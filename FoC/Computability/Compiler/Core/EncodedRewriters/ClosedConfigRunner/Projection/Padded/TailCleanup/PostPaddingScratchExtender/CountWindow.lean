@@ -407,6 +407,23 @@ def selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTai
           (selectedProjectionPaddedTailCleanupPostCountTailCells
             useAccept L extraScratch)))
 
+def selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((ParsedLayoutBits L).map some)
+      (none ::
+        none ::
+        none ::
+        List.append
+          (List.replicate
+            (selectedProjectionPaddedTailCleanupScratchCountBits
+              useAccept L).length
+            (none : Option Bool))
+          (selectedProjectionPaddedTailCleanupPostCountTailCells
+            useAccept L extraScratch)))
+
 def SelectedProjectionPaddedTailCleanupScratchCountWindowDecoderSpec
     (useAccept : Bool) (decoder : MachineDescription) : Prop :=
   decoder.SubroutineReady ∧
@@ -700,6 +717,33 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
                 (selectedProjectionPaddedTailCleanupPostCountTailCells
                   useAccept L extraScratch)))) := by
   rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
+  rw [
+    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+      useAccept L]
+  simp [List.map_append, List.append_assoc]
+
+theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_eq_skipped_count
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
+        useAccept L extraScratch =
+      tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+            useAccept L).map some)
+          (List.append
+            ((selectedProjectionPaddedTailCleanupScratchCountBits
+              useAccept L).map some)
+            (none ::
+              none ::
+              none ::
+              List.append
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupScratchCountBits
+                    useAccept L).length
+                  (none : Option Bool))
+                (selectedProjectionPaddedTailCleanupPostCountTailCells
+                  useAccept L extraScratch)))) := by
+  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
   rw [
     selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
       useAccept L]
@@ -1041,7 +1085,7 @@ def ScratchCountSuffixRightEdgeRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixRestorerRightEdgeTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixRightEdgeRestorerConstruction : Prop :=
@@ -1073,7 +1117,7 @@ def ScratchCountSuffixCompactedRightEdgeRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixRestorerCompactedRightEdgeTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixCompactedRightEdgeRestorerConstruction : Prop :=
@@ -1105,7 +1149,7 @@ def ScratchCountSuffixExtraBlankRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixExtraBlankRestorerConstruction : Prop :=
@@ -1121,7 +1165,7 @@ def ScratchCountSuffixRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixRestorerSourceTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixRestorerConstruction : Prop :=
@@ -1133,7 +1177,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
   encoder.SubroutineReady ∧
     forall L : DovetailLayout,
       encoder.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
+        (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
           useAccept L
@@ -1157,6 +1201,19 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
         useAccept L extraScratch := by
   rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
   rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
+  rw [htail]
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
+            useAccept L extraScratch)) =
+      selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
+        useAccept L extraScratch := by
+  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
+  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
   rw [htail]
   simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
@@ -2135,22 +2192,30 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorer_halt
     restorer.HaltsFromTape
       (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
         useAccept L 0)
-      (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
+      (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
         useAccept L 0) := by
-  have hrun :=
-    hrestorer.right
-      (selectedProjectionPaddedTailCleanupScratchSkippedBits useAccept L)
-      (selectedProjectionPaddedTailCleanupScratchCountBits useAccept L)
-      (selectedProjectionPaddedTailCleanupPostCountTailCells useAccept L 0)
-      (selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
-        useAccept L)
-  rw [
-    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail_eq_skipped_count]
-  simpa [
-    scratchCountSuffixRestorerSourceTape,
-    scratchCountSuffixPositionerSourceTape,
-    selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail,
-    List.append_assoc] using hrun
+  cases hcount :
+      selectedProjectionPaddedTailCleanupScratchCountBits useAccept L with
+  | nil =>
+      have hpos :=
+        selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
+          useAccept L
+      simp [hcount] at hpos
+  | cons bit rest =>
+      have hrun :=
+        hrestorer.right
+          (selectedProjectionPaddedTailCleanupScratchSkippedBits useAccept L)
+          (bit :: rest)
+          (selectedProjectionPaddedTailCleanupPostCountTailCells useAccept L 0)
+          (by simp)
+      rw [
+        selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_eq_skipped_count]
+      simpa [
+        scratchCountSuffixRestorerSourceTape,
+        scratchCountSuffixRestorerExtraBlankRewindTape,
+        rightEdgeRewindTargetTape,
+        selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail,
+        hcount, List.replicate_succ, List.append_assoc] using hrun
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_of_suffixRestorerAndRawSourceEncoder
     {useAccept : Bool} {suffixRestorer encoder : MachineDescription}
@@ -2171,7 +2236,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_of_suf
         hencoder.left
         (selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorer_haltsFrom
           hsuffixRestorer useAccept L)
-        (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail_move_left_move_right
+        (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_move_left_move_right
           useAccept L 0)
         (hencoder.right L)
 

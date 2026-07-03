@@ -1233,7 +1233,7 @@ def ScratchCountSuffixExtraBlankRightGapRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixExtraBlankRightGapTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixExtraBlankRightGapRestorerConstruction :
@@ -1281,7 +1281,7 @@ def ScratchCountSuffixExtraBlankLeftBoundaryRestorerSpec
         restorer.HaltsFromTape
           (scratchCountSuffixExtraBlankLeftBoundaryTape
             pref suffix rightTail)
-          (scratchCountSuffixPositionerSourceTape
+          (scratchCountSuffixRestorerExtraBlankRewindTape
             pref suffix rightTail)
 
 def ScratchCountSuffixExtraBlankLeftBoundaryRestorerConstruction :
@@ -1485,10 +1485,8 @@ theorem scratchCountSuffixExtraBlankRestorerConstruction_of_rightGapParts
               (hrestorerSpec.right pref suffix rightTail hpos)⟩
 
 theorem scratchCountSuffixCompactedRightEdgeRestorerConstruction_core :
-    ScratchCountSuffixCompactedRightEdgeRestorerConstruction := by
-  -- Remaining real leaf: shift the compacted payload one cell right into the
-  -- trailing blank while rewinding to the preserved left boundary.
-  sorry
+    ScratchCountSuffixCompactedRightEdgeRestorerConstruction :=
+  scratchCountSuffixCompactedRightEdgeRewinderConstruction_core
 
 theorem scratchCountSuffixRightEdgeRestorerConstruction_core :
     ScratchCountSuffixRightEdgeRestorerConstruction :=
@@ -1568,9 +1566,9 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderCon
                   useAccept L)
                 (selectedProjectionPaddedTailCleanupPostCountTailCells
                   useAccept L 0) =
-              selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
+              selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
                 useAccept L 0 := by
-          simp [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail,
+          simp [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank,
             countWindowRawSourceEncoderSourceTape,
             hsplit, List.map_append, List.append_assoc]
         have htarget :

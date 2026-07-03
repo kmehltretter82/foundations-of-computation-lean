@@ -9,9 +9,9 @@ set_option doc.verso true
 
 This module packages the reusable finite-machine obligation for re-encoding a
 raw split layout window.  The input contains the parsed layout bits directly,
-followed by a blank count window and a tail.  The output restores the encoded
-header, layout length, skipped-cell field, counted-cell field, and preserves
-the tail.
+followed by a blank count window, one repaired extra count-window blank, and a
+tail.  The output restores the encoded header, layout length, skipped-cell
+field, counted-cell field, consumes the repaired blank, and preserves the tail.
 -/
 
 namespace FoC
@@ -43,6 +43,7 @@ def countWindowRawSourceEncoderSourceTape
     (List.append
       ((List.append skipped count).map some)
       (none ::
+        none ::
         none ::
         List.append
           (List.replicate count.length (none : Option Bool))
