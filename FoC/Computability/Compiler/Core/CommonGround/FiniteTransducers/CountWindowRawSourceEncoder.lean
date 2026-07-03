@@ -295,6 +295,52 @@ theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
       layout []]
   simp [encodeCodeWordAsInput, List.map_append]
 
+theorem countWindowRawSourceEncoderCellFieldCells_length
+    (cells : List (Option Bool)) :
+    (countWindowRawSourceEncoderCellFieldCells cells).length =
+      4 * cells.length := by
+  unfold countWindowRawSourceEncoderCellFieldCells
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+        simp [EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+          EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+          ih, Nat.mul_add, Nat.add_comm] <;>
+        omega
+      | some bit =>
+          cases bit <;>
+            simp [EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+              EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+              encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+              ih, Nat.mul_add, Nat.add_comm] <;>
+            omega
+
+theorem countWindowRawSourceEncoderEncodedLayoutCells_length
+    (layout : Word Bool) :
+    (countWindowRawSourceEncoderEncodedLayoutCells layout).length =
+      8 * layout.length + 8 := by
+  unfold countWindowRawSourceEncoderEncodedLayoutCells
+  unfold countWindowRawSourceEncoderHeaderCells
+  unfold countWindowRawSourceEncoderLayoutLengthCells
+  simp [countWindowRawSourceEncoderCellFieldCells_length,
+    DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_length,
+    encodeCodeSymbolAsInput]
+  omega
+
+theorem
+    countWindowRawSourceEncoderEncodedLayoutCells_length_gt_sourcePrefix
+    (skipped count : Word Bool) :
+    (List.append skipped count).length + 3 + count.length <
+      (countWindowRawSourceEncoderEncodedLayoutCells
+        (List.append skipped count)).length := by
+  rw [countWindowRawSourceEncoderEncodedLayoutCells_length]
+  simp [List.length_append]
+  omega
+
 theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     countWindowRawSourceEncoderOutputCells skipped count tail =
