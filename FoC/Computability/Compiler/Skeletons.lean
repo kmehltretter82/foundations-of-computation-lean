@@ -740,7 +740,7 @@ theorem DescriptionCompiler.ofCompiledSubroutineAndDecider
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   DescriptionCompiler.ofCompiledSubroutineAndController
     hattempt
-    (Search.controllerCompilerOfDecider
+    (Search.controllerCompilerOfGeneratedCallSearch
       hbool)
 
 theorem DescriptionCompiler.ofLayoutSubroutineAndSearch

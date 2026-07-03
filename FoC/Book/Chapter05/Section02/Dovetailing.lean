@@ -556,7 +556,7 @@ namespace TotalStageAttemptControllerSearchDriver
 theorem of_descriptionBoolDeciderCompiler
     (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
     ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
-  Computability.Search.controllerCompilerOfDecider
+  Computability.Search.controllerCompilerOfGeneratedCallSearch
     hcompile
 
 theorem of_finiteStageLoopController

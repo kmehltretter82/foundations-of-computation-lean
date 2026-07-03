@@ -17,6 +17,10 @@ The search drivers are noncomputable programs extracted from machine-level
 constructions. They choose the first stage limit where the compiled attempt
 emits a canonical Boolean result, then rely on functionality lemmas to show
 that this search agrees with the intended recognizer behavior.
+
+The controller bridge below now reaches the generated-call search construction
+through concrete finite leaves, so its public names describe the finite
+generated-call obligation rather than a semantic decider compiler.
 -/
 
 noncomputable def PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
@@ -689,7 +693,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
       hinvoker)
     w b
 
-theorem Search.controllerCompilerOfDeciderOfFunctional
+theorem Search.controllerCompilerOfGeneratedCallSearchOfFunctional
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple)
     (attempt : MachineDescription)
     (hfunctional :
@@ -709,7 +713,7 @@ theorem Search.controllerCompilerOfDeciderOfFunctional
       (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
         attempt hfunctional w b)
 
-theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
+theorem Search.controllerCompilerOfGeneratedCallSearchOfProtectedInvocation
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple)
     {attempt invoker : MachineDescription}
     (hinvoker :
@@ -718,13 +722,12 @@ theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
     exists decider : MachineDescription,
       PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverRealizes
         attempt decider :=
-  Search.controllerCompilerOfDeciderOfFunctional
+  Search.controllerCompilerOfGeneratedCallSearchOfFunctional
     hcompile attempt
     (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
       hinvoker)
 
-theorem Search.protectedControllerFuelSearchDriverConstructionOfDecider
-    (_hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+theorem Search.protectedControllerFuelSearchDriverConstructionOfFiniteLeaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction :=
   pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf
 
@@ -735,15 +738,13 @@ theorem Search.protectedControllerSearchDriverConstructionOfFuel
   pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_of_fuel
     hcompile
 
-theorem Search.protectedControllerSearchDriverConstructionOfDecider
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+theorem Search.protectedControllerSearchDriverConstructionOfFiniteLeaf :
     PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
   exact
     Search.protectedControllerSearchDriverConstructionOfFuel
-      (Search.protectedControllerFuelSearchDriverConstructionOfDecider
-        hcompile)
+      Search.protectedControllerFuelSearchDriverConstructionOfFiniteLeaf
 
-theorem Search.controllerCompilerOfDecider
+theorem Search.controllerCompilerOfGeneratedCallSearch
     (_hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
   intro _accept _reject attempt hattemptReady
@@ -1605,7 +1606,7 @@ theorem Search.boundedCompilerOfCompiledSubroutineAndDecider
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Search.boundedCompilerOfCompiledSubroutineAndController
     hattempt
-    (Search.controllerCompilerOfDecider
+    (Search.controllerCompilerOfGeneratedCallSearch
       hcompile)
 
 theorem pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
