@@ -1437,6 +1437,46 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_output_nil
           | cons head tail =>
               simp [hdecode] at h
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_normalizedInput_iff
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode
+        (decodedBoundedSimulatorNormalizedInput stage D input) =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopConfig stage D input).state =
+        D.halt := by
+  rw [decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode]
+  exact
+    decodedBoundedSimulatorTransitionLoopPipelineCode_normalizedInput_iff
+      stage D input
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopConfig
+            stage D input).state = D.halt := by
+  rw [decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode]
+  exact
+    decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
+      tokens
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_output_nil
+    {tokens out : Word MachineCodeSymbol}
+    (h :
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some out) :
+    out = [] := by
+  apply decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_output_nil
+  simpa [decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode]
+    using h
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
     (tokens out : Word MachineCodeSymbol) :
     decodedBoundedSimulatorTransitionLoopPipelineCode tokens = some out <->
@@ -1678,6 +1718,17 @@ theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineCodeM
     ⟨state, runner, fun tokens =>
       Iff.trans (hrunner tokens)
         (decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
+          tokens)⟩
+
+theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineIterateCodeMachine
+    (hcode :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopRunnerConstruction := by
+  rcases hcode with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff
           tokens)⟩
 
 /--
@@ -2001,8 +2052,8 @@ Transition-loop finite-machine construction for the normalized decoded simulator
 theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction :
     DecodedBoundedSimulatorTransitionLoopRunnerConstruction := by
   exact
-    decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineCodeMachine
-      decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction
+    decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineIterateCodeMachine
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction
 
 /--
 The transition-loop runner is enough to realize the exact simulator-layout
