@@ -52,15 +52,13 @@ Boolean-input recognizers.  The Boolean program first parses its input using
 this parser is inverse to {name}`MachineDescription.encodeCodeWordAsInput`.
 -/
 
-noncomputable def EncodedInputBoolProgram
+def EncodedInputBoolProgram
     (P : StagedProgram MachineCodeSymbol Unit) :
     StagedProgram Bool Unit :=
-  by
-    exact
-      { run := fun bits stage =>
-          match MachineDescription.decodeCodeWordAsInput bits with
-          | none => none
-          | some w => P.run w stage }
+  { run := fun bits stage =>
+      match MachineDescription.decodeCodeWordAsInput bits with
+      | none => none
+      | some w => P.run w stage }
 
 theorem encodedInputBoolProgram_halts_iff_decode
     (P : StagedProgram MachineCodeSymbol Unit)
@@ -145,25 +143,21 @@ decode one description from the front of the input, then run the decoded
 description for the current stage bound on the encoded suffix.
 -/
 
-noncomputable def CodePrefixRecognizerProgram :
+def CodePrefixRecognizerProgram :
     StagedProgram MachineCodeSymbol Unit :=
-  by
-    classical
-    exact
-      { run := fun encoded stage =>
-          match MachineDescription.decodeDescriptionPrefix encoded with
-          | none => none
-          | some (D, input) =>
-              if D.HaltsIn stage
-                  (MachineDescription.encodeCodeWordAsInput input) then
-                some []
-              else
-                none }
+  { run := fun encoded stage =>
+      match MachineDescription.decodeDescriptionPrefix encoded with
+      | none => none
+      | some (D, input) =>
+          if D.HaltsIn stage
+              (MachineDescription.encodeCodeWordAsInput input) then
+            some []
+          else
+            none }
 
 theorem codePrefixRecognizerProgram_acceptsLanguage :
     ProgramAcceptsLanguage CodePrefixRecognizerProgram
       MachineDescription.CodePrefixAcceptedLanguage := by
-  classical
   intro encoded
   constructor
   · intro h
@@ -386,23 +380,20 @@ def CodePrefixRecognizerStageCode
     Word MachineCodeSymbol :=
   MachineDescription.encodeNatAppend stage encoded
 
-noncomputable def CodePrefixDecodedBoundedSimulatorCode :
+def CodePrefixDecodedBoundedSimulatorCode :
     MachineDescription.TapeCodePrimitive :=
-  by
-    classical
-    exact
-      { transform := fun tokens =>
-          match MachineDescription.decodeNat tokens with
+  { transform := fun tokens =>
+      match MachineDescription.decodeNat tokens with
+      | none => none
+      | some (stage, encoded) =>
+          match MachineDescription.decodeDescriptionPrefix encoded with
           | none => none
-          | some (stage, encoded) =>
-              match MachineDescription.decodeDescriptionPrefix encoded with
-              | none => none
-              | some (D, input) =>
-                  if D.HaltsIn stage
-                      (MachineDescription.encodeCodeWordAsInput input) then
-                    some []
-                  else
-                    none }
+          | some (D, input) =>
+              if D.HaltsIn stage
+                  (MachineDescription.encodeCodeWordAsInput input) then
+                some []
+              else
+                none }
 
 theorem codePrefixRecognizerStageCode_decodeNat
     (encoded : Word MachineCodeSymbol) (stage : Nat) :
@@ -441,7 +432,6 @@ theorem codePrefixDecodedBoundedSimulatorCode_stageCode_of_halts
     CodePrefixDecodedBoundedSimulatorCode.transform
         (CodePrefixRecognizerStageCode encoded stage) =
       some ([] : Word MachineCodeSymbol) := by
-  classical
   simp [CodePrefixDecodedBoundedSimulatorCode,
     CodePrefixRecognizerStageCode,
     MachineDescription.decodeNat_encodeNatAppend, hdecode, hhalts]
@@ -459,7 +449,6 @@ theorem codePrefixDecodedBoundedSimulatorCode_stageCode_of_not_halts
     CodePrefixDecodedBoundedSimulatorCode.transform
         (CodePrefixRecognizerStageCode encoded stage) =
       none := by
-  classical
   simp [CodePrefixDecodedBoundedSimulatorCode,
     CodePrefixRecognizerStageCode,
     MachineDescription.decodeNat_encodeNatAppend, hdecode, hhalts]
@@ -475,7 +464,6 @@ theorem codePrefixDecodedBoundedSimulatorCode_stageCode_eq_some_iff
       some ([] : Word MachineCodeSymbol) <->
         D.HaltsIn stage
           (MachineDescription.encodeCodeWordAsInput input) := by
-  classical
   constructor
   · intro h
     by_cases hhalts :
@@ -503,7 +491,6 @@ theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
               some (D, input) ∧
             D.HaltsIn stage
               (MachineDescription.encodeCodeWordAsInput input) := by
-  classical
   constructor
   · intro h
     unfold CodePrefixDecodedBoundedSimulatorCode at h
@@ -604,7 +591,6 @@ theorem codePrefixDecodedStageSearchAccepts_iff_boundedSimulatorCode
         CodePrefixDecodedBoundedSimulatorCode.transform
           (CodePrefixRecognizerStageCode encoded stage) =
           some ([] : Word MachineCodeSymbol) := by
-  classical
   constructor
   · intro h
     rcases h with ⟨D, input, stage, hdecode, hhalts⟩

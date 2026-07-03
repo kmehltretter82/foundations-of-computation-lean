@@ -152,6 +152,11 @@ def runConfig (D : MachineDescription) :
 def HaltsIn (D : MachineDescription) (n : Nat) (w : Word Bool) : Prop :=
   (D.runConfig n (D.initial w)).state = D.halt
 
+instance (D : MachineDescription) (n : Nat) (w : Word Bool) :
+    Decidable (D.HaltsIn n w) := by
+  unfold HaltsIn
+  infer_instance
+
 def HaltsOnInput (D : MachineDescription) (w : Word Bool) : Prop :=
   exists n : Nat, D.HaltsIn n w
 
