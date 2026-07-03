@@ -1870,13 +1870,45 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
-/-
-The generic `CountWindowRawSourceEncoderEquivConstruction` package is not
-exported with a `_core` theorem here.  Current consumers use the
-projection-owned bridge in
-`PostPaddingScratchExtender.CountWindowRawSourceEncoderBridge`, keeping
-projection/quoter dependencies out of this common finite-transducer module.
+theorem
+    countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
+    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction := by
+  sorry
+
+theorem
+    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
+    CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
+  exact
+    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
+      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
+
+theorem
+    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
+    CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by
+  exact
+    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter
+      countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core
+
+theorem countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core :
+    CountWindowRawSourceEncoderNoCountPaddingEquivConstruction := by
+  exact
+    countWindowRawSourceEncoderNoCountPaddingEquivConstruction_of_countWindowStartEmitter
+      countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core
+
+/--
+Direct construction obligation for the raw-source encoder.
+
+This should not be factored through the live-tail emitter handoff: once the
+head has crossed the tail-first bit, the empty raw-layout case has no nonblank
+left sentinel separating it from an arbitrarily long count-window blank run.
+The original source tape still exposes the empty/nonempty raw-layout boundary
+at the head, so the real finite-machine proof belongs at this level.
 -/
+theorem countWindowRawSourceEncoderEquivConstruction_core :
+    CountWindowRawSourceEncoderEquivConstruction := by
+  exact
+    countWindowRawSourceEncoderEquivConstruction_of_noCountPadding
+      countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core
 
 end FiniteTransducers
 end CommonGround

@@ -1613,14 +1613,14 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptRawSourceEnco
     exists encoder : MachineDescription,
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         true encoder :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_projectionLiveTailBridge
+  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_countWindowRawSourceEncoderBridge
     true
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectRawSourceEncoderConstruction_core :
     exists encoder : MachineDescription,
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         false encoder :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_projectionLiveTailBridge
+  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_countWindowRawSourceEncoderBridge
     false
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_core :
