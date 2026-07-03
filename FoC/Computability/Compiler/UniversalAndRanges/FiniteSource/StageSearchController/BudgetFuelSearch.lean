@@ -261,6 +261,20 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
       codePrefixExactFuelRunner_haltsOnNested_iff
         hselected encoded limit fuel
 
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteLeafDecidable
+    {attemptState : Type uStage} [DecidableEq attemptState]
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptObligation
+      attempt := by
+  rcases codePrefixExactFuelRunnerFiniteLeafDecidable attempt with
+    ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro encoded limit fuel
+  simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
+    using
+      codePrefixExactFuelRunner_haltsOnNested_iff
+        hselected encoded limit fuel
+
 /--
 Finite-machine leaf for the limit/fuel enumerator used by the raw outer-loop
 fuel search.
@@ -271,6 +285,29 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFin
     CodePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorObligation
       selected := by
   rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases (hsearcher encoded).mp hhalt with
+      ⟨limit, fuel, hselected⟩
+    exact ⟨limit, fuel, by
+      simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode,
+        NestedCodePrefixRecognizerStageCode] using hselected⟩
+  · intro htarget
+    rcases htarget with ⟨limit, fuel, hselected⟩
+    exact (hsearcher encoded).mpr
+      ⟨limit, fuel, by
+        simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode,
+          NestedCodePrefixRecognizerStageCode] using hselected⟩
+
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorFiniteLeafDecidable
+    {selectedState : Type uSimulator} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelEnumeratorObligation
+      selected := by
+  rcases codePrefixNestedPairEnumeratorFiniteLeafDecidable selected with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro encoded
@@ -299,6 +336,13 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeaf
       attempt := by
   exact codePrefixNestedExactFuelSearchFiniteLeaf attempt
 
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeafDecidable
+    {attemptState : Type uStage} [DecidableEq attemptState]
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
+      attempt := by
+  exact codePrefixNestedExactFuelSearchFiniteLeafDecidable attempt
+
 /--
 Global wrapper for the raw stage-code/fuel search construction.  The concrete
 transition-table obligation is the per-machine outer-loop fuel-search leaf.
@@ -320,6 +364,13 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation_c
       attempt := by
   exact codePrefixNestedExactFuelSearchFiniteLeaf attempt
 
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation_coreDecidable
+    {attemptState : Type} [DecidableEq attemptState]
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchObligation
+      attempt := by
+  exact codePrefixNestedExactFuelSearchFiniteLeafDecidable attempt
+
 /--
 Finite-machine leaf for the bounded attempt phase of the raw budget/fuel
 driver.
@@ -330,6 +381,13 @@ theorem codePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation_core
     CodePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation
       checker := by
   exact codePrefixBoundedNestedExactFuelSearchFiniteLeaf checker
+
+theorem codePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation_coreDecidable
+    {checkerState : Type} [DecidableEq checkerState]
+    (checker : TuringMachine MachineCodeSymbol checkerState) :
+    CodePrefixStageSearchControllerBudgetFuelBoundedAttemptObligation
+      checker := by
+  exact codePrefixBoundedNestedExactFuelSearchFiniteLeafDecidable checker
 
 /--
 Finite-machine leaf for the unbounded outer-loop phase of the raw budget/fuel
@@ -353,6 +411,13 @@ theorem codePrefixStageSearchControllerBudgetFuelRawDriverObligation_core
     CodePrefixStageSearchControllerBudgetFuelRawDriverObligation
       checker := by
   exact codePrefixNestedExactFuelSearchFiniteLeaf checker
+
+theorem codePrefixStageSearchControllerBudgetFuelRawDriverObligation_coreDecidable
+    {checkerState : Type} [DecidableEq checkerState]
+    (checker : TuringMachine MachineCodeSymbol checkerState) :
+    CodePrefixStageSearchControllerBudgetFuelRawDriverObligation
+      checker := by
+  exact codePrefixNestedExactFuelSearchFiniteLeafDecidable checker
 
 /--
 Finite-machine construction for the budget-only searcher.  The remaining

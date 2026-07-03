@@ -80,6 +80,13 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFini
       simulator := by
   exact codePrefixBoundedNestedExactFuelSearchFiniteLeaf simulator
 
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFiniteLeafDecidable
+    {simulatorState : Type uSimulator} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopObligation
+      simulator := by
+  exact codePrefixBoundedNestedExactFuelSearchFiniteLeafDecidable simulator
+
 /--
 Adapter from the parser wrapper and pair-loop construction to the canonical
 raw-loop contract.
@@ -91,6 +98,39 @@ theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRaw
       simulator := by
   rcases
       codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFiniteLeaf
+        simulator with
+    ⟨pairState, pairRunner, hpairRunner⟩
+  rcases
+      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalInputParserFiniteLeaf
+        pairRunner with
+    ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro tokens
+  constructor
+  · intro hhalt
+    rcases (hrunner tokens).mp hhalt with
+      ⟨budget, encoded, htokens, hpair⟩
+    rcases (hpairRunner encoded budget).mp hpair with
+      ⟨checkedStage, fuel, hcheckedStage, hfuel, hsimulator⟩
+    exact
+      ⟨budget, encoded, checkedStage, fuel, htokens,
+        hcheckedStage, hfuel, hsimulator⟩
+  · intro htarget
+    rcases htarget with
+      ⟨budget, encoded, checkedStage, fuel, htokens,
+        hcheckedStage, hfuel, hsimulator⟩
+    exact (hrunner tokens).mpr
+      ⟨budget, encoded, htokens,
+        (hpairRunner encoded budget).mpr
+          ⟨checkedStage, fuel, hcheckedStage, hfuel, hsimulator⟩⟩
+
+theorem codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopFiniteLeafDecidable
+    {simulatorState : Type uSimulator} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    CodePrefixStageSearchControllerBudgetCheckerBoundedSimulatorCanonicalRawLoopObligation
+      simulator := by
+  rcases
+      codePrefixStageSearchControllerBudgetCheckerBoundedSimulatorPairLoopFiniteLeafDecidable
         simulator with
     ⟨pairState, pairRunner, hpairRunner⟩
   rcases
