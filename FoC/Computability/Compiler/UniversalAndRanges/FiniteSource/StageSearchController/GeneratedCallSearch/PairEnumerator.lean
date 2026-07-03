@@ -74,6 +74,33 @@ theorem codePrefixNestedPairEnumeratorConstruction_of_indexed
           (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
           hhalt⟩
 
+theorem codePrefixNestedPairEnumeratorConstruction_of_indexedDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      CodePrefixNestedPairEnumeratorConstruction
+        (TuringMachine.indexedDecidable selected)) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hindexedHalt⟩
+    exact
+      ⟨inner, outer,
+        (TuringMachine.indexedDecidable_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (TuringMachine.indexedDecidable_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
+          hhalt⟩
+
 /--
 A generated-pair enumerator for every concrete {lit}`Fin n` recognizer state
 space suffices for arbitrary selected recognizers.
@@ -202,6 +229,33 @@ theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_indexed
           (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
           hhalt⟩
 
+theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_indexedDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      CodePrefixBoundedNestedPairEnumeratorConstruction
+        (TuringMachine.indexedDecidable selected)) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInput_iff selected
+          (NestedCodePrefixRecognizerStageCode input inner outer)).mpr
+          hhalt⟩
+
 /--
 The bounded pair enumerator can likewise be proved only for concrete
 {lit}`Fin n` selected recognizers and then transported to arbitrary finite
@@ -278,6 +332,33 @@ theorem codePrefixBoundedNestedExactFuelSearchConstruction_of_indexed
     exact (hsearcher input budget).mpr
       ⟨inner, outer, hinner, houter,
         (TuringMachine.indexed_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mpr
+          hhalt⟩
+
+theorem codePrefixBoundedNestedExactFuelSearchConstruction_of_indexedDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixBoundedNestedExactFuelSearchConstruction
+        (TuringMachine.indexedDecidable M)) :
+    CodePrefixBoundedNestedExactFuelSearchConstruction M := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
           M outer (CodePrefixRecognizerStageCode input inner)).mpr
           hhalt⟩
 

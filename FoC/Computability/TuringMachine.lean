@@ -597,6 +597,58 @@ theorem indexed_haltsOnInputIn_iff
   simpa [HaltsOnInputIn, initial, indexed] using
     indexed_haltsFromIn_iff (M := M) (n := n) (c := initial M w)
 
+theorem indexedDecidable_haltsFrom_iff [DecidableEq state]
+    (M : TuringMachine symbol state)
+    (c : Configuration symbol state) :
+    HaltsFrom (indexedDecidable M)
+        { state :=
+            Foundation.FiniteType.indexOfDecidable M.statesFinite c.state,
+          tape := c.tape } <->
+      HaltsFrom M c := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompOriginal :=
+      computes_of_indexedDecidable_computes (M := M) hcomp
+    have hstate :
+        Foundation.FiniteType.valueOf M.statesFinite final.state =
+          M.halt := by
+      have hindex :
+          final.state =
+            Foundation.FiniteType.indexOfDecidable
+              M.statesFinite M.halt := by
+        simpa [Halted, indexedDecidable] using hfinal
+      rw [hindex, Foundation.FiniteType.valueOf_indexOfDecidable]
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.valueOf M.statesFinite final.state,
+          tape := final.tape },
+        by
+          simpa [Foundation.FiniteType.valueOf_indexOfDecidable] using
+            hcompOriginal,
+        by
+          simp [Halted, hstate]⟩
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompIndexed :=
+      indexedDecidable_computes_of_computes (M := M) hcomp
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.indexOfDecidable
+              M.statesFinite final.state,
+          tape := final.tape },
+        hcompIndexed,
+        by
+          have hstate : final.state = M.halt := by
+            simpa [Halted] using hfinal
+          simp [Halted, indexedDecidable, hstate]⟩
+
+theorem indexedDecidable_haltsOnInput_iff [DecidableEq state]
+    (M : TuringMachine symbol state) (w : Word symbol) :
+    HaltsOnInput (indexedDecidable M) w <-> HaltsOnInput M w := by
+  simpa [HaltsOnInput, initial, indexedDecidable] using
+    indexedDecidable_haltsFrom_iff (M := M) (c := initial M w)
+
 theorem indexedDecidable_haltsFromIn_iff [DecidableEq state]
     (M : TuringMachine symbol state) (n : Nat)
     (c : Configuration symbol state) :

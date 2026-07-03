@@ -79,6 +79,36 @@ theorem codePrefixExactFuelProductRunnerConstruction_of_indexed
         (TuringMachine.indexed_haltsOnInputIn_iff
           right rightFuel input).mpr hright⟩
 
+theorem codePrefixExactFuelProductRunnerConstruction_of_indexedDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState)
+    (hindexed :
+      CodePrefixExactFuelProductRunnerConstruction
+        (TuringMachine.indexedDecidable left)
+        (TuringMachine.indexedDecidable right)) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  rcases hindexed with ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  constructor
+  · intro hhalt
+    rcases (hselected input leftFuel rightFuel).mp hhalt with
+      ⟨hleft, hright⟩
+    exact
+      ⟨(TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          left leftFuel input).mp hleft,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          right rightFuel input).mp hright⟩
+  · intro htarget
+    rcases htarget with ⟨hleft, hright⟩
+    exact (hselected input leftFuel rightFuel).mpr
+      ⟨(TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          left leftFuel input).mpr hleft,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          right rightFuel input).mpr hright⟩
+
 /--
 For the product exact-fuel runner, it is enough to solve the case where both
 input recognizers use concrete {lit}`Fin` state spaces.

@@ -60,6 +60,19 @@ theorem codePrefixExactFuelRunnerConstruction_of_indexed
   exact Iff.trans (hrunner input fuel)
     (TuringMachine.indexed_haltsOnInputIn_iff M fuel input)
 
+theorem codePrefixExactFuelRunnerConstruction_of_indexedDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixExactFuelRunnerConstruction
+        (TuringMachine.indexedDecidable M)) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  rcases hindexed with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (TuringMachine.indexedDecidable_haltsOnInputIn_iff M fuel input)
+
 /--
 Conversely, any exact-fuel runner for the original machine also serves the
 indexed copy.  This keeps later constructions free to move across the indexed
@@ -76,6 +89,20 @@ theorem codePrefixExactFuelRunnerConstruction_indexed_of
   intro input fuel
   exact Iff.trans (hrunner input fuel)
     (Iff.symm (TuringMachine.indexed_haltsOnInputIn_iff
+      M fuel input))
+
+theorem codePrefixExactFuelRunnerConstruction_indexedDecidable_of
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (h :
+      CodePrefixExactFuelRunnerConstruction M) :
+    CodePrefixExactFuelRunnerConstruction
+      (TuringMachine.indexedDecidable M) := by
+  rcases h with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (Iff.symm (TuringMachine.indexedDecidable_haltsOnInputIn_iff
       M fuel input))
 
 /--
