@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator.NormalizedRunner
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Final
 
 set_option doc.verso true
@@ -728,7 +729,7 @@ theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec_of_codeMachin
     CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineSpec simulator := by
   intro tokens
   exact Iff.trans (hsimulator tokens)
-    (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat_encodeDescription
+    (decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
       tokens)
 
 theorem codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_normalizedCodeMachineSpec
@@ -739,7 +740,7 @@ theorem codePrefixDecodedBoundedSimulatorCodeMachineSpec_of_normalizedCodeMachin
   intro tokens
   exact Iff.trans (hsimulator tokens)
     (Iff.symm
-      (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNat_encodeDescription
+      (decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
         tokens))
 
 theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineSpec_of_normalizedCodeMachineSpec
@@ -965,7 +966,7 @@ accept exactly when the decoded table halts at that exact stage.
 -/
 theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf :
     CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction := by
-  sorry
+  exact decodedBoundedSimulatorNormalizedRunnerConstruction
 
 /--
 Parsed finite-machine leaf for the decoded bounded simulator primitive.  The
