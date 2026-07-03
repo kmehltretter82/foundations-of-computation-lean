@@ -53,6 +53,34 @@ theorem stepConfig_of_lookupTransition_some
           tape := Tape.move t.move (Tape.write t.write c.tape) } := by
   simp [stepConfig, hlookup]
 
+theorem lookupTransition_matches
+    {D : MachineDescription} {source : Nat} {read : Option Bool}
+    {t : TransitionDescription}
+    (hlookup : D.lookupTransition source read = some t) :
+    t.source = source ∧ t.read = read := by
+  unfold lookupTransition at hlookup
+  let p := Matches source read
+  have hmatches :
+      forall transitions : List TransitionDescription,
+        transitions.find? p = some t -> p t = true := by
+    intro transitions
+    induction transitions with
+    | nil =>
+        intro hnil
+        simp at hnil
+    | cons candidate rest ih =>
+        intro hfind
+        rw [List.find?_cons] at hfind
+        cases hp : p candidate
+        · simp [hp] at hfind
+          exact ih hfind
+        · simp [hp] at hfind
+          cases hfind
+          exact hp
+  have ht : Matches source read t = true :=
+    hmatches D.transitions hlookup
+  simpa [Matches] using ht
+
 theorem stepConfig_eq_none_iff_lookupTransition_eq_none
     {D : MachineDescription} {c : Configuration} :
     D.stepConfig c = none <->
@@ -100,6 +128,26 @@ theorem haltsIn_succ_iff_stepConfig_initial_some
     D.HaltsIn (n + 1) w <->
       (D.runConfig n next).state = D.halt := by
   simp [HaltsIn, runConfig_succ_of_stepConfig_some hstep]
+
+theorem runConfig_succ_of_lookupTransition_none
+    {D : MachineDescription} {c : Configuration} {n : Nat}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = none) :
+    D.runConfig (n + 1) c = c :=
+  runConfig_succ_of_stepConfig_none
+    (stepConfig_of_lookupTransition_none hlookup)
+
+theorem runConfig_succ_of_lookupTransition_some
+    {D : MachineDescription} {c : Configuration}
+    {t : TransitionDescription} {n : Nat}
+    (hlookup :
+      D.lookupTransition c.state (Tape.read c.tape) = some t) :
+    D.runConfig (n + 1) c =
+      D.runConfig n
+        { state := t.target
+          tape := Tape.move t.move (Tape.write t.write c.tape) } :=
+  runConfig_succ_of_stepConfig_some
+    (stepConfig_of_lookupTransition_some hlookup)
 
 end MachineDescription
 
@@ -394,6 +442,64 @@ def DecodedBoundedSimulatorRunConfigRunnerConstruction : Prop :=
     DecodedBoundedSimulatorRunConfigRunnerSpec runner
 
 /--
+The semantic configuration reached by the uniform decoded transition loop.
+This name isolates the operation that the remaining finite table has to
+implement: repeatedly scan the decoded transition table, apply the selected
+write/move action, and decrement the parsed stage counter.
+-/
+def decodedBoundedSimulatorTransitionLoopConfig
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) : MachineDescription.Configuration :=
+  D.runConfig stage
+    (D.initial (MachineDescription.encodeCodeWordAsInput input))
+
+theorem decodedBoundedSimulatorTransitionLoopConfig_zero
+    (D : MachineDescription) (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopConfig 0 D input =
+      D.initial (MachineDescription.encodeCodeWordAsInput input) :=
+  rfl
+
+theorem decodedBoundedSimulatorTransitionLoopConfig_succ
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopConfig (stage + 1) D input =
+      match
+        D.stepConfig
+          (D.initial (MachineDescription.encodeCodeWordAsInput input)) with
+      | none =>
+          D.initial (MachineDescription.encodeCodeWordAsInput input)
+      | some next => D.runConfig stage next := by
+  simp [decodedBoundedSimulatorTransitionLoopConfig,
+    MachineDescription.runConfig]
+  rfl
+
+/--
+Transition-loop form of the normalized bounded simulator runner.  This is the
+actual uniform-runner leaf: the machine must interpret the decoded description
+as transition-table data for exactly the parsed stage count.
+-/
+def DecodedBoundedSimulatorTransitionLoopRunnerSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopConfig
+            stage D input).state = D.halt
+
+/--
+Finite-machine construction target for the decoded transition-loop runner.
+-/
+def DecodedBoundedSimulatorTransitionLoopRunnerConstruction : Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorTransitionLoopRunnerSpec runner
+
+/--
 Canonical simulator layout for a decoded bounded-simulator call after the
 stage, description, and residual code input have been parsed.
 -/
@@ -605,6 +711,68 @@ theorem decodedBoundedSimulatorExactLayoutRun_iff_runConfig
           stage D input] using hhalt⟩
 
 /--
+The transition-loop predicate is the same run-config halt-state predicate,
+with the loop operation named explicitly for the remaining finite runner.
+-/
+theorem decodedBoundedSimulatorTransitionLoopRun_iff_runConfig
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopConfig
+            stage D input).state = D.halt) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (D.runConfig stage
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [decodedBoundedSimulatorTransitionLoopConfig] using hhalt⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [decodedBoundedSimulatorTransitionLoopConfig] using hhalt⟩
+
+/--
+The exact layout wrapper and the transition-loop leaf expose the same
+acceptance predicate.
+-/
+theorem decodedBoundedSimulatorExactLayoutRun_iff_transitionLoop
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (MachineDescription.SimulatorLayout.afterRun D
+            (decodedBoundedSimulatorExactInitialLayout stage D input)
+            stage).config.state = D.halt) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopConfig
+            stage D input).state = D.halt :=
+  Iff.trans
+    (decodedBoundedSimulatorExactLayoutRun_iff_runConfig tokens)
+    (Iff.symm
+      (decodedBoundedSimulatorTransitionLoopRun_iff_runConfig tokens))
+
+/--
 Any independently supplied machine for the code primitive is already a
 normalized decoded bounded-simulator runner.
 -/
@@ -631,12 +799,36 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Transition-loop finite-machine leaf for the normalized decoded simulator.
+-/
+theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction :
+    DecodedBoundedSimulatorTransitionLoopRunnerConstruction := by
+  sorry
+
+/--
+The transition-loop runner is enough to realize the exact simulator-layout
+runner.
+-/
+theorem decodedBoundedSimulatorExactLayoutRunnerConstruction_of_transitionLoopRunner
+    (hrunner : DecodedBoundedSimulatorTransitionLoopRunnerConstruction) :
+    DecodedBoundedSimulatorExactLayoutRunnerConstruction := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorExactLayoutRun_iff_transitionLoop
+            tokens))⟩
+
+/--
 Exact simulator-layout finite-machine leaf for the normalized decoded
 simulator.
 -/
 theorem decodedBoundedSimulatorExactLayoutRunnerConstruction :
     DecodedBoundedSimulatorExactLayoutRunnerConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorExactLayoutRunnerConstruction_of_transitionLoopRunner
+      decodedBoundedSimulatorTransitionLoopRunnerConstruction
 
 /--
 The exact simulator-layout runner is enough to realize the run-config runner.
