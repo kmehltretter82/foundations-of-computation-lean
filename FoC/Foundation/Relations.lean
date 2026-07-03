@@ -124,6 +124,16 @@ theorem classes_equal_or_disjoint {R : Rel alpha} (h : Equivalence R)
       intro x hx
       exact hoverlap (Exists.intro x hx))
 
+theorem classes_equal_or_disjoint_decidable {R : Rel alpha} (h : Equivalence R)
+    (a b : alpha)
+    [Decidable (exists x, x ∈ Class R a ∧ x ∈ Class R b)] :
+    FSet.Equal (Class R a) (Class R b) ∨ FSet.Disjoint (Class R a) (Class R b) := by
+  by_cases hoverlap : exists x, x ∈ Class R a ∧ x ∈ Class R b
+  · exact Or.inl (overlapping_classes_equal h hoverlap)
+  · exact Or.inr (by
+      intro x hx
+      exact hoverlap (Exists.intro x hx))
+
 def classes_partition {R : Rel alpha} (h : Equivalence R) : Partition alpha where
   block := Classes R
   covers := by

@@ -219,6 +219,26 @@ theorem injective_iff_distinct_images (f : alpha -> beta) :
     · exact hxy
     · exact False.elim (h x y hxy hImage)
 
+theorem distinct_images_of_injective {f : alpha -> beta}
+    (hf : Injective f) : forall x y, x ≠ y -> f x ≠ f y := by
+  intro x y hxy hImage
+  exact hxy (hf hImage)
+
+theorem injective_of_distinct_images_decidable [DecidableEq alpha]
+    {f : alpha -> beta}
+    (h : forall x y, x ≠ y -> f x ≠ f y) : Injective f := by
+  intro x y hImage
+  by_cases hxy : x = y
+  · exact hxy
+  · exact False.elim (h x y hxy hImage)
+
+theorem injective_iff_distinct_images_decidable [DecidableEq alpha]
+    (f : alpha -> beta) :
+    Injective f <-> forall x y, x ≠ y -> f x ≠ f y := by
+  constructor
+  · exact distinct_images_of_injective
+  · exact injective_of_distinct_images_decidable
+
 theorem collision_of_not_injective {f : alpha -> beta}
     (h : ¬ Injective f) : exists x y, x ≠ y ∧ f x = f y := by
   classical

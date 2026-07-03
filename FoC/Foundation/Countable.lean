@@ -142,6 +142,40 @@ theorem countable_subset {A B : FSet alpha}
                   exact hyA
                 · simp [hfn, hyA] at hn
 
+theorem countable_subset_decidable {A B : FSet alpha}
+    [DecidablePred (fun x => x ∈ A)]
+    (hAB : Subset A B) (hB : Countable B) : Countable A := by
+  cases hB with
+  | intro f hf =>
+      let filtered : Nat -> Option alpha := fun n =>
+        match f n with
+        | none => none
+        | some x => if x ∈ A then some x else none
+      exists filtered
+      intro x
+      constructor
+      · intro hxA
+        have hxB : x ∈ B := hAB x hxA
+        cases (hf x).mp hxB with
+        | intro n hn =>
+            exists n
+            dsimp [filtered]
+            rw [hn]
+            simp [hxA]
+      · intro hx
+        cases hx with
+        | intro n hn =>
+            dsimp [filtered] at hn
+            cases hfn : f n with
+            | none =>
+                simp [hfn] at hn
+            | some y =>
+                by_cases hyA : y ∈ A
+                · simp [hfn, hyA] at hn
+                  rw [← hn]
+                  exact hyA
+                · simp [hfn, hyA] at hn
+
 /-!
 # Countable unions
 
@@ -238,6 +272,44 @@ countable universal set by searching for the first value with a given code.
 def EncodableByNat (alpha : Type u) : Prop :=
   exists code : alpha -> Nat, Fn.Injective code
 
+structure NatCodec (alpha : Type u) where
+  encode : alpha -> Nat
+  decode : Nat -> Option alpha
+  decode_encode : forall x, decode (encode x) = some x
+
+namespace NatCodec
+
+def nat : NatCodec Nat where
+  encode := fun n => n
+  decode := fun n => some n
+  decode_encode := by
+    intro x
+    rfl
+
+end NatCodec
+
+theorem countable_univ_of_natCodec {alpha : Type u}
+    (codec : NatCodec alpha) :
+    FSet.Countable (FSet.Univ : FSet alpha) := by
+  exists codec.decode
+  intro x
+  constructor
+  · intro _
+    exact Exists.intro (codec.encode x) (codec.decode_encode x)
+  · intro _
+    exact True.intro
+
+theorem natCodec_encodableByNat {alpha : Type u}
+    (codec : NatCodec alpha) : EncodableByNat alpha := by
+  exists codec.encode
+  intro x y h
+  have hx := codec.decode_encode x
+  have hy := codec.decode_encode y
+  rw [h] at hx
+  rw [hy] at hx
+  cases hx
+  rfl
+
 theorem countable_univ_of_encodableByNat {alpha : Type u}
     (henc : EncodableByNat alpha) :
     FSet.Countable (FSet.Univ : FSet alpha) := by
@@ -261,6 +333,25 @@ theorem countable_univ_of_encodableByNat {alpha : Type u}
 def IntCode : Int -> Nat
   | Int.ofNat n => 2 * n
   | Int.negSucc n => 2 * n + 1
+
+def NatCodec.int : NatCodec Int where
+  encode := IntCode
+  decode := fun n =>
+    if n % 2 = 0 then
+      some (Int.ofNat (n / 2))
+    else
+      some (Int.negSucc (n / 2))
+  decode_encode := by
+    intro x
+    cases x with
+    | ofNat n =>
+        simp [IntCode]
+    | negSucc n =>
+        have hdiv : (2 * n + 1) / 2 = n := by
+          have hpos : 2 > 0 := by decide
+          rw [Nat.mul_add_div hpos]
+          simp
+        simp [IntCode, hdiv]
 
 /-!
 # Integer encodings

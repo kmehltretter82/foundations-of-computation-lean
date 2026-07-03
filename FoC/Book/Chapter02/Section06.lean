@@ -68,6 +68,12 @@ theorem subset_of_countable_set_countable {A B : FSet alpha}
     FSet.Countable A :=
   FSet.countable_subset hAB hB
 
+theorem subset_of_countable_set_countable_decidable {A B : FSet alpha}
+    [DecidablePred (fun x => x ∈ A)]
+    (hAB : FSet.Subset A B) (hB : FSet.Countable B) :
+    FSet.Countable A :=
+  FSet.countable_subset_decidable hAB hB
+
 theorem union_of_countably_infinite_sets_countably_infinite {A B : FSet alpha}
     (hA : FSet.CountablyInfinite A) (hB : FSet.CountablyInfinite B) :
     FSet.CountablyInfinite (FSet.Union A B) :=
@@ -86,6 +92,17 @@ theorem natural_numbers_encodable : Countability.EncodableByNat Nat :=
 
 theorem integers_encodable : Countability.EncodableByNat Int :=
   Countability.int_encodable
+
+def natural_numbers_codec : Countability.NatCodec Nat :=
+  Countability.NatCodec.nat
+
+def integers_codec : Countability.NatCodec Int :=
+  Countability.NatCodec.int
+
+theorem codec_types_are_countable {alpha : Type u}
+    (codec : Countability.NatCodec alpha) :
+    FSet.Countable (FSet.Univ : FSet alpha) :=
+  Countability.countable_univ_of_natCodec codec
 
 theorem nat_pair_on_diagonal (a b : Nat) :
     (a, b) ∈ Countability.DiagonalList (a + b) :=
@@ -158,6 +175,12 @@ theorem subset_of_finite_set_finite {A B : FSet alpha}
     (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
     FSet.Finite A :=
   FSet.finite_subset hAB hB
+
+theorem subset_of_finite_set_finite_decidable {A B : FSet alpha}
+    [DecidablePred (fun x => x ∈ A)]
+    (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
+    FSet.Finite A :=
+  FSet.finite_subset_decidable hAB hB
 
 theorem list_product_cardinality (xs : List alpha) (ys : List beta) :
     (ListCard.Pairs xs ys).length = xs.length * ys.length :=

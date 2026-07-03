@@ -74,6 +74,15 @@ theorem injective_iff_distinct_images (f : alpha -> beta) :
     Fn.Injective f <-> forall x y, x ≠ y -> f x ≠ f y :=
   Fn.injective_iff_distinct_images f
 
+theorem distinct_images_of_injective {f : alpha -> beta}
+    (hf : Fn.Injective f) : forall x y, x ≠ y -> f x ≠ f y :=
+  Fn.distinct_images_of_injective hf
+
+theorem injective_iff_distinct_images_decidable [DecidableEq alpha]
+    (f : alpha -> beta) :
+    Fn.Injective f <-> forall x y, x ≠ y -> f x ≠ f y :=
+  Fn.injective_iff_distinct_images_decidable f
+
 theorem bijective_definition (f : alpha -> beta) :
     Fn.Bijective f <-> Fn.Injective f ∧ Fn.Surjective f :=
   Iff.rfl
