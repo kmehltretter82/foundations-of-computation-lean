@@ -39,8 +39,9 @@ Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
 machine-encoding, and universal-machine vocabulary. The concrete encoding,
 interpreter, compiled-machine simulation, and faithful diagonal-pair
 copy-machine witness are present. The remaining implementation boundary is the
-uniform compiler and universal-runner machinery needed to turn the interpreter
-layer into one finite universal machine theorem without extra hypotheses.
+finite-source compiler and universal-prefix runner machinery needed to turn the
+interpreter layer into one finite universal machine theorem without extra
+hypotheses.
 
 ## Source Audit
 
@@ -52,6 +53,13 @@ pair-halting reductions, concrete machine descriptions, and universal-machine
 row coverage. The places where the textbook says to construct a machine are now
 represented either by concrete descriptions/proofs or by named compiler
 principles and closeout records in the reusable computability layer.
+
+Some textbook presentations are deliberately recast. The book's two-tape
+listing-machine and enumerated {lit}`T_n`/{lit}`G`/{lit}`U` storyline is
+represented here by semantic listing/range witnesses, encoded machine
+descriptions, diagonal pair maps, and universal-prefix row coverage. That
+presentation keeps the theorem shapes but makes the remaining finite-source
+machine construction obligations explicit.
 
 ## What to Inspect
 
@@ -75,9 +83,12 @@ book pages and reusable APIs identify concrete finite compiler constructions,
 finite/effective grammar construction, and the universal-machine construction
 as explicit deferred surfaces. The closeout records have been narrowed to the
 actual construction handoffs: Section 5.2 now relates semantic and finite
-grammar closeouts directly, while Section 5.3 packages row coverage from the
-encoded-input program compiler plus one universal runner. The surrounding
-theorems are therefore stated with closeout records or named construction
-hypotheses where a textbook proof says "build the machine" but the formal
-repository has not yet completed that finite machine description.
+grammar closeouts directly, while Section 5.3 uses the finite-source closeout,
+the universal-prefix row-coverage route, the prefix recognizer machine, and the
+encoded-input description compiler as the live construction path. The older
+encoded-input program-compiler surface remains as compatibility scaffolding,
+not as the route to finish first. The surrounding theorems are therefore stated
+with closeout records or named construction hypotheses where a textbook proof
+says "build the machine" but the formal repository has not yet completed that
+finite machine description.
 -/

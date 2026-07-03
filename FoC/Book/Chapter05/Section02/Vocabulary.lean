@@ -118,6 +118,13 @@ def SemanticDescriptionBoolDeciderCompilationAssumption : Prop :=
 def SemanticDovetailDescriptionCompilerAssumption : Prop :=
   Computability.SemanticDovetailDescriptionCompilerAssumption
 
+/-!
+The following three compatibility names are historical chapter-facing aliases.
+Despite the word {lit}`Concrete`, they are semantic compiler assumptions over
+Lean-level descriptions, not finite transition-table closeouts. Prefer the
+{lit}`Semantic...Assumption` names above in new theorem statements.
+-/
+
 def ConcreteDescriptionAcceptorCompilationConstruction : Prop :=
   SemanticDescriptionAcceptorCompilationAssumption
 
@@ -302,6 +309,13 @@ def ConcreteFiniteDovetailCompilerConstruction : Prop :=
 def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
   Computability.SemanticPartialUnaryRangeCompilerAssumption
 
+/-!
+Compatibility alias for the semantic partial-unary range compiler assumption.
+New statements should use
+{name}`SemanticPartialUnaryRangeCompilerAssumption` unless they are preserving
+an older chapter theorem surface.
+-/
+
 def ConcretePartialUnaryRangeDescriptionCompilerConstruction : Prop :=
   SemanticPartialUnaryRangeCompilerAssumption
 
@@ -312,7 +326,7 @@ def ConcreteFinitePartialUnaryRangeProgramCloseoutConstruction : Prop :=
   FinitePartialUnaryRangeProgram.RangeCloseoutConstruction
 
 /-!
-## Grouped construction surfaces
+# Grouped construction surfaces
 
 The names above remain available as compatibility vocabulary.  New Section 5.2
 statements should prefer these smaller surfaces when they need to pass several

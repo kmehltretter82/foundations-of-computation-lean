@@ -312,9 +312,10 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
 
 /-!
 **Section 5.2 finite-data handoffs.**  This is the explicit dependency graph
-for the remaining finite/effective route.  It deliberately does not manufacture
-the broad {name}`DecidableToAcceptableConstruction` field of the semantic
-closeout.  The safe stopped-decider variant is recorded separately, while the
+for the remaining finite/effective route. The closeout records still carry the
+semantic acceptor bridge when a final recursive-language theorem needs it, but
+the handoff lemmas below do not manufacture a broad semantic closeout from
+finite data. The safe stopped-decider variant is recorded separately, while the
 finite consequences below keep the paired-dovetail compiler as an explicit
 hypothesis and use the checked-certificate grammar compiler only as an adapter
 to the first-order presentation compiler.

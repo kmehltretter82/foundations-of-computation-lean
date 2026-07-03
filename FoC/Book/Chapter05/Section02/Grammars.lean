@@ -269,6 +269,13 @@ theorem concrete_machine_description_to_finite_general_grammar_construction :
 def SemanticBooleanGeneralGrammarRecognizerCompilerAssumption : Prop :=
   Computability.SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
 
+/-!
+Compatibility alias for the semantic grammar-recognizer compiler assumption.
+The finite/effective construction targets below keep {lit}`Concrete` because
+they mention finite presentations or finite-source compiler data. This alias
+does not.
+-/
+
 def ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction : Prop :=
   SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
 
@@ -317,6 +324,15 @@ def RecursivelyEnumerableToFiniteGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
   RecursivelyEnumerableToFiniteGeneralGrammarPrinciple terminal
 
+/-!
+These aliases preserve the chapter's older {lit}`Concrete...Closeout` names.
+The underlying records are layered: the semantic closeout contains semantic
+compiler principles, the finite-grammar closeout mixes semantic bridges with a
+finite-presentation grammar compiler, and the finite-data closeout narrows the
+dovetail and grammar-recognizer fields to finite-source or finite-presentation
+targets while still carrying the acceptor bridge needed by the theorem surface.
+-/
+
 abbrev ConcreteBooleanSection52CompilerCloseout :=
   BooleanSection52CompilerCloseout
 
@@ -327,7 +343,7 @@ abbrev ConcreteBooleanFiniteDataSection52CompilerCloseout :=
   BooleanFiniteDataSection52CompilerCloseout
 
 theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
-    (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction) :
+    (hcompile : SemanticBooleanGeneralGrammarRecognizerCompilerAssumption) :
     ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction :=
   Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
     hcompile

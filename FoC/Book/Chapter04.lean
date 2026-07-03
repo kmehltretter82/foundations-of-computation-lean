@@ -30,6 +30,13 @@ The unrestricted grammar section is also a bridge into Chapter 5: it introduces
 the kind of grammar power that later lines up with recursively enumerable
 languages.
 
+The reusable grammar layer is intentionally semantic-first. Core CFG and PDA
+structures carry derivation or transition relations directly, while finite
+production lists, finite stack alphabets, and other book-style finite
+presentations are supplied by secondary predicates and presentation records.
+Chapter-facing theorems call out the finite presentation hypotheses where they
+matter.
+
 ## What to Inspect
 
 Start with {module}`FoC.Grammars.CFG` and {module}`FoC.Grammars.CFL` for
@@ -60,11 +67,14 @@ exact PDA examples, intersection/difference with DFA and regular languages,
 CFL pumping, and nonclosure proofs. General grammars include finite-presentation
 countability, CFG embedding, substantial counting/order examples, constructive
 square-word generation, and family-level generation of the power-of-two unary
-language.
+language. The LL(1) page also includes an executable runner, a certified finite
+table generator, conflict detection, and fixed-point {lit}`FIRST`/{lit}`FOLLOW`
+machinery that fills much of the parser-generator side.
 
-Remaining deferrals are parser-generator algorithms, large purely
-application-oriented BNF enumerations, optional exercise families whose
-mathematical pattern is already represented by the general closure, pumping,
-or exact-language theorem schemas, and the final soundness/completeness
-preservation lemmas for the square and power-of-two unrestricted grammars.
+Remaining deferrals are large purely application-oriented BNF enumerations,
+optional exercise families whose mathematical pattern is already represented by
+the general closure, pumping, or exact-language theorem schemas, and the final
+soundness direction for the power-of-two unrestricted grammar. The unary-square
+grammar now has the constructive exact-language closeout that older status
+notes treated as deferred.
 -/

@@ -188,6 +188,10 @@ theorem runFrom_repeatWord_loop (M : DFA alpha state) (q : state)
 
 The repeated state in a long DFA run yields a loop that can be traversed any
 number of times without changing the accepting state.
+
+The length below is the length of the DFA's finite-state witness list. Since
+{lit}`FiniteType` allows duplicates, this is a valid finite bound rather than
+a canonical number of states.
 -/
 
 theorem dfa_pumpingLength [DecidableEq state] (M : DFA alpha state) :

@@ -12,6 +12,13 @@ sentential form containing at least one nonterminal.  This is the unrestricted
 grammar model needed at the end of Chapter 4 and for the transition to
 recursively enumerable languages in Chapter 5.
 
+The core structure is intentionally semantic: its production component is an
+arbitrary relation, not a finite list of rules. Finite/effective grammar
+content is supplied later by {lit}`GeneralGrammar.HasFiniteProductions` and
+the finite-presentation encodings below. This distinction matters because
+semantic unrestricted grammars are much broader than finite grammar
+presentations.
+
 Used by:
 - Chapter 4, Section 4.6: general grammars and unrestricted derivations.
 - Chapter 5: recursively enumerable languages are later related to general
@@ -61,6 +68,9 @@ The textbook later compares grammars with machines, so this file records a
 countable coding of finite grammar presentations.  A production is coded by
 coding its left and right sentential forms; a finite presentation is coded by
 the start symbol together with a finite list of productions.
+
+These definitions are the finite-data layer for results that need a concrete
+grammar presentation rather than an arbitrary production predicate.
 -/
 
 structure Production (terminal : Type u) (nonterminal : Type v) where

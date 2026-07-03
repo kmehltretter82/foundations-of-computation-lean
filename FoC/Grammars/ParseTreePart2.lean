@@ -154,6 +154,10 @@ end
 A longest path with more nonterminal nodes than the finite nonterminal set must
 repeat a root label. The following lemmas refine that pigeonhole fact into
 actual subtrees on the path.
+
+The finite bound is measured by the grammar's witness list. Because
+{lit}`FiniteType` permits duplicates, the length is a valid upper bound for
+this argument rather than a canonical nonterminal count.
 -/
 
 theorem ParseTree.exists_duplicate_nonterminal_on_long_path

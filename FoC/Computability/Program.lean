@@ -401,6 +401,12 @@ theorem recursivelyEnumerable_of_programCompiler
 
 /-!
 # Partial listings, ranges, and programs
+
+The names in this block are semantic normal forms. A {lit}`ListingProgram` is
+a function from stages to optional output words, and a
+{lit}`PartialUnaryRangeProgram` is a partial function on unary strings. They
+are not finite program syntax or machine descriptions; finite or
+machine-backed compilers are supplied by later construction principles.
 -/
 
 def ListingProgram (output : Type u) : Type u :=

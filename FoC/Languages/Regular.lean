@@ -604,6 +604,10 @@ theorem nfa_subset_construction_auto {state : Type} (M : NFA alpha state) :
 
 For a finite alphabet, state-elimination turns DFA-recognizable languages back
 into regular-expression languages, completing the equivalence.
+
+The finite alphabet is an explicit argument: {lit}`alphabet` must cover every
+symbol by {lit}`halphabet`. These theorems are therefore finite-alphabet
+conversion results over the otherwise arbitrary alphabet type {lit}`alpha`.
 -/
 
 theorem dfa_recognizable_regular (alphabet : List alpha)

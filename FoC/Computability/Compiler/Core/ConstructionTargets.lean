@@ -242,6 +242,13 @@ def PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstructi
       PairedRecognizerDovetailTotalOutputCode
       emitter
 
+/-
+The handoff and closed-handoff targets in this block are exported compatibility
+surfaces. New bounded-runner work should start from the output-compiled
+padded/equivalence contracts unless a theorem is adapting an existing legacy
+consumer. The bounded-runner handoff targets below are explicitly obsolete.
+-/
+
 def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :
     Prop :=
   forall accept reject : MachineDescription,

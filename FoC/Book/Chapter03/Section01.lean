@@ -18,6 +18,11 @@ predicate on words. The reusable vocabulary is developed in
 {module}`FoC.Languages.Words`, {module}`FoC.Languages.Language`, and
 {module}`FoC.Foundation.Finite`.
 
+Unlike the textbook definition, the core Lean vocabulary does not require every
+alphabet type to be finite or nonempty. The binary and a/b alphabets below are
+finite examples; later automata and regular-expression theorems add explicit
+finite alphabet data when a construction needs to enumerate symbols.
+
 The concrete alphabets below give the book's binary and a/b examples small
 finite types, so later automata and grammar examples can state
 membership facts with actual words.

@@ -157,6 +157,14 @@ def FiniteGeneralGrammarREEquivalencePrinciple
   forall L : Language terminal,
     FiniteGeneralGrammarAcceptabilityEquivalence L
 
+/-!
+The broad Boolean Section 5.2 closeout is a semantic package. It keeps the
+finite trace-search handoff, but its acceptor conversion, dovetail compiler,
+partial-unary range compiler, and unrestricted grammar-recognizer compiler are
+semantic principles over Lean-level objects. It should not be read as a finite
+machine-description closeout.
+-/
+
 structure BooleanSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
@@ -166,6 +174,14 @@ structure BooleanSection52CompilerCloseout where
   grammarRecognizerDescription :
     SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
 
+/-!
+The finite-grammar closeout moves the grammar-recognizer side to finite
+presentations, but it still carries semantic acceptor and dovetailing
+principles. Use it for finite grammar equivalence statements, not as evidence
+that every compiler dependency has already been reduced to first-order finite
+machine data.
+-/
+
 structure BooleanFiniteGrammarSection52Closeout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
@@ -174,6 +190,15 @@ structure BooleanFiniteGrammarSection52Closeout where
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction
   recursivelyEnumerableToFiniteGrammar :
     RecursivelyEnumerableToFiniteGeneralGrammarPrinciple Bool
+
+/-!
+The finite-data closeout is the narrowest Section 5.2 package currently used by
+the book-facing finite/effective route. Its paired-dovetail and grammar
+recognizer fields are finite-source or finite-presentation construction
+targets, and the recognizer-to-finite-grammar field is description-backed. It
+still includes the semantic decidable-to-acceptable principle because the
+recursive-language theorem consuming this package needs that bridge explicitly.
+-/
 
 structure BooleanFiniteDataSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction

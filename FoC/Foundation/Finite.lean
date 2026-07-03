@@ -24,6 +24,12 @@ namespace Foundation
 
 A finite type is represented by a list that contains every value of the type.
 This is the finite-state witness reused by automata and grammar modules.
+
+The list is a coverage witness, not a canonical cardinality: it may contain
+duplicates. Public theorems that mention {lit}`finite.elems.length` are using
+the length as a representation-dependent finite bound. Use the later
+{lit}`FiniteWithNoDuplicates` predicate when duplicate freedom is needed for
+cardinality-style reasoning.
 -/
 
 structure FiniteType (alpha : Type u) where

@@ -20,6 +20,11 @@ languages are not regular.
 These files are the chapter-facing layer over reusable language and automata
 modules in {module}`FoC.Languages`.
 
+The Lean library broadens the book's alphabet convention. Words and languages
+are defined over an arbitrary element type; finite alphabets are introduced as
+explicit hypotheses or finite witnesses for automata and regular-expression
+conversion theorems that need them.
+
 ## Story of the Chapter
 
 The chapter follows the book's progression. Sections 3.1 through 3.3 set up

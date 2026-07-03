@@ -12,6 +12,11 @@ Recursively enumerable languages can be viewed through machines, listings, or
 ranges of computable functions.  This module records those equivalent-looking
 forms as reusable predicates and bridges.
 
+The listing and range predicates here are semantic. A stream is an arbitrary
+Lean function, and partial streams may use arbitrary option-valued functions.
+Executable or finite-description enumerators appear only after a compiler or
+machine-backed construction is supplied.
+
 ## Book coordinates
 
 Used by:
@@ -30,6 +35,8 @@ open Languages
 
 A listing is a stream of words whose range is extensionally equal to the
 language.
+
+These are function-space witnesses, not finite machine programs.
 -/
 
 def ListedBy (stream : Nat -> Word alpha) (L : Language alpha) : Prop :=

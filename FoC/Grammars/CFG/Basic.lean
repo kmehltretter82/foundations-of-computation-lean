@@ -288,6 +288,11 @@ end SententialForm
 A CFG consists of a start nonterminal, a production predicate, and finite
 nonterminal data. The finite-presentation records and encodings package the
 book's finite list of productions as Lean data.
+
+The core {lit}`CFG` structure is semantic-first: productions are a predicate,
+not a stored finite list, and the terminal alphabet is not part of the core
+finite witness. Use {lit}`CFG.HasFiniteProductions` and the presentation
+records below when a theorem needs the book-style finite production data.
 -/
 
 structure CFG (terminal : Type u) (nonterminal : Type v) where

@@ -397,14 +397,30 @@ def ConcreteMachineDescriptionAcceptsEncodedInputLanguage
     (L : Language ConcreteMachineCodeSymbol) : Prop :=
   Computability.MachineDescriptionAcceptsEncodedInputLanguage D L
 
-def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
+def SemanticEncodedInputProgramAcceptorCompilationPrinciple : Prop :=
   EncodedInputProgramAcceptorCompilationPrinciple
 
-def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
+def SemanticEncodedInputDescriptionCompilerPrinciple : Prop :=
   EncodedInputDescriptionCompilerPrinciple
 
-def ConcreteBooleanDescriptionAcceptorCompilationConstruction : Prop :=
+def SemanticBooleanDescriptionAcceptorCompilationPrinciple : Prop :=
   DescriptionProgramAcceptorCompilationPrinciple
+
+/-!
+Compatibility aliases for semantic compiler principles. These names predate
+the current finite-source closeout route and should not be read as finite
+transition-table constructions. Prefer the {lit}`Semantic...Principle` names
+above in new theorem statements.
+-/
+
+def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
+  SemanticEncodedInputProgramAcceptorCompilationPrinciple
+
+def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
+  SemanticEncodedInputDescriptionCompilerPrinciple
+
+def ConcreteBooleanDescriptionAcceptorCompilationConstruction : Prop :=
+  SemanticBooleanDescriptionAcceptorCompilationPrinciple
 
 theorem concrete_encoded_input_program_compiler_of_boolean_description_compiler
     (hcompile : ConcreteBooleanDescriptionAcceptorCompilationConstruction) :

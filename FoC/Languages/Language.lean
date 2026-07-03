@@ -13,6 +13,10 @@ The book defines a language as a set of strings.  This module represents a
 language as a predicate on words and then reuses the extensional set operations
 from {module}`FoC.Foundation.Sets`.
 
+The alphabet type is arbitrary at this level. Results that need the book's
+finite-alphabet convention carry an explicit finite witness or covering list in
+the automata and regular-language modules.
+
 ## Book coordinates
 
 Used by:

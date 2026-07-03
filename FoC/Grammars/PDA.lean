@@ -63,6 +63,11 @@ end FiniteType
 
 A PDA is given by a start state, a transition relation over optional input and
 stack words, an accepting-state predicate, and a finite-state witness.
+
+As with grammars, this core structure is semantic-first. The transition system
+is a relation, and finite input or stack alphabets are not stored in the core
+record. The finite-presentation layer below supplies rule lists and accepting
+state data for book-style finite PDA descriptions.
 -/
 
 structure PDA (input : Type u) (stack : Type v) (state : Type w) where
@@ -78,6 +83,9 @@ namespace PDA
 
 The finite-presentation layer turns an arbitrary transition relation into the
 book's finite list of transition rules and accepting states.
+
+Use this layer, rather than the bare {name}`PDA` record, when a theorem needs
+explicit finite transition data.
 -/
 
 structure TransitionRule (input : Type u) (stack : Type v) (state : Type w) where
