@@ -32,6 +32,7 @@ def TransitionListParserConstruction : Prop :=
 inductive TransitionListParserMarker where
   | initial : TransitionListParserMarker
   | saved : Option MachineCodeSymbol -> TransitionListParserMarker
+deriving DecidableEq
 
 inductive TransitionListParserState where
   | findCount : TransitionListParserMarker -> TransitionListParserState
@@ -47,6 +48,7 @@ inductive TransitionListParserState where
   | markPosition : TransitionListParserState
   | returnLeft : Option MachineCodeSymbol -> TransitionListParserState
   | halt : TransitionListParserState
+deriving DecidableEq
 
 namespace TransitionListParserState
 

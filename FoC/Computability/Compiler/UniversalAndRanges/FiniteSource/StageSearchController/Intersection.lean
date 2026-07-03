@@ -137,6 +137,29 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionSelectedFuelRunF
     NestedCodePrefixRecognizerStageCode] using
     hselected input leftFuel rightFuel
 
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionSelectedFuelRunFiniteLeafDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    exists selectedState : Type,
+    exists selected : TuringMachine MachineCodeSymbol selectedState,
+      forall input : Word MachineCodeSymbol,
+      forall leftFuel : Nat,
+      forall rightFuel : Nat,
+        TuringMachine.HaltsOnInput selected
+            (codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode
+              input leftFuel rightFuel) <->
+          TuringMachine.HaltsOnInputIn left leftFuel input ∧
+            TuringMachine.HaltsOnInputIn right rightFuel input := by
+  rcases codePrefixExactFuelProductRunnerFiniteLeafDecidable left right with
+    ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+    NestedCodePrefixRecognizerStageCode] using
+    hselected input leftFuel rightFuel
+
 /--
 Finite-machine leaf for the fuel-pair enumerator used by recognizer
 intersection.
@@ -164,6 +187,29 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumerat
         simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
           NestedCodePrefixRecognizerStageCode] using hselected⟩
 
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumeratorFiniteLeafDecidable
+    {selectedState : Type uSimulator} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairEnumeratorObligation
+      selected := by
+  rcases codePrefixNestedPairEnumeratorFiniteLeafDecidable selected with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hboth input).mp hhalt with
+      ⟨rightFuel, leftFuel, hselected⟩
+    exact ⟨leftFuel, rightFuel, by
+      simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+        NestedCodePrefixRecognizerStageCode] using hselected⟩
+  · intro htarget
+    rcases htarget with ⟨leftFuel, rightFuel, hselected⟩
+    exact (hboth input).mpr
+      ⟨rightFuel, leftFuel, by
+        simpa [codePrefixStageSearchControllerBudgetCheckerIntersectionFuelPairCode,
+          NestedCodePrefixRecognizerStageCode] using hselected⟩
+
 /--
 Adapter from the selected-fuel runner and fuel-pair enumerator to the
 bounded-pair driver used by recognizer intersection.
@@ -172,6 +218,21 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairOblig
     CodePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation := by
   intro leftState rightState left right
   exact codePrefixExactFuelProductSearchFiniteLeaf left right
+
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionBoundedPairObligation_coreDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    exists bothState : Type,
+    exists both : TuringMachine MachineCodeSymbol bothState,
+      forall input : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput both input <->
+          exists leftFuel : Nat,
+          exists rightFuel : Nat,
+            TuringMachine.HaltsOnInputIn left leftFuel input ∧
+              TuringMachine.HaltsOnInputIn right rightFuel input := by
+  exact codePrefixExactFuelProductSearchFiniteLeafDecidable left right
 
 /--
 Finite-machine leaf for intersecting two same-alphabet recognizers.  The
@@ -182,6 +243,19 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionObligation_core 
     CodePrefixStageSearchControllerBudgetCheckerIntersectionObligation := by
   intro leftState rightState left right
   exact codePrefixProductHaltingSearchFiniteLeaf left right
+
+theorem codePrefixStageSearchControllerBudgetCheckerIntersectionObligation_coreDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    exists checkerState : Type,
+    exists checker : TuringMachine MachineCodeSymbol checkerState,
+      forall input : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput checker input <->
+          TuringMachine.HaltsOnInput left input ∧
+            TuringMachine.HaltsOnInput right input := by
+  exact codePrefixProductHaltingSearchFiniteLeafDecidable left right
 
 /--
 Concrete finite-machine construction for the bounded checker driver.  This is

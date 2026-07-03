@@ -400,6 +400,13 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopObligation_core
       attempt := by
   exact codePrefixNestedHaltingSearchFiniteLeaf attempt
 
+theorem codePrefixStageSearchControllerBudgetFuelOuterLoopObligation_coreDecidable
+    {attemptState : Type} [DecidableEq attemptState]
+    (attempt : TuringMachine MachineCodeSymbol attemptState) :
+    CodePrefixStageSearchControllerBudgetFuelOuterLoopObligation
+      attempt := by
+  exact codePrefixNestedHaltingSearchFiniteLeafDecidable attempt
+
 /--
 Concrete finite-machine construction for the raw budget/fuel dovetail driver.
 The shared generated-call helper enumerates budget/fuel pairs, rebuilds the
@@ -429,6 +436,12 @@ theorem codePrefixStageSearchControllerBudgetRawSearchObligation_core
     (checker : TuringMachine MachineCodeSymbol checkerState) :
     CodePrefixStageSearchControllerBudgetRawSearchObligation checker := by
   exact codePrefixNestedHaltingSearchFiniteLeaf checker
+
+theorem codePrefixStageSearchControllerBudgetRawSearchObligation_coreDecidable
+    {checkerState : Type} [DecidableEq checkerState]
+    (checker : TuringMachine MachineCodeSymbol checkerState) :
+    CodePrefixStageSearchControllerBudgetRawSearchObligation checker := by
+  exact codePrefixNestedHaltingSearchFiniteLeafDecidable checker
 
 /--
 Finite-machine obligation for the outer budget/fuel dovetail driver.  The raw
@@ -518,6 +531,18 @@ theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_core
             TuringMachine.HaltsOnInput checker
               (CodePrefixRecognizerStageCode encoded budget) := by
   exact codePrefixNestedHaltingSearchFiniteLeaf checker
+
+theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_coreDecidable
+    {checkerState : Type} [DecidableEq checkerState]
+    (checker : TuringMachine MachineCodeSymbol checkerState) :
+    exists searcherState : Type,
+    exists searcher : TuringMachine MachineCodeSymbol searcherState,
+      forall encoded : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput searcher encoded <->
+          exists budget : Nat,
+            TuringMachine.HaltsOnInput checker
+              (CodePrefixRecognizerStageCode encoded budget) := by
+  exact codePrefixNestedHaltingSearchFiniteLeafDecidable checker
 
 /-- Finite-machine leaf for enumerating budgets using a bounded checker. -/
 theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :

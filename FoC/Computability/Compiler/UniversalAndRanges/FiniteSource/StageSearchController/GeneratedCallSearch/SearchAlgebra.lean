@@ -252,6 +252,18 @@ theorem codePrefixNestedHaltingSearchFiniteLeaf
     (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
       M (fun inner => CodePrefixRecognizerStageCode input inner))
 
+theorem codePrefixNestedHaltingSearchFiniteLeafDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixNestedHaltingSearchConstruction M := by
+  rcases codePrefixNestedExactFuelSearchFiniteLeafDecidable M with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  exact Iff.trans (hsearcher input)
+    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M (fun inner => CodePrefixRecognizerStageCode input inner))
+
 /--
 Unbounded product search for recognizer intersection, hiding both exact fuel
 witnesses behind ordinary halting.
@@ -277,6 +289,20 @@ theorem codePrefixProductHaltingSearchFiniteLeaf
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixProductHaltingSearchConstruction left right := by
   rcases codePrefixExactFuelProductSearchFiniteLeaf left right with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  exact Iff.trans (hboth input)
+    (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input)
+
+theorem codePrefixProductHaltingSearchFiniteLeafDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixProductHaltingSearchConstruction left right := by
+  rcases codePrefixExactFuelProductSearchFiniteLeafDecidable left right with
     ⟨bothState, both, hboth⟩
   refine ⟨bothState, both, ?_⟩
   intro input

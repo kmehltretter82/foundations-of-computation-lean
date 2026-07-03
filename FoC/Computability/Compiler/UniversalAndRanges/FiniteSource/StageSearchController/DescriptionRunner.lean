@@ -21,6 +21,7 @@ inductive BudgetCheckerDescriptionRunnerState
   | scan : BudgetCheckerDescriptionRunnerState descriptionState
   | run : descriptionState ->
       BudgetCheckerDescriptionRunnerState descriptionState
+deriving DecidableEq
 
 namespace BudgetCheckerDescriptionRunnerState
 

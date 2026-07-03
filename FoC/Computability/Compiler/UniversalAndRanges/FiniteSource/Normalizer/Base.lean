@@ -93,6 +93,7 @@ inductive CodePrefixParserNormalizerState where
   | restoreLeft : CodePrefixParserNormalizerState
   | restoreForward : CodePrefixParserNormalizerState
   | halt : CodePrefixParserNormalizerState
+deriving DecidableEq
 
 namespace CodePrefixParserNormalizerState
 
