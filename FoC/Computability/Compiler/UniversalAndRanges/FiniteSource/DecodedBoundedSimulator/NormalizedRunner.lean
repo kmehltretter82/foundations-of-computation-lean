@@ -1260,6 +1260,57 @@ def decodedBoundedSimulatorTransitionLoopPipelineCode
               D stage config)
       | _ => none
 
+def decodedBoundedSimulatorTransitionLoopPipelineIterateCode
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodedBoundedSimulatorInitialWorkCodeTransform tokens with
+  | none => none
+  | some work =>
+      match decodedBoundedSimulatorTransitionLoopWorkDecode work with
+      | some (_D, stage, _config, []) =>
+          match
+            decodedBoundedSimulatorTransitionLoopIterateWorkStepCode
+              stage work with
+          | none => none
+          | some finalWork =>
+              decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+                finalWork
+      | _ => none
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+      decodedBoundedSimulatorTransitionLoopPipelineCode tokens := by
+  unfold decodedBoundedSimulatorTransitionLoopPipelineIterateCode
+  unfold decodedBoundedSimulatorTransitionLoopPipelineCode
+  cases hinit :
+      decodedBoundedSimulatorInitialWorkCodeTransform tokens with
+  | none =>
+      rfl
+  | some work =>
+      cases hdecode :
+          decodedBoundedSimulatorTransitionLoopWorkDecode work with
+      | none =>
+          simp [hdecode]
+      | some parsed =>
+          rcases parsed with ⟨D, stage, config, suffix⟩
+          cases suffix with
+          | nil =>
+              have hwork :
+                  work =
+                    decodedBoundedSimulatorTransitionLoopWorkCode
+                      D stage config := by
+                simpa [decodedBoundedSimulatorTransitionLoopWorkCode] using
+                  decodedBoundedSimulatorTransitionLoopWorkDecode_eq_some_encodeAppend
+                    hdecode
+              subst work
+              simp [
+                decodedBoundedSimulatorTransitionLoopWorkDecode_encode,
+                decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encode,
+                decodedBoundedSimulatorTransitionLoopIteratedWorkCode]
+          | cons _ _ =>
+              simp [hdecode]
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineCode_normalizedInput_iff
     (stage : Nat) (D : MachineDescription)
     (input : Word MachineCodeSymbol) :
