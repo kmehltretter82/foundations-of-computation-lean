@@ -382,30 +382,5 @@ theorem codePrefixStageSearchControllerBudgetCheckerDecidableConstruction_core :
       (codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff
         simulator encoded budget))
 
-/-- Finite-machine leaf for checking one encoded input at one budget. -/
-theorem codePrefixStageSearchControllerBudgetCheckerConstruction_core :
-    forall {simulatorState : Type}
-      (simulator : TuringMachine MachineCodeSymbol simulatorState),
-        CodePrefixStageSearchControllerBudgetCheckerConstruction simulator := by
-  intro simulatorState simulator
-  rcases codePrefixStageSearchControllerBudgetCheckerFiniteLeaf
-      simulator with
-    ⟨checkerState, checker, hchecker⟩
-  refine ⟨checkerState, checker, ?_⟩
-  intro encoded budget
-  exact Iff.trans (hchecker encoded budget)
-    (Iff.symm
-      (codePrefixStageSearchControllerProgram_run_eq_some_iff
-        simulator encoded budget))
-
-theorem codePrefixStageSearchControllerBudgetCheckerConstruction_core_of_decidable
-    {simulatorState : Type} [DecidableEq simulatorState]
-    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
-    CodePrefixStageSearchControllerBudgetCheckerConstruction simulator :=
-  codePrefixStageSearchControllerBudgetCheckerConstruction_of_decidable
-    (codePrefixStageSearchControllerBudgetCheckerDecidableConstruction_core
-      simulator)
-
-
 end Computability
 end FoC

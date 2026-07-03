@@ -544,24 +544,6 @@ theorem codePrefixStageSearchControllerBudgetEnumeratorConstruction_coreDecidabl
               (CodePrefixRecognizerStageCode encoded budget) := by
   exact codePrefixNestedHaltingSearchFiniteLeafDecidable checker
 
-/-- Finite-machine leaf for enumerating budgets using a bounded checker. -/
-theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :
-    CodePrefixStageSearchControllerBudgetSearchSequencingConstruction := by
-  intro simulatorState checkerState simulator checker hcheckerSpec
-  rcases codePrefixStageSearchControllerBudgetEnumeratorConstruction_core
-      checker with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro encoded
-  constructor
-  · intro hhalt
-    rcases (hsearcher encoded).mp hhalt with ⟨budget, hbudget⟩
-    exact ⟨budget, (hcheckerSpec encoded budget).mp hbudget⟩
-  · intro hprogram
-    rcases hprogram with ⟨budget, hrun⟩
-    exact (hsearcher encoded).mpr
-      ⟨budget, (hcheckerSpec encoded budget).mpr hrun⟩
-
 theorem codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction_core :
     CodePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction := by
   intro simulatorState checkerState _ simulator checker hcheckerSpec
@@ -585,25 +567,6 @@ theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
     codePrefixStageSearchControllerProgramDecidableCompilerConstruction_of_components
       codePrefixStageSearchControllerBudgetCheckerDecidableConstruction_core
       codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction_core
-
-theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
-    CodePrefixStageSearchControllerProgramCompilerConstruction := by
-  exact
-    codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable
-      codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
-
-theorem codePrefixStageSearchControllerProgramCompilerConstruction_core_state
-    {simulatorState : Type} [DecidableEq simulatorState]
-    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
-    exists searcherState : Type,
-    exists searcher : TuringMachine MachineCodeSymbol searcherState,
-      forall encoded : Word MachineCodeSymbol,
-        TuringMachine.HaltsOnInput searcher encoded <->
-          ProgramHaltsWithOutput
-            (codePrefixStageSearchControllerProgram simulator) encoded [] :=
-  codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable_state
-    codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
-    simulator
 
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
