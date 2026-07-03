@@ -688,22 +688,33 @@ theorem encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCom
       (encodedInputBoolProgram_halts_encodeCodeWordAsInput_iff P w)
 
 theorem encodedInputDescriptionCompilerPrinciple_of_programCompiler
+    (hcompile : EncodedInputProgramAcceptorCompilationPrinciple)
+    {L : Language MachineCodeSymbol}
+    {trace : Word MachineCodeSymbol -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
+    (htrace : AcceptanceTrace trace L) :
+    exists D : MachineDescription,
+      MachineDescriptionAcceptsEncodedInputLanguage D L := by
+  cases hcompile (TraceRecognizerProgram trace) with
+  | intro D hD =>
+      exists D
+      exact encodedInputProgramCompiledByDescription_acceptsLanguage
+        (traceRecognizerProgram_acceptsLanguage htrace) hD
+
+theorem semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
     (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
     EncodedInputDescriptionCompilerPrinciple := by
   intro L hL
   cases recursivelyEnumerable_has_acceptanceTrace hL with
   | intro trace htrace =>
       classical
-      cases hcompile (TraceRecognizerProgram trace) with
-      | intro D hD =>
-          exists D
-          exact encodedInputProgramCompiledByDescription_acceptsLanguage
-            (traceRecognizerProgram_acceptsLanguage htrace) hD
+      exact encodedInputDescriptionCompilerPrinciple_of_programCompiler
+        hcompile htrace
 
 theorem encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     EncodedInputDescriptionCompilerPrinciple :=
-  encodedInputDescriptionCompilerPrinciple_of_programCompiler
+  semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
     (encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
       hcompile)
 
@@ -711,7 +722,7 @@ theorem codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
     (hclose : CodeUniversalPrefixSection53Closeout) :
     CodeUniversalPrefixRowsCoverConstruction :=
   codeUniversalPrefixRowsCoverConstruction_of_constructions
-    (encodedInputDescriptionCompilerPrinciple_of_programCompiler
+    (semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
       hclose.encodedInputProgramCompiler)
     hclose.universalRunner
 

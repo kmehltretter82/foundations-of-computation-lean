@@ -800,9 +800,10 @@ theorem complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple)
     {L : Language Bool}
     {accept reject : Word Bool -> Nat -> Prop}
+    [∀ w n, Decidable (accept w n)]
+    [∀ w n, Decidable (reject w n)]
     (htraces : ComplementaryAcceptanceTraces accept reject L) :
     TuringDecidable L := by
-  classical
   cases hcompile accept reject with
   | intro D hD =>
       exact programBoolDecidableByDescription_turingDecidable
@@ -814,6 +815,7 @@ theorem reCoRe_turingDecidable_of_dovetailDescriptionCompiler
     {L : Language Bool}
     (h : RecursivelyEnumerableWithComplement L) :
     TuringDecidable L := by
+  classical
   cases recursivelyEnumerable_with_complement_has_complementaryTraces h with
   | intro accept haccept =>
       cases haccept with

@@ -85,9 +85,10 @@ noncomputable def CodeCandidateStream
     (code : alpha -> Nat) : Nat -> Option alpha :=
   CodeCandidates code
 
-noncomputable def BoundedAcceptanceTraceListing
+def BoundedAcceptanceTraceListing
     (candidates : Nat -> Option (Word alpha))
-    (trace : Word alpha -> Nat -> Prop) :
+    (trace : Word alpha -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)] :
     Nat -> Option (Word alpha) :=
   BoundedTraceListing candidates trace
 
@@ -101,6 +102,7 @@ theorem code_candidate_stream_covers
 theorem bounded_acceptance_trace_listing_partially_lists
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : LanguageWordStreamCovers candidates)
     (htrace : LanguageAcceptanceTrace trace L) :
@@ -125,6 +127,7 @@ theorem empty_language_is_partially_listable :
 theorem acceptance_trace_partially_listable_by_bounded_search
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : LanguageWordStreamCovers candidates)
     (htrace : LanguageAcceptanceTrace trace L) :
@@ -135,6 +138,7 @@ theorem acceptance_trace_partially_listable_by_code_bounded_search
     {code : Word alpha -> Nat}
     (hcode : FoC.Foundation.Fn.Injective code)
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (htrace : LanguageAcceptanceTrace trace L) :
     LanguagePartiallyListable L :=
@@ -146,6 +150,7 @@ theorem recursively_enumerable_language_partially_listable_by_code_bounded_searc
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguage L) :
     LanguagePartiallyListable L := by
+  classical
   rcases recursively_enumerable_language_has_acceptance_trace h with
     ⟨trace, htrace⟩
   exact acceptance_trace_partially_listable_by_code_bounded_search
@@ -291,6 +296,7 @@ theorem partially_listable_language_range_of_partial_unary_string_function
 theorem acceptance_trace_partial_range_by_bounded_search
     {candidates : Nat -> Option (Word output)}
     {trace : Word output -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language output}
     (hcovers : LanguageWordStreamCovers candidates)
     (htrace : LanguageAcceptanceTrace trace L) :
@@ -301,6 +307,7 @@ theorem acceptance_trace_partial_range_by_code_bounded_search
     {code : Word output -> Nat}
     (hcode : FoC.Foundation.Fn.Injective code)
     {trace : Word output -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language output}
     (htrace : LanguageAcceptanceTrace trace L) :
     PartialRangeOfUnaryStringFunction L :=
@@ -312,6 +319,7 @@ theorem recursively_enumerable_language_partial_range_by_code_bounded_search
     {L : Language output}
     (h : RecursivelyEnumerableLanguage L) :
     PartialRangeOfUnaryStringFunction L := by
+  classical
   rcases recursively_enumerable_language_has_acceptance_trace h with
     ⟨trace, htrace⟩
   exact acceptance_trace_partial_range_by_code_bounded_search hcode htrace

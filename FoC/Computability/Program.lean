@@ -486,21 +486,13 @@ those two parameters into one unary input, turning the program range into an
 ordinary partial unary range.
 -/
 
-noncomputable def StagedUnaryProgramPairRange
+def StagedUnaryProgramPairRange
     (P : StagedProgram Unit output) :
     Word Unit -> Option (Word output) :=
-  fun w => by
-    classical
-    let k := Word.Length w
-    exact
-      if h : exists inputLen : Nat, exists stage : Nat,
-          FoC.Foundation.Countability.PairCode inputLen stage = k then
-        let inputLen := Classical.choose h
-        let hstage := Classical.choose_spec h
-        let stage := Classical.choose hstage
-        P.run (UnaryInputWord inputLen) stage
-      else
-        none
+  fun w =>
+    match PairCodeDecode (Word.Length w) with
+    | none => none
+    | some (inputLen, stage) => P.run (UnaryInputWord inputLen) stage
 
 theorem stagedUnaryProgramPairRange_pairCode
     (P : StagedProgram Unit output) (inputLen stage : Nat) :
@@ -508,25 +500,8 @@ theorem stagedUnaryProgramPairRange_pairCode
         (UnaryInputWord
           (FoC.Foundation.Countability.PairCode inputLen stage)) =
       P.run (UnaryInputWord inputLen) stage := by
-  classical
   unfold StagedUnaryProgramPairRange
-  simp [unaryInputWord_length]
-  have hExists : exists i : Nat, exists n : Nat,
-      FoC.Foundation.Countability.PairCode i n =
-        FoC.Foundation.Countability.PairCode inputLen stage :=
-    ⟨inputLen, stage, rfl⟩
-  rw [dif_pos hExists]
-  let i := Classical.choose hExists
-  let hstage := Classical.choose_spec hExists
-  let n := Classical.choose hstage
-  have hp : FoC.Foundation.Countability.PairCode i n =
-      FoC.Foundation.Countability.PairCode inputLen stage := by
-    simpa [i, n, hstage] using Classical.choose_spec hstage
-  rcases FoC.Foundation.Countability.pairCode_injective_left hp with
-    ⟨hi, hn⟩
-  change P.run (UnaryInputWord i) n =
-    P.run (UnaryInputWord inputLen) stage
-  rw [hi, hn]
+  simp [unaryInputWord_length, pairCodeDecode_pairCode]
 
 theorem stagedUnaryProgramPairRange_equal_programRange
     (P : StagedProgram Unit output) :
@@ -537,17 +512,15 @@ theorem stagedUnaryProgramPairRange_equal_programRange
   constructor
   · intro h
     rcases h with ⟨w, hw⟩
-    classical
     unfold StagedUnaryProgramPairRange at hw
-    by_cases hpair : exists inputLen : Nat, exists stage : Nat,
-        FoC.Foundation.Countability.PairCode inputLen stage =
-          Word.Length w
-    · simp [hpair] at hw
-      let inputLen := Classical.choose hpair
-      let hstage := Classical.choose_spec hpair
-      let stage := Classical.choose hstage
-      exact ⟨UnaryInputWord inputLen, ⟨stage, hw⟩⟩
-    · simp [hpair] at hw
+    cases hpair : PairCodeDecode (Word.Length w) with
+    | none =>
+        simp [hpair] at hw
+    | some pair =>
+        cases pair with
+        | mk inputLen stage =>
+            simp [hpair] at hw
+            exact ⟨UnaryInputWord inputLen, ⟨stage, hw⟩⟩
   · intro h
     rcases h with ⟨input, stage, hstage⟩
     exists UnaryInputWord

@@ -115,77 +115,133 @@ theorem codeCandidates_covers
   intro x
   exact ⟨code x, codeCandidates_of_code hcode x⟩
 
-noncomputable def PairCodeDecode (n : Nat) :
-    Option (Nat × Nat) :=
-  by
-    classical
-    exact
-      if h : exists left : Nat, exists right : Nat,
-          Foundation.Countability.PairCode left right = n then
-        let left := Classical.choose h
-        let hright := Classical.choose_spec h
-        let right := Classical.choose hright
-        some (left, right)
+def PairCodeDecodeWithFuel : Nat -> Nat -> Option (Nat × Nat)
+  | 0, _ => none
+  | _ + 1, 0 => some (0, 0)
+  | fuel + 1, n + 1 =>
+      if (n + 1) % 2 = 0 then
+        some (0, (n + 1) / 2)
       else
-        none
+        match PairCodeDecodeWithFuel fuel ((n + 1) / 2) with
+        | none => none
+        | some pair => some (pair.1 + 1, pair.2)
+
+def PairCodeDecode (n : Nat) : Option (Nat × Nat) :=
+  PairCodeDecodeWithFuel (n + 1) n
+
+theorem pairCodeDecodeWithFuel_even {fuel m : Nat}
+    (hbound : 2 * m < fuel) :
+    PairCodeDecodeWithFuel fuel (2 * m) = some (0, m) := by
+  cases fuel with
+  | zero =>
+      simp at hbound
+  | succ fuel =>
+      cases m with
+      | zero =>
+          rfl
+      | succ m =>
+          have hsucc : 2 * (m + 1) = (2 * m + 1) + 1 := by
+            lia
+          rw [hsucc]
+          have hmod : ((2 * m + 1) + 1) % 2 = 0 := by
+            rw [show (2 * m + 1) + 1 = 2 * (m + 1) by lia]
+            exact Nat.mul_mod_right 2 (m + 1)
+          have hdiv : ((2 * m + 1) + 1) / 2 = m + 1 := by
+            rw [show (2 * m + 1) + 1 = 2 * (m + 1) by lia]
+            exact Nat.mul_div_right (m + 1) (by decide : 0 < 2)
+          simp [PairCodeDecodeWithFuel, hmod, hdiv]
+
+theorem pairCodeDecodeWithFuel_odd {fuel m : Nat}
+    (hbound : 2 * m + 1 < fuel) :
+    PairCodeDecodeWithFuel fuel (2 * m + 1) =
+      match PairCodeDecodeWithFuel (fuel - 1) m with
+      | none => none
+      | some pair => some (pair.1 + 1, pair.2) := by
+  cases fuel with
+  | zero =>
+      simp at hbound
+  | succ fuel =>
+      have hmod : (2 * m + 1) % 2 ≠ 0 := by
+        simp [Nat.mul_comm]
+      have hdiv : (2 * m + 1) / 2 = m := by
+        rw [Nat.add_comm]
+        simp [Nat.add_mul_div_left]
+      simp [PairCodeDecodeWithFuel, hdiv]
+
+theorem pairCodeDecodeWithFuel_pairCode
+    {fuel left right : Nat}
+    (hbound : Foundation.Countability.PairCode left right < fuel) :
+    PairCodeDecodeWithFuel fuel
+        (Foundation.Countability.PairCode left right) =
+      some (left, right) := by
+  induction left generalizing fuel with
+  | zero =>
+      simpa [Foundation.Countability.PairCode]
+        using pairCodeDecodeWithFuel_even (fuel := fuel) (m := right)
+          hbound
+  | succ left ih =>
+      rw [Foundation.Countability.PairCode]
+      have hbound' :
+          2 * Foundation.Countability.PairCode left right + 1 < fuel := by
+        simpa [Foundation.Countability.PairCode] using hbound
+      have hprev :
+          Foundation.Countability.PairCode left right < fuel - 1 := by
+        cases fuel with
+        | zero =>
+            simp at hbound'
+        | succ fuel =>
+            simp
+            lia
+      rw [pairCodeDecodeWithFuel_odd (fuel := fuel)
+        (m := Foundation.Countability.PairCode left right) hbound']
+      rw [ih hprev]
 
 theorem pairCodeDecode_pairCode (left right : Nat) :
     PairCodeDecode
         (Foundation.Countability.PairCode left right) =
       some (left, right) := by
-  classical
-  unfold PairCodeDecode
-  have hExists : exists left' : Nat, exists right' : Nat,
-      Foundation.Countability.PairCode left' right' =
-        Foundation.Countability.PairCode left right :=
-    ⟨left, right, rfl⟩
-  rw [dif_pos hExists]
-  let left' := Classical.choose hExists
-  let hright := Classical.choose_spec hExists
-  let right' := Classical.choose hright
-  have hpair :
-      Foundation.Countability.PairCode left' right' =
-        Foundation.Countability.PairCode left right := by
-    simpa [left', right', hright] using Classical.choose_spec hright
-  rcases Foundation.Countability.pairCode_injective_left hpair with
-    ⟨hleft, hright'⟩
-  change some (left', right') = some (left, right)
-  rw [hleft, hright']
+  induction left with
+  | zero =>
+      unfold PairCodeDecode
+      exact pairCodeDecodeWithFuel_pairCode (by
+        simp [Foundation.Countability.PairCode])
+  | succ left ih =>
+      unfold PairCodeDecode
+      exact pairCodeDecodeWithFuel_pairCode (by simp)
 
-noncomputable def BoundedTraceListing
+def BoundedTraceListing
     (candidates : Nat -> Option (Word alpha))
-    (trace : Word alpha -> Nat -> Prop) :
+    (trace : Word alpha -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)] :
     Nat -> Option (Word alpha) :=
-  by
-    classical
-    exact fun n =>
-      match PairCodeDecode n with
-      | none => none
-      | some (candidateIndex, stage) =>
-          match candidates candidateIndex with
-          | none => none
-          | some w => if trace w stage then some w else none
+  fun n =>
+    match PairCodeDecode n with
+    | none => none
+    | some (candidateIndex, stage) =>
+        match candidates candidateIndex with
+        | none => none
+        | some w => if trace w stage then some w else none
 
 theorem boundedTraceListing_pairCode_of_trace
     (candidates : Nat -> Option (Word alpha))
     (trace : Word alpha -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)]
     {candidateIndex stage : Nat} {w : Word alpha}
     (hcandidate : candidates candidateIndex = some w)
     (htrace : trace w stage) :
     BoundedTraceListing candidates trace
         (Foundation.Countability.PairCode candidateIndex stage) =
       some w := by
-  classical
   simp [BoundedTraceListing, pairCodeDecode_pairCode,
     hcandidate, htrace]
 
 theorem boundedTraceListing_trace_of_some
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {n : Nat} {w : Word alpha}
     (h : BoundedTraceListing candidates trace n = some w) :
     exists stage : Nat, trace w stage := by
-  classical
   unfold BoundedTraceListing at h
   cases hpair : PairCodeDecode n with
   | none =>
@@ -206,6 +262,7 @@ theorem boundedTraceListing_trace_of_some
 theorem acceptanceTrace_boundedTraceListing_partiallyListedBy
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : WordStreamCovers candidates)
     (htrace : AcceptanceTrace trace L) :
@@ -226,6 +283,7 @@ theorem acceptanceTrace_boundedTraceListing_partiallyListedBy
 theorem acceptanceTrace_partiallyListable_of_word_stream
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : WordStreamCovers candidates)
     (htrace : AcceptanceTrace trace L) :
@@ -237,6 +295,7 @@ theorem acceptanceTrace_partiallyListable_of_word_code
     {code : Word alpha -> Nat}
     (hcode : Foundation.Fn.Injective code)
     {trace : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (htrace : AcceptanceTrace trace L) :
     PartiallyListable L :=
@@ -494,6 +553,7 @@ theorem partiallyListable_partialRangeOfUnaryFunction
 theorem acceptanceTrace_partialRangeOfUnaryFunction_of_word_stream
     {candidates : Nat -> Option (Word output)}
     {trace : Word output -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language output}
     (hcovers : WordStreamCovers candidates)
     (htrace : AcceptanceTrace trace L) :
@@ -505,6 +565,7 @@ theorem acceptanceTrace_partialRangeOfUnaryFunction_of_word_code
     {code : Word output -> Nat}
     (hcode : Foundation.Fn.Injective code)
     {trace : Word output -> Nat -> Prop}
+    [∀ w n, Decidable (trace w n)]
     {L : Language output}
     (htrace : AcceptanceTrace trace L) :
     PartialRangeOfUnaryFunction L :=

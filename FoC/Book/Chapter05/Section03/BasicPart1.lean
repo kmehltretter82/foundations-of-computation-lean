@@ -940,7 +940,7 @@ theorem concrete_machine_encoded_description_recognizes_input_language
 theorem concrete_encoded_input_description_compiler_of_program_compiler
     (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
     ConcreteEncodedInputDescriptionCompilerConstruction :=
-  Computability.encodedInputDescriptionCompilerPrinciple_of_programCompiler
+  Computability.semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
     hcompile
 
 theorem concrete_encoded_input_description_compiler_decoder_universal

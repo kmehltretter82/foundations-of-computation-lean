@@ -870,6 +870,8 @@ theorem complementary_traces_recursive_language_of_concrete_dovetail_description
     (hcompile : ConcreteDovetailDescriptionCompilerConstruction)
     {L : Language Bool}
     {accept reject : Word Bool -> Nat -> Prop}
+    [∀ w n, Decidable (accept w n)]
+    [∀ w n, Decidable (reject w n)]
     (htraces : LanguageComplementaryAcceptanceTraces accept reject L) :
     RecursiveLanguage L :=
   Computability.complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
