@@ -46,6 +46,9 @@ jobs:
               id: build
               run: echo "path=$(lake query :literateHtml)" >> "$GITHUB_OUTPUT"
 
+            - name: Slim literate site
+              run: node scripts/slim-literate-html.mjs "${{ steps.build.outputs.path }}"
+
             - name: Upload Pages artifact
               uses: actions/upload-pages-artifact@v5
               with:
