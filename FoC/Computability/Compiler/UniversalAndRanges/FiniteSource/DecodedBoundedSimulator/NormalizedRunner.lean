@@ -1075,6 +1075,137 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff
       D target.snd
 
 /--
+Complete work payload after semantically iterating the transition loop.
+-/
+def decodedBoundedSimulatorTransitionLoopIteratedWorkCode
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration) :
+    Word MachineCodeSymbol :=
+  let target :=
+    decodedBoundedSimulatorTransitionLoopIterateStepTarget
+      stage D stage config
+  decodedBoundedSimulatorTransitionLoopWorkCode
+    D target.fst target.snd
+
+/--
+Semantic code transform for the whole normalized transition-loop pipeline.
+-/
+def decodedBoundedSimulatorTransitionLoopPipelineCode
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodedBoundedSimulatorInitialWorkCodeTransform tokens with
+  | none => none
+  | some work =>
+      match decodedBoundedSimulatorTransitionLoopWorkDecode work with
+      | some (D, stage, config, []) =>
+          decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+            (decodedBoundedSimulatorTransitionLoopIteratedWorkCode
+              D stage config)
+      | _ => none
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineCode_normalizedInput_iff
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineCode
+        (decodedBoundedSimulatorNormalizedInput stage D input) =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopConfig stage D input).state =
+        D.halt := by
+  simp [decodedBoundedSimulatorTransitionLoopPipelineCode,
+    decodedBoundedSimulatorInitialWorkCodeTransform_normalizedInput,
+    decodedBoundedSimulatorInitialWorkCode_decode,
+    decodedBoundedSimulatorTransitionLoopIteratedWorkCode,
+    decodedBoundedSimulatorTransitionLoopConfig,
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff]
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopConfig
+            stage D input).state = D.halt := by
+  constructor
+  · intro hpipeline
+    unfold decodedBoundedSimulatorTransitionLoopPipelineCode at hpipeline
+    unfold decodedBoundedSimulatorInitialWorkCodeTransform at hpipeline
+    cases hstage : MachineDescription.decodeNat tokens with
+    | none =>
+        simp [hstage] at hpipeline
+    | some parsedStage =>
+        rcases parsedStage with ⟨stage, encoded⟩
+        simp [hstage] at hpipeline
+        cases hdescription :
+            MachineDescription.decodeDescriptionPrefix encoded with
+        | none =>
+            simp [hdescription] at hpipeline
+        | some parsedDescription =>
+            rcases parsedDescription with ⟨D, input⟩
+            simp [hdescription,
+              decodedBoundedSimulatorInitialWorkCode_decode,
+              decodedBoundedSimulatorTransitionLoopIteratedWorkCode]
+              at hpipeline
+            have hencoded :
+                encoded =
+                  List.append (MachineDescription.encodeDescription D)
+                    input :=
+              MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                hdescription
+            have hdecode :
+                some (stage, encoded) =
+                  some (stage,
+                    List.append (MachineDescription.encodeDescription D)
+                      input) := by
+              rw [hencoded]
+              rfl
+            have hhalt :
+                (decodedBoundedSimulatorTransitionLoopConfig
+                  stage D input).state = D.halt := by
+              exact
+                (decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff
+                  stage D
+                  (D.initial
+                    (MachineDescription.encodeCodeWordAsInput input))).mp
+                  hpipeline
+            exact ⟨stage, D, input, hdecode, hhalt⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hdecode, hhalt⟩
+    have htokens :
+        tokens = decodedBoundedSimulatorNormalizedInput stage D input := by
+      exact
+        MachineDescription.decodeNat_eq_some_encodeNatAppend hdecode
+    rw [htokens]
+    exact
+      (decodedBoundedSimulatorTransitionLoopPipelineCode_normalizedInput_iff
+        stage D input).mpr hhalt
+
+/--
+Finite-machine spec for the explicit normalized transition-loop pipeline
+transform.
+-/
+def DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      decodedBoundedSimulatorTransitionLoopPipelineCode tokens =
+        some ([] : Word MachineCodeSymbol)
+
+/--
+Finite-machine construction target for the explicit transition-loop pipeline
+transform.
+-/
+def DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction :
+    Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineSpec runner
+
+/--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
 as transition-table data for exactly the parsed stage count.
@@ -1099,6 +1230,17 @@ def DecodedBoundedSimulatorTransitionLoopRunnerConstruction : Prop :=
   exists state : Type,
   exists runner : TuringMachine MachineCodeSymbol state,
     DecodedBoundedSimulatorTransitionLoopRunnerSpec runner
+
+theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineCodeMachine
+    (hcode :
+      DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopRunnerConstruction := by
+  rcases hcode with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
+          tokens)⟩
 
 /--
 Canonical simulator layout for a decoded bounded-simulator call after the
@@ -1400,11 +1542,20 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
-Transition-loop finite-machine leaf for the normalized decoded simulator.
+Finite-machine leaf for the explicit transition-loop pipeline transform.
+-/
+theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction :
+    DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
+  sorry
+
+/--
+Transition-loop finite-machine construction for the normalized decoded simulator.
 -/
 theorem decodedBoundedSimulatorTransitionLoopRunnerConstruction :
     DecodedBoundedSimulatorTransitionLoopRunnerConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorTransitionLoopRunnerConstruction_of_pipelineCodeMachine
+      decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction
 
 /--
 The transition-loop runner is enough to realize the exact simulator-layout
