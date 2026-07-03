@@ -477,6 +477,45 @@ theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_of_c
   rcases hchecker simulator with ⟨checkerState, checker, hcheckerSpec⟩
   exact hsequence simulator checker hcheckerSpec
 
+theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable
+    (hcompile :
+      CodePrefixStageSearchControllerProgramDecidableCompilerConstruction) :
+    CodePrefixStageSearchControllerProgramCompilerConstruction := by
+  intro simulatorState simulator
+  rcases hcompile (TuringMachine.indexed simulator) with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases
+        (codePrefixStageSearchControllerProgramDecidable_accepts
+          (TuringMachine.indexed simulator) encoded).mp
+          ((hsearcher encoded).mp hhalt) with
+      ⟨D, input, stage, hdecode, hindexed⟩
+    exact
+      (codePrefixStageSearchControllerProgram_accepts
+        simulator encoded).mpr
+        ⟨D, input, stage, hdecode,
+          (TuringMachine.indexed_haltsOnInput_iff
+            simulator
+            (CodePrefixRecognizerStageCode encoded stage)).mp
+            hindexed⟩
+  · intro hprogram
+    rcases
+        (codePrefixStageSearchControllerProgram_accepts
+          simulator encoded).mp hprogram with
+      ⟨D, input, stage, hdecode, hsimulator⟩
+    exact
+      (hsearcher encoded).mpr
+        ((codePrefixStageSearchControllerProgramDecidable_accepts
+          (TuringMachine.indexed simulator) encoded).mpr
+          ⟨D, input, stage, hdecode,
+            (TuringMachine.indexed_haltsOnInput_iff
+              simulator
+              (CodePrefixRecognizerStageCode encoded stage)).mpr
+              hsimulator⟩)
+
 theorem codePrefixStageSearchControllerCoreConstruction_of_programCompiler
     (hcompile : CodePrefixStageSearchControllerProgramCompilerConstruction) :
     CodePrefixStageSearchControllerCoreConstruction := by

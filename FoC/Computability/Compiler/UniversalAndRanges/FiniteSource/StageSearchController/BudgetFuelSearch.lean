@@ -489,19 +489,18 @@ theorem codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstructi
     exact (hsearcher encoded).mpr
       ⟨budget, (hcheckerSpec encoded budget).mpr hrun⟩
 
-theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
-    CodePrefixStageSearchControllerProgramCompilerConstruction := by
-  exact
-    codePrefixStageSearchControllerProgramCompilerConstruction_of_components
-      codePrefixStageSearchControllerBudgetCheckerConstruction_core
-      codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core
-
 theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core :
     CodePrefixStageSearchControllerProgramDecidableCompilerConstruction := by
   exact
     codePrefixStageSearchControllerProgramDecidableCompilerConstruction_of_components
       codePrefixStageSearchControllerBudgetCheckerDecidableConstruction_core
       codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction_core
+
+theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
+    CodePrefixStageSearchControllerProgramCompilerConstruction := by
+  exact
+    codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable
+      codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
 
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
