@@ -2522,6 +2522,38 @@ theorem decodedBoundedSimulatorExactLayoutRun_iff_transitionLoop
     (Iff.symm
       (decodedBoundedSimulatorTransitionLoopRun_iff_runConfig tokens))
 
+theorem decodedBoundedSimulatorTransitionLoopInitialHalt_iff_haltsIn
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopFromConfig stage D
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          D.HaltsIn stage
+            (MachineDescription.encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [MachineDescription.HaltsIn,
+        decodedBoundedSimulatorTransitionLoopFromConfig] using hhalt⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [MachineDescription.HaltsIn,
+        decodedBoundedSimulatorTransitionLoopFromConfig] using hhalt⟩
+
 /--
 Any independently supplied machine for the code primitive is already a
 normalized decoded bounded-simulator runner.
@@ -2546,6 +2578,29 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
     ⟨state, runner, fun tokens =>
       Iff.trans (hrunner tokens)
         (decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
+          tokens)⟩
+
+theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_initialHaltMachine
+    (hrunner :
+      DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction) :
+    exists state : Type,
+    exists runner : TuringMachine MachineCodeSymbol state,
+      forall tokens : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput runner tokens <->
+          exists stage : Nat,
+          exists D : MachineDescription,
+          exists input : Word MachineCodeSymbol,
+            MachineDescription.decodeNat tokens =
+                some (stage,
+                  List.append (MachineDescription.encodeDescription D)
+                    input) ∧
+              D.HaltsIn stage
+                (MachineDescription.encodeCodeWordAsInput input) := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorTransitionLoopInitialHalt_iff_haltsIn
           tokens)⟩
 
 /--
@@ -2798,8 +2853,8 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction :
               D.HaltsIn stage
                 (MachineDescription.encodeCodeWordAsInput input) := by
   exact
-    decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
-      decodedBoundedSimulatorUniformCodeMachineConstruction
+    decodedBoundedSimulatorNormalizedRunnerConstruction_of_initialHaltMachine
+      decodedBoundedSimulatorTransitionLoopInitialHaltMachineFiniteLeaf
 
 end Computability
 end FoC
