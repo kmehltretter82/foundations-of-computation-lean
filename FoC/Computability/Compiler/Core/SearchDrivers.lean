@@ -724,20 +724,9 @@ theorem Search.controllerCompilerOfDeciderOfProtectedInvocation
       hinvoker)
 
 theorem Search.protectedControllerFuelSearchDriverConstructionOfDecider
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
-    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction := by
-  intro attempt invoker hinvoker
-  rcases hcompile
-      (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
-        attempt) with
-    ⟨decider, hdecider⟩
-  refine ⟨decider, ?_⟩
-  constructor
-  · exact hdecider.left
-  · intro w b
-    exact Iff.trans (hdecider.right w b)
-      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_protectedInvocation
-        hinvoker w b)
+    (_hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction :=
+  pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf
 
 theorem Search.protectedControllerSearchDriverConstructionOfFuel
     (hcompile :
@@ -895,6 +884,42 @@ theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
       rfl
     · simp [PairedRecognizerDovetailStageAttemptSearchProgram,
         hattempt, hout]
+
+theorem pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutputIn_iff
+    (accept reject attempt : MachineDescription)
+    (w : Word Bool) (b : Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailStageAttemptSearchProgram
+          accept reject attempt) w [b] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        attempt.HaltsWithOutputIn fuel
+          (encodeCodeWordAsInput
+            (PairedRecognizerDovetailStageInputCode w limit))
+          (encodeCodeWordAsInput
+            (encodeBoolWord [b])) ∧
+        boundedDovetailOutput
+          accept reject w limit = some [b] := by
+  constructor
+  · intro h
+    rcases
+        (pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
+          accept reject attempt w b).mp h with
+      ⟨limit, hattempt, hout⟩
+    rcases
+        MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mp
+          hattempt with
+      ⟨fuel, hfuel⟩
+    exact ⟨limit, fuel, hfuel, hout⟩
+  · intro h
+    rcases h with ⟨limit, fuel, hattempt, hout⟩
+    exact
+      (pairedRecognizerDovetailStageAttemptSearchProgram_haltsWithOutput_iff
+        accept reject attempt w b).mpr
+        ⟨limit,
+          MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mpr
+            ⟨fuel, hattempt⟩,
+          hout⟩
 
 theorem Search.stageCompilerOfDecider
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
