@@ -1240,6 +1240,60 @@ theorem decodedBoundedSimulatorInitialWorkCodeTransform_normalizedInput
       cases hcanonical
       rfl
 
+theorem decodedBoundedSimulatorInitialWorkCodeTransform_eq_some_iff
+    (tokens work : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorInitialWorkCodeTransform tokens = some work <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          work = decodedBoundedSimulatorInitialWorkCode stage D input := by
+  unfold decodedBoundedSimulatorInitialWorkCodeTransform
+  constructor
+  · intro h
+    cases hstage : MachineDescription.decodeNat tokens with
+    | none =>
+        simp [hstage] at h
+    | some parsed =>
+        rcases parsed with ⟨stage, encoded⟩
+        simp [hstage] at h
+        cases hdecode : MachineDescription.decodeDescriptionPrefix encoded with
+        | none =>
+            simp [hdecode] at h
+        | some decoded =>
+            rcases decoded with ⟨D, input⟩
+            simp [hdecode] at h
+            have hencoded :
+                encoded =
+                  List.append (MachineDescription.encodeDescription D) input :=
+              MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                hdecode
+            refine ⟨stage, D, input, ?_, ?_⟩
+            · exact congrArg (fun tail => some (stage, tail)) hencoded
+            · exact h.symm
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hwork⟩
+    simp [hstage, hwork]
+    have hcanonical :
+        MachineDescription.decodeDescriptionPrefix
+            (List.append (MachineDescription.encodeDescription D) input) =
+          some (D, input) :=
+      MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+        D input
+    cases hdecode :
+        MachineDescription.decodeDescriptionPrefix
+          (List.append (MachineDescription.encodeDescription D) input) with
+    | none =>
+        rw [hdecode] at hcanonical
+        cases hcanonical
+    | some decoded =>
+        rcases decoded with ⟨decodedD, decodedInput⟩
+        rw [hdecode] at hcanonical
+        cases hcanonical
+        rfl
+
 theorem decodedBoundedSimulatorTransitionLoopConfig_eq_initialWork
     (stage : Nat) (D : MachineDescription)
     (input : Word MachineCodeSymbol) :
