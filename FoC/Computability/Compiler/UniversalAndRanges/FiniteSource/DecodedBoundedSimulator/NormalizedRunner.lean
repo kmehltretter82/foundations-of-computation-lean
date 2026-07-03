@@ -1523,6 +1523,32 @@ def DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction :
   exists runner : TuringMachine MachineCodeSymbol state,
     DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineSpec runner
 
+def DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol)
+
+def DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction :
+    Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineSpec runner
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
+    (hiter :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
+  rcases hiter with ⟨state, runner, hrunner⟩
+  refine ⟨state, runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans (hrunner tokens) (by
+      rw [
+        decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
+          tokens])
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_codeMachine
     (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
     DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
