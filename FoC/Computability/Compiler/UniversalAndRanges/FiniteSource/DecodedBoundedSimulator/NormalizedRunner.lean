@@ -831,6 +831,97 @@ theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_encodeAppend
   simp [decodedBoundedSimulatorTransitionLoopWorkStepCode,
     decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
 
+theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_eq_some_iff
+    (tokens out : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopWorkStepCode tokens = some out <->
+      exists D : MachineDescription,
+      exists stage : Nat,
+      exists config : MachineDescription.Configuration,
+      exists suffix : Word MachineCodeSymbol,
+        decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+            some (D, stage, config, suffix) ∧
+          out =
+            decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend
+              D stage config suffix := by
+  unfold decodedBoundedSimulatorTransitionLoopWorkStepCode
+  cases hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens with
+  | none =>
+      constructor
+      · intro h
+        cases h
+      · intro h
+        rcases h with
+          ⟨D, stage, config, suffix, hdecode', _hout⟩
+        cases hdecode'
+  | some parsed =>
+      rcases parsed with ⟨D, stage, config, suffix⟩
+      constructor
+      · intro h
+        cases h
+        exact ⟨D, stage, config, suffix, rfl, rfl⟩
+      · intro h
+        rcases h with
+          ⟨D', stage', config', suffix', hdecode', hout⟩
+        cases hdecode'
+        cases hout
+        rfl
+
+theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_output_decode_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix))
+    (hstep :
+      decodedBoundedSimulatorTransitionLoopWorkStepCode tokens = some out) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode out =
+      some
+        (D,
+          (decodedBoundedSimulatorTransitionLoopStepTarget
+            stage D config).fst,
+          (decodedBoundedSimulatorTransitionLoopStepTarget
+            stage D config).snd,
+          suffix) := by
+  unfold decodedBoundedSimulatorTransitionLoopWorkStepCode at hstep
+  simp [hdecode] at hstep
+  subst out
+  exact
+    decodedBoundedSimulatorTransitionLoopWorkStepDecode_encodeAppend
+      D stage config suffix
+
+theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_preserves_final_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix))
+    (hstep :
+      decodedBoundedSimulatorTransitionLoopWorkStepCode tokens = some out) :
+    exists nextStage : Nat,
+    exists nextConfig : MachineDescription.Configuration,
+      decodedBoundedSimulatorTransitionLoopWorkDecode out =
+        some (D, nextStage, nextConfig, suffix) ∧
+        decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+          decodedBoundedSimulatorTransitionLoopFromConfig
+            nextStage D nextConfig := by
+  refine
+    ⟨(decodedBoundedSimulatorTransitionLoopStepTarget
+        stage D config).fst,
+      (decodedBoundedSimulatorTransitionLoopStepTarget
+        stage D config).snd,
+      ?_, ?_⟩
+  · exact
+      decodedBoundedSimulatorTransitionLoopWorkStepCode_output_decode_of_decode
+        hdecode hstep
+  · exact
+      decodedBoundedSimulatorTransitionLoopStepTarget_preserves_final
+        stage D config
+
 /--
 Repeated semantic work-loop iterations.
 -/
