@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawSourceEncoder
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowRawSourceEncoderBridge
 
 set_option doc.verso true
 
@@ -1612,15 +1613,15 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptRawSourceEnco
     exists encoder : MachineDescription,
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         true encoder :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder
-    countWindowRawSourceEncoderEquivConstruction_core true
+  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_projectionLiveTailBridge
+    true
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectRawSourceEncoderConstruction_core :
     exists encoder : MachineDescription,
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         false encoder :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder
-    countWindowRawSourceEncoderEquivConstruction_core false
+  selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_projectionLiveTailBridge
+    false
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction := by

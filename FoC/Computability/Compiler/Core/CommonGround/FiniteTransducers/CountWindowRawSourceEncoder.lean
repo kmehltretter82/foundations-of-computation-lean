@@ -993,6 +993,44 @@ theorem countWindowRawSourceEncoderRawBoundaryTape_move_left_move_right
   simp [countWindowRawSourceEncoderRawBoundaryTape, tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem countWindowRawSourceEncoderRightBoundaryLayout_rewind_haltsFromTape
+    (layout : Word Bool) (right : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells (List.append (layout.reverse.map some) [none])
+        (none :: right))
+      (tapeAtCells [none]
+        (List.append (layout.map some) (none :: right))) := by
+  cases hrev : layout.reverse with
+  | nil =>
+      have hlayout : layout = [] := by
+        have h := congrArg List.reverse hrev
+        simpa using h
+      simpa [hlayout, List.append_assoc] using
+        rightEdgeRewindDescription_haltsFrom_emptyBoundaryBase_noDelimiter
+          ([] : List (Option Bool)) right
+  | cons current leftBits =>
+      have hlayout : layout = List.append leftBits.reverse [current] := by
+        have h := congrArg List.reverse hrev
+        simpa [List.reverse_cons] using h
+      simpa [hlayout, List.map_append, List.append_assoc] using
+        rightEdgeRewindDescription_haltsFrom_rightBoundaryBase_noDelimiter
+          ([] : List (Option Bool)) leftBits current right
+
+theorem countWindowRawSourceEncoderRawBoundaryTape_rewind_haltsFromTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (countWindowRawSourceEncoderRawBoundaryTape skipped count tail)
+      (countWindowRawSourceEncoderSourceTape skipped count tail) := by
+  simpa [countWindowRawSourceEncoderRawBoundaryTape,
+    countWindowRawSourceEncoderSourceTape, List.append_assoc] using
+    countWindowRawSourceEncoderRightBoundaryLayout_rewind_haltsFromTape
+      (List.append skipped count)
+      (none ::
+        none ::
+        List.append
+          (List.replicate count.length (none : Option Bool))
+          tail)
+
 def rightMoveAcrossThreeBlanksDescription : MachineDescription where
   stateCount := 4
   start := 0
@@ -1832,45 +1870,13 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
-theorem
-    countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction := by
-  sorry
-
-theorem
-    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
-    CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
-  exact
-    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
-      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
-
-theorem
-    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
-    CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by
-  exact
-    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter
-      countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core
-
-theorem countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core :
-    CountWindowRawSourceEncoderNoCountPaddingEquivConstruction := by
-  exact
-    countWindowRawSourceEncoderNoCountPaddingEquivConstruction_of_countWindowStartEmitter
-      countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core
-
-/--
-Direct construction obligation for the raw-source encoder.
-
-This should not be factored through the live-tail emitter handoff: once the
-head has crossed the tail-first bit, the empty raw-layout case has no nonblank
-left sentinel separating it from an arbitrarily long count-window blank run.
-The original source tape still exposes the empty/nonempty raw-layout boundary
-at the head, so the real finite-machine proof belongs at this level.
+/-
+The generic `CountWindowRawSourceEncoderEquivConstruction` package is not
+exported with a `_core` theorem here.  Current consumers use the
+projection-owned bridge in
+`PostPaddingScratchExtender.CountWindowRawSourceEncoderBridge`, keeping
+projection/quoter dependencies out of this common finite-transducer module.
 -/
-theorem countWindowRawSourceEncoderEquivConstruction_core :
-    CountWindowRawSourceEncoderEquivConstruction := by
-  exact
-    countWindowRawSourceEncoderEquivConstruction_of_noCountPadding
-      countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core
 
 end FiniteTransducers
 end CommonGround

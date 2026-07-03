@@ -836,6 +836,90 @@ theorem rightEdgeRewindDescription_haltsFrom_lastBitBoundaryBase_noDelimiter
   constructor <;>
     rw [rightEdgeRewindDescription_run_from_lastBitBoundaryBase_noDelimiter]
 
+theorem rightEdgeRewindDescription_run_from_emptyBoundaryBase_noDelimiter
+    (baseLeft right : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig 2
+        { state := rightEdgeRewindDescription.start
+          tape := tapeAtCells (none :: baseLeft) (none :: right) } =
+      { state := rightEdgeRewindDescription.halt
+        tape := tapeAtCells (none :: baseLeft) (none :: right) } := by
+  cases baseLeft <;> cases right <;>
+    simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+      stepConfig, lookupTransition, Matches, transition, Tape.read,
+      Tape.move, Tape.moveLeft, Tape.moveRight, Tape.write]
+
+theorem rightEdgeRewindDescription_haltsFrom_emptyBoundaryBase_noDelimiter
+    (baseLeft right : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells (none :: baseLeft) (none :: right))
+      (tapeAtCells (none :: baseLeft) (none :: right)) := by
+  refine ⟨2, ?_⟩
+  constructor <;>
+    rw [rightEdgeRewindDescription_run_from_emptyBoundaryBase_noDelimiter]
+
+theorem rightEdgeRewindDescription_run_from_rightBoundaryBase_noDelimiter
+    (baseLeft : List (Option Bool))
+    (leftBits : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig (leftBits.length + 3)
+        { state := rightEdgeRewindDescription.start
+          tape :=
+            tapeAtCells
+              (some current ::
+                List.append (leftBits.map some) (none :: baseLeft))
+              (none :: right) } =
+      { state := rightEdgeRewindDescription.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append
+              ((List.append leftBits.reverse [current]).map some)
+              (none :: right)) } := by
+  rw [show leftBits.length + 3 =
+      1 + ((leftBits.length + 1) + 1) by omega]
+  rw [runConfig_add]
+  have hstart :
+      rightEdgeRewindDescription.runConfig 1
+          { state := rightEdgeRewindDescription.start
+            tape :=
+              tapeAtCells
+                (some current ::
+                  List.append (leftBits.map some) (none :: baseLeft))
+                (none :: right) } =
+        { state := 1
+          tape :=
+            tapeAtCells
+              (List.append (leftBits.map some) (none :: baseLeft))
+              (some current :: none :: right) } := by
+    cases current <;>
+      simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+        stepConfig, lookupTransition, Matches, transition, Tape.read,
+        Tape.move, Tape.moveLeft, Tape.write]
+  rw [hstart]
+  rw [runConfig_add]
+  rw [rightEdgeRewindDescription_run_scan_withBoundaryBase_core
+    baseLeft leftBits current (none :: right)]
+  simpa [List.append_assoc] using
+    rightEdgeRewindDescription_step_finish_noDelimiter
+      baseLeft (List.append leftBits.reverse [current])
+      (none :: right)
+
+theorem rightEdgeRewindDescription_haltsFrom_rightBoundaryBase_noDelimiter
+    (baseLeft : List (Option Bool))
+    (leftBits : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells
+        (some current ::
+          List.append (leftBits.map some) (none :: baseLeft))
+        (none :: right))
+      (tapeAtCells (none :: baseLeft)
+        (List.append
+          ((List.append leftBits.reverse [current]).map some)
+          (none :: right))) := by
+  refine ⟨leftBits.length + 3, ?_⟩
+  constructor <;>
+    rw [rightEdgeRewindDescription_run_from_rightBoundaryBase_noDelimiter]
+
 theorem rightEdgeRewindDescription_run
     (bits : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (bits.length + 2)
