@@ -381,12 +381,31 @@ def CodePrefixStageSearchControllerBudgetCheckerSpec
       (codePrefixStageSearchControllerProgram simulator).run
           encoded budget = some []
 
+def CodePrefixStageSearchControllerBudgetCheckerDecidableSpec
+    {simulatorState checkerState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (checker : TuringMachine MachineCodeSymbol checkerState) : Prop :=
+  forall encoded : Word MachineCodeSymbol,
+  forall budget : Nat,
+    TuringMachine.HaltsOnInput checker
+        (CodePrefixRecognizerStageCode encoded budget) <->
+      (codePrefixStageSearchControllerProgramDecidable simulator).run
+          encoded budget = some []
+
 def CodePrefixStageSearchControllerBudgetCheckerConstruction
     {simulatorState : Type}
     (simulator : TuringMachine MachineCodeSymbol simulatorState) : Prop :=
   exists checkerState : Type,
   exists checker : TuringMachine MachineCodeSymbol checkerState,
     CodePrefixStageSearchControllerBudgetCheckerSpec simulator checker
+
+def CodePrefixStageSearchControllerBudgetCheckerDecidableConstruction
+    {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) : Prop :=
+  exists checkerState : Type,
+  exists checker : TuringMachine MachineCodeSymbol checkerState,
+    CodePrefixStageSearchControllerBudgetCheckerDecidableSpec
+      simulator checker
 
 /--
 Sequencing obligation that turns a bounded checker into an unbounded searcher
@@ -474,6 +493,32 @@ theorem codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff_program
         encoded budget = some [] := by
   rw [codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff,
     codePrefixStageSearchControllerProgram_run_eq_some_iff]
+
+theorem codePrefixStageSearchControllerBudgetCheckerSpec_of_decidableSpec
+    [DecidableEq simulatorState]
+    {simulator : TuringMachine MachineCodeSymbol simulatorState}
+    {checker : TuringMachine MachineCodeSymbol checkerState}
+    (hchecker :
+      CodePrefixStageSearchControllerBudgetCheckerDecidableSpec
+        simulator checker) :
+    CodePrefixStageSearchControllerBudgetCheckerSpec simulator checker := by
+  intro encoded budget
+  exact Iff.trans (hchecker encoded budget)
+    (codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff_program
+      simulator encoded budget)
+
+theorem codePrefixStageSearchControllerBudgetCheckerConstruction_of_decidable
+    [DecidableEq simulatorState]
+    {simulator : TuringMachine MachineCodeSymbol simulatorState}
+    (hchecker :
+      CodePrefixStageSearchControllerBudgetCheckerDecidableConstruction
+        simulator) :
+    CodePrefixStageSearchControllerBudgetCheckerConstruction simulator := by
+  rcases hchecker with ⟨checkerState, checker, hcheckerSpec⟩
+  exact
+    ⟨checkerState, checker,
+      codePrefixStageSearchControllerBudgetCheckerSpec_of_decidableSpec
+        hcheckerSpec⟩
 
 /--
 Finite-machine obligation for the bounded checker.  The checker must parse a
