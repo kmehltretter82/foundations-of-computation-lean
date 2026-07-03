@@ -53,6 +53,48 @@ theorem stepConfig_of_lookupTransition_some
           tape := Tape.move t.move (Tape.write t.write c.tape) } := by
   simp [stepConfig, hlookup]
 
+def scanTransitionTable
+    (source : Nat) (read : Option Bool)
+    (transitions : List TransitionDescription) :
+    Option TransitionDescription :=
+  transitions.find? (Matches source read)
+
+theorem lookupTransition_eq_scanTransitionTable
+    (D : MachineDescription) (source : Nat) (read : Option Bool) :
+    D.lookupTransition source read =
+      scanTransitionTable source read D.transitions :=
+  rfl
+
+theorem scanTransitionTable_nil
+    (source : Nat) (read : Option Bool) :
+    scanTransitionTable source read [] = none :=
+  rfl
+
+theorem scanTransitionTable_cons_match
+    {source : Nat} {read : Option Bool}
+    {transition : TransitionDescription}
+    {rest : List TransitionDescription}
+    (hmatch : Matches source read transition = true) :
+    scanTransitionTable source read (transition :: rest) =
+      some transition := by
+  simp [scanTransitionTable, hmatch]
+
+theorem scanTransitionTable_cons_skip
+    {source : Nat} {read : Option Bool}
+    {transition : TransitionDescription}
+    {rest : List TransitionDescription}
+    (hmatch : Matches source read transition = false) :
+    scanTransitionTable source read (transition :: rest) =
+      scanTransitionTable source read rest := by
+  simp [scanTransitionTable, hmatch]
+
+theorem matches_eq_true_iff
+    (source : Nat) (read : Option Bool)
+    (transition : TransitionDescription) :
+    Matches source read transition = true <->
+      transition.source = source ∧ transition.read = read := by
+  simp [Matches]
+
 theorem lookupTransition_matches
     {D : MachineDescription} {source : Nat} {read : Option Bool}
     {t : TransitionDescription}
@@ -148,6 +190,35 @@ theorem runConfig_succ_of_lookupTransition_some
           tape := Tape.move t.move (Tape.write t.write c.tape) } :=
   runConfig_succ_of_stepConfig_some
     (stepConfig_of_lookupTransition_some hlookup)
+
+theorem stepConfig_eq_scanTransitionTable
+    {D : MachineDescription} {c : Configuration} :
+    D.stepConfig c =
+      match
+        scanTransitionTable c.state (Tape.read c.tape)
+          D.transitions with
+      | none => none
+      | some t =>
+          some
+            { state := t.target
+              tape := Tape.move t.move (Tape.write t.write c.tape) } := by
+  rfl
+
+theorem runConfig_succ_eq_scanTransitionTable
+    {D : MachineDescription} {c : Configuration} {n : Nat} :
+    D.runConfig (n + 1) c =
+      match
+        scanTransitionTable c.state (Tape.read c.tape)
+          D.transitions with
+      | none => c
+      | some t =>
+          D.runConfig n
+            { state := t.target
+              tape := Tape.move t.move (Tape.write t.write c.tape) } := by
+  simp [scanTransitionTable, lookupTransition, runConfig, stepConfig]
+  cases hlookup :
+      List.find? (Matches c.state (Tape.read c.tape))
+        D.transitions <;> simp
 
 end MachineDescription
 
