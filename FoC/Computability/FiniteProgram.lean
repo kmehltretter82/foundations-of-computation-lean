@@ -215,7 +215,6 @@ theorem traceRecognizer_compiledByDescription
     (hD : P.description.WellFormed) :
     ProgramCompiledByDescription
       (TraceRecognizerProgram P.trace) P.compile := by
-  classical
   constructor
   · exact hD
   · intro w
@@ -276,20 +275,18 @@ structure FiniteBoolProgram where
 
 namespace FiniteBoolProgram
 
-noncomputable def toStagedProgram (P : FiniteBoolProgram) :
+def toStagedProgram (P : FiniteBoolProgram) :
     StagedProgram Bool Bool where
-  run w n := by
-    classical
+  run w n :=
     let final := P.description.runConfig n (P.description.initial w)
-    exact
-      if final.state = P.description.halt ∧
-          Tape.normalizedOutput final.tape = [true] then
-        some [true]
-      else if final.state = P.description.halt ∧
-          Tape.normalizedOutput final.tape = [false] then
-        some [false]
-      else
-        none
+    if final.state = P.description.halt ∧
+        Tape.normalizedOutput final.tape = [true] then
+      some [true]
+    else if final.state = P.description.halt ∧
+        Tape.normalizedOutput final.tape = [false] then
+      some [false]
+    else
+      none
 
 def compile (P : FiniteBoolProgram) : MachineDescription :=
   P.description
@@ -306,7 +303,6 @@ theorem toStagedProgram_run_false_of_halts
     {P : FiniteBoolProgram} {w : Word Bool} {n : Nat}
     (h : P.description.HaltsWithOutputIn n w [false]) :
     P.toStagedProgram.run w n = some [false] := by
-  classical
   unfold MachineDescription.HaltsWithOutputIn at h
   have hnot :
       ¬((P.description.runConfig n (P.description.initial w)).state =
@@ -341,7 +337,6 @@ theorem compiledByDescription
     (P : FiniteBoolProgram)
     (hD : P.description.WellFormed) :
     BoolProgramCompiledByDescription P.toStagedProgram P.compile := by
-  classical
   constructor
   · exact hD
   · intro w b

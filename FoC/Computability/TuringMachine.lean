@@ -78,13 +78,25 @@ def stepConfig (M : TuringMachine symbol state)
         { state := nextState,
           tape := Tape.move dir (Tape.write write c.tape) }
 
-def runConfig? (M : TuringMachine symbol state) :
+/-- Run exactly the requested number of machine steps, failing if a transition
+is unavailable before all steps have been consumed. -/
+def runConfigExact? (M : TuringMachine symbol state) :
     Nat -> Configuration symbol state -> Option (Configuration symbol state)
   | 0, c => some c
   | n + 1, c =>
       match M.stepConfig c with
       | none => none
-      | some next => runConfig? M n next
+      | some next => runConfigExact? M n next
+
+/-- Run for at most the requested number of steps, preserving the current
+configuration when the machine has no outgoing transition. -/
+def runConfigBounded (M : TuringMachine symbol state) :
+    Nat -> Configuration symbol state -> Configuration symbol state
+  | 0, c => c
+  | n + 1, c =>
+      match M.stepConfig c with
+      | none => c
+      | some next => runConfigBounded M n next
 
 theorem step_iff_transition_eq_some
     {M : TuringMachine symbol state}
@@ -716,24 +728,24 @@ theorem computesIn_succ_iff {M : TuringMachine symbol state}
     rcases h with ⟨d, hstep, hrest⟩
     exact ComputesIn.succ hstep hrest
 
-theorem runConfig?_eq_some_iff_computesIn
+theorem runConfigExact?_eq_some_iff_computesIn
     {M : TuringMachine symbol state}
     {n : Nat} {c d : Configuration symbol state} :
-    M.runConfig? n c = some d <-> ComputesIn M n c d := by
+    M.runConfigExact? n c = some d <-> ComputesIn M n c d := by
   induction n generalizing c with
   | zero =>
       constructor
       · intro hrun
-        simp [runConfig?] at hrun
+        simp [runConfigExact?] at hrun
         cases hrun
         exact ComputesIn.zero _
       · intro hcomp
         cases hcomp
-        simp [runConfig?]
+        simp [runConfigExact?]
   | succ n ih =>
       constructor
       · intro hrun
-        simp [runConfig?] at hrun
+        simp [runConfigExact?] at hrun
         cases hstep : M.stepConfig c with
         | none =>
             simp [hstep] at hrun
@@ -748,43 +760,43 @@ theorem runConfig?_eq_some_iff_computesIn
           ⟨next, hstep, htail⟩
         have hstepConfig : M.stepConfig c = some next :=
           stepConfig_eq_some_iff_step.mpr hstep
-        simp [runConfig?, hstepConfig]
+        simp [runConfigExact?, hstepConfig]
         exact ih.mpr htail
 
-theorem haltsFromIn_iff_runConfig?
+theorem haltsFromIn_iff_runConfigExact?
     {M : TuringMachine symbol state}
     {n : Nat} {c : Configuration symbol state} :
     HaltsFromIn M n c <->
       exists final : Configuration symbol state,
-        M.runConfig? n c = some final ∧ Halted M final := by
+        M.runConfigExact? n c = some final ∧ Halted M final := by
   constructor
   · intro hhalt
     rcases hhalt with ⟨final, hcomp, hfinal⟩
     exact
-      ⟨final, runConfig?_eq_some_iff_computesIn.mpr hcomp, hfinal⟩
+      ⟨final, runConfigExact?_eq_some_iff_computesIn.mpr hcomp, hfinal⟩
   · intro hhalt
     rcases hhalt with ⟨final, hrun, hfinal⟩
     exact
-      ⟨final, runConfig?_eq_some_iff_computesIn.mp hrun, hfinal⟩
+      ⟨final, runConfigExact?_eq_some_iff_computesIn.mp hrun, hfinal⟩
 
 instance [DecidableEq state] (M : TuringMachine symbol state)
     (n : Nat) (c : Configuration symbol state) :
     Decidable (HaltsFromIn M n c) := by
-  cases hrun : M.runConfig? n c with
+  cases hrun : M.runConfigExact? n c with
   | none =>
       exact isFalse (by
         intro hhalt
-        rcases haltsFromIn_iff_runConfig?.mp hhalt with
+        rcases haltsFromIn_iff_runConfigExact?.mp hhalt with
           ⟨final, hfinal, _hhalted⟩
         rw [hrun] at hfinal
         cases hfinal)
   | some final =>
       by_cases hhalted : final.state = M.halt
-      · exact isTrue (haltsFromIn_iff_runConfig?.mpr
+      · exact isTrue (haltsFromIn_iff_runConfigExact?.mpr
           ⟨final, hrun, by simpa [Halted] using hhalted⟩)
       · exact isFalse (by
           intro hhalt
-          rcases haltsFromIn_iff_runConfig?.mp hhalt with
+          rcases haltsFromIn_iff_runConfigExact?.mp hhalt with
             ⟨final', hfinal', hhalted'⟩
           rw [hrun] at hfinal'
           cases hfinal'
