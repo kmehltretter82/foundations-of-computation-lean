@@ -939,7 +939,10 @@ theorem stoppedTuringDecidable_complement {L : Language input}
 
 theorem turing_decidable_of_complement {L : Language input}
     (h : TuringDecidable (Language.Compl L)) : TuringDecidable L :=
-  turing_decidable_of_equal (turing_decidable_complement h) (Language.double_compl L)
+  by
+    classical
+    exact turing_decidable_of_equal
+      (turing_decidable_complement h) (Language.double_compl L)
 
 theorem turing_decidable_complement_iff {L : Language input} :
     TuringDecidable (Language.Compl L) <-> TuringDecidable L := by

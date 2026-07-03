@@ -160,7 +160,8 @@ theorem equal_trans {L M N : Language alpha} (hLM : Equal L M) (hMN : Equal M N)
   Equal L N :=
   FSet.equal_trans hLM hMN
 
-theorem double_compl (L : Language alpha) :
+theorem double_compl (L : Language alpha)
+    [DecidablePred (fun w => w ∈ L)] :
   Equal (Compl (Compl L)) L :=
   FSet.double_compl L
 

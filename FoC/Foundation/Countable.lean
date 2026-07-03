@@ -109,40 +109,6 @@ theorem countable_of_equal {A B : FSet alpha}
         exact (hAB x).mp ((hf x).mpr hx)
 
 theorem countable_subset {A B : FSet alpha}
-    (hAB : Subset A B) (hB : Countable B) : Countable A := by
-  classical
-  cases hB with
-  | intro f hf =>
-      let filtered : Nat -> Option alpha := fun n =>
-        match f n with
-        | none => none
-        | some x => if x ∈ A then some x else none
-      exists filtered
-      intro x
-      constructor
-      · intro hxA
-        have hxB : x ∈ B := hAB x hxA
-        cases (hf x).mp hxB with
-        | intro n hn =>
-            exists n
-            dsimp [filtered]
-            rw [hn]
-            simp [hxA]
-      · intro hx
-        cases hx with
-        | intro n hn =>
-            dsimp [filtered] at hn
-            cases hfn : f n with
-            | none =>
-                simp [hfn] at hn
-            | some y =>
-                by_cases hyA : y ∈ A
-                · simp [hfn, hyA] at hn
-                  rw [← hn]
-                  exact hyA
-                · simp [hfn, hyA] at hn
-
-theorem countable_subset_decidable {A B : FSet alpha}
     [DecidablePred (fun x => x ∈ A)]
     (hAB : Subset A B) (hB : Countable B) : Countable A := by
   cases hB with
@@ -225,6 +191,7 @@ already infinite, then the union cannot become finite.
 theorem countably_infinite_union {A B : FSet alpha}
     (hA : CountablyInfinite A) (hB : CountablyInfinite B) :
     CountablyInfinite (Union A B) := by
+  classical
   constructor
   · exact countable_union hA.left hB.left
   · intro hfinite

@@ -244,14 +244,7 @@ when the alphabet is finite and the grammar has finitely many productions, the
 constructed PDA has a finite presentation.
 -/
 
-noncomputable def cfg_to_pda_finite_presentation
-    (G : CFG terminal nonterminal)
-    (terminalFinite : Foundation.FiniteType terminal)
-    (hG : CFG.HasFiniteProductions G) :
-    PDA.FinitePresentation (CFGToPDA G) :=
-  CFG.toPDA_finitePresentation G terminalFinite hG
-
-def cfg_to_pda_finite_presentation_of_rules
+def cfg_to_pda_finite_presentation
     (G : CFG terminal nonterminal)
     (terminalFinite : Foundation.FiniteType terminal)
     (rules : List (CFG.Production terminal nonterminal))
@@ -259,46 +252,54 @@ def cfg_to_pda_finite_presentation_of_rules
       G.produces A rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
     PDA.FinitePresentation (CFGToPDA G) :=
-  CFG.toPDA_finitePresentationOfRules G terminalFinite rules hrules
+  CFG.toPDA_finitePresentation G terminalFinite rules hrules
+
+noncomputable def cfg_to_pda_finite_presentation_of_has_finite_productions
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    PDA.FinitePresentation (CFGToPDA G) :=
+  CFG.toPDA_finitePresentation_of_hasFiniteProductions G terminalFinite hG
 
 theorem cfg_to_pda_has_finite_presentation
     (G : CFG terminal nonterminal)
     (terminalFinite : Foundation.FiniteType terminal)
-    (hG : CFG.HasFiniteProductions G) :
-    FinitePresentationPDA (CFGToPDA G) :=
-  CFG.toPDA_hasFinitePresentation G terminalFinite hG
-
-theorem cfg_to_pda_has_finite_presentation_of_rules
-    (G : CFG terminal nonterminal)
-    (terminalFinite : Foundation.FiniteType terminal)
     (rules : List (CFG.Production terminal nonterminal))
     (hrules : forall A rhs,
       G.produces A rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
     FinitePresentationPDA (CFGToPDA G) :=
-  CFG.toPDA_hasFinitePresentationOfRules G terminalFinite rules hrules
+  CFG.toPDA_hasFinitePresentation G terminalFinite rules hrules
+
+theorem cfg_to_pda_has_finite_presentation_of_has_finite_productions
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    FinitePresentationPDA (CFGToPDA G) :=
+  CFG.toPDA_hasFinitePresentation_of_hasFiniteProductions G terminalFinite hG
 
 theorem cfg_generated_language_finite_presentation_pda_recognizable
     {terminal nonterminal : Type}
     (G : CFG terminal nonterminal)
     (terminalFinite : Foundation.FiniteType terminal)
-    (hG : CFG.HasFiniteProductions G) :
-    PDA.FinitePresentationRecognizable (CFG.GeneratedLanguage G) := by
-  exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
-    cfg_to_pda_finite_presentation G terminalFinite hG,
-    cfg_to_pda_language_exact G⟩
-
-theorem cfg_generated_language_finite_presentation_pda_recognizable_of_rules
-    {terminal nonterminal : Type}
-    (G : CFG terminal nonterminal)
-    (terminalFinite : Foundation.FiniteType terminal)
     (rules : List (CFG.Production terminal nonterminal))
     (hrules : forall A rhs,
       G.produces A rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
     PDA.FinitePresentationRecognizable (CFG.GeneratedLanguage G) := by
   exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
-    cfg_to_pda_finite_presentation_of_rules G terminalFinite rules hrules,
+    cfg_to_pda_finite_presentation G terminalFinite rules hrules,
+    cfg_to_pda_language_exact G⟩
+
+theorem cfg_generated_language_finite_presentation_pda_recognizable_of_has_finite_productions
+    {terminal nonterminal : Type}
+    (G : CFG terminal nonterminal)
+    (terminalFinite : Foundation.FiniteType terminal)
+    (hG : CFG.HasFiniteProductions G) :
+    PDA.FinitePresentationRecognizable (CFG.GeneratedLanguage G) := by
+  exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
+    cfg_to_pda_finite_presentation_of_has_finite_productions
+      G terminalFinite hG,
     cfg_to_pda_language_exact G⟩
 
 theorem finite_production_context_free_language_finite_presentation_pda_recognizable
@@ -308,7 +309,8 @@ theorem finite_production_context_free_language_finite_presentation_pda_recogniz
     PDA.FinitePresentationRecognizable L := by
   rcases hL with ⟨nonterminal, G, hGfinite, hGexact⟩
   exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
-    cfg_to_pda_finite_presentation G terminalFinite hGfinite,
+    cfg_to_pda_finite_presentation_of_has_finite_productions
+      G terminalFinite hGfinite,
     Language.equal_trans (cfg_to_pda_language_exact G) hGexact⟩
 
 /-!

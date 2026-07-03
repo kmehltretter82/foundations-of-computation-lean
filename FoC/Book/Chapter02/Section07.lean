@@ -58,17 +58,11 @@ theorem overlapping_equivalence_classes_are_equal {R : Rel alpha}
   Rel.overlapping_classes_equal h hoverlap
 
 theorem equivalence_classes_equal_or_disjoint {R : Rel alpha}
-    (h : Rel.Equivalence R) (a b : alpha) :
-    FSet.Equal (Rel.Class R a) (Rel.Class R b) ∨
-      FSet.Disjoint (Rel.Class R a) (Rel.Class R b) :=
-  Rel.classes_equal_or_disjoint h a b
-
-theorem equivalence_classes_equal_or_disjoint_decidable {R : Rel alpha}
     (h : Rel.Equivalence R) (a b : alpha)
     [Decidable (exists x, x ∈ Rel.Class R a ∧ x ∈ Rel.Class R b)] :
     FSet.Equal (Rel.Class R a) (Rel.Class R b) ∨
       FSet.Disjoint (Rel.Class R a) (Rel.Class R b) :=
-  Rel.classes_equal_or_disjoint_decidable h a b
+  Rel.classes_equal_or_disjoint h a b
 
 /-!
 ## Partitions and Fibers

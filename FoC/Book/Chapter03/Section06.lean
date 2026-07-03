@@ -153,32 +153,19 @@ The finite alphabet list is an explicit hypothesis because the construction
 must build expressions that account for every symbol a transition may read.
 -/
 
-theorem dfa_state_elimination_regex_sound
+theorem dfa_state_elimination_regex_sound [DecidableEq state]
     (alphabet : List alpha) (M : DFA alpha state) {w : Word alpha}
+    [DecidablePred M.accept]
     (hw : w ∈ RegExp.Denote (RegularLanguage.DFARegex alphabet M)) :
     DFA.Accepts M w :=
   RegularLanguage.dfaRegex_sound alphabet M hw
 
-theorem dfa_state_elimination_regex_complete
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
-    (M : DFA alpha state) {w : Word alpha}
-    (hw : DFA.Accepts M w) :
-    w ∈ RegExp.Denote (RegularLanguage.DFARegex alphabet M) :=
-  RegularLanguage.dfaRegex_complete alphabet M halphabet hw
-
-theorem dfa_state_elimination_regex_decidable_sound [DecidableEq state]
-    (alphabet : List alpha) (M : DFA alpha state) [DecidablePred M.accept]
-    {w : Word alpha}
-    (hw : w ∈ RegExp.Denote (RegularLanguage.DFARegexDecidable alphabet M)) :
-    DFA.Accepts M w :=
-  RegularLanguage.dfaRegexDecidable_sound alphabet M hw
-
-theorem dfa_state_elimination_regex_decidable_complete [DecidableEq state]
+theorem dfa_state_elimination_regex_complete [DecidableEq state]
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
     (M : DFA alpha state) [DecidablePred M.accept] {w : Word alpha}
     (hw : DFA.Accepts M w) :
-    w ∈ RegExp.Denote (RegularLanguage.DFARegexDecidable alphabet M) :=
-  RegularLanguage.dfaRegexDecidable_complete alphabet M halphabet hw
+    w ∈ RegExp.Denote (RegularLanguage.DFARegex alphabet M) :=
+  RegularLanguage.dfaRegex_complete alphabet M halphabet hw
 
 theorem dfa_recognizable_language_is_regular
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
@@ -186,11 +173,11 @@ theorem dfa_recognizable_language_is_regular
     RegularLanguage.Regular L :=
   RegularLanguage.dfa_recognizable_regular alphabet halphabet hL
 
-theorem dfa_language_is_regular_decidable [DecidableEq state]
+theorem dfa_language_is_regular [DecidableEq state]
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
     (M : DFA alpha state) [DecidablePred M.accept] :
     RegularLanguage.Regular (DFA.Language M) :=
-  RegularLanguage.dfa_language_regular_decidable alphabet halphabet M
+  RegularLanguage.dfa_language_regular alphabet halphabet M
 
 theorem nfa_language_is_regular
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)

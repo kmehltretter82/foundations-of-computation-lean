@@ -324,29 +324,7 @@ theorem inter_distrib_union (A B C : FSet alpha) :
     | inl hAB => exact And.intro hAB.left (Or.inl hAB.right)
     | inr hAC => exact And.intro hAC.left (Or.inr hAC.right)
 
-theorem double_compl (A : FSet alpha) : Equal (Compl (Compl A)) A := by
-  classical
-  intro x
-  constructor
-  · intro hx
-    by_cases hA : x ∈ A
-    · exact hA
-    · exact False.elim (hx hA)
-  · intro hx hnot
-    exact hnot hx
-
-theorem union_compl_univ (A : FSet alpha) : Equal (Union A (Compl A)) Univ := by
-  classical
-  intro x
-  constructor
-  · intro _
-    exact True.intro
-  · intro _
-    by_cases hA : x ∈ A
-    · exact Or.inl hA
-    · exact Or.inr hA
-
-theorem double_compl_decidable (A : FSet alpha)
+theorem double_compl (A : FSet alpha)
     [DecidablePred (fun x => x ∈ A)] : Equal (Compl (Compl A)) A := by
   intro x
   constructor
@@ -357,7 +335,7 @@ theorem double_compl_decidable (A : FSet alpha)
   · intro hx hnot
     exact hnot hx
 
-theorem union_compl_univ_decidable (A : FSet alpha)
+theorem union_compl_univ (A : FSet alpha)
     [DecidablePred (fun x => x ∈ A)] : Equal (Union A (Compl A)) Univ := by
   intro x
   constructor
@@ -391,24 +369,7 @@ theorem demorgan_union (A B : FSet alpha) :
     | inl hA => exact hx.left hA
     | inr hB => exact hx.right hB
 
-theorem demorgan_inter (A B : FSet alpha) :
-    Equal (Compl (Inter A B)) (Union (Compl A) (Compl B)) := by
-  classical
-  intro x
-  constructor
-  · intro hx
-    by_cases hA : x ∈ A
-    · have hnotB : ¬ x ∈ B := by
-        intro hB
-        exact hx (And.intro hA hB)
-      exact Or.inr hnotB
-    · exact Or.inl hA
-  · intro hx hAB
-    cases hx with
-    | inl hnotA => exact hnotA hAB.left
-    | inr hnotB => exact hnotB hAB.right
-
-theorem demorgan_inter_decidable (A B : FSet alpha)
+theorem demorgan_inter (A B : FSet alpha)
     [DecidablePred (fun x => x ∈ A)] :
     Equal (Compl (Inter A B)) (Union (Compl A) (Compl B)) := by
   intro x
@@ -453,35 +414,7 @@ theorem compl_listUnion (sets : List (FSet alpha)) :
             have htail : x ∈ Compl (ListUnion As) := (ih x).mpr hx.right
             exact htail hAs
 
-theorem compl_listInter (sets : List (FSet alpha)) :
-    Equal (Compl (ListInter sets)) (ListUnion (sets.map Compl)) := by
-  classical
-  induction sets with
-  | nil =>
-      intro x
-      constructor
-      · intro hx
-        exact False.elim (hx True.intro)
-      · intro hx
-        cases hx
-  | cons A As ih =>
-      intro x
-      constructor
-      · intro hx
-        by_cases hA : x ∈ A
-        · have htail : x ∈ Compl (ListInter As) := by
-            intro hAs
-            exact hx (And.intro hA hAs)
-          exact Or.inr ((ih x).mp htail)
-        · exact Or.inl hA
-      · intro hx hInter
-        cases hx with
-        | inl hnotA => exact hnotA hInter.left
-        | inr htail =>
-            have htailCompl : x ∈ Compl (ListInter As) := (ih x).mpr htail
-            exact htailCompl hInter.right
-
-theorem compl_listInter_decidable (sets : List (FSet alpha))
+theorem compl_listInter (sets : List (FSet alpha))
     (hdec : forall A : FSet alpha, A ∈ sets -> DecidablePred (fun x => x ∈ A)) :
     Equal (Compl (ListInter sets)) (ListUnion (sets.map Compl)) := by
   induction sets with

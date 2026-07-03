@@ -190,7 +190,7 @@ The repeated state in a long DFA run yields a loop that can be traversed any
 number of times without changing the accepting state.
 -/
 
-theorem dfa_pumpingLength_decidable [DecidableEq state] (M : DFA alpha state) :
+theorem dfa_pumpingLength [DecidableEq state] (M : DFA alpha state) :
     PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
   constructor
   · lia
@@ -320,20 +320,10 @@ theorem dfa_pumpingLength_decidable [DecidableEq state] (M : DFA alpha state) :
                   rw [hrepeat]
                   exact hOriginalFromLoop
 
-theorem dfa_pumpingLength (M : DFA alpha state) :
-    PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
-  classical
-  exact dfa_pumpingLength_decidable M
-
-theorem dfa_hasPumpingProperty (M : DFA alpha state) :
+theorem dfa_hasPumpingProperty [DecidableEq state] (M : DFA alpha state) :
     HasPumpingProperty (DFA.Language M) := by
   exists M.statesFinite.elems.length + 1
   exact dfa_pumpingLength M
-
-theorem dfa_hasPumpingProperty_decidable [DecidableEq state] (M : DFA alpha state) :
-    HasPumpingProperty (DFA.Language M) := by
-  exists M.statesFinite.elems.length + 1
-  exact dfa_pumpingLength_decidable M
 
 /-!
 # Transfer to regular languages
@@ -399,6 +389,7 @@ theorem hasPumpingProperty_of_equal {L M : Language alpha}
 theorem dfa_recognizable_hasPumpingProperty {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
     HasPumpingProperty L := by
+  classical
   cases hL with
   | intro state hstate =>
       cases hstate with

@@ -211,7 +211,7 @@ theorem toPDA_accept_complete (G : CFG terminal nonterminal) :
   · intro h
     simpa [ToPDA] using h
 
-def toPDA_finitePresentationOfRules
+def toPDA_finitePresentation
     (G : CFG terminal nonterminal)
     (terminalFinite : FiniteType terminal)
     (rules : List (Production terminal nonterminal))
@@ -226,7 +226,7 @@ def toPDA_finitePresentationOfRules
   acceptingStates := [ToPDAState.run]
   accept_complete := toPDA_accept_complete G
 
-theorem toPDA_hasFinitePresentationOfRules
+theorem toPDA_hasFinitePresentation
     (G : CFG terminal nonterminal)
     (terminalFinite : FiniteType terminal)
     (rules : List (Production terminal nonterminal))
@@ -235,9 +235,9 @@ theorem toPDA_hasFinitePresentationOfRules
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
     PDA.HasFinitePresentation (ToPDA G) :=
   Nonempty.intro
-    (toPDA_finitePresentationOfRules G terminalFinite rules hrules)
+    (toPDA_finitePresentation G terminalFinite rules hrules)
 
-noncomputable def toPDA_finitePresentation
+noncomputable def toPDA_finitePresentation_of_hasFiniteProductions
     (G : CFG terminal nonterminal)
     (terminalFinite : FiniteType terminal)
     (hG : HasFiniteProductions G) :
@@ -245,14 +245,15 @@ noncomputable def toPDA_finitePresentation
   classical
   let rules := Classical.choose hG
   have hrules := Classical.choose_spec hG
-  exact toPDA_finitePresentationOfRules G terminalFinite rules hrules
+  exact toPDA_finitePresentation G terminalFinite rules hrules
 
-theorem toPDA_hasFinitePresentation
+theorem toPDA_hasFinitePresentation_of_hasFiniteProductions
     (G : CFG terminal nonterminal)
     (terminalFinite : FiniteType terminal)
     (hG : HasFiniteProductions G) :
     PDA.HasFinitePresentation (ToPDA G) :=
-  Nonempty.intro (toPDA_finitePresentation G terminalFinite hG)
+  Nonempty.intro
+    (toPDA_finitePresentation_of_hasFiniteProductions G terminalFinite hG)
 
 /-!
 # Completeness: grammar to PDA

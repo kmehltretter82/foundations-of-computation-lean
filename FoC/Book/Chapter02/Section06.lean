@@ -64,15 +64,10 @@ theorem union_of_countable_sets_countable {A B : FSet alpha}
   FSet.countable_union hA hB
 
 theorem subset_of_countable_set_countable {A B : FSet alpha}
-    (hAB : FSet.Subset A B) (hB : FSet.Countable B) :
-    FSet.Countable A :=
-  FSet.countable_subset hAB hB
-
-theorem subset_of_countable_set_countable_decidable {A B : FSet alpha}
     [DecidablePred (fun x => x ∈ A)]
     (hAB : FSet.Subset A B) (hB : FSet.Countable B) :
     FSet.Countable A :=
-  FSet.countable_subset_decidable hAB hB
+  FSet.countable_subset hAB hB
 
 theorem union_of_countably_infinite_sets_countably_infinite {A B : FSet alpha}
     (hA : FSet.CountablyInfinite A) (hB : FSet.CountablyInfinite B) :
@@ -172,15 +167,10 @@ theorem cardinality_respects_set_equality {A B : FSet alpha} {n : Nat}
   FSet.hasCardinality_of_equal hAB hA
 
 theorem subset_of_finite_set_finite {A B : FSet alpha}
-    (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
-    FSet.Finite A :=
-  FSet.finite_subset hAB hB
-
-theorem subset_of_finite_set_finite_decidable {A B : FSet alpha}
     [DecidablePred (fun x => x ∈ A)]
     (hAB : FSet.Subset A B) (hB : FSet.Finite B) :
     FSet.Finite A :=
-  FSet.finite_subset_decidable hAB hB
+  FSet.finite_subset hAB hB
 
 theorem list_product_cardinality (xs : List alpha) (ys : List beta) :
     (ListCard.Pairs xs ys).length = xs.length * ys.length :=

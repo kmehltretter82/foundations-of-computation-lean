@@ -45,6 +45,7 @@ def FiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction : Prop :=
 
 def FiniteProductionListGrammarRecognizerCompilerConstruction : Prop :=
   forall {nonterminal : Type},
+    DecidableEq nonterminal ->
     forall G : GeneralGrammar Bool nonterminal,
     forall rules : List (GeneralGrammar.Production Bool nonterminal),
       (forall lhs rhs,
@@ -58,7 +59,8 @@ theorem finiteProductionListGrammarRecognizerCompilerConstruction_of_finitePrese
     (hcompile :
       FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction) :
     FiniteProductionListGrammarRecognizerCompilerConstruction := by
-  intro _ G rules hrules
+  intro _ hdec G rules hrules
+  let _ : DecidableEq _ := hdec
   let P :=
     FiniteBoolGeneralGrammarPresentation.ofGrammarRules G rules hrules
   rcases hcompile P with ⟨D, hD⟩
@@ -85,16 +87,18 @@ theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompile
 theorem finiteProductionListGrammarRecognizerCompilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
     FiniteProductionListGrammarRecognizerCompilerConstruction := by
-  intro _ G rules _hrules
+  intro _ _hdec G rules _hrules
   exact hcompile (FiniteProductionListRecognizerProgram G rules)
 
 theorem finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_productionListCompiler
     (hcompile : FiniteProductionListGrammarRecognizerCompilerConstruction) :
     FiniteBooleanGeneralGrammarRecognizerCompilerPrinciple := by
-  intro _ G hfinite
+  intro nonterminal G hfinite
+  classical
   rcases GeneralGrammar.hasFiniteProductions_productionListProduces
     hfinite with ⟨rules, hrules⟩
-  rcases hcompile G rules hrules with ⟨D, hD⟩
+  rcases hcompile (inferInstance : DecidableEq nonterminal) G rules hrules with
+    ⟨D, hD⟩
   exact
     ⟨D,
       programCompiledByDescription_of_same_accepted_language

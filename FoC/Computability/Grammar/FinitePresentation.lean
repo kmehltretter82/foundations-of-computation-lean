@@ -296,29 +296,7 @@ theorem compilerConstruction_of_boundedRecognizerCompiler
         P.recognizerProgram_acceptsLanguage
         hD⟩
 
-noncomputable def ofGrammarRules
-    (G : GeneralGrammar Bool nonterminal)
-    (rules : List (GeneralGrammar.Production Bool nonterminal))
-    (hrules : forall lhs rhs,
-      G.produces lhs rhs <->
-        GeneralGrammar.ProductionListProduces rules lhs rhs) :
-    FiniteBoolGeneralGrammarPresentation where
-  nonterminalCount := G.nonterminalsFinite.elems.length
-  start := indexOf G.nonterminalsFinite G.start
-  rules := rules.map (mapProduction (indexOf G.nonterminalsFinite))
-  rule_lhsContainsNonterminal := by
-    intro rule hrule
-    rcases List.mem_map.mp hrule with ⟨source, hsource, rfl⟩
-    have hprod : G.produces source.lhs source.rhs :=
-      (hrules source.lhs source.rhs).mpr
-        ⟨source, hsource, rfl, rfl⟩
-    exact
-      (containsNonterminal_mapNonterminal_iff
-        (indexOf G.nonterminalsFinite) source.lhs).mpr
-        (G.lhsContainsNonterminal source.lhs source.rhs hprod)
-
-def ofGrammarRulesDecidable
-    [DecidableEq nonterminal]
+def ofGrammarRules [DecidableEq nonterminal]
     (G : GeneralGrammar Bool nonterminal)
     (rules : List (GeneralGrammar.Production Bool nonterminal))
     (hrules : forall lhs rhs,
@@ -463,79 +441,7 @@ theorem productionListDerivesIn_unmap_indexOfDecidable
       exact GeneralGrammar.ProductionListDerivesIn.step
         (productionListYields_unmap_indexOfDecidable finite hstep) ih
 
-theorem generatedLanguage_equal_ofGrammarRules
-    (G : GeneralGrammar Bool nonterminal)
-    (rules : List (GeneralGrammar.Production Bool nonterminal))
-    (hrules : forall lhs rhs,
-      G.produces lhs rhs <->
-        GeneralGrammar.ProductionListProduces rules lhs rhs) :
-    Language.Equal
-      (GeneralGrammar.GeneratedLanguage (ofGrammarRules G rules hrules).toGrammar)
-      (GeneralGrammar.GeneratedLanguage G) := by
-  intro w
-  let P := ofGrammarRules G rules hrules
-  constructor
-  · intro hP
-    rcases GeneralGrammar.derives_derivesIn hP with ⟨n, hPDerives⟩
-    have hPList :
-        GeneralGrammar.ProductionListDerivesIn P.rules n
-          [Symbol.nonterminal P.start]
-          (SententialForm.terminalWord w) :=
-      (GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
-        (P.toGrammar_produces_iff)).mpr hPDerives
-    have hUnmapped :=
-      productionListDerivesIn_unmap_indexOf G.nonterminalsFinite
-        (rules := rules) hPList
-    have hGList :
-        GeneralGrammar.ProductionListDerivesIn rules n
-          [Symbol.nonterminal G.start]
-          (SententialForm.terminalWord w) := by
-      have hStart :
-          SententialForm.mapNonterminal (term := Bool)
-              (valueOf G.nonterminalsFinite)
-              ([Symbol.nonterminal (terminal := Bool)
-                (indexOf G.nonterminalsFinite G.start)] :
-                SententialForm Bool
-                  (Fin G.nonterminalsFinite.elems.length)) =
-            ([Symbol.nonterminal (terminal := Bool) G.start] :
-              SententialForm Bool nonterminal) := by
-        simp [SententialForm.mapNonterminal, Symbol.mapNonterminal,
-          valueOf_indexOf]
-      have hTerm :
-          SententialForm.mapNonterminal (term := Bool)
-              (valueOf G.nonterminalsFinite)
-              (SententialForm.terminalWord
-                (nt := Fin G.nonterminalsFinite.elems.length) w) =
-            SententialForm.terminalWord (nt := nonterminal) w :=
-        SententialForm.mapNonterminal_terminalWord
-          (valueOf G.nonterminalsFinite) w
-      simpa [P, ofGrammarRules, hStart, hTerm] using hUnmapped
-    exact GeneralGrammar.derivesIn_derives
-      ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
-        hrules).mp hGList)
-  · intro hG
-    rcases GeneralGrammar.derives_derivesIn hG with ⟨n, hGDerives⟩
-    have hGList :
-        GeneralGrammar.ProductionListDerivesIn rules n
-          [Symbol.nonterminal G.start]
-          (SententialForm.terminalWord w) :=
-      (GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
-        hrules).mpr hGDerives
-    have hMapped :=
-      productionListDerivesIn_mapNonterminal
-        (indexOf G.nonterminalsFinite) hGList
-    have hPList :
-        GeneralGrammar.ProductionListDerivesIn P.rules n
-          [Symbol.nonterminal P.start]
-          (SententialForm.terminalWord w) := by
-      simpa [P, ofGrammarRules, SententialForm.mapNonterminal_terminalWord]
-        using hMapped
-    exact GeneralGrammar.derivesIn_derives
-      ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
-        (P.toGrammar_produces_iff)).mp hPList)
-
-theorem generatedLanguage_equal_ofGrammarRulesDecidable
-    [DecidableEq nonterminal]
+theorem generatedLanguage_equal_ofGrammarRules [DecidableEq nonterminal]
     (G : GeneralGrammar Bool nonterminal)
     (rules : List (GeneralGrammar.Production Bool nonterminal))
     (hrules : forall lhs rhs,
@@ -543,10 +449,10 @@ theorem generatedLanguage_equal_ofGrammarRulesDecidable
         GeneralGrammar.ProductionListProduces rules lhs rhs) :
     Language.Equal
       (GeneralGrammar.GeneratedLanguage
-        (ofGrammarRulesDecidable G rules hrules).toGrammar)
+        (ofGrammarRules G rules hrules).toGrammar)
       (GeneralGrammar.GeneratedLanguage G) := by
   intro w
-  let P := ofGrammarRulesDecidable G rules hrules
+  let P := ofGrammarRules G rules hrules
   constructor
   · intro hP
     rcases GeneralGrammar.derives_derivesIn hP with ⟨n, hPDerives⟩
@@ -582,7 +488,7 @@ theorem generatedLanguage_equal_ofGrammarRulesDecidable
             SententialForm.terminalWord (nt := nonterminal) w :=
         SententialForm.mapNonterminal_terminalWord
           (valueOf G.nonterminalsFinite) w
-      simpa [P, ofGrammarRulesDecidable, hStart, hTerm] using hUnmapped
+      simpa [P, ofGrammarRules, hStart, hTerm] using hUnmapped
     exact GeneralGrammar.derivesIn_derives
       ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
         hrules).mp hGList)
@@ -601,13 +507,14 @@ theorem generatedLanguage_equal_ofGrammarRulesDecidable
         GeneralGrammar.ProductionListDerivesIn P.rules n
           [Symbol.nonterminal P.start]
           (SententialForm.terminalWord w) := by
-      simpa [P, ofGrammarRulesDecidable,
+      simpa [P, ofGrammarRules,
         SententialForm.mapNonterminal_terminalWord] using hMapped
     exact GeneralGrammar.derivesIn_derives
       ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
         (P.toGrammar_produces_iff)).mp hPList)
 
 theorem recognizerProgram_acceptsLanguage_ofGrammarRules
+    [DecidableEq nonterminal]
     (G : GeneralGrammar Bool nonterminal)
     (rules : List (GeneralGrammar.Production Bool nonterminal))
     (hrules : forall lhs rhs,

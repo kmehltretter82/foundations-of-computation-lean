@@ -225,24 +225,6 @@ Exercise 12(c) is the finite-subset principle: every subset of a finite set is
 finite.  The proof filters the finite list for the larger set.
 -/
 theorem finite_subset {A B : FSet alpha}
-    (hAB : Subset A B) (hB : Finite B) : Finite A := by
-  classical
-  cases hB with
-  | intro xs hxs =>
-      exists xs.filter (fun x => decide (x ∈ A))
-      intro x
-      constructor
-      · intro hxA
-        have hxB := hAB x hxA
-        have hxList := (hxs x).mp hxB
-        simp [hxList]
-        exact hxA
-      · intro hxFilter
-        have hx : x ∈ xs ∧ x ∈ A := by
-          simpa using hxFilter
-        exact hx.right
-
-theorem finite_subset_decidable {A B : FSet alpha}
     [DecidablePred (fun x => x ∈ A)]
     (hAB : Subset A B) (hB : Finite B) : Finite A := by
   cases hB with

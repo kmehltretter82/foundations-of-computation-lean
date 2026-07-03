@@ -44,23 +44,15 @@ sets have the same logical shape once membership in a set is read as a
 proposition.
 -/
 
-theorem double_complement (A : FSet alpha) :
+theorem double_complement (A : FSet alpha)
+    [DecidablePred (fun x => x ∈ A)] :
     FSet.Equal (FSet.Compl (FSet.Compl A)) A :=
   FSet.double_compl A
 
-theorem double_complement_decidable (A : FSet alpha)
+theorem union_with_complement (A : FSet alpha)
     [DecidablePred (fun x => x ∈ A)] :
-    FSet.Equal (FSet.Compl (FSet.Compl A)) A :=
-  FSet.double_compl_decidable A
-
-theorem union_with_complement (A : FSet alpha) :
     FSet.Equal (FSet.Union A (FSet.Compl A)) FSet.Univ :=
   FSet.union_compl_univ A
-
-theorem union_with_complement_decidable (A : FSet alpha)
-    [DecidablePred (fun x => x ∈ A)] :
-    FSet.Equal (FSet.Union A (FSet.Compl A)) FSet.Univ :=
-  FSet.union_compl_univ_decidable A
 
 theorem intersection_with_complement (A : FSet alpha) :
     FSet.Equal (FSet.Inter A (FSet.Compl A)) FSet.Empty :=
@@ -143,32 +135,22 @@ theorem demorgan_union (A B : FSet alpha) :
       (FSet.Inter (FSet.Compl A) (FSet.Compl B)) :=
   FSet.demorgan_union A B
 
-theorem demorgan_intersection (A B : FSet alpha) :
-    FSet.Equal (FSet.Compl (FSet.Inter A B))
-      (FSet.Union (FSet.Compl A) (FSet.Compl B)) :=
-  FSet.demorgan_inter A B
-
-theorem demorgan_intersection_decidable (A B : FSet alpha)
+theorem demorgan_intersection (A B : FSet alpha)
     [DecidablePred (fun x => x ∈ A)] :
     FSet.Equal (FSet.Compl (FSet.Inter A B))
       (FSet.Union (FSet.Compl A) (FSet.Compl B)) :=
-  FSet.demorgan_inter_decidable A B
+  FSet.demorgan_inter A B
 
 theorem generalized_demorgan_union (sets : List (FSet alpha)) :
     FSet.Equal (FSet.Compl (FSet.ListUnion sets))
       (FSet.ListInter (sets.map FSet.Compl)) :=
   FSet.compl_listUnion sets
 
-theorem generalized_demorgan_intersection (sets : List (FSet alpha)) :
-    FSet.Equal (FSet.Compl (FSet.ListInter sets))
-      (FSet.ListUnion (sets.map FSet.Compl)) :=
-  FSet.compl_listInter sets
-
-theorem generalized_demorgan_intersection_decidable (sets : List (FSet alpha))
+theorem generalized_demorgan_intersection (sets : List (FSet alpha))
     (hdec : forall A : FSet alpha, A ∈ sets -> DecidablePred (fun x => x ∈ A)) :
     FSet.Equal (FSet.Compl (FSet.ListInter sets))
       (FSet.ListUnion (sets.map FSet.Compl)) :=
-  FSet.compl_listInter_decidable sets hdec
+  FSet.compl_listInter sets hdec
 
 end Section02
 end Chapter02
