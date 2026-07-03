@@ -69,6 +69,56 @@ def preRewindTape
   Tape.move Direction.left
     (rightEdgeTape skipped count tailFirst tail)
 
+theorem sourceTape_cells
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.cells (sourceTape skipped count tail) =
+      none ::
+        List.append ((List.append skipped count).map some)
+          (none ::
+            none ::
+            none ::
+            List.append
+              (List.replicate count.length (none : Option Bool))
+              tail) := by
+  simp [sourceTape, Tape.cells, tapeAtCells, List.reverse_append,
+    List.map_reverse, List.append_assoc]
+
+theorem rightEdgeTape_cells
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.cells (rightEdgeTape skipped count tailFirst tail) =
+      List.append
+        ((encodedLayoutBits (List.append skipped count)).map some)
+        (some tailFirst :: tail) := by
+  rw [rightEdgeTape, encodedLayoutBits]
+  change
+    Tape.cells
+        (tapeAtCells
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+            some)
+          (some tailFirst :: tail)) =
+      List.append
+        ((encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend (List.append skipped count) [])).map some)
+        (some tailFirst :: tail)
+  rw [show
+      (encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+          some =
+        List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+            some)
+          [some false, some false, some false, some false] by
+    simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      List.map_append, List.append_assoc]]
+  simp [Tape.cells, tapeAtCells, encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
+
 theorem encodedLayoutBits_eq_headerQuoteBits
     (layout : Word Bool) :
     encodedLayoutBits layout =
@@ -82,6 +132,119 @@ theorem encodedLayoutBits_eq_headerQuoteBits
   exact
     (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
       layout).symm
+
+theorem encodedLayoutBits_eq_header_length_cells
+    (layout : Word Bool) :
+    encodedLayoutBits layout =
+      List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            layout.length)
+          (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
+            layout)) :=
+  encodedLayoutBits_eq_headerQuoteBits layout
+
+theorem tapeAtCells_moveRight_moveLeft_append_headerBits
+    (pref right : List (Option Bool)) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells
+            (List.append pref
+              [some false, some false, some false, some false])
+            right)) =
+      tapeAtCells
+        (List.append pref
+          [some false, some false, some false, some false])
+        right := by
+  cases pref <;> cases right <;>
+    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem preRewindTape_moveRight
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.move Direction.right
+        (preRewindTape skipped count tailFirst tail) =
+      rightEdgeTape skipped count tailFirst tail := by
+  rw [preRewindTape, rightEdgeTape, encodedLayoutBits]
+  change
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells
+            ((encodeCodeWordAsInput
+              (MachineCodeSymbol.header ::
+                encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+              some)
+            (some tailFirst :: tail))) =
+      tapeAtCells
+        ((encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+          some)
+        (some tailFirst :: tail)
+  rw [show
+      (encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+          some =
+        List.append
+          ((encodeCodeWordAsInput
+            (encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+            some)
+          [some false, some false, some false, some false] by
+    simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+      List.map_append, List.append_assoc]]
+  exact
+    tapeAtCells_moveRight_moveLeft_append_headerBits
+      ((encodeCodeWordAsInput
+        (encodeBoolWordAppend (List.append skipped count) [])).reverse.map
+        some)
+      (some tailFirst :: tail)
+
+theorem rightEdgeTape_rewind_haltsFromTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (rightEdgeTape skipped count tailFirst tail)
+      (tapeAtCells [none]
+        (List.append
+          ((encodedLayoutBits (List.append skipped count)).map some)
+          (some tailFirst :: tail))) := by
+  simpa [rightEdgeTape] using
+    rightEdgeRewindDescription_haltsFrom_rightEdge_noDelimiter
+      (encodedLayoutBits (List.append skipped count))
+      tailFirst tail
+
+theorem rightEdgeTape_rewind_target_cells
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.cells
+        (tapeAtCells [none]
+          (List.append
+            ((encodedLayoutBits (List.append skipped count)).map some)
+            (some tailFirst :: tail))) =
+      none ::
+        List.append
+          ((encodedLayoutBits (List.append skipped count)).map some)
+          (some tailFirst :: tail) := by
+  rw [encodedLayoutBits]
+  change
+    Tape.cells
+        (tapeAtCells [none]
+          (List.append
+            ((encodeCodeWordAsInput
+              (MachineCodeSymbol.header ::
+                encodeBoolWordAppend (List.append skipped count) [])).map
+              some)
+            (some tailFirst :: tail))) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend (List.append skipped count) [])).map some)
+          (some tailFirst :: tail)
+  simp [Tape.cells, tapeAtCells, encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
 
 def Spec (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
