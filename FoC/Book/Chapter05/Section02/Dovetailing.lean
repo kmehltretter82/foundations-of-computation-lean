@@ -36,7 +36,7 @@ def LanguageProgramAcceptanceTrace
 noncomputable def AcceptanceTraceStagedRecognizer
     (trace : Word alpha -> Nat -> Prop) :
     StagedProgram alpha Unit :=
-  TraceRecognizerProgram trace
+  TraceRecognizerProgramOfProp trace
 
 /-!
 **Complements and Extensionality.**
@@ -138,13 +138,14 @@ theorem acceptance_trace_staged_recognizer_accepts_language
     (h : LanguageAcceptanceTrace trace L) :
     ProgramAcceptsLanguage
       (AcceptanceTraceStagedRecognizer trace) L :=
-  Computability.traceRecognizerProgram_acceptsLanguage h
+  Computability.traceRecognizerProgramOfProp_acceptsLanguage h
 
 theorem acceptance_trace_has_program_acceptable_language
     {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
     (h : LanguageAcceptanceTrace trace L) :
-    ProgramAcceptableLanguage L :=
-  Computability.acceptanceTrace_programAcceptable h
+    ProgramAcceptableLanguage L := by
+  classical
+  exact Computability.acceptanceTrace_programAcceptable h
 
 theorem program_acceptable_language_iff_has_acceptance_trace
     (L : Language alpha) :
@@ -280,7 +281,7 @@ theorem complementary_traces_dovetailing_program_decides
     (h : LanguageComplementaryAcceptanceTraces accept reject L) :
     ProgramBoolDecidesLanguage
       (TraceDovetailProgram accept reject) L :=
-  Computability.dovetailProgram_decides h
+  Computability.dovetailProgramOfProp_decides h
 
 theorem re_and_co_re_have_dovetailing_program
     {L : Language alpha}
@@ -353,8 +354,10 @@ theorem concrete_bounded_dovetail_output_correct
       (TraceDovetailProgram
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w)).run w limit :=
-  MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
-    accept reject w limit
+  by
+    rw [TraceDovetailProgram, Computability.dovetailProgramOfProp_run_eq]
+    exact MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
+      accept reject w limit
 
 theorem concrete_machine_bounded_dovetail_true_iff_of_complementary_traces
     {accept reject : MachineDescription}
@@ -943,11 +946,16 @@ theorem concrete_finite_trace_recognizer_compiled_by_description
       (AcceptanceTraceStagedRecognizer
         (ConcreteFiniteAcceptorTrace P))
       (ConcreteFiniteAcceptorDescription P) := by
-  simpa [AcceptanceTraceStagedRecognizer,
-    ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
-    using
-      Computability.FiniteAcceptorProgram.traceRecognizer_compiledByDescription
-        P hD
+  have hcompiled :=
+    Computability.FiniteAcceptorProgram.traceRecognizer_compiledByDescription
+      P hD
+  constructor
+  · exact hcompiled.left
+  · intro w
+    exact Iff.trans (hcompiled.right w)
+      (Iff.symm
+        (Computability.traceRecognizerProgramOfProp_haltsWithOutput_iff
+          (trace := ConcreteFiniteAcceptorTrace P) w []))
 
 theorem concrete_finite_trace_recognizer_acceptable_by_description
     (P : ConcreteFiniteAcceptorProgram)
@@ -1169,9 +1177,8 @@ theorem concrete_finite_complementary_recognizers_have_compiled_dovetail_program
               constructor
               · cases hP.left
                 cases hP.right.left
-                exact
-                  complementary_traces_dovetailing_program_decides
-                    hreject.right.right
+                exact Computability.dovetailProgram_decides
+                  hreject.right.right
               · exact hP.right.right
 
 /-!

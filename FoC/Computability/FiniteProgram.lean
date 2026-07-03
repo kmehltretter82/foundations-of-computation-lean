@@ -151,6 +151,11 @@ namespace FiniteAcceptorProgram
 def trace (P : FiniteAcceptorProgram) (w : Word Bool) (n : Nat) : Prop :=
   P.description.HaltsIn n w
 
+instance traceDecidable (P : FiniteAcceptorProgram)
+    (w : Word Bool) (n : Nat) : Decidable (P.trace w n) := by
+  unfold trace
+  infer_instance
+
 def toStagedProgram (P : FiniteAcceptorProgram) :
     StagedProgram Bool Unit where
   run w n :=
@@ -451,7 +456,7 @@ structure FiniteDovetailProgram where
 
 namespace FiniteDovetailProgram
 
-noncomputable def toStagedProgram (P : FiniteDovetailProgram) :
+def toStagedProgram (P : FiniteDovetailProgram) :
     StagedProgram Bool Bool :=
   DovetailProgram P.accept.trace P.reject.trace
 

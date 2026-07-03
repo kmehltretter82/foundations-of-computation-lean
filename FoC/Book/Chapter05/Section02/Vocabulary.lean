@@ -402,7 +402,7 @@ def LanguageDovetailSearchHit
 noncomputable def TraceDovetailProgram
     (accept reject : Word alpha -> Nat -> Prop) :
     StagedProgram alpha Bool :=
-  Computability.DovetailProgram accept reject
+  Computability.DovetailProgramOfProp accept reject
 
 def ProgramBoolDecidesLanguage
     (P : StagedProgram alpha Bool) (L : Language alpha) : Prop :=
@@ -476,6 +476,12 @@ def ConcreteFiniteAcceptorTrace
     (P : ConcreteFiniteAcceptorProgram)
     (w : Word Bool) (n : Nat) : Prop :=
   P.trace w n
+
+instance concreteFiniteAcceptorTraceDecidable
+    (P : ConcreteFiniteAcceptorProgram) (w : Word Bool) (n : Nat) :
+    Decidable (ConcreteFiniteAcceptorTrace P w n) := by
+  unfold ConcreteFiniteAcceptorTrace
+  infer_instance
 
 def ConcreteFiniteAcceptorDescription
     (P : ConcreteFiniteAcceptorProgram) : MachineDescription :=

@@ -603,11 +603,18 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
 
 theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  fun accept reject =>
-    hcompile
-    (fun w n => accept.HaltsIn n w)
-    (fun w n => reject.HaltsIn n w)
+    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  intro accept reject
+  rcases hcompile
+      (fun w n => accept.HaltsIn n w)
+      (fun w n => reject.HaltsIn n w) with
+    ⟨D, hD⟩
+  exists D
+  constructor
+  · exact hD.left
+  · intro w b
+    exact Iff.trans (hD.right w b)
+      (dovetailProgramOfProp_haltsWithOutput_iff w [b])
 
 theorem pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     (hcompile :
@@ -766,7 +773,7 @@ theorem DescriptionCompiler.ofLayoutSubroutineAndRunner
 theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     DovetailDescriptionCompilerPrinciple :=
-  fun accept reject => hcompile (DovetailProgram accept reject)
+  fun accept reject => hcompile (DovetailProgramOfProp accept reject)
 
 theorem pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
@@ -805,8 +812,9 @@ theorem complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
   cases hcompile accept reject with
   | intro D hD =>
       exact programBoolDecidableByDescription_turingDecidable
-        (Exists.intro (DovetailProgram accept reject)
-          (Exists.intro D (And.intro (dovetailProgram_decides htraces) hD)))
+        (Exists.intro (DovetailProgramOfProp accept reject)
+          (Exists.intro D
+            (And.intro (dovetailProgramOfProp_decides htraces) hD)))
 
 theorem reCoRe_turingDecidable_of_dovetailDescriptionCompiler
     (hcompile : DovetailDescriptionCompilerPrinciple)

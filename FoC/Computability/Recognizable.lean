@@ -138,6 +138,46 @@ def TraceHitsBy (trace : Word input -> Nat -> Prop)
     (w : Word input) (limit : Nat) : Prop :=
   exists n : Nat, n ≤ limit ∧ trace w n
 
+def traceHitsByDecidable
+    (trace : Word input -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)]
+    (w : Word input) :
+    forall limit : Nat, Decidable (TraceHitsBy trace w limit)
+  | 0 =>
+      if h : trace w 0 then
+        isTrue ⟨0, Nat.le_refl 0, h⟩
+      else
+        isFalse (by
+          intro hit
+          rcases hit with ⟨n, hn, htrace⟩
+          have hn0 : n = 0 := Nat.eq_zero_of_le_zero hn
+          exact h (by simpa [hn0] using htrace))
+  | limit + 1 =>
+      match traceHitsByDecidable trace w limit with
+      | isTrue hit =>
+          isTrue (by
+            rcases hit with ⟨n, hn, htrace⟩
+            exact ⟨n, Nat.le_trans hn (Nat.le_succ limit), htrace⟩)
+      | isFalse noHit =>
+          if hlast : trace w (limit + 1) then
+            isTrue ⟨limit + 1, Nat.le_refl (limit + 1), hlast⟩
+          else
+            isFalse (by
+              intro hit
+              rcases hit with ⟨n, hn, htrace⟩
+              by_cases hlastIndex : n = limit + 1
+              · exact hlast (by simpa [hlastIndex] using htrace)
+              · have hnLimit : n ≤ limit := by
+                  lia
+                exact noHit ⟨n, hnLimit, htrace⟩)
+
+instance traceHitsByDecidableInstance
+    (trace : Word input -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)]
+    (w : Word input) (limit : Nat) :
+    Decidable (TraceHitsBy trace w limit) :=
+  traceHitsByDecidable trace w limit
+
 def ComplementaryTraceSearchHit
     (accept reject : Word input -> Nat -> Prop)
     (w : Word input) (limit : Nat) : Prop :=
@@ -150,11 +190,15 @@ Decidability can be represented by a computable Boolean characteristic function
 with explicit true and false outputs.
 -/
 
-noncomputable def CharacteristicFunction (L : Language input) :
+def CharacteristicFunction (L : Language input)
+    [DecidablePred (fun w => w ∈ L)] :
     Word input -> Word Bool :=
-  by
-    classical
-    exact fun w => if w ∈ L then [true] else [false]
+  fun w => if w ∈ L then [true] else [false]
+
+noncomputable def CharacteristicFunctionOfProp (L : Language input) :
+    Word input -> Word Bool := by
+  classical
+  exact CharacteristicFunction L
 
 def BoolCharacteristic (χ : Word input -> Word Bool)
     (L : Language input) : Prop :=
@@ -238,15 +282,21 @@ theorem turing_acceptable_acceptedLanguage {input : Type} {state : Type}
   turing_acceptable_of_recognizes (TuringMachine.recognizes_acceptedLanguage M)
 
 theorem characteristicFunction_is_boolCharacteristic
-    (L : Language input) :
+    (L : Language input)
+    [DecidablePred (fun w => w ∈ L)] :
     BoolCharacteristic (CharacteristicFunction L) L := by
-  classical
   intro w
   constructor
   · intro hw
     simp [CharacteristicFunction, hw]
   · intro hw
     simp [CharacteristicFunction, hw]
+
+theorem characteristicFunctionOfProp_is_boolCharacteristic
+    (L : Language input) :
+    BoolCharacteristic (CharacteristicFunctionOfProp L) L := by
+  classical
+  exact characteristicFunction_is_boolCharacteristic L
 
 theorem boolCharacteristic_of_equal
     {χ : Word input -> Word Bool} {L K : Language input}
@@ -270,18 +320,30 @@ theorem computesFunction_characteristicFunction
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
+    [DecidablePred (fun w => w ∈ L)]
     (h : DecidesLanguage M encodeInput zero one L) :
     ComputesFunction M encodeInput
       (fun b : Bool => if b then one else zero)
       (CharacteristicFunction L) := by
-  classical
   intro w
   by_cases hw : w ∈ L
   · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).left hw
   · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).right hw
 
+theorem computesFunction_characteristicFunctionOfProp
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {zero one : symbol}
+    {L : Language input}
+    (h : DecidesLanguage M encodeInput zero one L) :
+    ComputesFunction M encodeInput
+      (fun b : Bool => if b then one else zero)
+      (CharacteristicFunctionOfProp L) := by
+  classical
+  exact computesFunction_characteristicFunction h
+
 theorem turingDecidable_characteristicFunction_turingComputable
     {L : Language input}
+    [DecidablePred (fun w => w ∈ L)]
     (h : TuringDecidable L) :
     TuringComputable (CharacteristicFunction L) := by
   rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩
@@ -289,14 +351,23 @@ theorem turingDecidable_characteristicFunction_turingComputable
     (fun b : Bool => if b then one else zero),
     computesFunction_characteristicFunction hdec⟩
 
+theorem turingDecidable_characteristicFunctionOfProp_turingComputable
+    {L : Language input}
+    (h : TuringDecidable L) :
+    TuringComputable (CharacteristicFunctionOfProp L) := by
+  rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩
+  exact ⟨symbol, state, M, encodeInput,
+    (fun b : Bool => if b then one else zero),
+    computesFunction_characteristicFunctionOfProp hdec⟩
+
 theorem turingDecidable_has_computableCharacteristic
     {L : Language input}
     (h : TuringDecidable L) :
     HasComputableCharacteristic L :=
-  Exists.intro (CharacteristicFunction L)
+  Exists.intro (CharacteristicFunctionOfProp L)
     (And.intro
-      (turingDecidable_characteristicFunction_turingComputable h)
-      (characteristicFunction_is_boolCharacteristic L))
+      (turingDecidable_characteristicFunctionOfProp_turingComputable h)
+      (characteristicFunctionOfProp_is_boolCharacteristic L))
 
 theorem boolCharacteristic_turingDecidable
     {χ : Word input -> Word Bool} {L : Language input}

@@ -693,11 +693,11 @@ theorem encodedInputDescriptionCompilerPrinciple_of_programCompiler
   intro L hL
   cases recursivelyEnumerable_has_acceptanceTrace hL with
   | intro trace htrace =>
-      cases hcompile (TraceRecognizerProgram trace) with
+      cases hcompile (TraceRecognizerProgramOfProp trace) with
       | intro D hD =>
           exists D
           exact encodedInputProgramCompiledByDescription_acceptsLanguage
-            (traceRecognizerProgram_acceptsLanguage htrace) hD
+            (traceRecognizerProgramOfProp_acceptsLanguage htrace) hD
 
 theorem encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :

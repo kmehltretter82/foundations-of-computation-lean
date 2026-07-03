@@ -180,7 +180,7 @@ def SemanticDescriptionBoolDeciderCompilerAssumption : Prop :=
 def DovetailDescriptionCompilerPrinciple : Prop :=
   forall accept reject : Word Bool -> Nat -> Prop,
     exists D : MachineDescription,
-      BoolProgramCompiledByDescription (DovetailProgram accept reject) D
+      BoolProgramCompiledByDescription (DovetailProgramOfProp accept reject) D
 
 def SemanticDovetailDescriptionCompilerAssumption : Prop :=
   DovetailDescriptionCompilerPrinciple
