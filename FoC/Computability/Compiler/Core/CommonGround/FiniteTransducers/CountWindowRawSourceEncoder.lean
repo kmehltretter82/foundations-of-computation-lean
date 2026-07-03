@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 
 set_option doc.verso true
@@ -36,6 +37,33 @@ def countWindowRawSourceEncoderCellFieldCells
   (EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
     cells).map some
 
+def countWindowRawSourceEncoderEncodedLayoutCells
+    (layout : Word Bool) : List (Option Bool) :=
+  List.append
+    countWindowRawSourceEncoderHeaderCells
+    (List.append
+      (countWindowRawSourceEncoderLayoutLengthCells layout)
+      (countWindowRawSourceEncoderCellFieldCells
+        (layout.map some)))
+
+def countWindowRawSourceEncoderOutputCells
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append
+    (countWindowRawSourceEncoderEncodedLayoutCells
+      (List.append skipped count))
+    (List.append tail
+      (List.replicate count.length (none : Option Bool)))
+
+def countWindowRawSourceEncoderScanPadding
+    (count : Word Bool) (tail : List (Option Bool)) :
+    List (Option Bool) :=
+  none ::
+    none ::
+    List.append
+      (List.replicate count.length (none : Option Bool))
+      tail
+
 def countWindowRawSourceEncoderSourceTape
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     Tape Bool :=
@@ -68,7 +96,694 @@ def countWindowRawSourceEncoderTargetTape
               (List.replicate count.length
                 (none : Option Bool)))))))
 
-def CountWindowRawSourceEncoderSpec
+def countWindowRawSourceEncoderRightEdgeTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape Bool :=
+  rightEdgeScanTargetTapeFromLeft [none]
+    (List.append skipped count)
+    (countWindowRawSourceEncoderScanPadding count tail)
+
+def countWindowRawSourceEncoderCountWindowStartTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape Bool :=
+  tapeAtCells
+    (none ::
+      none ::
+      none ::
+      List.append
+        ((List.append skipped count).reverse.map some)
+        [none])
+    (List.append
+      (List.replicate count.length (none : Option Bool))
+      tail)
+
+def countWindowRawSourceEncoderBeforeCountWindowTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape Bool :=
+  tapeAtCells
+    (none ::
+      none ::
+      List.append
+        ((List.append skipped count).reverse.map some)
+        [none])
+    (none ::
+      List.append
+        (List.replicate count.length (none : Option Bool))
+        tail)
+
+def countWindowRawSourceEncoderTailPastFirstTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (some tailFirst ::
+      List.append
+        (List.replicate count.length (none : Option Bool))
+        (none ::
+          none ::
+          none ::
+          List.append
+            ((List.append skipped count).reverse.map some)
+            [none]))
+    tail
+
+theorem countWindowRawSourceEncoderCellFieldCells_append
+    (left right : List (Option Bool)) :
+    countWindowRawSourceEncoderCellFieldCells
+        (List.append left right) =
+      List.append
+        (countWindowRawSourceEncoderCellFieldCells left)
+        (countWindowRawSourceEncoderCellFieldCells right) := by
+  unfold countWindowRawSourceEncoderCellFieldCells
+  rw [
+    EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits_append]
+  simp [List.map_append]
+
+theorem countWindowRawSourceEncoderCellFieldCells_map_append
+    (left right : Word Bool) :
+    countWindowRawSourceEncoderCellFieldCells
+        ((List.append left right).map some) =
+      List.append
+        (countWindowRawSourceEncoderCellFieldCells (left.map some))
+        (countWindowRawSourceEncoderCellFieldCells (right.map some)) := by
+  have hmap :
+      (List.append left right).map some =
+        List.append (left.map some) (right.map some) := by
+    induction left with
+    | nil =>
+        rfl
+    | cons bit rest ih =>
+        simp [List.append]
+  rw [hmap]
+  exact countWindowRawSourceEncoderCellFieldCells_append
+    (left.map some) (right.map some)
+
+theorem countWindowRawSourceEncoderTargetTape_eq_outputCells
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderTargetTape skipped count tail =
+      tapeAtCells [none]
+        (countWindowRawSourceEncoderOutputCells skipped count tail) := by
+  unfold countWindowRawSourceEncoderTargetTape
+  unfold countWindowRawSourceEncoderOutputCells
+  unfold countWindowRawSourceEncoderEncodedLayoutCells
+  rw [countWindowRawSourceEncoderCellFieldCells_map_append]
+  simp [List.append_assoc]
+
+theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
+    (layout : Word Bool) :
+    countWindowRawSourceEncoderEncodedLayoutCells layout =
+      (encodeCodeWordAsInput
+        (MachineCodeSymbol.header ::
+          encodeBoolWordAppend layout [])).map some := by
+  unfold countWindowRawSourceEncoderEncodedLayoutCells
+  unfold countWindowRawSourceEncoderHeaderCells
+  unfold countWindowRawSourceEncoderLayoutLengthCells
+  unfold countWindowRawSourceEncoderCellFieldCells
+  simp [encodeCodeWordAsInput, List.map_append]
+  rw [
+    EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.boolWordBits_eq_encodeBoolWordAppend
+      layout []]
+  simp [encodeCodeWordAsInput, List.map_append]
+
+theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderOutputCells skipped count tail =
+      List.append
+        ((encodeCodeWordAsInput
+          (MachineCodeSymbol.header ::
+            encodeBoolWordAppend (List.append skipped count) [])).map some)
+        (List.append tail
+          (List.replicate count.length (none : Option Bool))) := by
+  rw [countWindowRawSourceEncoderOutputCells,
+    countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord]
+
+theorem countWindowRawSourceEncoderRightEdgeScan_haltsFromTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    rightEdgeScanDescription.HaltsFromTape
+      (countWindowRawSourceEncoderSourceTape skipped count tail)
+      (countWindowRawSourceEncoderRightEdgeTape skipped count tail) := by
+  simpa [countWindowRawSourceEncoderSourceTape,
+    countWindowRawSourceEncoderRightEdgeTape,
+    countWindowRawSourceEncoderScanPadding,
+    rightEdgeScanSourceTapeFromLeft, List.append_assoc] using
+    rightEdgeScanDescription_haltsFromTape [none]
+      (List.append skipped count)
+      (countWindowRawSourceEncoderScanPadding count tail)
+
+theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_cons
+    (leftRev : List (Option Bool)) (cell : Option Bool)
+    (rest : List (Option Bool)) :
+    Tape.move Direction.right (tapeAtCells leftRev (cell :: rest)) =
+      tapeAtCells (cell :: leftRev) rest := by
+  cases rest <;> rfl
+
+theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
+    (pref right : List (Option Bool)) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells (List.append pref [none]) right)) =
+      tapeAtCells (List.append pref [none]) right := by
+  cases pref <;> cases right <;>
+    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem rightEdgeScanTargetTapeFromLeft_moveRight_four_fixedBlanks
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.right
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (rightEdgeScanTargetTapeFromLeft [none] bits
+              (none :: none :: padding))))) =
+      tapeAtCells
+        (none ::
+          none ::
+          none ::
+          List.append (bits.reverse.map some) [none])
+        padding := by
+  rw [rightEdgeScanTargetTapeFromLeft]
+  rw [
+    countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none]
+  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
+  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
+  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
+
+theorem rightEdgeScanTargetTapeFromLeft_moveRight_threeBlankSource
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.right
+        (rightEdgeScanTargetTapeFromLeft [none] bits
+          (none :: none :: padding)) =
+      tapeAtCells
+        (List.append (bits.reverse.map some) [none])
+        (none :: none :: none :: padding) := by
+  rw [rightEdgeScanTargetTapeFromLeft]
+  exact
+    countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
+      (bits.reverse.map some) (none :: none :: none :: padding)
+
+theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_four
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.move Direction.right
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (countWindowRawSourceEncoderRightEdgeTape
+              skipped count tail)))) =
+      countWindowRawSourceEncoderCountWindowStartTape
+        skipped count tail := by
+  rw [countWindowRawSourceEncoderRightEdgeTape,
+    countWindowRawSourceEncoderCountWindowStartTape,
+    countWindowRawSourceEncoderScanPadding]
+  exact
+    rightEdgeScanTargetTapeFromLeft_moveRight_four_fixedBlanks
+      (List.append skipped count)
+      (List.append
+        (List.replicate count.length (none : Option Bool))
+        tail)
+
+def rightMoveAcrossThreeBlanksDescription : MachineDescription where
+  stateCount := 4
+  start := 0
+  halt := 3
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 1 none none Direction.right 2
+    , transition 2 none none Direction.right 3 ]
+
+theorem rightMoveAcrossThreeBlanksDescription_wellFormed :
+    rightMoveAcrossThreeBlanksDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := rightMoveAcrossThreeBlanksDescription.transitions)
+      (stateCount := rightMoveAcrossThreeBlanksDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := rightMoveAcrossThreeBlanksDescription.transitions)
+      (by decide)
+
+theorem rightMoveAcrossThreeBlanksDescription_haltTransitionFree :
+    rightMoveAcrossThreeBlanksDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := rightMoveAcrossThreeBlanksDescription.transitions)
+    (state := rightMoveAcrossThreeBlanksDescription.halt)
+    (by decide)
+
+theorem rightMoveAcrossThreeBlanksDescription_subroutineReady :
+    rightMoveAcrossThreeBlanksDescription.SubroutineReady :=
+  ⟨rightMoveAcrossThreeBlanksDescription_wellFormed,
+    rightMoveAcrossThreeBlanksDescription_haltTransitionFree⟩
+
+theorem rightMoveAcrossThreeBlanksDescription_run
+    (left right : List (Option Bool)) :
+    rightMoveAcrossThreeBlanksDescription.runConfig 3
+        { state := rightMoveAcrossThreeBlanksDescription.start
+          tape :=
+            tapeAtCells left
+              (none :: none :: none :: right) } =
+      { state := rightMoveAcrossThreeBlanksDescription.halt
+        tape :=
+          tapeAtCells
+            (none :: none :: none :: left)
+            right } := by
+  cases right <;>
+    simp [rightMoveAcrossThreeBlanksDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem rightMoveAcrossThreeBlanksDescription_haltsFromTape
+    (left right : List (Option Bool)) :
+    rightMoveAcrossThreeBlanksDescription.HaltsFromTape
+      (tapeAtCells left
+        (none :: none :: none :: right))
+      (tapeAtCells
+        (none :: none :: none :: left)
+        right) := by
+  refine ⟨3, ?_⟩
+  constructor <;>
+    rw [rightMoveAcrossThreeBlanksDescription_run]
+
+def countWindowRawSourceEncoderScanToCountWindowStartDescription :
+    MachineDescription :=
+  seqSubroutine rightEdgeScanDescription
+    rightMoveAcrossThreeBlanksDescription Direction.right
+
+theorem
+    countWindowRawSourceEncoderScanToCountWindowStartDescription_subroutineReady :
+    countWindowRawSourceEncoderScanToCountWindowStartDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    rightEdgeScanDescription_subroutineReady
+    rightMoveAcrossThreeBlanksDescription_subroutineReady
+
+theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.move Direction.right
+        (countWindowRawSourceEncoderRightEdgeTape skipped count tail) =
+      tapeAtCells
+        (List.append
+          ((List.append skipped count).reverse.map some)
+          [none])
+        (none ::
+          none ::
+          none ::
+          List.append
+            (List.replicate count.length (none : Option Bool))
+            tail) := by
+  rw [countWindowRawSourceEncoderRightEdgeTape,
+    countWindowRawSourceEncoderScanPadding]
+  exact
+    rightEdgeScanTargetTapeFromLeft_moveRight_threeBlankSource
+      (List.append skipped count)
+      (List.append
+        (List.replicate count.length (none : Option Bool))
+        tail)
+
+theorem
+    countWindowRawSourceEncoderScanToCountWindowStartDescription_haltsFromTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderScanToCountWindowStartDescription.HaltsFromTape
+      (countWindowRawSourceEncoderSourceTape skipped count tail)
+      (countWindowRawSourceEncoderCountWindowStartTape
+        skipped count tail) := by
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      rightEdgeScanDescription_subroutineReady
+      rightMoveAcrossThreeBlanksDescription_subroutineReady
+      (countWindowRawSourceEncoderRightEdgeScan_haltsFromTape
+        skipped count tail)
+      (countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
+        skipped count tail)
+      (by
+        simpa [countWindowRawSourceEncoderCountWindowStartTape] using
+          rightMoveAcrossThreeBlanksDescription_haltsFromTape
+            (List.append
+              ((List.append skipped count).reverse.map some)
+              [none])
+            (List.append
+              (List.replicate count.length (none : Option Bool))
+              tail))
+
+def rightMoveAcrossTwoBlanksDescription : MachineDescription where
+  stateCount := 3
+  start := 0
+  halt := 2
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 1 none none Direction.right 2 ]
+
+theorem rightMoveAcrossTwoBlanksDescription_wellFormed :
+    rightMoveAcrossTwoBlanksDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := rightMoveAcrossTwoBlanksDescription.transitions)
+      (stateCount := rightMoveAcrossTwoBlanksDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := rightMoveAcrossTwoBlanksDescription.transitions)
+      (by decide)
+
+theorem rightMoveAcrossTwoBlanksDescription_haltTransitionFree :
+    rightMoveAcrossTwoBlanksDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := rightMoveAcrossTwoBlanksDescription.transitions)
+    (state := rightMoveAcrossTwoBlanksDescription.halt)
+    (by decide)
+
+theorem rightMoveAcrossTwoBlanksDescription_subroutineReady :
+    rightMoveAcrossTwoBlanksDescription.SubroutineReady :=
+  ⟨rightMoveAcrossTwoBlanksDescription_wellFormed,
+    rightMoveAcrossTwoBlanksDescription_haltTransitionFree⟩
+
+theorem rightMoveAcrossTwoBlanksDescription_run
+    (left right : List (Option Bool)) :
+    rightMoveAcrossTwoBlanksDescription.runConfig 2
+        { state := rightMoveAcrossTwoBlanksDescription.start
+          tape := tapeAtCells left (none :: none :: right) } =
+      { state := rightMoveAcrossTwoBlanksDescription.halt
+        tape := tapeAtCells (none :: none :: left) right } := by
+  cases right <;>
+    simp [rightMoveAcrossTwoBlanksDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem rightMoveAcrossTwoBlanksDescription_haltsFromTape
+    (left right : List (Option Bool)) :
+    rightMoveAcrossTwoBlanksDescription.HaltsFromTape
+      (tapeAtCells left (none :: none :: right))
+      (tapeAtCells (none :: none :: left) right) := by
+  refine ⟨2, ?_⟩
+  constructor <;>
+    rw [rightMoveAcrossTwoBlanksDescription_run]
+
+def countWindowRawSourceEncoderScanToBeforeCountWindowDescription :
+    MachineDescription :=
+  seqSubroutine rightEdgeScanDescription
+    rightMoveAcrossTwoBlanksDescription Direction.right
+
+theorem
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady :
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    rightEdgeScanDescription_subroutineReady
+    rightMoveAcrossTwoBlanksDescription_subroutineReady
+
+theorem
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription_haltsFromTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription.HaltsFromTape
+      (countWindowRawSourceEncoderSourceTape skipped count tail)
+      (countWindowRawSourceEncoderBeforeCountWindowTape
+        skipped count tail) := by
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      rightEdgeScanDescription_subroutineReady
+      rightMoveAcrossTwoBlanksDescription_subroutineReady
+      (countWindowRawSourceEncoderRightEdgeScan_haltsFromTape
+        skipped count tail)
+      (countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
+        skipped count tail)
+      (by
+        simpa [countWindowRawSourceEncoderBeforeCountWindowTape] using
+          rightMoveAcrossTwoBlanksDescription_haltsFromTape
+            (List.append
+              ((List.append skipped count).reverse.map some)
+              [none])
+            (none ::
+              List.append
+                (List.replicate count.length (none : Option Bool))
+                tail))
+
+theorem countWindowRawSourceEncoderBeforeCountWindowTape_moveRight
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.move Direction.right
+        (countWindowRawSourceEncoderBeforeCountWindowTape
+          skipped count tail) =
+      countWindowRawSourceEncoderCountWindowStartTape
+        skipped count tail := by
+  rw [countWindowRawSourceEncoderBeforeCountWindowTape,
+    countWindowRawSourceEncoderCountWindowStartTape]
+  exact
+    countWindowRawSourceEncoder_tapeAtCells_moveRight_cons
+      (none ::
+        none ::
+        List.append
+          ((List.append skipped count).reverse.map some)
+          [none])
+      (none : Option Bool)
+      (List.append
+        (List.replicate count.length (none : Option Bool))
+        tail)
+
+def rightBlankRunTailFirstScannerDescription : MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ transition 0 none none Direction.right 0
+    , transition 0 (some false) (some false) Direction.right 1
+    , transition 0 (some true) (some true) Direction.right 1 ]
+
+theorem rightBlankRunTailFirstScannerDescription_wellFormed :
+    rightBlankRunTailFirstScannerDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := rightBlankRunTailFirstScannerDescription.transitions)
+      (stateCount := rightBlankRunTailFirstScannerDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := rightBlankRunTailFirstScannerDescription.transitions)
+      (by decide)
+
+theorem rightBlankRunTailFirstScannerDescription_haltTransitionFree :
+    rightBlankRunTailFirstScannerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := rightBlankRunTailFirstScannerDescription.transitions)
+    (state := rightBlankRunTailFirstScannerDescription.halt)
+    (by decide)
+
+theorem rightBlankRunTailFirstScannerDescription_subroutineReady :
+    rightBlankRunTailFirstScannerDescription.SubroutineReady :=
+  ⟨rightBlankRunTailFirstScannerDescription_wellFormed,
+    rightBlankRunTailFirstScannerDescription_haltTransitionFree⟩
+
+theorem rightBlankRunTailFirstScannerDescription_step_blank
+    (left right : List (Option Bool)) :
+    rightBlankRunTailFirstScannerDescription.runConfig 1
+        { state := rightBlankRunTailFirstScannerDescription.start
+          tape := tapeAtCells left (none :: right) } =
+      { state := rightBlankRunTailFirstScannerDescription.start
+        tape := tapeAtCells (none :: left) right } := by
+  cases right <;>
+    simp [rightBlankRunTailFirstScannerDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem rightBlankRunTailFirstScannerDescription_step_tailFirst
+    (left tail : List (Option Bool)) (tailFirst : Bool) :
+    rightBlankRunTailFirstScannerDescription.runConfig 1
+        { state := rightBlankRunTailFirstScannerDescription.start
+          tape := tapeAtCells left (some tailFirst :: tail) } =
+      { state := rightBlankRunTailFirstScannerDescription.halt
+        tape := tapeAtCells (some tailFirst :: left) tail } := by
+  cases tailFirst <;> cases tail <;>
+    simp [rightBlankRunTailFirstScannerDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem countWindowRawSourceEncoder_replicate_none_append_cons
+    (n : Nat) (left : List (Option Bool)) :
+    List.append (List.replicate n (none : Option Bool))
+        (none :: left) =
+      List.append
+        (List.replicate (n + 1) (none : Option Bool))
+        left := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        none ::
+            List.append (List.replicate n (none : Option Bool))
+              (none :: left) =
+          List.append
+            (List.replicate (Nat.succ n + 1)
+              (none : Option Bool))
+            left
+      rw [ih]
+      rfl
+
+theorem rightBlankRunTailFirstScannerDescription_run
+    (blankCount : Nat) (left tail : List (Option Bool))
+    (tailFirst : Bool) :
+    rightBlankRunTailFirstScannerDescription.runConfig
+        (blankCount + 1)
+        { state := rightBlankRunTailFirstScannerDescription.start
+          tape :=
+            tapeAtCells left
+              (List.append
+                (List.replicate blankCount (none : Option Bool))
+                (some tailFirst :: tail)) } =
+      { state := rightBlankRunTailFirstScannerDescription.halt
+        tape :=
+          tapeAtCells
+            (some tailFirst ::
+              List.append
+                (List.replicate blankCount (none : Option Bool))
+                left)
+            tail } := by
+  induction blankCount generalizing left with
+  | zero =>
+      simpa using
+        rightBlankRunTailFirstScannerDescription_step_tailFirst
+          left tail tailFirst
+  | succ blankCount ih =>
+      rw [show Nat.succ blankCount + 1 =
+        1 + (blankCount + 1) by omega]
+      rw [runConfig_add]
+      change
+        rightBlankRunTailFirstScannerDescription.runConfig
+            (blankCount + 1)
+            (rightBlankRunTailFirstScannerDescription.runConfig 1
+              { state := rightBlankRunTailFirstScannerDescription.start
+                tape :=
+                  tapeAtCells left
+                    (none ::
+                      List.append
+                        (List.replicate blankCount
+                          (none : Option Bool))
+                        (some tailFirst :: tail)) }) =
+          { state := rightBlankRunTailFirstScannerDescription.halt
+            tape :=
+              tapeAtCells
+                (some tailFirst ::
+                  List.append
+                    (List.replicate (Nat.succ blankCount)
+                      (none : Option Bool))
+                    left)
+                tail }
+      rw [rightBlankRunTailFirstScannerDescription_step_blank]
+      have hih := ih (none :: left)
+      rw [hih]
+      simpa [List.replicate] using
+        congrArg
+          (fun cells =>
+            tapeAtCells (some tailFirst :: cells) tail)
+          (countWindowRawSourceEncoder_replicate_none_append_cons
+            blankCount left)
+
+theorem rightBlankRunTailFirstScannerDescription_haltsFromTape
+    (blankCount : Nat) (left tail : List (Option Bool))
+    (tailFirst : Bool) :
+    rightBlankRunTailFirstScannerDescription.HaltsFromTape
+      (tapeAtCells left
+        (List.append
+          (List.replicate blankCount (none : Option Bool))
+          (some tailFirst :: tail)))
+      (tapeAtCells
+        (some tailFirst ::
+          List.append
+            (List.replicate blankCount (none : Option Bool))
+            left)
+        tail) := by
+  refine ⟨blankCount + 1, ?_⟩
+  constructor <;>
+    rw [rightBlankRunTailFirstScannerDescription_run]
+
+theorem rightBlankRunTailFirstScannerDescription_haltsFrom_countWindowStart
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    rightBlankRunTailFirstScannerDescription.HaltsFromTape
+      (countWindowRawSourceEncoderCountWindowStartTape
+        skipped count (some tailFirst :: tail))
+      (countWindowRawSourceEncoderTailPastFirstTape
+        skipped count tailFirst tail) := by
+  simpa [countWindowRawSourceEncoderCountWindowStartTape,
+    countWindowRawSourceEncoderTailPastFirstTape] using
+    rightBlankRunTailFirstScannerDescription_haltsFromTape
+      count.length
+      (none ::
+        none ::
+        none ::
+        List.append
+          ((List.append skipped count).reverse.map some)
+          [none])
+      tail
+      tailFirst
+
+def countWindowRawSourceEncoderScanToTailPastFirstDescription :
+    MachineDescription :=
+  seqSubroutine
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription
+    rightBlankRunTailFirstScannerDescription Direction.right
+
+theorem
+    countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady :
+    countWindowRawSourceEncoderScanToTailPastFirstDescription.SubroutineReady :=
+  seqSubroutine_subroutineReady
+    countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady
+    rightBlankRunTailFirstScannerDescription_subroutineReady
+
+theorem
+    countWindowRawSourceEncoderScanToTailPastFirstDescription_haltsFromTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderScanToTailPastFirstDescription.HaltsFromTape
+      (countWindowRawSourceEncoderSourceTape
+        skipped count (some tailFirst :: tail))
+      (countWindowRawSourceEncoderTailPastFirstTape
+        skipped count tailFirst tail) := by
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady
+      rightBlankRunTailFirstScannerDescription_subroutineReady
+      (countWindowRawSourceEncoderScanToBeforeCountWindowDescription_haltsFromTape
+        skipped count (some tailFirst :: tail))
+      (countWindowRawSourceEncoderBeforeCountWindowTape_moveRight
+        skipped count (some tailFirst :: tail))
+      (rightBlankRunTailFirstScannerDescription_haltsFrom_countWindowStart
+        skipped count tailFirst tail)
+
+theorem countWindowRawSourceEncoderSourceTape_arbitraryTail_ambiguous :
+    countWindowRawSourceEncoderSourceTape
+        [false] [true] [none, some true] =
+      countWindowRawSourceEncoderSourceTape
+        [] [false, true] [some true] := by
+  native_decide
+
+theorem countWindowRawSourceEncoderTargetTape_arbitraryTail_ambiguous_ne :
+    countWindowRawSourceEncoderTargetTape
+        [false] [true] [none, some true] ≠
+      countWindowRawSourceEncoderTargetTape
+        [] [false, true] [some true] := by
+  native_decide
+
+theorem countWindowRawSourceEncoderSourceTape_tailTrailingBlank_equiv :
+    Tape.Equiv
+      (countWindowRawSourceEncoderSourceTape
+        [] [true] [some false])
+      (countWindowRawSourceEncoderSourceTape
+        [] [true] [some false, none]) := by
+  simp [Tape.Equiv, countWindowRawSourceEncoderSourceTape, tapeAtCells,
+    Tape.dropTrailingNone]
+
+theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_ne :
+    countWindowRawSourceEncoderTargetTape
+        [] [true] [some false] ≠
+      countWindowRawSourceEncoderTargetTape
+        [] [true] [some false, none] := by
+  native_decide
+
+theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_equiv :
+    Tape.Equiv
+      (countWindowRawSourceEncoderTargetTape
+        [] [true] [some false])
+      (countWindowRawSourceEncoderTargetTape
+        [] [true] [some false, none]) := by
+  unfold Tape.Equiv
+  constructor
+  · native_decide
+  constructor
+  · native_decide
+  · native_decide
+
+def CountWindowRawSourceEncoderArbitraryTailSpec
     (encoder : MachineDescription) : Prop :=
   encoder.SubroutineReady ∧
     forall (skipped count : Word Bool)
@@ -76,6 +791,34 @@ def CountWindowRawSourceEncoderSpec
       encoder.HaltsFromTape
         (countWindowRawSourceEncoderSourceTape skipped count tail)
         (countWindowRawSourceEncoderTargetTape skipped count tail)
+
+theorem countWindowRawSourceEncoderArbitraryTailSpec_impossible
+    (encoder : MachineDescription) :
+    ¬ CountWindowRawSourceEncoderArbitraryTailSpec encoder := by
+  intro hencoder
+  have hleft :=
+    hencoder.right [false] [true] [none, some true]
+  have hright :=
+    hencoder.right [] [false, true] [some true]
+  rw [← countWindowRawSourceEncoderSourceTape_arbitraryTail_ambiguous]
+    at hright
+  have htape :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hencoder.left.right hleft hright
+  exact
+    countWindowRawSourceEncoderTargetTape_arbitraryTail_ambiguous_ne
+      htape
+
+def CountWindowRawSourceEncoderSpec
+    (encoder : MachineDescription) : Prop :=
+  encoder.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      encoder.HaltsFromTape
+        (countWindowRawSourceEncoderSourceTape
+          skipped count (some tailFirst :: tail))
+        (countWindowRawSourceEncoderTargetTape
+          skipped count (some tailFirst :: tail))
 
 def CountWindowRawSourceEncoderConstruction : Prop :=
   exists encoder : MachineDescription,

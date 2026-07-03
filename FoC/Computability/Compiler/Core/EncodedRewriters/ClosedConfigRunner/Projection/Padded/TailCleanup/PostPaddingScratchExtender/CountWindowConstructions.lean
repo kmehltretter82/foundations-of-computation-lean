@@ -1534,10 +1534,13 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderCon
                   useAccept L) :=
           selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
             useAccept L
+        rcases
+            selectedProjectionPaddedTailCleanupPostCountTailCells_cons_false
+              useAccept L 0 with
+          ⟨postCountTail, hpostCountTail⟩
         have htail :
             List.append
-                (selectedProjectionPaddedTailCleanupPostCountTailCells
-                  useAccept L 0)
+                (some false :: postCountTail)
                 (List.replicate
                   (selectedProjectionPaddedTailCleanupScratchCountBits
                     useAccept L).length
@@ -1545,44 +1548,46 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderCon
               selectedProjectionPaddedTailCleanupPostCountTailCells
                 useAccept L
                 (selectedProjectionPaddedTailCleanupScratchCountBits
-                  useAccept L).length :=
-          selectedProjectionPaddedTailCleanupPostCountTailCells_zero_append_replicate
-            useAccept L
-            (selectedProjectionPaddedTailCleanupScratchCountBits
-              useAccept L).length
+                  useAccept L).length := by
+          rw [← hpostCountTail]
+          exact
+            selectedProjectionPaddedTailCleanupPostCountTailCells_zero_append_replicate
+              useAccept L
+              (selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).length
         have hrun :=
           hencoderSpec.right
             (selectedProjectionPaddedTailCleanupScratchSkippedBits
               useAccept L)
             (selectedProjectionPaddedTailCleanupScratchCountBits
               useAccept L)
-            (selectedProjectionPaddedTailCleanupPostCountTailCells
-              useAccept L 0)
+            false
+            postCountTail
         have hsource :
             countWindowRawSourceEncoderSourceTape
                 (selectedProjectionPaddedTailCleanupScratchSkippedBits
                   useAccept L)
                 (selectedProjectionPaddedTailCleanupScratchCountBits
                   useAccept L)
-                (selectedProjectionPaddedTailCleanupPostCountTailCells
-                  useAccept L 0) =
+                (some false :: postCountTail) =
               selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
                 useAccept L 0 := by
           simp [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank,
             countWindowRawSourceEncoderSourceTape,
-            hsplit, List.map_append, List.append_assoc]
+            hsplit, hpostCountTail, List.map_append, List.append_assoc]
         have htarget :
             countWindowRawSourceEncoderTargetTape
                 (selectedProjectionPaddedTailCleanupScratchSkippedBits
                   useAccept L)
                 (selectedProjectionPaddedTailCleanupScratchCountBits
                   useAccept L)
-                (selectedProjectionPaddedTailCleanupPostCountTailCells
-                  useAccept L 0) =
+                (some false :: postCountTail) =
               selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
                 useAccept L
                 (selectedProjectionPaddedTailCleanupScratchCountBits
                   useAccept L).length := by
+          unfold countWindowRawSourceEncoderTargetTape
+          rw [htail]
           cases useAccept <;>
             simp [
               selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countSplit,
@@ -1596,7 +1601,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderCon
               selectedProjectionPaddedTailCleanupRejectPostCountTailCells,
               selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
               selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
-              countWindowRawSourceEncoderTargetTape,
               countWindowRawSourceEncoderHeaderCells,
               countWindowRawSourceEncoderLayoutLengthCells,
               countWindowRawSourceEncoderCellFieldCells,
