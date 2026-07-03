@@ -955,14 +955,18 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
-theorem countWindowRawSourceEncoderLiveTailEmitterEquivConstruction_core :
-    CountWindowRawSourceEncoderLiveTailEmitterEquivConstruction := by
-  sorry
+/--
+Direct construction obligation for the raw-source encoder.
 
+This should not be factored through the live-tail emitter handoff: once the
+head has crossed the tail-first bit, the empty raw-layout case has no nonblank
+left sentinel separating it from an arbitrarily long count-window blank run.
+The original source tape still exposes the empty/nonempty raw-layout boundary
+at the head, so the real finite-machine proof belongs at this level.
+-/
 theorem countWindowRawSourceEncoderEquivConstruction_core :
-    CountWindowRawSourceEncoderEquivConstruction :=
-  countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
-    countWindowRawSourceEncoderLiveTailEmitterEquivConstruction_core
+    CountWindowRawSourceEncoderEquivConstruction := by
+  sorry
 
 end FiniteTransducers
 end CommonGround
