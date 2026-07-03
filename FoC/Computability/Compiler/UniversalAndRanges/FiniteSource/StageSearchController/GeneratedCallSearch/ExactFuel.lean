@@ -118,6 +118,16 @@ theorem codePrefixExactFuelRunnerConstruction_of_finStateConstruction
     codePrefixExactFuelRunnerConstruction_of_indexed M
       (hFin M.statesFinite.elems.length (TuringMachine.indexed M))
 
+theorem codePrefixExactFuelRunnerConstruction_of_finStateConstructionDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hFin : CodePrefixExactFuelRunnerFinStateConstruction) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  exact
+    codePrefixExactFuelRunnerConstruction_of_indexedDecidable M
+      (hFin M.statesFinite.elems.length
+        (TuringMachine.indexedDecidable M))
+
 /--
 Remaining concrete finite-table leaf for exact-fuel simulation over concrete
 indexed state spaces.
@@ -142,6 +152,14 @@ theorem codePrefixExactFuelRunnerFiniteLeaf
     CodePrefixExactFuelRunnerConstruction M := by
   exact
     codePrefixExactFuelRunnerConstruction_of_finStateConstruction
+      M codePrefixExactFuelRunnerFinStateFiniteLeaf
+
+theorem codePrefixExactFuelRunnerFiniteLeafDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixExactFuelRunnerConstruction M := by
+  exact
+    codePrefixExactFuelRunnerConstruction_of_finStateConstructionDecidable
       M codePrefixExactFuelRunnerFinStateFiniteLeaf
 
 theorem codePrefixExactFuelRunner_haltsOnInput_zero_iff

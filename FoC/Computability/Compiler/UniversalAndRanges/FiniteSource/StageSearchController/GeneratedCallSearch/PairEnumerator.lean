@@ -115,6 +115,16 @@ theorem codePrefixNestedPairEnumeratorConstruction_of_finStateConstruction
       (hFin selected.statesFinite.elems.length
         (TuringMachine.indexed selected))
 
+theorem codePrefixNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : CodePrefixNestedPairEnumeratorFinStateConstruction) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixNestedPairEnumeratorConstruction_of_indexedDecidable selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexedDecidable selected))
+
 /--
 Remaining concrete finite-table leaf for unbounded generated-pair
 enumeration over indexed selected recognizers.
@@ -139,6 +149,14 @@ theorem codePrefixNestedPairEnumeratorFiniteLeaf
     codePrefixNestedPairEnumeratorConstruction_of_finStateConstruction
       selected codePrefixNestedPairEnumeratorFinStateFiniteLeaf
 
+theorem codePrefixNestedPairEnumeratorFiniteLeafDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
+      selected codePrefixNestedPairEnumeratorFinStateFiniteLeaf
+
 /--
 Composition of the exact-fuel runner and unbounded generated-pair enumerator.
 This is the shared helper behind raw budget/fuel searches.
@@ -148,6 +166,31 @@ theorem codePrefixNestedExactFuelSearchFiniteLeaf
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedExactFuelSearchConstruction M := by
   rcases codePrefixExactFuelRunnerFiniteLeaf M with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hselectedHalt⟩
+    exact
+      ⟨inner, outer,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hM⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mpr hM⟩
+
+theorem codePrefixNestedExactFuelSearchFiniteLeafDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixNestedExactFuelSearchConstruction M := by
+  rcases codePrefixExactFuelRunnerFiniteLeafDecidable M with
     ⟨selectedState, selected, hselected⟩
   rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
     ⟨searcherState, searcher, hsearcher⟩
@@ -271,6 +314,17 @@ theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstructio
       (hFin selected.statesFinite.elems.length
         (TuringMachine.indexed selected))
 
+theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : CodePrefixBoundedNestedPairEnumeratorFinStateConstruction) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixBoundedNestedPairEnumeratorConstruction_of_indexedDecidable
+      selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexedDecidable selected))
+
 /--
 Remaining concrete finite-table leaf for bounded generated-pair enumeration
 over indexed selected recognizers.
@@ -373,6 +427,14 @@ theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
     codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
       selected codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf
 
+theorem codePrefixBoundedNestedPairEnumeratorFiniteLeafDecidable
+    {selectedState : Type u} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  exact
+    codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
+      selected codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf
+
 /--
 Composition of the exact-fuel runner and bounded generated-pair enumerator.
 This is the shared helper behind bounded simulator pair loops.
@@ -382,6 +444,31 @@ theorem codePrefixBoundedNestedExactFuelSearchFiniteLeaf
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixBoundedNestedExactFuelSearchConstruction M := by
   rcases codePrefixExactFuelRunnerFiniteLeaf M with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, hinner, houter, hselectedHalt⟩
+    exact
+      ⟨inner, outer, hinner, houter,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hinner, houter, hM⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, hinner, houter,
+        (codePrefixExactFuelRunner_haltsOnNested_iff
+          hselected input inner outer).mpr hM⟩
+
+theorem codePrefixBoundedNestedExactFuelSearchFiniteLeafDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixBoundedNestedExactFuelSearchConstruction M := by
+  rcases codePrefixExactFuelRunnerFiniteLeafDecidable M with
     ⟨selectedState, selected, hselected⟩
   rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
     ⟨searcherState, searcher, hsearcher⟩

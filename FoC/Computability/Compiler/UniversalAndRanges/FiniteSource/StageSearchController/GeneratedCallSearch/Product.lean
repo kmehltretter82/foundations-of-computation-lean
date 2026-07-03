@@ -125,6 +125,21 @@ theorem codePrefixExactFuelProductRunnerConstruction_of_finStateConstruction
         right.statesFinite.elems.length
         (TuringMachine.indexed left) (TuringMachine.indexed right))
 
+theorem codePrefixExactFuelProductRunnerConstruction_of_finStateConstructionDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState)
+    (hFin : CodePrefixExactFuelProductRunnerFinStateConstruction) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  exact
+    codePrefixExactFuelProductRunnerConstruction_of_indexedDecidable
+      left right
+      (hFin left.statesFinite.elems.length
+        right.statesFinite.elems.length
+        (TuringMachine.indexedDecidable left)
+        (TuringMachine.indexedDecidable right))
+
 /--
 Remaining concrete finite-table leaf for the product exact-fuel runner over
 indexed recognizers.
@@ -152,6 +167,16 @@ theorem codePrefixExactFuelProductRunnerFiniteLeaf
     CodePrefixExactFuelProductRunnerConstruction left right := by
   exact
     codePrefixExactFuelProductRunnerConstruction_of_finStateConstruction
+      left right codePrefixExactFuelProductRunnerFinStateFiniteLeaf
+
+theorem codePrefixExactFuelProductRunnerFiniteLeafDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  exact
+    codePrefixExactFuelProductRunnerConstruction_of_finStateConstructionDecidable
       left right codePrefixExactFuelProductRunnerFinStateFiniteLeaf
 
 /--
@@ -182,6 +207,32 @@ theorem codePrefixExactFuelProductSearchFiniteLeaf
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductSearchConstruction left right := by
   rcases codePrefixExactFuelProductRunnerFiniteLeaf left right with
+    ⟨selectedState, selected, hselected⟩
+  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hboth input).mp hhalt with
+      ⟨rightFuel, leftFuel, hselectedHalt⟩
+    exact
+      ⟨leftFuel, rightFuel,
+        (hselected input leftFuel rightFuel).mp hselectedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨leftFuel, rightFuel, hleftRight⟩
+    exact (hboth input).mpr
+      ⟨rightFuel, leftFuel,
+        (hselected input leftFuel rightFuel).mpr hleftRight⟩
+
+theorem codePrefixExactFuelProductSearchFiniteLeafDecidable
+    {leftState : Type uStage} {rightState : Type uDescription}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    CodePrefixExactFuelProductSearchConstruction left right := by
+  rcases codePrefixExactFuelProductRunnerFiniteLeafDecidable
+      left right with
     ⟨selectedState, selected, hselected⟩
   rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
     ⟨bothState, both, hboth⟩
