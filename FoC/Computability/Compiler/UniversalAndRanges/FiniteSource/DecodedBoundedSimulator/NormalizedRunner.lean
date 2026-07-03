@@ -1549,6 +1549,28 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_
         decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
           tokens])
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_pipelineCodeMachine
+    (hpipeline :
+      DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
+  rcases hpipeline with ⟨state, runner, hrunner⟩
+  refine ⟨state, runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans (hrunner tokens) (by
+      rw [
+        decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
+          tokens])
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_iff_pipelineCodeMachine :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction <->
+      DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
+  constructor
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_pipelineCodeMachine
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_codeMachine
     (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
     DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
@@ -1917,11 +1939,20 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Finite-machine leaf for the explicit iterative transition-loop pipeline.
+-/
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
+  sorry
+
+/--
 Finite-machine leaf for the explicit transition-loop pipeline transform.
 -/
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction :
     DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction
 
 /--
 Transition-loop finite-machine construction for the normalized decoded simulator.
