@@ -1,7 +1,9 @@
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
+import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.CellPass
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixExtraBlankRestorer
 
 set_option doc.verso true
 
@@ -188,6 +190,95 @@ theorem countWindowRawSourceEncoderTargetTape_eq_outputCells
   rw [countWindowRawSourceEncoderCellFieldCells_map_append]
   simp [List.append_assoc]
 
+theorem countWindowRawSourceEncoder_dropTrailingNone_append_none
+    (xs : List (Option Bool)) :
+    Tape.dropTrailingNone (xs ++ [none]) = Tape.dropTrailingNone xs := by
+  induction xs with
+  | nil =>
+      rfl
+  | cons cell xs ih =>
+      cases cell <;>
+        simp [Tape.dropTrailingNone, ih]
+
+theorem countWindowRawSourceEncoder_dropTrailingNone_append_replicate_none
+    (xs : List (Option Bool)) (padding : Nat) :
+    Tape.dropTrailingNone
+        (xs ++ List.replicate padding (none : Option Bool)) =
+      Tape.dropTrailingNone xs := by
+  induction padding generalizing xs with
+  | zero =>
+      simp
+  | succ padding ih =>
+      calc
+        Tape.dropTrailingNone
+            (xs ++ List.replicate (padding + 1)
+              (none : Option Bool)) =
+          Tape.dropTrailingNone
+            ((xs ++ [none]) ++
+              List.replicate padding (none : Option Bool)) := by
+            simp [List.replicate_succ, List.append_assoc]
+        _ = Tape.dropTrailingNone (xs ++ [none]) :=
+          ih (xs ++ [none])
+        _ = Tape.dropTrailingNone xs :=
+          countWindowRawSourceEncoder_dropTrailingNone_append_none xs
+
+def countWindowRawSourceEncoderTargetTapeNoCountPadding
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      countWindowRawSourceEncoderHeaderCells
+      (List.append
+        (countWindowRawSourceEncoderLayoutLengthCells
+          (List.append skipped count))
+        (List.append
+          (countWindowRawSourceEncoderCellFieldCells
+            (skipped.map some))
+          (List.append
+            (countWindowRawSourceEncoderCellFieldCells
+              (count.map some))
+            tail))))
+
+theorem
+    countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderTargetTapeNoCountPadding
+        skipped count tail =
+      tapeAtCells [none]
+        (List.append
+          (countWindowRawSourceEncoderEncodedLayoutCells
+            (List.append skipped count))
+          tail) := by
+  unfold countWindowRawSourceEncoderTargetTapeNoCountPadding
+  unfold countWindowRawSourceEncoderEncodedLayoutCells
+  rw [countWindowRawSourceEncoderCellFieldCells_map_append]
+  simp [List.append_assoc]
+
+theorem countWindowRawSourceEncoderTargetTape_equiv_noCountPadding
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.Equiv
+      (countWindowRawSourceEncoderTargetTape skipped count tail)
+      (countWindowRawSourceEncoderTargetTapeNoCountPadding
+        skipped count tail) := by
+  unfold countWindowRawSourceEncoderTargetTape
+  unfold countWindowRawSourceEncoderTargetTapeNoCountPadding
+  simp [countWindowRawSourceEncoderHeaderCells, encodeCodeSymbolAsInput,
+    Tape.Equiv, tapeAtCells]
+  simpa [List.append_assoc] using
+    countWindowRawSourceEncoder_dropTrailingNone_append_replicate_none
+      (some false :: some false :: some false ::
+        (List.append
+          (countWindowRawSourceEncoderLayoutLengthCells
+            (List.append skipped count))
+          (List.append
+            (countWindowRawSourceEncoderCellFieldCells
+              (skipped.map some))
+            (List.append
+              (countWindowRawSourceEncoderCellFieldCells
+                (count.map some))
+              tail))))
+      count.length
+
 theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
     (layout : Word Bool) :
     countWindowRawSourceEncoderEncodedLayoutCells layout =
@@ -215,6 +306,119 @@ theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
           (List.replicate count.length (none : Option Bool))) := by
   rw [countWindowRawSourceEncoderOutputCells,
     countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord]
+
+theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_headerBoolWord
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderTargetTapeNoCountPadding
+        skipped count tail =
+      tapeAtCells [none]
+        (List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend (List.append skipped count) [])).map
+              some)
+          tail) := by
+  rw [
+    countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells]
+  rw [countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord]
+
+def countWindowRawSourceEncoderHeaderGapEmitterDescription :
+    MachineDescription :=
+  { DovetailInitialLayoutInitializer.ControllerInitialRawBoolWordHeaderEmitterDescription with
+    stateCount := 61
+    halt := 60
+    transitions :=
+      DovetailInitialLayoutInitializer.ControllerInitialRawBoolWordHeaderEmitterDescription.transitions.filter
+        (fun row => row.source < 60) }
+
+private abbrev CWRSEHeaderGap :=
+  countWindowRawSourceEncoderHeaderGapEmitterDescription
+
+theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_wellFormed :
+    CWRSEHeaderGap.WellFormed := by
+  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := CWRSEHeaderGap.transitions)
+      (stateCount := CWRSEHeaderGap.stateCount)
+      (by native_decide)
+  · exact transition_deterministic_of_all
+      (l := CWRSEHeaderGap.transitions)
+      (by native_decide)
+
+theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_haltTransitionFree :
+    CWRSEHeaderGap.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := CWRSEHeaderGap.transitions)
+    (state := CWRSEHeaderGap.halt)
+    (by native_decide)
+
+theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_subroutineReady :
+    CWRSEHeaderGap.SubroutineReady :=
+  ⟨countWindowRawSourceEncoderHeaderGapEmitterDescription_wellFormed,
+    countWindowRawSourceEncoderHeaderGapEmitterDescription_haltTransitionFree⟩
+
+theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_step_finish
+    (leftRev : List (Option Bool)) (output : Word Bool)
+    (padding : List (Option Bool)) :
+    CWRSEHeaderGap.runConfig 1
+        (DovetailInitialLayoutInitializer.config 36 leftRev
+          (none :: List.append (output.map some) (none :: padding))) =
+      { state := CWRSEHeaderGap.halt
+        tape :=
+          tapeAtCells (none :: leftRev)
+            (List.append (output.map some) (none :: padding)) } := by
+  cases output <;> cases padding <;>
+    simp [CWRSEHeaderGap,
+      countWindowRawSourceEncoderHeaderGapEmitterDescription,
+      DovetailInitialLayoutInitializer.ControllerInitialRawBoolWordHeaderEmitterDescription,
+      DovetailInitialLayoutInitializer.config, tapeAtCells, runConfig,
+      DovetailInitialLayoutInitializer.tapeAtCells, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight]
+
+theorem countWindowRawSourceEncoderHeaderGapEmitterOutput_bits_eq
+    (layout : Word Bool) :
+    List.append
+        (List.append
+          (List.append [false, false, false, false]
+            (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCountTicksBits
+              layout))
+          [false, false, true, true])
+        (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits
+          layout) =
+      encodeCodeWordAsInput
+        (MachineCodeSymbol.header :: encodeBoolWordAppend layout []) := by
+  rw [show
+      List.append
+          (List.append
+            (List.append [false, false, false, false]
+              (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCountTicksBits
+                layout))
+            [false, false, true, true])
+          (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits
+            layout) =
+        List.append [false, false, false, false]
+          (List.append
+            (List.append
+              (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCountTicksBits
+                layout)
+              [false, false, true, true])
+            (DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits
+              layout)) by
+    simp [List.append_assoc]]
+  rw [
+    DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCountTicksBits_append_done]
+  have hcells :
+      DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits
+          layout =
+        encodeCodeWordAsInput (encodeCellsAppend (layout.map some) []) := by
+    simpa [encodeCodeWordAsInput] using
+      DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits_append_suffix
+        layout ([] : Word MachineCodeSymbol)
+  rw [hcells]
+  rw [← encodeCodeWordAsInput_append]
+  simp [encodeBoolWordAppend, encodeCellListAppend, encodeNatAppend,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput]
 
 theorem countWindowRawSourceEncoderRightEdgeScan_haltsFromTape
     (skipped count : Word Bool) (tail : List (Option Bool)) :
@@ -394,6 +598,32 @@ theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
       (List.append
         (List.replicate count.length (none : Option Bool))
         tail)
+
+theorem
+    countWindowRawSourceEncoderRightEdgeTape_moveRight_eq_countedSuffixExtraBlank
+    (skipped suffixRest : Word Bool) (suffixFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.move Direction.right
+        (countWindowRawSourceEncoderRightEdgeTape
+          skipped (suffixFirst :: suffixRest) tail) =
+      countedSuffixExtraBlankRightGapSourceTape
+        skipped suffixRest suffixFirst tail := by
+  simpa [countedSuffixExtraBlankRightGapSourceTape,
+    rightEdgeRewindSourceTapeWithBase, List.append_assoc] using
+    countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
+      skipped (suffixFirst :: suffixRest) tail
+
+theorem countWindowRawSourceEncoderSourceTape_eq_countedSuffixRestored
+    (skipped suffixRest : Word Bool) (suffixFirst : Bool)
+    (tail : List (Option Bool)) :
+    countWindowRawSourceEncoderSourceTape
+        skipped (suffixFirst :: suffixRest) tail =
+      countedSuffixExtraBlankRestoredSourceTape
+        skipped suffixRest suffixFirst tail := by
+  simp [countedSuffixExtraBlankRestoredSourceTape,
+    rightEdgeRewindTargetTapeWithBase,
+    countWindowRawSourceEncoderSourceTape, List.replicate_succ,
+    List.append_assoc]
 
 theorem
     countWindowRawSourceEncoderScanToCountWindowStartDescription_haltsFromTape
@@ -906,6 +1136,38 @@ def CountWindowRawSourceEncoderEquivConstruction : Prop :=
   exists encoder : MachineDescription,
     CountWindowRawSourceEncoderEquivSpec encoder
 
+def CountWindowRawSourceEncoderNoCountPaddingEquivSpec
+    (encoder : MachineDescription) : Prop :=
+  encoder.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      encoder.HaltsFromTapeEquiv
+        (countWindowRawSourceEncoderSourceTape
+          skipped count (some tailFirst :: tail))
+        (countWindowRawSourceEncoderTargetTapeNoCountPadding
+          skipped count (some tailFirst :: tail))
+
+def CountWindowRawSourceEncoderNoCountPaddingEquivConstruction :
+    Prop :=
+  exists encoder : MachineDescription,
+    CountWindowRawSourceEncoderNoCountPaddingEquivSpec encoder
+
+theorem countWindowRawSourceEncoderEquivConstruction_of_noCountPadding
+    (hencoder :
+      CountWindowRawSourceEncoderNoCountPaddingEquivConstruction) :
+    CountWindowRawSourceEncoderEquivConstruction := by
+  rcases hencoder with ⟨encoder, hencoderSpec⟩
+  refine ⟨encoder, hencoderSpec.left, ?_⟩
+  intro skipped count tailFirst tail
+  rcases hencoderSpec.right skipped count tailFirst tail with
+    ⟨actual, hhalt, hequiv⟩
+  exact
+    ⟨actual, hhalt,
+      Tape.Equiv.trans hequiv
+        (Tape.Equiv.symm
+          (countWindowRawSourceEncoderTargetTape_equiv_noCountPadding
+            skipped count (some tailFirst :: tail)))⟩
+
 theorem countWindowRawSourceEncoderConstruction_of_liveTailEmitter
     (hemitter : CountWindowRawSourceEncoderLiveTailEmitterConstruction) :
     CountWindowRawSourceEncoderConstruction := by
@@ -955,6 +1217,10 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
+theorem countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core :
+    CountWindowRawSourceEncoderNoCountPaddingEquivConstruction := by
+  sorry
+
 /--
 Direct construction obligation for the raw-source encoder.
 
@@ -966,7 +1232,9 @@ at the head, so the real finite-machine proof belongs at this level.
 -/
 theorem countWindowRawSourceEncoderEquivConstruction_core :
     CountWindowRawSourceEncoderEquivConstruction := by
-  sorry
+  exact
+    countWindowRawSourceEncoderEquivConstruction_of_noCountPadding
+      countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core
 
 end FiniteTransducers
 end CommonGround
