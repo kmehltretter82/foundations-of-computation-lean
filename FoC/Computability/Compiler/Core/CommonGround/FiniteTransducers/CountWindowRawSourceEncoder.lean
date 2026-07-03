@@ -4,6 +4,7 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetai
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixExtraBlankRestorer
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter
 
 set_option doc.verso true
 
@@ -1873,7 +1874,21 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
 theorem
     countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
     CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction := by
-  sorry
+  rcases
+      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.construction_core
+    with ⟨emitter, hemitter⟩
+  refine ⟨emitter, hemitter.left, ?_⟩
+  intro skipped count tailFirst tail
+  simpa [CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.Spec,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeTape,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits,
+    countWindowRawSourceEncoderRawBoundaryTape,
+    countWindowRawSourceEncoderEncodedLayoutPreRewindTape,
+    countWindowRawSourceEncoderEncodedLayoutRightEdgeTape,
+    countWindowRawSourceEncoderEncodedLayoutBits] using
+      hemitter.right skipped count tailFirst tail
 
 theorem
     countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
