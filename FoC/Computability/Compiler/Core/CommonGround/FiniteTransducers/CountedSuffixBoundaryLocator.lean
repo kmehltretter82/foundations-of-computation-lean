@@ -229,7 +229,9 @@ def countedSuffixBoundaryRightRestoreDescription : MachineDescription where
     , transition 14 (some true) (some true) Direction.left 15
     , transition 15 (some false) (some false) Direction.left 15
     , transition 15 (some true) (some true) Direction.left 15
-    , transition 15 none none Direction.left 0
+    , transition 15 none none Direction.right 31
+    , transition 31 (some false) (some false) Direction.left 0
+    , transition 31 (some true) (some true) Direction.left 0
 
     , transition 20 none none Direction.right 20
     , transition 20 (some false) none Direction.left 21
@@ -1972,9 +1974,806 @@ theorem countedSuffixBoundaryPrefixShiftDescription_haltsFromTape
     rfl
   · rw [hrun]
 
+theorem countedSuffixBoundaryRightRestoreDescription_run_final
+    (pref processed : Word Bool) (last guardBit : Bool)
+    (tail : List (Option Bool)) :
+    RightRestore.runConfig 7
+        { state := RightRestore.start
+          tape :=
+            countedSuffixBoundaryRestoreLoopTape
+              pref processed [last] guardBit tail } =
+      { state := 39
+        tape :=
+          countedSuffixBoundaryRestoreLoopTape
+            pref (List.append processed [last]) [] guardBit tail } := by
+  cases last <;> cases guardBit <;> cases processed <;> cases pref <;>
+    cases tail <;>
+    simp [RightRestore, countedSuffixBoundaryRightRestoreDescription,
+      countedSuffixBoundaryRestoreLoopTape, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
+      List.map_append, List.reverse_append, List.append_assoc,
+      List.replicate_succ]
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_scan_suffix
+    (left : List (Option Bool)) (bits : Word Bool)
+    (right : List (Option Bool)) :
+    RightRestore.runConfig (bits.length + 1)
+        { state := 10
+          tape :=
+            tapeAtCells left
+              (List.append (bits.map some) (none :: right)) } =
+      { state := 11
+        tape :=
+          tapeAtCells
+            (none ::
+              List.append (bits.reverse.map some) left)
+            right } := by
+  induction bits generalizing left with
+  | nil =>
+      cases left <;> cases right <;>
+        simp [RightRestore, countedSuffixBoundaryRightRestoreDescription,
+          runConfig, stepConfig, lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveRight, tapeAtCells]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 =
+        1 + (rest.length + 1) by
+        simp
+        lia]
+      rw [runConfig_add]
+      change
+        RightRestore.runConfig (rest.length + 1)
+            (RightRestore.runConfig 1
+              { state := 10
+                tape :=
+                  tapeAtCells left
+                    (some bit ::
+                      List.append (rest.map some)
+                        (none :: right)) }) =
+          { state := 11
+            tape :=
+              tapeAtCells
+                (none ::
+                  List.append ((bit :: rest).reverse.map some)
+                    left)
+                right }
+      have hstep :
+          RightRestore.runConfig 1
+              { state := 10
+                tape :=
+                  tapeAtCells left
+                    (some bit ::
+                      List.append (rest.map some)
+                        (none :: right)) } =
+            { state := 10
+              tape :=
+                tapeAtCells (some bit :: left)
+                  (List.append (rest.map some)
+                    (none :: right)) } := by
+        cases bit <;> cases rest <;> cases right <;>
+          simp [RightRestore,
+            countedSuffixBoundaryRightRestoreDescription, runConfig,
+            stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveRight,
+            tapeAtCells]
+      rw [hstep]
+      simpa [List.reverse_cons, List.map_append,
+        List.append_assoc] using ih (some bit :: left)
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_shift_guard
+    (left : List (Option Bool)) (blanks : Nat)
+    (guardBit : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (blanks + 3)
+        { state := 11
+          tape :=
+            tapeAtCells (none :: left)
+              (List.append
+                (List.replicate (blanks + 1) (none : Option Bool))
+                (some guardBit :: right)) } =
+      { state := 14
+        tape :=
+          tapeAtCells
+            (List.append
+              (List.replicate blanks (none : Option Bool))
+              left)
+            (none :: some guardBit :: none :: right) } := by
+  induction blanks generalizing left with
+  | zero =>
+      cases guardBit <;> cases left <;> cases right <;>
+        simp [RightRestore, countedSuffixBoundaryRightRestoreDescription,
+          runConfig, stepConfig, lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, Tape.moveRight, tapeAtCells]
+  | succ blanks ih =>
+      rw [show blanks + 1 + 3 = 1 + (blanks + 3) by lia]
+      rw [runConfig_add]
+      change
+        RightRestore.runConfig (blanks + 3)
+            (RightRestore.runConfig 1
+              { state := 11
+                tape :=
+                  tapeAtCells (none :: left)
+                    (none ::
+                      List.append
+                        (List.replicate (blanks + 1)
+                          (none : Option Bool))
+                        (some guardBit :: right)) }) =
+          { state := 14
+            tape :=
+              tapeAtCells
+                (List.append
+                  (List.replicate (blanks + 1)
+                    (none : Option Bool))
+                  left)
+                (none :: some guardBit :: none :: right) }
+      have hstep :
+          RightRestore.runConfig 1
+              { state := 11
+                tape :=
+                  tapeAtCells (none :: left)
+                    (none ::
+                      List.append
+                        (List.replicate (blanks + 1)
+                          (none : Option Bool))
+                        (some guardBit :: right)) } =
+            { state := 11
+              tape :=
+                tapeAtCells (none :: none :: left)
+                  (List.append
+                    (List.replicate (blanks + 1)
+                      (none : Option Bool))
+                    (some guardBit :: right)) } := by
+        simp [RightRestore,
+          countedSuffixBoundaryRightRestoreDescription, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.write, Tape.move, Tape.moveRight,
+          tapeAtCells] <;> rfl
+      rw [hstep]
+      have hih := ih (none :: left)
+      have hleft :
+          List.append
+              (List.replicate blanks (none : Option Bool))
+              (none :: left) =
+            none ::
+              List.append
+                (List.replicate blanks (none : Option Bool))
+                left :=
+        replicate_none_append_none_cons blanks left
+      rw [hleft] at hih
+      simpa [List.replicate_succ, List.append_assoc] using hih
+
+def countedSuffixBoundaryRightReturnScanTape
+    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
+    (last : Bool) (right : List (Option Bool)) : Tape Bool :=
+  match processedRev with
+  | [] => tapeAtCells baseLeft (none :: some last :: right)
+  | bit :: rest =>
+      tapeAtCells
+        (List.append (rest.map some) (none :: baseLeft))
+        (some bit :: some last :: right)
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
+    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
+    (blanks : Nat) (last : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (blanks + 1)
+        { state := 14
+          tape :=
+            tapeAtCells
+              (List.append
+                (List.replicate blanks (none : Option Bool))
+                (some last ::
+                  List.append (processedRev.map some)
+                    (none :: baseLeft)))
+              (none :: right) } =
+      { state := 14
+        tape :=
+          tapeAtCells
+            (List.append (processedRev.map some)
+              (none :: baseLeft))
+            (some last ::
+              List.append
+                (List.replicate (blanks + 1)
+                  (none : Option Bool))
+                right) } := by
+  induction blanks generalizing right with
+  | zero =>
+      cases last <;> cases processedRev <;> cases right <;>
+        simp [RightRestore, countedSuffixBoundaryRightRestoreDescription,
+          runConfig, stepConfig, lookupTransition, Matches,
+          transition, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft, tapeAtCells]
+  | succ blanks ih =>
+      rw [show blanks + 1 + 1 = 1 + (blanks + 1) by lia]
+      rw [runConfig_add]
+      rw [show
+          List.append
+              (List.replicate (blanks + 1) (none : Option Bool))
+              (some last ::
+                List.append (processedRev.map some)
+                  (none :: baseLeft)) =
+            none ::
+              List.append
+                (List.replicate blanks (none : Option Bool))
+                (some last ::
+                  List.append (processedRev.map some)
+                    (none :: baseLeft)) by
+        simp [List.replicate_succ]]
+      have hstep :
+          RightRestore.runConfig 1
+              { state := 14
+                tape :=
+                  tapeAtCells
+                    (none ::
+                      List.append
+                        (List.replicate blanks (none : Option Bool))
+                        (some last ::
+                          List.append (processedRev.map some)
+                            (none :: baseLeft)))
+                    (none :: right) } =
+            { state := 14
+              tape :=
+                tapeAtCells
+                  (List.append
+                    (List.replicate blanks (none : Option Bool))
+                    (some last ::
+                      List.append (processedRev.map some)
+                        (none :: baseLeft)))
+                  (none :: none :: right) } := by
+        simp [RightRestore,
+          countedSuffixBoundaryRightRestoreDescription, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+          tapeAtCells]
+      rw [hstep]
+      have hih := ih (none :: right)
+      have htail :
+          List.append
+              (List.replicate (blanks + 1) (none : Option Bool))
+              (none :: right) =
+            none ::
+              List.append
+                (List.replicate (blanks + 1)
+                  (none : Option Bool))
+                right :=
+        replicate_none_append_none_cons (blanks + 1) right
+      rw [htail] at hih
+      have hrep :
+          List.append
+              (List.replicate (1 + (blanks + 1))
+                (none : Option Bool))
+              right =
+            none ::
+              none ::
+                List.append
+                  (List.replicate blanks (none : Option Bool))
+                  right := by
+        rw [show 1 + (blanks + 1) = (blanks + 1) + 1 by omega]
+        simp [List.replicate_succ]
+      rw [hrep]
+      simpa [List.replicate_succ, List.append_assoc] using hih
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
+    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
+    (last : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (processedRev.length + 2)
+        { state := 15
+          tape :=
+            countedSuffixBoundaryRightReturnScanTape
+              baseLeft processedRev last right } =
+      { state := 0
+        tape :=
+          tapeAtCells baseLeft
+            (none ::
+              List.append (processedRev.reverse.map some)
+                (some last :: right)) } := by
+  induction processedRev generalizing last right with
+  | nil =>
+      cases last <;> cases right <;>
+        simp [countedSuffixBoundaryRightReturnScanTape, RightRestore,
+          countedSuffixBoundaryRightRestoreDescription, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+          Tape.moveRight, tapeAtCells]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 2 =
+        1 + (rest.length + 2) by
+        simp
+        lia]
+      rw [runConfig_add]
+      have hstep :
+          RightRestore.runConfig 1
+              { state := 15
+                tape :=
+                  countedSuffixBoundaryRightReturnScanTape
+                    baseLeft (bit :: rest) last right } =
+            { state := 15
+              tape :=
+                countedSuffixBoundaryRightReturnScanTape
+                  baseLeft rest bit (some last :: right) } := by
+        cases bit <;> cases last <;> cases rest <;> cases right <;>
+          simp [countedSuffixBoundaryRightReturnScanTape, RightRestore,
+            countedSuffixBoundaryRightRestoreDescription, runConfig,
+            stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+            tapeAtCells]
+      rw [hstep]
+      simpa [List.reverse_cons, List.map_append, List.append_assoc] using
+        ih bit (some last :: right)
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_bits
+    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
+    (last : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (processedRev.length + 3)
+        { state := 14
+          tape :=
+            tapeAtCells
+              (List.append (processedRev.map some) (none :: baseLeft))
+              (some last :: right) } =
+      { state := 0
+        tape :=
+          tapeAtCells baseLeft
+            (none ::
+              List.append (processedRev.reverse.map some)
+                (some last :: right)) } := by
+  rw [show processedRev.length + 3 =
+    1 + (processedRev.length + 2) by lia]
+  rw [runConfig_add]
+  have hstep :
+      RightRestore.runConfig 1
+          { state := 14
+            tape :=
+              tapeAtCells
+                (List.append (processedRev.map some)
+                  (none :: baseLeft))
+                (some last :: right) } =
+        { state := 15
+          tape :=
+            countedSuffixBoundaryRightReturnScanTape
+              baseLeft processedRev last right } := by
+    cases processedRev <;> cases last <;>
+      simp [countedSuffixBoundaryRightReturnScanTape, RightRestore,
+        countedSuffixBoundaryRightRestoreDescription, runConfig,
+        stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+        tapeAtCells]
+  rw [hstep]
+  exact
+    countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
+      baseLeft processedRev last right
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
+    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
+    (last guardBit : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (2 * processedRev.length + 4)
+        { state := 14
+          tape :=
+            tapeAtCells
+              (List.append
+                (List.replicate processedRev.length
+                  (none : Option Bool))
+                (some last ::
+                  List.append (processedRev.map some)
+                    (none :: baseLeft)))
+              (none :: some guardBit :: right) } =
+      { state := 0
+        tape :=
+          tapeAtCells baseLeft
+            (none ::
+              List.append ((last :: processedRev).reverse.map some)
+                (List.append
+                  (List.replicate (processedRev.length + 1)
+                    (none : Option Bool))
+                  (some guardBit :: right))) } := by
+  rw [show 2 * processedRev.length + 4 =
+    (processedRev.length + 1) + (processedRev.length + 3) by lia]
+  rw [runConfig_add]
+  rw [
+    countedSuffixBoundaryRightRestoreDescription_run_return_blanks
+      baseLeft processedRev processedRev.length last
+      (some guardBit :: right)]
+  simpa [List.reverse_cons, List.map_append, List.append_assoc] using
+    countedSuffixBoundaryRightRestoreDescription_run_return_scan_bits
+      baseLeft processedRev last
+      (List.append
+        (List.replicate (processedRev.length + 1)
+          (none : Option Bool))
+        (some guardBit :: right))
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
+    (baseLeft : List (Option Bool)) (rest : Word Bool)
+    (next guardBit : Bool) (right : List (Option Bool)) :
+    RightRestore.runConfig (2 * rest.length + 4)
+        { state := 14
+          tape :=
+            tapeAtCells
+              (List.append
+                (List.replicate rest.length (none : Option Bool))
+                (List.append ((next :: rest).reverse.map some)
+                  (none :: baseLeft)))
+              (none :: some guardBit :: right) } =
+      { state := 0
+        tape :=
+          tapeAtCells baseLeft
+            (none ::
+              some next ::
+                List.append (rest.map some)
+                  (List.append
+                    (List.replicate (rest.length + 1)
+                      (none : Option Bool))
+                    (some guardBit :: right))) } := by
+  cases hrev : (next :: rest).reverse with
+  | nil =>
+      simp at hrev
+  | cons last processedRev =>
+      have hlen : processedRev.length = rest.length := by
+        have h := congrArg List.length hrev
+        simp at h
+        omega
+      have hmap :
+          (last :: processedRev).reverse.map some =
+            some next :: rest.map some := by
+        rw [← hrev]
+        simp
+      have hmap' :
+          (List.map some processedRev).reverse ++ [some last] =
+            some next :: rest.map some := by
+        simpa [List.reverse_cons, List.map_append] using hmap
+      rw [← hlen]
+      simpa [hrev, hmap', List.append_assoc] using
+        countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
+          baseLeft processedRev last guardBit right
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_continue
+    (pref processed rest : Word Bool)
+    (current next guardBit : Bool) (tail : List (Option Bool)) :
+    RightRestore.runConfig (4 * rest.length + 13)
+        { state := RightRestore.start
+          tape :=
+            countedSuffixBoundaryRestoreLoopTape
+              pref processed (current :: next :: rest) guardBit
+              tail } =
+      { state := RightRestore.start
+        tape :=
+          countedSuffixBoundaryRestoreLoopTape
+            pref (List.append processed [current]) (next :: rest)
+            guardBit tail } := by
+  rw [show 4 * rest.length + 13 =
+    5 + ((rest.length + 1) +
+      ((rest.length + 3) + (2 * rest.length + 4))) by lia]
+  rw [runConfig_add]
+  let baseLeft : List (Option Bool) :=
+    List.append (processed.reverse.map some)
+      (none :: pref.reverse.map some)
+  let afterCurrentLeft : List (Option Bool) :=
+    some current :: baseLeft
+  let afterNextLeft : List (Option Bool) :=
+    some next :: none :: afterCurrentLeft
+  have hstart :
+      RightRestore.runConfig 5
+          { state := RightRestore.start
+            tape :=
+              countedSuffixBoundaryRestoreLoopTape
+                pref processed (current :: next :: rest) guardBit
+                tail } =
+        { state := 10
+          tape :=
+            tapeAtCells afterNextLeft
+              (List.append (rest.map some)
+                (none ::
+                  List.append
+                    (List.replicate (rest.length + 1)
+                      (none : Option Bool))
+                    (some guardBit ::
+                      List.append
+                        (List.replicate processed.length
+                          (none : Option Bool))
+                        tail))) } := by
+    cases current <;> cases next <;> cases guardBit <;>
+      cases rest <;> cases processed <;> cases pref <;>
+      cases tail <;>
+      simp [RightRestore, countedSuffixBoundaryRightRestoreDescription,
+        countedSuffixBoundaryRestoreLoopTape, baseLeft,
+        afterCurrentLeft, afterNextLeft, runConfig, stepConfig,
+        lookupTransition, Matches, transition, Tape.read, Tape.write,
+        Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
+        List.replicate_succ, List.append_assoc]
+  rw [hstart]
+  rw [runConfig_add]
+  rw [
+    countedSuffixBoundaryRightRestoreDescription_run_scan_suffix
+      afterNextLeft rest
+      (List.append
+        (List.replicate (rest.length + 1) (none : Option Bool))
+        (some guardBit ::
+          List.append
+            (List.replicate processed.length (none : Option Bool))
+            tail))]
+  rw [runConfig_add]
+  rw [
+    countedSuffixBoundaryRightRestoreDescription_run_shift_guard
+      (List.append (rest.reverse.map some) afterNextLeft)
+      rest.length guardBit
+      (List.append
+        (List.replicate processed.length (none : Option Bool))
+        tail)]
+  simpa [countedSuffixBoundaryRestoreLoopTape, baseLeft,
+    afterCurrentLeft, afterNextLeft, List.reverse_cons,
+    List.map_append, List.reverse_append, List.append_assoc,
+    List.replicate_succ] using
+    countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
+      afterCurrentLeft rest next guardBit
+      (none ::
+        List.append
+          (List.replicate processed.length (none : Option Bool))
+          tail)
+
+theorem countedSuffixBoundaryRightRestoreDescription_run_loop
+    (pref processed : Word Bool)
+    (suffixFirst : Bool) (suffixRest : Word Bool)
+    (guardBit : Bool) (tail : List (Option Bool)) :
+    exists steps : Nat,
+      RightRestore.runConfig steps
+          { state := RightRestore.start
+            tape :=
+              countedSuffixBoundaryRestoreLoopTape
+                pref processed (suffixFirst :: suffixRest)
+                guardBit tail } =
+        { state := RightRestore.halt
+          tape :=
+            countedSuffixBoundaryRestoreLoopTape
+              pref (List.append processed (suffixFirst :: suffixRest))
+              [] guardBit tail } := by
+  induction suffixRest generalizing processed suffixFirst with
+  | nil =>
+      refine ⟨7, ?_⟩
+      simpa using
+        countedSuffixBoundaryRightRestoreDescription_run_final
+          pref processed suffixFirst guardBit tail
+  | cons next rest ih =>
+      obtain ⟨steps, hsteps⟩ :=
+        ih (List.append processed [suffixFirst]) next
+      refine ⟨4 * rest.length + 13 + steps, ?_⟩
+      rw [runConfig_add]
+      rw [
+        countedSuffixBoundaryRightRestoreDescription_run_continue
+          pref processed rest suffixFirst next guardBit tail]
+      simpa [List.append_assoc] using hsteps
+
+theorem countedSuffixBoundaryRightRestoreDescription_haltsFromTape
+    (pref suffixRest : Word Bool)
+    (suffixFirst guardBit tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    RightRestore.HaltsFromTape
+      (countedSuffixBoundaryPrefixShiftedTape
+        pref (suffixFirst :: suffixRest) guardBit
+        (some tailFirst :: tail))
+      (rightEdgeRewindSourceTapeWithBase
+        (pref.reverse.map some) (suffixFirst :: suffixRest)
+        (countedSuffixBoundaryLocatorPadding (some guardBit)
+          (suffixFirst :: suffixRest) (some tailFirst :: tail))) := by
+  obtain ⟨steps, hrun⟩ :=
+    countedSuffixBoundaryRightRestoreDescription_run_loop
+      pref [] suffixFirst suffixRest guardBit (some tailFirst :: tail)
+  refine ⟨steps, ?_⟩
+  have hrun' :
+      RightRestore.runConfig steps
+          { state := RightRestore.start
+            tape :=
+              countedSuffixBoundaryPrefixShiftedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail) } =
+        { state := RightRestore.halt
+          tape :=
+            rightEdgeRewindSourceTapeWithBase
+              (pref.reverse.map some) (suffixFirst :: suffixRest)
+              (countedSuffixBoundaryLocatorPadding (some guardBit)
+                (suffixFirst :: suffixRest)
+                (some tailFirst :: tail)) } := by
+    simpa [countedSuffixBoundaryPrefixShiftedTape,
+      countedSuffixBoundaryRestoreLoopTape,
+      rightEdgeRewindSourceTapeWithBase,
+      countedSuffixBoundaryLocatorPadding, List.append_assoc] using hrun
+  constructor
+  · rw [hrun']
+  · rw [hrun']
+
+theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
+    (pref suffix leftStack : Word Bool) (last guardBit tailFirst : Bool)
+    (tail : List (Option Bool))
+    (hrev : suffix.reverse = last :: leftStack) :
+    countedSuffixBoundaryLocatorSourceTape pref suffix (some guardBit)
+        (some tailFirst :: tail) =
+    countedSuffixBoundaryLeftAdvanceCurrentTape
+        pref leftStack last guardBit (some tailFirst :: tail) := by
+  have hlen : suffix.length = leftStack.length + 1 := by
+    have h := congrArg List.length hrev
+    simp at h
+    omega
+  simp [countedSuffixBoundaryLocatorSourceTape,
+    countedSuffixBoundaryLeftAdvanceCurrentTape,
+    countedSuffixBoundaryLocatorPadding,
+    rightEdgeScanTargetTapeFromLeft, hrev, hlen, List.reverse_append,
+    List.map_append, List.append_assoc, Tape.move, Tape.moveLeft,
+    tapeAtCells]
+
+theorem countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
+    (pref suffixRest : Word Bool)
+    (suffixFirst guardBit tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (countedSuffixBoundaryLeftAdvancedTape
+            pref (suffixFirst :: suffixRest) guardBit
+            (some tailFirst :: tail))) =
+      countedSuffixBoundaryLeftAdvancedTape
+        pref (suffixFirst :: suffixRest) guardBit
+        (some tailFirst :: tail) := by
+  cases suffixFirst <;> cases guardBit <;> cases tailFirst <;>
+    cases suffixRest <;> cases pref <;> cases tail <;>
+    simp [countedSuffixBoundaryLeftAdvancedTape, Tape.move,
+      Tape.moveLeft, Tape.moveRight, tapeAtCells,
+      List.replicate_succ, List.append_assoc]
+
+theorem countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
+    (pref suffixRest : Word Bool)
+    (suffixFirst guardBit tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (countedSuffixBoundaryPrefixShiftedTape
+            pref (suffixFirst :: suffixRest) guardBit
+            (some tailFirst :: tail))) =
+      countedSuffixBoundaryPrefixShiftedTape
+        pref (suffixFirst :: suffixRest) guardBit
+        (some tailFirst :: tail) := by
+  cases suffixFirst <;> cases guardBit <;> cases tailFirst <;>
+    cases suffixRest <;> cases pref <;> cases tail <;>
+    simp [countedSuffixBoundaryPrefixShiftedTape, Tape.move,
+      Tape.moveLeft, Tape.moveRight, tapeAtCells,
+      List.replicate_succ]
+
 theorem countedSuffixBoundaryLocatorConstruction_core :
     CountedSuffixBoundaryLocatorConstruction := by
-  sorry
+  refine ⟨countedSuffixBoundaryLocatorDescription, ?_⟩
+  constructor
+  · exact countedSuffixBoundaryLocatorDescription_subroutineReady
+  · intro pref suffixRest suffixFirst guardBit tailFirst tail
+    cases hrev : (suffixFirst :: suffixRest).reverse with
+    | nil =>
+        simp at hrev
+    | cons last leftStack =>
+        have hsuffix :
+            suffixFirst :: suffixRest =
+              List.append leftStack.reverse [last] := by
+          have h := congrArg List.reverse hrev
+          simpa [List.reverse_append] using h
+        have hLeft :
+            LeftAdvance.HaltsFromTape
+              (countedSuffixBoundaryLocatorSourceTape
+                pref (suffixFirst :: suffixRest) (some guardBit)
+                (some tailFirst :: tail))
+              (countedSuffixBoundaryLeftAdvancedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail)) := by
+          have hsource :=
+            countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
+              pref (suffixFirst :: suffixRest) leftStack last guardBit
+              tailFirst tail hrev
+          rw [hsource]
+          simpa [hsuffix] using
+            countedSuffixBoundaryLeftAdvanceDescription_haltsFromTape
+              pref leftStack last guardBit tailFirst tail
+        have hPrefix :
+            PrefixShift.HaltsFromTape
+              (countedSuffixBoundaryLeftAdvancedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail))
+              (countedSuffixBoundaryPrefixShiftedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail)) :=
+          countedSuffixBoundaryPrefixShiftDescription_haltsFromTape
+            pref (suffixFirst :: suffixRest) guardBit
+            (some tailFirst :: tail)
+        have hRight :
+            RightRestore.HaltsFromTape
+              (countedSuffixBoundaryPrefixShiftedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail))
+              (rightEdgeRewindSourceTapeWithBase
+                (pref.reverse.map some) (suffixFirst :: suffixRest)
+                (countedSuffixBoundaryLocatorPadding (some guardBit)
+                  (suffixFirst :: suffixRest)
+                  (some tailFirst :: tail))) :=
+          countedSuffixBoundaryRightRestoreDescription_haltsFromTape
+            pref suffixRest suffixFirst guardBit tailFirst tail
+        have hRewind :
+            rightEdgeRewindDescription.HaltsFromTape
+              (rightEdgeRewindSourceTapeWithBase
+                (pref.reverse.map some) (suffixFirst :: suffixRest)
+                (countedSuffixBoundaryLocatorPadding (some guardBit)
+                  (suffixFirst :: suffixRest)
+                  (some tailFirst :: tail)))
+              (countedSuffixBoundaryLocatorTargetTape
+                pref (suffixFirst :: suffixRest) (some guardBit)
+                (some tailFirst :: tail)) := by
+          simpa [countedSuffixBoundaryLocatorTargetTape,
+            rightEdgeScanSourceTapeFromLeft,
+            rightEdgeRewindTargetTapeWithBase] using
+            rightEdgeRewindDescription_haltsFromTapeWithBase
+              (pref.reverse.map some) (suffixFirst :: suffixRest)
+              (countedSuffixBoundaryLocatorPadding (some guardBit)
+                (suffixFirst :: suffixRest) (some tailFirst :: tail))
+        have hRightBridge :
+            Tape.move Direction.left
+                (Tape.move Direction.right
+                  (rightEdgeRewindSourceTapeWithBase
+                    (pref.reverse.map some)
+                    (suffixFirst :: suffixRest)
+                    (countedSuffixBoundaryLocatorPadding
+                      (some guardBit) (suffixFirst :: suffixRest)
+                      (some tailFirst :: tail)))) =
+              rightEdgeRewindSourceTapeWithBase
+                (pref.reverse.map some) (suffixFirst :: suffixRest)
+                (countedSuffixBoundaryLocatorPadding
+                  (some guardBit) (suffixFirst :: suffixRest)
+                  (some tailFirst :: tail)) := by
+          simpa [countedSuffixBoundaryLocatorPadding,
+            List.append_assoc] using
+            rightEdgeRewindSourceTapeWithBase_move_left_move_right_padding_cons
+              (pref.reverse.map some) (suffixFirst :: suffixRest)
+              (some guardBit)
+              (List.append
+                (List.replicate (suffixFirst :: suffixRest).length
+                  (none : Option Bool))
+                (some tailFirst :: tail))
+        have hRightRewind :
+            (canonicalSeqDescription
+              countedSuffixBoundaryRightRestoreDescription
+              rightEdgeRewindDescription).HaltsFromTape
+              (countedSuffixBoundaryPrefixShiftedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail))
+              (countedSuffixBoundaryLocatorTargetTape
+                pref (suffixFirst :: suffixRest) (some guardBit)
+                (some tailFirst :: tail)) :=
+          canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+            countedSuffixBoundaryRightRestoreDescription_subroutineReady
+            rightEdgeRewindDescription_subroutineReady
+            hRight hRightBridge hRewind
+        have hPrefixRightRewind :
+            (canonicalSeqDescription
+              countedSuffixBoundaryPrefixShiftDescription
+              (canonicalSeqDescription
+                countedSuffixBoundaryRightRestoreDescription
+                rightEdgeRewindDescription)).HaltsFromTape
+              (countedSuffixBoundaryLeftAdvancedTape
+                pref (suffixFirst :: suffixRest) guardBit
+                (some tailFirst :: tail))
+              (countedSuffixBoundaryLocatorTargetTape
+                pref (suffixFirst :: suffixRest) (some guardBit)
+                (some tailFirst :: tail)) :=
+          canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+            countedSuffixBoundaryPrefixShiftDescription_subroutineReady
+            (canonicalSeqDescription_subroutineReady
+              countedSuffixBoundaryRightRestoreDescription_subroutineReady
+              rightEdgeRewindDescription_subroutineReady)
+            hPrefix
+            (countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
+              pref suffixRest suffixFirst guardBit tailFirst tail)
+            hRightRewind
+        exact
+          canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+            countedSuffixBoundaryLeftAdvanceDescription_subroutineReady
+            (canonicalSeqDescription_subroutineReady
+              countedSuffixBoundaryPrefixShiftDescription_subroutineReady
+              (canonicalSeqDescription_subroutineReady
+                countedSuffixBoundaryRightRestoreDescription_subroutineReady
+                rightEdgeRewindDescription_subroutineReady))
+            hLeft
+            (countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
+              pref suffixRest suffixFirst guardBit tailFirst tail)
+            hPrefixRightRewind
 
 end FiniteTransducers
 end CommonGround
