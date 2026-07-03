@@ -740,6 +740,28 @@ theorem
       (rightBlankRunTailFirstScannerDescription_haltsFrom_countWindowStart
         skipped count tailFirst tail)
 
+def countWindowRawSourceEncoderLiveTailEmitterSourceTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) : Tape Bool :=
+  Tape.move Direction.right
+    (countWindowRawSourceEncoderTailPastFirstTape
+      skipped count tailFirst tail)
+
+def CountWindowRawSourceEncoderLiveTailEmitterSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      emitter.HaltsFromTape
+        (countWindowRawSourceEncoderLiveTailEmitterSourceTape
+          skipped count tailFirst tail)
+        (countWindowRawSourceEncoderTargetTape
+          skipped count (some tailFirst :: tail))
+
+def CountWindowRawSourceEncoderLiveTailEmitterConstruction : Prop :=
+  exists emitter : MachineDescription,
+    CountWindowRawSourceEncoderLiveTailEmitterSpec emitter
+
 theorem countWindowRawSourceEncoderSourceTape_arbitraryTail_ambiguous :
     countWindowRawSourceEncoderSourceTape
         [false] [true] [none, some true] =
@@ -783,6 +805,51 @@ theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_equiv :
   · native_decide
   · native_decide
 
+theorem countWindowRawSourceEncoderLiveTailEmitterSourceTape_tailTrailingBlank_eq :
+    countWindowRawSourceEncoderLiveTailEmitterSourceTape
+        [] [true] false [] =
+      countWindowRawSourceEncoderLiveTailEmitterSourceTape
+        [] [true] false [none] := by
+  native_decide
+
+theorem countWindowRawSourceEncoderLiveTailEmitterSpec_impossible
+    (emitter : MachineDescription) :
+    ¬ CountWindowRawSourceEncoderLiveTailEmitterSpec emitter := by
+  intro hem
+  have hleft :=
+    hem.right [] [true] false []
+  have hright :=
+    hem.right [] [true] false [none]
+  rw [← countWindowRawSourceEncoderLiveTailEmitterSourceTape_tailTrailingBlank_eq]
+    at hright
+  have htape :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hem.left.right hleft hright
+  exact countWindowRawSourceEncoderTargetTape_tailTrailingBlank_ne htape
+
+theorem countWindowRawSourceEncoderLiveTailEmitterConstruction_impossible :
+    ¬ CountWindowRawSourceEncoderLiveTailEmitterConstruction := by
+  intro hconstruction
+  rcases hconstruction with ⟨emitter, hem⟩
+  exact countWindowRawSourceEncoderLiveTailEmitterSpec_impossible
+    emitter hem
+
+def CountWindowRawSourceEncoderLiveTailEmitterEquivSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      emitter.HaltsFromTapeEquiv
+        (countWindowRawSourceEncoderLiveTailEmitterSourceTape
+          skipped count tailFirst tail)
+        (countWindowRawSourceEncoderTargetTape
+          skipped count (some tailFirst :: tail))
+
+def CountWindowRawSourceEncoderLiveTailEmitterEquivConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    CountWindowRawSourceEncoderLiveTailEmitterEquivSpec emitter
+
 def CountWindowRawSourceEncoderArbitraryTailSpec
     (encoder : MachineDescription) : Prop :=
   encoder.SubroutineReady ∧
@@ -824,9 +891,78 @@ def CountWindowRawSourceEncoderConstruction : Prop :=
   exists encoder : MachineDescription,
     CountWindowRawSourceEncoderSpec encoder
 
-theorem countWindowRawSourceEncoderConstruction_core :
+def CountWindowRawSourceEncoderEquivSpec
+    (encoder : MachineDescription) : Prop :=
+  encoder.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      encoder.HaltsFromTapeEquiv
+        (countWindowRawSourceEncoderSourceTape
+          skipped count (some tailFirst :: tail))
+        (countWindowRawSourceEncoderTargetTape
+          skipped count (some tailFirst :: tail))
+
+def CountWindowRawSourceEncoderEquivConstruction : Prop :=
+  exists encoder : MachineDescription,
+    CountWindowRawSourceEncoderEquivSpec encoder
+
+theorem countWindowRawSourceEncoderConstruction_of_liveTailEmitter
+    (hemitter : CountWindowRawSourceEncoderLiveTailEmitterConstruction) :
     CountWindowRawSourceEncoderConstruction := by
+  rcases hemitter with ⟨emitter, hemitterSpec⟩
+  refine
+    ⟨seqSubroutine
+        countWindowRawSourceEncoderScanToTailPastFirstDescription
+        emitter Direction.right,
+      ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady
+        hemitterSpec.left
+  · intro skipped count tailFirst tail
+    exact
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady
+        hemitterSpec.left
+        (countWindowRawSourceEncoderScanToTailPastFirstDescription_haltsFromTape
+          skipped count tailFirst tail)
+        rfl
+        (hemitterSpec.right skipped count tailFirst tail)
+
+theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
+    (hemitter :
+      CountWindowRawSourceEncoderLiveTailEmitterEquivConstruction) :
+    CountWindowRawSourceEncoderEquivConstruction := by
+  rcases hemitter with ⟨emitter, hemitterSpec⟩
+  refine
+    ⟨seqSubroutine
+        countWindowRawSourceEncoderScanToTailPastFirstDescription
+        emitter Direction.right,
+      ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady
+        hemitterSpec.left
+  · intro skipped count tailFirst tail
+    exact
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
+        countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady
+        hemitterSpec.left
+        (countWindowRawSourceEncoderScanToTailPastFirstDescription_haltsFromTape
+          skipped count tailFirst tail)
+        rfl
+        (hemitterSpec.right skipped count tailFirst tail)
+
+theorem countWindowRawSourceEncoderLiveTailEmitterEquivConstruction_core :
+    CountWindowRawSourceEncoderLiveTailEmitterEquivConstruction := by
   sorry
+
+theorem countWindowRawSourceEncoderEquivConstruction_core :
+    CountWindowRawSourceEncoderEquivConstruction :=
+  countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
+    countWindowRawSourceEncoderLiveTailEmitterEquivConstruction_core
 
 end FiniteTransducers
 end CommonGround

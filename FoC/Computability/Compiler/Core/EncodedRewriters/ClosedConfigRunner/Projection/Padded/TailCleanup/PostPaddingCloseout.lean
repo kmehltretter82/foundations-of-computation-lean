@@ -520,7 +520,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
     forall L : DovetailLayout,
-      materializer.HaltsFromTape
+      materializer.HaltsFromTapeEquiv
         (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)
         (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
           useAccept L)
@@ -591,7 +591,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_
   · exact canonicalSeqDescription_subroutineReady hbase.left hallocator.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         hbase.left hallocator.left
         (hbase.right L)
         (selectedProjectionPaddedTailCleanupBaseSourceTape_move_left_move_right
@@ -655,7 +655,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sour
           useAccept)
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
         hmaterializer.left
         (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_subroutineReady
           useAccept)
@@ -714,15 +714,21 @@ theorem selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
           hpostPadding.left
     · intro L
       exact
-        SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
           skipCurrentAndFourBlankPaddingRightDescription_subroutineReady
           hpostPadding.left
           (skipCurrentAndFourBlankPaddingRightDescription_haltsFrom_rejectHandoff_named
-            L)
+            L).toEquiv
           (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
-                false L)
+            rw [show
+              Tape.move Direction.left
+                  (Tape.move Direction.right
+                    (selectedHitOtherFlagErasedRejectAfterPaddingTape L)) =
+                selectedHitOtherFlagErasedRejectAfterPaddingTape L by
+              simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+                selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
+                  false L]
+            exact Tape.Equiv.refl _)
           (by
             simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
               hpostPadding.right L)
@@ -733,15 +739,21 @@ theorem selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
           hpostPadding.left
     · intro L
       exact
-        SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
           skipCurrentAndFourBlankPaddingLeftDescription_subroutineReady
           hpostPadding.left
           (skipCurrentAndFourBlankPaddingLeftDescription_haltsFrom_acceptHandoff
-            L)
+            L).toEquiv
           (by
-            simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
-              selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
-                true L)
+            rw [show
+              Tape.move Direction.left
+                  (Tape.move Direction.right
+                    (selectedHitOtherFlagErasedAcceptAfterPaddingTape L)) =
+                selectedHitOtherFlagErasedAcceptAfterPaddingTape L by
+              simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
+                selectedHitOtherFlagErasedAfterPaddingTape_move_left_move_right
+                  true L]
+            exact Tape.Equiv.refl _)
           (by
             simpa [selectedHitOtherFlagErasedAfterPaddingTape] using
               hpostPadding.right L)

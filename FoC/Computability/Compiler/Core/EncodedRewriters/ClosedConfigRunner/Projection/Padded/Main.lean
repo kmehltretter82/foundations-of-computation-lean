@@ -22,16 +22,11 @@ namespace BoundedLayoutRunner
 def SelectedProjectionEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
-  RightScratchPaddedEmitterSpec
-    (fun L : DovetailLayout =>
-      Tape.input (ParsedLayoutBits L))
-    (fun L : DovetailLayout =>
-      encodeCodeWordAsInput
-        (SelectedProjectionOutputCode useAccept L))
-    (fun L : DovetailLayout =>
-      (ParsedLayoutBits L).length)
-    (SelectedProjectionOutputTape useAccept)
-    emitter
+  emitter.SubroutineReady ∧
+    forall L : DovetailLayout,
+      emitter.HaltsFromTapeEquiv
+        (Tape.input (ParsedLayoutBits L))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 
 def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -41,16 +36,11 @@ def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
 def SelectedProjectionCheckedEquivPaddedEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
-  RightScratchPaddedEmitterSpec
-    (fun L : DovetailLayout =>
-      ParsedLayoutCheckedTape L)
-    (fun L : DovetailLayout =>
-      encodeCodeWordAsInput
-        (SelectedProjectionOutputCode useAccept L))
-    (fun L : DovetailLayout =>
-      (ParsedLayoutBits L).length)
-    (SelectedProjectionOutputTape useAccept)
-    emitter
+  emitter.SubroutineReady ∧
+    forall L : DovetailLayout,
+      emitter.HaltsFromTapeEquiv
+        (ParsedLayoutCheckedTape L)
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 
 def SelectedProjectionCheckedEquivPaddedEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -82,7 +72,6 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
         some
   constructor
   · exact SeqViaCanonical_subroutineReady hquoter.left htail.left
-  constructor
   · intro L
     have hquoterRun :
         quoter.HaltsFromTape
@@ -90,26 +79,67 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
           (SelectedProjectionTailProjector.sourceTape L
             (baseLeft L)) :=
       hquoter.right L
-    have htailRun :
-        tail.HaltsFromTape
-          (SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L))
-          (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L) :=
-      htail.right.left L
     have hbridge :
-        Tape.move Direction.left
+        Tape.Equiv
+          (Tape.move Direction.left
             (Tape.move Direction.right
               (SelectedProjectionTailProjector.sourceTape L
-                (baseLeft L))) =
-          SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L) :=
-      SelectedProjectionTailProjector.sourceTape_move_left_move_right
-        L (baseLeft L)
+                (baseLeft L))))
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L)) :=
+      by
+        rw [
+          SelectedProjectionTailProjector.sourceTape_move_left_move_right
+            L (baseLeft L)]
+        exact Tape.Equiv.refl _
     simpa [SelectedProjectionCheckedEquivPaddedEmitterFromComponents] using
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        hquoter.left htail.left hquoterRun hbridge htailRun
-  · intro L
-    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+        hquoter.left htail.left hquoterRun.toEquiv hbridge
+        (htail.right L)
+
+theorem selectedProjectionEquivPaddedEmitterSpec_haltsToOutput
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemits : SelectedProjectionEquivPaddedEmitterSpec useAccept emitter)
+    (L : DovetailLayout) :
+    emitter.HaltsFromTapeEquiv
+      (Tape.input (ParsedLayoutBits L))
+      (SelectedProjectionOutputTape useAccept L) := by
+  rcases hemits.right L with ⟨Tactual, hactual, hTequiv⟩
+  exact
+    ⟨Tactual, hactual,
+      Tape.Equiv.trans hTequiv
+        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
+          useAccept L)⟩
+
+theorem selectedProjectionCheckedEquivPaddedEmitterSpec_haltsToOutput
+    {useAccept : Bool} {emitter : MachineDescription}
+    (hemits :
+      SelectedProjectionCheckedEquivPaddedEmitterSpec useAccept emitter)
+    (L : DovetailLayout) :
+    emitter.HaltsFromTapeEquiv
+      (ParsedLayoutCheckedTape L)
+      (SelectedProjectionOutputTape useAccept L) := by
+  rcases hemits.right L with ⟨Tactual, hactual, hTequiv⟩
+  exact
+    ⟨Tactual, hactual,
+      Tape.Equiv.trans hTequiv
+        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
+          useAccept L)⟩
+
+theorem closedFromTapeEquiv_of_haltsFromTapeEquiv
+    {D : MachineDescription} {Tin Tpadded Tout : Tape Bool}
+    (hD : D.SubroutineReady)
+    (hhalt : D.HaltsFromTapeEquiv Tin Tpadded)
+    (hequiv : Tape.Equiv Tpadded Tout) :
+    D.ClosedFromTapeEquiv Tin Tout := by
+  intro T hT
+  rcases hhalt with ⟨Tactual, hactual, hTactual⟩
+  have hsame :
+      T = Tactual :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hD.right hT hactual
+  rw [hsame]
+  exact Tape.Equiv.trans hTactual hequiv
 
 theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
     (hcomponents :
@@ -131,9 +161,13 @@ theorem selectedProjectionEquivEmitterSpec_of_padded
   · exact hemits.left
   constructor
   · intro L
-    exact PaddedEquivEmitterSpec.haltsFromTapeEquiv hemits L
+    exact selectedProjectionEquivPaddedEmitterSpec_haltsToOutput hemits L
   · intro L T hhalt
-    exact PaddedEquivEmitterSpec.closedFromTapeEquiv hemits L T hhalt
+    exact
+      closedFromTapeEquiv_of_haltsFromTapeEquiv
+        hemits.left (hemits.right L)
+        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
+          useAccept L) T hhalt
 
 theorem selectedProjectionEquivEmitterConstruction_of_padded
     (h : SelectedProjectionEquivPaddedEmitterConstruction) :
@@ -151,9 +185,15 @@ theorem selectedProjectionCheckedEquivEmitterSpec_of_padded
   · exact hemits.left
   constructor
   · intro L
-    exact PaddedEquivEmitterSpec.haltsFromTapeEquiv hemits L
+    exact
+      selectedProjectionCheckedEquivPaddedEmitterSpec_haltsToOutput
+        hemits L
   · intro L T hhalt
-    exact PaddedEquivEmitterSpec.closedFromTapeEquiv hemits L T hhalt
+    exact
+      closedFromTapeEquiv_of_haltsFromTapeEquiv
+        hemits.left (hemits.right L)
+        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
+          useAccept L) T hhalt
 
 theorem selectedProjectionCheckedEquivEmitterConstruction_of_padded
     (h : SelectedProjectionCheckedEquivPaddedEmitterConstruction) :

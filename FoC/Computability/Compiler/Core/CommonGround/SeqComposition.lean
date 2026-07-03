@@ -81,6 +81,21 @@ theorem seqSubroutine_haltsFromTape_of_haltsFromTape_eq
   · simpa [MachineDescription.HaltsFromTapeIn] using
       congrArg MachineDescription.Configuration.tape hsteps
 
+theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hmove : Tape.move handoffMove Tmid = Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (seqSubroutine A B handoffMove).HaltsFromTapeEquiv Tin Tout := by
+  rcases hBhalts with ⟨Tactual, hBactual, hTequiv⟩
+  exact
+    ⟨Tactual,
+      seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        hA hB hAhalts hmove hBactual,
+      hTequiv⟩
+
 theorem seqSubroutine_haltsWithTape_of_haltsWithTape_eq
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

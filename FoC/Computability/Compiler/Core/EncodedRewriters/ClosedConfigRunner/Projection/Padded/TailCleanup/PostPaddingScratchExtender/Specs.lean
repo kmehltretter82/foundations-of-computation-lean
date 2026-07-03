@@ -27,7 +27,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
     (useAccept : Bool) (allocator : MachineDescription) : Prop :=
   allocator.SubroutineReady ∧
     forall L : DovetailLayout,
-      allocator.HaltsFromTape
+      allocator.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupBaseSourceTape useAccept L)
         (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
           useAccept L)
@@ -36,7 +36,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
     (useAccept : Bool) (extender : MachineDescription) : Prop :=
   extender.SubroutineReady ∧
     forall L : DovetailLayout,
-      extender.HaltsFromTape
+      extender.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
@@ -48,7 +48,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
     (useAccept : Bool) (extender : MachineDescription) : Prop :=
   extender.SubroutineReady ∧
     forall L : DovetailLayout,
-      extender.HaltsFromTape
+      extender.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch

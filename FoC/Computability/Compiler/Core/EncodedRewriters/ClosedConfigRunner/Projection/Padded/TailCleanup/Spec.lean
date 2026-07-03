@@ -20,18 +20,13 @@ namespace BoundedLayoutRunner
 def SelectedProjectionPaddedTailEmitterSpec
     (useAccept : Bool)
     (tail : MachineDescription) : Prop :=
-  RightScratchPaddedEmitterSpec
-    (fun L : DovetailLayout =>
+  tail.SubroutineReady ∧
+    forall L : DovetailLayout,
+      tail.HaltsFromTapeEquiv
         (SelectedProjectionTailProjector.sourceTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-            some)))
-    (fun L : DovetailLayout =>
-      encodeCodeWordAsInput
-        (SelectedProjectionOutputCode useAccept L))
-    (fun L : DovetailLayout =>
-      (ParsedLayoutBits L).length)
-    (SelectedProjectionOutputTape useAccept)
-    tail
+            some))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 
 def SelectedProjectionPaddedTailEmitterConstruction : Prop :=
   forall useAccept : Bool,
@@ -41,18 +36,13 @@ def SelectedProjectionPaddedTailEmitterConstruction : Prop :=
 def SelectedProjectionPaddedTailCleanupSpec
     (useAccept : Bool)
     (cleanup : MachineDescription) : Prop :=
-  RightScratchPaddedEmitterSpec
-    (fun L : DovetailLayout =>
+  cleanup.SubroutineReady ∧
+    forall L : DovetailLayout,
+      cleanup.HaltsFromTapeEquiv
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
-            some)))
-    (fun L : DovetailLayout =>
-      encodeCodeWordAsInput
-        (SelectedProjectionOutputCode useAccept L))
-    (fun L : DovetailLayout =>
-      (ParsedLayoutBits L).length)
-    (SelectedProjectionOutputTape useAccept)
-    cleanup
+            some))
+        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 
 def SelectedProjectionPaddedTailCleanupConstruction : Prop :=
   forall useAccept : Bool,
@@ -64,7 +54,7 @@ def SelectedProjectionPaddedTailCleanupExactShapeSpec
     (cleanup : MachineDescription) : Prop :=
   cleanup.SubroutineReady ∧
     forall L : DovetailLayout,
-      cleanup.HaltsFromTape
+      cleanup.HaltsFromTapeEquiv
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map
             some))
@@ -80,15 +70,7 @@ theorem selectedProjectionPaddedTailCleanupSpec_of_exactShape
     (hcleanup :
       SelectedProjectionPaddedTailCleanupExactShapeSpec useAccept cleanup) :
     SelectedProjectionPaddedTailCleanupSpec useAccept cleanup := by
-  constructor
-  · exact hcleanup.left
-  constructor
-  · intro L
-    simpa [SelectedProjectionPaddedTailCleanupSpec,
-      SelectedProjectionEquivEmitterPaddedOutputTape] using
-      hcleanup.right L
-  · intro L
-    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+  exact hcleanup
 
 theorem selectedProjectionPaddedTailCleanupConstruction_of_exactShape
     (hcleanup :
@@ -122,7 +104,6 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
       seqSubroutine_subroutineReady
         CanonicalLayouts.DovetailLayoutScanner.stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hcleanup.left
-  constructor
   · intro L
     have hscanner :
         CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription.HaltsFromTape
@@ -131,34 +112,22 @@ theorem selectedProjectionPaddedTailEmitterSpec_of_cleanup
             (baseLeft L)) :=
       SelectedProjectionTailProjector.sourceScanner_haltsFromTape_withBase
         L (baseLeft L)
-    have hcleanupRun :
-        exists nB : Nat,
-          cleanup.runConfig nB
-              { state := cleanup.start
-                tape :=
-                  Tape.move Direction.right
-                    (SelectedProjectionTailProjector.sourceScannerHandoffTape
-                      L (baseLeft L)) } =
-            { state := cleanup.halt
-              tape := SelectedProjectionEquivEmitterPaddedOutputTape
-                useAccept L } := by
-      simpa [baseLeft,
-        SelectedProjectionTailProjector.sourceScannerRightHandoffTape,
-        List.map_reverse]
-        using
-          runConfig_eq_halt_of_haltsFromTape
-            (hcleanup.right.left L)
     simpa [SelectedProjectionPaddedTailEmitterFromCleanup, baseLeft,
       List.map_reverse] using
-      seqSubroutine_haltsFromTape_of_haltsFromTape
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
         (A :=
           CanonicalLayouts.DovetailLayoutScanner.StageConfigurationsAndFinalFlagsScannerDescription)
         (B := cleanup)
         (handoffMove := Direction.right)
         CanonicalLayouts.DovetailLayoutScanner.stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
-        hcleanup.left hscanner hcleanupRun
-  · intro L
-    exact SelectedProjectionEquivEmitterPaddedOutputTape_equiv useAccept L
+        hcleanup.left hscanner
+        (by
+          rfl)
+        (by
+          simpa [baseLeft,
+            SelectedProjectionTailProjector.sourceScannerRightHandoffTape,
+            List.map_reverse] using
+            hcleanup.right L)
 
 theorem selectedProjectionPaddedTailEmitterConstruction_of_cleanup
     (hcleanup : SelectedProjectionPaddedTailCleanupConstruction) :

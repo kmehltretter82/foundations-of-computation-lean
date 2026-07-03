@@ -1517,7 +1517,7 @@ theorem selectedProjectionPaddedTailCleanupPostCountTailCells_zero_append_replic
       List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder
-    (hencoder : CountWindowRawSourceEncoderConstruction) :
+    (hencoder : CountWindowRawSourceEncoderEquivConstruction) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction := by
   rcases hencoder with ⟨encoder, hencoderSpec⟩
   intro useAccept
@@ -1613,14 +1613,14 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptRawSourceEnco
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         true encoder :=
   selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder
-    countWindowRawSourceEncoderConstruction_core true
+    countWindowRawSourceEncoderEquivConstruction_core true
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectRawSourceEncoderConstruction_core :
     exists encoder : MachineDescription,
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         false encoder :=
   selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder
-    countWindowRawSourceEncoderConstruction_core false
+    countWindowRawSourceEncoderEquivConstruction_core false
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction := by

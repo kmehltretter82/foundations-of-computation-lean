@@ -65,6 +65,68 @@ theorem canonicalSeqDescription_haltsFromTape_of_haltsFromTape
       (seqSubroutine_subroutineReady hA hid)
       hB hAid hbridge hBhalts
 
+theorem canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTapeEquiv Tin Tmid)
+    (hbridge :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) =
+        Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (canonicalSeqDescription A B).HaltsFromTapeEquiv Tin Tout := by
+  rcases hAhalts with ⟨TmidActual, hAactual, hTmidEquiv⟩
+  rcases hBhalts with ⟨ToutBActual, hBactual, hToutBEquiv⟩
+  let TnextActual :=
+    Tape.move Direction.left (Tape.move Direction.right TmidActual)
+  have hTnextEquiv : Tape.Equiv Tnext TnextActual := by
+    rw [← hbridge]
+    exact
+      Tape.Equiv.symm
+        (Tape.Equiv.moveLeft
+          (Tape.Equiv.moveRight hTmidEquiv))
+  have hBfromActual :=
+    HaltsFromTapeEquiv_of_input_equiv
+      (D := B)
+      (Tin := Tnext)
+      (Tin' := TnextActual)
+      (Tout := ToutBActual)
+      hTnextEquiv
+      hBactual
+  rcases hBfromActual with
+    ⟨ToutActual, hBactualFromActual, hToutActualEquiv⟩
+  exact
+    ⟨ToutActual,
+      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        hA hB hAactual rfl hBactualFromActual,
+      Tape.Equiv.trans hToutActualEquiv hToutBEquiv⟩
+
+theorem canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hbridge :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) =
+        Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (canonicalSeqDescription A B).HaltsFromTapeEquiv Tin Tout :=
+  canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
+    hA hB hAhalts.toEquiv hbridge hBhalts
+
+theorem canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTapeEquiv Tin Tmid)
+    (hbridge :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) =
+        Tnext)
+    (hBhalts : B.HaltsFromTape Tnext Tout) :
+    (canonicalSeqDescription A B).HaltsFromTapeEquiv Tin Tout :=
+  canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
+    hA hB hAhalts hbridge hBhalts.toEquiv
+
 def oneGapRightEndCompactorDescription : MachineDescription :=
   canonicalSeqDescription
     (canonicalSeqDescription

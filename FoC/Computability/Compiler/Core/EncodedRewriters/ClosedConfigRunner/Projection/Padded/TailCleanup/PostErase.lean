@@ -1555,7 +1555,7 @@ def SelectedProjectionPaddedTailCleanupPostEraseSpec
     (postErase : MachineDescription) : Prop :=
   postErase.SubroutineReady ∧
     forall L : DovetailLayout,
-      postErase.HaltsFromTape
+      postErase.HaltsFromTapeEquiv
         (selectedHitOtherFlagErasedRightLeftHandoffTape useAccept L)
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 
@@ -1568,7 +1568,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingSpec
     (useAccept : Bool) (postPadding : MachineDescription) : Prop :=
   postPadding.SubroutineReady ∧
     forall L : DovetailLayout,
-      postPadding.HaltsFromTape
+      postPadding.HaltsFromTapeEquiv
         (selectedHitOtherFlagErasedAfterPaddingTape useAccept L)
         (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
 

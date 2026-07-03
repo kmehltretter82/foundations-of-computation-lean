@@ -307,7 +307,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
     (useAccept : Bool) (restorer : MachineDescription) : Prop :=
   restorer.SubroutineReady ∧
     forall L : DovetailLayout,
-      restorer.HaltsFromTape
+      restorer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
@@ -346,7 +346,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_iff_en
         useAccept restorer ↔
       restorer.SubroutineReady ∧
         forall L : DovetailLayout,
-          restorer.HaltsFromTape
+          restorer.HaltsFromTapeEquiv
             (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
               useAccept L 0)
             (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
@@ -1176,7 +1176,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
     (useAccept : Bool) (encoder : MachineDescription) : Prop :=
   encoder.SubroutineReady ∧
     forall L : DovetailLayout,
-      encoder.HaltsFromTape
+      encoder.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
@@ -2231,7 +2231,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_of_suf
         hsuffixRestorer.left hencoder.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         hsuffixRestorer.left
         hencoder.left
         (selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorer_haltsFrom
@@ -2414,7 +2414,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec_o
           (scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPostCountTail
             useAccept L 0)
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         (canonicalSeqDescription_subroutineReady
           hmaterializer.left
           scratchCounterAppendBlanksDescription_subroutineReady)

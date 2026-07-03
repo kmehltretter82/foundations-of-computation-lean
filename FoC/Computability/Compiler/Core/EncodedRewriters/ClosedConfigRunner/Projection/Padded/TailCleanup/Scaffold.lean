@@ -44,14 +44,14 @@ theorem selectedProjectionPaddedTailCleanupExactShapeConstruction_scaffold :
         hpostErase.left
   · intro L
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         (SelectedProjectionPaddedTailCleanup.selectedHitOtherFlagErasedFromScannerDescription_subroutineReady
           useAccept)
         hpostErase.left
         (SelectedProjectionPaddedTailCleanup.selectedHitOtherFlagErasedFromScannerDescription_haltsFrom_sourceScannerRightHandoffTape
-          useAccept L)
+          useAccept L).toEquiv
         (by
-          rfl)
+          exact Tape.Equiv.refl _)
         (hpostErase.right L)
 
 theorem selectedProjectionPaddedTailCleanupConstruction_scaffold :
