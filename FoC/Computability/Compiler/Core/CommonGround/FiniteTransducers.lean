@@ -9,6 +9,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.LeftShiftCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MapAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionSpecializations
