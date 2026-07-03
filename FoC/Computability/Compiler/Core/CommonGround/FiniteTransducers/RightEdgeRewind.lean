@@ -468,6 +468,73 @@ theorem rightEdgeRewindDescription_step_finish
           Matches, transition, Tape.read, Tape.move, Tape.moveRight,
           Tape.write]
 
+theorem rightEdgeRewindDescription_step_finish_noDelimiter
+    (baseLeft : List (Option Bool))
+    (bits : Word Bool) (right : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig 1
+        { state := 1
+          tape :=
+            tapeAtCells baseLeft
+              (none :: List.append (bits.map some) right) } =
+      { state := rightEdgeRewindDescription.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append (bits.map some) right) } := by
+  cases bits <;> cases right <;> cases baseLeft <;>
+    simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+      stepConfig, lookupTransition, Matches, transition, Tape.read,
+      Tape.move, Tape.moveRight, Tape.write]
+
+theorem rightEdgeRewindDescription_run_scan_withBoundaryBase_core
+    (baseLeft : List (Option Bool))
+    (leftBits : Word Bool) (current : Bool)
+    (rightCells : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig (leftBits.length + 1)
+        { state := 1
+          tape :=
+            tapeAtCells
+              (List.append (leftBits.map some) (none :: baseLeft))
+              (some current :: rightCells) } =
+      { state := 1
+        tape :=
+          tapeAtCells baseLeft
+            (none ::
+              List.append
+                ((List.append leftBits.reverse [current]).map some)
+                rightCells) } := by
+  induction leftBits generalizing current rightCells with
+  | nil =>
+      cases current <;> cases baseLeft <;> cases rightCells <;>
+        simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+  | cons next rest ih =>
+      rw [show (next :: rest).length + 1 =
+        1 + (rest.length + 1) by
+        simp
+        lia]
+      rw [runConfig_add]
+      have hstep :
+          rightEdgeRewindDescription.runConfig 1
+              { state := 1
+                tape :=
+                  tapeAtCells
+                    (List.append ((next :: rest).map some)
+                      (none :: baseLeft))
+                    (some current :: rightCells) } =
+            { state := 1
+              tape :=
+                tapeAtCells
+                  (List.append (rest.map some) (none :: baseLeft))
+                  (some next :: some current :: rightCells) } := by
+        cases current <;> cases next <;>
+          simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+            stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstep]
+      simpa [List.append_assoc] using
+        ih next (some current :: rightCells)
+
 theorem rightEdgeRewindDescription_run_from_leftStack
     (leftStack : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftStack.length + 2)
@@ -514,6 +581,82 @@ theorem rightEdgeRewindDescription_run_from_leftStack
         List.append_assoc] using
         rightEdgeRewindDescription_step_finish
           (List.append rest.reverse [current]) padding
+
+theorem rightEdgeRewindDescription_run_from_leftStack_noDelimiter
+    (leftStack : Word Bool) (rightHead : Bool)
+    (rightTail : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig (leftStack.length + 2)
+        { state := rightEdgeRewindDescription.start
+          tape :=
+            tapeAtCells (leftStack.map some)
+              (some rightHead :: rightTail) } =
+      { state := rightEdgeRewindDescription.halt
+        tape :=
+          tapeAtCells [none]
+            (List.append (leftStack.reverse.map some)
+              (some rightHead :: rightTail)) } := by
+  cases leftStack with
+  | nil =>
+      cases rightHead <;> cases rightTail <;>
+        simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight,
+          Tape.write]
+  | cons current rest =>
+      rw [show (current :: rest).length + 2 =
+        1 + ((rest.length + 1) + 1) by
+        simp
+        lia]
+      rw [runConfig_add]
+      have hstart :
+          rightEdgeRewindDescription.runConfig 1
+              { state := rightEdgeRewindDescription.start
+                tape :=
+                  tapeAtCells ((current :: rest).map some)
+                    (some rightHead :: rightTail) } =
+            { state := 1
+              tape :=
+                tapeAtCells (rest.map some)
+                  (some current :: some rightHead :: rightTail) } := by
+        cases current <;> cases rightHead <;> cases rightTail <;>
+          simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+            stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstart]
+      rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
+      rw [runConfig_add]
+      rw [rightEdgeRewindDescription_run_scan rest current
+        (some rightHead :: rightTail)]
+      simpa [List.map_append, List.append_assoc] using
+        rightEdgeRewindDescription_step_finish_noDelimiter []
+          (List.append rest.reverse [current])
+          (some rightHead :: rightTail)
+
+theorem rightEdgeRewindDescription_haltsFrom_leftStack_noDelimiter
+    (leftStack : Word Bool) (rightHead : Bool)
+    (rightTail : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells (leftStack.map some)
+        (some rightHead :: rightTail))
+      (tapeAtCells [none]
+        (List.append (leftStack.reverse.map some)
+          (some rightHead :: rightTail))) := by
+  refine ⟨leftStack.length + 2, ?_⟩
+  constructor <;>
+    rw [rightEdgeRewindDescription_run_from_leftStack_noDelimiter]
+
+theorem rightEdgeRewindDescription_haltsFrom_rightEdge_noDelimiter
+    (bits : Word Bool) (rightHead : Bool)
+    (rightTail : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells (bits.reverse.map some)
+        (some rightHead :: rightTail))
+      (tapeAtCells [none]
+        (List.append (bits.map some)
+          (some rightHead :: rightTail))) := by
+  simpa [List.map_reverse] using
+    rightEdgeRewindDescription_haltsFrom_leftStack_noDelimiter
+      bits.reverse rightHead rightTail
 
 theorem rightEdgeRewindDescription_run_from_lastBitStack
     (leftStack : Word Bool) (current : Bool)
@@ -619,6 +762,79 @@ theorem rightEdgeRewindDescription_run_from_lastBitBoundary
         rightEdgeRewindDescription_step_finish
           (List.append (List.append rest.reverse [next]) [current])
           padding
+
+theorem rightEdgeRewindDescription_run_from_lastBitBoundaryBase_noDelimiter
+    (baseLeft : List (Option Bool))
+    (leftStack : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    rightEdgeRewindDescription.runConfig (leftStack.length + 2)
+        { state := rightEdgeRewindDescription.start
+          tape :=
+            tapeAtCells
+              (List.append (leftStack.map some) (none :: baseLeft))
+              (some current :: right) } =
+      { state := rightEdgeRewindDescription.halt
+        tape :=
+          tapeAtCells (none :: baseLeft)
+            (List.append
+              ((List.append leftStack.reverse [current]).map some)
+              right) } := by
+  cases leftStack with
+  | nil =>
+      cases current <;> cases baseLeft <;> cases right <;>
+        simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+          stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight,
+          Tape.write]
+  | cons next rest =>
+      rw [show (next :: rest).length + 2 =
+        1 + ((rest.length + 1) + 1) by
+        simp
+        lia]
+      rw [runConfig_add]
+      have hstart :
+          rightEdgeRewindDescription.runConfig 1
+              { state := rightEdgeRewindDescription.start
+                tape :=
+                  tapeAtCells
+                    (List.append ((next :: rest).map some)
+                      (none :: baseLeft))
+                    (some current :: right) } =
+            { state := 1
+              tape :=
+                tapeAtCells
+                  (List.append (rest.map some) (none :: baseLeft))
+                  (some next :: some current :: right) } := by
+        cases current <;> cases next <;> cases baseLeft <;> cases right <;>
+          simp [rightEdgeRewindDescription, tapeAtCells, runConfig,
+            stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.write]
+      rw [hstart]
+      rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
+      rw [runConfig_add]
+      rw [rightEdgeRewindDescription_run_scan_withBoundaryBase_core
+        baseLeft rest next (some current :: right)]
+      simpa [List.map_append, List.append_assoc] using
+        rightEdgeRewindDescription_step_finish_noDelimiter
+          baseLeft
+          (List.append (List.append rest.reverse [next]) [current])
+          right
+
+theorem rightEdgeRewindDescription_haltsFrom_lastBitBoundaryBase_noDelimiter
+    (baseLeft : List (Option Bool))
+    (leftStack : Word Bool) (current : Bool)
+    (right : List (Option Bool)) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (tapeAtCells
+        (List.append (leftStack.map some) (none :: baseLeft))
+        (some current :: right))
+      (tapeAtCells (none :: baseLeft)
+        (List.append
+          ((List.append leftStack.reverse [current]).map some)
+          right)) := by
+  refine ⟨leftStack.length + 2, ?_⟩
+  constructor <;>
+    rw [rightEdgeRewindDescription_run_from_lastBitBoundaryBase_noDelimiter]
 
 theorem rightEdgeRewindDescription_run
     (bits : Word Bool) (padding : List (Option Bool)) :
