@@ -502,10 +502,34 @@ theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
     codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable
       codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
 
+theorem codePrefixStageSearchControllerProgramCompilerConstruction_core_state
+    {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    exists searcherState : Type,
+    exists searcher : TuringMachine MachineCodeSymbol searcherState,
+      forall encoded : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput searcher encoded <->
+          ProgramHaltsWithOutput
+            (codePrefixStageSearchControllerProgram simulator) encoded [] :=
+  codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable_state
+    codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
+    simulator
+
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
   codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompiler
     codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
+
+theorem codePrefixStageSearchControllerCoreConstruction_core_state
+    {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator) :
+    exists searcherState : Type,
+    exists searcher : TuringMachine MachineCodeSymbol searcherState,
+      CodePrefixStageSearchControllerSpec simulator searcher :=
+  codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompiler_state
+    codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
+    simulator hsimulator
 
 
 end Computability

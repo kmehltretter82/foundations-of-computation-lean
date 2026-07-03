@@ -516,6 +516,24 @@ theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable
               (CodePrefixRecognizerStageCode encoded stage)).mpr
               hsimulator⟩)
 
+theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_decidable_state
+    (hcompile :
+      CodePrefixStageSearchControllerProgramDecidableCompilerConstruction)
+    {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    exists searcherState : Type,
+    exists searcher : TuringMachine MachineCodeSymbol searcherState,
+      forall encoded : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput searcher encoded <->
+          ProgramHaltsWithOutput
+            (codePrefixStageSearchControllerProgram simulator) encoded [] := by
+  rcases hcompile simulator with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  exact Iff.trans (hsearcher encoded)
+    (codePrefixStageSearchControllerProgramDecidable_accepts_program
+      simulator encoded)
+
 theorem codePrefixStageSearchControllerCoreConstruction_of_programCompiler
     (hcompile : CodePrefixStageSearchControllerProgramCompilerConstruction) :
     CodePrefixStageSearchControllerCoreConstruction := by
@@ -557,6 +575,22 @@ theorem codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompi
             (TuringMachine.indexed_haltsOnInput_iff
               simulator (CodePrefixRecognizerStageCode encoded stage)).mpr
               hsimulator⟩)
+
+theorem codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompiler_state
+    (hcompile :
+      CodePrefixStageSearchControllerProgramDecidableCompilerConstruction)
+    {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (_hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator) :
+    exists searcherState : Type,
+    exists searcher : TuringMachine MachineCodeSymbol searcherState,
+      CodePrefixStageSearchControllerSpec simulator searcher := by
+  rcases hcompile simulator with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  exact Iff.trans (hsearcher encoded)
+    (codePrefixStageSearchControllerProgramDecidable_accepts
+      simulator encoded)
 
 /-!
 **Stage-search driver core.**  This is the unbounded dovetailing leaf: given a

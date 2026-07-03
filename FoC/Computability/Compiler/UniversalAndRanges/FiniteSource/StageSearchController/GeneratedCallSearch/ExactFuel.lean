@@ -412,5 +412,32 @@ theorem codePrefixNestedExactFuelSearchConstruction_of_indexed
           M outer (CodePrefixRecognizerStageCode input inner)).mpr
           hhalt⟩
 
+theorem codePrefixNestedExactFuelSearchConstruction_of_indexedDecidable
+    {machineState : Type u} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState)
+    (hindexed :
+      CodePrefixNestedExactFuelSearchConstruction
+        (TuringMachine.indexedDecidable M)) :
+    CodePrefixNestedExactFuelSearchConstruction M := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, hindexedHalt⟩
+    exact
+      ⟨inner, outer,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with ⟨inner, outer, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+          M outer (CodePrefixRecognizerStageCode input inner)).mpr
+          hhalt⟩
+
 end Computability
 end FoC
