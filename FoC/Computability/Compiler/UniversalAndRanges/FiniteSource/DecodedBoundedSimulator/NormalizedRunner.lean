@@ -513,15 +513,50 @@ def DecodedBoundedSimulatorRunConfigRunnerConstruction : Prop :=
     DecodedBoundedSimulatorRunConfigRunnerSpec runner
 
 /--
-The semantic configuration reached by the uniform decoded transition loop.
-This name isolates the operation that the remaining finite table has to
-implement: repeatedly scan the decoded transition table, apply the selected
-write/move action, and decrement the parsed stage counter.
+The semantic configuration reached by the uniform decoded transition loop from
+an arbitrary current configuration.  This is the invariant carried by the
+remaining finite table: repeatedly scan the decoded transition table, apply the
+selected write/move action, and decrement the parsed stage counter.
+-/
+def decodedBoundedSimulatorTransitionLoopFromConfig
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    MachineDescription.Configuration :=
+  D.runConfig stage config
+
+theorem decodedBoundedSimulatorTransitionLoopFromConfig_zero
+    (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFromConfig 0 D config =
+      config :=
+  rfl
+
+theorem decodedBoundedSimulatorTransitionLoopFromConfig_succ_eq_scan
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFromConfig (stage + 1) D config =
+      match
+        MachineDescription.scanTransitionTable
+          config.state (Tape.read config.tape) D.transitions with
+      | none => config
+      | some transition =>
+          decodedBoundedSimulatorTransitionLoopFromConfig stage D
+            { state := transition.target
+              tape :=
+                Tape.move transition.move
+                  (Tape.write transition.write config.tape) } := by
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+    (MachineDescription.runConfig_succ_eq_scanTransitionTable
+      (D := D) (c := config) (n := stage))
+
+/--
+The semantic configuration reached by the uniform decoded transition loop from
+the canonical initial configuration for a decoded source word.
 -/
 def decodedBoundedSimulatorTransitionLoopConfig
     (stage : Nat) (D : MachineDescription)
     (input : Word MachineCodeSymbol) : MachineDescription.Configuration :=
-  D.runConfig stage
+  decodedBoundedSimulatorTransitionLoopFromConfig stage D
     (D.initial (MachineDescription.encodeCodeWordAsInput input))
 
 theorem decodedBoundedSimulatorTransitionLoopConfig_zero
@@ -541,8 +576,36 @@ theorem decodedBoundedSimulatorTransitionLoopConfig_succ
           D.initial (MachineDescription.encodeCodeWordAsInput input)
       | some next => D.runConfig stage next := by
   simp [decodedBoundedSimulatorTransitionLoopConfig,
+    decodedBoundedSimulatorTransitionLoopFromConfig,
     MachineDescription.runConfig]
   rfl
+
+theorem decodedBoundedSimulatorTransitionLoopConfig_succ_eq_scan
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopConfig (stage + 1) D input =
+      match
+        MachineDescription.scanTransitionTable
+          (D.initial
+            (MachineDescription.encodeCodeWordAsInput input)).state
+          (Tape.read
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input)).tape)
+          D.transitions with
+      | none =>
+          D.initial (MachineDescription.encodeCodeWordAsInput input)
+      | some transition =>
+          decodedBoundedSimulatorTransitionLoopFromConfig stage D
+            { state := transition.target
+              tape :=
+                Tape.move transition.move
+                  (Tape.write transition.write
+                    (D.initial
+                      (MachineDescription.encodeCodeWordAsInput input)).tape) } := by
+  simpa [decodedBoundedSimulatorTransitionLoopConfig] using
+    decodedBoundedSimulatorTransitionLoopFromConfig_succ_eq_scan
+      stage D
+      (D.initial (MachineDescription.encodeCodeWordAsInput input))
 
 /--
 Transition-loop form of the normalized bounded simulator runner.  This is the
