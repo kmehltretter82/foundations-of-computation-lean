@@ -1152,6 +1152,48 @@ def CountWindowRawSourceEncoderNoCountPaddingEquivConstruction :
   exists encoder : MachineDescription,
     CountWindowRawSourceEncoderNoCountPaddingEquivSpec encoder
 
+def CountWindowRawSourceEncoderCountWindowStartEmitterEquivSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall (skipped count : Word Bool)
+      (tailFirst : Bool) (tail : List (Option Bool)),
+      emitter.HaltsFromTapeEquiv
+        (countWindowRawSourceEncoderCountWindowStartTape
+          skipped count (some tailFirst :: tail))
+        (countWindowRawSourceEncoderTargetTapeNoCountPadding
+          skipped count (some tailFirst :: tail))
+
+def CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction :
+    Prop :=
+  exists emitter : MachineDescription,
+    CountWindowRawSourceEncoderCountWindowStartEmitterEquivSpec emitter
+
+theorem countWindowRawSourceEncoderNoCountPaddingEquivConstruction_of_countWindowStartEmitter
+    (hemitter :
+      CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction) :
+    CountWindowRawSourceEncoderNoCountPaddingEquivConstruction := by
+  rcases hemitter with ⟨emitter, hemitterSpec⟩
+  refine
+    ⟨seqSubroutine
+        countWindowRawSourceEncoderScanToBeforeCountWindowDescription
+        emitter Direction.right,
+      ?_⟩
+  constructor
+  · exact
+      seqSubroutine_subroutineReady
+        countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady
+        hemitterSpec.left
+  · intro skipped count tailFirst tail
+    exact
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
+        countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady
+        hemitterSpec.left
+        (countWindowRawSourceEncoderScanToBeforeCountWindowDescription_haltsFromTape
+          skipped count (some tailFirst :: tail))
+        (countWindowRawSourceEncoderBeforeCountWindowTape_moveRight
+          skipped count (some tailFirst :: tail))
+        (hemitterSpec.right skipped count tailFirst tail)
+
 theorem countWindowRawSourceEncoderEquivConstruction_of_noCountPadding
     (hencoder :
       CountWindowRawSourceEncoderNoCountPaddingEquivConstruction) :
@@ -1217,9 +1259,16 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
+theorem
+    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
+    CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by
+  sorry
+
 theorem countWindowRawSourceEncoderNoCountPaddingEquivConstruction_core :
     CountWindowRawSourceEncoderNoCountPaddingEquivConstruction := by
-  sorry
+  exact
+    countWindowRawSourceEncoderNoCountPaddingEquivConstruction_of_countWindowStartEmitter
+      countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core
 
 /--
 Direct construction obligation for the raw-source encoder.
