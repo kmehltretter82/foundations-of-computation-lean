@@ -744,14 +744,16 @@ theorem Search.protectedControllerSearchDriverConstructionOfDecider
         hcompile)
 
 theorem Search.controllerCompilerOfDecider
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    (_hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
   intro _accept _reject attempt hattemptReady
+  rcases
+      pairedRecognizerDovetailStageAttemptProtectedInvocationConstructionData_scaffold
+        attempt hattemptReady with
+    ⟨invoker, hinvoker⟩
   exact
-    Search.controllerCompilerOfDeciderOfFunctional
-      hcompile attempt
-      (pairedRecognizerDovetailStageAttemptOutputFunctional_of_subroutineReady
-        hattemptReady)
+    pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf
+      attempt invoker hinvoker
 
 noncomputable def PairedRecognizerDovetailStageAttemptSearchProgram
     (accept reject attempt : MachineDescription) :
