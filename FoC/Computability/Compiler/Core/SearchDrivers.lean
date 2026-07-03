@@ -275,6 +275,63 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_
             ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
               attempt w false budget budget).mpr h.right))
 
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_true_iff
+    (attempt : MachineDescription) (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+          attempt) w [true] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        pairedRecognizerDovetailTotalStageAttemptOutputIn
+          attempt w true limit fuel := by
+  constructor
+  · intro h
+    rcases h with ⟨budget, hrun⟩
+    rcases
+        (pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_true_iff
+          attempt w budget).mp hrun with
+      ⟨limit, fuel, _hlimit, _hfuel, hhit⟩
+    exact ⟨limit, fuel, hhit⟩
+  · intro h
+    rcases h with ⟨limit, fuel, hhit⟩
+    refine ⟨limit + fuel, ?_⟩
+    exact
+      (pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_true_iff
+        attempt w (limit + fuel)).mpr
+        ⟨limit, fuel, by lia, by lia, hhit⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_false_iff
+    (attempt : MachineDescription) (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+          attempt) w [false] <->
+      exists budget : Nat,
+        ¬ (exists limit : Nat,
+          exists fuel : Nat,
+            limit ≤ budget ∧
+              fuel ≤ budget ∧
+              pairedRecognizerDovetailTotalStageAttemptOutputIn
+                attempt w true limit fuel) ∧
+        exists limit : Nat,
+        exists fuel : Nat,
+          limit ≤ budget ∧
+            fuel ≤ budget ∧
+            pairedRecognizerDovetailTotalStageAttemptOutputIn
+              attempt w false limit fuel := by
+  constructor
+  · intro h
+    rcases h with ⟨budget, hrun⟩
+    exact
+      ⟨budget,
+        (pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_false_iff
+          attempt w budget).mp hrun⟩
+  · intro h
+    rcases h with ⟨budget, hbudget⟩
+    exact
+      ⟨budget,
+        (pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_false_iff
+          attempt w budget).mpr hbudget⟩
+
 def PairedRecognizerDovetailStageAttemptOutputFunctional
     (attempt : MachineDescription) : Prop :=
   forall w : Word Bool,
@@ -495,6 +552,96 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWi
           MachineDescription.haltsWithOutput_iff_exists_haltsWithOutputIn.mpr
             ⟨fuel, hattempt⟩,
           hraw⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_halts_true_iff_of_functional
+    (attempt : MachineDescription)
+    (hfunctional :
+      PairedRecognizerDovetailStageAttemptOutputFunctional attempt)
+    (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [true] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        pairedRecognizerDovetailTotalStageAttemptOutputIn
+          attempt w true limit fuel := by
+  constructor
+  · intro h
+    rcases
+        (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_functional
+          attempt hfunctional w true).mp h with
+      ⟨limit, fuel, result, hhalt, hraw⟩
+    have hresult : result = [true] :=
+      (DovetailControllerLayout.rawOutput_eq_some_singleton_iff
+        result true).mp hraw
+    subst result
+    exact ⟨limit, fuel, by
+      simpa [pairedRecognizerDovetailTotalStageAttemptOutputIn]
+        using hhalt⟩
+  · intro h
+    rcases h with ⟨limit, fuel, hhalt⟩
+    exact
+      (pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff_of_functional
+        attempt hfunctional w true).mpr
+        ⟨limit, fuel, [true], by
+          simpa [pairedRecognizerDovetailTotalStageAttemptOutputIn]
+            using hhalt,
+          by
+            simp [PairedRecognizerDovetailControllerRawOutput,
+              DovetailControllerLayout.rawOutput_singleton]⟩
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_true_iff_searchProgram
+    (attempt : MachineDescription)
+    (hfunctional :
+      PairedRecognizerDovetailStageAttemptOutputFunctional attempt)
+    (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+          attempt) w [true] <->
+      ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [true] := by
+  rw [
+    pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_true_iff,
+    pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_halts_true_iff_of_functional
+      attempt hfunctional]
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_halts_true_iff_of_protectedInvocation
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [true] <->
+      exists limit : Nat,
+      exists fuel : Nat,
+        pairedRecognizerDovetailTotalStageAttemptOutputIn
+          attempt w true limit fuel :=
+  pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_halts_true_iff_of_functional
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+      hinvoker)
+    w
+
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_true_iff_searchProgram_of_protectedInvocation
+    {attempt invoker : MachineDescription}
+    (hinvoker :
+      PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+        attempt invoker)
+    (w : Word Bool) :
+    ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+          attempt) w [true] <->
+      ProgramHaltsWithOutput
+        (PairedRecognizerDovetailTotalStageAttemptControllerSearchProgram
+          attempt) w [true] :=
+  pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_halts_true_iff_searchProgram
+    attempt
+    (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
+      hinvoker)
+    w
 
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutputIn_iff
     (attempt : MachineDescription)
