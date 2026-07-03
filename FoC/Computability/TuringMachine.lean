@@ -69,6 +69,23 @@ inductive Step (M : TuringMachine symbol state) :
       Step M c
         { state := nextState, tape := Tape.move dir (Tape.write write c.tape) }
 
+def stepConfig (M : TuringMachine symbol state)
+    (c : Configuration symbol state) : Option (Configuration symbol state) :=
+  match M.transition c.state (Tape.read c.tape) with
+  | none => none
+  | some (write, dir, nextState) =>
+      some
+        { state := nextState,
+          tape := Tape.move dir (Tape.write write c.tape) }
+
+def runConfig? (M : TuringMachine symbol state) :
+    Nat -> Configuration symbol state -> Option (Configuration symbol state)
+  | 0, c => some c
+  | n + 1, c =>
+      match M.stepConfig c with
+      | none => none
+      | some next => runConfig? M n next
+
 theorem step_iff_transition_eq_some
     {M : TuringMachine symbol state}
     {c d : Configuration symbol state} :
@@ -89,6 +106,26 @@ theorem step_iff_transition_eq_some
   · intro h
     rcases h with ⟨write, dir, nextState, haction, rfl⟩
     exact Step.mk haction
+
+theorem stepConfig_eq_some_iff_step
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state} :
+    M.stepConfig c = some d <-> Step M c d := by
+  constructor
+  · intro hstep
+    unfold stepConfig at hstep
+    cases haction : M.transition c.state (Tape.read c.tape) with
+    | none =>
+        simp [haction] at hstep
+    | some action =>
+        rcases action with ⟨write, dir, nextState⟩
+        simp [haction] at hstep
+        cases hstep
+        exact Step.mk haction
+  · intro hstep
+    cases hstep with
+    | mk haction =>
+        simp [stepConfig, haction]
 
 /-!
 # Finite-state reindexing
@@ -456,6 +493,86 @@ theorem computesIn_succ_iff {M : TuringMachine symbol state}
   · intro h
     rcases h with ⟨d, hstep, hrest⟩
     exact ComputesIn.succ hstep hrest
+
+theorem runConfig?_eq_some_iff_computesIn
+    {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state} :
+    M.runConfig? n c = some d <-> ComputesIn M n c d := by
+  induction n generalizing c with
+  | zero =>
+      constructor
+      · intro hrun
+        simp [runConfig?] at hrun
+        cases hrun
+        exact ComputesIn.zero _
+      · intro hcomp
+        cases hcomp
+        simp [runConfig?]
+  | succ n ih =>
+      constructor
+      · intro hrun
+        simp [runConfig?] at hrun
+        cases hstep : M.stepConfig c with
+        | none =>
+            simp [hstep] at hrun
+        | some next =>
+            simp [hstep] at hrun
+            exact
+              ComputesIn.succ
+                (stepConfig_eq_some_iff_step.mp hstep)
+                (ih.mp hrun)
+      · intro hcomp
+        rcases computesIn_succ_iff.mp hcomp with
+          ⟨next, hstep, htail⟩
+        have hstepConfig : M.stepConfig c = some next :=
+          stepConfig_eq_some_iff_step.mpr hstep
+        simp [runConfig?, hstepConfig]
+        exact ih.mpr htail
+
+theorem haltsFromIn_iff_runConfig?
+    {M : TuringMachine symbol state}
+    {n : Nat} {c : Configuration symbol state} :
+    HaltsFromIn M n c <->
+      exists final : Configuration symbol state,
+        M.runConfig? n c = some final ∧ Halted M final := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    exact
+      ⟨final, runConfig?_eq_some_iff_computesIn.mpr hcomp, hfinal⟩
+  · intro hhalt
+    rcases hhalt with ⟨final, hrun, hfinal⟩
+    exact
+      ⟨final, runConfig?_eq_some_iff_computesIn.mp hrun, hfinal⟩
+
+instance [DecidableEq state] (M : TuringMachine symbol state)
+    (n : Nat) (c : Configuration symbol state) :
+    Decidable (HaltsFromIn M n c) := by
+  cases hrun : M.runConfig? n c with
+  | none =>
+      exact isFalse (by
+        intro hhalt
+        rcases haltsFromIn_iff_runConfig?.mp hhalt with
+          ⟨final, hfinal, _hhalted⟩
+        rw [hrun] at hfinal
+        cases hfinal)
+  | some final =>
+      by_cases hhalted : final.state = M.halt
+      · exact isTrue (haltsFromIn_iff_runConfig?.mpr
+          ⟨final, hrun, by simpa [Halted] using hhalted⟩)
+      · exact isFalse (by
+          intro hhalt
+          rcases haltsFromIn_iff_runConfig?.mp hhalt with
+            ⟨final', hfinal', hhalted'⟩
+          rw [hrun] at hfinal'
+          cases hfinal'
+          exact hhalted (by simpa [Halted] using hhalted'))
+
+instance [DecidableEq state] (M : TuringMachine symbol state)
+    (n : Nat) (w : Word symbol) :
+    Decidable (HaltsOnInputIn M n w) := by
+  unfold HaltsOnInputIn
+  infer_instance
 
 theorem haltsFromIn_zero_iff {M : TuringMachine symbol state}
     {c : Configuration symbol state} :

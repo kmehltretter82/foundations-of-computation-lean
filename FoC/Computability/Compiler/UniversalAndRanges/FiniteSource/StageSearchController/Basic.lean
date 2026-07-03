@@ -45,6 +45,168 @@ noncomputable def codePrefixStageSearchControllerProgram
           else
             none }
 
+def codePrefixStageSearchControllerFuelHit
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) (checkedStage : Nat) :
+    Nat -> Bool
+  | 0 =>
+      decide
+        (TuringMachine.HaltsOnInputIn simulator 0
+          (CodePrefixRecognizerStageCode encoded checkedStage))
+  | fuel + 1 =>
+      decide
+        (TuringMachine.HaltsOnInputIn simulator (fuel + 1)
+          (CodePrefixRecognizerStageCode encoded checkedStage)) ||
+        codePrefixStageSearchControllerFuelHit
+          simulator encoded checkedStage fuel
+
+theorem codePrefixStageSearchControllerFuelHit_eq_true_iff
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) (checkedStage fuelBudget : Nat) :
+    codePrefixStageSearchControllerFuelHit
+        simulator encoded checkedStage fuelBudget = true <->
+      exists fuel : Nat,
+        fuel ≤ fuelBudget ∧
+          TuringMachine.HaltsOnInputIn simulator fuel
+            (CodePrefixRecognizerStageCode encoded checkedStage) := by
+  induction fuelBudget with
+  | zero =>
+      simp [codePrefixStageSearchControllerFuelHit]
+  | succ fuelBudget ih =>
+      by_cases hcurrent :
+          TuringMachine.HaltsOnInputIn simulator (fuelBudget + 1)
+            (CodePrefixRecognizerStageCode encoded checkedStage)
+      · constructor
+        · intro _hhit
+          exact ⟨fuelBudget + 1, by lia, hcurrent⟩
+        · intro _hwitness
+          simp [codePrefixStageSearchControllerFuelHit, hcurrent]
+      · simp [codePrefixStageSearchControllerFuelHit, hcurrent, ih]
+        constructor
+        · intro h
+          rcases h with ⟨fuel, hfuel, hhalt⟩
+          exact ⟨fuel, by lia, hhalt⟩
+        · intro h
+          rcases h with ⟨fuel, hfuel, hhalt⟩
+          by_cases hlast : fuel = fuelBudget + 1
+          · subst fuel
+            exact False.elim (hcurrent hhalt)
+          · exact ⟨fuel, by lia, hhalt⟩
+
+def codePrefixStageSearchControllerStageFuelHit
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) (fuelBudget : Nat) :
+    Nat -> Bool
+  | 0 =>
+      codePrefixStageSearchControllerFuelHit simulator encoded 0 fuelBudget
+  | checkedStage + 1 =>
+      codePrefixStageSearchControllerFuelHit
+          simulator encoded (checkedStage + 1) fuelBudget ||
+        codePrefixStageSearchControllerStageFuelHit
+          simulator encoded fuelBudget checkedStage
+
+theorem codePrefixStageSearchControllerStageFuelHit_eq_true_iff
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol)
+    (stageBudget fuelBudget : Nat) :
+    codePrefixStageSearchControllerStageFuelHit
+        simulator encoded fuelBudget stageBudget = true <->
+      exists checkedStage : Nat,
+      exists fuel : Nat,
+        checkedStage ≤ stageBudget ∧
+          fuel ≤ fuelBudget ∧
+          TuringMachine.HaltsOnInputIn simulator fuel
+            (CodePrefixRecognizerStageCode encoded checkedStage) := by
+  induction stageBudget with
+  | zero =>
+      simp [codePrefixStageSearchControllerStageFuelHit,
+        codePrefixStageSearchControllerFuelHit_eq_true_iff]
+  | succ stageBudget ih =>
+      simp [codePrefixStageSearchControllerStageFuelHit,
+        codePrefixStageSearchControllerFuelHit_eq_true_iff, ih]
+      constructor
+      · intro h
+        rcases h with hlast | hprev
+        ·
+            rcases hlast with ⟨fuel, hfuel, hhalt⟩
+            exact ⟨stageBudget + 1, by lia, fuel, hfuel, hhalt⟩
+        ·
+            rcases hprev with
+              ⟨checkedStage, hstage, fuel, hfuel, hhalt⟩
+            exact ⟨checkedStage, by lia, fuel, hfuel, hhalt⟩
+      · intro h
+        rcases h with ⟨checkedStage, hstage, fuel, hfuel, hhalt⟩
+        by_cases hlast : checkedStage = stageBudget + 1
+        · subst checkedStage
+          exact Or.inl ⟨fuel, hfuel, hhalt⟩
+        · exact Or.inr ⟨checkedStage, by lia, fuel, hfuel, hhalt⟩
+
+def codePrefixStageSearchControllerProgramDecidable
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState) :
+    StagedProgram MachineCodeSymbol Unit :=
+  { run := fun encoded budget =>
+      match MachineDescription.decodeDescriptionPrefix encoded with
+      | none => none
+      | some _ =>
+          if codePrefixStageSearchControllerStageFuelHit
+              simulator encoded budget budget = true then
+            some []
+          else
+            none }
+
+theorem codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) (budget : Nat) :
+    (codePrefixStageSearchControllerProgramDecidable simulator).run
+        encoded budget = some [] <->
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+      exists checkedStage : Nat,
+      exists fuel : Nat,
+        checkedStage ≤ budget ∧
+          fuel ≤ budget ∧
+          MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          TuringMachine.HaltsOnInputIn simulator fuel
+            (CodePrefixRecognizerStageCode encoded checkedStage) := by
+  cases hdecode : MachineDescription.decodeDescriptionPrefix encoded with
+  | none =>
+      simp [codePrefixStageSearchControllerProgramDecidable, hdecode]
+  | some decoded =>
+      rcases decoded with ⟨D, input⟩
+      constructor
+      · intro hrun
+        by_cases hhit :
+            codePrefixStageSearchControllerStageFuelHit
+              simulator encoded budget budget = true
+        ·
+          rcases
+              (codePrefixStageSearchControllerStageFuelHit_eq_true_iff
+                simulator encoded budget budget).mp hhit with
+            ⟨checkedStage, fuel, hstage, hfuel, hhalt⟩
+          exact
+            ⟨D, input, checkedStage, fuel, hstage, hfuel, rfl, hhalt⟩
+        · simp [codePrefixStageSearchControllerProgramDecidable, hdecode, hhit]
+            at hrun
+      · intro h
+        rcases h with
+          ⟨D', input', checkedStage, fuel, hstage, hfuel, hdecode', hhalt⟩
+        cases hdecode'
+        have hhit :
+            codePrefixStageSearchControllerStageFuelHit
+              simulator encoded budget budget = true :=
+          ((codePrefixStageSearchControllerStageFuelHit_eq_true_iff
+            simulator encoded budget budget).mpr
+            ⟨checkedStage, fuel, hstage, hfuel, hhalt⟩)
+        simp [codePrefixStageSearchControllerProgramDecidable, hdecode, hhit]
+        rfl
+
 theorem codePrefixStageSearchControllerProgram_accepts
     (simulator : TuringMachine MachineCodeSymbol simulatorState)
     (encoded : Word MachineCodeSymbol) :
