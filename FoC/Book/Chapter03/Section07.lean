@@ -133,6 +133,14 @@ theorem regular_languages_have_pumping_property {L : Language alpha}
     Pumping.HasPumpingProperty L :=
   Pumping.regular_hasPumpingProperty hL
 
+theorem dfa_pumping_length_decidable [DecidableEq state] (M : DFA alpha state) :
+    Pumping.PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) :=
+  Pumping.dfa_pumpingLength_decidable M
+
+theorem dfa_has_pumping_property_decidable [DecidableEq state] (M : DFA alpha state) :
+    Pumping.HasPumpingProperty (DFA.Language M) :=
+  Pumping.dfa_hasPumpingProperty_decidable M
+
 theorem pumping_lemma_conclusion (L : Language alpha) :
     Pumping.PumpingLemmaConclusion L :=
   Pumping.regular_pumpingLemmaConclusion L

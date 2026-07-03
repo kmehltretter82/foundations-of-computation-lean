@@ -127,6 +127,28 @@ noncomputable def DFARegex (alphabet : List alpha) (M : DFA alpha state) :
     ((M.statesFinite.elems.filter fun q => M.accept q).map
       (fun q => PathRegex alphabet M M.statesFinite.elems M.start q))
 
+def StepRegexDecidable [DecidableEq state] (alphabet : List alpha)
+    (M : DFA alpha state) (q r : state) : RegExp alpha :=
+  RegExp.CharClass (alphabet.filter fun a => M.step q a = r)
+
+def PathRegexDecidable [DecidableEq state] (alphabet : List alpha)
+    (M : DFA alpha state) : List state -> state -> state -> RegExp alpha
+  | [], q, r =>
+      RegExp.alt (if q = r then RegExp.eps else RegExp.empty)
+        (StepRegexDecidable alphabet M q r)
+  | s :: rest, q, r =>
+      RegExp.alt (PathRegexDecidable alphabet M rest q r)
+        (RegExp.seq
+          (RegExp.seq (PathRegexDecidable alphabet M rest q s)
+            (RegExp.star (PathRegexDecidable alphabet M rest s s)))
+          (PathRegexDecidable alphabet M rest s r))
+
+def DFARegexDecidable [DecidableEq state] (alphabet : List alpha)
+    (M : DFA alpha state) [DecidablePred M.accept] : RegExp alpha :=
+  RegExp.AltList
+    ((M.statesFinite.elems.filter fun q => M.accept q).map
+      (fun q => PathRegexDecidable alphabet M M.statesFinite.elems M.start q))
+
 /-!
 # Alphabet-restricted paths
 
@@ -489,6 +511,210 @@ theorem dfaRegex_complete (alphabet : List alpha) (M : DFA alpha state)
         unfold DFA.Run
         exact pathVia_allStates M M.start w)
 
+theorem stepRegexDecidable_denote [DecidableEq state]
+    (alphabet : List alpha) (M : DFA alpha state)
+    (q r : state) (w : Word alpha) :
+    w ∈ RegExp.Denote (StepRegexDecidable alphabet M q r) <->
+      exists a, a ∈ alphabet ∧ M.step q a = r ∧ w = Word.Symbol a := by
+  unfold StepRegexDecidable
+  rw [RegExp.charClass_denote]
+  constructor
+  · intro hw
+    cases hw with
+    | intro a ha =>
+        exists a
+        constructor
+        · exact (List.mem_filter.mp ha.left).left
+        constructor
+        · simpa using (List.mem_filter.mp ha.left).right
+        · exact ha.right
+  · intro hw
+    cases hw with
+    | intro a ha =>
+        exists a
+        constructor
+        · exact List.mem_filter.mpr
+            (And.intro ha.left (by simp [ha.right.left]))
+        · exact ha.right.right
+
+theorem pathRegexDecidable_complete [DecidableEq state]
+    (alphabet : List alpha) (M : DFA alpha state)
+    (states : List state) {q r : state} {w : Word alpha}
+    (hall : AllSymbolsIn alphabet w)
+    (hpath : PathVia M states q w r) :
+    w ∈ RegExp.Denote (PathRegexDecidable alphabet M states q r) := by
+  induction states generalizing q r w with
+  | nil =>
+      cases hpath with
+      | empty q =>
+          unfold PathRegexDecidable
+          apply Or.inl
+          simp
+          rfl
+      | symbol q a =>
+          unfold PathRegexDecidable
+          apply Or.inr
+          apply (stepRegexDecidable_denote alphabet M q (M.step q a) (Word.Symbol a)).mpr
+          exists a
+          constructor
+          · exact hall a (List.Mem.head [])
+          constructor <;> rfl
+      | cons _ hmid _ _ =>
+          cases hmid
+  | cons s rest ih =>
+      unfold PathRegexDecidable
+      cases pathVia_cons_decomp M s rest hpath with
+      | inl hrest =>
+          exact Or.inl (ih hall hrest)
+      | inr hsplit =>
+          cases hsplit with
+          | intro x hx =>
+              cases hx with
+              | intro loops hloops =>
+                  cases hloops with
+                  | intro z hz =>
+                      have hallSplit :
+                          AllSymbolsIn alphabet
+                            (Word.Concat x (Word.Concat (Language.ConcatWords loops) z)) := by
+                        rw [← hz.left]
+                        exact hall
+                      have hxAll : AllSymbolsIn alphabet x :=
+                        allSymbolsIn_concat_left hallSplit
+                      have htailAll :
+                          AllSymbolsIn alphabet
+                            (Word.Concat (Language.ConcatWords loops) z) :=
+                        allSymbolsIn_concat_right hallSplit
+                      have hloopsAll : AllSymbolsIn alphabet (Language.ConcatWords loops) :=
+                        allSymbolsIn_concat_left htailAll
+                      have hzAll : AllSymbolsIn alphabet z :=
+                        allSymbolsIn_concat_right htailAll
+                      have hxMem :
+                          x ∈ RegExp.Denote (PathRegexDecidable alphabet M rest q s) :=
+                        ih hxAll hz.right.left
+                      have hloopsMem :
+                          Language.ConcatWords loops ∈
+                            Language.Star
+                              (RegExp.Denote (PathRegexDecidable alphabet M rest s s)) := by
+                        exists loops
+                        constructor
+                        · intro p hp
+                          exact ih (allSymbolsIn_concatWords hloopsAll hp)
+                            (hz.right.right.left p hp)
+                        · rfl
+                      have hzMem :
+                          z ∈ RegExp.Denote (PathRegexDecidable alphabet M rest s r) :=
+                        ih hzAll hz.right.right.right
+                      apply Or.inr
+                      exists Word.Concat x (Language.ConcatWords loops)
+                      exists z
+                      constructor
+                      · exact Exists.intro x
+                          (Exists.intro (Language.ConcatWords loops)
+                            (And.intro hxMem (And.intro hloopsMem rfl)))
+                      constructor
+                      · exact hzMem
+                      · calc
+                          w = Word.Concat x
+                              (Word.Concat (Language.ConcatWords loops) z) := hz.left
+                          _ = Word.Concat
+                              (Word.Concat x (Language.ConcatWords loops)) z := by
+                                rw [← Word.concat_assoc]
+
+theorem pathRegexDecidable_sound [DecidableEq state]
+    (alphabet : List alpha) (M : DFA alpha state)
+    (states : List state) {q r : state} {w : Word alpha}
+    (hw : w ∈ RegExp.Denote (PathRegexDecidable alphabet M states q r)) :
+    DFA.RunFrom M q w = r := by
+  induction states generalizing q r w with
+  | nil =>
+      unfold PathRegexDecidable at hw
+      cases hw with
+      | inl hbase =>
+          by_cases hqr : q = r
+          · simp [hqr] at hbase
+            rw [hbase]
+            exact hqr
+          · simp [hqr] at hbase
+            cases hbase
+      | inr hstep =>
+          cases (stepRegexDecidable_denote alphabet M q r w).mp hstep with
+          | intro a ha =>
+              rw [ha.right.right]
+              exact ha.right.left
+  | cons s rest ih =>
+      unfold PathRegexDecidable at hw
+      cases hw with
+      | inl hrest =>
+          exact ih hrest
+      | inr hthrough =>
+          cases hthrough with
+          | intro xy hxy =>
+              cases hxy with
+              | intro z hz =>
+                  cases hz.left with
+                  | intro x hx =>
+                      cases hx with
+                      | intro y hy =>
+                          have hxRun : DFA.RunFrom M q x = s := ih hy.left
+                          have hyRun : DFA.RunFrom M s y = s := by
+                            cases hy.right.left with
+                            | intro pieces hpieces =>
+                                rw [← hpieces.right]
+                                exact DFA.runFrom_concatWords_loop M s pieces (by
+                                  intro p hp
+                                  exact ih (hpieces.left p hp))
+                          have hzRun : DFA.RunFrom M s z = r := ih hz.right.left
+                          rw [hz.right.right, hy.right.right,
+                            DFA.runFrom_append, DFA.runFrom_append, hxRun,
+                            hyRun]
+                          exact hzRun
+
+theorem dfaRegexDecidable_sound [DecidableEq state]
+    (alphabet : List alpha) (M : DFA alpha state) [DecidablePred M.accept]
+    {w : Word alpha}
+    (hw : w ∈ RegExp.Denote (DFARegexDecidable alphabet M)) :
+    DFA.Accepts M w := by
+  unfold DFARegexDecidable at hw
+  cases (RegExp.altList_denote
+      ((M.statesFinite.elems.filter fun q => M.accept q).map
+        (fun q => PathRegexDecidable alphabet M M.statesFinite.elems M.start q)) w).mp hw with
+  | intro r hr =>
+      cases List.mem_map.mp hr.left with
+      | intro q hq =>
+          have haccept : M.accept q := by
+            simpa using (List.mem_filter.mp hq.left).right
+          rw [← hq.right] at hr
+          unfold DFA.Accepts DFA.Run
+          rw [pathRegexDecidable_sound alphabet M M.statesFinite.elems hr.right]
+          exact haccept
+
+theorem dfaRegexDecidable_complete [DecidableEq state]
+    (alphabet : List alpha) (M : DFA alpha state) [DecidablePred M.accept]
+    (halphabet : forall a, a ∈ alphabet) {w : Word alpha}
+    (hw : DFA.Accepts M w) :
+    w ∈ RegExp.Denote (DFARegexDecidable alphabet M) := by
+  unfold DFARegexDecidable
+  apply (RegExp.altList_denote
+      ((M.statesFinite.elems.filter fun q => M.accept q).map
+        (fun q => PathRegexDecidable alphabet M M.statesFinite.elems M.start q)) w).mpr
+  exists PathRegexDecidable alphabet M M.statesFinite.elems M.start (DFA.Run M w)
+  constructor
+  · apply List.mem_map.mpr
+    exists DFA.Run M w
+    constructor
+    · apply List.mem_filter.mpr
+      constructor
+      · exact M.statesFinite.complete (DFA.Run M w)
+      · simpa using hw
+    · rfl
+  · exact pathRegexDecidable_complete alphabet M M.statesFinite.elems
+      (by
+        intro a _ha
+        exact halphabet a)
+      (by
+        unfold DFA.Run
+        exact pathVia_allStates M M.start w)
+
 /-!
 # Basic regular constructions
 
@@ -625,6 +851,18 @@ theorem dfa_recognizable_regular (alphabet : List alpha)
             exact (hM w).mp (dfaRegex_sound alphabet M hw)
           · intro hw
             exact dfaRegex_complete alphabet M halphabet ((hM w).mpr hw)
+
+theorem dfa_language_regular_decidable [DecidableEq state]
+    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (M : DFA alpha state) [DecidablePred M.accept] :
+    Regular (DFA.Language M) := by
+  exists DFARegexDecidable alphabet M
+  intro w
+  constructor
+  · intro hw
+    exact dfaRegexDecidable_sound alphabet M hw
+  · intro hw
+    exact dfaRegexDecidable_complete alphabet M halphabet hw
 
 theorem nfa_language_regular (alphabet : List alpha)
     (halphabet : forall a, a ∈ alphabet)

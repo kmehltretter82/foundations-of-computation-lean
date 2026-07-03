@@ -190,9 +190,8 @@ The repeated state in a long DFA run yields a loop that can be traversed any
 number of times without changing the accepting state.
 -/
 
-theorem dfa_pumpingLength (M : DFA alpha state) :
+theorem dfa_pumpingLength_decidable [DecidableEq state] (M : DFA alpha state) :
     PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
-  classical
   constructor
   · lia
   · intro w hw hlen
@@ -321,10 +320,20 @@ theorem dfa_pumpingLength (M : DFA alpha state) :
                   rw [hrepeat]
                   exact hOriginalFromLoop
 
+theorem dfa_pumpingLength (M : DFA alpha state) :
+    PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
+  classical
+  exact dfa_pumpingLength_decidable M
+
 theorem dfa_hasPumpingProperty (M : DFA alpha state) :
     HasPumpingProperty (DFA.Language M) := by
   exists M.statesFinite.elems.length + 1
   exact dfa_pumpingLength M
+
+theorem dfa_hasPumpingProperty_decidable [DecidableEq state] (M : DFA alpha state) :
+    HasPumpingProperty (DFA.Language M) := by
+  exists M.statesFinite.elems.length + 1
+  exact dfa_pumpingLength_decidable M
 
 /-!
 # Transfer to regular languages
