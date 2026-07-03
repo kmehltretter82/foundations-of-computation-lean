@@ -207,6 +207,40 @@ theorem codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff
         simp [codePrefixStageSearchControllerProgramDecidable, hdecode, hhit]
         rfl
 
+theorem codePrefixStageSearchControllerProgramDecidable_accepts
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) :
+    ProgramHaltsWithOutput
+        (codePrefixStageSearchControllerProgramDecidable simulator)
+        encoded [] <->
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+      exists stage : Nat,
+        MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          TuringMachine.HaltsOnInput simulator
+            (CodePrefixRecognizerStageCode encoded stage) := by
+  constructor
+  · intro h
+    rcases h with ⟨budget, hbudget⟩
+    rcases
+        (codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff
+          simulator encoded budget).mp hbudget with
+      ⟨D, input, stage, fuel, _hstage, _hfuel, hdecode, hsim⟩
+    exact
+      ⟨D, input, stage, hdecode,
+        TuringMachine.halts_on_input_in_to_halts_on_input hsim⟩
+  · intro h
+    rcases h with ⟨D, input, stage, hdecode, hsim⟩
+    rcases TuringMachine.halts_on_input_to_halts_on_input_in hsim with
+      ⟨fuel, hsimFuel⟩
+    refine ⟨stage + fuel, ?_⟩
+    exact
+      (codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff
+        simulator encoded (stage + fuel)).mpr
+        ⟨D, input, stage, fuel, by lia, by lia, hdecode, hsimFuel⟩
+
 theorem codePrefixStageSearchControllerProgram_accepts
     (simulator : TuringMachine MachineCodeSymbol simulatorState)
     (encoded : Word MachineCodeSymbol) :
@@ -242,6 +276,18 @@ theorem codePrefixStageSearchControllerProgram_accepts
     exact
       ⟨D, input, stage, hstageLe, fuel, hfuelLe, rfl, rfl, hsimFuel⟩
 
+theorem codePrefixStageSearchControllerProgramDecidable_accepts_program
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) :
+    ProgramHaltsWithOutput
+        (codePrefixStageSearchControllerProgramDecidable simulator)
+        encoded [] <->
+      ProgramHaltsWithOutput
+        (codePrefixStageSearchControllerProgram simulator) encoded [] := by
+  rw [codePrefixStageSearchControllerProgramDecidable_accepts,
+    codePrefixStageSearchControllerProgram_accepts]
+
 theorem codePrefixStageSearchControllerProgram_accepts_of_simulatorSpec
     (simulator : TuringMachine MachineCodeSymbol simulatorState)
     (hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator)
@@ -250,6 +296,28 @@ theorem codePrefixStageSearchControllerProgram_accepts_of_simulatorSpec
         (codePrefixStageSearchControllerProgram simulator) encoded [] <->
       CodePrefixDecodedStageSearchAccepts encoded := by
   rw [codePrefixStageSearchControllerProgram_accepts]
+  constructor
+  · intro h
+    rcases h with ⟨D, input, stage, hdecode, hsim⟩
+    exact
+      ⟨D, input, stage, hdecode,
+        (hsimulator encoded D input stage hdecode).mp hsim⟩
+  · intro h
+    rcases h with ⟨D, input, stage, hdecode, hhalts⟩
+    exact
+      ⟨D, input, stage, hdecode,
+        (hsimulator encoded D input stage hdecode).mpr hhalts⟩
+
+theorem codePrefixStageSearchControllerProgramDecidable_accepts_of_simulatorSpec
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator)
+    (encoded : Word MachineCodeSymbol) :
+    ProgramHaltsWithOutput
+        (codePrefixStageSearchControllerProgramDecidable simulator)
+        encoded [] <->
+      CodePrefixDecodedStageSearchAccepts encoded := by
+  rw [codePrefixStageSearchControllerProgramDecidable_accepts]
   constructor
   · intro h
     rcases h with ⟨D, input, stage, hdecode, hsim⟩
@@ -271,6 +339,20 @@ theorem codePrefixStageSearchControllerProgram_accepts_recognizerProgram
       ProgramHaltsWithOutput CodePrefixRecognizerProgram encoded [] :=
   Iff.trans
     (codePrefixStageSearchControllerProgram_accepts_of_simulatorSpec
+      simulator hsimulator encoded)
+    (codePrefixDecodedStageSearchAccepts_iff_programHalts encoded)
+
+theorem codePrefixStageSearchControllerProgramDecidable_accepts_recognizerProgram
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (hsimulator : CodePrefixDecodedBoundedSimulatorSpec simulator)
+    (encoded : Word MachineCodeSymbol) :
+    ProgramHaltsWithOutput
+        (codePrefixStageSearchControllerProgramDecidable simulator)
+        encoded [] <->
+      ProgramHaltsWithOutput CodePrefixRecognizerProgram encoded [] :=
+  Iff.trans
+    (codePrefixStageSearchControllerProgramDecidable_accepts_of_simulatorSpec
       simulator hsimulator encoded)
     (codePrefixDecodedStageSearchAccepts_iff_programHalts encoded)
 
@@ -381,6 +463,17 @@ theorem codePrefixStageSearchControllerProgram_run_eq_some_iff
   · simp [codePrefixStageSearchControllerProgram, h]
     rfl
   · simp [codePrefixStageSearchControllerProgram, h]
+
+theorem codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff_program
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (encoded : Word MachineCodeSymbol) (budget : Nat) :
+    (codePrefixStageSearchControllerProgramDecidable simulator).run
+        encoded budget = some [] <->
+      (codePrefixStageSearchControllerProgram simulator).run
+        encoded budget = some [] := by
+  rw [codePrefixStageSearchControllerProgramDecidable_run_eq_some_iff,
+    codePrefixStageSearchControllerProgram_run_eq_some_iff]
 
 /--
 Finite-machine obligation for the bounded checker.  The checker must parse a
