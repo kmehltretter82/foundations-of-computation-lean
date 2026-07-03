@@ -1599,6 +1599,42 @@ def DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction 
   exists runner : TuringMachine MachineCodeSymbol state,
     DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineSpec runner
 
+def DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction :
+    Prop :=
+  exists n : Nat,
+  exists runner : TuringMachine MachineCodeSymbol (Fin n),
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineSpec runner
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
+    (hfin :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
+  rcases hfin with ⟨n, runner, hrunner⟩
+  exact ⟨Fin n, runner, hrunner⟩
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction_of_construction
+    (hiter :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction := by
+  rcases hiter with ⟨state, runner, hrunner⟩
+  refine
+    ⟨runner.statesFinite.elems.length,
+      TuringMachine.indexed runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans
+      (TuringMachine.indexed_haltsOnInput_iff runner tokens)
+      (hrunner tokens)
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_iff_finState :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction <->
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction := by
+  constructor
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction_of_construction
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
     (hiter :
       DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
@@ -2062,11 +2098,20 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Concrete finite-table leaf for the explicit iterative transition-loop pipeline.
+-/
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateFiniteLeaf :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction := by
+  sorry
+
+/--
 Finite-machine leaf for the explicit iterative transition-loop pipeline.
 -/
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction :
     DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateFiniteLeaf
 
 /--
 Finite-machine leaf for the explicit transition-loop pipeline transform.
