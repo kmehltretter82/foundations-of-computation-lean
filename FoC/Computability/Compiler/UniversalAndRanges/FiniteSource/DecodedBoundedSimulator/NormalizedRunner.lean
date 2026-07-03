@@ -1128,6 +1128,47 @@ theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_self_fst
           decodedBoundedSimulatorTransitionLoopIterateStepTarget_zero_fst]
       · simp [decodedBoundedSimulatorTransitionLoopStepTarget, hscan, ih]
 
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_self_output_decode_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix))
+    (hiter :
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode stage tokens =
+        some out) :
+    exists finalConfig : MachineDescription.Configuration,
+      decodedBoundedSimulatorTransitionLoopWorkDecode out =
+        some (D, 0, finalConfig, suffix) ∧
+        decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+          decodedBoundedSimulatorTransitionLoopFromConfig
+            0 D finalConfig := by
+  let target :=
+    decodedBoundedSimulatorTransitionLoopIterateStepTarget
+      stage D stage config
+  have hdecodeOut :
+      decodedBoundedSimulatorTransitionLoopWorkDecode out =
+        some (D, target.fst, target.snd, suffix) := by
+    simpa [target] using
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_output_decode_of_decode
+        stage hdecode hiter
+  have hzero : target.fst = 0 := by
+    simpa [target] using
+      decodedBoundedSimulatorTransitionLoopIterateStepTarget_self_fst
+        stage D config
+  have hpres :
+      decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+        decodedBoundedSimulatorTransitionLoopFromConfig
+          target.fst D target.snd := by
+    simpa [target] using
+      decodedBoundedSimulatorTransitionLoopIterateStepTarget_preserves_final
+        stage stage D config
+  refine ⟨target.snd, ?_, ?_⟩
+  · simpa [hzero] using hdecodeOut
+  · simpa [hzero] using hpres
+
 /--
 Initial transition-loop work payload for a normalized decoded-simulator source.
 -/
