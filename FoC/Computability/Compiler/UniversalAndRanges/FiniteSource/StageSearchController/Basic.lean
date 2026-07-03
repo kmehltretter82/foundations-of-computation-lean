@@ -487,6 +487,38 @@ theorem codePrefixStageSearchControllerCoreConstruction_of_programCompiler
   exact Iff.trans (hsearcher encoded)
     (codePrefixStageSearchControllerProgram_accepts simulator encoded)
 
+theorem codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompiler
+    (hcompile :
+      CodePrefixStageSearchControllerProgramDecidableCompilerConstruction) :
+    CodePrefixStageSearchControllerCoreConstruction := by
+  intro simulatorState simulator _hsimulator
+  rcases hcompile (TuringMachine.indexed simulator) with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases
+        (codePrefixStageSearchControllerProgramDecidable_accepts
+          (TuringMachine.indexed simulator) encoded).mp
+          ((hsearcher encoded).mp hhalt) with
+      ⟨D, input, stage, hdecode, hindexed⟩
+    exact
+      ⟨D, input, stage, hdecode,
+        (TuringMachine.indexed_haltsOnInput_iff
+          simulator (CodePrefixRecognizerStageCode encoded stage)).mp
+          hindexed⟩
+  · intro htarget
+    rcases htarget with ⟨D, input, stage, hdecode, hsimulator⟩
+    exact
+      (hsearcher encoded).mpr
+        ((codePrefixStageSearchControllerProgramDecidable_accepts
+          (TuringMachine.indexed simulator) encoded).mpr
+          ⟨D, input, stage, hdecode,
+            (TuringMachine.indexed_haltsOnInput_iff
+              simulator (CodePrefixRecognizerStageCode encoded stage)).mpr
+              hsimulator⟩)
+
 /-!
 **Stage-search driver core.**  This is the unbounded dovetailing leaf: given a
 bounded decoded simulator, build a searcher that enumerates stage bounds for a

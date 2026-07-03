@@ -505,8 +505,8 @@ theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
 
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
-  codePrefixStageSearchControllerCoreConstruction_of_programCompiler
-    codePrefixStageSearchControllerProgramCompilerConstruction_core
+  codePrefixStageSearchControllerCoreConstruction_of_decidableProgramCompiler
+    codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core
 
 
 end Computability
