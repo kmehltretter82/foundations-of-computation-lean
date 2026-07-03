@@ -911,6 +911,67 @@ theorem decodedBoundedSimulatorTransitionLoopConfig_eq_initialWork
   rfl
 
 /--
+Final accept transform for completed transition-loop work code.
+-/
+def decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodedBoundedSimulatorTransitionLoopWorkDecode tokens with
+  | none => none
+  | some (D, stage, config, suffix) =>
+      match stage, suffix with
+      | 0, [] =>
+          if config.state = D.halt then some ([] : Word MachineCodeSymbol)
+          else none
+      | _, _ => none
+
+theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff
+    (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+        (decodedBoundedSimulatorTransitionLoopWorkCode D 0 config) =
+        some ([] : Word MachineCodeSymbol) <->
+      config.state = D.halt := by
+  unfold decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+  rw [decodedBoundedSimulatorTransitionLoopWorkDecode_encode]
+  change (if config.state = D.halt then some ([] : Word MachineCodeSymbol)
+      else none) = some ([] : Word MachineCodeSymbol) <->
+    config.state = D.halt
+  by_cases hhalt : config.state = D.halt
+  · rw [if_pos hhalt]
+    constructor
+    · intro _
+      exact hhalt
+    · intro _
+      rfl
+  · rw [if_neg hhalt]
+    constructor
+    · intro h
+      cases h
+    · intro h
+      exact False.elim (hhalt h)
+
+theorem decodedBoundedSimulatorTransitionLoopFromConfig_zero_state_iff
+    (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    (decodedBoundedSimulatorTransitionLoopFromConfig 0 D config).state =
+        D.halt <->
+      config.state = D.halt := by
+  rfl
+
+theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff_loop
+    (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+        (decodedBoundedSimulatorTransitionLoopWorkCode D 0 config) =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopFromConfig 0 D config).state =
+        D.halt := by
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff
+      D config
+
+/--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
 as transition-table data for exactly the parsed stage count.
