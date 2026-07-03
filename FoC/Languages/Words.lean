@@ -35,6 +35,9 @@ statements close to the textbook notation.
 def Word (alpha : Type u) : Type u :=
   List alpha
 
+instance [DecidableEq alpha] : DecidableEq (Word alpha) :=
+  inferInstanceAs (DecidableEq (List alpha))
+
 namespace Word
 
 def Empty : Word alpha :=

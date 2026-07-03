@@ -195,11 +195,6 @@ def CharacteristicFunction (L : Language input)
     Word input -> Word Bool :=
   fun w => if w ∈ L then [true] else [false]
 
-noncomputable def CharacteristicFunctionOfProp (L : Language input) :
-    Word input -> Word Bool := by
-  classical
-  exact CharacteristicFunction L
-
 def BoolCharacteristic (χ : Word input -> Word Bool)
     (L : Language input) : Prop :=
   forall w : Word input,
@@ -292,12 +287,6 @@ theorem characteristicFunction_is_boolCharacteristic
   · intro hw
     simp [CharacteristicFunction, hw]
 
-theorem characteristicFunctionOfProp_is_boolCharacteristic
-    (L : Language input) :
-    BoolCharacteristic (CharacteristicFunctionOfProp L) L := by
-  classical
-  exact characteristicFunction_is_boolCharacteristic L
-
 theorem boolCharacteristic_of_equal
     {χ : Word input -> Word Bool} {L K : Language input}
     (hχ : BoolCharacteristic χ L) (hEq : Language.Equal L K) :
@@ -330,17 +319,6 @@ theorem computesFunction_characteristicFunction
   · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).left hw
   · simpa [CharacteristicFunction, hw, EncodeWord] using (h w).right hw
 
-theorem computesFunction_characteristicFunctionOfProp
-    {M : TuringMachine symbol state}
-    {encodeInput : input -> symbol} {zero one : symbol}
-    {L : Language input}
-    (h : DecidesLanguage M encodeInput zero one L) :
-    ComputesFunction M encodeInput
-      (fun b : Bool => if b then one else zero)
-      (CharacteristicFunctionOfProp L) := by
-  classical
-  exact computesFunction_characteristicFunction h
-
 theorem turingDecidable_characteristicFunction_turingComputable
     {L : Language input}
     [DecidablePred (fun w => w ∈ L)]
@@ -351,23 +329,15 @@ theorem turingDecidable_characteristicFunction_turingComputable
     (fun b : Bool => if b then one else zero),
     computesFunction_characteristicFunction hdec⟩
 
-theorem turingDecidable_characteristicFunctionOfProp_turingComputable
-    {L : Language input}
-    (h : TuringDecidable L) :
-    TuringComputable (CharacteristicFunctionOfProp L) := by
-  rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩
-  exact ⟨symbol, state, M, encodeInput,
-    (fun b : Bool => if b then one else zero),
-    computesFunction_characteristicFunctionOfProp hdec⟩
-
 theorem turingDecidable_has_computableCharacteristic
     {L : Language input}
     (h : TuringDecidable L) :
-    HasComputableCharacteristic L :=
-  Exists.intro (CharacteristicFunctionOfProp L)
+    HasComputableCharacteristic L := by
+  classical
+  exact Exists.intro (CharacteristicFunction L)
     (And.intro
-      (turingDecidable_characteristicFunctionOfProp_turingComputable h)
-      (characteristicFunctionOfProp_is_boolCharacteristic L))
+      (turingDecidable_characteristicFunction_turingComputable h)
+      (characteristicFunction_is_boolCharacteristic L))
 
 theorem boolCharacteristic_turingDecidable
     {χ : Word input -> Word Bool} {L : Language input}

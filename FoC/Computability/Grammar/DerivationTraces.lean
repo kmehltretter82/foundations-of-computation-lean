@@ -684,43 +684,54 @@ theorem finiteProductionListBoundedCheckedIndexedCertificateSearch_complete
 noncomputable def GeneralGrammarBoundedRecognizerProgram
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
-  TraceRecognizerProgramOfProp (GeneralGrammarBoundedDerivationSearch G)
+  by
+    classical
+    exact TraceRecognizerProgram (GeneralGrammarBoundedDerivationSearch G)
 
 noncomputable def FiniteProductionListCertificateRecognizerProgram
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  TraceRecognizerProgramOfProp
-    (FiniteProductionListBoundedCertificateSearch G rules)
+  by
+    classical
+    exact TraceRecognizerProgram
+      (FiniteProductionListBoundedCertificateSearch G rules)
 
 noncomputable def FiniteProductionListIndexedCertificateRecognizerProgram
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  TraceRecognizerProgramOfProp
-    (FiniteProductionListBoundedIndexedCertificateSearch G rules)
+  by
+    classical
+    exact TraceRecognizerProgram
+      (FiniteProductionListBoundedIndexedCertificateSearch G rules)
 
 noncomputable def FiniteProductionListCheckedIndexedCertificateRecognizerProgram
     [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  TraceRecognizerProgramOfProp
-    (FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules)
+  by
+    classical
+    exact TraceRecognizerProgram
+      (FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules)
 
 noncomputable def FiniteProductionListBoundedRecognizerProgram
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  TraceRecognizerProgramOfProp
-    (FiniteProductionListBoundedDerivationSearch G rules)
+  by
+    classical
+    exact TraceRecognizerProgram
+      (FiniteProductionListBoundedDerivationSearch G rules)
 
 theorem generalGrammarBoundedRecognizerProgram_acceptsLanguage
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptsLanguage
       (GeneralGrammarBoundedRecognizerProgram G)
       (GeneralGrammar.GeneratedLanguage G) := by
-  apply traceRecognizerProgramOfProp_acceptsLanguage
+  classical
+  apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
   · intro h
@@ -738,7 +749,8 @@ theorem finiteProductionListBoundedRecognizerProgram_acceptsLanguage
     ProgramAcceptsLanguage
       (FiniteProductionListBoundedRecognizerProgram G rules)
       (GeneralGrammar.GeneratedLanguage G) := by
-  apply traceRecognizerProgramOfProp_acceptsLanguage
+  classical
+  apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
   · intro h
@@ -756,7 +768,8 @@ theorem finiteProductionListCertificateRecognizerProgram_acceptsLanguage
     ProgramAcceptsLanguage
       (FiniteProductionListCertificateRecognizerProgram G rules)
       (GeneralGrammar.GeneratedLanguage G) := by
-  apply traceRecognizerProgramOfProp_acceptsLanguage
+  classical
+  apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
   · intro h
@@ -774,7 +787,8 @@ theorem finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
     ProgramAcceptsLanguage
       (FiniteProductionListIndexedCertificateRecognizerProgram G rules)
       (GeneralGrammar.GeneratedLanguage G) := by
-  apply traceRecognizerProgramOfProp_acceptsLanguage
+  classical
+  apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
   · intro h
@@ -796,7 +810,8 @@ theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLa
       (FiniteProductionListCheckedIndexedCertificateRecognizerProgram G
         rules)
       (GeneralGrammar.GeneratedLanguage G) := by
-  apply traceRecognizerProgramOfProp_acceptsLanguage
+  classical
+  apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
   · intro h

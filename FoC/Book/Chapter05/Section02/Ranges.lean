@@ -173,12 +173,14 @@ theorem partially_listable_language_has_acceptance_trace_by_bounded_search
     partially_listed_language_has_acceptance_trace hstream⟩
 
 theorem partially_listable_language_program_acceptable_by_bounded_search
+    [DecidableEq alpha]
     {L : Language alpha}
     (h : LanguagePartiallyListable L) :
     ProgramAcceptableLanguage L := by
-  rcases partially_listable_language_has_acceptance_trace_by_bounded_search
-      h with
-    ⟨trace, htrace⟩
+  rcases h with ⟨stream, hstream⟩
+  let trace : Word alpha -> Nat -> Prop := fun w n => stream n = some w
+  have htrace : LanguageAcceptanceTrace trace L :=
+    partially_listed_language_has_acceptance_trace hstream
   exact acceptance_trace_has_program_acceptable_language htrace
 
 def FunctionRangeLanguage (f : Word input -> Word output) : Language output :=
@@ -334,11 +336,15 @@ theorem partial_unary_string_function_range_has_acceptance_trace
   partialRangeOfUnaryFunction_acceptanceTrace h
 
 theorem partial_unary_string_function_range_program_acceptable_by_bounded_search
+    [DecidableEq output]
     {L : Language output}
     (h : PartialRangeOfUnaryStringFunction L) :
     ProgramAcceptableLanguage L := by
-  rcases partial_unary_string_function_range_has_acceptance_trace h with
-    ⟨trace, htrace⟩
+  rcases Computability.partialRangeOfUnaryFunction_partiallyListable h with
+    ⟨stream, hstream⟩
+  let trace : Word output -> Nat -> Prop := fun w n => stream n = some w
+  have htrace : LanguageAcceptanceTrace trace L :=
+    partiallyListedBy_acceptanceTrace hstream
   exact acceptance_trace_has_program_acceptable_language htrace
 
 theorem listable_language_iff_range_of_unary_string_function

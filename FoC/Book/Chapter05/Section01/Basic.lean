@@ -328,9 +328,10 @@ def TuringDecidableLanguage (L : Language input) : Prop :=
 def TuringAcceptableLanguage (L : Language input) : Prop :=
   TuringAcceptable L
 
-noncomputable def LanguageCharacteristicFunction (L : Language input) :
+def LanguageCharacteristicFunction (L : Language input)
+    [DecidablePred (fun w => w ∈ L)] :
     Word input -> Word Bool :=
-  CharacteristicFunctionOfProp L
+  CharacteristicFunction L
 
 def LanguageBoolCharacteristic (χ : Word input -> Word Bool)
     (L : Language input) : Prop :=
@@ -350,19 +351,21 @@ def MachineRejectsByZeroOutput (M : TuringMachine symbol state)
   RejectsByZeroOutput M encodeInput zero L
 
 theorem language_characteristic_function_is_bool_characteristic
-    (L : Language input) :
+    (L : Language input)
+    [DecidablePred (fun w => w ∈ L)] :
     LanguageBoolCharacteristic (LanguageCharacteristicFunction L) L :=
-  Computability.characteristicFunctionOfProp_is_boolCharacteristic L
+  Computability.characteristicFunction_is_boolCharacteristic L
 
 theorem decider_computes_language_characteristic_function
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
+    [DecidablePred (fun w => w ∈ L)]
     (h : DecidesLanguage M encodeInput zero one L) :
     ComputesFunction M encodeInput
       (fun b : Bool => if b then one else zero)
       (LanguageCharacteristicFunction L) :=
-  Computability.computesFunction_characteristicFunctionOfProp h
+  Computability.computesFunction_characteristicFunction h
 
 theorem decidable_language_has_computable_characteristic
     {L : Language input}

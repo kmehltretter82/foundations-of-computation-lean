@@ -102,41 +102,6 @@ def TraceRecognizerProgram
     StagedProgram input Unit :=
   { run := fun w n => if trace w n then some [] else none }
 
-noncomputable def TraceRecognizerProgramOfProp
-    (trace : Word input -> Nat -> Prop) :
-    StagedProgram input Unit := by
-  classical
-  exact TraceRecognizerProgram trace
-
-theorem traceRecognizerProgramOfProp_run_eq
-    {trace : Word input -> Nat -> Prop}
-    [∀ w n, Decidable (trace w n)]
-    (w : Word input) (n : Nat) :
-    (TraceRecognizerProgramOfProp trace).run w n =
-      (TraceRecognizerProgram trace).run w n := by
-  classical
-  by_cases htrace : trace w n
-  · simp [TraceRecognizerProgramOfProp, TraceRecognizerProgram, htrace]
-  · simp [TraceRecognizerProgramOfProp, TraceRecognizerProgram, htrace]
-
-theorem traceRecognizerProgramOfProp_haltsWithOutput_iff
-    {trace : Word input -> Nat -> Prop}
-    [∀ w n, Decidable (trace w n)]
-    (w : Word input) (out : Word Unit) :
-    ProgramHaltsWithOutput (TraceRecognizerProgramOfProp trace) w out <->
-      ProgramHaltsWithOutput (TraceRecognizerProgram trace) w out := by
-  constructor
-  · intro h
-    rcases h with ⟨n, hrun⟩
-    exact ⟨n, by
-      rw [← traceRecognizerProgramOfProp_run_eq (trace := trace) w n]
-      exact hrun⟩
-  · intro h
-    rcases h with ⟨n, hrun⟩
-    exact ⟨n, by
-      rw [traceRecognizerProgramOfProp_run_eq (trace := trace) w n]
-      exact hrun⟩
-
 theorem traceRecognizerProgram_run_of_trace
     {trace : Word input -> Nat -> Prop}
     [∀ w n, Decidable (trace w n)]
@@ -164,13 +129,6 @@ theorem traceRecognizerProgram_acceptsLanguage
     | intro n hn =>
         exact Exists.intro n (traceRecognizerProgram_run_of_trace hn)
 
-theorem traceRecognizerProgramOfProp_acceptsLanguage
-    {trace : Word input -> Nat -> Prop} {L : Language input}
-    (h : AcceptanceTrace trace L) :
-    ProgramAcceptsLanguage (TraceRecognizerProgramOfProp trace) L := by
-  classical
-  exact traceRecognizerProgram_acceptsLanguage h
-
 theorem acceptanceTrace_programAcceptable
     {trace : Word input -> Nat -> Prop} {L : Language input}
     [∀ w n, Decidable (trace w n)]
@@ -182,13 +140,25 @@ theorem acceptanceTrace_programAcceptable
 theorem programAcceptable_iff_has_acceptanceTrace
     (L : Language input) :
     ProgramAcceptable L <->
-      exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
+      exists trace : Word input -> Nat -> Prop,
+        (exists _ : (forall w n, Decidable (trace w n)),
+          AcceptanceTrace trace L) := by
   constructor
-  · exact programAcceptable_has_acceptanceTrace
+  · intro h
+    rcases h with ⟨P, hP⟩
+    let trace := ProgramAcceptanceTrace P
+    have htrace : AcceptanceTrace trace L :=
+      programAcceptsLanguage_acceptanceTrace hP
+    have hdec : forall w n, Decidable (trace w n) := by
+      intro w n
+      unfold trace ProgramAcceptanceTrace
+      infer_instance
+    exact ⟨trace, hdec, htrace⟩
   · intro h
     cases h with
     | intro trace htrace =>
-        classical
+        rcases htrace with ⟨traceDecidable, htrace⟩
+        letI := traceDecidable
         exact acceptanceTrace_programAcceptable htrace
 
 theorem turingAcceptable_programAcceptable
@@ -226,47 +196,6 @@ def DovetailProgram
       if TraceHitsBy accept w n then some [true]
       else if TraceHitsBy reject w n then some [false]
       else none }
-
-noncomputable def DovetailProgramOfProp
-    (accept reject : Word input -> Nat -> Prop) :
-    StagedProgram input Bool := by
-  classical
-  exact DovetailProgram accept reject
-
-theorem dovetailProgramOfProp_run_eq
-    {accept reject : Word input -> Nat -> Prop}
-    [∀ w n, Decidable (accept w n)]
-    [∀ w n, Decidable (reject w n)]
-    (w : Word input) (limit : Nat) :
-    (DovetailProgramOfProp accept reject).run w limit =
-      (DovetailProgram accept reject).run w limit := by
-  classical
-  by_cases ha : TraceHitsBy accept w limit
-  · simp [DovetailProgramOfProp, DovetailProgram, ha]
-  · by_cases hr : TraceHitsBy reject w limit
-    · simp [DovetailProgramOfProp, DovetailProgram, ha, hr]
-    · simp [DovetailProgramOfProp, DovetailProgram, ha, hr]
-
-theorem dovetailProgramOfProp_haltsWithOutput_iff
-    {accept reject : Word input -> Nat -> Prop}
-    [∀ w n, Decidable (accept w n)]
-    [∀ w n, Decidable (reject w n)]
-    (w : Word input) (out : Word Bool) :
-    ProgramHaltsWithOutput (DovetailProgramOfProp accept reject) w out <->
-      ProgramHaltsWithOutput (DovetailProgram accept reject) w out := by
-  constructor
-  · intro h
-    rcases h with ⟨limit, hrun⟩
-    exact ⟨limit, by
-      rw [← dovetailProgramOfProp_run_eq (accept := accept)
-        (reject := reject) w limit]
-      exact hrun⟩
-  · intro h
-    rcases h with ⟨limit, hrun⟩
-    exact ⟨limit, by
-      rw [dovetailProgramOfProp_run_eq (accept := accept)
-        (reject := reject) w limit]
-      exact hrun⟩
 
 theorem dovetailProgram_run_accept_hit
     {accept reject : Word input -> Nat -> Prop}
@@ -324,7 +253,6 @@ theorem dovetailProgram_true_sound
     (hh : ProgramHaltsWithOutput
       (DovetailProgram accept reject) w [true]) :
     w ∈ L := by
-  classical
   cases hh with
   | intro limit hrun =>
       by_cases ha : TraceHitsBy accept w limit
@@ -364,7 +292,6 @@ theorem dovetailProgram_false_sound
     (hh : ProgramHaltsWithOutput
       (DovetailProgram accept reject) w [false]) :
     ¬ w ∈ L := by
-  classical
   cases hh with
   | intro limit hrun =>
       by_cases ha : TraceHitsBy accept w limit
@@ -415,36 +342,16 @@ theorem dovetailProgram_decides
     · exact dovetailProgram_false_sound h
     · exact dovetailProgram_false_complete h
 
-theorem dovetailProgramOfProp_decides
-    {accept reject : Word input -> Nat -> Prop}
-    {L : Language input}
-    (h : ComplementaryAcceptanceTraces accept reject L) :
-    ProgramBoolDecides (DovetailProgramOfProp accept reject) L := by
-  classical
-  exact dovetailProgram_decides h
-
-theorem reCoRe_has_dovetailProgram {L : Language input}
+theorem reCoRe_programBoolDecidable {L : Language input}
     (h : RecursivelyEnumerableWithComplement L) :
-    exists accept reject : Word input -> Nat -> Prop,
-      ComplementaryAcceptanceTraces accept reject L ∧
-        ProgramBoolDecides (DovetailProgramOfProp accept reject) L := by
+    ProgramBoolDecidable L := by
+  classical
   cases recursivelyEnumerable_with_complement_has_complementaryTraces h with
   | intro accept haccept =>
       cases haccept with
       | intro reject hreject =>
-          exact Exists.intro accept
-            (Exists.intro reject
-              (And.intro hreject (dovetailProgramOfProp_decides hreject)))
-
-theorem reCoRe_programBoolDecidable {L : Language input}
-    (h : RecursivelyEnumerableWithComplement L) :
-    ProgramBoolDecidable L := by
-  cases reCoRe_has_dovetailProgram h with
-  | intro accept haccept =>
-      cases haccept with
-      | intro reject hreject =>
-          exact Exists.intro (DovetailProgramOfProp accept reject)
-            hreject.right
+          exact Exists.intro (DovetailProgram accept reject)
+            (dovetailProgram_decides hreject)
 
 theorem reCoReToDecidablePrinciple_of_programBoolCompiler
     (hcompile : ProgramBoolDeciderCompilationPrinciple input) :

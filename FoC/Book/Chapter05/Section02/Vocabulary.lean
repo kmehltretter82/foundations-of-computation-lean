@@ -399,10 +399,12 @@ def LanguageDovetailSearchHit
     (w : Word alpha) (limit : Nat) : Prop :=
   ComplementaryTraceSearchHit accept reject w limit
 
-noncomputable def TraceDovetailProgram
-    (accept reject : Word alpha -> Nat -> Prop) :
+def TraceDovetailProgram
+    (accept reject : Word alpha -> Nat -> Prop)
+    [∀ w n, Decidable (accept w n)]
+    [∀ w n, Decidable (reject w n)] :
     StagedProgram alpha Bool :=
-  Computability.DovetailProgramOfProp accept reject
+  Computability.DovetailProgram accept reject
 
 def ProgramBoolDecidesLanguage
     (P : StagedProgram alpha Bool) (L : Language alpha) : Prop :=

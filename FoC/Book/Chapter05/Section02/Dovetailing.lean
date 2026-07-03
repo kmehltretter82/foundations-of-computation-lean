@@ -33,10 +33,11 @@ def LanguageProgramAcceptanceTrace
     (w : Word alpha) (n : Nat) : Prop :=
   ProgramAcceptanceTrace P w n
 
-noncomputable def AcceptanceTraceStagedRecognizer
-    (trace : Word alpha -> Nat -> Prop) :
+def AcceptanceTraceStagedRecognizer
+    (trace : Word alpha -> Nat -> Prop)
+    [∀ w n, Decidable (trace w n)] :
     StagedProgram alpha Unit :=
-  TraceRecognizerProgramOfProp trace
+  TraceRecognizerProgram trace
 
 /-!
 **Complements and Extensionality.**
@@ -135,31 +136,34 @@ theorem program_acceptable_language_has_acceptance_trace
 
 theorem acceptance_trace_staged_recognizer_accepts_language
     {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
+    [∀ w n, Decidable (trace w n)]
     (h : LanguageAcceptanceTrace trace L) :
     ProgramAcceptsLanguage
-      (AcceptanceTraceStagedRecognizer trace) L :=
-  Computability.traceRecognizerProgramOfProp_acceptsLanguage h
+      (AcceptanceTraceStagedRecognizer trace) L := by
+  exact Computability.traceRecognizerProgram_acceptsLanguage h
 
 theorem acceptance_trace_has_program_acceptable_language
     {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
+    [∀ w n, Decidable (trace w n)]
     (h : LanguageAcceptanceTrace trace L) :
     ProgramAcceptableLanguage L := by
-  classical
   exact Computability.acceptanceTrace_programAcceptable h
 
 theorem program_acceptable_language_iff_has_acceptance_trace
     (L : Language alpha) :
     ProgramAcceptableLanguage L <->
       exists trace : Word alpha -> Nat -> Prop,
-        LanguageAcceptanceTrace trace L :=
+        (exists _ : (forall w n, Decidable (trace w n)),
+          LanguageAcceptanceTrace trace L) :=
   Computability.programAcceptable_iff_has_acceptanceTrace L
 
 theorem recursively_enumerable_language_is_program_acceptable
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguage L) :
-    ProgramAcceptableLanguage L := by
+  ProgramAcceptableLanguage L := by
   cases recursively_enumerable_language_has_acceptance_trace h with
   | intro trace htrace =>
+      classical
       exact acceptance_trace_has_program_acceptable_language htrace
 
 /-!
@@ -277,28 +281,43 @@ theorem re_and_co_re_bounded_search_eventually_classifies
 
 theorem complementary_traces_dovetailing_program_decides
     {accept reject : Word alpha -> Nat -> Prop}
+    [∀ w n, Decidable (accept w n)]
+    [∀ w n, Decidable (reject w n)]
     {L : Language alpha}
     (h : LanguageComplementaryAcceptanceTraces accept reject L) :
     ProgramBoolDecidesLanguage
-      (TraceDovetailProgram accept reject) L :=
-  Computability.dovetailProgramOfProp_decides h
+      (TraceDovetailProgram accept reject) L := by
+  exact Computability.dovetailProgram_decides h
 
 theorem re_and_co_re_have_dovetailing_program
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguageWithComplement L) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L ∧
-        ProgramBoolDecidesLanguage
-          (TraceDovetailProgram accept reject) L :=
-  Computability.reCoRe_has_dovetailProgram h
+      (exists _ : (forall w n, Decidable (accept w n)),
+        exists _ : (forall w n, Decidable (reject w n)),
+          LanguageComplementaryAcceptanceTraces accept reject L ∧
+            ProgramBoolDecidesLanguage
+              (TraceDovetailProgram accept reject) L) :=
+  by
+    classical
+    cases
+      Computability.recursivelyEnumerable_with_complement_has_complementaryTraces
+        h with
+    | intro accept haccept =>
+        cases haccept with
+        | intro reject hreject =>
+            exact ⟨accept, reject, inferInstance, inferInstance, hreject,
+              complementary_traces_dovetailing_program_decides hreject⟩
 
 theorem re_and_co_re_have_paired_bounded_search_decider
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguageWithComplement L) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L ∧
-        ProgramBoolDecidesLanguage
-          (TraceDovetailProgram accept reject) L :=
+      (exists _ : (forall w n, Decidable (accept w n)),
+        exists _ : (forall w n, Decidable (reject w n)),
+          LanguageComplementaryAcceptanceTraces accept reject L ∧
+            ProgramBoolDecidesLanguage
+              (TraceDovetailProgram accept reject) L) :=
   re_and_co_re_have_dovetailing_program h
 
 theorem re_and_co_re_have_program_bool_decider
@@ -355,9 +374,9 @@ theorem concrete_bounded_dovetail_output_correct
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w)).run w limit :=
   by
-    rw [TraceDovetailProgram, Computability.dovetailProgramOfProp_run_eq]
-    exact MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
-      accept reject w limit
+    simpa [TraceDovetailProgram]
+      using MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
+        accept reject w limit
 
 theorem concrete_machine_bounded_dovetail_true_iff_of_complementary_traces
     {accept reject : MachineDescription}
@@ -946,16 +965,25 @@ theorem concrete_finite_trace_recognizer_compiled_by_description
       (AcceptanceTraceStagedRecognizer
         (ConcreteFiniteAcceptorTrace P))
       (ConcreteFiniteAcceptorDescription P) := by
-  have hcompiled :=
-    Computability.FiniteAcceptorProgram.traceRecognizer_compiledByDescription
-      P hD
   constructor
-  · exact hcompiled.left
+  · exact hD
   · intro w
-    exact Iff.trans (hcompiled.right w)
-      (Iff.symm
-        (Computability.traceRecognizerProgramOfProp_haltsWithOutput_iff
-          (trace := ConcreteFiniteAcceptorTrace P) w []))
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨n, hn⟩
+      exists n
+      have htrace : ConcreteFiniteAcceptorTrace P w n := by
+        simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
+          using hn
+      simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram, htrace]
+    · intro hprog
+      rcases hprog with ⟨n, hn⟩
+      by_cases htrace : ConcreteFiniteAcceptorTrace P w n
+      · exact ⟨n, by
+          simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
+            using htrace⟩
+      · simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram,
+          htrace] at hn
 
 theorem concrete_finite_trace_recognizer_acceptable_by_description
     (P : ConcreteFiniteAcceptorProgram)
