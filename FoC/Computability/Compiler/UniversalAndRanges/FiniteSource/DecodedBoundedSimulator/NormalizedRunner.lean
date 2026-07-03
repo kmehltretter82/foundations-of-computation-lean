@@ -1558,6 +1558,107 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff
         hinit, hdecode, hiter, hfinal⟩
     simp [hinit, hdecode, hiter, hfinal]
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_parts
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+      exists finalWork : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          decodedBoundedSimulatorTransitionLoopIterateWorkStepCode stage
+              (decodedBoundedSimulatorInitialWorkCode stage D input) =
+            some finalWork ∧
+          decodedBoundedSimulatorTransitionLoopFinalAcceptCode finalWork =
+            some ([] : Word MachineCodeSymbol) := by
+  constructor
+  · intro h
+    rcases
+        (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_parts
+          tokens).mp h with
+      ⟨work, parsedD, parsedStage, config, finalWork,
+        hinit, hworkDecode, hiter, hfinal⟩
+    rcases
+        (decodedBoundedSimulatorInitialWorkCodeTransform_eq_some_iff
+          tokens work).mp hinit with
+      ⟨stage, D, input, hstage, hwork⟩
+    rw [hwork, decodedBoundedSimulatorInitialWorkCode_decode] at hworkDecode
+    cases hworkDecode
+    exact
+      ⟨parsedStage, parsedD, input, finalWork, hstage,
+        by simpa [hwork] using hiter, hfinal⟩
+  · intro h
+    rcases h with
+      ⟨stage, D, input, finalWork, hstage, hiter, hfinal⟩
+    apply
+      (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_parts
+        tokens).mpr
+    refine
+      ⟨decodedBoundedSimulatorInitialWorkCode stage D input,
+        D, stage,
+        D.initial (MachineDescription.encodeCodeWordAsInput input),
+        finalWork, ?_, ?_, hiter, hfinal⟩
+    · exact
+        (decodedBoundedSimulatorInitialWorkCodeTransform_eq_some_iff
+          tokens
+          (decodedBoundedSimulatorInitialWorkCode stage D input)).mpr
+          ⟨stage, D, input, hstage, rfl⟩
+    · exact decodedBoundedSimulatorInitialWorkCode_decode stage D input
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_halt
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopFromConfig stage D
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt := by
+  constructor
+  · intro h
+    rcases
+        (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_parts
+          tokens).mp h with
+      ⟨stage, D, input, finalWork, hstage, hiter, hfinal⟩
+    have hdecode :=
+      decodedBoundedSimulatorInitialWorkCode_decode stage D input
+    have hhalt :
+        (decodedBoundedSimulatorTransitionLoopFromConfig stage D
+          (D.initial
+            (MachineDescription.encodeCodeWordAsInput input))).state =
+          D.halt :=
+      (decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_output_iff_of_decode
+        hdecode hiter).mp hfinal
+    exact ⟨stage, D, input, hstage, hhalt⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    apply
+      (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_parts
+        tokens).mpr
+    refine
+      ⟨stage, D, input,
+        decodedBoundedSimulatorTransitionLoopIteratedWorkCode D stage
+          (D.initial
+            (MachineDescription.encodeCodeWordAsInput input)),
+        hstage, ?_, ?_⟩
+    · exact
+        decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_initial
+          stage D input
+    · exact
+        (decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff
+          stage D
+          (D.initial
+            (MachineDescription.encodeCodeWordAsInput input))).mpr
+          hhalt
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
     (tokens : Word MachineCodeSymbol) :
     decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
