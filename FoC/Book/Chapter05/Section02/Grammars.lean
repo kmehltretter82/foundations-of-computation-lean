@@ -99,7 +99,8 @@ noncomputable def GeneralGrammarBoundedStagedRecognizer
     StagedProgram terminal Unit :=
   GeneralGrammarBoundedRecognizerProgram G
 
-noncomputable def GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+def GeneralGrammarFiniteProductionListBoundedStagedRecognizer
+    [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
@@ -130,19 +131,21 @@ abbrev ConcreteFiniteProductionListIndexedDerivationCertificateData
     (x y : SententialForm terminal nonterminal) :=
   FiniteProductionListIndexedDerivationCertificateData rules n x y
 
-noncomputable def GeneralGrammarFiniteProductionListCertificateStagedRecognizer
+def GeneralGrammarFiniteProductionListCertificateStagedRecognizer
+    [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
   FiniteProductionListCertificateRecognizerProgram G rules
 
-noncomputable def GeneralGrammarFiniteProductionListIndexedCertificateStagedRecognizer
+def GeneralGrammarFiniteProductionListIndexedCertificateStagedRecognizer
+    [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
   FiniteProductionListIndexedCertificateRecognizerProgram G rules
 
-noncomputable def GeneralGrammarFiniteProductionListCheckedIndexedCertificateStagedRecognizer
+def GeneralGrammarFiniteProductionListCheckedIndexedCertificateStagedRecognizer
     [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
@@ -745,6 +748,7 @@ theorem general_grammar_bounded_staged_recognizer_accepts_generated_language
   Computability.generalGrammarBoundedRecognizerProgram_acceptsLanguage G
 
 theorem finite_production_list_bounded_staged_recognizer_accepts_generated_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
@@ -757,6 +761,7 @@ theorem finite_production_list_bounded_staged_recognizer_accepts_generated_langu
     hrules
 
 theorem finite_production_list_certificate_staged_recognizer_accepts_generated_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
@@ -769,6 +774,7 @@ theorem finite_production_list_certificate_staged_recognizer_accepts_generated_l
     hrules
 
 theorem finite_production_list_indexed_certificate_staged_recognizer_accepts_generated_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
@@ -796,6 +802,7 @@ theorem finite_production_list_checked_indexed_certificate_staged_recognizer_acc
     hrules
 
 theorem finite_production_list_certificate_staged_recognizer_same_language_as_bounded
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
@@ -812,6 +819,7 @@ theorem finite_production_list_certificate_staged_recognizer_same_language_as_bo
     hrules
 
 theorem finite_production_list_indexed_certificate_staged_recognizer_same_language_as_bounded
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,

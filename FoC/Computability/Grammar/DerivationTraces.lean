@@ -146,6 +146,79 @@ theorem check_eq_true_iff
 
 end FiniteProductionListIndexedStepCertificate
 
+def listAny {α : Type u} (p : α -> Bool) : List α -> Bool
+  | [] => false
+  | x :: xs => p x || listAny p xs
+
+theorem listAny_eq_true_iff {α : Type u} (p : α -> Bool) :
+    forall xs : List α,
+      listAny p xs = true <-> exists x, x ∈ xs ∧ p x = true
+  | [] => by
+      simp [listAny]
+  | x :: xs => by
+      simp [listAny, listAny_eq_true_iff p xs]
+
+def sententialFormSplits {α : Type u} : List α -> List (List α × List α)
+  | [] => [([], [])]
+  | x :: xs =>
+      ([], x :: xs) ::
+        (sententialFormSplits xs).map
+          (fun split => (x :: split.1, split.2))
+
+theorem sententialFormSplits_complete {α : Type u}
+    (pre suf : List α) :
+    (pre, suf) ∈ sententialFormSplits (pre ++ suf) := by
+  induction pre with
+  | nil =>
+      cases suf <;> simp [sententialFormSplits]
+  | cons x pre ih =>
+      simp [sententialFormSplits, ih]
+
+structure FiniteProductionListIndexedStepSearchCandidate
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) where
+  mid : SententialForm terminal nonterminal
+  cert : FiniteProductionListIndexedStepCertificate rules
+
+def finiteProductionListIndexedStepSearchCandidates
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (x : SententialForm terminal nonterminal) :
+    List (FiniteProductionListIndexedStepSearchCandidate rules) :=
+  (List.finRange rules.length).flatMap fun ruleIndex =>
+    (sententialFormSplits x).flatMap fun outerSplit =>
+      (sententialFormSplits outerSplit.2).map fun innerSplit =>
+        let cert : FiniteProductionListIndexedStepCertificate rules :=
+          { pre := outerSplit.1
+            suf := innerSplit.2
+            ruleIndex := ruleIndex }
+        { mid := outerSplit.1 ++ (rules.get ruleIndex).rhs ++
+            innerSplit.2
+          cert := cert }
+
+theorem finiteProductionListIndexedStepSearchCandidates_complete
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {x mid : SententialForm terminal nonterminal}
+    (cert : FiniteProductionListIndexedStepCertificate rules)
+    (hmatch : cert.Matches x mid) :
+    { mid := mid, cert := cert } ∈
+      finiteProductionListIndexedStepSearchCandidates rules x := by
+  rcases cert with ⟨pre, suf, ruleIndex⟩
+  rcases hmatch with ⟨hx, hmid⟩
+  subst x
+  subst mid
+  apply List.mem_flatMap.mpr
+  refine ⟨ruleIndex, List.mem_finRange ruleIndex, ?_⟩
+  apply List.mem_flatMap.mpr
+  refine
+    ⟨(pre, (rules.get ruleIndex).lhs ++ suf), ?_, ?_⟩
+  · simpa [List.append_assoc] using
+      sententialFormSplits_complete pre
+        ((rules.get ruleIndex).lhs ++ suf)
+  apply List.mem_map.mpr
+  refine
+    ⟨((rules.get ruleIndex).lhs, suf),
+      sententialFormSplits_complete (rules.get ruleIndex).lhs suf, ?_⟩
+  rfl
+
 inductive FiniteProductionListDerivationCertificate
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     Nat -> SententialForm terminal nonterminal ->
@@ -264,6 +337,95 @@ theorem exists_check_eq_true_of_indexedCertificate
 
 end FiniteProductionListIndexedDerivationCertificateData
 
+def finiteProductionListCheckedIndexedDerivationCertificateSearch
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    (n : Nat) ->
+      SententialForm terminal nonterminal ->
+      SententialForm terminal nonterminal -> Bool
+  | 0, x, y => decide (x = y)
+  | n + 1, x, y =>
+      listAny
+        (fun candidate =>
+          candidate.cert.check x candidate.mid &&
+            finiteProductionListCheckedIndexedDerivationCertificateSearch
+              rules n candidate.mid y)
+        (finiteProductionListIndexedStepSearchCandidates rules x)
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateSearch_eq_true_of_data
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {n : Nat} {x y : SententialForm terminal nonterminal}
+    {data :
+      FiniteProductionListIndexedDerivationCertificateData rules n x y}
+    (h : data.check = true) :
+    finiteProductionListCheckedIndexedDerivationCertificateSearch
+      rules n x y = true := by
+  induction data with
+  | zero x =>
+      simp [finiteProductionListCheckedIndexedDerivationCertificateSearch]
+  | step stepCert rest ih =>
+      simp [FiniteProductionListIndexedDerivationCertificateData.check]
+        at h
+      rw [finiteProductionListCheckedIndexedDerivationCertificateSearch]
+      apply (listAny_eq_true_iff _ _).mpr
+      refine
+        ⟨{ mid := _, cert := stepCert },
+          finiteProductionListIndexedStepSearchCandidates_complete
+            stepCert
+            ((FiniteProductionListIndexedStepCertificate.check_eq_true_iff
+              stepCert _ _).mp h.left),
+          ?_⟩
+      simp [h.left, ih h.right]
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateSearch_exists_data
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {rules : List (GeneralGrammar.Production terminal nonterminal)} :
+    forall {n : Nat} {x y : SententialForm terminal nonterminal},
+      finiteProductionListCheckedIndexedDerivationCertificateSearch
+        rules n x y = true ->
+        exists data :
+          FiniteProductionListIndexedDerivationCertificateData rules n x y,
+          data.check = true
+  | 0, x, y, h => by
+      simp [finiteProductionListCheckedIndexedDerivationCertificateSearch]
+        at h
+      subst y
+      exact ⟨FiniteProductionListIndexedDerivationCertificateData.zero x,
+        rfl⟩
+  | n + 1, x, y, h => by
+      rw [finiteProductionListCheckedIndexedDerivationCertificateSearch] at h
+      rcases (listAny_eq_true_iff _ _).mp h with
+        ⟨candidate, _hmem, hcandidate⟩
+      simp at hcandidate
+      rcases
+        finiteProductionListCheckedIndexedDerivationCertificateSearch_exists_data
+          (rules := rules) hcandidate.right with
+        ⟨rest, hrest⟩
+      refine
+        ⟨FiniteProductionListIndexedDerivationCertificateData.step
+          candidate.cert rest, ?_⟩
+      simp [FiniteProductionListIndexedDerivationCertificateData.check,
+        hcandidate.left, hrest]
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateSearch_iff
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {n : Nat} {x y : SententialForm terminal nonterminal} :
+    finiteProductionListCheckedIndexedDerivationCertificateSearch
+        rules n x y = true <->
+      exists data :
+        FiniteProductionListIndexedDerivationCertificateData rules n x y,
+        data.check = true := by
+  constructor
+  · exact
+      finiteProductionListCheckedIndexedDerivationCertificateSearch_exists_data
+  · intro h
+    rcases h with ⟨data, hdata⟩
+    exact
+      finiteProductionListCheckedIndexedDerivationCertificateSearch_eq_true_of_data
+        hdata
+
 theorem FiniteProductionListIndexedDerivationCertificate.to_certificate
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     {n : Nat} {x y : SententialForm terminal nonterminal}
@@ -336,6 +498,40 @@ def FiniteProductionListCheckedIndexedDerivationCertificateTrace
       [Symbol.nonterminal G.start]
       (SententialForm.terminalWord w),
     data.check = true
+
+theorem finiteProductionListCheckedIndexedDerivationCertificateSearch_iff_trace
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    {w : Word terminal} {n : Nat} :
+    finiteProductionListCheckedIndexedDerivationCertificateSearch
+        rules n [Symbol.nonterminal G.start]
+        (SententialForm.terminalWord w) = true <->
+      FiniteProductionListCheckedIndexedDerivationCertificateTrace
+        G rules w n := by
+  simp [FiniteProductionListCheckedIndexedDerivationCertificateTrace,
+    finiteProductionListCheckedIndexedDerivationCertificateSearch_iff]
+
+instance finiteProductionListCheckedIndexedDerivationCertificateTraceDecidable
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (n : Nat) :
+    Decidable
+      (FiniteProductionListCheckedIndexedDerivationCertificateTrace
+        G rules w n) := by
+  by_cases h :
+      finiteProductionListCheckedIndexedDerivationCertificateSearch
+        rules n [Symbol.nonterminal G.start]
+        (SententialForm.terminalWord w) = true
+  · exact isTrue
+      ((finiteProductionListCheckedIndexedDerivationCertificateSearch_iff_trace).mp
+        h)
+  · exact isFalse (by
+      intro htrace
+      exact h
+        ((finiteProductionListCheckedIndexedDerivationCertificateSearch_iff_trace).mpr
+          htrace))
 
 theorem finiteProductionListDerivationCertificateTrace_iff_trace
     {G : GeneralGrammar terminal nonterminal}
@@ -481,6 +677,17 @@ def FiniteProductionListBoundedCheckedIndexedCertificateSearch
   TraceHitsBy
     (FiniteProductionListCheckedIndexedDerivationCertificateTrace G rules)
     w limit
+
+instance finiteProductionListBoundedCheckedIndexedCertificateSearchDecidable
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal))
+    (w : Word terminal) (limit : Nat) :
+    Decidable
+      (FiniteProductionListBoundedCheckedIndexedCertificateSearch
+        G rules w limit) := by
+  unfold FiniteProductionListBoundedCheckedIndexedCertificateSearch
+  infer_instance
 
 theorem finiteProductionListBoundedCertificateSearch_iff_derivationSearch
     {G : GeneralGrammar terminal nonterminal}
@@ -688,42 +895,34 @@ noncomputable def GeneralGrammarBoundedRecognizerProgram
     classical
     exact TraceRecognizerProgram (GeneralGrammarBoundedDerivationSearch G)
 
-noncomputable def FiniteProductionListCertificateRecognizerProgram
-    (G : GeneralGrammar terminal nonterminal)
-    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
-    StagedProgram terminal Unit :=
-  by
-    classical
-    exact TraceRecognizerProgram
-      (FiniteProductionListBoundedCertificateSearch G rules)
-
-noncomputable def FiniteProductionListIndexedCertificateRecognizerProgram
-    (G : GeneralGrammar terminal nonterminal)
-    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
-    StagedProgram terminal Unit :=
-  by
-    classical
-    exact TraceRecognizerProgram
-      (FiniteProductionListBoundedIndexedCertificateSearch G rules)
-
-noncomputable def FiniteProductionListCheckedIndexedCertificateRecognizerProgram
+def FiniteProductionListCheckedIndexedCertificateRecognizerProgram
     [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  by
-    classical
-    exact TraceRecognizerProgram
-      (FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules)
+  TraceRecognizerProgram
+    (FiniteProductionListBoundedCheckedIndexedCertificateSearch G rules)
 
-noncomputable def FiniteProductionListBoundedRecognizerProgram
+def FiniteProductionListCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
     (G : GeneralGrammar terminal nonterminal)
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
-  by
-    classical
-    exact TraceRecognizerProgram
-      (FiniteProductionListBoundedDerivationSearch G rules)
+  FiniteProductionListCheckedIndexedCertificateRecognizerProgram G rules
+
+def FiniteProductionListIndexedCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCheckedIndexedCertificateRecognizerProgram G rules
+
+def FiniteProductionListBoundedRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    (G : GeneralGrammar terminal nonterminal)
+    (rules : List (GeneralGrammar.Production terminal nonterminal)) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCheckedIndexedCertificateRecognizerProgram G rules
 
 theorem generalGrammarBoundedRecognizerProgram_acceptsLanguage
     (G : GeneralGrammar terminal nonterminal) :
@@ -740,65 +939,6 @@ theorem generalGrammarBoundedRecognizerProgram_acceptsLanguage
   · intro hw
     exact generalGrammarBoundedDerivationSearch_complete hw
 
-theorem finiteProductionListBoundedRecognizerProgram_acceptsLanguage
-    {G : GeneralGrammar terminal nonterminal}
-    {rules : List (GeneralGrammar.Production terminal nonterminal)}
-    (hrules : forall lhs rhs,
-      G.produces lhs rhs <->
-        GeneralGrammar.ProductionListProduces rules lhs rhs) :
-    ProgramAcceptsLanguage
-      (FiniteProductionListBoundedRecognizerProgram G rules)
-      (GeneralGrammar.GeneratedLanguage G) := by
-  classical
-  apply traceRecognizerProgram_acceptsLanguage
-  intro w
-  constructor
-  · intro h
-    rcases h with ⟨limit, hit⟩
-    exact finiteProductionListBoundedDerivationSearch_sound hrules hit
-  · intro hw
-    exact finiteProductionListBoundedDerivationSearch_complete hrules hw
-
-theorem finiteProductionListCertificateRecognizerProgram_acceptsLanguage
-    {G : GeneralGrammar terminal nonterminal}
-    {rules : List (GeneralGrammar.Production terminal nonterminal)}
-    (hrules : forall lhs rhs,
-      G.produces lhs rhs <->
-        GeneralGrammar.ProductionListProduces rules lhs rhs) :
-    ProgramAcceptsLanguage
-      (FiniteProductionListCertificateRecognizerProgram G rules)
-      (GeneralGrammar.GeneratedLanguage G) := by
-  classical
-  apply traceRecognizerProgram_acceptsLanguage
-  intro w
-  constructor
-  · intro h
-    rcases h with ⟨limit, hit⟩
-    exact finiteProductionListBoundedCertificateSearch_sound hrules hit
-  · intro hw
-    exact finiteProductionListBoundedCertificateSearch_complete hrules hw
-
-theorem finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
-    {G : GeneralGrammar terminal nonterminal}
-    {rules : List (GeneralGrammar.Production terminal nonterminal)}
-    (hrules : forall lhs rhs,
-      G.produces lhs rhs <->
-        GeneralGrammar.ProductionListProduces rules lhs rhs) :
-    ProgramAcceptsLanguage
-      (FiniteProductionListIndexedCertificateRecognizerProgram G rules)
-      (GeneralGrammar.GeneratedLanguage G) := by
-  classical
-  apply traceRecognizerProgram_acceptsLanguage
-  intro w
-  constructor
-  · intro h
-    rcases h with ⟨limit, hit⟩
-    exact finiteProductionListBoundedIndexedCertificateSearch_sound
-      hrules hit
-  · intro hw
-    exact finiteProductionListBoundedIndexedCertificateSearch_complete
-      hrules hw
-
 theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
     [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
@@ -810,7 +950,6 @@ theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLa
       (FiniteProductionListCheckedIndexedCertificateRecognizerProgram G
         rules)
       (GeneralGrammar.GeneratedLanguage G) := by
-  classical
   apply traceRecognizerProgram_acceptsLanguage
   intro w
   constructor
@@ -822,7 +961,47 @@ theorem finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLa
     exact finiteProductionListBoundedCheckedIndexedCertificateSearch_complete
       hrules hw
 
+theorem finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListBoundedRecognizerProgram G rules)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem finiteProductionListCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListCertificateRecognizerProgram G rules)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
+theorem finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    {rules : List (GeneralGrammar.Production terminal nonterminal)}
+    (hrules : forall lhs rhs,
+      G.produces lhs rhs <->
+        GeneralGrammar.ProductionListProduces rules lhs rhs) :
+    ProgramAcceptsLanguage
+      (FiniteProductionListIndexedCertificateRecognizerProgram G rules)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    hrules
+
 theorem finiteProductionListCertificateRecognizerProgram_same_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
@@ -841,6 +1020,7 @@ theorem finiteProductionListCertificateRecognizerProgram_same_language
       hrules w).symm)
 
 theorem finiteProductionListIndexedCertificateRecognizerProgram_same_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
     (hrules : forall lhs rhs,
