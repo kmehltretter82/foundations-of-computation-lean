@@ -78,6 +78,29 @@ noncomputable def dfaComplementAcceptingPresentation (D : DFA input dstate) :
     DFAAcceptingPresentation (DFA.Complement D) :=
   dfaAcceptingPresentation (DFA.Complement D)
 
+def dfaAcceptingPresentationDecidable
+    (D : DFA input dstate) [DecidablePred D.accept] :
+    DFAAcceptingPresentation D where
+  acceptingStates := D.statesFinite.elems.filter (fun q => decide (D.accept q))
+  accept_complete := by
+    intro q
+    constructor
+    · intro hq
+      apply List.mem_filter.mpr
+      constructor
+      · exact D.statesFinite.complete q
+      · simpa using hq
+    · intro hq
+      simpa using (List.mem_filter.mp hq).2
+
+def dfaComplementAcceptingPresentationDecidable
+    (D : DFA input dstate) [DecidablePred D.accept] :
+    DFAAcceptingPresentation (DFA.Complement D) := by
+  let _ : DecidablePred (DFA.Complement D).accept := fun q => by
+    unfold DFA.Complement
+    infer_instance
+  exact dfaAcceptingPresentationDecidable (DFA.Complement D)
+
 def pdaIntersectDFA_transitionRule
     (D : DFA input dstate)
     (rule : PDA.TransitionRule input stack pstate)
@@ -278,6 +301,14 @@ noncomputable def pdaIntersectDFA_finitePresentation_auto
   pdaIntersectDFA_finitePresentation P D presentation
     (dfaAcceptingPresentation D)
 
+def pdaIntersectDFA_finitePresentation_decidable
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept] :
+    PDA.FinitePresentation (PDAIntersectDFA P D) :=
+  pdaIntersectDFA_finitePresentation P D presentation
+    (dfaAcceptingPresentationDecidable D)
+
 /-!
 The first exactness direction lifts a PDA computation into the product machine.
 The DFA state is not guessed: after consuming the whole input it must be
@@ -456,6 +487,18 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
   exact pda_intersect_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaAcceptingPresentation D) hcomplete
 
+theorem pda_intersect_dfa_context_free_of_empty_summary_complete_decidable
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept]
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
+    CFL.ContextFreeLanguage
+      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) :=
+  pda_intersect_dfa_context_free_of_empty_summary_complete
+    P D presentation (dfaAcceptingPresentationDecidable D) hcomplete
+
 theorem pda_intersect_dfa_context_free
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -464,6 +507,29 @@ theorem pda_intersect_dfa_context_free
       (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
   let productPresentation :=
     pdaIntersectDFA_finitePresentation_auto P D presentation
+  have hProduct :
+      CFL.ContextFreeLanguage
+        (PDA.AcceptedLanguage (PDAIntersectDFA P D)) :=
+    Section04.finite_presentation_pda_context_free
+      (M := PDAIntersectDFA P D)
+      (presentation := productPresentation)
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · exact Language.equal_trans hEq
+      (fun w => pda_intersect_dfa_accepted_language_exact P D w)
+
+theorem pda_intersect_dfa_context_free_decidable
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept] :
+    CFL.ContextFreeLanguage
+      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  let productPresentation :=
+    pdaIntersectDFA_finitePresentation_decidable P D presentation
   have hProduct :
       CFL.ContextFreeLanguage
         (PDA.AcceptedLanguage (PDAIntersectDFA P D)) :=
@@ -524,6 +590,20 @@ theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
   exact pda_diff_dfa_context_free_of_empty_summary_complete
     P D presentation (dfaComplementAcceptingPresentation D) hcomplete
 
+theorem pda_diff_dfa_context_free_of_empty_summary_complete_decidable
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept]
+    (hcomplete :
+      Section04.EmptySummaryPDAComplete
+        (PDAIntersectDFA P (DFA.Complement D))) :
+    CFL.ContextFreeLanguage
+      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) :=
+  pda_diff_dfa_context_free_of_empty_summary_complete
+    P D presentation (dfaComplementAcceptingPresentationDecidable D)
+    hcomplete
+
 theorem pda_diff_dfa_context_free
     {input stack pstate dstate : Type}
     (P : PDA input stack pstate) (D : DFA input dstate)
@@ -532,6 +612,38 @@ theorem pda_diff_dfa_context_free
       (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
   have hProduct :=
     pda_intersect_dfa_context_free P (DFA.Complement D) presentation
+  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
+  exists nonterminal
+  exists G
+  constructor
+  · exact hfinite
+  · intro w
+    constructor
+    · intro hw
+      have hInter := (hEq w).mp hw
+      constructor
+      · exact hInter.left
+      · intro hD
+        exact (DFA.complement_accepts D w).mp hInter.right hD
+    · intro hw
+      apply (hEq w).mpr
+      constructor
+      · exact hw.left
+      · exact (DFA.complement_accepts D w).mpr hw.right
+
+theorem pda_diff_dfa_context_free_decidable
+    {input stack pstate dstate : Type}
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept] :
+    CFL.ContextFreeLanguage
+      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
+  let _ : DecidablePred (DFA.Complement D).accept := fun q => by
+    unfold DFA.Complement
+    infer_instance
+  have hProduct :=
+    pda_intersect_dfa_context_free_decidable
+      P (DFA.Complement D) presentation
   rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
   exists nonterminal
   exists G
@@ -734,6 +846,28 @@ theorem finite_presentation_pda_recognizable_inter_dfa
     exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
       (And.intro ((hP w).mpr hw.left) ((hR w).mpr hw.right))
 
+theorem finite_presentation_pda_recognizable_inter_dfa_decidable
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    {dstate : Type} (D : DFA input dstate)
+    [DecidablePred D.accept]
+    (hR : Language.Equal (DFA.Language D) R) :
+    PDA.FinitePresentationRecognizable (Language.Inter L R) := by
+  rcases hL with ⟨stack, pstate, P, presentation, hP⟩
+  exists stack
+  exists pstate × dstate
+  exists PDAIntersectDFA P D
+  exists pdaIntersectDFA_finitePresentation_decidable P D presentation
+  intro w
+  constructor
+  · intro hw
+    have hExact :=
+      (pda_intersect_dfa_accepted_language_exact P D w).mp hw
+    exact And.intro ((hP w).mp hExact.left) ((hR w).mp hExact.right)
+  · intro hw
+    exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
+      (And.intro ((hP w).mpr hw.left) ((hR w).mpr hw.right))
+
 theorem finite_presentation_pda_recognizable_inter_dfa_recognizable
     {L R : Language input}
     (hL : PDA.FinitePresentationRecognizable L)
@@ -760,6 +894,33 @@ theorem finite_presentation_pda_recognizable_diff_dfa
         exact hw ((hR w).mp hAccept))
   have hInter :=
     finite_presentation_pda_recognizable_inter_dfa
+      hL (DFA.Complement D) hComplement
+  simpa [Language.Diff, Language.Inter, Language.Compl,
+    Foundation.FSet.Diff, Foundation.FSet.Inter, Foundation.FSet.Compl]
+    using hInter
+
+theorem finite_presentation_pda_recognizable_diff_dfa_decidable
+    {L R : Language input}
+    (hL : PDA.FinitePresentationRecognizable L)
+    {dstate : Type} (D : DFA input dstate)
+    [DecidablePred D.accept]
+    (hR : Language.Equal (DFA.Language D) R) :
+    PDA.FinitePresentationRecognizable (Language.Diff L R) := by
+  let _ : DecidablePred (DFA.Complement D).accept := fun q => by
+    unfold DFA.Complement
+    infer_instance
+  have hComplement :
+      Language.Equal (DFA.Language (DFA.Complement D)) (Language.Compl R) := by
+    intro w
+    constructor
+    · intro hw hRmem
+      exact (DFA.complement_accepts D w).mp hw ((hR w).mpr hRmem)
+    · intro hw
+      exact (DFA.complement_accepts D w).mpr (by
+        intro hAccept
+        exact hw ((hR w).mp hAccept))
+  have hInter :=
+    finite_presentation_pda_recognizable_inter_dfa_decidable
       hL (DFA.Complement D) hComplement
   simpa [Language.Diff, Language.Inter, Language.Compl,
     Foundation.FSet.Diff, Foundation.FSet.Inter, Foundation.FSet.Compl]

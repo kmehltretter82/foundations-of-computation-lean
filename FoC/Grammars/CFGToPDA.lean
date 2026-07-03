@@ -211,6 +211,32 @@ theorem toPDA_accept_complete (G : CFG terminal nonterminal) :
   · intro h
     simpa [ToPDA] using h
 
+def toPDA_finitePresentationOfRules
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (rules : List (Production terminal nonterminal))
+    (hrules : forall A rhs,
+      G.produces A rhs <->
+        exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
+    PDA.FinitePresentation (ToPDA G) where
+  stackFinite := toPDAStackFinite terminalFinite G.nonterminalsFinite
+  transitionRules := toPDATransitionRules G terminalFinite rules
+  transition_complete :=
+    toPDA_transition_complete G terminalFinite rules hrules
+  acceptingStates := [ToPDAState.run]
+  accept_complete := toPDA_accept_complete G
+
+theorem toPDA_hasFinitePresentationOfRules
+    (G : CFG terminal nonterminal)
+    (terminalFinite : FiniteType terminal)
+    (rules : List (Production terminal nonterminal))
+    (hrules : forall A rhs,
+      G.produces A rhs <->
+        exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs) :
+    PDA.HasFinitePresentation (ToPDA G) :=
+  Nonempty.intro
+    (toPDA_finitePresentationOfRules G terminalFinite rules hrules)
+
 noncomputable def toPDA_finitePresentation
     (G : CFG terminal nonterminal)
     (terminalFinite : FiniteType terminal)
@@ -219,13 +245,7 @@ noncomputable def toPDA_finitePresentation
   classical
   let rules := Classical.choose hG
   have hrules := Classical.choose_spec hG
-  exact {
-    stackFinite := toPDAStackFinite terminalFinite G.nonterminalsFinite,
-    transitionRules := toPDATransitionRules G terminalFinite rules,
-    transition_complete :=
-      toPDA_transition_complete G terminalFinite rules hrules,
-    acceptingStates := [ToPDAState.run],
-    accept_complete := toPDA_accept_complete G }
+  exact toPDA_finitePresentationOfRules G terminalFinite rules hrules
 
 theorem toPDA_hasFinitePresentation
     (G : CFG terminal nonterminal)
