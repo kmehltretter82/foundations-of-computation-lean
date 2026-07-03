@@ -1337,6 +1337,15 @@ theorem codeMachineConstruction_of_decodedBoundedSimulatorTransitionLoopPipeline
         (decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
           tokens ([] : Word MachineCodeSymbol))⟩
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_iff_codeMachine :
+    DecodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction <->
+      CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  constructor
+  · exact
+      codeMachineConstruction_of_decodedBoundedSimulatorTransitionLoopPipelineCodeMachine
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_codeMachine
+
 /--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
