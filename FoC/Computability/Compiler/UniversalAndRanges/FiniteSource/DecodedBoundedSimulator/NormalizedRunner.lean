@@ -1552,6 +1552,19 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_cod
     decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
       tokens out
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_stageProgramRun_iff
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists stage : Nat,
+      exists encoded : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+          CodePrefixRecognizerProgram.run encoded stage = some [] :=
+  Iff.trans
+    (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_code
+      tokens ([] : Word MachineCodeSymbol))
+    (decodedBoundedSimulatorCode_transform_eq_stageProgramRun_iff tokens)
+
 /--
 Finite-machine spec for the explicit normalized transition-loop pipeline
 transform.
@@ -1651,6 +1664,24 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruct
       codeMachineConstruction_of_decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachine
   · exact
       decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_codeMachine
+
+theorem decodedBoundedSimulatorStageProgramRunnerConstruction_of_pipelineIterateCodeMachine
+    (hiter :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
+    exists state : Type,
+    exists runner : TuringMachine MachineCodeSymbol state,
+      forall tokens : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput runner tokens <->
+          exists stage : Nat,
+          exists encoded : Word MachineCodeSymbol,
+            MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+              CodePrefixRecognizerProgram.run encoded stage = some [] := by
+  rcases hiter with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_stageProgramRun_iff
+          tokens)⟩
 
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_codeMachine
     (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
@@ -2162,8 +2193,8 @@ theorem decodedBoundedSimulatorStageProgramRunnerConstruction :
             MachineDescription.decodeNat tokens = some (stage, encoded) ∧
               CodePrefixRecognizerProgram.run encoded stage = some [] := by
   exact
-    decodedBoundedSimulatorStageProgramRunnerConstruction_of_booleanRunner
-      decodedBoundedSimulatorBooleanRunnerConstruction
+    decodedBoundedSimulatorStageProgramRunnerConstruction_of_pipelineIterateCodeMachine
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction
 
 /--
 The stage-program runner is enough to realize the decoded bounded simulator
