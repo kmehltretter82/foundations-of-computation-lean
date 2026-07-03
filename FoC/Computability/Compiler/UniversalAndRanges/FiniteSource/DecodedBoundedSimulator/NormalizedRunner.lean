@@ -1451,6 +1451,59 @@ def decodedBoundedSimulatorTransitionLoopPipelineIterateCode
                 finalWork
       | _ => none
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_parts
+    (tokens : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      exists work : Word MachineCodeSymbol,
+      exists D : MachineDescription,
+      exists stage : Nat,
+      exists config : MachineDescription.Configuration,
+      exists finalWork : Word MachineCodeSymbol,
+        decodedBoundedSimulatorInitialWorkCodeTransform tokens =
+            some work ∧
+          decodedBoundedSimulatorTransitionLoopWorkDecode work =
+            some (D, stage, config, []) ∧
+          decodedBoundedSimulatorTransitionLoopIterateWorkStepCode
+              stage work = some finalWork ∧
+          decodedBoundedSimulatorTransitionLoopFinalAcceptCode finalWork =
+            some ([] : Word MachineCodeSymbol) := by
+  unfold decodedBoundedSimulatorTransitionLoopPipelineIterateCode
+  constructor
+  · intro h
+    cases hinit :
+        decodedBoundedSimulatorInitialWorkCodeTransform tokens with
+    | none =>
+        simp [hinit] at h
+    | some work =>
+        simp [hinit] at h
+        cases hdecode :
+            decodedBoundedSimulatorTransitionLoopWorkDecode work with
+        | none =>
+            simp [hdecode] at h
+        | some parsed =>
+            rcases parsed with ⟨D, stage, config, suffix⟩
+            cases suffix with
+            | nil =>
+                simp [hdecode] at h
+                cases hiter :
+                    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode
+                      stage work with
+                | none =>
+                    simp [hiter] at h
+                | some finalWork =>
+                    simp [hiter] at h
+                    exact
+                      ⟨work, D, stage, config, finalWork,
+                        rfl, hdecode, hiter, h⟩
+            | cons _ _ =>
+                simp [hdecode] at h
+  · intro h
+    rcases h with
+      ⟨work, D, stage, config, finalWork,
+        hinit, hdecode, hiter, hfinal⟩
+    simp [hinit, hdecode, hiter, hfinal]
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode
     (tokens : Word MachineCodeSymbol) :
     decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
