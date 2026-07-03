@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageCodeDecoder
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Basic
 
 set_option doc.verso true
 
