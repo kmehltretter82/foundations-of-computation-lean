@@ -1289,6 +1289,25 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff
     · intro h
       exact False.elim (hhalt h)
 
+theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_of_decode_zero_iff
+    {tokens : Word MachineCodeSymbol}
+    {D : MachineDescription}
+    {config : MachineDescription.Configuration}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, 0, config, [])) :
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      config.state = D.halt := by
+  unfold decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+  rw [hdecode]
+  change (if config.state = D.halt then some ([] : Word MachineCodeSymbol)
+      else none) = some ([] : Word MachineCodeSymbol) <->
+    config.state = D.halt
+  by_cases hhalt : config.state = D.halt
+  · simp [hhalt]
+  · simp [hhalt]
+
 theorem decodedBoundedSimulatorTransitionLoopFromConfig_zero_state_iff
     (D : MachineDescription)
     (config : MachineDescription.Configuration) :
@@ -1346,6 +1365,29 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff
   exact
     decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff_loop
       D target.snd
+
+theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_output_iff_of_decode
+    {tokens out : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, []))
+    (hiter :
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode stage tokens =
+        some out) :
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode out =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopFromConfig
+        stage D config).state = D.halt := by
+  rcases
+      decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_self_output_decode_of_decode
+        hdecode hiter with
+    ⟨finalConfig, hfinalDecode, hpres⟩
+  rw [hpres]
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode_of_decode_zero_iff
+      hfinalDecode
 
 /--
 Complete work payload after semantically iterating the transition loop.
