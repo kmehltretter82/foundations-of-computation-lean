@@ -936,6 +936,56 @@ def decodedBoundedSimulatorTransitionLoopIterateStepTarget :
       decodedBoundedSimulatorTransitionLoopIterateStepTarget
         fuel D target.fst target.snd
 
+def decodedBoundedSimulatorTransitionLoopIterateWorkStepCode :
+    Nat -> Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)
+  | 0, tokens => some tokens
+  | fuel + 1, tokens =>
+      match decodedBoundedSimulatorTransitionLoopWorkStepCode tokens with
+      | none => none
+      | some next =>
+          decodedBoundedSimulatorTransitionLoopIterateWorkStepCode
+            fuel next
+
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encodeAppend
+    (fuel : Nat) (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode fuel
+        (decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+          D stage config suffix) =
+      some
+        (decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+          D
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).fst
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).snd
+          suffix) := by
+  induction fuel generalizing stage config with
+  | zero =>
+      rfl
+  | succ fuel ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateWorkStepCode,
+        decodedBoundedSimulatorTransitionLoopIterateStepTarget,
+        decodedBoundedSimulatorTransitionLoopWorkStepCode_encodeAppend,
+        decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend, ih]
+
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encode
+    (fuel : Nat) (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode fuel
+        (decodedBoundedSimulatorTransitionLoopWorkCode D stage config) =
+      some
+        (decodedBoundedSimulatorTransitionLoopWorkCode
+          D
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).fst
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            fuel D stage config).snd) := by
+  simpa [decodedBoundedSimulatorTransitionLoopWorkCode] using
+    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encodeAppend
+      fuel D stage config []
+
 theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_preserves_final
     (fuel stage : Nat) (D : MachineDescription)
     (config : MachineDescription.Configuration) :
@@ -1177,6 +1227,22 @@ def decodedBoundedSimulatorTransitionLoopIteratedWorkCode
       stage D stage config
   decodedBoundedSimulatorTransitionLoopWorkCode
     D target.fst target.snd
+
+theorem decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_initial
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode stage
+        (decodedBoundedSimulatorInitialWorkCode stage D input) =
+      some
+        (decodedBoundedSimulatorTransitionLoopIteratedWorkCode
+          D stage
+          (D.initial
+            (MachineDescription.encodeCodeWordAsInput input))) := by
+  simpa [decodedBoundedSimulatorInitialWorkCode,
+    decodedBoundedSimulatorTransitionLoopIteratedWorkCode] using
+    decodedBoundedSimulatorTransitionLoopIterateWorkStepCode_encode
+      stage D stage
+      (D.initial (MachineDescription.encodeCodeWordAsInput input))
 
 /--
 Semantic code transform for the whole normalized transition-loop pipeline.
