@@ -1987,6 +1987,27 @@ def DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConst
   exists runner : TuringMachine MachineCodeSymbol (Fin n),
     DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineSpec runner
 
+def DecodedBoundedSimulatorTransitionLoopInitialHaltMachineSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (decodedBoundedSimulatorTransitionLoopFromConfig stage D
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt
+
+def DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction :
+    Prop :=
+  exists n : Nat,
+  exists runner : TuringMachine MachineCodeSymbol (Fin n),
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineSpec runner
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
     (hfin :
       DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction) :
@@ -2480,11 +2501,25 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Concrete finite-table leaf for the direct initial-halt transition-loop runner.
+-/
+theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateFiniteLeaf :
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction := by
+  sorry
+
+/--
 Concrete finite-table leaf for the explicit iterative transition-loop pipeline.
 -/
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateFiniteLeaf :
     DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction := by
-  sorry
+  rcases decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateFiniteLeaf with
+    ⟨n, runner, hrunner⟩
+  exact
+    ⟨n, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_halt
+            tokens))⟩
 
 /--
 Finite-machine leaf for the explicit iterative transition-loop pipeline.
