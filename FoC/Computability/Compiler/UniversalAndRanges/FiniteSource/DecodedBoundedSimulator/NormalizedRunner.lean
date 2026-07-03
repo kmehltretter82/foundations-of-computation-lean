@@ -225,6 +225,106 @@ theorem codePrefixRecognizerProgram_run_eq_some_nil_iff
     rfl
 
 /--
+Boolean form of the staged evaluator.  The remaining finite runner only needs
+to compute the executable bounded-trace predicate
+{name}`MachineDescription.haltsInBool` after the source has been normalized.
+-/
+theorem codePrefixRecognizerProgram_run_eq_some_nil_iff_haltsInBool
+    (encoded : Word MachineCodeSymbol) (stage : Nat) :
+    CodePrefixRecognizerProgram.run encoded stage = some [] <->
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeDescriptionPrefix encoded =
+            some (D, input) ∧
+          MachineDescription.haltsInBool D stage
+            (MachineDescription.encodeCodeWordAsInput input) = true := by
+  rw [codePrefixRecognizerProgram_run_eq_some_nil_iff]
+  constructor
+  · intro h
+    rcases h with ⟨D, input, hdecode, hhalts⟩
+    exact
+      ⟨D, input, hdecode,
+        (MachineDescription.haltsInBool_eq_true_iff D stage
+          (MachineDescription.encodeCodeWordAsInput input)).mpr hhalts⟩
+  · intro h
+    rcases h with ⟨D, input, hdecode, hhalts⟩
+    exact
+      ⟨D, input, hdecode,
+        (MachineDescription.haltsInBool_eq_true_iff D stage
+          (MachineDescription.encodeCodeWordAsInput input)).mp hhalts⟩
+
+/--
+Normalized boolean runner spec for the decoded bounded simulator.  This is the
+next construction boundary: parse the outer stage, parse a canonical encoded
+description payload, then evaluate the executable bounded-trace boolean.
+-/
+def DecodedBoundedSimulatorBooleanRunnerSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          MachineDescription.haltsInBool D stage
+            (MachineDescription.encodeCodeWordAsInput input) = true
+
+/--
+Finite-machine construction target for the normalized boolean runner.
+-/
+def DecodedBoundedSimulatorBooleanRunnerConstruction : Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorBooleanRunnerSpec runner
+
+/--
+The stage-program acceptance predicate is equivalent to the normalized boolean
+bounded-trace predicate.
+-/
+theorem decodedBoundedSimulatorStageProgramRun_iff_haltsInBool
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists encoded : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+          CodePrefixRecognizerProgram.run encoded stage = some []) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          MachineDescription.haltsInBool D stage
+            (MachineDescription.encodeCodeWordAsInput input) = true := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, encoded, hstage, hprogram⟩
+    rcases
+        (codePrefixRecognizerProgram_run_eq_some_nil_iff_haltsInBool
+          encoded stage).mp hprogram with
+      ⟨D, input, hdecode, hhalts⟩
+    have hencoded :
+        encoded =
+          List.append (MachineDescription.encodeDescription D) input :=
+      MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+        hdecode
+    exact ⟨stage, D, input, by simpa [hencoded] using hstage, hhalts⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalts⟩
+    exact
+      ⟨stage,
+        List.append (MachineDescription.encodeDescription D) input,
+        hstage,
+        (codePrefixRecognizerProgram_run_eq_some_nil_iff_haltsInBool
+          (List.append (MachineDescription.encodeDescription D) input)
+          stage).mpr
+          ⟨D, input,
+            MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+              D input,
+            hhalts⟩⟩
+
+/--
 Any independently supplied machine for the code primitive is already a
 normalized decoded bounded-simulator runner.
 -/
@@ -251,6 +351,34 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Boolean bounded-trace finite-machine leaf for the normalized decoded simulator.
+-/
+theorem decodedBoundedSimulatorBooleanRunnerConstruction :
+    DecodedBoundedSimulatorBooleanRunnerConstruction := by
+  sorry
+
+/--
+The normalized boolean runner is enough to realize the staged-program runner.
+-/
+theorem decodedBoundedSimulatorStageProgramRunnerConstruction_of_booleanRunner
+    (hrunner : DecodedBoundedSimulatorBooleanRunnerConstruction) :
+    exists state : Type,
+    exists runner : TuringMachine MachineCodeSymbol state,
+      forall tokens : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput runner tokens <->
+          exists stage : Nat,
+          exists encoded : Word MachineCodeSymbol,
+            MachineDescription.decodeNat tokens = some (stage, encoded) ∧
+              CodePrefixRecognizerProgram.run encoded stage = some [] := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorStageProgramRun_iff_haltsInBool
+            tokens))⟩
+
+/--
 Stage-coded evaluator construction for the fixed staged program
 {name}`CodePrefixRecognizerProgram`.
 
@@ -267,7 +395,9 @@ theorem decodedBoundedSimulatorStageProgramRunnerConstruction :
           exists encoded : Word MachineCodeSymbol,
             MachineDescription.decodeNat tokens = some (stage, encoded) ∧
               CodePrefixRecognizerProgram.run encoded stage = some [] := by
-  sorry
+  exact
+    decodedBoundedSimulatorStageProgramRunnerConstruction_of_booleanRunner
+      decodedBoundedSimulatorBooleanRunnerConstruction
 
 /--
 The stage-program runner is enough to realize the decoded bounded simulator
