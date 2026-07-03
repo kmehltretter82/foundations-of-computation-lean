@@ -2008,6 +2008,42 @@ def DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction 
   exists runner : TuringMachine MachineCodeSymbol (Fin n),
     DecodedBoundedSimulatorTransitionLoopInitialHaltMachineSpec runner
 
+def DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction :
+    Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineSpec runner
+
+theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction_of_finState
+    (hfin :
+      DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction) :
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction := by
+  rcases hfin with ⟨n, runner, hrunner⟩
+  exact ⟨Fin n, runner, hrunner⟩
+
+theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction_of_construction
+    (hrunner :
+      DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  refine
+    ⟨runner.statesFinite.elems.length,
+      TuringMachine.indexed runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans
+      (TuringMachine.indexed_haltsOnInput_iff runner tokens)
+      (hrunner tokens)
+
+theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction_iff_finState :
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction <->
+      DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction := by
+  constructor
+  · exact
+      decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction_of_construction
+  · exact
+      decodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction_of_finState
+
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
     (hfin :
       DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction) :
@@ -2037,6 +2073,18 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruct
       decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineFinStateConstruction_of_construction
   · exact
       decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_finState
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_initialHaltMachine
+    (hrunner :
+      DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_nil_iff_initial_halt
+            tokens))⟩
 
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
     (hiter :
@@ -2501,11 +2549,20 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Concrete finite-state leaf for the direct initial-halt transition-loop runner.
+-/
+theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineFiniteLeaf :
+    DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction := by
+  sorry
+
+/--
 Concrete finite-table leaf for the direct initial-halt transition-loop runner.
 -/
 theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateFiniteLeaf :
     DecodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorTransitionLoopInitialHaltMachineFinStateConstruction_of_construction
+      decodedBoundedSimulatorTransitionLoopInitialHaltMachineFiniteLeaf
 
 /--
 Concrete finite-table leaf for the explicit iterative transition-loop pipeline.
