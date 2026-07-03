@@ -832,6 +832,71 @@ theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_encodeAppend
     decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
 
 /--
+Repeated semantic work-loop iterations.
+-/
+def decodedBoundedSimulatorTransitionLoopIterateStepTarget :
+    Nat -> MachineDescription -> Nat ->
+      MachineDescription.Configuration ->
+      Nat × MachineDescription.Configuration
+  | 0, _D, stage, config => (stage, config)
+  | fuel + 1, D, stage, config =>
+      let target :=
+        decodedBoundedSimulatorTransitionLoopStepTarget stage D config
+      decodedBoundedSimulatorTransitionLoopIterateStepTarget
+        fuel D target.fst target.snd
+
+theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_preserves_final
+    (fuel stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+      decodedBoundedSimulatorTransitionLoopFromConfig
+        (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+          fuel D stage config).fst
+        D
+        (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+          fuel D stage config).snd := by
+  induction fuel generalizing stage config with
+  | zero =>
+      rfl
+  | succ fuel ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateStepTarget]
+      rw [decodedBoundedSimulatorTransitionLoopStepTarget_preserves_final]
+      exact ih
+        (decodedBoundedSimulatorTransitionLoopStepTarget
+          stage D config).fst
+        (decodedBoundedSimulatorTransitionLoopStepTarget
+          stage D config).snd
+
+theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_zero_fst
+    (fuel : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+      fuel D 0 config).fst = 0 := by
+  induction fuel generalizing config with
+  | zero =>
+      rfl
+  | succ fuel ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateStepTarget,
+        decodedBoundedSimulatorTransitionLoopStepTarget, ih]
+
+theorem decodedBoundedSimulatorTransitionLoopIterateStepTarget_self_fst
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+      stage D stage config).fst = 0 := by
+  induction stage generalizing config with
+  | zero =>
+      rfl
+  | succ remaining ih =>
+      simp [decodedBoundedSimulatorTransitionLoopIterateStepTarget]
+      cases hscan :
+          MachineDescription.scanTransitionTable
+            config.state (Tape.read config.tape) D.transitions
+      · simp [decodedBoundedSimulatorTransitionLoopStepTarget, hscan,
+          decodedBoundedSimulatorTransitionLoopIterateStepTarget_zero_fst]
+      · simp [decodedBoundedSimulatorTransitionLoopStepTarget, hscan, ih]
+
+/--
 Initial transition-loop work payload for a normalized decoded-simulator source.
 -/
 def decodedBoundedSimulatorInitialWorkCode
@@ -970,6 +1035,44 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff_loo
   simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
     decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff
       D config
+
+theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_iff
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+        (decodedBoundedSimulatorTransitionLoopWorkCode D
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            stage D stage config).fst
+          (decodedBoundedSimulatorTransitionLoopIterateStepTarget
+            stage D stage config).snd) =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopFromConfig
+        stage D config).state = D.halt := by
+  let target :=
+    decodedBoundedSimulatorTransitionLoopIterateStepTarget
+      stage D stage config
+  change
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode
+        (decodedBoundedSimulatorTransitionLoopWorkCode
+          D target.fst target.snd) =
+        some ([] : Word MachineCodeSymbol) <->
+      (decodedBoundedSimulatorTransitionLoopFromConfig
+        stage D config).state = D.halt
+  have hzero : target.fst = 0 := by
+    simpa [target] using
+      decodedBoundedSimulatorTransitionLoopIterateStepTarget_self_fst
+        stage D config
+  have hpres :
+      decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+        decodedBoundedSimulatorTransitionLoopFromConfig
+          target.fst D target.snd := by
+    simpa [target] using
+      decodedBoundedSimulatorTransitionLoopIterateStepTarget_preserves_final
+        stage stage D config
+  rw [hpres, hzero]
+  exact
+    decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff_loop
+      D target.snd
 
 /--
 Transition-loop form of the normalized bounded simulator runner.  This is the
