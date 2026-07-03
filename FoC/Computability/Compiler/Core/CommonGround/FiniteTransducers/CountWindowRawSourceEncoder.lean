@@ -531,14 +531,14 @@ theorem countWindowRawSourceEncoderCellFieldCells_length
           EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
           encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
           ih, Nat.mul_add, Nat.add_comm] <;>
-        omega
+        lia
       | some bit =>
           cases bit <;>
             simp [EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
               EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
               encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
               ih, Nat.mul_add, Nat.add_comm] <;>
-            omega
+            lia
 
 theorem countWindowRawSourceEncoderEncodedLayoutCells_length
     (layout : Word Bool) :
@@ -550,7 +550,7 @@ theorem countWindowRawSourceEncoderEncodedLayoutCells_length
   simp [countWindowRawSourceEncoderCellFieldCells_length,
     DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_length,
     encodeCodeSymbolAsInput]
-  omega
+  lia
 
 theorem
     countWindowRawSourceEncoderEncodedLayoutCells_length_gt_sourcePrefix
@@ -560,7 +560,7 @@ theorem
         (List.append skipped count)).length := by
   rw [countWindowRawSourceEncoderEncodedLayoutCells_length]
   simp [List.length_append]
-  omega
+  lia
 
 theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
     (skipped count : Word Bool) (tail : List (Option Bool)) :
@@ -714,21 +714,21 @@ private abbrev CWRSEHeaderGap :=
 
 theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_wellFormed :
     CWRSEHeaderGap.WellFormed := by
-  refine ⟨by native_decide, by native_decide, by native_decide, ?_, ?_⟩
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
       (l := CWRSEHeaderGap.transitions)
       (stateCount := CWRSEHeaderGap.stateCount)
-      (by native_decide)
+      (by decide)
   · exact transition_deterministic_of_all
       (l := CWRSEHeaderGap.transitions)
-      (by native_decide)
+      (by decide)
 
 theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_haltTransitionFree :
     CWRSEHeaderGap.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CWRSEHeaderGap.transitions)
     (state := CWRSEHeaderGap.halt)
-    (by native_decide)
+    (by decide)
 
 theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_subroutineReady :
     CWRSEHeaderGap.SubroutineReady :=
@@ -1394,7 +1394,7 @@ theorem rightBlankRunTailFirstScannerDescription_run
           left tail tailFirst
   | succ blankCount ih =>
       rw [show Nat.succ blankCount + 1 =
-        1 + (blankCount + 1) by omega]
+        1 + (blankCount + 1) by lia]
       rw [runConfig_add]
       change
         rightBlankRunTailFirstScannerDescription.runConfig
@@ -1526,14 +1526,14 @@ theorem countWindowRawSourceEncoderSourceTape_arbitraryTail_ambiguous :
         [false] [true] [none, some true] =
       countWindowRawSourceEncoderSourceTape
         [] [false, true] [some true] := by
-  native_decide
+  decide
 
 theorem countWindowRawSourceEncoderTargetTape_arbitraryTail_ambiguous_ne :
     countWindowRawSourceEncoderTargetTape
         [false] [true] [none, some true] ≠
       countWindowRawSourceEncoderTargetTape
         [] [false, true] [some true] := by
-  native_decide
+  decide
 
 theorem countWindowRawSourceEncoderSourceTape_tailTrailingBlank_equiv :
     Tape.Equiv
@@ -1549,7 +1549,7 @@ theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_ne :
         [] [true] [some false] ≠
       countWindowRawSourceEncoderTargetTape
         [] [true] [some false, none] := by
-  native_decide
+  decide
 
 theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_equiv :
     Tape.Equiv
@@ -1559,17 +1559,17 @@ theorem countWindowRawSourceEncoderTargetTape_tailTrailingBlank_equiv :
         [] [true] [some false, none]) := by
   unfold Tape.Equiv
   constructor
-  · native_decide
+  · decide
   constructor
-  · native_decide
-  · native_decide
+  · decide
+  · decide
 
 theorem countWindowRawSourceEncoderLiveTailEmitterSourceTape_tailTrailingBlank_eq :
     countWindowRawSourceEncoderLiveTailEmitterSourceTape
         [] [true] false [] =
       countWindowRawSourceEncoderLiveTailEmitterSourceTape
         [] [true] false [none] := by
-  native_decide
+  decide
 
 theorem countWindowRawSourceEncoderLiveTailEmitterSpec_impossible
     (emitter : MachineDescription) :

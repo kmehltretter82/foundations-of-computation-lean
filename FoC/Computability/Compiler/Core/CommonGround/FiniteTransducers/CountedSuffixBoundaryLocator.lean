@@ -1033,7 +1033,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
         have hlen : rest.length + 1 = processedRev.length := by
           have h := congrArg List.length hrev
           simp at h
-          omega
+          lia
         cases current <;> cases last <;> cases guardBit <;>
           cases head <;>
           simp [countedSuffixBoundaryLeftAdvanceLoopTape,
@@ -1342,7 +1342,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
                 List.append
                   (List.replicate blanks (none : Option Bool))
                   right := by
-        rw [show 1 + (blanks + 1) = (blanks + 1) + 1 by omega]
+        rw [show 1 + (blanks + 1) = (blanks + 1) + 1 by lia]
         simp [List.replicate_succ]
       rw [hrep]
       simpa [List.replicate_succ, List.append_assoc] using hih
@@ -1555,7 +1555,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
         have hlen : rest.length + 1 = processedRev.length := by
           have h := congrArg List.length hrev
           simp at h
-          omega
+          lia
         cases head <;> cases last <;> cases guardBit <;>
           cases tailFirst <;>
           simp [countedSuffixBoundaryLeftAdvanceLoopTape,
@@ -2248,7 +2248,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
                 List.append
                   (List.replicate blanks (none : Option Bool))
                   right := by
-        rw [show 1 + (blanks + 1) = (blanks + 1) + 1 by omega]
+        rw [show 1 + (blanks + 1) = (blanks + 1) + 1 by lia]
         simp [List.replicate_succ]
       rw [hrep]
       simpa [List.replicate_succ, List.append_assoc] using hih
@@ -2409,7 +2409,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
       have hlen : processedRev.length = rest.length := by
         have h := congrArg List.length hrev
         simp at h
-        omega
+        lia
       have hmap :
           (last :: processedRev).reverse.map some =
             some next :: rest.map some := by
@@ -2589,7 +2589,7 @@ theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
   have hlen : suffix.length = leftStack.length + 1 := by
     have h := congrArg List.length hrev
     simp at h
-    omega
+    lia
   simp [countedSuffixBoundaryLocatorSourceTape,
     countedSuffixBoundaryLeftAdvanceCurrentTape,
     countedSuffixBoundaryLocatorPadding,

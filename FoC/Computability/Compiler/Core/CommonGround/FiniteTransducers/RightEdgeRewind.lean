@@ -875,7 +875,7 @@ theorem rightEdgeRewindDescription_run_from_rightBoundaryBase_noDelimiter
               ((List.append leftBits.reverse [current]).map some)
               (none :: right)) } := by
   rw [show leftBits.length + 3 =
-      1 + ((leftBits.length + 1) + 1) by omega]
+      1 + ((leftBits.length + 1) + 1) by lia]
   rw [runConfig_add]
   have hstart :
       rightEdgeRewindDescription.runConfig 1
