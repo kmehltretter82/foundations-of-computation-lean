@@ -608,6 +608,128 @@ theorem decodedBoundedSimulatorTransitionLoopConfig_succ_eq_scan
       (D.initial (MachineDescription.encodeCodeWordAsInput input))
 
 /--
+Canonical code payload for the transition-loop work tape: decoded description,
+remaining stage, current configuration, then a preserved suffix.
+-/
+def decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  MachineDescription.encodeDescriptionAppend D
+    (MachineDescription.encodeNatAppend stage
+      (MachineDescription.encodeConfigurationAppend config suffix))
+
+/-- Canonical complete transition-loop work payload. -/
+def decodedBoundedSimulatorTransitionLoopWorkCode
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration) :
+    Word MachineCodeSymbol :=
+  decodedBoundedSimulatorTransitionLoopWorkCodeAppend D stage config []
+
+/--
+Decoder for the canonical transition-loop work payload.
+-/
+def decodedBoundedSimulatorTransitionLoopWorkDecode
+    (tokens : Word MachineCodeSymbol) :
+    Option
+      (MachineDescription × Nat ×
+        MachineDescription.Configuration × Word MachineCodeSymbol) :=
+  match MachineDescription.decodeDescriptionPrefix tokens with
+  | none => none
+  | some (D, rest) =>
+      match MachineDescription.decodeNat rest with
+      | none => none
+      | some (stage, rest) =>
+          match MachineDescription.decodeConfiguration rest with
+          | none => none
+          | some (config, suffix) => some (D, stage, config, suffix)
+
+theorem decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode
+        (decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+          D stage config suffix) =
+      some (D, stage, config, suffix) := by
+  simp [decodedBoundedSimulatorTransitionLoopWorkDecode,
+    decodedBoundedSimulatorTransitionLoopWorkCodeAppend,
+    MachineDescription.decodeDescriptionPrefix_encodeDescriptionAppend,
+    MachineDescription.decodeNat_encodeNatAppend,
+    MachineDescription.decodeConfiguration_encodeConfigurationAppend]
+
+theorem decodedBoundedSimulatorTransitionLoopWorkDecode_encode
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode
+        (decodedBoundedSimulatorTransitionLoopWorkCode
+          D stage config) =
+      some (D, stage, config, []) := by
+  exact
+    decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend
+      D stage config []
+
+theorem decodedBoundedSimulatorTransitionLoopWorkDecode_eq_some_encodeAppend
+    {tokens : Word MachineCodeSymbol}
+    {D : MachineDescription} {stage : Nat}
+    {config : MachineDescription.Configuration}
+    {suffix : Word MachineCodeSymbol}
+    (hdecode :
+      decodedBoundedSimulatorTransitionLoopWorkDecode tokens =
+        some (D, stage, config, suffix)) :
+    tokens =
+      decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+        D stage config suffix := by
+  unfold decodedBoundedSimulatorTransitionLoopWorkDecode at hdecode
+  cases hdescription :
+      MachineDescription.decodeDescriptionPrefix tokens with
+  | none =>
+      simp [hdescription] at hdecode
+  | some parsedDescription =>
+      rcases parsedDescription with ⟨D', restAfterDescription⟩
+      simp [hdescription] at hdecode
+      cases hstage :
+          MachineDescription.decodeNat restAfterDescription with
+      | none =>
+          simp [hstage] at hdecode
+      | some parsedStage =>
+          rcases parsedStage with ⟨stage', restAfterStage⟩
+          simp [hstage] at hdecode
+          cases hconfig :
+              MachineDescription.decodeConfiguration restAfterStage with
+          | none =>
+              simp [hconfig] at hdecode
+          | some parsedConfig =>
+              rcases parsedConfig with ⟨config', parsedSuffix⟩
+              simp [hconfig] at hdecode
+              rcases hdecode with
+                ⟨hD, hstageEq, hconfigEq, hsuffixEq⟩
+              cases hD
+              cases hstageEq
+              cases hconfigEq
+              cases hsuffixEq
+              have htokens :
+                  tokens =
+                    MachineDescription.encodeDescriptionAppend
+                      D restAfterDescription :=
+                MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescriptionAppend
+                  hdescription
+              have hrestAfterDescription :
+                  restAfterDescription =
+                    MachineDescription.encodeNatAppend
+                      stage restAfterStage :=
+                MachineDescription.decodeNat_eq_some_encodeNatAppend
+                  hstage
+              have hrestAfterStage :
+                  restAfterStage =
+                    MachineDescription.encodeConfigurationAppend
+                      config suffix :=
+                MachineDescription.decodeConfiguration_eq_some_encodeConfigurationAppend
+                  hconfig
+              simp [decodedBoundedSimulatorTransitionLoopWorkCodeAppend,
+                htokens, hrestAfterDescription, hrestAfterStage]
+
+/--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
 as transition-table data for exactly the parsed stage count.
