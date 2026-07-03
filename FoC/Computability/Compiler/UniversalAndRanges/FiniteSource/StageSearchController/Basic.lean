@@ -366,6 +366,18 @@ def CodePrefixStageSearchControllerProgramCompilerConstruction : Prop :=
             ProgramHaltsWithOutput
               (codePrefixStageSearchControllerProgram simulator) encoded []
 
+def CodePrefixStageSearchControllerProgramDecidableCompilerConstruction :
+    Prop :=
+  forall {simulatorState : Type} [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState),
+      exists searcherState : Type,
+      exists searcher : TuringMachine MachineCodeSymbol searcherState,
+        forall encoded : Word MachineCodeSymbol,
+          TuringMachine.HaltsOnInput searcher encoded <->
+            ProgramHaltsWithOutput
+              (codePrefixStageSearchControllerProgramDecidable simulator)
+              encoded []
+
 /--
 Specification for the bounded checker: on a stage-coded input, it halts exactly
 when the semantic controller program accepts within that same budget.
@@ -424,6 +436,22 @@ def CodePrefixStageSearchControllerBudgetSearchSequencingConstruction :
             ProgramHaltsWithOutput
               (codePrefixStageSearchControllerProgram simulator) encoded []
 
+def CodePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction :
+    Prop :=
+  forall {simulatorState checkerState : Type}
+    [DecidableEq simulatorState]
+    (simulator : TuringMachine MachineCodeSymbol simulatorState)
+    (checker : TuringMachine MachineCodeSymbol checkerState),
+    CodePrefixStageSearchControllerBudgetCheckerDecidableSpec
+      simulator checker ->
+      exists searcherState : Type,
+      exists searcher : TuringMachine MachineCodeSymbol searcherState,
+        forall encoded : Word MachineCodeSymbol,
+          TuringMachine.HaltsOnInput searcher encoded <->
+            ProgramHaltsWithOutput
+              (codePrefixStageSearchControllerProgramDecidable simulator)
+              encoded []
+
 theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_components
     (hchecker :
       forall {simulatorState : Type}
@@ -433,6 +461,19 @@ theorem codePrefixStageSearchControllerProgramCompilerConstruction_of_components
       CodePrefixStageSearchControllerBudgetSearchSequencingConstruction) :
     CodePrefixStageSearchControllerProgramCompilerConstruction := by
   intro simulatorState simulator
+  rcases hchecker simulator with ⟨checkerState, checker, hcheckerSpec⟩
+  exact hsequence simulator checker hcheckerSpec
+
+theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_of_components
+    (hchecker :
+      forall {simulatorState : Type} [DecidableEq simulatorState]
+        (simulator : TuringMachine MachineCodeSymbol simulatorState),
+          CodePrefixStageSearchControllerBudgetCheckerDecidableConstruction
+            simulator)
+    (hsequence :
+      CodePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction) :
+    CodePrefixStageSearchControllerProgramDecidableCompilerConstruction := by
+  intro simulatorState hdec simulator
   rcases hchecker simulator with ⟨checkerState, checker, hcheckerSpec⟩
   exact hsequence simulator checker hcheckerSpec
 

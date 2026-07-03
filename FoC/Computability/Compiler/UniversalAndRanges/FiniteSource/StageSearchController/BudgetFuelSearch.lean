@@ -472,12 +472,36 @@ theorem codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core :
     exact (hsearcher encoded).mpr
       ⟨budget, (hcheckerSpec encoded budget).mpr hrun⟩
 
+theorem codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction_core :
+    CodePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction := by
+  intro simulatorState checkerState _ simulator checker hcheckerSpec
+  rcases codePrefixStageSearchControllerBudgetEnumeratorConstruction_core
+      checker with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro encoded
+  constructor
+  · intro hhalt
+    rcases (hsearcher encoded).mp hhalt with ⟨budget, hbudget⟩
+    exact ⟨budget, (hcheckerSpec encoded budget).mp hbudget⟩
+  · intro hprogram
+    rcases hprogram with ⟨budget, hrun⟩
+    exact (hsearcher encoded).mpr
+      ⟨budget, (hcheckerSpec encoded budget).mpr hrun⟩
+
 theorem codePrefixStageSearchControllerProgramCompilerConstruction_core :
     CodePrefixStageSearchControllerProgramCompilerConstruction := by
   exact
     codePrefixStageSearchControllerProgramCompilerConstruction_of_components
       codePrefixStageSearchControllerBudgetCheckerConstruction_core
       codePrefixStageSearchControllerBudgetSearchSequencingConstruction_core
+
+theorem codePrefixStageSearchControllerProgramDecidableCompilerConstruction_core :
+    CodePrefixStageSearchControllerProgramDecidableCompilerConstruction := by
+  exact
+    codePrefixStageSearchControllerProgramDecidableCompilerConstruction_of_components
+      codePrefixStageSearchControllerBudgetCheckerDecidableConstruction_core
+      codePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction_core
 
 theorem codePrefixStageSearchControllerCoreConstruction_core :
     CodePrefixStageSearchControllerCoreConstruction :=
