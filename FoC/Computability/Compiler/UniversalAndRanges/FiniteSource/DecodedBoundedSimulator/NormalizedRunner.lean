@@ -832,6 +832,85 @@ theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_encodeAppend
     decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
 
 /--
+Initial transition-loop work payload for a normalized decoded-simulator source.
+-/
+def decodedBoundedSimulatorInitialWorkCode
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  decodedBoundedSimulatorTransitionLoopWorkCode
+    D stage
+    (D.initial (MachineDescription.encodeCodeWordAsInput input))
+
+theorem decodedBoundedSimulatorInitialWorkCode_decode
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode
+        (decodedBoundedSimulatorInitialWorkCode stage D input) =
+      some
+        (D, stage,
+          D.initial (MachineDescription.encodeCodeWordAsInput input),
+          []) := by
+  simp [decodedBoundedSimulatorInitialWorkCode,
+    decodedBoundedSimulatorTransitionLoopWorkCode,
+    decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
+  rfl
+
+/--
+Semantic initial handoff from a normalized source word into loop work code.
+-/
+def decodedBoundedSimulatorInitialWorkCodeTransform
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match MachineDescription.decodeNat tokens with
+  | none => none
+  | some (stage, encoded) =>
+      match MachineDescription.decodeDescriptionPrefix encoded with
+      | none => none
+      | some (D, input) =>
+          some (decodedBoundedSimulatorInitialWorkCode stage D input)
+
+theorem decodedBoundedSimulatorInitialWorkCodeTransform_normalizedInput
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorInitialWorkCodeTransform
+        (decodedBoundedSimulatorNormalizedInput stage D input) =
+      some (decodedBoundedSimulatorInitialWorkCode stage D input) := by
+  unfold decodedBoundedSimulatorInitialWorkCodeTransform
+  rw [decodedBoundedSimulatorNormalizedInput_decodeNat]
+  simp only
+  cases hdecode :
+      MachineDescription.decodeDescriptionPrefix
+        (List.append (MachineDescription.encodeDescription D) input) with
+  | none =>
+      have hcanonical :
+          MachineDescription.decodeDescriptionPrefix
+              (List.append (MachineDescription.encodeDescription D) input) =
+            some (D, input) :=
+        MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+          D input
+      rw [hdecode] at hcanonical
+      cases hcanonical
+  | some decoded =>
+      rcases decoded with ⟨decodedD, decodedInput⟩
+      have hcanonical :
+          MachineDescription.decodeDescriptionPrefix
+              (List.append (MachineDescription.encodeDescription D) input) =
+            some (D, input) :=
+        MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+          D input
+      rw [hdecode] at hcanonical
+      cases hcanonical
+      rfl
+
+theorem decodedBoundedSimulatorTransitionLoopConfig_eq_initialWork
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopConfig stage D input =
+      decodedBoundedSimulatorTransitionLoopFromConfig stage D
+        (D.initial (MachineDescription.encodeCodeWordAsInput input)) :=
+  rfl
+
+/--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
 as transition-table data for exactly the parsed stage count.
