@@ -220,6 +220,61 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_
           ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
             attempt w true budget budget).mpr hwitness))
 
+theorem pairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram_run_false_iff
+    (attempt : MachineDescription) (w : Word Bool) (budget : Nat) :
+    (PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram
+        attempt).run w budget = some [false] <->
+      ¬ (exists limit : Nat,
+      exists fuel : Nat,
+        limit ≤ budget ∧
+          fuel ≤ budget ∧
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w true limit fuel) ∧
+      exists limit : Nat,
+      exists fuel : Nat,
+        limit ≤ budget ∧
+          fuel ≤ budget ∧
+          pairedRecognizerDovetailTotalStageAttemptOutputIn
+            attempt w false limit fuel := by
+  by_cases htrue :
+      pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+        attempt w true budget budget = true
+  · constructor
+    · intro hrun
+      simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+        htrue] at hrun
+      cases hrun
+    · intro h
+      exact False.elim
+        (h.left
+          ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+            attempt w true budget budget).mp htrue))
+  · by_cases hfalse :
+        pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit
+          attempt w false budget budget = true
+    · constructor
+      · intro _hrun
+        exact
+          ⟨fun htrueWitness =>
+            htrue
+              ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+                attempt w true budget budget).mpr htrueWitness),
+            (pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+              attempt w false budget budget).mp hfalse⟩
+      · intro _h
+        simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+          htrue, hfalse]
+        rfl
+    · constructor
+      · intro hrun
+        simp [PairedRecognizerDovetailTotalStageAttemptControllerBoundedSearchProgram,
+          htrue, hfalse] at hrun
+      · intro h
+        exact False.elim
+          (hfalse
+            ((pairedRecognizerDovetailTotalStageAttemptOutputBudgetHit_eq_true_iff
+              attempt w false budget budget).mpr h.right))
+
 def PairedRecognizerDovetailStageAttemptOutputFunctional
     (attempt : MachineDescription) : Prop :=
   forall w : Word Bool,
