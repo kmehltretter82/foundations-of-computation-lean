@@ -49,6 +49,56 @@ theorem nestedCodePrefixRecognizerStageCode_decodeNat_inner
       some (inner, input) := by
   simp [codePrefixRecognizerStageCode_decodeNat]
 
+/--
+Exact source-window cells for nested generated calls.  The generated pair and
+product finite leaves start from this input-tape shape before unpacking the
+outer fuel prefix.
+-/
+theorem nestedCodePrefixRecognizerStageCode_input_cells
+    (input : Word MachineCodeSymbol) (inner outer : Nat) :
+    Tape.cells
+        (Tape.input
+          (NestedCodePrefixRecognizerStageCode input inner outer)) =
+      match outer with
+      | 0 =>
+          some MachineCodeSymbol.done ::
+            (CodePrefixRecognizerStageCode input inner).map some
+      | outer + 1 =>
+          some MachineCodeSymbol.tick ::
+            (NestedCodePrefixRecognizerStageCode input inner outer).map some := by
+  cases outer <;>
+    rfl
+
+/--
+First-cell boundary for nested generated calls.  The product and pair
+enumerator finite leaves branch on this outer fuel prefix before recovering
+the inner generated call.
+-/
+theorem nestedCodePrefixRecognizerStageCode_input_read
+    (input : Word MachineCodeSymbol) (inner outer : Nat) :
+    Tape.read
+        (Tape.input
+          (NestedCodePrefixRecognizerStageCode input inner outer)) =
+      match outer with
+      | 0 => some MachineCodeSymbol.done
+      | _ + 1 => some MachineCodeSymbol.tick := by
+  cases outer <;>
+    rfl
+
+/--
+Loading a nested generated call as an input tape preserves exactly the public
+nested stage-code word.
+-/
+theorem nestedCodePrefixRecognizerStageCode_input_normalizedOutput
+    (input : Word MachineCodeSymbol) (inner outer : Nat) :
+    Tape.normalizedOutput
+        (Tape.input
+          (NestedCodePrefixRecognizerStageCode input inner outer)) =
+      NestedCodePrefixRecognizerStageCode input inner outer := by
+  simpa [Tape.output] using
+    Tape.normalizedOutput_output
+      (NestedCodePrefixRecognizerStageCode input inner outer)
+
 theorem nestedCodePrefixRecognizerStageCode_eq_of_decodeNat_outer_inner
     {tokens innerCode input : Word MachineCodeSymbol}
     {inner outer : Nat}

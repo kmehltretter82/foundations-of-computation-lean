@@ -25,12 +25,15 @@ export EncodedRewriters
 export EncodedRewriters.CanonicalLayouts
   ( ExactOutputTape
     exactOutputTape_normalizedOutput
+    exactOutputTape_cells
     ExactEmitterSpec
     ExactEmitterConstruction
     OutputTape
     outputTape_normalizedOutput
+    outputTape_cells
     RightShiftedOutputTape
     rightShiftedOutputTape_normalizedOutput
+    rightShiftedOutputTape_cells
     EmitterSpec
     EmitterConstruction
     RightShiftedEmitterSpec

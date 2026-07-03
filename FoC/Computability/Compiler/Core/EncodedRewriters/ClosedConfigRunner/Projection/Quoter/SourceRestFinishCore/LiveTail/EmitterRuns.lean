@@ -1237,6 +1237,46 @@ def assemblySourceRestLiveTailEmitterTargetBits
     (assemblySourceRestLiveTailEmitterRawTail p)
     (assemblySourceRestLiveTailEmitterQuoteRest p)
 
+-- Family-level source shape for the remaining assembly emitter leaf.  This
+-- packages the generic split-source tape view at the exact assembly parameters.
+theorem
+    assemblySourceRestLiveTailEmitterSourceTape_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+            (assemblySourceRestLiveTailEmitterLeftRev p)
+            (assemblySourceRestLiveTailEmitterQuoteScan p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestLiveTailEmitterSourceBits p := by
+  rw [assemblySourceRestLiveTailEmitterSourceBits]
+  exact
+    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_eq_sourceBits
+      (assemblySourceRestLiveTailEmitterLeftRev p)
+      (assemblySourceRestLiveTailEmitterQuoteScan p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+-- Family-level target shape for the emitter leaf before the joiner consumes
+-- the separated quote-rest field.
+theorem
+    assemblySourceRestLiveTailEmitterTargetTape_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterTargetTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestLiveTailEmitterTargetBits p := by
+  rw [assemblySourceRestLiveTailEmitterTargetBits]
+  exact
+    mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_targetBits
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
 theorem
     assemblySourceRestLiveTailEmitterQuoteScan_append_stageNatBits_eq_stageInputSecondBitTail
     (p : AssemblySourceRestLiveTailEmitterParam) :
@@ -1286,6 +1326,28 @@ theorem
         mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_assembly
           w sourceRestBits (preservingCellPassCellBits sourceRestBits) stage
 
+-- The assembly source tape's defaulted cells are the original defaulted parser
+-- source plus the reusable quote-rest field behind the structural blank.
+theorem
+    assemblySourceRestLiveTailEmitterSourceTape_defaultedCells_eq_defaultedSource
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+            (assemblySourceRestLiveTailEmitterLeftRev p)
+            (assemblySourceRestLiveTailEmitterQuoteScan p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      false ::
+        List.append
+          (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage)
+          (false ::
+            List.append
+              (assemblySourceRestLiveTailEmitterQuoteRest p)
+              [false]) := by
+  rw [assemblySourceRestLiveTailEmitterSourceTape_defaultedCells,
+    assemblySourceRestLiveTailEmitterSourceBits_eq_defaultedSource]
+
 theorem
     assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated
     (p : AssemblySourceRestLiveTailEmitterParam) :
@@ -1300,6 +1362,22 @@ theorem
       exact
         mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparatedBits
           w sourceRestBits stage
+
+-- The emitter target is exactly the separated prefix/raw-tail/quote-rest bit
+-- view that the live-tail joiner later consumes.
+theorem
+    assemblySourceRestLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparated
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterTargetTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestFinishPrefixQuotedSeparatedBits
+        p.w p.sourceRestBits p.stage := by
+  rw [assemblySourceRestLiveTailEmitterTargetTape_defaultedCells,
+    assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated]
 
 theorem
     assemblySourceRestLiveTailEmitterEmittedPrefix_append_quoteRest_eq_targetPrefix

@@ -127,6 +127,24 @@ def acceptPostFieldHandoffAfterSentinelGapTape
     (postFieldHandoffAfterSentinelGapPadding deletedTail
       [none, none, none, none, none])
 
+-- Normalize the accept-side compactor target so later restoration work can
+-- reason about the surviving prefix/payload bits without tape-position noise.
+theorem acceptPostFieldHandoffAfterSentinelGapTape_normalizedOutput
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    Tape.normalizedOutput
+        (acceptPostFieldHandoffAfterSentinelGapTape
+          L pref leftBit deletedTail) =
+      List.append
+        ((selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+          L).reverse.filterMap (fun cell => cell))
+        (List.append (List.append pref [leftBit])
+          ((postFieldHandoffAfterSentinelGapPadding deletedTail
+            [none, none, none, none, none]).filterMap
+              (fun cell => cell))) := by
+  rw [acceptPostFieldHandoffAfterSentinelGapTape,
+    leadingBlankLeftShiftTargetTapeWithPadding_normalizedOutput]
+
 def acceptPostFieldHandoffAfterBoundaryCleanupTape
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
     (deletedTail : Word Bool) : Tape Bool :=
@@ -363,6 +381,27 @@ def rejectPostFieldHandoffAfterFirstGapTape
           ((selectedProjectionPaddedTailCleanupSelectedHitBits
             false L).map some)
           [none, none])))
+
+-- The reject-side window carries the selected-hit bits in its right padding;
+-- this exposes those bits in the normalized output shape.
+theorem rejectPostFieldHandoffAfterFirstGapTape_normalizedOutput
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    Tape.normalizedOutput
+        (rejectPostFieldHandoffAfterFirstGapTape
+          L pref leftBit deletedTail) =
+      List.append
+        ((selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+          L).reverse.filterMap (fun cell => cell))
+        (List.append (List.append pref [leftBit])
+          ((postFieldHandoffAfterSentinelGapPadding deletedTail
+            (List.append (List.replicate 3 (none : Option Bool))
+              (List.append
+                ((selectedProjectionPaddedTailCleanupSelectedHitBits
+                  false L).map some)
+                [none, none]))).filterMap (fun cell => cell))) := by
+  rw [rejectPostFieldHandoffAfterFirstGapTape,
+    leadingBlankLeftShiftTargetTapeWithPadding_normalizedOutput]
 
 theorem rejectPostFieldHandoff_firstGap_haltsFrom_of_config_and_payload_append_last
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
@@ -778,6 +817,26 @@ def acceptPostFieldHandoffAfterRightEdgeRewindTape
       leadingBlankLeftShiftTargetVisiblePadding
         (postFieldHandoffAfterSentinelGapPadding
           deletedTail [none, none, none, none, none]))
+
+-- After the accept-side right-edge rewind, the visible output is the selected
+-- prefix followed by the payload bits that survived sentinel-gap padding.
+theorem acceptPostFieldHandoffAfterRightEdgeRewindTape_normalizedOutput
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    Tape.normalizedOutput
+        (acceptPostFieldHandoffAfterRightEdgeRewindTape
+          L pref leftBit deletedTail) =
+      List.append
+        (List.append (selectedProjectionPaddedTailCleanupPrefixBits L)
+          (List.append pref [leftBit]))
+        ((none ::
+          none ::
+          leadingBlankLeftShiftTargetVisiblePadding
+            (postFieldHandoffAfterSentinelGapPadding
+              deletedTail [none, none, none, none, none])).filterMap
+                (fun cell => cell)) := by
+  rw [acceptPostFieldHandoffAfterRightEdgeRewindTape,
+    rightEdgeRewindTargetTape_normalizedOutput]
 
 def AcceptPostFieldRepositionRightEdgeRewinderSpec
     (rewinder : MachineDescription) : Prop :=

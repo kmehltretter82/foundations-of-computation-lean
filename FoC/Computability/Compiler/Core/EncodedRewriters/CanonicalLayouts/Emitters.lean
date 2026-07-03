@@ -93,6 +93,19 @@ theorem exactOutputTape_normalizedOutput
     Tape.normalizedOutput_output
       (encodeCodeWordAsInput (outputCode a))
 
+theorem exactOutputTape_cells
+    (outputCode : α -> Word MachineCodeSymbol) (a : α) :
+    Tape.cells (ExactOutputTape outputCode a) =
+      match encodeCodeWordAsInput (outputCode a) with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  unfold ExactOutputTape
+  cases hbits : encodeCodeWordAsInput (outputCode a) with
+  | nil =>
+      simp [Tape.cells_input]
+  | cons bit rest =>
+      simp [Tape.cells_input]
+
 theorem outputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
     Tape.normalizedOutput (OutputTape outputCode a) =
@@ -101,11 +114,40 @@ theorem outputTape_normalizedOutput
     EncodedRewriters.tape_normalizedOutput_move_right_input
       (encodeCodeWordAsInput (outputCode a))
 
+theorem outputTape_cells
+    (outputCode : α -> Word MachineCodeSymbol) (a : α) :
+    Tape.cells (OutputTape outputCode a) =
+      match encodeCodeWordAsInput (outputCode a) with
+      | [] => [none, none]
+      | bit :: [] => [some bit, none]
+      | first :: second :: rest =>
+          some first :: some second :: rest.map some := by
+  unfold OutputTape
+  cases hbits : encodeCodeWordAsInput (outputCode a) with
+  | nil =>
+      simp [Tape.cells_move_right_input]
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [Tape.cells_move_right_input]
+      | cons second tail =>
+          simp [Tape.cells_move_right_input]
+
 theorem rightShiftedOutputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
     Tape.normalizedOutput (RightShiftedOutputTape outputCode a) =
       encodeCodeWordAsInput (outputCode a) :=
   outputTape_normalizedOutput outputCode a
+
+theorem rightShiftedOutputTape_cells
+    (outputCode : α -> Word MachineCodeSymbol) (a : α) :
+    Tape.cells (RightShiftedOutputTape outputCode a) =
+      match encodeCodeWordAsInput (outputCode a) with
+      | [] => [none, none]
+      | bit :: [] => [some bit, none]
+      | first :: second :: rest =>
+          some first :: some second :: rest.map some :=
+  outputTape_cells outputCode a
 
 end CanonicalLayouts
 end EncodedRewriters

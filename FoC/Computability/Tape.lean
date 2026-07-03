@@ -124,6 +124,36 @@ theorem input_cons (a : symbol) (rest : Word symbol) :
     input (a :: rest) = { left := [], head := some a, right := rest.map some } :=
   rfl
 
+theorem cells_input (w : Word symbol) :
+    cells (input w) =
+      match w with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  cases w <;> rfl
+
+theorem cells_output (w : Word symbol) :
+    cells (output w) =
+      match w with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  exact cells_input w
+
+theorem cells_move_right_input (w : Word symbol) :
+    cells (move Direction.right (input w)) =
+      match w with
+      | [] => [none, none]
+      | bit :: [] => [some bit, none]
+      | first :: second :: rest => some first :: some second :: rest.map some := by
+  cases w with
+  | nil =>
+      rfl
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          rfl
+      | cons second tail =>
+          rfl
+
 theorem filterMap_id_map_some (w : Word symbol) :
     (w.map (fun a => some a)).filterMap (fun cell => cell) = w := by
   induction w with
@@ -395,7 +425,7 @@ theorem Equiv.moveLeft {symbol} {T1 T2 : Tape symbol}
   have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
   have h_head : T1.head = T2.head := h.2.1
   have h_right : dropTrailingNone T1.right = dropTrailingNone T2.right := h.2.2
-  
+
   constructor
   · rw [moveLeft_left, moveLeft_left]
     exact getTail_eq_of_dropTrailingNone_eq h_left
@@ -410,7 +440,7 @@ theorem Equiv.moveRight {symbol} {T1 T2 : Tape symbol}
   have h_left : dropTrailingNone T1.left = dropTrailingNone T2.left := h.1
   have h_head : T1.head = T2.head := h.2.1
   have h_right : dropTrailingNone T1.right = dropTrailingNone T2.right := h.2.2
-  
+
   constructor
   · rw [moveRight_left, moveRight_left]
     exact dropTrailingNone_cons_eq h_head h_left
@@ -478,7 +508,7 @@ theorem Equiv.normalizedOutput_eq {symbol} {T1 T2 : Tape symbol}
 
   have h_filter_left : T1.left.filterMap (fun cell => cell) = T2.left.filterMap (fun cell => cell) := by
     rw [← filterMap_dropTrailingNone T1.left, ← filterMap_dropTrailingNone T2.left, h_left]
-  
+
   have h_filter_right : T1.right.filterMap (fun cell => cell) = T2.right.filterMap (fun cell => cell) := by
     rw [← filterMap_dropTrailingNone T1.right, ← filterMap_dropTrailingNone T2.right, h_right]
 

@@ -402,6 +402,48 @@ theorem codePrefixRecognizerStageCode_decodeNat
       some (stage, encoded) :=
   MachineDescription.decodeNat_encodeNatAppend stage encoded
 
+/--
+Exact source-window cells for generated stage-code calls.  The construction
+leaves use this as the tape-level boundary for the unary fuel prefix.
+-/
+theorem codePrefixRecognizerStageCode_input_cells
+    (encoded : Word MachineCodeSymbol) (stage : Nat) :
+    Tape.cells (Tape.input (CodePrefixRecognizerStageCode encoded stage)) =
+      match stage with
+      | 0 => some MachineCodeSymbol.done :: encoded.map some
+      | stage + 1 =>
+          some MachineCodeSymbol.tick ::
+            (CodePrefixRecognizerStageCode encoded stage).map some := by
+  cases stage <;>
+    rfl
+
+/--
+First-cell boundary for generated stage-code inputs.  Exact-fuel finite tables
+use this to branch on the unary fuel prefix before preserving the payload.
+-/
+theorem codePrefixRecognizerStageCode_input_read
+    (encoded : Word MachineCodeSymbol) (stage : Nat) :
+    Tape.read (Tape.input (CodePrefixRecognizerStageCode encoded stage)) =
+      match stage with
+      | 0 => some MachineCodeSymbol.done
+      | _ + 1 => some MachineCodeSymbol.tick := by
+  cases stage <;>
+    rfl
+
+/--
+The public source word is unchanged by loading a generated stage-code call as
+an input tape.  This keeps later finite leaves separate from word/tape
+normalization bookkeeping.
+-/
+theorem codePrefixRecognizerStageCode_input_normalizedOutput
+    (encoded : Word MachineCodeSymbol) (stage : Nat) :
+    Tape.normalizedOutput
+        (Tape.input (CodePrefixRecognizerStageCode encoded stage)) =
+      CodePrefixRecognizerStageCode encoded stage := by
+  simpa [Tape.output] using
+    Tape.normalizedOutput_output
+      (CodePrefixRecognizerStageCode encoded stage)
+
 theorem codePrefixRecognizerStageCode_eq_of_decodeNat
     {tokens encoded : Word MachineCodeSymbol} {stage : Nat}
     (h : MachineDescription.decodeNat tokens = some (stage, encoded)) :

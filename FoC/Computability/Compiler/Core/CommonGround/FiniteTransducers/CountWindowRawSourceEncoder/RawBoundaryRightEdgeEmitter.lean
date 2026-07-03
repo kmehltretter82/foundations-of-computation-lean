@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly.Prefix
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.CellPass
 
 set_option doc.verso true
@@ -34,6 +35,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
+open EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf
 
 namespace CommonGround
 namespace FiniteTransducers
@@ -83,6 +85,24 @@ theorem sourceTape_cells
   simp [sourceTape, Tape.cells, tapeAtCells, List.reverse_append,
     List.map_reverse, List.append_assoc]
 
+-- Defaulted source view for the finite leaf: raw layout bits are followed by
+-- the erased count-window gap and then the live tail.
+theorem sourceTape_defaultedCells
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    List.map optionBitDefaultFalse
+        (Tape.cells (sourceTape skipped count tail)) =
+      false ::
+        List.append (List.append skipped count)
+          (false ::
+            false ::
+              false ::
+                List.append (List.replicate count.length false)
+                  (tail.map optionBitDefaultFalse)) := by
+  rw [sourceTape_cells]
+  simp [List.map_append, List.append_assoc,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
+
 theorem rightEdgeTape_cells
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
@@ -118,6 +138,21 @@ theorem rightEdgeTape_cells
       List.map_append, List.append_assoc]]
   simp [Tape.cells, tapeAtCells, encodeCodeWordAsInput,
     encodeCodeSymbolAsInput]
+
+-- Defaulted target view just before the final rewind: the encoded layout is
+-- immediately followed by the nonblank live-tail head.
+theorem rightEdgeTape_defaultedCells
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    List.map optionBitDefaultFalse
+        (Tape.cells (rightEdgeTape skipped count tailFirst tail)) =
+      List.append
+        (encodedLayoutBits (List.append skipped count))
+        (tailFirst :: tail.map optionBitDefaultFalse) := by
+  rw [rightEdgeTape_cells]
+  simp [List.map_append,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
 theorem encodedLayoutBits_eq_headerQuoteBits
     (layout : Word Bool) :
@@ -245,6 +280,26 @@ theorem rightEdgeTape_rewind_target_cells
           (some tailFirst :: tail)
   simp [Tape.cells, tapeAtCells, encodeCodeWordAsInput,
     encodeCodeSymbolAsInput]
+
+-- The public count-window encoder composes the local emitter with this rewind;
+-- this defaulted view records the shape after that packaging step.
+theorem rightEdgeTape_rewind_target_defaultedCells
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (tapeAtCells [none]
+            (List.append
+              ((encodedLayoutBits (List.append skipped count)).map some)
+              (some tailFirst :: tail)))) =
+      false ::
+        List.append
+          (encodedLayoutBits (List.append skipped count))
+          (tailFirst :: tail.map optionBitDefaultFalse) := by
+  rw [rightEdgeTape_rewind_target_cells]
+  simp [List.map_append,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
 def Spec (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧

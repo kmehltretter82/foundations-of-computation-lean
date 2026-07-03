@@ -901,6 +901,28 @@ theorem
         (MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape
           w sourceRestBits stage).symm
 
+-- Family-level source shape for the remaining assembly joiner leaf.  This is
+-- the narrowed replacement for the impossible arbitrary prefix/source split.
+theorem
+    assemblySourceRestLiveTailJoinerSeparatedTape_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailSeparatedTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestFinishPrefixQuotedSeparatedBits
+        p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_eq_prefixQuotedSeparatedBits
+          w sourceRestBits stage
+
 theorem
     assemblySourceRestLiveTailJoinerJoinedTape_eq_quoteRestJoinedTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
@@ -917,6 +939,27 @@ theorem
         assemblySourceRestLiveTailEmitterQuoteRest]
       exact
         mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
+          w sourceRestBits stage
+
+-- Family-level target shape for the assembly joiner.  The finite leaf must
+-- move the already-computed quote-rest bits before this live raw tail.
+theorem
+    assemblySourceRestLiveTailJoinerJoinedTape_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailJoinedTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestFinishTargetBits p.w p.sourceRestBits p.stage := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestLiveTailEmitterRawTail,
+        assemblySourceRestLiveTailEmitterQuoteRest]
+      exact
+        mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_eq_targetBits
           w sourceRestBits stage
 
 theorem

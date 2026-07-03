@@ -600,6 +600,57 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
           (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
             attempt w limit fuel))))
 
+-- The generated exact-fuel parser halts one cell right of the simulator-layout
+-- code, but its visible output is still the canonical encoded layout.
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape_normalizedOutput
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) :
+    Tape.normalizedOutput
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+          attempt w limit fuel) =
+      encodeCodeWordAsInput
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel)) := by
+  exact
+    EncodedRewriters.tape_normalizedOutput_move_right_input
+      (encodeCodeWordAsInput
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel)))
+
+-- Exact cells for the right-shifted generated simulator-layout target.
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape_cells
+    (attempt : MachineDescription)
+    (w : Word Bool) (limit fuel : Nat) :
+    Tape.cells
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+          attempt w limit fuel) =
+      match
+        encodeCodeWordAsInput
+          (SimulatorLayout.encode
+            (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+              attempt w limit fuel))
+      with
+      | [] => [none, none]
+      | bit :: [] => [some bit, none]
+      | first :: second :: rest =>
+          some first :: some second :: rest.map some := by
+  unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+  cases hbits :
+      encodeCodeWordAsInput
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt w limit fuel)) with
+  | nil =>
+      simp [Tape.cells_move_right_input]
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [Tape.cells_move_right_input]
+      | cons second tail =>
+          simp [Tape.cells_move_right_input]
+
 def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
     (attempt runner : MachineDescription) : Prop :=
   runner.SubroutineReady ∧
@@ -738,6 +789,42 @@ def PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
     Tape Bool :=
   CommonGround.CodeWordEmitters.ExactOutputTape
     PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
+
+-- The halted simulator-output extractor uses the exact output-tape shape for
+-- the decoded boolean-word code.
+theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputTape_normalizedOutput
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) :
+    Tape.normalizedOutput
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i) =
+      encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+          i) := by
+  exact
+    CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
+
+-- Exact cells for the extractor target, kept separate from normalized output
+-- so finite-table leaves can reason about the head position directly.
+theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputTape_cells
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) :
+    Tape.cells
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i) =
+      match
+        encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+            i)
+      with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  simpa using
+    CommonGround.CodeWordEmitters.exactOutputTape_cells
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
 
 def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec
     (attempt extractor : MachineDescription) : Prop :=
@@ -1191,6 +1278,45 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutpu
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
     i
 
+-- The non-right-shifted bounded enumerator target is the exact boolean-word
+-- output tape for the successful `(limit, fuel)` witness.
+theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape_normalizedOutput
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) :
+    Tape.normalizedOutput
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+          i) =
+      encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+          i) := by
+  exact
+    CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+      i
+
+-- Exact cells for the non-right-shifted enumerator target.
+theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape_cells
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) :
+    Tape.cells
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
+          i) =
+      match
+        encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+            i)
+      with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  simpa using
+    CommonGround.CodeWordEmitters.exactOutputTape_cells
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+      i
+
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
     {runner : MachineDescription}
     (i :
@@ -1219,6 +1345,39 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
       (encodeCodeWordAsInput
         (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
           i))
+
+-- Exact cells for the right-shifted bounded enumerator handoff target.
+theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape_cells
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) :
+    Tape.cells
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+          i) =
+      match
+        encodeCodeWordAsInput
+          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+            i)
+      with
+      | [] => [none, none]
+      | bit :: [] => [some bit, none]
+      | first :: second :: rest =>
+          some first :: some second :: rest.map some := by
+  unfold
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+  cases hbits :
+      encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
+          i) with
+  | nil =>
+      simp [Tape.cells_move_right_input]
+  | cons first rest =>
+      cases rest with
+      | nil =>
+          simp [Tape.cells_move_right_input]
+      | cons second tail =>
+          simp [Tape.cells_move_right_input]
 
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpec
     (runner enumerator : MachineDescription) : Prop :=

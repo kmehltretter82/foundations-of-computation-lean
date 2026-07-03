@@ -575,6 +575,93 @@ theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_none_of_decodeNat_dec
   classical
   simp [CodePrefixDecodedBoundedSimulatorCode, hstage, hdecode, hhalts]
 
+/--
+Canonical source tape for the normalized decoded simulator leaf.  The finite
+table should start from this generated stage-code input and then decode the
+machine-description prefix in the payload.
+-/
+theorem codePrefixDecodedBoundedSimulatorNormalizedInputTape_cells
+    (D : MachineDescription) (input : Word MachineCodeSymbol)
+    (stage : Nat) :
+    Tape.cells
+        (Tape.input
+          (CodePrefixRecognizerStageCode
+            (List.append (MachineDescription.encodeDescription D) input)
+            stage)) =
+      match stage with
+      | 0 =>
+          some MachineCodeSymbol.done ::
+            (List.append
+              (MachineDescription.encodeDescription D) input).map some
+      | stage + 1 =>
+          some MachineCodeSymbol.tick ::
+            (CodePrefixRecognizerStageCode
+              (List.append (MachineDescription.encodeDescription D) input)
+              stage).map some := by
+  simpa using
+    codePrefixRecognizerStageCode_input_cells
+      (List.append (MachineDescription.encodeDescription D) input)
+      stage
+
+/--
+Loading the normalized decoded-simulator input as a tape preserves exactly the
+canonical stage-code word.
+-/
+theorem codePrefixDecodedBoundedSimulatorNormalizedInputTape_normalizedOutput
+    (D : MachineDescription) (input : Word MachineCodeSymbol)
+    (stage : Nat) :
+    Tape.normalizedOutput
+        (Tape.input
+          (CodePrefixRecognizerStageCode
+            (List.append (MachineDescription.encodeDescription D) input)
+            stage)) =
+      CodePrefixRecognizerStageCode
+        (List.append (MachineDescription.encodeDescription D) input)
+        stage := by
+  simpa using
+    codePrefixRecognizerStageCode_input_normalizedOutput
+      (List.append (MachineDescription.encodeDescription D) input)
+      stage
+
+/--
+The normalized decoded-simulator input decodes to the supplied stage and the
+canonical encoded-description payload.
+-/
+theorem codePrefixDecodedBoundedSimulatorNormalizedInput_decodeNat
+    (D : MachineDescription) (input : Word MachineCodeSymbol)
+    (stage : Nat) :
+    MachineDescription.decodeNat
+        (CodePrefixRecognizerStageCode
+          (List.append (MachineDescription.encodeDescription D) input)
+          stage) =
+      some (stage,
+        List.append (MachineDescription.encodeDescription D) input) := by
+  exact
+    codePrefixRecognizerStageCode_decodeNat
+      (List.append (MachineDescription.encodeDescription D) input)
+      stage
+
+/--
+On canonical normalized inputs, the decoded-bounded-simulator code accepts
+exactly when the encoded description halts at the requested stage.
+-/
+theorem codePrefixDecodedBoundedSimulatorCode_transform_normalizedInput_eq_some_nil_iff
+    (D : MachineDescription) (input : Word MachineCodeSymbol)
+    (stage : Nat) :
+    CodePrefixDecodedBoundedSimulatorCode.transform
+        (CodePrefixRecognizerStageCode
+          (List.append (MachineDescription.encodeDescription D) input)
+          stage) =
+        some ([] : Word MachineCodeSymbol) <->
+      D.HaltsIn stage
+        (MachineDescription.encodeCodeWordAsInput input) := by
+  exact
+    codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_of_decodeNat_decodeDescriptionPrefix
+      (codePrefixDecodedBoundedSimulatorNormalizedInput_decodeNat
+        D input stage)
+      (MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+        D input)
+
 def CodePrefixDecodedBoundedSimulatorParsedCodeMachineSpec
     (simulator : TuringMachine MachineCodeSymbol state) : Prop :=
   forall tokens : Word MachineCodeSymbol,

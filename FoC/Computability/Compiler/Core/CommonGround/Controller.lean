@@ -523,6 +523,26 @@ theorem stageAttemptFramedOutputTape_normalizedOutput
         (DovetailControllerLayout.encode
           (DovetailControllerLayout.withResult C result)))
 
+theorem stageAttemptFramedOutputTape_cells
+    (C : DovetailControllerLayout) (result : Word Bool) :
+    Tape.cells (StageAttemptFramedOutputTape C result) =
+      match
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result))
+      with
+      | [] => [none]
+      | bit :: rest => some bit :: rest.map some := by
+  unfold StageAttemptFramedOutputTape
+  cases hbits :
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result)) with
+  | nil =>
+      simp [Tape.cells_output]
+  | cons bit rest =>
+      simp [Tape.cells_output]
+
 def StageAttemptFramedExactSpec
     (attempt invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧

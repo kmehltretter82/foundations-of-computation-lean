@@ -510,6 +510,31 @@ theorem
           (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p))]
   simp [SelectedMergePaddedEmitterParsedInnerSourceFieldTailBits]
 
+-- Flatten the post-prefix source into the exact field order needed by the
+-- branch-specific field transport leaves.
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits_eq_flatFields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p)
+              (List.append
+                (SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits p)
+                (List.append
+                  (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p)
+                  (List.append
+                    (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits
+                      p)
+                    (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits
+                      p))))))) := by
+  rfl
+
 theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
     (p : SelectedMergeEmitterPayload) :
@@ -858,6 +883,42 @@ theorem
   · exact
       SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_true_eq_targetFieldTailBits
         p
+
+-- Accept-branch transport replaces the inner accept fields with the outer
+-- simulator config/hit fields and keeps the reject branch fields.
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_true_eq_flatFields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits true p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p)
+              (SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits
+                p)))) := by
+  rfl
+
+-- Reject-branch transport is the dual shape: preserve the accept branch fields
+-- and replace the reject branch fields with the outer simulator fields.
+theorem
+    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_false_eq_flatFields
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits false p =
+      List.append
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p)
+              (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits
+                p)))) := by
+  rfl
 
 theorem
     SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail

@@ -28,6 +28,73 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_config
       (List.append ((SimulatorLayout.asBoolInput L).reverse.map some)
         [none]) [none])
 
+-- The post-scan leaf starts on the last source bit immediately left of the
+-- terminal blank; its visible cells are still the canonical field source.
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+          L) =
+      none ::
+        List.append ((SimulatorLayout.asBoolInput L).map some) [none] := by
+  cases hbits : SimulatorLayout.asBoolInput L with
+  | nil =>
+      simp [
+        FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
+        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+        Tape.move, Tape.moveLeft, hbits]
+  | cons bit rest =>
+      cases hrev : rest.reverse with
+      | nil =>
+          have hrest : rest = [] := by
+            simpa using congrArg List.reverse hrev
+          simp [
+            FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
+            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+            Tape.move, Tape.moveLeft, hbits, hrest]
+      | cons head tail =>
+          have hrest : rest = (head :: tail).reverse := by
+            rw [← hrev, List.reverse_reverse]
+          simp [
+            FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
+            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
+            Tape.move, Tape.moveLeft, hbits, hrest, List.map_reverse,
+            List.append_assoc]
+
+-- The same source bits are preserved after scanning to the right-end-left
+-- position; only the head location changes.
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_normalizedOutput_configRunner
+    (L : SimulatorLayout) :
+    Tape.normalizedOutput
+        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+          L) =
+      SimulatorLayout.asBoolInput L := by
+  rw [Tape.normalizedOutput]
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner]
+  cases SimulatorLayout.asBoolInput L <;>
+    simp [Function.comp_def]
+
+-- Expanded field form for the source boundary consumed by the remaining
+-- post-scan run-config emitter leaf.
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_eq_fields_configRunner
+    (L : SimulatorLayout) :
+    Tape.cells
+        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+          L) =
+      none ::
+        List.append
+          ((encodeCodeWordAsInput
+            (MachineCodeSymbol.header ::
+              encodeBoolWordAppend L.input
+                (encodeNatAppend L.stage
+                  (encodeConfigurationAppend L.config
+                    (encodeBoolAppend L.hit []))))).map some)
+          [none] := by
+  rw [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner,
+    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
+
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_move_left_move_right_configRunner
     (L : SimulatorLayout) :
     Tape.move Direction.left
