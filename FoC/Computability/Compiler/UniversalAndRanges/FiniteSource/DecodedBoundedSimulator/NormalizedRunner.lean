@@ -730,6 +730,108 @@ theorem decodedBoundedSimulatorTransitionLoopWorkDecode_eq_some_encodeAppend
                 htokens, hrestAfterDescription, hrestAfterStage]
 
 /--
+One semantic work-loop iteration.  It either stops immediately when there is no
+remaining stage or no outgoing transition, or advances to the scanned
+transition's next configuration with one less remaining stage.
+-/
+def decodedBoundedSimulatorTransitionLoopStepTarget
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    Nat × MachineDescription.Configuration :=
+  match stage with
+  | 0 => (0, config)
+  | remaining + 1 =>
+      match
+        MachineDescription.scanTransitionTable
+          config.state (Tape.read config.tape) D.transitions with
+      | none => (0, config)
+      | some transition =>
+          (remaining,
+            { state := transition.target
+              tape :=
+                Tape.move transition.move
+                  (Tape.write transition.write config.tape) })
+
+theorem decodedBoundedSimulatorTransitionLoopStepTarget_preserves_final
+    (stage : Nat) (D : MachineDescription)
+    (config : MachineDescription.Configuration) :
+    decodedBoundedSimulatorTransitionLoopFromConfig stage D config =
+      decodedBoundedSimulatorTransitionLoopFromConfig
+        (decodedBoundedSimulatorTransitionLoopStepTarget
+          stage D config).fst
+        D
+        (decodedBoundedSimulatorTransitionLoopStepTarget
+          stage D config).snd := by
+  cases stage with
+  | zero =>
+      simp [decodedBoundedSimulatorTransitionLoopStepTarget,
+        decodedBoundedSimulatorTransitionLoopFromConfig]
+  | succ remaining =>
+      rw [decodedBoundedSimulatorTransitionLoopFromConfig_succ_eq_scan]
+      cases hscan :
+          MachineDescription.scanTransitionTable
+            config.state (Tape.read config.tape) D.transitions
+      · simp [decodedBoundedSimulatorTransitionLoopStepTarget, hscan,
+          decodedBoundedSimulatorTransitionLoopFromConfig,
+          MachineDescription.runConfig]
+      · simp [decodedBoundedSimulatorTransitionLoopStepTarget, hscan]
+
+/--
+Encoded output payload for one semantic work-loop iteration.
+-/
+def decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
+  let target :=
+    decodedBoundedSimulatorTransitionLoopStepTarget stage D config
+  decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+    D target.fst target.snd suffix
+
+theorem decodedBoundedSimulatorTransitionLoopWorkStepDecode_encodeAppend
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopWorkDecode
+        (decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend
+          D stage config suffix) =
+      some
+        (D,
+          (decodedBoundedSimulatorTransitionLoopStepTarget
+            stage D config).fst,
+          (decodedBoundedSimulatorTransitionLoopStepTarget
+            stage D config).snd,
+          suffix) := by
+  simp [decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend,
+    decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
+
+/--
+Partial code transform for one semantic work-loop iteration.
+-/
+def decodedBoundedSimulatorTransitionLoopWorkStepCode
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match decodedBoundedSimulatorTransitionLoopWorkDecode tokens with
+  | none => none
+  | some (D, stage, config, suffix) =>
+      some
+        (decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend
+          D stage config suffix)
+
+theorem decodedBoundedSimulatorTransitionLoopWorkStepCode_encodeAppend
+    (D : MachineDescription) (stage : Nat)
+    (config : MachineDescription.Configuration)
+    (suffix : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopWorkStepCode
+        (decodedBoundedSimulatorTransitionLoopWorkCodeAppend
+          D stage config suffix) =
+      some
+        (decodedBoundedSimulatorTransitionLoopWorkStepCodeAppend
+          D stage config suffix) := by
+  simp [decodedBoundedSimulatorTransitionLoopWorkStepCode,
+    decodedBoundedSimulatorTransitionLoopWorkDecode_encodeAppend]
+
+/--
 Transition-loop form of the normalized bounded simulator runner.  This is the
 actual uniform-runner leaf: the machine must interpret the decoded description
 as transition-table data for exactly the parsed stage count.
