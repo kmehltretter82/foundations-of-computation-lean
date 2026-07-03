@@ -1502,6 +1502,16 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
         ⟨stage, D, input, hdecode, hhalt⟩
     simpa [hout] using hpipelineNil
 
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_code
+    (tokens out : Word MachineCodeSymbol) :
+    decodedBoundedSimulatorTransitionLoopPipelineIterateCode tokens =
+        some out <->
+      CodePrefixDecodedBoundedSimulatorCode.transform tokens = some out := by
+  rw [decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_pipelineCode]
+  exact
+    decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
+      tokens out
+
 /--
 Finite-machine spec for the explicit normalized transition-loop pipeline
 transform.
@@ -1570,6 +1580,37 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruct
       decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_iterateCodeMachine
   · exact
       decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_pipelineCodeMachine
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_codeMachine
+    (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction := by
+  rcases hcode with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_code
+            tokens ([] : Word MachineCodeSymbol)))⟩
+
+theorem codeMachineConstruction_of_decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachine
+    (hiter :
+      DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction) :
+    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  rcases hiter with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_code
+          tokens ([] : Word MachineCodeSymbol))⟩
+
+theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_iff_codeMachine :
+    DecodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction <->
+      CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
+  constructor
+  · exact
+      codeMachineConstruction_of_decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachine
+  · exact
+      decodedBoundedSimulatorTransitionLoopPipelineIterateCodeMachineConstruction_of_codeMachine
 
 theorem decodedBoundedSimulatorTransitionLoopPipelineCodeMachineConstruction_of_codeMachine
     (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
