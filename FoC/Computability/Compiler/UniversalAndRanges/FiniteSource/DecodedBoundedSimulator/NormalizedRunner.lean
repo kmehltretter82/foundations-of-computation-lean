@@ -280,6 +280,33 @@ def DecodedBoundedSimulatorBooleanRunnerConstruction : Prop :=
     DecodedBoundedSimulatorBooleanRunnerSpec runner
 
 /--
+Run-config form of the normalized bounded simulator runner.  This is the
+transition-level target underneath {name}`MachineDescription.haltsInBool`.
+-/
+def DecodedBoundedSimulatorRunConfigRunnerSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (D.runConfig stage
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt
+
+/--
+Finite-machine construction target for the normalized run-config runner.
+-/
+def DecodedBoundedSimulatorRunConfigRunnerConstruction : Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorRunConfigRunnerSpec runner
+
+/--
 The stage-program acceptance predicate is equivalent to the normalized boolean
 bounded-trace predicate.
 -/
@@ -325,6 +352,51 @@ theorem decodedBoundedSimulatorStageProgramRun_iff_haltsInBool
             hhalts⟩⟩
 
 /--
+The normalized boolean bounded-trace predicate is exactly the run-config halt
+state predicate.
+-/
+theorem decodedBoundedSimulatorHaltsInBool_iff_runConfig
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          MachineDescription.haltsInBool D stage
+            (MachineDescription.encodeCodeWordAsInput input) = true) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (D.runConfig stage
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalts⟩
+    have hhaltsIn :
+        D.HaltsIn stage
+          (MachineDescription.encodeCodeWordAsInput input) :=
+      (MachineDescription.haltsInBool_eq_true_iff D stage
+        (MachineDescription.encodeCodeWordAsInput input)).mp hhalts
+    exact ⟨stage, D, input, hstage, by
+      simpa [MachineDescription.HaltsIn] using hhaltsIn⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hrun⟩
+    have hhaltsIn :
+        D.HaltsIn stage
+          (MachineDescription.encodeCodeWordAsInput input) := by
+      simpa [MachineDescription.HaltsIn] using hrun
+    exact
+      ⟨stage, D, input, hstage,
+        (MachineDescription.haltsInBool_eq_true_iff D stage
+          (MachineDescription.encodeCodeWordAsInput input)).mpr hhaltsIn⟩
+
+/--
 Any independently supplied machine for the code primitive is already a
 normalized decoded bounded-simulator runner.
 -/
@@ -351,11 +423,33 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Run-config finite-machine leaf for the normalized decoded simulator.
+-/
+theorem decodedBoundedSimulatorRunConfigRunnerConstruction :
+    DecodedBoundedSimulatorRunConfigRunnerConstruction := by
+  sorry
+
+/--
+The run-config runner is enough to realize the Boolean bounded-trace runner.
+-/
+theorem decodedBoundedSimulatorBooleanRunnerConstruction_of_runConfigRunner
+    (hrunner : DecodedBoundedSimulatorRunConfigRunnerConstruction) :
+    DecodedBoundedSimulatorBooleanRunnerConstruction := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (Iff.symm
+          (decodedBoundedSimulatorHaltsInBool_iff_runConfig tokens))⟩
+
+/--
 Boolean bounded-trace finite-machine leaf for the normalized decoded simulator.
 -/
 theorem decodedBoundedSimulatorBooleanRunnerConstruction :
     DecodedBoundedSimulatorBooleanRunnerConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorBooleanRunnerConstruction_of_runConfigRunner
+      decodedBoundedSimulatorRunConfigRunnerConstruction
 
 /--
 The normalized boolean runner is enough to realize the staged-program runner.
