@@ -394,6 +394,88 @@ def DecodedBoundedSimulatorRunConfigRunnerConstruction : Prop :=
     DecodedBoundedSimulatorRunConfigRunnerSpec runner
 
 /--
+Canonical simulator layout for a decoded bounded-simulator call after the
+stage, description, and residual code input have been parsed.
+-/
+def decodedBoundedSimulatorExactInitialLayout
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    MachineDescription.SimulatorLayout :=
+  MachineDescription.SimulatorLayout.initial D
+    (MachineDescription.encodeCodeWordAsInput input) stage
+
+/-- The exact initial layout carries the requested stage. -/
+theorem decodedBoundedSimulatorExactInitialLayout_stage
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    (decodedBoundedSimulatorExactInitialLayout stage D input).stage =
+      stage :=
+  rfl
+
+/-- The exact initial layout carries the encoded code-word input. -/
+theorem decodedBoundedSimulatorExactInitialLayout_input
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    (decodedBoundedSimulatorExactInitialLayout stage D input).input =
+      MachineDescription.encodeCodeWordAsInput input :=
+  rfl
+
+/-- The exact initial layout starts from the decoded machine's initial config. -/
+theorem decodedBoundedSimulatorExactInitialLayout_config
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    (decodedBoundedSimulatorExactInitialLayout stage D input).config =
+      D.initial (MachineDescription.encodeCodeWordAsInput input) :=
+  rfl
+
+/-- The exact initial layout has no pre-existing hit flag. -/
+theorem decodedBoundedSimulatorExactInitialLayout_hit
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    (decodedBoundedSimulatorExactInitialLayout stage D input).hit =
+      false :=
+  rfl
+
+/--
+Running the exact simulator layout for its stage exposes exactly the decoded
+machine's bounded run configuration.
+-/
+theorem decodedBoundedSimulatorExactInitialLayout_afterRun_config
+    (stage : Nat) (D : MachineDescription)
+    (input : Word MachineCodeSymbol) :
+    (MachineDescription.SimulatorLayout.afterRun D
+        (decodedBoundedSimulatorExactInitialLayout stage D input)
+        stage).config =
+      D.runConfig stage
+        (D.initial (MachineDescription.encodeCodeWordAsInput input)) :=
+  rfl
+
+/--
+Exact simulator-layout form of the normalized bounded simulator runner.
+-/
+def DecodedBoundedSimulatorExactLayoutRunnerSpec
+    (runner : TuringMachine MachineCodeSymbol state) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (MachineDescription.SimulatorLayout.afterRun D
+            (decodedBoundedSimulatorExactInitialLayout stage D input)
+            stage).config.state = D.halt
+
+/--
+Finite-machine construction target for the exact simulator-layout runner.
+-/
+def DecodedBoundedSimulatorExactLayoutRunnerConstruction : Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedBoundedSimulatorExactLayoutRunnerSpec runner
+
+/--
 The stage-program acceptance predicate is equivalent to the normalized boolean
 bounded-trace predicate.
 -/
@@ -484,6 +566,45 @@ theorem decodedBoundedSimulatorHaltsInBool_iff_runConfig
           (MachineDescription.encodeCodeWordAsInput input)).mpr hhaltsIn⟩
 
 /--
+The exact simulator-layout predicate is the same run-config halt-state
+predicate in layout form.
+-/
+theorem decodedBoundedSimulatorExactLayoutRun_iff_runConfig
+    (tokens : Word MachineCodeSymbol) :
+    (exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (MachineDescription.SimulatorLayout.afterRun D
+            (decodedBoundedSimulatorExactInitialLayout stage D input)
+            stage).config.state = D.halt) <->
+      exists stage : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (stage,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          (D.runConfig stage
+            (D.initial
+              (MachineDescription.encodeCodeWordAsInput input))).state =
+            D.halt := by
+  constructor
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [
+        decodedBoundedSimulatorExactInitialLayout_afterRun_config
+          stage D input] using hhalt⟩
+  · intro h
+    rcases h with ⟨stage, D, input, hstage, hhalt⟩
+    exact ⟨stage, D, input, hstage, by
+      simpa [
+        decodedBoundedSimulatorExactInitialLayout_afterRun_config
+          stage D input] using hhalt⟩
+
+/--
 Any independently supplied machine for the code primitive is already a
 normalized decoded bounded-simulator runner.
 -/
@@ -510,11 +631,33 @@ theorem decodedBoundedSimulatorNormalizedRunnerConstruction_of_codeMachine
           tokens)⟩
 
 /--
+Exact simulator-layout finite-machine leaf for the normalized decoded
+simulator.
+-/
+theorem decodedBoundedSimulatorExactLayoutRunnerConstruction :
+    DecodedBoundedSimulatorExactLayoutRunnerConstruction := by
+  sorry
+
+/--
+The exact simulator-layout runner is enough to realize the run-config runner.
+-/
+theorem decodedBoundedSimulatorRunConfigRunnerConstruction_of_exactLayoutRunner
+    (hrunner : DecodedBoundedSimulatorExactLayoutRunnerConstruction) :
+    DecodedBoundedSimulatorRunConfigRunnerConstruction := by
+  rcases hrunner with ⟨state, runner, hrunner⟩
+  exact
+    ⟨state, runner, fun tokens =>
+      Iff.trans (hrunner tokens)
+        (decodedBoundedSimulatorExactLayoutRun_iff_runConfig tokens)⟩
+
+/--
 Run-config finite-machine leaf for the normalized decoded simulator.
 -/
 theorem decodedBoundedSimulatorRunConfigRunnerConstruction :
     DecodedBoundedSimulatorRunConfigRunnerConstruction := by
-  sorry
+  exact
+    decodedBoundedSimulatorRunConfigRunnerConstruction_of_exactLayoutRunner
+      decodedBoundedSimulatorExactLayoutRunnerConstruction
 
 /--
 The run-config runner is enough to realize the Boolean bounded-trace runner.
