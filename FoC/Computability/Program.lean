@@ -137,6 +137,28 @@ theorem acceptanceTrace_programAcceptable
   Exists.intro (TraceRecognizerProgram trace)
     (traceRecognizerProgram_acceptsLanguage h)
 
+theorem hasDecidableAcceptanceTrace_programAcceptable
+    {L : Language input}
+    (h : HasDecidableAcceptanceTrace L) :
+    ProgramAcceptable L := by
+  rcases h with ⟨trace, traceDecidable, htrace⟩
+  letI := traceDecidable
+  exact acceptanceTrace_programAcceptable htrace
+
+theorem programAcceptable_hasDecidableAcceptanceTrace
+    {L : Language input}
+    (h : ProgramAcceptable L) :
+    HasDecidableAcceptanceTrace L := by
+  rcases h with ⟨P, hP⟩
+  let trace := ProgramAcceptanceTrace P
+  have htrace : AcceptanceTrace trace L :=
+    programAcceptsLanguage_acceptanceTrace hP
+  have hdec : forall w n, Decidable (trace w n) := by
+    intro w n
+    unfold trace ProgramAcceptanceTrace
+    infer_instance
+  exact ⟨trace, hdec, htrace⟩
+
 theorem programAcceptable_iff_has_acceptanceTrace
     (L : Language input) :
     ProgramAcceptable L <->
@@ -163,10 +185,9 @@ theorem programAcceptable_iff_has_acceptanceTrace
 
 theorem turingAcceptable_programAcceptable
     {L : Language input} (h : TuringAcceptable L) :
-    ProgramAcceptable L := by
-  rcases turing_acceptable_has_acceptanceTrace h with ⟨trace, htrace⟩
-  classical
-  exact acceptanceTrace_programAcceptable htrace
+    ProgramAcceptable L :=
+  hasDecidableAcceptanceTrace_programAcceptable
+    (turing_acceptable_has_decidableAcceptanceTrace h)
 
 theorem recursivelyEnumerable_programAcceptable
     {L : Language input} (h : RecursivelyEnumerable L) :
@@ -342,16 +363,21 @@ theorem dovetailProgram_decides
     · exact dovetailProgram_false_sound h
     · exact dovetailProgram_false_complete h
 
+theorem hasDecidableComplementaryAcceptanceTraces_programBoolDecidable
+    {L : Language input}
+    (h : HasDecidableComplementaryAcceptanceTraces L) :
+    ProgramBoolDecidable L := by
+  rcases h with ⟨accept, reject, acceptDecidable, rejectDecidable, htraces⟩
+  letI := acceptDecidable
+  letI := rejectDecidable
+  exact Exists.intro (DovetailProgram accept reject)
+    (dovetailProgram_decides htraces)
+
 theorem reCoRe_programBoolDecidable {L : Language input}
     (h : RecursivelyEnumerableWithComplement L) :
-    ProgramBoolDecidable L := by
-  classical
-  cases recursivelyEnumerable_with_complement_has_complementaryTraces h with
-  | intro accept haccept =>
-      cases haccept with
-      | intro reject hreject =>
-          exact Exists.intro (DovetailProgram accept reject)
-            (dovetailProgram_decides hreject)
+    ProgramBoolDecidable L :=
+  hasDecidableComplementaryAcceptanceTraces_programBoolDecidable
+    (recursivelyEnumerable_with_complement_has_decidableComplementaryTraces h)
 
 theorem reCoReToDecidablePrinciple_of_programBoolCompiler
     (hcompile : ProgramBoolDeciderCompilationPrinciple input) :

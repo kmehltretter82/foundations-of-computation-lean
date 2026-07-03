@@ -134,6 +134,18 @@ def ComplementaryAcceptanceTraces
     (L : Language input) : Prop :=
   AcceptanceTrace accept L ∧ AcceptanceTrace reject (Language.Compl L)
 
+def HasDecidableAcceptanceTrace (L : Language input) : Prop :=
+  exists trace : Word input -> Nat -> Prop,
+    (exists _ : (forall w n, Decidable (trace w n)),
+      AcceptanceTrace trace L)
+
+def HasDecidableComplementaryAcceptanceTraces
+    (L : Language input) : Prop :=
+  exists accept reject : Word input -> Nat -> Prop,
+    (exists _ : (forall w n, Decidable (accept w n)),
+      exists _ : (forall w n, Decidable (reject w n)),
+        ComplementaryAcceptanceTraces accept reject L)
+
 def TraceHitsBy (trace : Word input -> Nat -> Prop)
     (w : Word input) (limit : Nat) : Prop :=
   exists n : Nat, n ≤ limit ∧ trace w n
@@ -329,15 +341,22 @@ theorem turingDecidable_characteristicFunction_turingComputable
     (fun b : Bool => if b then one else zero),
     computesFunction_characteristicFunction hdec⟩
 
+theorem turingDecidable_has_computableCharacteristic_of_decidableMembership
+    {L : Language input}
+    [DecidablePred (fun w => w ∈ L)]
+    (h : TuringDecidable L) :
+    HasComputableCharacteristic L :=
+  Exists.intro (CharacteristicFunction L)
+    (And.intro
+      (turingDecidable_characteristicFunction_turingComputable h)
+      (characteristicFunction_is_boolCharacteristic L))
+
 theorem turingDecidable_has_computableCharacteristic
     {L : Language input}
     (h : TuringDecidable L) :
     HasComputableCharacteristic L := by
   classical
-  exact Exists.intro (CharacteristicFunction L)
-    (And.intro
-      (turingDecidable_characteristicFunction_turingComputable h)
-      (characteristicFunction_is_boolCharacteristic L))
+  exact turingDecidable_has_computableCharacteristic_of_decidableMembership h
 
 theorem boolCharacteristic_turingDecidable
     {χ : Word input -> Word Bool} {L : Language input}
@@ -489,6 +508,19 @@ theorem complementaryAcceptanceTraces_eventually_hits
     (fun hw => complementaryAcceptanceTraces_accept_complete h hw)
     (fun hw => complementaryAcceptanceTraces_reject_complete h hw)
 
+theorem complementaryAcceptanceTraces_eventually_hits_of_decidableMembership
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    [DecidablePred (fun w => w ∈ L)]
+    (h : ComplementaryAcceptanceTraces accept reject L)
+    (w : Word input) :
+    exists n : Nat, accept w n ∨ reject w n := by
+  by_cases hw : w ∈ L
+  · cases complementaryAcceptanceTraces_accept_complete h hw with
+    | intro n hn => exact Exists.intro n (Or.inl hn)
+  · cases complementaryAcceptanceTraces_reject_complete h hw with
+    | intro n hn => exact Exists.intro n (Or.inr hn)
+
 theorem complementaryAcceptanceTraces_eventually_hits_classical
     {accept reject : Word input -> Nat -> Prop}
     {L : Language input}
@@ -496,11 +528,7 @@ theorem complementaryAcceptanceTraces_eventually_hits_classical
     (w : Word input) :
     exists n : Nat, accept w n ∨ reject w n := by
   classical
-  by_cases hw : w ∈ L
-  · cases complementaryAcceptanceTraces_accept_complete h hw with
-    | intro n hn => exact Exists.intro n (Or.inl hn)
-  · cases complementaryAcceptanceTraces_reject_complete h hw with
-    | intro n hn => exact Exists.intro n (Or.inr hn)
+  exact complementaryAcceptanceTraces_eventually_hits_of_decidableMembership h w
 
 theorem complementaryTraceAcceptsBy_sound
     {accept reject : Word input -> Nat -> Prop}
@@ -592,6 +620,66 @@ theorem acceptsLanguage_acceptanceTrace
       M (EncodeWord encodeInput w)).symm
     (h w)
 
+theorem acceptanceTrace_hasDecidableAcceptanceTrace
+    {trace : Word input -> Nat -> Prop} {L : Language input}
+    [∀ w n, Decidable (trace w n)]
+    (h : AcceptanceTrace trace L) :
+    HasDecidableAcceptanceTrace L :=
+  ⟨trace, inferInstance, h⟩
+
+theorem hasDecidableAcceptanceTrace_has_acceptanceTrace
+    {L : Language input}
+    (h : HasDecidableAcceptanceTrace L) :
+    exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
+  rcases h with ⟨trace, _hdec, htrace⟩
+  exact ⟨trace, htrace⟩
+
+theorem complementaryAcceptanceTraces_hasDecidableComplementaryAcceptanceTraces
+    {accept reject : Word input -> Nat -> Prop}
+    {L : Language input}
+    [∀ w n, Decidable (accept w n)]
+    [∀ w n, Decidable (reject w n)]
+    (h : ComplementaryAcceptanceTraces accept reject L) :
+    HasDecidableComplementaryAcceptanceTraces L :=
+  ⟨accept, reject, inferInstance, inferInstance, h⟩
+
+theorem hasDecidableComplementaryAcceptanceTraces_has_complementaryTraces
+    {L : Language input}
+    (h : HasDecidableComplementaryAcceptanceTraces L) :
+    exists accept reject : Word input -> Nat -> Prop,
+      ComplementaryAcceptanceTraces accept reject L := by
+  rcases h with ⟨accept, reject, _hacceptDec, _hrejectDec, htraces⟩
+  exact ⟨accept, reject, htraces⟩
+
+theorem acceptsLanguage_hasDecidableAcceptanceTrace_of_decidableState
+    [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {L : Language input}
+    (h : AcceptsLanguage M encodeInput L) :
+    HasDecidableAcceptanceTrace L :=
+  acceptanceTrace_hasDecidableAcceptanceTrace
+    (acceptsLanguage_acceptanceTrace h)
+
+/-!
+The next bridge keeps {name}`TuringAcceptable` extensional by reindexing the
+accepting machine to a concrete {name}`Fin` state space. The resulting trace has
+explicit decidability, but the reindexing uses {name}`TuringMachine.indexed`,
+whose construction is noncomputable for arbitrary state types.
+-/
+theorem acceptsLanguage_hasDecidableAcceptanceTrace_of_indexed
+    {M : TuringMachine symbol state}
+    {encodeInput : input -> symbol} {L : Language input}
+    (h : AcceptsLanguage M encodeInput L) :
+    HasDecidableAcceptanceTrace L := by
+  let M' := TuringMachine.indexed M
+  have hacc : AcceptsLanguage M' encodeInput L := by
+    intro w
+    exact Iff.trans
+      (TuringMachine.indexed_haltsOnInput_iff M
+        (EncodeWord encodeInput w))
+      (h w)
+  exact acceptsLanguage_hasDecidableAcceptanceTrace_of_decidableState hacc
+
 theorem turing_acceptable_has_acceptanceTrace {L : Language input}
     (h : TuringAcceptable L) :
     exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L := by
@@ -600,10 +688,22 @@ theorem turing_acceptable_has_acceptanceTrace {L : Language input}
     TuringMachine.HaltsOnInputIn M n (EncodeWord encodeInput w),
     acceptsLanguage_acceptanceTrace hacc⟩
 
+theorem turing_acceptable_has_decidableAcceptanceTrace {L : Language input}
+    (h : TuringAcceptable L) :
+    HasDecidableAcceptanceTrace L := by
+  rcases h with ⟨_symbol, _state, M, _encodeInput, hacc⟩
+  exact acceptsLanguage_hasDecidableAcceptanceTrace_of_indexed hacc
+
 theorem recursivelyEnumerable_has_acceptanceTrace {L : Language input}
     (h : RecursivelyEnumerable L) :
     exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L :=
   turing_acceptable_has_acceptanceTrace h
+
+theorem recursivelyEnumerable_has_decidableAcceptanceTrace
+    {L : Language input}
+    (h : RecursivelyEnumerable L) :
+    HasDecidableAcceptanceTrace L :=
+  turing_acceptable_has_decidableAcceptanceTrace h
 
 theorem turing_acceptable_with_complement_has_complementaryTraces
     {L : Language input}
@@ -615,12 +715,31 @@ theorem turing_acceptable_with_complement_has_complementaryTraces
   rcases turing_acceptable_has_acceptanceTrace hCompl with ⟨reject, hreject⟩
   exact ⟨accept, reject, haccept, hreject⟩
 
+theorem turing_acceptable_with_complement_has_decidableComplementaryTraces
+    {L : Language input}
+    (hL : TuringAcceptable L)
+    (hCompl : TuringAcceptable (Language.Compl L)) :
+    HasDecidableComplementaryAcceptanceTraces L := by
+  rcases turing_acceptable_has_decidableAcceptanceTrace hL with
+    ⟨accept, hacceptDec, haccept⟩
+  rcases turing_acceptable_has_decidableAcceptanceTrace hCompl with
+    ⟨reject, hrejectDec, hreject⟩
+  exact ⟨accept, reject, hacceptDec, hrejectDec,
+    And.intro haccept hreject⟩
+
 theorem recursivelyEnumerable_with_complement_has_complementaryTraces
     {L : Language input}
     (h : RecursivelyEnumerableWithComplement L) :
     exists accept reject : Word input -> Nat -> Prop,
       ComplementaryAcceptanceTraces accept reject L :=
   turing_acceptable_with_complement_has_complementaryTraces h.left h.right
+
+theorem recursivelyEnumerable_with_complement_has_decidableComplementaryTraces
+    {L : Language input}
+    (h : RecursivelyEnumerableWithComplement L) :
+    HasDecidableComplementaryAcceptanceTraces L :=
+  turing_acceptable_with_complement_has_decidableComplementaryTraces
+    h.left h.right
 
 theorem decidesLanguage_of_equal {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}

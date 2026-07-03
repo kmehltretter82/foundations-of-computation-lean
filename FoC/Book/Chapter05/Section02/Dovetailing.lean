@@ -160,11 +160,9 @@ theorem program_acceptable_language_iff_has_acceptance_trace
 theorem recursively_enumerable_language_is_program_acceptable
     {L : Language alpha}
     (h : RecursivelyEnumerableLanguage L) :
-  ProgramAcceptableLanguage L := by
-  cases recursively_enumerable_language_has_acceptance_trace h with
-  | intro trace htrace =>
-      classical
-      exact acceptance_trace_has_program_acceptable_language htrace
+  ProgramAcceptableLanguage L :=
+  Computability.hasDecidableAcceptanceTrace_programAcceptable
+    (Computability.recursivelyEnumerable_has_decidableAcceptanceTrace h)
 
 /-!
 Complementary traces are the finite evidence supplied by recognizers for a
@@ -299,15 +297,14 @@ theorem re_and_co_re_have_dovetailing_program
             ProgramBoolDecidesLanguage
               (TraceDovetailProgram accept reject) L) :=
   by
-    classical
-    cases
-      Computability.recursivelyEnumerable_with_complement_has_complementaryTraces
+    rcases
+      Computability.recursivelyEnumerable_with_complement_has_decidableComplementaryTraces
         h with
-    | intro accept haccept =>
-        cases haccept with
-        | intro reject hreject =>
-            exact ⟨accept, reject, inferInstance, inferInstance, hreject,
-              complementary_traces_dovetailing_program_decides hreject⟩
+      ⟨accept, reject, acceptDecidable, rejectDecidable, htraces⟩
+    letI := acceptDecidable
+    letI := rejectDecidable
+    exact ⟨accept, reject, acceptDecidable, rejectDecidable, htraces,
+      complementary_traces_dovetailing_program_decides htraces⟩
 
 theorem re_and_co_re_have_paired_bounded_search_decider
     {L : Language alpha}
