@@ -149,6 +149,20 @@ noncomputable def indexed (M : TuringMachine symbol state) :
           Foundation.FiniteType.indexOf M.statesFinite nextState)
   statesFinite := Foundation.FiniteType.fin M.statesFinite.elems.length
 
+def indexedDecidable [DecidableEq state] (M : TuringMachine symbol state) :
+    TuringMachine symbol (Fin M.statesFinite.elems.length) where
+  start := Foundation.FiniteType.indexOfDecidable M.statesFinite M.start
+  halt := Foundation.FiniteType.indexOfDecidable M.statesFinite M.halt
+  transition := fun index cell =>
+    match M.transition
+        (Foundation.FiniteType.valueOf M.statesFinite index) cell with
+    | none => none
+    | some (write, dir, nextState) =>
+        some (write, dir,
+          Foundation.FiniteType.indexOfDecidable
+            M.statesFinite nextState)
+  statesFinite := Foundation.FiniteType.fin M.statesFinite.elems.length
+
 theorem indexed_step_of_step
     {M : TuringMachine symbol state}
     {c d : Configuration symbol state}
@@ -162,6 +176,21 @@ theorem indexed_step_of_step
   | mk haction =>
       exact Step.mk (by
         simp [indexed, Foundation.FiniteType.valueOf_indexOf, haction])
+
+theorem indexedDecidable_step_of_step [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hstep : Step M c d) :
+    Step (indexedDecidable M)
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite d.state,
+        tape := d.tape } := by
+  cases hstep with
+  | mk haction =>
+      exact Step.mk (by
+        simp [indexedDecidable, Foundation.FiniteType.valueOf_indexOfDecidable,
+          haction])
 
 theorem step_of_indexed_step
     {M : TuringMachine symbol state}
@@ -188,6 +217,33 @@ theorem step_of_indexed_step
           subst hdir
           cases hstate
           simpa [Foundation.FiniteType.valueOf_indexOf] using
+            Step.mk hM
+
+theorem step_of_indexedDecidable_step [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hstep : Step (indexedDecidable M) c d) :
+    Step M
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  cases hstep with
+  | mk haction =>
+      cases hM :
+          M.transition
+            (Foundation.FiniteType.valueOf M.statesFinite c.state)
+            (Tape.read c.tape) with
+      | none =>
+          simp [indexedDecidable, hM] at haction
+      | some action =>
+          rcases action with ⟨write, dir, nextState⟩
+          simp [indexedDecidable, hM] at haction
+          rcases haction with ⟨hwrite, hdir, hstate⟩
+          subst hwrite
+          subst hdir
+          cases hstate
+          simpa [Foundation.FiniteType.valueOf_indexOfDecidable] using
             Step.mk hM
 
 inductive Computes (M : TuringMachine symbol state) :
@@ -262,6 +318,67 @@ theorem computesIn_of_indexed_computesIn
       exact ComputesIn.zero _
   | succ hstep _ ih =>
       exact ComputesIn.succ (step_of_indexed_step hstep) ih
+
+theorem indexedDecidable_computes_of_computes [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (hcomp : Computes M c d) :
+    Computes (indexedDecidable M)
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | refl c =>
+      exact Computes.refl _
+  | step hstep _ ih =>
+      exact Computes.step (indexedDecidable_step_of_step hstep) ih
+
+theorem computes_of_indexedDecidable_computes [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hcomp : Computes (indexedDecidable M) c d) :
+    Computes M
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | refl c =>
+      exact Computes.refl _
+  | step hstep _ ih =>
+      exact Computes.step (step_of_indexedDecidable_step hstep) ih
+
+theorem indexedDecidable_computesIn_of_computesIn [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {n : Nat} {c d : Configuration symbol state}
+    (hcomp : ComputesIn M n c d) :
+    ComputesIn (indexedDecidable M) n
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.indexOfDecidable M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | zero c =>
+      exact ComputesIn.zero _
+  | succ hstep _ ih =>
+      exact ComputesIn.succ (indexedDecidable_step_of_step hstep) ih
+
+theorem computesIn_of_indexedDecidable_computesIn [DecidableEq state]
+    {M : TuringMachine symbol state}
+    {n : Nat}
+    {c d : Configuration symbol (Fin M.statesFinite.elems.length)}
+    (hcomp : ComputesIn (indexedDecidable M) n c d) :
+    ComputesIn M n
+      { state := Foundation.FiniteType.valueOf M.statesFinite c.state,
+        tape := c.tape }
+      { state := Foundation.FiniteType.valueOf M.statesFinite d.state,
+        tape := d.tape } := by
+  induction hcomp with
+  | zero c =>
+      exact ComputesIn.zero _
+  | succ hstep _ ih =>
+      exact ComputesIn.succ (step_of_indexedDecidable_step hstep) ih
 
 /-!
 # Exact tape-window invariants
@@ -479,6 +596,59 @@ theorem indexed_haltsOnInputIn_iff
     HaltsOnInputIn (indexed M) n w <-> HaltsOnInputIn M n w := by
   simpa [HaltsOnInputIn, initial, indexed] using
     indexed_haltsFromIn_iff (M := M) (n := n) (c := initial M w)
+
+theorem indexedDecidable_haltsFromIn_iff [DecidableEq state]
+    (M : TuringMachine symbol state) (n : Nat)
+    (c : Configuration symbol state) :
+    HaltsFromIn (indexedDecidable M) n
+        { state :=
+            Foundation.FiniteType.indexOfDecidable M.statesFinite c.state,
+          tape := c.tape } <->
+      HaltsFromIn M n c := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompOriginal :=
+      computesIn_of_indexedDecidable_computesIn (M := M) hcomp
+    have hstate :
+        Foundation.FiniteType.valueOf M.statesFinite final.state =
+          M.halt := by
+      have hindex :
+          final.state =
+            Foundation.FiniteType.indexOfDecidable
+              M.statesFinite M.halt := by
+        simpa [Halted, indexedDecidable] using hfinal
+      rw [hindex, Foundation.FiniteType.valueOf_indexOfDecidable]
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.valueOf M.statesFinite final.state,
+          tape := final.tape },
+        by
+          simpa [Foundation.FiniteType.valueOf_indexOfDecidable] using
+            hcompOriginal,
+        by
+          simp [Halted, hstate]⟩
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinal⟩
+    have hcompIndexed :=
+      indexedDecidable_computesIn_of_computesIn (M := M) hcomp
+    exact
+      ⟨{ state :=
+            Foundation.FiniteType.indexOfDecidable
+              M.statesFinite final.state,
+          tape := final.tape },
+        hcompIndexed,
+        by
+          have hstate : final.state = M.halt := by
+            simpa [Halted] using hfinal
+          simp [Halted, indexedDecidable, hstate]⟩
+
+theorem indexedDecidable_haltsOnInputIn_iff [DecidableEq state]
+    (M : TuringMachine symbol state) (n : Nat) (w : Word symbol) :
+    HaltsOnInputIn (indexedDecidable M) n w <-> HaltsOnInputIn M n w := by
+  simpa [HaltsOnInputIn, initial, indexedDecidable] using
+    indexedDecidable_haltsFromIn_iff (M := M) (n := n)
+      (c := initial M w)
 
 theorem computesIn_succ_iff {M : TuringMachine symbol state}
     {n : Nat} {c e : Configuration symbol state} :

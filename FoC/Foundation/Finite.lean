@@ -35,9 +35,10 @@ namespace FiniteType
 /-!
 Finite-state constructions sometimes need to replace an arbitrary finite state
 type by a concrete index type.  The index/value helpers below use the
-enumerating list carried by {name}`FiniteType`; they are intentionally
-noncomputable because the project only needs them for finite construction
-packaging, not for extracted computation.
+enumerating list carried by {name}`FiniteType`.  The general index helper is
+intentionally noncomputable because it does not assume decidable equality; the
+decidable-equality variant records the executable search used by finite
+machine constructions.
 -/
 
 def fin (n : Nat) : FiniteType (Fin n) where
@@ -143,6 +144,38 @@ theorem valueOf_indexOf
       finite.elems[i] = x :=
     (List.mem_iff_getElem).mp (finite.complete x)
   exact Classical.choose_spec (Classical.choose_spec h)
+
+def indexOfMemDecidable [DecidableEq alpha] :
+    (xs : List alpha) -> (x : alpha) -> x ∈ xs -> Fin xs.length
+  | [], _x, h => False.elim (by simp at h)
+  | y :: ys, x, h =>
+      if hxy : x = y then
+        ⟨0, by simp⟩
+      else
+        let tailIndex := indexOfMemDecidable ys x (by
+          simpa [hxy] using h)
+        ⟨tailIndex.val + 1, by
+          have hlt := tailIndex.isLt
+          exact Nat.succ_lt_succ hlt⟩
+
+theorem get_indexOfMemDecidable [DecidableEq alpha] :
+    (xs : List alpha) -> (x : alpha) -> (h : x ∈ xs) ->
+      xs[indexOfMemDecidable xs x h] = x
+  | [], _x, h => False.elim (by simp at h)
+  | y :: ys, x, h => by
+      by_cases hxy : x = y
+      · simp [indexOfMemDecidable, hxy]
+      · simp [indexOfMemDecidable, hxy]
+        exact get_indexOfMemDecidable ys x (by simpa [hxy] using h)
+
+def indexOfDecidable [DecidableEq alpha]
+    (finite : FiniteType alpha) (x : alpha) : Fin finite.elems.length :=
+  indexOfMemDecidable finite.elems x (finite.complete x)
+
+theorem valueOf_indexOfDecidable [DecidableEq alpha]
+    (finite : FiniteType alpha) (x : alpha) :
+    valueOf finite (indexOfDecidable finite x) = x :=
+  get_indexOfMemDecidable finite.elems x (finite.complete x)
 
 end FiniteType
 
