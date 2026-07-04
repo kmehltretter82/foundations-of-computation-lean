@@ -670,9 +670,6 @@ title = "Section 5.3: Diagonal Machinery"
 [modules."FoC.Book.Chapter05.Section03.BasicPart2"]
 title = "Section 5.3: Universal Machine Closeout"
 
-[modules."FoC.Computability.APICrossReference"]
-title = "Computability API Cross Reference"
-
 [modules."FoC.Computability.DiagonalPairMachine"]
 title = "Diagonal Pair Machine"
 
