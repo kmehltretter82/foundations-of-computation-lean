@@ -177,8 +177,8 @@ def toMachineDescription (D : Description) : MachineDescription :=
 @[simp] theorem toMachineDescription_stateCount
     (D : Description) :
     (toMachineDescription D).stateCount =
-      D.stateCount + (D.transitions.filterMap lowerTransition?).length := by
-  rfl
+      D.stateCount + D.stateCount * 3 := by
+  simp [toMachineDescription, toMachineDescriptionWithStay]
 
 @[simp] theorem toMachineDescription_start
     (D : Description) :
