@@ -1128,7 +1128,7 @@ def checkedHaltConfig (w : Word Bool) (stage : Nat) :
   { state := SIMS.halt
     tape := stageInputSecondBitMarkedCheckedHandoffTape w stage }
 
-def state120AfterStartConfig
+private def state120AfterStartConfig
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     Configuration :=
   config 120 [none, some true, none, some false]
@@ -1189,7 +1189,7 @@ theorem activeLengthPrefixRestored (n : Nat) :
   | succ n =>
       rfl
 
-def markingState120
+private def markingState120
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) : Configuration :=
   config 120 (activeLengthPrefixRev processed.length)
@@ -1199,7 +1199,7 @@ def markingState120
           (List.append ((cellsBits rest).map some)
             ((stageNatBits stage).map some)))))
 
-def state100AfterMarked
+private def state100AfterMarked
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) : Configuration :=
   config 100 (finishLengthPrefixRev processed.length)
@@ -1556,7 +1556,7 @@ theorem run_state170_none_to_state180
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
-def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
+private def state160AfterRestoreConfig (w : Word Bool) (stage : Nat) :
     Configuration :=
   config 160
     (List.append ((cellsBits w).reverse.map some)
@@ -1576,27 +1576,27 @@ theorem stageInputSecondBitTail_eq_prefix_stageNat
       simp [stageInputSecondBitTailPrefix,
         stageInputSecondBitTail_cons, List.append_assoc]
 
-def markedStageNatBits (stage : Nat) : List (Option Bool) :=
+private def markedStageNatBits (stage : Nat) : List (Option Bool) :=
   some false :: none :: ((stageNatBits stage).drop 2).map some
 
-def appendBlankStartConfig (w : Word Bool) (stage : Nat) :
+private def appendBlankStartConfig (w : Word Bool) (stage : Nat) :
     Configuration :=
   config 180 [none, some false]
     (List.append ((stageInputSecondBitTailPrefix w).map some)
       (markedStageNatBits stage))
 
-def AppendBlankStart
+private def AppendBlankStart
     (w : Word Bool) (stage : Nat)
     (cfg : Configuration) : Prop :=
   cfg = appendBlankStartConfig w stage
 
-def checkedBoundaryScanConfig (w : Word Bool) (stage : Nat) :
+private def checkedBoundaryScanConfig (w : Word Bool) (stage : Nat) :
     Configuration :=
   state220ScanConfig
     (stageInputSecondBitTail w stage).reverse
     none [some false] [none]
 
-def CheckedBoundaryScanStart
+private def CheckedBoundaryScanStart
     (w : Word Bool) (stage : Nat)
     (cfg : Configuration) : Prop :=
   cfg = checkedBoundaryScanConfig w stage
