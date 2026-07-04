@@ -35,7 +35,7 @@ def ResultNoneGuardRewindDescription : MachineDescription where
         Direction.right 4
     ]
 
-theorem resultNoneGuardRewindDescription_wellFormed :
+private theorem resultNoneGuardRewindDescription_wellFormed :
     ResultNoneGuardRewindDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -46,14 +46,14 @@ theorem resultNoneGuardRewindDescription_wellFormed :
       (l := ResultNoneGuardRewindDescription.transitions)
       (by decide)
 
-theorem resultNoneGuardRewindDescription_haltTransitionFree :
+private theorem resultNoneGuardRewindDescription_haltTransitionFree :
     ResultNoneGuardRewindDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ResultNoneGuardRewindDescription.transitions)
     (state := ResultNoneGuardRewindDescription.halt)
     (by decide)
 
-theorem resultNoneGuardRewindDescription_subroutineReady :
+private theorem resultNoneGuardRewindDescription_subroutineReady :
     ResultNoneGuardRewindDescription.SubroutineReady :=
   ⟨resultNoneGuardRewindDescription_wellFormed,
     resultNoneGuardRewindDescription_haltTransitionFree⟩
@@ -82,7 +82,7 @@ def resultNoneGuardRewindFinalTape
     (Tape.move Direction.right
       (resultNoneGuardRewindBoundaryTape bits))
 
-theorem resultNoneGuardRewindDescription_run_start
+private theorem resultNoneGuardRewindDescription_run_start
     (leftRev : Word Bool) :
     ResultNoneGuardRewindDescription.runConfig 2
         { state := ResultNoneGuardRewindDescription.start
@@ -96,7 +96,7 @@ theorem resultNoneGuardRewindDescription_run_start
   | cons b rest =>
       cases b <;> rfl
 
-theorem resultNoneGuardRewindDescription_run_left_scan
+private theorem resultNoneGuardRewindDescription_run_left_scan
     (leftRev : Word Bool) (right : List (Option Bool)) :
     ResultNoneGuardRewindDescription.runConfig leftRev.length
         { state := 2
@@ -152,7 +152,7 @@ theorem resultNoneGuardRewindDescription_run_left_scan
         rw [ih]
         simp [List.append_assoc]
 
-theorem resultNoneGuardRewindDescription_run_finish
+private theorem resultNoneGuardRewindDescription_run_finish
     (bits : Word Bool) :
     ResultNoneGuardRewindDescription.runConfig 2
         { state := 2
@@ -165,7 +165,7 @@ theorem resultNoneGuardRewindDescription_run_finish
   | cons b rest =>
       cases b <;> cases rest <;> rfl
 
-theorem resultNoneGuardRewindDescription_run_scanned
+private theorem resultNoneGuardRewindDescription_run_scanned
     (bits : Word Bool) :
     ResultNoneGuardRewindDescription.runConfig
         (bits.length + 4)
@@ -240,7 +240,7 @@ private theorem resultNoneGuardRewindFinalTape_handoff_equiv
               resultNoneGuardRewind_dropTrailingNone_map_some,
               resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks]
 
-def resultNoneGuardOffsetTransition
+private def resultNoneGuardOffsetTransition
     (offset : Nat) (t : TransitionDescription) :
     TransitionDescription :=
   { source := offset + t.source
@@ -307,7 +307,7 @@ theorem resultNoneGuardScanRewindDescription_subroutineReady :
   ⟨resultNoneGuardScanRewindDescription_wellFormed,
     resultNoneGuardScanRewindDescription_haltTransitionFree⟩
 
-theorem resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
+private theorem resultNoneGuardScanRewindDescription_state_ne_halt_of_later_ne_halt
     {c : Configuration} {n k : Nat}
     (hle : n ≤ k)
     (hlater :

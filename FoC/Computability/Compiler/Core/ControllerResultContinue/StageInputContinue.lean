@@ -240,7 +240,7 @@ def StageInputContinueCheckedRewriterDescription : MachineDescription where
         14 none (some true) Direction.right 15
     ]
 
-theorem stageInputContinueCheckedRewriterDescription_wellFormed :
+private theorem stageInputContinueCheckedRewriterDescription_wellFormed :
     StageInputContinueCheckedRewriterDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -272,7 +272,7 @@ def stageInputContinueHeaderPrefixedTape
       [some false, some false, some false]
       (List.append (bits.map some) [none]))
 
-theorem stageInputContinueCheckedRewriterDescription_run_header
+private theorem stageInputContinueCheckedRewriterDescription_run_header
     (b : Bool) (rest : List (Option Bool)) :
     StageInputContinueCheckedRewriterDescription.runConfig 5
         { state := StageInputContinueCheckedRewriterDescription.start
@@ -308,7 +308,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_header_checked_cons
     stageInputContinueCheckedRewriterDescription_run_header
       b (List.append (bits.map some) [none])
 
-theorem stageInputContinueCheckedRewriterDescription_run_scan_nonempty
+private theorem stageInputContinueCheckedRewriterDescription_run_scan_nonempty
     (leftRev : List (Option Bool)) (b : Bool)
     (rest : List (Option Bool)) :
     StageInputContinueCheckedRewriterDescription.runConfig 1
@@ -328,7 +328,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_scan_nonempty
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem stageInputContinueCheckedRewriterDescription_run_scan
+private theorem stageInputContinueCheckedRewriterDescription_run_scan
     (leftRev : List (Option Bool)) (bits : Word Bool) :
     StageInputContinueCheckedRewriterDescription.runConfig bits.length
         { state := 5
@@ -363,7 +363,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_scan
       rw [ih]
       simp [List.append_assoc]
 
-theorem stageInputContinueCheckedRewriterDescription_run_to_last_bit
+private theorem stageInputContinueCheckedRewriterDescription_run_to_last_bit
     (leftRev : List (Option Bool)) (lastBit : Bool) :
     StageInputContinueCheckedRewriterDescription.runConfig 1
         { state := 5
@@ -382,7 +382,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_to_last_bit
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
-theorem stageInputContinueCheckedRewriterDescription_run_rewrite_last
+private theorem stageInputContinueCheckedRewriterDescription_run_rewrite_last
     (leftRev : List (Option Bool)) (lastBit : Bool) :
     StageInputContinueCheckedRewriterDescription.runConfig 1
         { state := 6
@@ -432,7 +432,7 @@ theorem stageInputContinueOutputTape_normalizedOutput
     DovetailInitialLayoutInitializer.tapeAtCells,
     Tape.normalizedOutput, Tape.cells, hfilter]
 
-theorem stageInputContinueCheckedRewriterDescription_run_append_done_done
+private theorem stageInputContinueCheckedRewriterDescription_run_append_done_done
     (leftRev : List (Option Bool)) :
     StageInputContinueCheckedRewriterDescription.runConfig 8
         { state := 7
@@ -454,7 +454,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_append_done_done
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveRight]
 
-theorem stageInputContinueCheckedRewriterDescription_haltsFromTape_prefixBits
+private theorem stageInputContinueCheckedRewriterDescription_haltsFromTape_prefixBits
     (prefixBits : Word Bool) :
     StageInputContinueCheckedRewriterDescription.HaltsFromTape
       (stageInputContinueCheckedTape

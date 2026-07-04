@@ -12,10 +12,10 @@ namespace Computability
 open Languages
 open MachineDescription
 
-/-
+/-!
 The broad dovetail compiler above talks about arbitrary Lean traces.  The
 paired-recognizer version below is the concrete Section 5.2 transition-level
-handoff: both traces come from finite `MachineDescription` interpreters.
+handoff: both traces come from finite {lit}`MachineDescription` interpreters.
 It is still a construction principle, but it names the exact uniform machine
 description that a real dovetailing compiler must build.
 -/

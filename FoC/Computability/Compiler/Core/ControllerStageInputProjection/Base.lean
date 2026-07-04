@@ -289,7 +289,7 @@ theorem encodeNat_eq_replicate_tick_done
   | succ n ih =>
       simp [encodeNat, ih, List.replicate_succ]
 
-theorem encodeCodeWordAsInput_encodeNat
+private theorem encodeCodeWordAsInput_encodeNat
     (n : Nat) :
     encodeCodeWordAsInput
         (encodeNat n) =
@@ -300,7 +300,7 @@ theorem encodeCodeWordAsInput_encodeNat
   rw [encodeNat_eq_replicate_tick_done,
     encodeCodeWordAsInput_append]
 
-theorem projectionDoneCodeCells_filterMap :
+private theorem projectionDoneCodeCells_filterMap :
     projectionDoneCodeCells.filterMap (fun cell => cell) =
       encodeCodeWordAsInput [MachineCodeSymbol.done] := by
   simpa [projectionDoneCodeCells] using
@@ -437,7 +437,7 @@ theorem projectionCodeCells_encodeBoolWord
     projectionMarkedBoolPayloadCells, projectionCodeCells_replicate_tick,
     hnil]
 
-def transitionCore : List TransitionDescription :=
+private def transitionCore : List TransitionDescription :=
   [ erase 0 (some false) 1
     , erase 1 (some false) 2
     , erase 2 (some false) 3
@@ -726,7 +726,7 @@ theorem run_stage_nat
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
-theorem run_stage_nat_bool_word_suffix
+private theorem run_stage_nat_bool_word_suffix
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool)
     (suffix : Word MachineCodeSymbol) :
     Description.runConfig

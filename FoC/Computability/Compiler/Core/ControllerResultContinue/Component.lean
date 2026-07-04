@@ -37,7 +37,7 @@ def ProjectionTailRewindDescription : MachineDescription where
         1 none none Direction.right 2
     ]
 
-theorem projectionTailRewindDescription_wellFormed :
+private theorem projectionTailRewindDescription_wellFormed :
     ProjectionTailRewindDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -48,7 +48,7 @@ theorem projectionTailRewindDescription_wellFormed :
       (l := ProjectionTailRewindDescription.transitions)
       (by decide)
 
-theorem projectionTailRewindDescription_haltTransitionFree :
+private theorem projectionTailRewindDescription_haltTransitionFree :
     ProjectionTailRewindDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := ProjectionTailRewindDescription.transitions)
@@ -63,7 +63,7 @@ theorem projectionTailRewindDescription_subroutineReady :
 def StageInputContinueBoundaryRewriterDescription : MachineDescription :=
   { StageInputContinueCheckedRewriterDescription with start := 1 }
 
-theorem stageInputContinueBoundaryRewriterDescription_wellFormed :
+private theorem stageInputContinueBoundaryRewriterDescription_wellFormed :
     StageInputContinueBoundaryRewriterDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -74,7 +74,7 @@ theorem stageInputContinueBoundaryRewriterDescription_wellFormed :
       (l := StageInputContinueBoundaryRewriterDescription.transitions)
       (by decide)
 
-theorem stageInputContinueBoundaryRewriterDescription_haltTransitionFree :
+private theorem stageInputContinueBoundaryRewriterDescription_haltTransitionFree :
     StageInputContinueBoundaryRewriterDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := StageInputContinueBoundaryRewriterDescription.transitions)
@@ -98,7 +98,7 @@ theorem projectedStageInputContinueDescription_subroutineReady :
     projectionTailRewindDescription_subroutineReady
     stageInputContinueBoundaryRewriterDescription_subroutineReady
 
-theorem stageInputContinueBoundaryRewriterDescription_run_header
+private theorem stageInputContinueBoundaryRewriterDescription_run_header
     (right : List (Option Bool)) :
     StageInputContinueBoundaryRewriterDescription.runConfig 4
         { state := StageInputContinueBoundaryRewriterDescription.start
@@ -118,7 +118,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_header
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem stageInputContinueBoundaryRewriterDescription_run_scan_nonempty
+private theorem stageInputContinueBoundaryRewriterDescription_run_scan_nonempty
     (leftRev : List (Option Bool)) (b : Bool)
     (rest : List (Option Bool)) :
     StageInputContinueBoundaryRewriterDescription.runConfig 1
@@ -139,7 +139,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_scan_nonempty
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem stageInputContinueBoundaryRewriterDescription_run_scan
+private theorem stageInputContinueBoundaryRewriterDescription_run_scan
     (leftRev : List (Option Bool)) (bits : Word Bool) :
     StageInputContinueBoundaryRewriterDescription.runConfig bits.length
         { state := 5
@@ -174,7 +174,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_scan
       rw [ih]
       simp [List.append_assoc]
 
-theorem stageInputContinueBoundaryRewriterDescription_run_to_last_bit
+private theorem stageInputContinueBoundaryRewriterDescription_run_to_last_bit
     (leftRev : List (Option Bool)) (lastBit : Bool) :
     StageInputContinueBoundaryRewriterDescription.runConfig 1
         { state := 5
@@ -194,7 +194,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_to_last_bit
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
-theorem stageInputContinueBoundaryRewriterDescription_run_rewrite_last
+private theorem stageInputContinueBoundaryRewriterDescription_run_rewrite_last
     (leftRev : List (Option Bool)) (lastBit : Bool) :
     StageInputContinueBoundaryRewriterDescription.runConfig 1
         { state := 6
@@ -214,7 +214,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_rewrite_last
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem stageInputContinueBoundaryRewriterDescription_run_append_done_done
+private theorem stageInputContinueBoundaryRewriterDescription_run_append_done_done
     (leftRev : List (Option Bool)) :
     StageInputContinueBoundaryRewriterDescription.runConfig 8
         { state := 7
@@ -237,7 +237,7 @@ theorem stageInputContinueBoundaryRewriterDescription_run_append_done_done
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveRight]
 
-theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
+private theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
     (prefixBits : Word Bool) :
     StageInputContinueBoundaryRewriterDescription.HaltsFromTape
       (DovetailInitialLayoutInitializer.tapeAtCells []
@@ -605,7 +605,7 @@ private theorem projectionFinalTape_move_left_eq_tailBlock
     Tape.move, Tape.moveLeft, DovetailInitialLayoutInitializer.tapeAtCells]
   exact hblank
 
-theorem projectionTailRewindDescription_run_blank
+private theorem projectionTailRewindDescription_run_blank
     (leftRev right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig 1
         { state := ProjectionTailRewindDescription.start
@@ -623,7 +623,7 @@ theorem projectionTailRewindDescription_run_blank
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft]
 
-theorem projectionTailRewindDescription_run_blank_to_cell
+private theorem projectionTailRewindDescription_run_blank_to_cell
     (leftCell : Option Bool) (leftRev right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig 1
         { state := ProjectionTailRewindDescription.start
@@ -701,7 +701,7 @@ theorem projectionTailRewindDescription_run_finish
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem projectionTailRewindDescription_run_blanks
+private theorem projectionTailRewindDescription_run_blanks
     (n : Nat) (leftRev right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig n
         { state := ProjectionTailRewindDescription.start
@@ -744,7 +744,7 @@ theorem projectionTailRewindDescription_run_blanks
       rw [show 1 + n + 1 = n + 1 + 1 by lia]
       simp [List.replicate_succ', List.append_assoc]
 
-theorem projectionTailRewindDescription_run_scan_to_first_bit
+private theorem projectionTailRewindDescription_run_scan_to_first_bit
     (bitsLeftRev : Word Bool) (headBit : Bool)
     (prefixLeft right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig
@@ -807,7 +807,7 @@ theorem projectionTailRewindDescription_run_scan_to_first_bit
       rw [ih bit (some headBit :: right)]
       simp [List.reverse_cons, List.map_append, List.append_assoc]
 
-theorem projectionTailRewindDescription_run_from_last_bit
+private theorem projectionTailRewindDescription_run_from_last_bit
     (bitsLeftRev : Word Bool) (lastBit : Bool)
     (prefixLeft right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig
@@ -871,7 +871,7 @@ theorem projectionTailRewindDescription_run_from_last_bit
         rest bit prefixLeft (some lastBit :: right)]
       simp [List.reverse_cons, List.map_append, List.append_assoc]
 
-theorem projectionTailRewindDescription_run_tail_block
+private theorem projectionTailRewindDescription_run_tail_block
     (trail : Nat) (bitsLeftRev : Word Bool) (lastBit : Bool)
     (prefixLeft right : List (Option Bool)) :
     ProjectionTailRewindDescription.runConfig

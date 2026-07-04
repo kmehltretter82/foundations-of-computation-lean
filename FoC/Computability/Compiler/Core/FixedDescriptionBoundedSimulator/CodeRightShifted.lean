@@ -62,7 +62,7 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape
       (encodeCodeWordAsInput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode D L)))
 
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape_normalizedOutput
+private theorem fixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape_normalizedOutput
     (D : MachineDescription) (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorCodeRightShiftedOutputTape D L) =
@@ -416,13 +416,6 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction :
 def FixedDescriptionBoundedSimulatorCodeRightShiftedRunner
     (parser emitter : MachineDescription) : MachineDescription :=
   seqSubroutine parser emitter Direction.left
-
-theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParser_handoff
-    (L : SimulatorLayout) :
-    Tape.move Direction.left
-        (CommonGround.SimulatorLayouts.handoffTape L) =
-      Tape.input (SimulatorLayout.asBoolInput L) := by
-  exact CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
     {D parser emitter : MachineDescription}

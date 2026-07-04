@@ -101,7 +101,7 @@ theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
       (Tape.contextLength
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
 
-theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_normalizedOutput
+private theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_normalizedOutput
     (D : MachineDescription) (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) =
@@ -112,7 +112,7 @@ theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_normalizedOutput
       (Tape.contextLength
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)))
 
-theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_contextLength_ge_input
+private theorem FixedDescriptionBoundedSimulatorPaddedOutputTape_contextLength_ge_input
     (D : MachineDescription) (L : SimulatorLayout) :
     Tape.contextLength
         (Tape.input (FixedDescriptionBoundedSimulatorInput L)) <=

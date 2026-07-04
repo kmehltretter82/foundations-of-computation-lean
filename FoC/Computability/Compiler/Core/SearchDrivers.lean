@@ -1163,7 +1163,7 @@ theorem fixedDescriptionStepCodeConfigurationRealizerConstruction_iff_outputReal
   · exact
       fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
 
-theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
+private theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
     {D stepper : MachineDescription}
     (hstepper :
       TapeCodePrimitiveOutputRealizedByDescription
@@ -1180,7 +1180,7 @@ theorem fixedDescriptionStepCodeConfigurationRealizes_of_runConfig_one_eq_id
       (encodeConfiguration c)
       rfl
 
-theorem runConfig_one_eq_id_of_transitions_nil
+private theorem runConfig_one_eq_id_of_transitions_nil
     {D : MachineDescription}
     (hD : D.transitions = []) :
     forall c : Configuration, D.runConfig 1 c = c := by

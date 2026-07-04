@@ -44,7 +44,7 @@ def DecomposedResultContinuePrimitive : TapeCodePrimitive :=
     GuardProjectionPrimitive
     StageInputContinuePrimitive
 
-theorem nextStage_encode_eq_header_input_succ_empty
+private theorem nextStage_encode_eq_header_input_succ_empty
     (C : DovetailControllerLayout) :
     DovetailControllerLayout.encode
         (DovetailControllerLayout.nextStage C) =
@@ -55,7 +55,7 @@ theorem nextStage_encode_eq_header_input_succ_empty
   cases C
   rfl
 
-theorem rawOutput_eq_none_iff_empty_or_multi
+private theorem rawOutput_eq_none_iff_empty_or_multi
     (result : Word Bool) :
     PairedRecognizerDovetailControllerRawOutput result = none <->
       result = [] ∨
@@ -141,7 +141,7 @@ theorem stageInputContinuePrimitive_transform_eq_some_iff
     unfold StageInputContinuePrimitive
     simp [DovetailLayout.decodeStageInputComplete_stageInputCode]
 
-theorem stageInputContinuePrimitive_stageInputCode
+private theorem stageInputContinuePrimitive_stageInputCode
     (C : DovetailControllerLayout) :
     StageInputContinuePrimitive.transform
         (PairedRecognizerDovetailControllerStageInputCode C) =
@@ -217,7 +217,7 @@ theorem guardProjectionPrimitive_transform_eq_some_iff
           ⟨C, rfl, hraw, rfl⟩)
         (pairedRecognizerDovetailControllerStageInputCode_encode C)
 
-theorem decomposedResultContinuePrimitive_transform_eq
+private theorem decomposedResultContinuePrimitive_transform_eq
     (code : Word MachineCodeSymbol) :
     DecomposedResultContinuePrimitive.transform code =
       PairedRecognizerDovetailControllerResultContinueCode.transform code := by

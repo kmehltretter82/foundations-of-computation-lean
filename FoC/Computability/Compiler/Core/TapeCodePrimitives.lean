@@ -22,7 +22,7 @@ One left move then puts the next subroutine at the same canonical
 def tapeCodePrimitiveCodeWordHandoffMove : Direction :=
   Direction.left
 
-theorem tape_move_right_ne_input {symbol : Type} (T : Tape symbol)
+private theorem tape_move_right_ne_input {symbol : Type} (T : Tape symbol)
     (w : Word symbol) :
     Tape.move Direction.right T ≠ Tape.input w := by
   cases T with

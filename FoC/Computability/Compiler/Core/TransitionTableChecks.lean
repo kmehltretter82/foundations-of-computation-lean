@@ -40,7 +40,7 @@ def transitionNotFromBool
     (state : Nat) (t : TransitionDescription) : Bool :=
   decide (t.source ≠ state)
 
-theorem list_all_flatten_of_chunk_all
+private theorem list_all_flatten_of_chunk_all
     {α : Type} {p : α -> Bool} {chunks : List (List α)}
     (h : chunks.all (fun l => l.all p) = true) :
     chunks.flatten.all p = true := by
@@ -90,7 +90,7 @@ theorem transition_deterministic_of_all
   simpa [transitionDeterministicPairBool, hkeyBool, transitionSameActionBool,
     TransitionDescription.SameAction, and_assoc] using hubool
 
-theorem transition_deterministic_bool_flatten_of_chunks
+private theorem transition_deterministic_bool_flatten_of_chunks
     {chunks : List (List TransitionDescription)}
     (h : transitionChunksDeterministicBool chunks = true) :
     chunks.flatten.all (fun t =>

@@ -96,7 +96,7 @@ above. They are stated against encoded words rather than tapes, so later
 finite-machine proofs can reuse them when closing handoff obligations.
 -/
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageInput
     (w : Word Bool) (limit fuel : Nat) :
     DovetailLayout.decodeStageInput
         (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
@@ -105,7 +105,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelInputCode_decodeStageI
   exact DovetailLayout.decodeStageInput_stageInputCodeAppend
     w limit (encodeNatAppend fuel [])
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode_encode
     (attempt : MachineDescription)
     (w : Word Bool) (limit fuel : Nat) :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCode attempt
@@ -233,7 +233,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout_haltsW
     MachineDescription.HaltsWithOutputIn, SimulatorLayout.initial,
     SimulatorLayout.run]
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_iff
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_iff
     (attempt : MachineDescription)
     (w : Word Bool) (limit fuel : Nat) (out : Word MachineCodeSymbol) :
     let L :=
@@ -302,7 +302,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_tr
       SimulatorLayout.decodeComplete_encode, hstate,
       (decodeCodeWordAsInput_eq_some_iff _ _).mpr houtput]
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_boolWord_iff
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCode_run_boolWord_iff
     (attempt : MachineDescription)
     (w result : Word Bool) (limit fuel : Nat) :
     let L :=
