@@ -414,6 +414,69 @@ theorem logicalTapeTokens_headMarker_split
           logicalCellListTokens T.right) := by
   simp [logicalTapeTokens, List.append_assoc]
 
+/-- Raw Boolean payload for one encoded logical cell. -/
+def logicalCellBits : Option Bool -> Word Bool
+  | none => [false, false]
+  | some false => [false, true]
+  | some true => [true, false]
+
+/-- Raw Boolean payload for a list of encoded logical cells. -/
+def logicalCellListBits :
+    List (Option Bool) -> Word Bool
+  | [] => []
+  | cell :: rest =>
+      List.append (logicalCellBits cell)
+        (logicalCellListBits rest)
+
+/-- Raw Boolean payload for one encoded logical tape segment. -/
+def logicalTapeBits (T : Tape Bool) : Word Bool :=
+  List.append (logicalCellListBits T.left.reverse)
+    (List.append [true, true]
+      (List.append (logicalCellBits T.head)
+        (logicalCellListBits T.right)))
+
+@[simp] theorem logicalCellCode_eq_map_some
+    (cell : Option Bool) :
+    logicalCellCode cell = (logicalCellBits cell).map some := by
+  cases cell with
+  | none => rfl
+  | some bit =>
+      cases bit <;> rfl
+
+@[simp] theorem logicalCellListCode_eq_map_some
+    (cells : List (Option Bool)) :
+    logicalCellListCode cells =
+      (logicalCellListBits cells).map some := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      simp [logicalCellListCode, logicalCellListBits, ih,
+        List.map_append]
+
+theorem logicalTapeCode_eq_map_some
+    (T : Tape Bool) :
+    logicalTapeCode T = (logicalTapeBits T).map some := by
+  simp [logicalTapeCode, logicalTapeBits, headMarkerCells]
+
+theorem logicalTapeBits_exists_cons
+    (T : Tape Bool) :
+    exists bit : Bool, exists rest : Word Bool,
+      logicalTapeBits T = bit :: rest := by
+  unfold logicalTapeBits
+  cases hleft : logicalCellListBits T.left.reverse with
+  | nil =>
+      exists true
+      exists true ::
+        List.append (logicalCellBits T.head)
+          (logicalCellListBits T.right)
+  | cons bit bits =>
+      exists bit
+      exists List.append bits
+        (List.append [true, true]
+          (List.append (logicalCellBits T.head)
+            (logicalCellListBits T.right)))
+
 /--
 Left guard condition for a logical tape.  It records that moving the logical
 head left can consume an already represented cell rather than forcing a
@@ -1159,6 +1222,487 @@ theorem lowersTransition_realizes_structured_step
     exact stepConfig_eq_some_of_lookupTransition hlookup
   · rw [hnext]
     exact lowersTransition_realizes_lookup h hlookup
+
+/-!
+## Cursor-level physical routines
+-/
+
+/--
+Cursor position immediately after the separator that opens a logical tape
+segment.  This is the first executable cursor boundary after
+{name}`AtTapeSeparator`: a one-tape machine can move right from a separator
+into the segment, then later scan for the head marker or next separator.
+-/
+def AtTapeSegmentEntry
+    (logical : List (Tape Bool)) (tapeIndex : Nat)
+    (physical : Tape Bool) : Prop :=
+  exists T : Tape Bool, exists rest : List (Tape Bool),
+    logical.drop tapeIndex = T :: rest ∧
+      physical =
+        tapeAtEncodedSplit
+          (List.append
+            (encodedPrefixBeforeTape logical tapeIndex)
+            tapeSeparatorCells)
+          (List.append (logicalTapeCode T)
+            (encodedStructuredTapeCells rest))
+
+/--
+Cursor position on the separator immediately after a logical tape segment.
+
+This is intentionally stated with the same {lit}`drop tapeIndex = T :: rest`
+witness as {name}`AtTapeSegmentEntry`; a later bridge can identify this with
+{lit}`AtTapeSeparator logical (tapeIndex + 1)`.
+-/
+def AtTapeSegmentExit
+    (logical : List (Tape Bool)) (tapeIndex : Nat)
+    (physical : Tape Bool) : Prop :=
+  exists T : Tape Bool, exists rest : List (Tape Bool),
+    logical.drop tapeIndex = T :: rest ∧
+      physical =
+        tapeAtEncodedSplit
+          (List.append
+            (List.append
+              (encodedPrefixBeforeTape logical tapeIndex)
+              tapeSeparatorCells)
+            (logicalTapeCode T))
+          (encodedStructuredTapeCells rest)
+
+/-- A separator cursor whose selected tape segment exists. -/
+def AtExistingTapeSeparator
+    (logical : List (Tape Bool)) (tapeIndex : Nat)
+    (physical : Tape Bool) : Prop :=
+  AtTapeSeparator logical tapeIndex physical ∧
+    exists T : Tape Bool, exists rest : List (Tape Bool),
+      logical.drop tapeIndex = T :: rest
+
+/--
+Contract for a concrete cursor routine.
+
+Unlike {name}`PhysicalPrimitiveContract`, this does not force the routine to
+start and end at the canonical block boundary.  It is the lower-level shape
+needed by real physical seek/scan routines.
+-/
+structure CursorRoutineContract
+    (source target : List (Tape Bool) -> Tape Bool -> Prop)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+    forall Tin : Tape Bool,
+      source logical Tin ->
+        exists Tout : Tape Bool,
+          machine.HaltsFromTape Tin Tout ∧ target logical Tout
+
+/--
+Concrete zero-step cursor machine.
+
+This is useful for already-at-boundary routines, notably the fixed
+{lit}`seekTape 0` case from the canonical encoded block start.
+-/
+def cursorNoopDescription : MachineDescription where
+  stateCount := 1
+  start := 0
+  halt := 0
+  transitions := []
+
+theorem cursorNoopDescription_wellFormed :
+    cursorNoopDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · intro t ht
+    simp [cursorNoopDescription] at ht
+  · intro t _u ht _hu _hkey
+    simp [cursorNoopDescription] at ht
+
+theorem cursorNoopDescription_haltTransitionFree :
+    cursorNoopDescription.HaltTransitionFree := by
+  intro t ht
+  simp [cursorNoopDescription] at ht
+
+theorem cursorNoopDescription_subroutineReady :
+    cursorNoopDescription.SubroutineReady :=
+  ⟨cursorNoopDescription_wellFormed,
+    cursorNoopDescription_haltTransitionFree⟩
+
+theorem cursorNoopDescription_haltsFromTape
+    (T : Tape Bool) :
+    cursorNoopDescription.HaltsFromTape T T := by
+  refine ⟨0, ?_⟩
+  constructor <;> rfl
+
+theorem cursorNoopDescription_contract
+    (P : List (Tape Bool) -> Tape Bool -> Prop) :
+    CursorRoutineContract P P cursorNoopDescription where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro logical Tin hsource
+    exact ⟨Tin, cursorNoopDescription_haltsFromTape Tin, hsource⟩
+
+/-- The concrete fixed-index seek routine for tape 0 at block start. -/
+def seekTape0Description : MachineDescription :=
+  cursorNoopDescription
+
+theorem seekTape0Description_physicalPrimitiveContract :
+    PhysicalPrimitiveContract (PhysicalPrimitive.seekTape 0)
+      seekTape0Description where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro logical _henabled
+    exact cursorNoopDescription_haltsFromTape
+      (encodedStructuredTapes logical)
+
+/-- Return-to-block-start is also a no-op once the caller is already there. -/
+def returnBlockStartNoopDescription : MachineDescription :=
+  cursorNoopDescription
+
+theorem returnBlockStartNoopDescription_physicalPrimitiveContract :
+    PhysicalPrimitiveContract PhysicalPrimitive.returnToBlockStart
+      returnBlockStartNoopDescription where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro logical _henabled
+    exact cursorNoopDescription_haltsFromTape
+      (encodedStructuredTapes logical)
+
+/-- Preserve the current physical cell and move once. -/
+def cursorMoveOnceDescription (move : Direction) :
+    MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ { source := 0
+        read := none
+        write := none
+        move := move
+        target := 1 }
+    , { source := 0
+        read := some false
+        write := some false
+        move := move
+        target := 1 }
+    , { source := 0
+        read := some true
+        write := some true
+        move := move
+        target := 1 } ]
+
+theorem cursorMoveOnceDescription_wellFormed
+    (move : Direction) :
+    (cursorMoveOnceDescription move).WellFormed := by
+  cases move
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := (cursorMoveOnceDescription Direction.left).transitions)
+      (stateCount := (cursorMoveOnceDescription Direction.left).stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := (cursorMoveOnceDescription Direction.left).transitions)
+      (by decide)
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := (cursorMoveOnceDescription Direction.right).transitions)
+      (stateCount := (cursorMoveOnceDescription Direction.right).stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := (cursorMoveOnceDescription Direction.right).transitions)
+      (by decide)
+
+theorem cursorMoveOnceDescription_haltTransitionFree
+    (move : Direction) :
+    (cursorMoveOnceDescription move).HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := (cursorMoveOnceDescription move).transitions)
+    (state := (cursorMoveOnceDescription move).halt)
+    (by cases move <;> decide)
+
+theorem cursorMoveOnceDescription_subroutineReady
+    (move : Direction) :
+    (cursorMoveOnceDescription move).SubroutineReady :=
+  ⟨cursorMoveOnceDescription_wellFormed move,
+    cursorMoveOnceDescription_haltTransitionFree move⟩
+
+theorem cursorMoveOnceDescription_run
+    (move : Direction) (T : Tape Bool) :
+    (cursorMoveOnceDescription move).runConfig 1
+        { state := (cursorMoveOnceDescription move).start
+          tape := T } =
+      { state := (cursorMoveOnceDescription move).halt
+        tape := Tape.move move T } := by
+  cases move <;>
+    cases T with
+    | mk left head right =>
+        cases head with
+        | none =>
+            simp [cursorMoveOnceDescription, MachineDescription.runConfig,
+              MachineDescription.stepConfig,
+              MachineDescription.lookupTransition,
+              MachineDescription.Matches, Tape.read, Tape.write]
+        | some bit =>
+            cases bit <;>
+              simp [cursorMoveOnceDescription,
+                MachineDescription.runConfig,
+                MachineDescription.stepConfig,
+                MachineDescription.lookupTransition,
+                MachineDescription.Matches, Tape.read, Tape.write]
+
+theorem cursorMoveOnceDescription_haltsFromTape
+    (move : Direction) (T : Tape Bool) :
+    (cursorMoveOnceDescription move).HaltsFromTape T
+      (Tape.move move T) := by
+  refine ⟨1, ?_⟩
+  constructor <;>
+    rw [cursorMoveOnceDescription_run]
+
+/--
+Scan right over the nonblank encoded cells of one logical tape segment, then
+bounce left/right so the final halted head is exactly on the next separator.
+-/
+def cursorScanToNextSeparatorDescription : MachineDescription where
+  stateCount := 3
+  start := 0
+  halt := 2
+  transitions :=
+    [ { source := 0
+        read := some false
+        write := some false
+        move := Direction.right
+        target := 0 }
+    , { source := 0
+        read := some true
+        write := some true
+        move := Direction.right
+        target := 0 }
+    , { source := 0
+        read := none
+        write := none
+        move := Direction.left
+        target := 1 }
+    , { source := 1
+        read := some false
+        write := some false
+        move := Direction.right
+        target := 2 }
+    , { source := 1
+        read := some true
+        write := some true
+        move := Direction.right
+        target := 2 } ]
+
+theorem cursorScanToNextSeparatorDescription_wellFormed :
+    cursorScanToNextSeparatorDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := cursorScanToNextSeparatorDescription.transitions)
+      (stateCount := cursorScanToNextSeparatorDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := cursorScanToNextSeparatorDescription.transitions)
+      (by decide)
+
+theorem cursorScanToNextSeparatorDescription_haltTransitionFree :
+    cursorScanToNextSeparatorDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := cursorScanToNextSeparatorDescription.transitions)
+    (state := cursorScanToNextSeparatorDescription.halt)
+    (by decide)
+
+theorem cursorScanToNextSeparatorDescription_subroutineReady :
+    cursorScanToNextSeparatorDescription.SubroutineReady :=
+  ⟨cursorScanToNextSeparatorDescription_wellFormed,
+    cursorScanToNextSeparatorDescription_haltTransitionFree⟩
+
+private theorem cursorScanToNextSeparatorDescription_step_bit
+    (left right : List (Option Bool)) (bit : Bool) :
+    cursorScanToNextSeparatorDescription.runConfig 1
+        { state := cursorScanToNextSeparatorDescription.start
+          tape := tapeAtCells left (some bit :: right) } =
+      { state := cursorScanToNextSeparatorDescription.start
+        tape := tapeAtCells (some bit :: left) right } := by
+  cases bit <;> cases right <;>
+    simp [cursorScanToNextSeparatorDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem cursorScanToNextSeparatorDescription_run_scan
+    (bits : Word Bool) (left suffix : List (Option Bool)) :
+    cursorScanToNextSeparatorDescription.runConfig bits.length
+        { state := cursorScanToNextSeparatorDescription.start
+          tape :=
+            tapeAtCells left
+              (List.append (bits.map some) (none :: suffix)) } =
+      { state := cursorScanToNextSeparatorDescription.start
+        tape :=
+          tapeAtCells
+            (List.append (bits.reverse.map some) left)
+            (none :: suffix) } := by
+  induction bits generalizing left with
+  | nil =>
+      simp [MachineDescription.runConfig]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length = 1 + rest.length by
+        simp [Nat.add_comm]]
+      rw [MachineDescription.runConfig_add]
+      change
+        cursorScanToNextSeparatorDescription.runConfig rest.length
+            (cursorScanToNextSeparatorDescription.runConfig 1
+              { state := cursorScanToNextSeparatorDescription.start
+                tape :=
+                  tapeAtCells left
+                    (some bit ::
+                      List.append (rest.map some) (none :: suffix)) }) =
+          { state := cursorScanToNextSeparatorDescription.start
+            tape :=
+              tapeAtCells
+                (List.append ((bit :: rest).reverse.map some) left)
+                (none :: suffix) }
+      rw [cursorScanToNextSeparatorDescription_step_bit left
+        (List.append (rest.map some) (none :: suffix)) bit]
+      simpa [List.reverse_cons, List.map_append,
+        List.append_assoc] using ih (some bit :: left)
+
+private theorem reverse_map_some_append_exists_cons
+    (bit : Bool) (rest : Word Bool)
+    (left : List (Option Bool)) :
+    exists head : Bool, exists tail : List (Option Bool),
+      List.append ((bit :: rest).reverse.map some) left =
+        some head :: tail := by
+  induction rest generalizing bit left with
+  | nil =>
+      exact ⟨bit, left, rfl⟩
+  | cons next rest ih =>
+      simpa [List.reverse_cons, List.map_append,
+        List.append_assoc] using ih next (some bit :: left)
+
+private theorem cursorScanToNextSeparatorDescription_run_finish
+    (bit : Bool) (left suffix : List (Option Bool)) :
+    cursorScanToNextSeparatorDescription.runConfig 2
+        { state := cursorScanToNextSeparatorDescription.start
+          tape := tapeAtCells (some bit :: left) (none :: suffix) } =
+      { state := cursorScanToNextSeparatorDescription.halt
+        tape := tapeAtCells (some bit :: left) (none :: suffix) } := by
+  cases bit <;> cases left <;> cases suffix <;>
+    simp [cursorScanToNextSeparatorDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight]
+
+theorem cursorScanToNextSeparatorDescription_run_to_next
+    (bit : Bool) (rest : Word Bool)
+    (left suffix : List (Option Bool)) :
+    cursorScanToNextSeparatorDescription.runConfig
+        ((bit :: rest).length + 2)
+        { state := cursorScanToNextSeparatorDescription.start
+          tape :=
+            tapeAtCells left
+              (List.append ((bit :: rest).map some)
+                (none :: suffix)) } =
+      { state := cursorScanToNextSeparatorDescription.halt
+        tape :=
+          tapeAtCells
+            (List.append ((bit :: rest).reverse.map some) left)
+            (none :: suffix) } := by
+  rw [MachineDescription.runConfig_add]
+  rw [cursorScanToNextSeparatorDescription_run_scan]
+  rcases reverse_map_some_append_exists_cons bit rest left with
+    ⟨head, tail, hleft⟩
+  rw [hleft]
+  exact cursorScanToNextSeparatorDescription_run_finish head tail suffix
+
+theorem cursorScanToNextSeparatorDescription_haltsFromTape
+    (bit : Bool) (rest : Word Bool)
+    (left suffix : List (Option Bool)) :
+    cursorScanToNextSeparatorDescription.HaltsFromTape
+      (tapeAtCells left
+        (List.append ((bit :: rest).map some) (none :: suffix)))
+      (tapeAtCells
+        (List.append ((bit :: rest).reverse.map some) left)
+        (none :: suffix)) := by
+  refine ⟨(bit :: rest).length + 2, ?_⟩
+  constructor <;>
+    rw [cursorScanToNextSeparatorDescription_run_to_next]
+
+theorem cursorScanToNextSeparatorDescription_contract_segmentEntry_to_exit
+    (tapeIndex : Nat) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtTapeSegmentEntry logical tapeIndex physical)
+      (fun logical physical =>
+        AtTapeSegmentExit logical tapeIndex physical)
+      cursorScanToNextSeparatorDescription where
+  subroutineReady :=
+    cursorScanToNextSeparatorDescription_subroutineReady
+  realizes := by
+    intro logical Tin hentry
+    rcases hentry with ⟨T, rest, hdrop, hTin⟩
+    rcases logicalTapeBits_exists_cons T with ⟨bit, bits, hbits⟩
+    rcases encodedStructuredTapeCells_startsWith_separator rest with
+      ⟨suffix, hsuffix⟩
+    let Tout :=
+      tapeAtEncodedSplit
+        (List.append
+          (List.append
+            (encodedPrefixBeforeTape logical tapeIndex)
+            tapeSeparatorCells)
+          (logicalTapeCode T))
+        (encodedStructuredTapeCells rest)
+    exists Tout
+    constructor
+    · rw [hTin]
+      have hrun :=
+        cursorScanToNextSeparatorDescription_haltsFromTape bit bits
+          (List.append
+            (encodedPrefixBeforeTape logical tapeIndex)
+            tapeSeparatorCells).reverse
+          suffix
+      simpa [Tout, tapeAtEncodedSplit, logicalTapeCode_eq_map_some T,
+        hbits, hsuffix, tapeSeparatorCells, List.reverse_append,
+        List.map_reverse, List.append_assoc] using hrun
+    · exact ⟨T, rest, hdrop, rfl⟩
+
+/--
+Moving right once from an existing tape separator enters that tape segment.
+This is the first concrete cursor-to-cursor routine used by later seek
+machines.
+-/
+theorem cursorMoveRightDescription_contract_separator_to_segmentEntry
+    (tapeIndex : Nat) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator logical tapeIndex physical)
+      (fun logical physical =>
+        AtTapeSegmentEntry logical tapeIndex physical)
+      (cursorMoveOnceDescription Direction.right) where
+  subroutineReady :=
+    cursorMoveOnceDescription_subroutineReady Direction.right
+  realizes := by
+    intro logical Tin hsource
+    rcases hsource with ⟨hseparator, T, rest, hdrop⟩
+    exists Tape.move Direction.right Tin
+    constructor
+    · exact cursorMoveOnceDescription_haltsFromTape Direction.right Tin
+    · rcases hseparator with ⟨_hle, hTin⟩
+      refine ⟨T, rest, hdrop, ?_⟩
+      rw [hTin]
+      have hmove :
+          Tape.move Direction.right
+            (tapeAtCells
+              (encodedPrefixBeforeTape logical tapeIndex).reverse
+              (none ::
+                List.append (logicalTapeCode T)
+                  (encodedStructuredTapeCells rest))) =
+            tapeAtCells
+              (none ::
+                (encodedPrefixBeforeTape logical tapeIndex).reverse)
+              (List.append (logicalTapeCode T)
+                (encodedStructuredTapeCells rest)) := by
+        cases hcells :
+            List.append (logicalTapeCode T)
+              (encodedStructuredTapeCells rest) <;>
+          rfl
+      simpa [tapeAtEncodedSplit, encodedSuffixFromTape, hdrop,
+        tapeSeparatorCells, List.reverse_append] using hmove
 
 end MultiTapeLowering
 end Structured
