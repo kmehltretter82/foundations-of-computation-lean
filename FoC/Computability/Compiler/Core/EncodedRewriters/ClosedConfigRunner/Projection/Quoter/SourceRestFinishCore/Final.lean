@@ -140,8 +140,7 @@ theorem assemblySourceRestFinishLeftBoundaryCoreConstruction :
 
 theorem assemblySourceRestFinishLeftBoundaryConstruction :
     AssemblySourceRestFinishLeftBoundaryConstruction :=
-  assemblySourceRestFinishLeftBoundaryConstruction_of_core
-    assemblySourceRestFinishLeftBoundaryCoreConstruction
+  assemblySourceRestFinishLeftBoundaryCoreConstruction
 
 theorem assemblySourceRestFinishQuoteBoundaryConstruction :
     AssemblySourceRestFinishQuoteBoundaryConstruction :=

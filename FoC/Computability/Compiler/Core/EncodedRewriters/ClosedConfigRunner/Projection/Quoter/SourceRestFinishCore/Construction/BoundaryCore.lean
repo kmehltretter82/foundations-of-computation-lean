@@ -35,28 +35,21 @@ def assemblySourceRestFinishLeftMoveDescription : MachineDescription where
     , transition 0 (some false) (some false) Direction.left 1
     , transition 0 (some true) (some true) Direction.left 1 ]
 
-theorem assemblySourceRestFinishLeftMoveDescription_wellFormed :
-    assemblySourceRestFinishLeftMoveDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := assemblySourceRestFinishLeftMoveDescription.transitions)
-      (stateCount := assemblySourceRestFinishLeftMoveDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := assemblySourceRestFinishLeftMoveDescription.transitions)
-      (by decide)
-
-theorem assemblySourceRestFinishLeftMoveDescription_haltTransitionFree :
-    assemblySourceRestFinishLeftMoveDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := assemblySourceRestFinishLeftMoveDescription.transitions)
-    (state := assemblySourceRestFinishLeftMoveDescription.halt)
-    (by decide)
-
 theorem assemblySourceRestFinishLeftMoveDescription_subroutineReady :
-    assemblySourceRestFinishLeftMoveDescription.SubroutineReady :=
-  ⟨assemblySourceRestFinishLeftMoveDescription_wellFormed,
-    assemblySourceRestFinishLeftMoveDescription_haltTransitionFree⟩
+    assemblySourceRestFinishLeftMoveDescription.SubroutineReady := by
+  constructor
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact transition_wellFormed_of_all
+        (l := assemblySourceRestFinishLeftMoveDescription.transitions)
+        (stateCount := assemblySourceRestFinishLeftMoveDescription.stateCount)
+        (by decide)
+    · exact transition_deterministic_of_all
+        (l := assemblySourceRestFinishLeftMoveDescription.transitions)
+        (by decide)
+  · exact transition_notFrom_of_all
+      (l := assemblySourceRestFinishLeftMoveDescription.transitions)
+      (state := assemblySourceRestFinishLeftMoveDescription.halt)
+      (by decide)
 
 theorem assemblySourceRestFinishLeftMoveDescription_haltsFromTape
     (T : Tape Bool) :
@@ -104,79 +97,6 @@ theorem tapeAtCells_move_left_none_cons_cells_of_left_ne_nil
   | cons cell rest =>
       simp [tapeAtCells, Tape.cells, Tape.move, Tape.moveLeft]
 
-theorem MixedParserStackRewriterSourceTape_cells_of_left_ne_nil
-    (prefixCells : List (Option Bool))
-    (stageBits sourceRestBits quoteRestBits : Word Bool)
-    (hleft :
-      List.append
-        (sourceRestBits.reverse.map some)
-        (List.append (stageBits.reverse.map some)
-          prefixCells.reverse) ≠ []) :
-    Tape.cells
-        (MixedParserStackRewriterSourceTape
-          prefixCells stageBits sourceRestBits quoteRestBits) =
-      List.append prefixCells
-        (List.append (stageBits.map some)
-          (List.append (sourceRestBits.map some)
-            (none ::
-              List.append (quoteRestBits.map some) [none]))) := by
-  rw [MixedParserStackRewriterSourceTape,
-    scanLeftToBlankLeftHaltTape]
-  rw [tapeAtCells_move_left_none_cons_cells_of_left_ne_nil _ _ hleft]
-  simp [List.reverse_append, List.map_reverse, List.append_assoc]
-
-theorem MixedParserStackRewriterSourceTape_cells_stageNat
-    (prefixCells : List (Option Bool))
-    (sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterSourceTape prefixCells
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage)
-          sourceRestBits quoteRestBits) =
-      List.append prefixCells
-        (List.append
-          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage).map some)
-          (List.append (sourceRestBits.map some)
-            (none ::
-              List.append (quoteRestBits.map some) [none]))) := by
-  rcases SelectedProjectionTailProjector.stageNatBits_cons_cons stage with
-    ⟨head, next, right, hstage⟩
-  exact
-    MixedParserStackRewriterSourceTape_cells_of_left_ne_nil
-      prefixCells
-      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        stage)
-      sourceRestBits quoteRestBits
-      (by
-        cases sourceRestBits with
-        | nil =>
-            simp [hstage]
-        | cons bit rest =>
-            simp)
-
-theorem MixedParserStackRewriterSourceTape_cells_marker_split_stageNat
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterSourceTape
-          (assemblySourceRestFinishParserPrefixCells w)
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage)
-          sourceRestBits quoteRestBits) =
-      List.append assemblySourceRestFinishParserMarkerLeftCells
-        (none ::
-          List.append
-            (assemblySourceRestFinishParserMarkerRightCells w)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (List.append (sourceRestBits.map some)
-                (none ::
-                  List.append (quoteRestBits.map some) [none])))) := by
-  rw [MixedParserStackRewriterSourceTape_cells_stageNat]
-  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split]
-  simp [List.append_assoc]
-
 /-!
 **Left-boundary seeker for the mixed parser stack.**  This scanner is the
 first finite slice needed by the core copier.  Unlike the ordinary left scan,
@@ -202,28 +122,21 @@ def mixedParserStackSeekLeftBoundaryDescription : MachineDescription where
 
 private abbrev MPSLB := mixedParserStackSeekLeftBoundaryDescription
 
-theorem mixedParserStackSeekLeftBoundaryDescription_wellFormed :
-    MPSLB.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := MPSLB.transitions)
-      (stateCount := MPSLB.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := MPSLB.transitions)
-      (by decide)
-
-theorem mixedParserStackSeekLeftBoundaryDescription_haltTransitionFree :
-    MPSLB.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := MPSLB.transitions)
-    (state := MPSLB.halt)
-    (by decide)
-
 theorem mixedParserStackSeekLeftBoundaryDescription_subroutineReady :
-    MPSLB.SubroutineReady :=
-  ⟨mixedParserStackSeekLeftBoundaryDescription_wellFormed,
-    mixedParserStackSeekLeftBoundaryDescription_haltTransitionFree⟩
+    MPSLB.SubroutineReady := by
+  constructor
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact transition_wellFormed_of_all
+        (l := MPSLB.transitions)
+        (stateCount := MPSLB.stateCount)
+        (by decide)
+    · exact transition_deterministic_of_all
+        (l := MPSLB.transitions)
+        (by decide)
+  · exact transition_notFrom_of_all
+      (l := MPSLB.transitions)
+      (state := MPSLB.halt)
+      (by decide)
 
 theorem mixedParserStackSeekLeftBoundaryDescription_run_payloadRev
     (scanRev : Word Bool) (current : Bool)
@@ -454,45 +367,6 @@ theorem MixedParserStackRewriterTrueSourceCells_quotedBits_eq_sourceBits
   rw [mixedParserStackQuotedCellsBits_eq_defaultBits]
   rw [MixedParserStackRewriterTrueSourceCells_defaultBits]
 
-theorem MixedParserStackRewriterDefaultedSourceCells_defaultBits
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (MixedParserStackRewriterDefaultedSourceCells
-          w sourceRestBits stage) =
-      assemblySourceRestFinishSourceBits
-        w sourceRestBits stage := by
-  rw [← MixedParserStackRewriterTrueSourceCells_defaultBits
-    w sourceRestBits stage]
-  rw [MixedParserStackRewriterDefaultedSourceCells,
-    MixedParserStackRewriterTrueSourceCells]
-  simp [List.map_append, List.map_map, optionBitDefaultFalse,
-    optionBitDefaultFalse_map_some]
-
-theorem MixedParserStackRewriterDefaultedSourceCells_length
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    (MixedParserStackRewriterDefaultedSourceCells
-        w sourceRestBits stage).length =
-      (assemblySourceRestFinishSourceBits
-        w sourceRestBits stage).length := by
-  rw [← mixedParserStack_defaultBits_length
-    (MixedParserStackRewriterDefaultedSourceCells
-      w sourceRestBits stage)]
-  rw [MixedParserStackRewriterDefaultedSourceCells_defaultBits]
-
-theorem MixedParserStackRewriterDefaultedSourceCells_quotedBits
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    mixedParserStackQuotedCellsBits
-        (MixedParserStackRewriterDefaultedSourceCells
-          w sourceRestBits stage) =
-      List.append
-        (assemblySourceRestFinishQuotedPrefixBits w stage)
-        (preservingCellPassCellBits sourceRestBits) := by
-  rw [mixedParserStackQuotedCellsBits_eq_defaultBits]
-  rw [MixedParserStackRewriterDefaultedSourceCells_defaultBits]
-  rw [assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest]
-  rw [preservingCellPassCellBits_append_bool]
-  rfl
-
 theorem MixedParserStackRewriterDefaultedSourceCells_eq_sourceBits_map_some
     (w sourceRestBits : Word Bool) (stage : Nat) :
     MixedParserStackRewriterDefaultedSourceCells
@@ -521,54 +395,6 @@ theorem MixedParserStackRewriterDefaultedSourceCells_eq_sourceBits_map_some
         DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix,
         transitionPrefixLeftTail, encodeCodeSymbolAsInput,
         List.map_append]
-
-theorem MixedParserStackRewriterTrueLeftBoundaryTape_cells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterTrueLeftBoundaryTape
-          w sourceRestBits quoteRestBits stage) =
-      none ::
-        List.append
-          (MixedParserStackRewriterTrueSourceCells
-            w sourceRestBits stage)
-          (none ::
-            List.append (quoteRestBits.map some) [none]) := by
-  rw [MixedParserStackRewriterTrueLeftBoundaryTape,
-    MixedParserStackRewriterTrueSourceCells]
-  simp [tapeAtCells, Tape.cells, List.append_assoc]
-
-theorem MixedParserStackRewriterTrueLeftBoundaryTape_defaultedCells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (MixedParserStackRewriterTrueLeftBoundaryTape
-            w sourceRestBits quoteRestBits stage)) =
-      false ::
-        List.append
-          (assemblySourceRestFinishSourceBits
-            w sourceRestBits stage)
-          (false :: List.append quoteRestBits [false]) := by
-  rw [MixedParserStackRewriterTrueLeftBoundaryTape_cells]
-  simp [List.map_append,
-    MixedParserStackRewriterTrueSourceCells_defaultBits,
-    optionBitDefaultFalse, List.map_map,
-    optionBitDefaultFalse_map_some]
-
-theorem MixedParserStackRewriterTrueLeftBoundaryTape_defaultedCells_finish
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (MixedParserStackRewriterTrueLeftBoundaryTape
-            w sourceRestBits
-            (preservingCellPassCellBits sourceRestBits) stage)) =
-      false ::
-        List.append
-          (assemblySourceRestFinishSourceBits
-            w sourceRestBits stage)
-          (false ::
-            List.append (preservingCellPassCellBits sourceRestBits)
-              [false]) := by
-  rw [MixedParserStackRewriterTrueLeftBoundaryTape_defaultedCells]
 
 def MixedParserStackRewriterDefaultedInternalMarkerTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
@@ -601,28 +427,21 @@ def mixedParserStackDefaultInternalMarkerDescription :
 private abbrev MPSDIM :=
   mixedParserStackDefaultInternalMarkerDescription
 
-theorem mixedParserStackDefaultInternalMarkerDescription_wellFormed :
-    MPSDIM.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := MPSDIM.transitions)
-      (stateCount := MPSDIM.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := MPSDIM.transitions)
-      (by decide)
-
-theorem mixedParserStackDefaultInternalMarkerDescription_haltTransitionFree :
-    MPSDIM.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := MPSDIM.transitions)
-    (state := MPSDIM.halt)
-    (by decide)
-
 theorem mixedParserStackDefaultInternalMarkerDescription_subroutineReady :
-    MPSDIM.SubroutineReady :=
-  ⟨mixedParserStackDefaultInternalMarkerDescription_wellFormed,
-    mixedParserStackDefaultInternalMarkerDescription_haltTransitionFree⟩
+    MPSDIM.SubroutineReady := by
+  constructor
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact transition_wellFormed_of_all
+        (l := MPSDIM.transitions)
+        (stateCount := MPSDIM.stateCount)
+        (by decide)
+    · exact transition_deterministic_of_all
+        (l := MPSDIM.transitions)
+        (by decide)
+  · exact transition_notFrom_of_all
+      (l := MPSDIM.transitions)
+      (state := MPSDIM.halt)
+      (by decide)
 
 theorem mixedParserStackDefaultInternalMarkerDescription_run
     (right : List (Option Bool)) :
@@ -718,21 +537,6 @@ theorem MixedParserStackRewriterDefaultedInternalMarkerTape_cells
   | cons bit rest =>
       simp [tapeAtCells, Tape.cells,
         List.reverse_append, List.append_assoc]
-
-theorem MixedParserStackRewriterDefaultedInternalMarkerTape_cells_eq_defaultedSourceCells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterDefaultedInternalMarkerTape
-          w sourceRestBits quoteRestBits stage) =
-      none ::
-        List.append
-          (MixedParserStackRewriterDefaultedSourceCells
-            w sourceRestBits stage)
-          (none ::
-            List.append (quoteRestBits.map some) [none]) := by
-  rw [MixedParserStackRewriterDefaultedInternalMarkerTape_cells,
-    MixedParserStackRewriterDefaultedSourceCells]
-  simp [List.append_assoc]
 
 theorem MixedParserStackRewriterDefaultedInternalMarkerTape_defaultedCells
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
@@ -857,68 +661,6 @@ def MixedParserStackRewriterDefaultedSourceRestBoundaryTape
     (List.append (sourceRestBits.map some)
       (none :: List.append (quoteRestBits.map some) [none]))
 
-theorem MixedParserStackRewriterDefaultedSourceRestBoundaryTape_cells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterDefaultedSourceRestBoundaryTape
-          w sourceRestBits quoteRestBits stage) =
-      none ::
-        List.append
-          (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
-          (List.append (sourceRestBits.map some)
-            (none :: List.append (quoteRestBits.map some) [none])) := by
-  rw [MixedParserStackRewriterDefaultedSourceRestBoundaryTape]
-  cases sourceRestBits <;>
-    simp [tapeAtCells, Tape.cells, List.reverse_append]
-
-theorem MixedParserStackRewriterDefaultedSourceRestBoundaryTape_defaultedCells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (MixedParserStackRewriterDefaultedSourceRestBoundaryTape
-            w sourceRestBits quoteRestBits stage)) =
-      false ::
-        List.append
-          (assemblySourceRestFinishSourcePrefixBits w stage)
-          (List.append sourceRestBits
-            (false :: List.append quoteRestBits [false])) := by
-  rw [MixedParserStackRewriterDefaultedSourceRestBoundaryTape_cells]
-  have hprefix :=
-    assemblySourceRestBoundaryLeftRev_defaultBits_eq_sourcePrefix
-      w stage
-  simp [List.map_append, List.map_map, optionBitDefaultFalse,
-    optionBitDefaultFalse_map_some, hprefix]
-
-theorem assemblyPrefixDescription_haltsFrom_empty_defaultedSourceStart_to_sourceRestBoundary
-    (sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    AssemblyPrefixDescription.HaltsFromTape
-      (MixedParserStackRewriterDefaultedSourceStartTape
-        ([] : Word Bool) sourceRestBits quoteRestBits stage)
-      (MixedParserStackRewriterDefaultedSourceRestBoundaryTape
-        ([] : Word Bool) sourceRestBits quoteRestBits stage) := by
-  rcases
-      assemblyPrefixDescription_run_empty_stageInput_to_sourceRest_boundary_cells_withBase
-        [none]
-        (List.append (sourceRestBits.map some)
-          (none :: List.append (quoteRestBits.map some) [none]))
-        stage with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  constructor
-  · simpa [MachineDescription.HaltsFromTapeIn,
-      AssemblyPrefixDescription,
-      MixedParserStackRewriterDefaultedSourceStartTape,
-      assemblySourceRestFinishSourceBits, List.map_append,
-      List.append_assoc, config] using
-      congrArg Configuration.state hsteps
-  · simpa [MachineDescription.HaltsFromTapeIn,
-      MixedParserStackRewriterDefaultedSourceRestBoundaryTape,
-      MixedParserStackRewriterDefaultedSourceStartTape,
-      assemblySourceRestFinishSourceBits,
-      assemblySourceRestBoundaryLeftRev, List.map_append,
-      List.append_assoc, config] using
-      congrArg Configuration.tape hsteps
-
 theorem assemblyPrefixDescription_haltsFrom_defaultedSourceStart_to_sourceRestBoundary
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     AssemblyPrefixDescription.HaltsFromTape
@@ -947,30 +689,6 @@ theorem assemblyPrefixDescription_haltsFrom_defaultedSourceStart_to_sourceRestBo
       assemblySourceRestBoundaryLeftRev, List.map_append,
       List.append_assoc, config] using
       congrArg Configuration.tape hsteps
-
-theorem assemblySkeletonDescription_run_defaultedSourceStart_to_sourceRestBoundary
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    exists steps : Nat,
-      AssemblySkeletonDescription.runConfig steps
-          { state := AssemblySkeletonDescription.start
-            tape :=
-              MixedParserStackRewriterDefaultedSourceStartTape
-                w sourceRestBits quoteRestBits stage } =
-        { state := 210
-          tape :=
-            MixedParserStackRewriterDefaultedSourceRestBoundaryTape
-              w sourceRestBits quoteRestBits stage } := by
-  rcases
-      assemblySkeletonDescription_run_stageInput_to_sourceRest_boundary_cells_withBase
-        [none] w stage
-        (List.append (sourceRestBits.map some)
-          (none :: List.append (quoteRestBits.map some) [none])) with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  simpa [MixedParserStackRewriterDefaultedSourceStartTape,
-    MixedParserStackRewriterDefaultedSourceRestBoundaryTape,
-    assemblySourceRestFinishSourceBits, List.map_append,
-    List.append_assoc, config] using hsteps
 
 def assemblySourceRestFinishRawBoolSourceStartTargetTape
     (w sourceRestBits : Word Bool) (stage : Nat) : Tape Bool :=
@@ -1007,61 +725,6 @@ def assemblySourceRestFinishRawBoolReusableQuoteTargetTape
     ((assemblySourceRestFinishRawTailBits
       sourceRestBits stage).map some)
 
-theorem assemblySourceRestFinishRawBoolReusableQuoteTargetTape_cells
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishRawBoolReusableQuoteTargetTape
-          w sourceRestBits stage) =
-      List.append
-        ((List.append
-          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-          (List.append
-            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              (assemblySourceRestFinishSourceBits
-                w sourceRestBits stage).length)
-            (List.append
-              (preservingCellPassCellBits
-                (assemblySourceRestFinishRawTailPrefixBits w))
-              (List.append
-                (preservingCellPassCellBits
-                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                    stage))
-                (preservingCellPassCellBits sourceRestBits))))).map some)
-        ((assemblySourceRestFinishRawTailBits
-          sourceRestBits stage).map some) := by
-  rcases SelectedProjectionTailProjector.stageNatBits_cons_cons stage with
-    ⟨head, next, right, hstage⟩
-  rw [assemblySourceRestFinishRawBoolReusableQuoteTargetTape,
-    assemblySourceRestFinishRawTailBits, hstage]
-  simp [tapeAtCells, Tape.cells, List.map_reverse, List.map_append]
-
-theorem assemblySourceRestFinishRawBoolReusableQuoteTargetTape_defaultedCells
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishRawBoolReusableQuoteTargetTape
-            w sourceRestBits stage)) =
-      List.append
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            (assemblySourceRestFinishSourceBits
-              w sourceRestBits stage).length)
-          (List.append
-            (preservingCellPassCellBits
-              (assemblySourceRestFinishRawTailPrefixBits w))
-            (List.append
-              (preservingCellPassCellBits
-                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                  stage))
-              (List.append
-                (preservingCellPassCellBits sourceRestBits)
-                (assemblySourceRestFinishRawTailBits
-                  sourceRestBits stage))))) := by
-  rw [assemblySourceRestFinishRawBoolReusableQuoteTargetTape_cells]
-  simp [List.map_append, List.map_map,
-    optionBitDefaultFalse_map_some, List.append_assoc]
-
 theorem assemblySourceRestFinishRawBoolSourceStartTargetTape_eq_reusableQuote
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishRawBoolSourceStartTargetTape
@@ -1087,37 +750,6 @@ theorem assemblySourceRestFinishRawBoolSourceStartTargetTape_eq_reusableQuote
       preservingCellPassCellBits_append_bool,
       preservingCellPassCellBits_append_bool]
   rw [hquote]
-
-theorem MixedParserStackRewriterDefaultedSourceStartTape_cells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterDefaultedSourceStartTape
-          w sourceRestBits quoteRestBits stage) =
-      none ::
-        List.append
-          ((assemblySourceRestFinishSourceBits
-            w sourceRestBits stage).map some)
-          (none :: List.append (quoteRestBits.map some) [none]) := by
-  rcases assemblySourceRestFinishSourceBits_headerPrefix
-      w sourceRestBits stage with
-    ⟨rest0, hbits0⟩
-  simp [MixedParserStackRewriterDefaultedSourceStartTape,
-    tapeAtCells, Tape.cells, hbits0]
-
-theorem MixedParserStackRewriterDefaultedSourceStartTape_defaultedCells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (MixedParserStackRewriterDefaultedSourceStartTape
-            w sourceRestBits quoteRestBits stage)) =
-      false ::
-        List.append
-          (assemblySourceRestFinishSourceBits
-            w sourceRestBits stage)
-          (false :: List.append quoteRestBits [false]) := by
-  rw [MixedParserStackRewriterDefaultedSourceStartTape_cells]
-  simp [List.map_append, List.map_map,
-    optionBitDefaultFalse, optionBitDefaultFalse_map_some]
 
 theorem MixedParserStackRewriterWholeSourceTargetTape_eq_rawBoolTargetTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -1220,28 +852,21 @@ def mixedParserStackScanRightToStructuralBlankDescription :
 private abbrev MPSSR :=
   mixedParserStackScanRightToStructuralBlankDescription
 
-theorem mixedParserStackScanRightToStructuralBlankDescription_wellFormed :
-    MPSSR.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := MPSSR.transitions)
-      (stateCount := MPSSR.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := MPSSR.transitions)
-      (by decide)
-
-theorem mixedParserStackScanRightToStructuralBlankDescription_haltTransitionFree :
-    MPSSR.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := MPSSR.transitions)
-    (state := MPSSR.halt)
-    (by decide)
-
 theorem mixedParserStackScanRightToStructuralBlankDescription_subroutineReady :
-    MPSSR.SubroutineReady :=
-  ⟨mixedParserStackScanRightToStructuralBlankDescription_wellFormed,
-    mixedParserStackScanRightToStructuralBlankDescription_haltTransitionFree⟩
+    MPSSR.SubroutineReady := by
+  constructor
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact transition_wellFormed_of_all
+        (l := MPSSR.transitions)
+        (stateCount := MPSSR.stateCount)
+        (by decide)
+    · exact transition_deterministic_of_all
+        (l := MPSSR.transitions)
+        (by decide)
+  · exact transition_notFrom_of_all
+      (l := MPSSR.transitions)
+      (state := MPSSR.halt)
+      (by decide)
 
 theorem mixedParserStackScanRightToStructuralBlankDescription_run
     (input : Word Bool) (left padding : List (Option Bool)) :
@@ -1367,62 +992,6 @@ theorem MixedParserStackRewriterDefaultedRightBoundaryTape_move_left_move_right
                 exact False.elim (hleft_ne hleft)
             | cons cell cells =>
                 simp [tapeAtCells, Tape.move, Tape.moveLeft])
-
-theorem MixedParserStackRewriterDefaultedRightBoundaryTape_cells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (MixedParserStackRewriterDefaultedRightBoundaryTape
-          w sourceRestBits quoteRestBits stage) =
-      none ::
-        List.append
-          (MixedParserStackRewriterDefaultedSourceCells
-            w sourceRestBits stage)
-          (none ::
-            List.append (quoteRestBits.map some) [none]) := by
-  rw [MixedParserStackRewriterDefaultedRightBoundaryTape,
-    MixedParserStackRewriterDefaultedSourceCells]
-  cases hpayload :
-      assemblySourceRestFinishRightPayloadBits
-        w sourceRestBits stage with
-  | nil =>
-      exact
-        False.elim
-          ((assemblySourceRestFinishRightPayloadBits_ne_nil
-              w sourceRestBits stage) hpayload)
-  | cons bit rest =>
-      have hleft_ne :
-          List.append ((bit :: rest).reverse.map some)
-              (some false ::
-                List.append
-                  (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
-                  [none]) ≠ [] := by
-        cases rest <;>
-          simp [List.reverse_cons, List.map_append]
-      rw [tapeAtCells_move_left_none_cons_cells_of_left_ne_nil
-        (List.append ((bit :: rest).reverse.map some)
-          (some false ::
-            List.append
-              (List.reverse assemblySourceRestFinishParserMarkerLeftCells)
-              [none]))
-        (List.append (quoteRestBits.map some) [none])
-        hleft_ne]
-      simp [List.reverse_append, List.map_reverse, List.append_assoc]
-
-theorem MixedParserStackRewriterDefaultedRightBoundaryTape_defaultedCells
-    (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (MixedParserStackRewriterDefaultedRightBoundaryTape
-            w sourceRestBits quoteRestBits stage)) =
-      false ::
-        List.append
-          (assemblySourceRestFinishSourceBits
-            w sourceRestBits stage)
-          (false :: List.append quoteRestBits [false]) := by
-  rw [MixedParserStackRewriterDefaultedRightBoundaryTape_cells]
-  simp [List.map_append, List.map_map,
-    MixedParserStackRewriterDefaultedSourceCells_defaultBits,
-    optionBitDefaultFalse, optionBitDefaultFalse_map_some]
 
 theorem MixedParserStackRewriterSourceTape_eq_seekLeftBoundarySource
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat)
@@ -1654,294 +1223,13 @@ def AssemblySourceRestFinishLeftBoundaryConstruction : Prop :=
   exists finish : MachineDescription,
     AssemblySourceRestFinishLeftBoundarySpec finish
 
-def AssemblySourceRestFinishLeftBoundaryCoreSpec
-    (finish : MachineDescription) : Prop :=
-  finish.SubroutineReady ∧
-    forall (w sourceRestBits : Word Bool) (stage : Nat),
-      finish.HaltsFromTape
-        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage)
-        (assemblySourceRestFinishTargetTape w sourceRestBits stage)
-
 def AssemblySourceRestFinishLeftBoundaryCoreConstruction : Prop :=
-  exists finish : MachineDescription,
-    AssemblySourceRestFinishLeftBoundaryCoreSpec finish
+  AssemblySourceRestFinishLeftBoundaryConstruction
 
-theorem assemblySourceRestFinishLeftBoundaryConstruction_of_core
-    (h : AssemblySourceRestFinishLeftBoundaryCoreConstruction) :
-    AssemblySourceRestFinishLeftBoundaryConstruction := by
-  exact h
-
-theorem scanLeftToBlankLeftHaltTape_cons
-    (cell : Option Bool) (leftBase : List (Option Bool))
-    (bits : Word Bool) (right : List (Option Bool)) :
-    scanLeftToBlankLeftHaltTape (cell :: leftBase) bits right =
-      { left := leftBase
-        head := cell
-        right := none :: List.append (bits.map some) right } := by
-  simp [scanLeftToBlankLeftHaltTape, tapeAtCells, Tape.move,
-    Tape.moveLeft]
-
-theorem scanLeftToBlankLeftHaltTape_right_of_left_ne_nil
-    (leftBase : List (Option Bool)) (bits : Word Bool)
-    (right : List (Option Bool)) (hleft : leftBase ≠ []) :
-    (scanLeftToBlankLeftHaltTape leftBase bits right).right =
-      none :: List.append (bits.map some) right := by
-  cases leftBase with
-  | nil =>
-      contradiction
-  | cons cell rest =>
-      simp [scanLeftToBlankLeftHaltTape_cons]
-
-theorem assemblySourceRestBoundaryLeftRev_ne_nil
-    (w : Word Bool) (stage : Nat) :
-    assemblySourceRestBoundaryLeftRev w stage ≠ [] := by
-  cases w <;>
-    simp [assemblySourceRestBoundaryLeftRev]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields
+theorem MixedParserStackRewriterSourceTape_eq_leftBoundary
     (w sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
-      List.append
-        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
-        (List.append
-          (sourceRestBits.map some)
-          (none ::
-            List.append
-              ((preservingCellPassCellBits sourceRestBits).map some)
-              [none])) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape,
-    scanLeftToBlankLeftHaltTape]
-  have hleft :
-      List.append (sourceRestBits.reverse.map some)
-          (assemblySourceRestBoundaryLeftRev w stage) ≠ [] := by
-    cases sourceRestBits with
-    | nil =>
-        simpa using assemblySourceRestBoundaryLeftRev_ne_nil w stage
-    | cons bit rest =>
-        simp
-  rw [tapeAtCells_move_left_none_cons_cells_of_left_ne_nil _ _ hleft]
-  simp [List.reverse_append, List.map_reverse, List.append_assoc]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_prefix_sourceRest_quote
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
-      List.append
-        (List.reverse (assemblySourceRestBoundaryLeftRev w stage))
-        (List.append
-          (sourceRestBits.map some)
-          (none ::
-            List.append
-              ((preservingCellPassCellBits sourceRestBits).map some)
-              [none])) :=
-  assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields
-    w sourceRestBits stage
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
-      List.append assemblySourceRestFinishParserMarkerLeftCells
-        (none ::
-          List.append
-            (assemblySourceRestFinishParserMarkerRightCells w)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (List.append (sourceRestBits.map some)
-                (none ::
-                  List.append
-                    ((preservingCellPassCellBits sourceRestBits).map some)
-                    [none])))) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields]
-  change
-    List.append
-      (assemblySourceRestFinishParserStackCells w stage)
-      (List.append
-        (sourceRestBits.map some)
-        (none ::
-          List.append
-            ((preservingCellPassCellBits sourceRestBits).map some)
-            [none])) =
-      List.append assemblySourceRestFinishParserMarkerLeftCells
-        (none ::
-          List.append
-            (assemblySourceRestFinishParserMarkerRightCells w)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (List.append (sourceRestBits.map some)
-                (none ::
-                  List.append
-                    ((preservingCellPassCellBits sourceRestBits).map some)
-                    [none]))))
-  rw [assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat]
-  rw [assemblySourceRestFinishParserPrefixCells_eq_marker_split]
-  simp [List.append_assoc]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_nil_eq_marker_split
-    (sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape
-          ([] : Word Bool) sourceRestBits stage) =
-      List.append assemblySourceRestFinishParserMarkerLeftCells
-        (none ::
-          List.append
-            ([true, true].map some)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (List.append (sourceRestBits.map some)
-                (none ::
-                  List.append
-                    ((preservingCellPassCellBits sourceRestBits).map some)
-                    [none])))) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split]
-  rfl
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_cons_eq_marker_split
-    (b : Bool) (rest sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape
-          (b :: rest) sourceRestBits stage) =
-      List.append assemblySourceRestFinishParserMarkerLeftCells
-        (none ::
-          List.append
-            ((true :: false ::
-              List.append
-                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                  rest.length)
-                (List.append
-                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellBits
-                    b)
-                  (DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits
-                    rest))).map some)
-            (List.append
-              ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                stage).map some)
-              (List.append (sourceRestBits.map some)
-                (none ::
-                  List.append
-                    ((preservingCellPassCellBits sourceRestBits).map some)
-                    [none])))) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_marker_split]
-  rfl
-
-theorem assemblySourceRestFinishLeftBoundaryTape_cells_eq_boundaryTape_cells
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    Tape.cells
-        (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage) =
-      Tape.cells
-        (assemblySourceRestFinishBoundaryTape w sourceRestBits stage) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_fields,
-    assemblySourceRestFinishBoundaryTape_cells]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishLeftBoundaryTape
-            w sourceRestBits stage)) =
-      List.append
-        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
-        (false ::
-          List.append (preservingCellPassCellBits sourceRestBits)
-            [false]) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_cells_eq_boundaryTape_cells]
-  exact assemblySourceRestFinishBoundaryTape_defaultedCells
-    w sourceRestBits stage
-
-theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_sourceBits_quote
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishLeftBoundaryTape
-            w sourceRestBits stage)) =
-      List.append
-        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
-        (false ::
-          List.append (preservingCellPassCellBits sourceRestBits)
-            [false]) :=
-  assemblySourceRestFinishLeftBoundaryTape_defaultedCells
-    w sourceRestBits stage
-
-theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_named_fields
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishLeftBoundaryTape
-            w sourceRestBits stage)) =
-      List.append
-        (assemblySourceRestFinishRawSourceBits w sourceRestBits stage)
-        (false ::
-          List.append (preservingCellPassCellBits sourceRestBits)
-            [false]) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_defaultedCells,
-    assemblySourceRestFinishRawSourceBits]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishLeftBoundaryTape
-            w sourceRestBits stage)) =
-      List.append
-        (assemblySourceRestFinishSourcePrefixBits w stage)
-        (List.append sourceRestBits
-          (false ::
-            List.append (preservingCellPassCellBits sourceRestBits)
-              [false])) := by
-  rw [assemblySourceRestFinishLeftBoundaryTape_defaultedCells,
-    assemblySourceRestFinishSourceBits_eq_prefix_append_sourceRest]
-  simp [List.append_assoc]
-
-theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_fields
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    List.map optionBitDefaultFalse
-        (Tape.cells
-          (assemblySourceRestFinishLeftBoundaryTape
-            w sourceRestBits stage)) =
-      List.append
-        (assemblySourceRestFinishSourcePrefixBits w stage)
-        (List.append sourceRestBits
-          (List.append [false]
-            (List.append (preservingCellPassCellBits sourceRestBits)
-              [false]))) := by
-  rw [
-    assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote]
-  simp
-
-theorem assemblySourceRestFinishLeftBoundaryTape_right
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    (assemblySourceRestFinishLeftBoundaryTape w sourceRestBits stage).right =
-      none ::
-        List.append
-          ((preservingCellPassCellBits sourceRestBits).map some)
-          [none] := by
-  rw [assemblySourceRestFinishLeftBoundaryTape]
-  exact
-    scanLeftToBlankLeftHaltTape_right_of_left_ne_nil
-      (List.append (sourceRestBits.reverse.map some)
-        (assemblySourceRestBoundaryLeftRev w stage))
-      (preservingCellPassCellBits sourceRestBits)
-      [none]
-      (by
-        cases sourceRestBits with
-        | nil =>
-            simpa using assemblySourceRestBoundaryLeftRev_ne_nil w stage
-        | cons bit rest =>
-            simp)
-
-theorem MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
-    (w sourceRestBits : Word Bool) (stage : Nat)
-    (prefixCells : List (Option Bool))
-    (hsplit :
-      assemblySourceRestFinishParserStackCells w stage =
-        List.append prefixCells
-          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage).map some)) :
-    MixedParserStackRewriterSourceTape prefixCells
+    MixedParserStackRewriterSourceTape
+        (assemblySourceRestFinishParserPrefixCells w)
         (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
           stage)
         sourceRestBits
@@ -1953,98 +1241,15 @@ theorem MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
         List.append
           ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
             stage).reverse.map some)
-          prefixCells.reverse := by
-    have hrev := congrArg List.reverse hsplit
+          (assemblySourceRestFinishParserPrefixCells w).reverse := by
+    have hrev :=
+      congrArg List.reverse
+        (assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
+          w stage)
     simpa [assemblySourceRestFinishParserStackCells,
       List.reverse_append, List.map_reverse] using hrev
   rw [MixedParserStackRewriterSourceTape,
     assemblySourceRestFinishLeftBoundaryTape, hboundary]
-
-theorem exists_MixedParserStackRewriterSourceTape_eq_leftBoundary
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    exists prefixCells : List (Option Bool),
-      MixedParserStackRewriterSourceTape prefixCells
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage)
-          sourceRestBits
-          (preservingCellPassCellBits sourceRestBits) =
-        assemblySourceRestFinishLeftBoundaryTape
-          w sourceRestBits stage := by
-  rcases
-      assemblySourceRestFinishParserStackCells_eq_prefix_append_stageNat
-        w stage with
-    ⟨prefixCells, hsplit⟩
-  exact
-    ⟨prefixCells,
-      MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
-        w sourceRestBits stage prefixCells hsplit⟩
-
-theorem MixedParserStackRewriterSourceTape_eq_leftBoundary
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    MixedParserStackRewriterSourceTape
-        (assemblySourceRestFinishParserPrefixCells w)
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage)
-        sourceRestBits
-        (preservingCellPassCellBits sourceRestBits) =
-      assemblySourceRestFinishLeftBoundaryTape
-        w sourceRestBits stage :=
-  MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
-    w sourceRestBits stage
-    (assemblySourceRestFinishParserPrefixCells w)
-    (assemblySourceRestFinishParserStackCells_eq_prefixCells_append_stageNat
-      w stage)
-
-theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_fields_prefixLength
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    assemblySourceRestFinishTargetTape w sourceRestBits stage =
-      tapeAtCells
-        ((List.append
-          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-          (List.append
-            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              ((assemblySourceRestFinishSourcePrefixBits w stage).length +
-                sourceRestBits.length))
-            (List.append
-              (preservingCellPassCellBits
-                (assemblySourceRestFinishSourcePrefixBits w stage))
-              (preservingCellPassCellBits sourceRestBits)))).reverse.map some)
-        ((List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            stage)
-          sourceRestBits).map some) := by
-  rw [assemblySourceRestFinishTargetTape,
-    assemblySourceRestFinishTargetPrefixBits_eq_splitQuote_prefixLength]
-
-theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_named_prefixLength
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    assemblySourceRestFinishTargetTape w sourceRestBits stage =
-      tapeAtCells
-        ((assemblySourceRestFinishTargetPrefixBits
-          w sourceRestBits stage).reverse.map some)
-        ((assemblySourceRestFinishRawTailBits
-          sourceRestBits stage).map some) := by
-  rw [assemblySourceRestFinishTargetTape,
-    assemblySourceRestFinishRawTailBits]
-
-theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_named_fields_prefixLength
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    assemblySourceRestFinishTargetTape w sourceRestBits stage =
-      tapeAtCells
-        ((List.append
-          (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-          (List.append
-            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-              ((assemblySourceRestFinishSourcePrefixBits w stage).length +
-                sourceRestBits.length))
-            (List.append
-              (assemblySourceRestFinishQuotedPrefixBits w stage)
-              (preservingCellPassCellBits sourceRestBits)))).reverse.map some)
-        ((assemblySourceRestFinishRawTailBits
-          sourceRestBits stage).map some) := by
-  rw [assemblySourceRestFinishTargetTape,
-    assemblySourceRestFinishTargetPrefixBits_eq_named_fields_prefixLength,
-    assemblySourceRestFinishRawTailBits]
 
 theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -2059,23 +1264,6 @@ theorem assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments
   rw [assemblySourceRestFinishTargetTape,
     assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote,
     assemblySourceRestFinishRawTailBits]
-
-theorem MixedParserStackRewriterTargetTape_eq_targetTape
-    (w sourceRestBits : Word Bool) (stage : Nat) :
-    MixedParserStackRewriterTargetTape
-        (assemblySourceRestFinishQuotedPrefixBits w stage)
-        (assemblySourceRestFinishLengthHeaderBits
-          w sourceRestBits stage)
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          stage)
-        sourceRestBits
-        (preservingCellPassCellBits sourceRestBits) =
-      assemblySourceRestFinishTargetTape w sourceRestBits stage := by
-  rw [MixedParserStackRewriterTargetTape,
-    assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments,
-    assemblySourceRestFinishPrefixQuoteOutputBits,
-    assemblySourceRestFinishRawTailBits]
-  simp [List.append_assoc]
 
 theorem MixedParserStackRewriterTargetTape_eq_targetTape_computed
     (w sourceRestBits : Word Bool) (stage : Nat) :
@@ -2095,9 +1283,12 @@ theorem MixedParserStackRewriterTargetTape_eq_targetTape_computed
         (preservingCellPassCellBits sourceRestBits) =
       assemblySourceRestFinishTargetTape w sourceRestBits stage := by
   rw [MixedParserStackRewriterPrefixQuote_eq_assemblyQuotedPrefix,
-    MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader]
-  exact MixedParserStackRewriterTargetTape_eq_targetTape
-    w sourceRestBits stage
+    MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader,
+    MixedParserStackRewriterTargetTape,
+    assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments,
+    assemblySourceRestFinishPrefixQuoteOutputBits,
+    assemblySourceRestFinishRawTailBits]
+  simp [List.append_assoc]
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
