@@ -245,8 +245,8 @@ def PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstructi
 /-
 The handoff and closed-handoff targets in this block are exported compatibility
 surfaces. New bounded-runner work should start from the output-compiled
-padded/equivalence contracts unless a theorem is adapting an existing legacy
-consumer. The bounded-runner handoff targets below are explicitly obsolete.
+padded/equivalence contracts unless a theorem is adapting an existing
+non-runner legacy consumer.
 -/
 
 def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :
@@ -256,19 +256,6 @@ def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstr
       TapeCodePrimitiveHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove
-
-/--
-Obsolete compatibility target for the bounded runner.  The active bounded-runner
-route is {name}`PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction`,
-which uses the output-compiled padded/equivalence contract.
--/
-def PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction :
-    Prop :=
-  forall accept reject : MachineDescription,
-    exists runner : MachineDescription,
-      TapeCodePrimitiveHandoffCompiledSubroutineByDescription
-        (PairedRecognizerDovetailLayoutCode accept reject)
-        runner tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :
     Prop :=
@@ -284,19 +271,6 @@ def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutine
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove
-
-/--
-Obsolete compatibility target for the bounded runner.  Exact closed handoff is
-too strong for the padded/equivalence runner and has no active construction
-scaffold.
--/
-def PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction :
-    Prop :=
-  forall accept reject : MachineDescription,
-    exists runner : MachineDescription,
-      TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-        (PairedRecognizerDovetailLayoutCode accept reject)
-        runner tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :
     Prop :=

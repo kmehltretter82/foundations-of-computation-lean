@@ -30,10 +30,6 @@ def OutputTape
     (Tape.input
       (encodeCodeWordAsInput (outputCode a)))
 
-abbrev RightShiftedOutputTape
-    (outputCode : α -> Word MachineCodeSymbol) (a : α) : Tape Bool :=
-  OutputTape outputCode a
-
 def ExactEmitterSpec
     (inputBits : α -> Word Bool)
     (outputCode : α -> Word MachineCodeSymbol)
@@ -68,22 +64,11 @@ def EmitterConstruction
   exists emitter : MachineDescription,
     EmitterSpec inputBits outputCode emitter
 
-abbrev RightShiftedEmitterSpec
-    (inputBits : α -> Word Bool)
-    (outputCode : α -> Word MachineCodeSymbol)
-    (emitter : MachineDescription) : Prop :=
-  EmitterSpec inputBits outputCode emitter
-
 def ExactEmitterConstruction
     (inputBits : α -> Word Bool)
     (outputCode : α -> Word MachineCodeSymbol) : Prop :=
   exists emitter : MachineDescription,
     ExactEmitterSpec inputBits outputCode emitter
-
-abbrev RightShiftedEmitterConstruction
-    (inputBits : α -> Word Bool)
-    (outputCode : α -> Word MachineCodeSymbol) : Prop :=
-  EmitterConstruction inputBits outputCode
 
 theorem exactOutputTape_normalizedOutput
     (outputCode : α -> Word MachineCodeSymbol) (a : α) :
@@ -132,22 +117,6 @@ theorem outputTape_cells
           simp [Tape.cells_move_right_input]
       | cons second tail =>
           simp [Tape.cells_move_right_input]
-
-theorem rightShiftedOutputTape_normalizedOutput
-    (outputCode : α -> Word MachineCodeSymbol) (a : α) :
-    Tape.normalizedOutput (RightShiftedOutputTape outputCode a) =
-      encodeCodeWordAsInput (outputCode a) :=
-  outputTape_normalizedOutput outputCode a
-
-theorem rightShiftedOutputTape_cells
-    (outputCode : α -> Word MachineCodeSymbol) (a : α) :
-    Tape.cells (RightShiftedOutputTape outputCode a) =
-      match encodeCodeWordAsInput (outputCode a) with
-      | [] => [none, none]
-      | bit :: [] => [some bit, none]
-      | first :: second :: rest =>
-          some first :: some second :: rest.map some :=
-  outputTape_cells outputCode a
 
 end CanonicalLayouts
 end EncodedRewriters

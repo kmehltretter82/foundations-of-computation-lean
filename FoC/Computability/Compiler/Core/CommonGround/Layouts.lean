@@ -78,11 +78,6 @@ export EncodedRewriters.CanonicalLayouts.Dovetail
     identityPrimitive_encode
     identityClosedHandoffConstruction_of_closedRecognizer )
 
-abbrev IdentityRightShiftedConstruction : Prop :=
-  exists runner : MachineDescription,
-    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
-      identityPrimitive runner
-
 theorem identityPrimitive_transform_eq_some_cons
     {code out : Word MachineCodeSymbol}
     (h : identityPrimitive.transform code = some out) :
@@ -93,7 +88,10 @@ theorem identityPrimitive_transform_eq_some_cons
     decode_encode (fun h => decode_eq_some_encode h) encode_cons h
 
 theorem identityClosedHandoffConstruction_of_rightShifted
-    (h : IdentityRightShiftedConstruction) :
+    (h :
+      exists runner : MachineDescription,
+        EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+          identityPrimitive runner) :
     IdentityClosedHandoffConstruction := by
   rcases h with ⟨runner, hrunner⟩
   exact

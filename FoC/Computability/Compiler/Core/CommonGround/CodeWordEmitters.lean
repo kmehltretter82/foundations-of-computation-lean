@@ -31,13 +31,8 @@ export EncodedRewriters.CanonicalLayouts
     OutputTape
     outputTape_normalizedOutput
     outputTape_cells
-    RightShiftedOutputTape
-    rightShiftedOutputTape_normalizedOutput
-    rightShiftedOutputTape_cells
     EmitterSpec
-    EmitterConstruction
-    RightShiftedEmitterSpec
-    RightShiftedEmitterConstruction )
+    EmitterConstruction )
 
 theorem rightShiftedOutputCompiled_of_indexed_tape_spec
     {ι : Type}

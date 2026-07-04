@@ -118,16 +118,6 @@ theorem configRunnerFromClosedHandoff_spec
           accept reject L
     exact TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv hclosed htransform hhalt
 
-theorem acceptRejectConfigRunnerConstruction_of_closedHandoffConstruction
-    (h :
-      PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction) :
-    AcceptRejectConfigRunnerConstruction := by
-  intro accept reject
-  rcases h accept reject with ⟨closed, hclosed⟩
-  exact
-    ⟨ConfigRunnerFromClosedHandoff closed,
-      configRunnerFromClosedHandoff_spec hclosed⟩
-
 theorem acceptRejectConfigRunnerConstruction_scaffold :
     AcceptRejectConfigRunnerConstruction := by
   exact
