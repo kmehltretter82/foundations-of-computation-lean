@@ -62,6 +62,16 @@ def stay : TapeAction where
   write? := none
   move := HeadMove.stay
 
+/-- Preserve the current cell, then move the logical head. -/
+def preserveMove (move : HeadMove) : TapeAction where
+  write? := none
+  move := move
+
+/-- Write one cell, then move the logical head. -/
+def writeMove (cell : Option Bool) (move : HeadMove) : TapeAction where
+  write? := some cell
+  move := move
+
 /-- Apply a local tape action: optional write first, then movement. -/
 def apply (action : TapeAction) (T : Tape Bool) : Tape Bool :=
   let written :=
@@ -87,6 +97,15 @@ structure Transition where
 deriving Repr, DecidableEq
 
 namespace Transition
+
+/-- Build a single-logical-tape transition row. -/
+def oneTape
+    (source : Nat) (read : Option Bool)
+    (action : TapeAction) (target : Nat) : Transition where
+  source := source
+  reads := [read]
+  actions := [action]
+  target := target
 
 def WellFormed (stateCount tapeCount : Nat) (t : Transition) : Prop :=
   t.source < stateCount ∧

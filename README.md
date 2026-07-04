@@ -145,6 +145,10 @@ It provides a finite structured logical-tape semantics, bounded runner, basic
 halt/run facts, and debugger/comparison helpers. The existing one-tape
 `MachineDescription` layer remains the backend contract until a particular
 structured machine has a proved lowering.
+For the first restricted backend bridge, import
+`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering`.
+It lowers one-logical-tape structured rows with one read, one local action, and
+a left/right move; `HeadMove.stay` is deliberately outside that first fragment.
 For reusable move/write/scan/copy/append building blocks over that semantics,
 import
 `FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives`.

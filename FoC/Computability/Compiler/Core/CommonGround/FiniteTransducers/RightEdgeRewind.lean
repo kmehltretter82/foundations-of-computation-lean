@@ -1,5 +1,6 @@
 import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 
 set_option doc.verso true
 
@@ -78,14 +79,39 @@ theorem leftMoveOnceDescription_haltsFromTape
   constructor <;>
     rw [leftMoveOnceDescription_run]
 
-def rightEdgeScanDescription : MachineDescription where
+/--
+Structured source for {lit}`rightEdgeScanDescription`.  The lowered machine
+keeps scanning right over Boolean cells, then backs up one cell when it sees the
+right-edge blank.
+-/
+def structuredRightEdgeScanDescription : Structured.Description where
+  tapeCount := 1
   stateCount := 2
   start := 0
   halt := 1
   transitions :=
-    [ transition 0 (some false) (some false) Direction.right 0
-    , transition 0 (some true) (some true) Direction.right 0
-    , transition 0 none none Direction.left 1 ]
+    [ { source := 0
+        reads := [some false]
+        actions :=
+          [ { write? := none
+              move := Structured.HeadMove.right } ]
+        target := 0 }
+    , { source := 0
+        reads := [some true]
+        actions :=
+          [ { write? := none
+              move := Structured.HeadMove.right } ]
+        target := 0 }
+    , { source := 0
+        reads := [none]
+        actions :=
+          [ { write? := none
+              move := Structured.HeadMove.left } ]
+        target := 1 } ]
+
+def rightEdgeScanDescription : MachineDescription :=
+  Structured.Lowering.toMachineDescription
+    structuredRightEdgeScanDescription
 
 def rightEdgeScanSourceTapeFromLeft
     (left : List (Option Bool)) (bits : Word Bool)
@@ -99,6 +125,97 @@ def rightEdgeScanTargetTapeFromLeft
     (tapeAtCells
       (List.append (bits.reverse.map some) left)
       (none :: padding))
+
+private theorem structuredRightEdgeScanDescription_step_bit
+    (left right : List (Option Bool)) (bit : Bool) :
+    structuredRightEdgeScanDescription.runConfig 1
+        { state := structuredRightEdgeScanDescription.start
+          tapes := [tapeAtCells left (some bit :: right)] } =
+      { state := structuredRightEdgeScanDescription.start
+        tapes := [tapeAtCells (some bit :: left) right] } := by
+  cases bit <;> cases right <;>
+    simp [structuredRightEdgeScanDescription,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.apply,
+      Structured.HeadMove.apply,
+      tapeAtCells, Tape.read, Tape.move, Tape.moveRight]
+
+private theorem structuredRightEdgeScanDescription_step_finish
+    (left padding : List (Option Bool)) :
+    structuredRightEdgeScanDescription.runConfig 1
+        { state := structuredRightEdgeScanDescription.start
+          tapes := [tapeAtCells left (none :: padding)] } =
+      { state := structuredRightEdgeScanDescription.halt
+        tapes :=
+          [Tape.move Direction.left
+            (tapeAtCells left (none :: padding))] } := by
+  cases left <;> cases padding <;>
+    simp [structuredRightEdgeScanDescription,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.apply,
+      Structured.HeadMove.apply,
+      tapeAtCells, Tape.read, Tape.move, Tape.moveLeft]
+
+private theorem structuredRightEdgeScanDescription_run_scan
+    (bits : Word Bool) (left padding : List (Option Bool)) :
+    structuredRightEdgeScanDescription.runConfig bits.length
+        { state := structuredRightEdgeScanDescription.start
+          tapes :=
+            [tapeAtCells left
+              (List.append (bits.map some) (none :: padding))] } =
+      { state := structuredRightEdgeScanDescription.start
+        tapes :=
+          [tapeAtCells
+            (List.append (bits.reverse.map some) left)
+            (none :: padding)] } := by
+  induction bits generalizing left with
+  | nil =>
+      simp [Structured.Description.runConfig]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length = 1 + rest.length by
+        simp
+        lia]
+      rw [Structured.Description.runConfig_add]
+      change
+        structuredRightEdgeScanDescription.runConfig rest.length
+            (structuredRightEdgeScanDescription.runConfig 1
+              { state := structuredRightEdgeScanDescription.start
+                tapes :=
+                  [tapeAtCells left
+                    (some bit ::
+                      List.append (rest.map some)
+                        (none :: padding))] }) =
+          { state := structuredRightEdgeScanDescription.start
+            tapes :=
+              [tapeAtCells
+                (List.append ((bit :: rest).reverse.map some) left)
+                (none :: padding)] }
+      rw [structuredRightEdgeScanDescription_step_bit left
+        (List.append (rest.map some) (none :: padding)) bit]
+      simpa [List.reverse_cons, List.map_append,
+        List.append_assoc] using ih (some bit :: left)
+
+private theorem structuredRightEdgeScanDescription_run_to_target
+    (left : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredRightEdgeScanDescription.runConfig (bits.length + 1)
+        { state := structuredRightEdgeScanDescription.start
+          tapes :=
+            [rightEdgeScanSourceTapeFromLeft left bits padding] } =
+      { state := structuredRightEdgeScanDescription.halt
+        tapes :=
+          [rightEdgeScanTargetTapeFromLeft left bits padding] } := by
+  rw [rightEdgeScanSourceTapeFromLeft,
+    rightEdgeScanTargetTapeFromLeft]
+  rw [Structured.Description.runConfig_add]
+  rw [structuredRightEdgeScanDescription_run_scan]
+  rw [structuredRightEdgeScanDescription_step_finish]
 
 /--
 For a nonempty scanned word, the source shape of
@@ -189,8 +306,13 @@ private theorem rightEdgeScanDescription_step_bit
       { state := rightEdgeScanDescription.start
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
-    simp [rightEdgeScanDescription, tapeAtCells, runConfig,
-      stepConfig, lookupTransition, Matches, transition, Tape.read,
+    simp [rightEdgeScanDescription, structuredRightEdgeScanDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      tapeAtCells, runConfig,
+      stepConfig, lookupTransition, Matches, Tape.read,
       Tape.write, Tape.move, Tape.moveRight]
 
 private theorem rightEdgeScanDescription_step_finish
@@ -203,8 +325,13 @@ private theorem rightEdgeScanDescription_step_finish
           Tape.move Direction.left
             (tapeAtCells left (none :: padding)) } := by
   cases left <;> cases padding <;>
-    simp [rightEdgeScanDescription, tapeAtCells, runConfig,
-      stepConfig, lookupTransition, Matches, transition, Tape.read,
+    simp [rightEdgeScanDescription, structuredRightEdgeScanDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      tapeAtCells, runConfig,
+      stepConfig, lookupTransition, Matches, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
 private theorem rightEdgeScanDescription_run_scan

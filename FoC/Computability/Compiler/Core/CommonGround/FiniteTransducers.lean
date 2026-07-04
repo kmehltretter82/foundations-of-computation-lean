@@ -20,6 +20,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGa
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppendGenerated
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TwoStateOptionAppend
 
@@ -34,5 +35,6 @@ arbitrary-state and two-state optional-output, and alternating optional-output
 compiler slices, their specialization links, the physical compaction shape
 helpers, the padded-input identity contract, the generic stateful optional-output
 append invariant, the reusable right-edge rewind adapter, and the structured
-logical-tape machine layer with its first primitive programs.
+logical-tape machine layer with its first primitive programs and restricted
+one-tape lowering fragment.
 -/

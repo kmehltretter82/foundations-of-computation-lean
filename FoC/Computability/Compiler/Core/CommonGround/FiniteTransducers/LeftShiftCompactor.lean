@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 
 set_option doc.verso true
 
@@ -21,18 +22,38 @@ open MachineDescription
 namespace CommonGround
 namespace FiniteTransducers
 
-def leadingBlankLeftShiftDescription : MachineDescription where
+/--
+Structured source for {lit}`leadingBlankLeftShiftDescription`.  The table
+erases each payload bit, writes it one cell to the left, and loops from the
+next source cell until it sees the trailing blank.
+-/
+def structuredLeadingBlankLeftShiftDescription :
+    Structured.Description where
+  tapeCount := 1
   stateCount := 6
   start := 0
   halt := 5
   transitions :=
-    [ transition 0 none none Direction.right 1
-    , transition 1 none none Direction.right 5
-    , transition 1 (some false) none Direction.left 2
-    , transition 1 (some true) none Direction.left 3
-    , transition 2 none (some false) Direction.right 4
-    , transition 3 none (some true) Direction.right 4
-    , transition 4 none none Direction.right 1 ]
+    [ Structured.Transition.oneTape 0 none
+        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 1
+    , Structured.Transition.oneTape 1 none
+        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 5
+    , Structured.Transition.oneTape 1 (some false)
+        (Structured.TapeAction.writeMove none Structured.HeadMove.left) 2
+    , Structured.Transition.oneTape 1 (some true)
+        (Structured.TapeAction.writeMove none Structured.HeadMove.left) 3
+    , Structured.Transition.oneTape 2 none
+        (Structured.TapeAction.writeMove (some false)
+          Structured.HeadMove.right) 4
+    , Structured.Transition.oneTape 3 none
+        (Structured.TapeAction.writeMove (some true)
+          Structured.HeadMove.right) 4
+    , Structured.Transition.oneTape 4 none
+        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 1 ]
+
+def leadingBlankLeftShiftDescription : MachineDescription :=
+  Structured.Lowering.toMachineDescription
+    structuredLeadingBlankLeftShiftDescription
 
 def leadingBlankLeftShiftSourceTape
     (baseLeft : List (Option Bool)) (bits : Word Bool) : Tape Bool :=
@@ -134,6 +155,138 @@ structure LeadingBlankLeftShiftWithPaddingMachineContract
         (leadingBlankLeftShiftTargetTapeWithPadding
           baseLeft bits padding)
 
+private theorem structuredLeadingBlankLeftShiftDescription_run_start_withPadding
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredLeadingBlankLeftShiftDescription.runConfig 1
+        { state := structuredLeadingBlankLeftShiftDescription.start
+          tapes :=
+            [leadingBlankLeftShiftSourceTapeWithPadding
+              baseLeft bits padding] } =
+      { state := 1
+        tapes :=
+          [leadingBlankLeftShiftLoopTapeWithPadding
+            baseLeft [] bits padding] } := by
+  cases bits <;>
+    simp [structuredLeadingBlankLeftShiftDescription,
+      leadingBlankLeftShiftSourceTapeWithPadding,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.apply,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
+
+private theorem structuredLeadingBlankLeftShiftDescription_run_bit_withPadding
+    (baseLeft : List (Option Bool))
+    (processed rest : Word Bool) (bit : Bool)
+    (padding : List (Option Bool)) :
+    structuredLeadingBlankLeftShiftDescription.runConfig 3
+        { state := 1
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed (bit :: rest) padding] } =
+      { state := 1
+        tapes :=
+          [leadingBlankLeftShiftLoopTapeWithPadding
+            baseLeft (List.append processed [bit]) rest padding] } := by
+  cases bit <;> cases rest <;>
+    simp [structuredLeadingBlankLeftShiftDescription,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.apply,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight, tapeAtCells, List.reverse_append]
+
+private theorem structuredLeadingBlankLeftShiftDescription_run_finish_withPadding
+    (baseLeft : List (Option Bool)) (processed : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredLeadingBlankLeftShiftDescription.runConfig 1
+        { state := 1
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed [] padding] } =
+      { state := structuredLeadingBlankLeftShiftDescription.halt
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft processed padding] } := by
+  cases padding <;>
+    simp [structuredLeadingBlankLeftShiftDescription,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      leadingBlankLeftShiftTargetTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.apply,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
+
+private theorem structuredLeadingBlankLeftShiftDescription_run_loop_withPadding
+    (baseLeft : List (Option Bool))
+    (processed remaining : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredLeadingBlankLeftShiftDescription.runConfig
+        (3 * remaining.length + 1)
+        { state := 1
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed remaining padding] } =
+      { state := structuredLeadingBlankLeftShiftDescription.halt
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft (List.append processed remaining) padding] } := by
+  induction remaining generalizing processed with
+  | nil =>
+      simpa using
+        structuredLeadingBlankLeftShiftDescription_run_finish_withPadding
+          baseLeft processed padding
+  | cons bit rest ih =>
+      rw [show 3 * (bit :: rest).length + 1 =
+          3 + (3 * rest.length + 1) by
+        simp
+        lia]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredLeadingBlankLeftShiftDescription_run_bit_withPadding]
+      simpa [List.append_assoc] using
+        ih (List.append processed [bit])
+
+private theorem structuredLeadingBlankLeftShiftDescription_run_to_target_withPadding
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredLeadingBlankLeftShiftDescription.runConfig
+        (3 * bits.length + 2)
+        { state := structuredLeadingBlankLeftShiftDescription.start
+          tapes :=
+            [leadingBlankLeftShiftSourceTapeWithPadding
+              baseLeft bits padding] } =
+      { state := structuredLeadingBlankLeftShiftDescription.halt
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft bits padding] } := by
+  rw [show 3 * bits.length + 2 =
+      1 + (3 * bits.length + 1) by lia]
+  rw [Structured.Description.runConfig_add]
+  rw [structuredLeadingBlankLeftShiftDescription_run_start_withPadding]
+  simpa using
+    structuredLeadingBlankLeftShiftDescription_run_loop_withPadding
+      baseLeft [] bits padding
+
 theorem leadingBlankLeftShiftDescription_wellFormed :
     leadingBlankLeftShiftDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
@@ -166,9 +319,17 @@ theorem leadingBlankLeftShiftDescription_run_start
         tape := leadingBlankLeftShiftLoopTape baseLeft [] bits } := by
   cases bits <;>
     simp [leadingBlankLeftShiftDescription,
+      structuredLeadingBlankLeftShiftDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftSourceTape,
       leadingBlankLeftShiftLoopTape, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem leadingBlankLeftShiftDescription_run_bit
@@ -185,8 +346,16 @@ theorem leadingBlankLeftShiftDescription_run_bit
             baseLeft (List.append processed [bit]) rest } := by
   cases bit <;> cases rest <;>
     simp [leadingBlankLeftShiftDescription,
+      structuredLeadingBlankLeftShiftDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTape, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.reverse_append]
 
@@ -198,8 +367,16 @@ theorem leadingBlankLeftShiftDescription_run_finish
       { state := leadingBlankLeftShiftDescription.halt
         tape := leadingBlankLeftShiftTargetTape baseLeft processed } := by
   simp [leadingBlankLeftShiftDescription,
+    structuredLeadingBlankLeftShiftDescription,
+    Structured.Lowering.toMachineDescription,
+    Structured.Lowering.lowerTransition?,
+    Structured.Lowering.lowerHeadMove?,
+    Structured.Lowering.lowerWrite,
+    Structured.Transition.oneTape,
+    Structured.TapeAction.preserveMove,
+    Structured.TapeAction.writeMove,
     leadingBlankLeftShiftLoopTape, leadingBlankLeftShiftTargetTape,
-    runConfig, stepConfig, lookupTransition, Matches, transition,
+    runConfig, stepConfig, lookupTransition, Matches,
     Tape.read, Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem leadingBlankLeftShiftDescription_run_loop
@@ -267,9 +444,17 @@ theorem leadingBlankLeftShiftDescription_run_start_withPadding
             baseLeft [] bits padding } := by
   cases bits <;>
     simp [leadingBlankLeftShiftDescription,
+      structuredLeadingBlankLeftShiftDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftSourceTapeWithPadding,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem leadingBlankLeftShiftDescription_run_bit_withPadding
@@ -287,8 +472,16 @@ theorem leadingBlankLeftShiftDescription_run_bit_withPadding
             baseLeft (List.append processed [bit]) rest padding } := by
   cases bit <;> cases rest <;>
     simp [leadingBlankLeftShiftDescription,
+      structuredLeadingBlankLeftShiftDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.reverse_append]
 
@@ -306,9 +499,17 @@ theorem leadingBlankLeftShiftDescription_run_finish_withPadding
             baseLeft processed padding } := by
   cases padding <;>
     simp [leadingBlankLeftShiftDescription,
+      structuredLeadingBlankLeftShiftDescription,
+      Structured.Lowering.toMachineDescription,
+      Structured.Lowering.lowerTransition?,
+      Structured.Lowering.lowerHeadMove?,
+      Structured.Lowering.lowerWrite,
+      Structured.Transition.oneTape,
+      Structured.TapeAction.preserveMove,
+      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTapeWithPadding,
       leadingBlankLeftShiftTargetTapeWithPadding,
-      runConfig, stepConfig, lookupTransition, Matches, transition,
+      runConfig, stepConfig, lookupTransition, Matches,
       Tape.read, Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem leadingBlankLeftShiftDescription_run_loop_withPadding
