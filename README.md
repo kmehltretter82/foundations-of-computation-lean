@@ -131,6 +131,13 @@ For API reference policy, see [`docs/API_WORKFLOW.md`](docs/API_WORKFLOW.md).
 Broad API inventories should be generated from Lean declarations and docstrings
 rather than maintained by hand.
 
+For concrete finite-machine debugging, import
+`FoC.Computability.MachineDescriptionDebug`. It provides printable tape,
+configuration, and transition views; `debugTraceString`; exact and
+`Tape.Equiv` comparers; and step-expectation checks for finding the first bad
+tape boundary. These helpers are opt-in diagnostics, not replacements for
+general run proofs.
+
 This formalization was developed with assistance from OpenAI Codex and Google Gemini.
 
 ## License
