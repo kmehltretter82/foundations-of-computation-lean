@@ -20,6 +20,10 @@ open MachineDescription
 namespace CommonGround
 namespace FiniteTransducers
 
+/- Shared public layout. The input head is at the right edge of pref ++ suffix;
+the padding starts with a guard bit and then has one blank for each suffix bit.
+The machine returns to the boundary before the suffix. -/
+
 def countedSuffixBoundaryLocatorPadding
     (guard : Option Bool) (suffix : Word Bool)
     (tail : List (Option Bool)) : List (Option Bool) :=
@@ -59,7 +63,11 @@ def CountedSuffixBoundaryLocatorConstruction : Prop :=
   exists locator : MachineDescription,
     CountedSuffixBoundaryLocatorSpec locator
 
-def countedSuffixBoundaryLeftAdvanceCurrentTape
+/- Internal phase layouts. The left-advance phase pushes suffix bits through the
+count window, the prefix-shift phase moves the prefix separator, and the
+right-restore phase rebuilds the suffix/count-window shape before rewind. -/
+
+private def countedSuffixBoundaryLeftAdvanceCurrentTape
     (pref leftStack : Word Bool) (current guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   tapeAtCells
@@ -72,7 +80,7 @@ def countedSuffixBoundaryLeftAdvanceCurrentTape
         (List.replicate (leftStack.length + 1) (none : Option Bool))
         tail)
 
-def countedSuffixBoundaryLeftAdvanceTape
+private def countedSuffixBoundaryLeftAdvanceTape
     (pref leftStack processed : Word Bool) (guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   tapeAtCells
@@ -87,7 +95,7 @@ def countedSuffixBoundaryLeftAdvanceTape
               (List.replicate leftStack.length (none : Option Bool))
               tail)))
 
-def countedSuffixBoundaryLeftAdvancedTape
+private def countedSuffixBoundaryLeftAdvancedTape
     (pref suffix : Word Bool) (guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   tapeAtCells
@@ -98,7 +106,7 @@ def countedSuffixBoundaryLeftAdvancedTape
           (List.replicate suffix.length (none : Option Bool))
           (some guardBit :: tail)))
 
-def countedSuffixBoundaryPrefixShiftedTape
+private def countedSuffixBoundaryPrefixShiftedTape
     (pref suffix : Word Bool) (guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   tapeAtCells (none :: pref.reverse.map some)
@@ -108,7 +116,7 @@ def countedSuffixBoundaryPrefixShiftedTape
           (List.replicate suffix.length (none : Option Bool))
           (some guardBit :: tail)))
 
-def countedSuffixBoundaryRestoreLoopTape
+private def countedSuffixBoundaryRestoreLoopTape
     (pref processed remaining : Word Bool) (guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   tapeAtCells
@@ -122,6 +130,8 @@ def countedSuffixBoundaryRestoreLoopTape
             List.append
               (List.replicate processed.length (none : Option Bool))
               tail)))
+
+/- Finite transition tables for the three local phases. -/
 
 def countedSuffixBoundaryLeftAdvanceDescription : MachineDescription where
   stateCount := 30
@@ -250,7 +260,7 @@ def countedSuffixBoundaryLocatorDescription : MachineDescription :=
         countedSuffixBoundaryRightRestoreDescription
         rightEdgeRewindDescription))
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_wellFormed :
+private theorem countedSuffixBoundaryLeftAdvanceDescription_wellFormed :
     countedSuffixBoundaryLeftAdvanceDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -261,19 +271,19 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_wellFormed :
       (l := countedSuffixBoundaryLeftAdvanceDescription.transitions)
       (by decide)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_haltTransitionFree :
+private theorem countedSuffixBoundaryLeftAdvanceDescription_haltTransitionFree :
     countedSuffixBoundaryLeftAdvanceDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := countedSuffixBoundaryLeftAdvanceDescription.transitions)
     (state := countedSuffixBoundaryLeftAdvanceDescription.halt)
     (by decide)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_subroutineReady :
+private theorem countedSuffixBoundaryLeftAdvanceDescription_subroutineReady :
     countedSuffixBoundaryLeftAdvanceDescription.SubroutineReady :=
   ⟨countedSuffixBoundaryLeftAdvanceDescription_wellFormed,
     countedSuffixBoundaryLeftAdvanceDescription_haltTransitionFree⟩
 
-theorem countedSuffixBoundaryPrefixShiftDescription_wellFormed :
+private theorem countedSuffixBoundaryPrefixShiftDescription_wellFormed :
     countedSuffixBoundaryPrefixShiftDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -284,19 +294,19 @@ theorem countedSuffixBoundaryPrefixShiftDescription_wellFormed :
       (l := countedSuffixBoundaryPrefixShiftDescription.transitions)
       (by decide)
 
-theorem countedSuffixBoundaryPrefixShiftDescription_haltTransitionFree :
+private theorem countedSuffixBoundaryPrefixShiftDescription_haltTransitionFree :
     countedSuffixBoundaryPrefixShiftDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := countedSuffixBoundaryPrefixShiftDescription.transitions)
     (state := countedSuffixBoundaryPrefixShiftDescription.halt)
     (by decide)
 
-theorem countedSuffixBoundaryPrefixShiftDescription_subroutineReady :
+private theorem countedSuffixBoundaryPrefixShiftDescription_subroutineReady :
     countedSuffixBoundaryPrefixShiftDescription.SubroutineReady :=
   ⟨countedSuffixBoundaryPrefixShiftDescription_wellFormed,
     countedSuffixBoundaryPrefixShiftDescription_haltTransitionFree⟩
 
-theorem countedSuffixBoundaryRightRestoreDescription_wellFormed :
+private theorem countedSuffixBoundaryRightRestoreDescription_wellFormed :
     countedSuffixBoundaryRightRestoreDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -307,19 +317,19 @@ theorem countedSuffixBoundaryRightRestoreDescription_wellFormed :
       (l := countedSuffixBoundaryRightRestoreDescription.transitions)
       (by decide)
 
-theorem countedSuffixBoundaryRightRestoreDescription_haltTransitionFree :
+private theorem countedSuffixBoundaryRightRestoreDescription_haltTransitionFree :
     countedSuffixBoundaryRightRestoreDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := countedSuffixBoundaryRightRestoreDescription.transitions)
     (state := countedSuffixBoundaryRightRestoreDescription.halt)
     (by decide)
 
-theorem countedSuffixBoundaryRightRestoreDescription_subroutineReady :
+private theorem countedSuffixBoundaryRightRestoreDescription_subroutineReady :
     countedSuffixBoundaryRightRestoreDescription.SubroutineReady :=
   ⟨countedSuffixBoundaryRightRestoreDescription_wellFormed,
     countedSuffixBoundaryRightRestoreDescription_haltTransitionFree⟩
 
-theorem countedSuffixBoundaryLocatorDescription_subroutineReady :
+private theorem countedSuffixBoundaryLocatorDescription_subroutineReady :
     countedSuffixBoundaryLocatorDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
     countedSuffixBoundaryLeftAdvanceDescription_subroutineReady
@@ -338,7 +348,9 @@ private abbrev PrefixShift :=
 private abbrev RightRestore :=
   countedSuffixBoundaryRightRestoreDescription
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_initial
+/- Exact execution lemmas for the left-advance phase. -/
+
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_initial
     (pref leftStack : Word Bool) (current guardBit : Bool)
     (tail : List (Option Bool)) :
     LeftAdvance.runConfig 8
@@ -358,7 +370,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_initial
       Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.replicate_succ]
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_processed
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_processed
     (left : List (Option Bool)) (processed : Word Bool)
     (right : List (Option Bool)) :
     LeftAdvance.runConfig (processed.length + 1)
@@ -421,7 +433,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_processed
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (some bit :: left)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count
+    (bit : Bool)
     (left : List (Option Bool)) (blanks : Nat)
     (right : List (Option Bool)) :
     LeftAdvance.runConfig (blanks + 1)
@@ -430,18 +443,18 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
             tapeAtCells left
               (List.append
                 (List.replicate blanks (none : Option Bool))
-                (some false :: right)) } =
-      { state := 23
+                (some bit :: right)) } =
+      { state := bif bit then 24 else 23
         tape :=
           tapeAtCells
-            (some false ::
+            (some bit ::
               List.append
                 (List.replicate blanks (none : Option Bool))
                 left)
             right } := by
   induction blanks generalizing left with
   | zero =>
-      cases right <;>
+      cases bit <;> cases right <;>
         simp [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
           runConfig, stepConfig, lookupTransition, Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight,
@@ -458,11 +471,11 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
                     (none ::
                       List.append
                         (List.replicate blanks (none : Option Bool))
-                        (some false :: right)) }) =
-          { state := 23
+                        (some bit :: right)) }) =
+          { state := bif bit then 24 else 23
             tape :=
               tapeAtCells
-                (some false ::
+                (some bit ::
                   List.append
                     (List.replicate (blanks + 1) (none : Option Bool))
                     left)
@@ -475,22 +488,32 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
                     (none ::
                       List.append
                         (List.replicate blanks (none : Option Bool))
-                        (some false :: right)) } =
+                        (some bit :: right)) } =
             { state := 22
               tape :=
                 tapeAtCells (none :: left)
                   (List.append
                     (List.replicate blanks (none : Option Bool))
-                    (some false :: right)) } := by
-        cases hright :
-            List.append
-              (List.replicate blanks (none : Option Bool))
-              (some false :: right) <;>
-          simp [LeftAdvance,
-            countedSuffixBoundaryLeftAdvanceDescription, runConfig,
-            stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveRight,
-            tapeAtCells]
+                    (some bit :: right)) } := by
+        cases bit
+        · cases hright :
+              List.append
+                (List.replicate blanks (none : Option Bool))
+                (some false :: right) <;>
+            simp [LeftAdvance,
+              countedSuffixBoundaryLeftAdvanceDescription, runConfig,
+              stepConfig, lookupTransition, Matches, transition,
+              Tape.read, Tape.write, Tape.move, Tape.moveRight,
+              tapeAtCells]
+        · cases hright :
+              List.append
+                (List.replicate blanks (none : Option Bool))
+                (some true :: right) <;>
+            simp [LeftAdvance,
+              countedSuffixBoundaryLeftAdvanceDescription, runConfig,
+              stepConfig, lookupTransition, Matches, transition,
+              Tape.read, Tape.write, Tape.move, Tape.moveRight,
+              tapeAtCells]
       rw [hstep]
       have htail :
           List.append
@@ -506,92 +529,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
       rw [htail] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_true
-    (left : List (Option Bool)) (blanks : Nat)
-    (right : List (Option Bool)) :
-    LeftAdvance.runConfig (blanks + 1)
-        { state := 22
-          tape :=
-            tapeAtCells left
-              (List.append
-                (List.replicate blanks (none : Option Bool))
-                (some true :: right)) } =
-      { state := 24
-        tape :=
-          tapeAtCells
-            (some true ::
-              List.append
-                (List.replicate blanks (none : Option Bool))
-                left)
-            right } := by
-  induction blanks generalizing left with
-  | zero =>
-      cases right <;>
-        simp [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.write, Tape.move, Tape.moveRight,
-          tapeAtCells]
-  | succ blanks ih =>
-      rw [show blanks + 1 + 1 = 1 + (blanks + 1) by lia]
-      rw [runConfig_add]
-      change
-        LeftAdvance.runConfig (blanks + 1)
-            (LeftAdvance.runConfig 1
-              { state := 22
-                tape :=
-                  tapeAtCells left
-                    (none ::
-                      List.append
-                        (List.replicate blanks (none : Option Bool))
-                        (some true :: right)) }) =
-          { state := 24
-            tape :=
-              tapeAtCells
-                (some true ::
-                  List.append
-                    (List.replicate (blanks + 1) (none : Option Bool))
-                    left)
-                right }
-      have hstep :
-          LeftAdvance.runConfig 1
-              { state := 22
-                tape :=
-                  tapeAtCells left
-                    (none ::
-                      List.append
-                        (List.replicate blanks (none : Option Bool))
-                        (some true :: right)) } =
-            { state := 22
-              tape :=
-                tapeAtCells (none :: left)
-                  (List.append
-                    (List.replicate blanks (none : Option Bool))
-                    (some true :: right)) } := by
-        cases hright :
-            List.append
-              (List.replicate blanks (none : Option Bool))
-              (some true :: right) <;>
-          simp [LeftAdvance,
-            countedSuffixBoundaryLeftAdvanceDescription, runConfig,
-            stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveRight,
-            tapeAtCells]
-      rw [hstep]
-      have htail :
-          List.append
-              (List.replicate blanks (none : Option Bool))
-              (none :: left) =
-            none ::
-              List.append
-                (List.replicate blanks (none : Option Bool))
-                left :=
-        list_replicate_append_cons_eq_cons_append
-          (none : Option Bool) blanks left
-      have hih := ih (none :: left)
-      rw [htail] at hih
-      simpa [List.replicate_succ, List.append_assoc] using hih
-
-def countedSuffixBoundaryLeftScanTape
+private def countedSuffixBoundaryLeftScanTape
     (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
     (current : Bool) (right : List (Option Bool)) : Tape Bool :=
   match processedLeft with
@@ -602,7 +540,7 @@ def countedSuffixBoundaryLeftScanTape
           (none :: some current :: baseLeft))
         (some bit :: right)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
     (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
     (blanks : Nat) (last current : Bool)
     (right : List (Option Bool)) :
@@ -698,7 +636,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
       rw [htail] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
     (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
     (current : Bool) (right : List (Option Bool)) :
     LeftAdvance.runConfig (processedLeft.length + 3)
@@ -759,7 +697,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (some bit :: right)
 
-theorem tapeAtCells_moveLeft_replicate_none_cons
+private theorem tapeAtCells_moveLeft_replicate_none_cons
     (n : Nat) (leftTail right : List (Option Bool)) :
     Tape.move Direction.left
         (tapeAtCells
@@ -781,14 +719,15 @@ theorem tapeAtCells_moveLeft_replicate_none_cons
         list_replicate_append_cons_eq_cons_append
           (none : Option Bool) n leftTail
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift
+    (bit : Bool)
     (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
     (last current : Bool) (rightTail : List (Option Bool)) :
     LeftAdvance.runConfig (2 * processedLeft.length + 7)
-        { state := 23
+        { state := bif bit then 24 else 23
           tape :=
             tapeAtCells
-              (some false ::
+              (some bit ::
                 List.append
                   (List.replicate processedLeft.length
                     (none : Option Bool))
@@ -807,17 +746,17 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
                   List.append
                     (List.replicate (processedLeft.length + 2)
                       (none : Option Bool))
-                    (some false :: rightTail))) } := by
+                    (some bit :: rightTail))) } := by
   rw [show 2 * processedLeft.length + 7 =
     2 + ((processedLeft.length + 2) +
       (processedLeft.length + 3)) by lia]
   rw [runConfig_add]
   have hshift :
       LeftAdvance.runConfig 2
-          { state := 23
+          { state := bif bit then 24 else 23
             tape :=
               tapeAtCells
-                (some false ::
+                (some bit ::
                   List.append
                     (List.replicate processedLeft.length
                       (none : Option Bool))
@@ -835,37 +774,49 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
                 (some last ::
                   List.append (processedLeft.map some)
                     (none :: some current :: baseLeft)))
-              (none :: none :: some false :: rightTail) } := by
-    have hmove :=
-      tapeAtCells_moveLeft_replicate_none_cons
-        processedLeft.length
-        (some last ::
-          List.append (processedLeft.map some)
-            (none :: some current :: baseLeft))
-        (some false :: rightTail)
-    simpa [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
-      runConfig, stepConfig, lookupTransition, Matches, transition,
-      Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
-      using hmove
+              (none :: none :: some bit :: rightTail) } := by
+    cases bit
+    · have hmove :=
+        tapeAtCells_moveLeft_replicate_none_cons
+          processedLeft.length
+          (some last ::
+            List.append (processedLeft.map some)
+              (none :: some current :: baseLeft))
+          (some false :: rightTail)
+      simpa [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
+        using hmove
+    · have hmove :=
+        tapeAtCells_moveLeft_replicate_none_cons
+          processedLeft.length
+          (some last ::
+            List.append (processedLeft.map some)
+              (none :: some current :: baseLeft))
+          (some true :: rightTail)
+      simpa [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
+        using hmove
   rw [hshift]
   rw [runConfig_add]
   rw [
     countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
       baseLeft processedLeft processedLeft.length last current
-      (none :: some false :: rightTail)]
+      (none :: some bit :: rightTail)]
   have htail :
       List.append
           (List.replicate (processedLeft.length + 1)
             (none : Option Bool))
-          (none :: some false :: rightTail) =
+          (none :: some bit :: rightTail) =
         List.append
           (List.replicate (processedLeft.length + 2)
             (none : Option Bool))
-          (some false :: rightTail) := by
+          (some bit :: rightTail) := by
     simpa [List.replicate_succ] using
       list_replicate_append_cons_eq_cons_append
         (none : Option Bool) (processedLeft.length + 1)
-        (some false :: rightTail)
+        (some bit :: rightTail)
   rw [htail]
   simpa [List.append_assoc] using
     countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
@@ -874,111 +825,16 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
         List.append
           (List.replicate (processedLeft.length + 2)
             (none : Option Bool))
-          (some false :: rightTail))
+          (some bit :: rightTail))
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_true
-    (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
-    (last current : Bool) (rightTail : List (Option Bool)) :
-    LeftAdvance.runConfig (2 * processedLeft.length + 7)
-        { state := 24
-          tape :=
-            tapeAtCells
-              (some true ::
-                List.append
-                  (List.replicate processedLeft.length
-                    (none : Option Bool))
-                  (none ::
-                    some last ::
-                    List.append (processedLeft.map some)
-                      (none :: some current :: baseLeft)))
-              (none :: rightTail) } =
-      { state := 20
-        tape :=
-          tapeAtCells baseLeft
-            (none ::
-              some current ::
-              List.append (processedLeft.reverse.map some)
-                (some last ::
-                  List.append
-                    (List.replicate (processedLeft.length + 2)
-                      (none : Option Bool))
-                    (some true :: rightTail))) } := by
-  rw [show 2 * processedLeft.length + 7 =
-    2 + ((processedLeft.length + 2) +
-      (processedLeft.length + 3)) by lia]
-  rw [runConfig_add]
-  have hshift :
-      LeftAdvance.runConfig 2
-          { state := 24
-            tape :=
-              tapeAtCells
-                (some true ::
-                  List.append
-                    (List.replicate processedLeft.length
-                      (none : Option Bool))
-                    (none ::
-                      some last ::
-                      List.append (processedLeft.map some)
-                        (none :: some current :: baseLeft)))
-                (none :: rightTail) } =
-        { state := 28
-          tape :=
-            tapeAtCells
-              (List.append
-                (List.replicate processedLeft.length
-                  (none : Option Bool))
-                (some last ::
-                  List.append (processedLeft.map some)
-                    (none :: some current :: baseLeft)))
-              (none :: none :: some true :: rightTail) } := by
-    have hmove :=
-      tapeAtCells_moveLeft_replicate_none_cons
-        processedLeft.length
-        (some last ::
-          List.append (processedLeft.map some)
-            (none :: some current :: baseLeft))
-        (some true :: rightTail)
-    simpa [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
-      runConfig, stepConfig, lookupTransition, Matches, transition,
-      Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
-      using hmove
-  rw [hshift]
-  rw [runConfig_add]
-  rw [
-    countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
-      baseLeft processedLeft processedLeft.length last current
-      (none :: some true :: rightTail)]
-  have htail :
-      List.append
-          (List.replicate (processedLeft.length + 1)
-            (none : Option Bool))
-          (none :: some true :: rightTail) =
-        List.append
-          (List.replicate (processedLeft.length + 2)
-            (none : Option Bool))
-          (some true :: rightTail) := by
-    simpa [List.replicate_succ] using
-      list_replicate_append_cons_eq_cons_append
-        (none : Option Bool) (processedLeft.length + 1)
-        (some true :: rightTail)
-  rw [htail]
-  simpa [List.append_assoc] using
-    countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
-      baseLeft processedLeft current
-      (some last ::
-        List.append
-          (List.replicate (processedLeft.length + 2)
-            (none : Option Bool))
-          (some true :: rightTail))
-
-def countedSuffixBoundaryLeftAdvanceLoopTape
+private def countedSuffixBoundaryLeftAdvanceLoopTape
     (pref remaining processedRev : Word Bool)
     (last guardBit : Bool)
     (tail : List (Option Bool)) : Tape Bool :=
   countedSuffixBoundaryLeftAdvanceTape pref remaining
     (List.append processedRev.reverse [last]) guardBit tail
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
     (pref leftStack processedRev : Word Bool)
     (last current guardBit : Bool)
     (tail : List (Option Bool)) :
@@ -1086,51 +942,29 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
               (none : Option Bool))
             tail := by
     simp [List.replicate_succ]
-  cases guardBit
-  · rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
-        (none ::
-          List.append (processed.reverse.map some)
-            (none :: some current :: baseLeft))
-        processedRev.length
-        (List.append
-          (List.replicate (leftStack.length + 1)
-            (none : Option Bool))
-          tail)]
-    rw [hprocessedLeft, hright]
-    rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
-        baseLeft processedRev last current
-        (List.append
-          (List.replicate leftStack.length (none : Option Bool))
-          tail)]
-    simp [countedSuffixBoundaryLeftAdvanceLoopTape,
-      countedSuffixBoundaryLeftAdvanceTape, baseLeft,
-      List.map_append, List.reverse_append, List.append_assoc,
-      List.replicate_succ]
-  · rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_true
-        (none ::
-          List.append (processed.reverse.map some)
-            (none :: some current :: baseLeft))
-        processedRev.length
-        (List.append
-          (List.replicate (leftStack.length + 1)
-            (none : Option Bool))
-          tail)]
-    rw [hprocessedLeft, hright]
-    rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_shift_true
-        baseLeft processedRev last current
-        (List.append
-          (List.replicate leftStack.length (none : Option Bool))
-          tail)]
-    simp [countedSuffixBoundaryLeftAdvanceLoopTape,
-      countedSuffixBoundaryLeftAdvanceTape, baseLeft,
-      List.map_append, List.reverse_append, List.append_assoc,
-      List.replicate_succ]
+  rw [
+    countedSuffixBoundaryLeftAdvanceDescription_run_scan_count guardBit
+      (none ::
+        List.append (processed.reverse.map some)
+          (none :: some current :: baseLeft))
+      processedRev.length
+      (List.append
+        (List.replicate (leftStack.length + 1)
+          (none : Option Bool))
+        tail)]
+  rw [hprocessedLeft, hright]
+  rw [
+    countedSuffixBoundaryLeftAdvanceDescription_run_shift guardBit
+      baseLeft processedRev last current
+      (List.append
+        (List.replicate leftStack.length (none : Option Bool))
+        tail)]
+  simp [countedSuffixBoundaryLeftAdvanceLoopTape,
+    countedSuffixBoundaryLeftAdvanceTape, baseLeft,
+    List.map_append, List.reverse_append, List.append_assoc,
+    List.replicate_succ]
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop
     (pref remaining processedRev : Word Bool)
     (last guardBit : Bool)
     (tail : List (Option Bool)) :
@@ -1160,7 +994,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop
       rw [hstep]
       simpa [List.append_assoc] using hrest
 
-def countedSuffixBoundaryDoneScanTape
+private def countedSuffixBoundaryDoneScanTape
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) : Tape Bool :=
   match processedRev with
@@ -1170,7 +1004,7 @@ def countedSuffixBoundaryDoneScanTape
         (List.append (rest.map some) (none :: baseLeft))
         (some bit :: some last :: right)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_finish
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_finish
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) :
     LeftAdvance.runConfig (processedRev.length + 2)
@@ -1218,7 +1052,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_finish
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih bit (some last :: right)
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) :
     LeftAdvance.runConfig (processedRev.length + 3)
@@ -1258,7 +1092,7 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
     countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_finish
       baseLeft processedRev last right
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (blanks : Nat) (last : Bool) (right : List (Option Bool)) :
     LeftAdvance.runConfig (blanks + 1)
@@ -1357,14 +1191,15 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
       rw [hrep]
       simpa [List.replicate_succ, List.append_assoc] using hih
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_false
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_bit
+    (bit : Bool)
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last tailFirst : Bool) (tail : List (Option Bool)) :
     LeftAdvance.runConfig (2 * processedRev.length + 6)
-        { state := 23
+        { state := bif bit then 24 else 23
           tape :=
             tapeAtCells
-              (some false ::
+              (some bit ::
                 List.append
                   (List.replicate processedRev.length
                     (none : Option Bool))
@@ -1382,17 +1217,17 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_false
                   List.append
                     (List.replicate (processedRev.length + 1)
                       (none : Option Bool))
-                    (some false :: some tailFirst :: tail))) } := by
+                    (some bit :: some tailFirst :: tail))) } := by
   rw [show 2 * processedRev.length + 6 =
     2 + ((processedRev.length + 1) +
       (processedRev.length + 3)) by lia]
   rw [runConfig_add]
   have hstart :
       LeftAdvance.runConfig 2
-          { state := 23
+          { state := bif bit then 24 else 23
             tape :=
               tapeAtCells
-                (some false ::
+                (some bit ::
                   List.append
                     (List.replicate processedRev.length
                       (none : Option Bool))
@@ -1410,7 +1245,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_false
                 (some last ::
                   List.append (processedRev.map some)
                     (none :: baseLeft)))
-              (none :: some false :: some tailFirst :: tail) } := by
+              (none :: some bit :: some tailFirst :: tail) } := by
+    cases bit <;>
     cases tailFirst <;> cases last <;> cases processedRev <;>
       simp [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
         runConfig, stepConfig, lookupTransition, Matches, transition,
@@ -1424,92 +1260,16 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_false
   rw [
     countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
       baseLeft processedRev processedRev.length last
-      (some false :: some tailFirst :: tail)]
+      (some bit :: some tailFirst :: tail)]
   simpa [List.append_assoc] using
     countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
       baseLeft processedRev last
       (List.append
         (List.replicate (processedRev.length + 1)
           (none : Option Bool))
-        (some false :: some tailFirst :: tail))
+        (some bit :: some tailFirst :: tail))
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_true
-    (baseLeft : List (Option Bool)) (processedRev : Word Bool)
-    (last tailFirst : Bool) (tail : List (Option Bool)) :
-    LeftAdvance.runConfig (2 * processedRev.length + 6)
-        { state := 24
-          tape :=
-            tapeAtCells
-              (some true ::
-                List.append
-                  (List.replicate processedRev.length
-                    (none : Option Bool))
-                  (none ::
-                    some last ::
-                    List.append (processedRev.map some)
-                      (none :: baseLeft)))
-              (some tailFirst :: tail) } =
-      { state := 29
-        tape :=
-          tapeAtCells baseLeft
-            (none ::
-              List.append (processedRev.reverse.map some)
-                (some last ::
-                  List.append
-                    (List.replicate (processedRev.length + 1)
-                      (none : Option Bool))
-                    (some true :: some tailFirst :: tail))) } := by
-  rw [show 2 * processedRev.length + 6 =
-    2 + ((processedRev.length + 1) +
-      (processedRev.length + 3)) by lia]
-  rw [runConfig_add]
-  have hstart :
-      LeftAdvance.runConfig 2
-          { state := 24
-            tape :=
-              tapeAtCells
-                (some true ::
-                  List.append
-                    (List.replicate processedRev.length
-                      (none : Option Bool))
-                    (none ::
-                      some last ::
-                      List.append (processedRev.map some)
-                        (none :: baseLeft)))
-                (some tailFirst :: tail) } =
-        { state := 15
-          tape :=
-            tapeAtCells
-              (List.append
-                (List.replicate processedRev.length
-                  (none : Option Bool))
-                (some last ::
-                  List.append (processedRev.map some)
-                    (none :: baseLeft)))
-              (none :: some true :: some tailFirst :: tail) } := by
-    cases tailFirst <;> cases last <;> cases processedRev <;>
-      simp [LeftAdvance, countedSuffixBoundaryLeftAdvanceDescription,
-        runConfig, stepConfig, lookupTransition, Matches, transition,
-        Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        tapeAtCells, List.replicate_succ] <;>
-      try exact
-        (list_replicate_append_cons_eq_cons_append
-          (none : Option Bool) _ _)
-  rw [hstart]
-  rw [runConfig_add]
-  rw [
-    countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
-      baseLeft processedRev processedRev.length last
-      (some true :: some tailFirst :: tail)]
-  simpa [List.append_assoc] using
-    countedSuffixBoundaryLeftAdvanceDescription_run_done_scan_bits
-      baseLeft processedRev last
-      (List.append
-        (List.replicate (processedRev.length + 1)
-          (none : Option Bool))
-        (some true :: some tailFirst :: tail))
-
-theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
+private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
     (pref processedRev : Word Bool)
     (last guardBit tailFirst : Bool)
     (tail : List (Option Bool)) :
@@ -1596,35 +1356,21 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
         some last ::
           List.append (processedRev.map some) (none :: baseLeft) := by
     simp [processed, List.reverse_append]
-  cases guardBit
-  · rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
-        (none ::
-          List.append (processed.reverse.map some)
-            (none :: baseLeft))
-        processedRev.length
-        (some tailFirst :: tail)]
-    rw [hprocessedLeft]
-    rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_done_false
-        baseLeft processedRev last tailFirst tail]
-    simp [countedSuffixBoundaryLeftAdvancedTape, baseLeft,
-      List.map_append, List.append_assoc]
-  · rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_true
-        (none ::
-          List.append (processed.reverse.map some)
-            (none :: baseLeft))
-        processedRev.length
-        (some tailFirst :: tail)]
-    rw [hprocessedLeft]
-    rw [
-      countedSuffixBoundaryLeftAdvanceDescription_run_done_true
-        baseLeft processedRev last tailFirst tail]
-    simp [countedSuffixBoundaryLeftAdvancedTape, baseLeft,
-      List.map_append, List.append_assoc]
+  rw [
+    countedSuffixBoundaryLeftAdvanceDescription_run_scan_count guardBit
+      (none ::
+        List.append (processed.reverse.map some)
+          (none :: baseLeft))
+      processedRev.length
+      (some tailFirst :: tail)]
+  rw [hprocessedLeft]
+  rw [
+    countedSuffixBoundaryLeftAdvanceDescription_run_done_bit guardBit
+      baseLeft processedRev last tailFirst tail]
+  simp [countedSuffixBoundaryLeftAdvancedTape, baseLeft,
+    List.map_append, List.append_assoc]
 
-theorem countedSuffixBoundaryLeftAdvanceDescription_haltsFromTape
+private theorem countedSuffixBoundaryLeftAdvanceDescription_haltsFromTape
     (pref leftStack : Word Bool) (last guardBit tailFirst : Bool)
     (tail : List (Option Bool)) :
     LeftAdvance.HaltsFromTape
@@ -1677,10 +1423,12 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_haltsFromTape
     rfl
   · rw [hrun]
 
-def countedSuffixBoundaryPrefixCarryState (carry : Bool) : Nat :=
+/- Exact execution lemmas for the prefix-shift phase. -/
+
+private def countedSuffixBoundaryPrefixCarryState (carry : Bool) : Nat :=
   bif carry then 3 else 2
 
-def countedSuffixBoundaryPrefixCarryTape
+private def countedSuffixBoundaryPrefixCarryTape
     (remaining : Word Bool) (right : List (Option Bool)) :
     Tape Bool :=
   match remaining with
@@ -1689,7 +1437,7 @@ def countedSuffixBoundaryPrefixCarryTape
       tapeAtCells (List.append (rest.map some) [none])
         (some bit :: right)
 
-def countedSuffixBoundaryPrefixScanRightTape
+private def countedSuffixBoundaryPrefixScanRightTape
     (shifted : Word Bool) (right : List (Option Bool)) :
     Tape Bool :=
   match shifted with
@@ -1698,7 +1446,7 @@ def countedSuffixBoundaryPrefixScanRightTape
       tapeAtCells [some bit]
         (List.append (rest.map some) right)
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_step
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_step
     (remaining : Word Bool) (current carry : Bool)
     (right : List (Option Bool)) :
     PrefixShift.runConfig 1
@@ -1717,7 +1465,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_step
       lookupTransition, Matches, transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, tapeAtCells]
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_finish
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_finish
     (carry : Bool) (right : List (Option Bool)) :
     PrefixShift.runConfig 1
         { state := countedSuffixBoundaryPrefixCarryState carry
@@ -1734,7 +1482,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_carry_finish
       stepConfig, lookupTransition, Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
 
-theorem countedSuffixBoundaryPrefixScanRightTape_append_last
+private theorem countedSuffixBoundaryPrefixScanRightTape_append_last
     (first : Bool) (rest : Word Bool) (last : Bool)
     (right : List (Option Bool)) :
     countedSuffixBoundaryPrefixScanRightTape
@@ -1745,7 +1493,7 @@ theorem countedSuffixBoundaryPrefixScanRightTape_append_last
     simp [countedSuffixBoundaryPrefixScanRightTape,
       List.map_append, List.append_assoc]
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_carry
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_carry
     (remaining : Word Bool) (carry : Bool)
     (right : List (Option Bool)) :
     PrefixShift.runConfig (remaining.length + 1)
@@ -1782,7 +1530,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_carry
               (countedSuffixBoundaryPrefixScanRightTape_append_last
                 first scanRest carry right).symm
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right
     (left : List (Option Bool)) (bits : Word Bool)
     (padding : List (Option Bool)) :
     PrefixShift.runConfig (bits.length + 1)
@@ -1848,7 +1596,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right
       simpa [List.reverse_cons, List.map_append,
         List.append_assoc] using ih (some bit :: left)
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_source
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_source
     (first : Bool) (rest : Word Bool)
     (padding : List (Option Bool)) :
     PrefixShift.runConfig ((first :: rest).length)
@@ -1866,7 +1614,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_source
     countedSuffixBoundaryPrefixShiftDescription_run_scan_right
       [some first] rest padding
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_reversed
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_reversed
     (first : Bool) (rest : Word Bool)
     (padding : List (Option Bool)) :
     PrefixShift.runConfig (first :: rest).length
@@ -1900,7 +1648,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_scan_right_reversed
         simpa [List.map_append] using h.symm
       simpa [hmap] using hscan
 
-theorem countedSuffixBoundaryPrefixShiftDescription_run_to_target_rev
+private theorem countedSuffixBoundaryPrefixShiftDescription_run_to_target_rev
     (prefRev : Word Bool) (padding : List (Option Bool)) :
     PrefixShift.runConfig (2 * prefRev.length + 2)
         { state := PrefixShift.start
@@ -1953,7 +1701,7 @@ theorem countedSuffixBoundaryPrefixShiftDescription_run_to_target_rev
         countedSuffixBoundaryPrefixShiftDescription_run_scan_right_reversed
           first rest (none :: padding)
 
-theorem countedSuffixBoundaryPrefixShiftDescription_haltsFromTape
+private theorem countedSuffixBoundaryPrefixShiftDescription_haltsFromTape
     (pref suffix : Word Bool) (guardBit : Bool)
     (tail : List (Option Bool)) :
     PrefixShift.HaltsFromTape
@@ -1986,7 +1734,9 @@ theorem countedSuffixBoundaryPrefixShiftDescription_haltsFromTape
     rfl
   · rw [hrun]
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_final
+/- Exact execution lemmas for the right-restore phase. -/
+
+private theorem countedSuffixBoundaryRightRestoreDescription_run_final
     (pref processed : Word Bool) (last guardBit : Bool)
     (tail : List (Option Bool)) :
     RightRestore.runConfig 7
@@ -2007,7 +1757,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_final
       List.map_append, List.reverse_append, List.append_assoc,
       List.replicate_succ]
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_scan_suffix
+private theorem countedSuffixBoundaryRightRestoreDescription_run_scan_suffix
     (left : List (Option Bool)) (bits : Word Bool)
     (right : List (Option Bool)) :
     RightRestore.runConfig (bits.length + 1)
@@ -2073,7 +1823,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_scan_suffix
       simpa [List.reverse_cons, List.map_append,
         List.append_assoc] using ih (some bit :: left)
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_shift_guard
+private theorem countedSuffixBoundaryRightRestoreDescription_run_shift_guard
     (left : List (Option Bool)) (blanks : Nat)
     (guardBit : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (blanks + 3)
@@ -2156,7 +1906,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_shift_guard
       rw [hleft] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
 
-def countedSuffixBoundaryRightReturnScanTape
+private def countedSuffixBoundaryRightReturnScanTape
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) : Tape Bool :=
   match processedRev with
@@ -2166,7 +1916,7 @@ def countedSuffixBoundaryRightReturnScanTape
         (List.append (rest.map some) (none :: baseLeft))
         (some bit :: some last :: right)
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
+private theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (blanks : Nat) (last : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (blanks + 1)
@@ -2267,7 +2017,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
       rw [hrep]
       simpa [List.replicate_succ, List.append_assoc] using hih
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
+private theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (processedRev.length + 2)
@@ -2315,7 +2065,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih bit (some last :: right)
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_bits
+private theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_bits
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (processedRev.length + 3)
@@ -2356,7 +2106,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_scan_bits
     countedSuffixBoundaryRightRestoreDescription_run_return_scan_finish
       baseLeft processedRev last right
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
+private theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
     (baseLeft : List (Option Bool)) (processedRev : Word Bool)
     (last guardBit : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (2 * processedRev.length + 4)
@@ -2394,7 +2144,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
           (none : Option Bool))
         (some guardBit :: right))
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
+private theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
     (baseLeft : List (Option Bool)) (rest : Word Bool)
     (next guardBit : Bool) (right : List (Option Bool)) :
     RightRestore.runConfig (2 * rest.length + 4)
@@ -2438,7 +2188,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
         countedSuffixBoundaryRightRestoreDescription_run_return_to_separator_rev
           baseLeft processedRev last guardBit right
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_continue
+private theorem countedSuffixBoundaryRightRestoreDescription_run_continue
     (pref processed rest : Word Bool)
     (current next guardBit : Bool) (tail : List (Option Bool)) :
     RightRestore.runConfig (4 * rest.length + 13)
@@ -2522,7 +2272,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_continue
           (List.replicate processed.length (none : Option Bool))
           tail)
 
-theorem countedSuffixBoundaryRightRestoreDescription_run_loop
+private theorem countedSuffixBoundaryRightRestoreDescription_run_loop
     (pref processed : Word Bool)
     (suffixFirst : Bool) (suffixRest : Word Bool)
     (guardBit : Bool) (tail : List (Option Bool)) :
@@ -2554,7 +2304,7 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_loop
           pref processed rest suffixFirst next guardBit tail]
       simpa [List.append_assoc] using hsteps
 
-theorem countedSuffixBoundaryRightRestoreDescription_haltsFromTape
+private theorem countedSuffixBoundaryRightRestoreDescription_haltsFromTape
     (pref suffixRest : Word Bool)
     (suffixFirst guardBit tailFirst : Bool)
     (tail : List (Option Bool)) :
@@ -2592,7 +2342,9 @@ theorem countedSuffixBoundaryRightRestoreDescription_haltsFromTape
   · rw [hrun']
   · rw [hrun']
 
-theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
+/- Composition bridge lemmas for chaining the phases. -/
+
+private theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
     (pref suffix leftStack : Word Bool) (last guardBit tailFirst : Bool)
     (tail : List (Option Bool))
     (hrev : suffix.reverse = last :: leftStack) :
@@ -2611,7 +2363,7 @@ theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
     List.map_append, List.append_assoc, Tape.move, Tape.moveLeft,
     tapeAtCells]
 
-theorem countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
+private theorem countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
     (pref suffixRest : Word Bool)
     (suffixFirst guardBit tailFirst : Bool)
     (tail : List (Option Bool)) :
@@ -2629,7 +2381,7 @@ theorem countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
       Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.replicate_succ, List.append_assoc]
 
-theorem countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
+private theorem countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
     (pref suffixRest : Word Bool)
     (suffixFirst guardBit tailFirst : Bool)
     (tail : List (Option Bool)) :
