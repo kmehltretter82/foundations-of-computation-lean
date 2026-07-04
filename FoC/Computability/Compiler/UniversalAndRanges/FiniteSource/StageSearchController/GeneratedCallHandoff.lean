@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageCodeDecoder
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.Basic
 
@@ -286,17 +287,6 @@ def boundedSimulatorCanonicalInputParserRewindTargetTape
         (some MachineCodeSymbol.tick : Option MachineCodeSymbol))
       (some head :: right)
 
-theorem replicate_append_self_cons
-    (n : Nat) (a : α) (xs : List α) :
-    List.append (List.replicate n a) (a :: xs) =
-      a :: List.append (List.replicate n a) xs := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simp [List.replicate]
-      exact ih
-
 theorem boundedSimulatorCanonicalInputParserRewindTargetTape_succ
     (stage : Nat) (head : MachineCodeSymbol)
     (right : List (Option MachineCodeSymbol)) :
@@ -307,9 +297,9 @@ theorem boundedSimulatorCanonicalInputParserRewindTargetTape_succ
   simp [boundedSimulatorCanonicalInputParserRewindTargetTape,
     List.replicate]
   exact
-    (replicate_append_self_cons stage
+    (list_replicate_append_cons_eq_cons_append
       (some MachineCodeSymbol.tick : Option MachineCodeSymbol)
-      (some head :: right)).symm
+      stage (some head :: right)).symm
 
 theorem boundedSimulatorCanonicalInputParserScannedLeftRev_eq
     (stage : Nat) (leftRev : Word MachineCodeSymbol) :
@@ -322,8 +312,10 @@ theorem boundedSimulatorCanonicalInputParserScannedLeftRev_eq
       rfl
   | succ stage ih =>
       rw [boundedSimulatorCanonicalInputParserScannedLeftRev, ih]
-      rw [replicate_append_self_cons]
-      simp [List.replicate]
+      exact
+        congrArg (fun tail => MachineCodeSymbol.done :: tail)
+          (list_replicate_append_self
+            MachineCodeSymbol.tick stage leftRev)
 
 theorem boundedSimulator_dropTrailingNone_replicate_tick_done_none
     (stage : Nat) :
@@ -748,9 +740,9 @@ theorem boundedSimulatorCanonicalInputParserMachine_computes_rewindPrefix_to_non
                       (some MachineCodeSymbol.tick :
                         Option MachineCodeSymbol))
                     (some head :: right) :=
-            replicate_append_self_cons stage
+            list_replicate_append_cons_eq_cons_append
               (some MachineCodeSymbol.tick : Option MachineCodeSymbol)
-              (some head :: right)
+              stage (some head :: right)
           rw [hright] at htail
           simpa [List.replicate] using htail)
 
