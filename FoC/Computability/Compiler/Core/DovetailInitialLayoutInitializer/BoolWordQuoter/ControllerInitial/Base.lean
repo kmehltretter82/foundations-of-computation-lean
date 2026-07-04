@@ -153,8 +153,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
       (l := CIH.transitions)
       (by decide)
 
-theorem
-    controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
+theorem controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
     CIH.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CIH.transitions)

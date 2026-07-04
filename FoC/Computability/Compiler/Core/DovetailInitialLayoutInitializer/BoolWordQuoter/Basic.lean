@@ -456,8 +456,7 @@ def CheckedRawBoolWordAppendHeaderReturnDescription
 
 private abbrev CRBAH := CheckedRawBoolWordAppendHeaderReturnDescription
 
-theorem
-    checkedRawBoolWordAppendHeaderReturnDescription_subroutineReady
+theorem checkedRawBoolWordAppendHeaderReturnDescription_subroutineReady
     (suffix : Word MachineCodeSymbol) :
     (CRBAH suffix).SubroutineReady :=
   checkedRawBoolWordAppendCodeWordReturnDescription_subroutineReady

@@ -649,8 +649,7 @@ theorem mixedParserStackDefaultInternalMarkerDescription_run
       lookupTransition, Matches, transition, tapeAtCells,
       Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem
-    mixedParserStackDefaultInternalMarkerDescription_haltsFrom_trueLeftBoundaryTape
+theorem mixedParserStackDefaultInternalMarkerDescription_haltsFrom_trueLeftBoundaryTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     MPSDIM.HaltsFromTape
       (MixedParserStackRewriterTrueLeftBoundaryTape
@@ -673,8 +672,7 @@ theorem
       List.append_assoc] using
       congrArg Configuration.tape hrun
 
-theorem
-    MixedParserStackRewriterDefaultedInternalMarkerTape_move_left_move_right
+theorem MixedParserStackRewriterDefaultedInternalMarkerTape_move_left_move_right
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -721,8 +719,7 @@ theorem MixedParserStackRewriterDefaultedInternalMarkerTape_cells
       simp [tapeAtCells, Tape.cells,
         List.reverse_append, List.append_assoc]
 
-theorem
-    MixedParserStackRewriterDefaultedInternalMarkerTape_cells_eq_defaultedSourceCells
+theorem MixedParserStackRewriterDefaultedInternalMarkerTape_cells_eq_defaultedSourceCells
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (MixedParserStackRewriterDefaultedInternalMarkerTape
@@ -874,8 +871,7 @@ theorem MixedParserStackRewriterDefaultedSourceRestBoundaryTape_cells
   cases sourceRestBits <;>
     simp [tapeAtCells, Tape.cells, List.reverse_append]
 
-theorem
-    MixedParserStackRewriterDefaultedSourceRestBoundaryTape_defaultedCells
+theorem MixedParserStackRewriterDefaultedSourceRestBoundaryTape_defaultedCells
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -893,8 +889,7 @@ theorem
   simp [List.map_append, List.map_map, optionBitDefaultFalse,
     optionBitDefaultFalse_map_some, hprefix]
 
-theorem
-    assemblyPrefixDescription_haltsFrom_empty_defaultedSourceStart_to_sourceRestBoundary
+theorem assemblyPrefixDescription_haltsFrom_empty_defaultedSourceStart_to_sourceRestBoundary
     (sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     AssemblyPrefixDescription.HaltsFromTape
       (MixedParserStackRewriterDefaultedSourceStartTape
@@ -924,8 +919,7 @@ theorem
       List.append_assoc, config] using
       congrArg Configuration.tape hsteps
 
-theorem
-    assemblyPrefixDescription_haltsFrom_defaultedSourceStart_to_sourceRestBoundary
+theorem assemblyPrefixDescription_haltsFrom_defaultedSourceStart_to_sourceRestBoundary
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     AssemblyPrefixDescription.HaltsFromTape
       (MixedParserStackRewriterDefaultedSourceStartTape
@@ -954,8 +948,7 @@ theorem
       List.append_assoc, config] using
       congrArg Configuration.tape hsteps
 
-theorem
-    assemblySkeletonDescription_run_defaultedSourceStart_to_sourceRestBoundary
+theorem assemblySkeletonDescription_run_defaultedSourceStart_to_sourceRestBoundary
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     exists steps : Nat,
       AssemblySkeletonDescription.runConfig steps
@@ -1169,8 +1162,7 @@ theorem MixedParserStackRewriterDefaultedRightBoundaryTape_eq_movedLeft_sourceBi
       using congrArg (fun cells => List.append cells [none]) hrev
   rw [hleft]
 
-theorem
-    rightEdgeRewindDescription_haltsFrom_defaultedRightBoundaryTape
+theorem rightEdgeRewindDescription_haltsFrom_defaultedRightBoundaryTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     CommonGround.FiniteTransducers.rightEdgeRewindDescription.HaltsFromTape
       (MixedParserStackRewriterDefaultedRightBoundaryTape
@@ -1239,16 +1231,14 @@ theorem mixedParserStackScanRightToStructuralBlankDescription_wellFormed :
       (l := MPSSR.transitions)
       (by decide)
 
-theorem
-    mixedParserStackScanRightToStructuralBlankDescription_haltTransitionFree :
+theorem mixedParserStackScanRightToStructuralBlankDescription_haltTransitionFree :
     MPSSR.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MPSSR.transitions)
     (state := MPSSR.halt)
     (by decide)
 
-theorem
-    mixedParserStackScanRightToStructuralBlankDescription_subroutineReady :
+theorem mixedParserStackScanRightToStructuralBlankDescription_subroutineReady :
     MPSSR.SubroutineReady :=
   ⟨mixedParserStackScanRightToStructuralBlankDescription_wellFormed,
     mixedParserStackScanRightToStructuralBlankDescription_haltTransitionFree⟩
@@ -1296,8 +1286,7 @@ theorem mixedParserStackScanRightToStructuralBlankDescription_run
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (some bit :: left)
 
-theorem
-    mixedParserStackScanRightToStructuralBlankDescription_haltsFrom_defaultedInternalMarkerTape
+theorem mixedParserStackScanRightToStructuralBlankDescription_haltsFrom_defaultedInternalMarkerTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     MPSSR.HaltsFromTape
       (MixedParserStackRewriterDefaultedInternalMarkerTape
@@ -1891,8 +1880,7 @@ theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_named_fields
   rw [assemblySourceRestFinishLeftBoundaryTape_defaultedCells,
     assemblySourceRestFinishRawSourceBits]
 
-theorem
-    assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
+theorem assemblySourceRestFinishLeftBoundaryTape_defaultedCells_eq_prefix_sourceRest_quote
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1972,8 +1960,7 @@ theorem MixedParserStackRewriterSourceTape_eq_leftBoundary_of_split
   rw [MixedParserStackRewriterSourceTape,
     assemblySourceRestFinishLeftBoundaryTape, hboundary]
 
-theorem
-    exists_MixedParserStackRewriterSourceTape_eq_leftBoundary
+theorem exists_MixedParserStackRewriterSourceTape_eq_leftBoundary
     (w sourceRestBits : Word Bool) (stage : Nat) :
     exists prefixCells : List (Option Bool),
       MixedParserStackRewriterSourceTape prefixCells

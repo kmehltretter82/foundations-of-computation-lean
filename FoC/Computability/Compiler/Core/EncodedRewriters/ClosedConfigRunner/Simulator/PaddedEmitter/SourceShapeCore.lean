@@ -405,8 +405,7 @@ theorem sourceLeftMoveOnceDescription_haltsFrom_rightShiftedSource_configRunner
       (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
         (SimulatorLayout.asBoolInput L))
 
-theorem
-    fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_normalizedOutput_eq_fields_configRunner
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
@@ -420,8 +419,7 @@ theorem
   rw [RightShiftedSourceTape.normalizedOutput_configRunner,
     fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
-theorem
-    fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_cells_eq_fields_configRunner
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_cells_eq_fields_configRunner
     (L : SimulatorLayout) :
     Tape.cells
         (FixedDescriptionBoundedSimulatorPaddedEmitterRightShiftedSourceTape_configRunner
@@ -438,8 +436,7 @@ theorem
   rw [RightShiftedSourceTape.simulator_cells_configRunner,
     fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
-theorem
-    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_eq_fields_configRunner
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_eq_fields_configRunner
     (L : SimulatorLayout) :
     Tape.normalizedOutput
         (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner
@@ -454,8 +451,7 @@ theorem
     fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_normalizedOutput_configRunner,
     fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
-theorem
-    fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_eq_fields_configRunner
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTarget_cells_eq_fields_configRunner
     (L : SimulatorLayout) :
     Tape.cells
         (FixedDescriptionBoundedSimulatorPaddedEmitterSourceRewindTargetTape_configRunner

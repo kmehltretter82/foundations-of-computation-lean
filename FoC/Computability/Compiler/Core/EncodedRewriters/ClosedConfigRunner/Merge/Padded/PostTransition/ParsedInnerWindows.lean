@@ -209,8 +209,7 @@ def SelectedMergePaddedEmitterParsedInnerRightStackRest
   | [] => []
   | _ :: rest => rest
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRightStackCurrentRest_reverse
+theorem SelectedMergePaddedEmitterParsedInnerRightStackCurrentRest_reverse
     {bits : Word Bool} (hbits : bits ≠ []) :
     (SelectedMergePaddedEmitterParsedInnerRightStackCurrent bits ::
         SelectedMergePaddedEmitterParsedInnerRightStackRest bits).reverse =
@@ -301,8 +300,7 @@ def SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest
   SelectedMergePaddedEmitterParsedInnerRightStackRest
     (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p)
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits_ne_nil
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits_ne_nil
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits p ≠ [] := by
   intro h
@@ -319,8 +317,7 @@ theorem
   | cons head tail =>
       simp [hinput, encodeNat] at hprefix
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrentRest_reverse
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrentRest_reverse
     (p : SelectedMergeEmitterPayload) :
     (SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixCurrent p ::
         SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixLeftRest p).reverse =
@@ -418,8 +415,7 @@ def SelectedMergePaddedEmitterParsedInnerPostPrefixCloseoutAndFieldTransportCons
       SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
         useAccept transport
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit
+theorem SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_stage_outerConfigHit
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p =
       List.append
@@ -434,8 +430,7 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits_eq_fields
+theorem SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits_eq_fields
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits p =
       List.append
@@ -447,8 +442,7 @@ theorem
       (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
         p.S.hit [])).symm
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_expanded
+theorem SelectedMergePaddedEmitterParsedInnerOuterSuffixBits_eq_expanded
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p =
       List.append
@@ -461,8 +455,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerOuterConfigHitBits_eq_fields]
   simp [SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits
+theorem SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits p =
       SelectedMergePaddedEmitterParsedInnerSourceFieldTailBits p := by
@@ -512,8 +505,7 @@ theorem
 
 -- Flatten the post-prefix source into the exact field order needed by the
 -- branch-specific field transport leaves.
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits_eq_flatFields
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits_eq_flatFields
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p =
       List.append
@@ -535,8 +527,7 @@ theorem
                       p))))))) := by
   rfl
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
@@ -546,8 +537,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerSourceLeftCells]
   simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceCells_filterMap_eq_sourceBits
+theorem SelectedMergePaddedEmitterParsedInnerSourceCells_filterMap_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
     (SelectedMergePaddedEmitterParsedInnerSourceCells p).filterMap
         (fun cell => cell) =
@@ -562,23 +552,20 @@ theorem
   rw [hcells] at hnorm
   exact hnorm
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceTailBits_ne_nil
+theorem SelectedMergePaddedEmitterParsedInnerSourceTailBits_ne_nil
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceTailBits p ≠ [] := by
   simp [SelectedMergePaddedEmitterParsedInnerSourceTailBits,
     CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits,
     CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceBits_ne_nil
+theorem SelectedMergePaddedEmitterParsedInnerSourceBits_ne_nil
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceBits p ≠ [] := by
   simp [SelectedMergePaddedEmitterParsedInnerSourceBits,
     encodeCodeSymbolAsInput]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceTailCurrentRest_reverse
+theorem SelectedMergePaddedEmitterParsedInnerSourceTailCurrentRest_reverse
     (p : SelectedMergeEmitterPayload) :
     (SelectedMergePaddedEmitterParsedInnerSourceTailCurrent p ::
         SelectedMergePaddedEmitterParsedInnerSourceTailLeftRest p).reverse =
@@ -587,8 +574,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerRightStackCurrentRest_reverse
       (SelectedMergePaddedEmitterParsedInnerSourceTailBits_ne_nil p)
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceCells_eq_split
+theorem SelectedMergePaddedEmitterParsedInnerSourceCells_eq_split
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceCells p =
       SelectedMergePaddedEmitterParsedInnerSourceSplitCells p := by
@@ -666,8 +652,7 @@ theorem
     congrArg (fun cells => List.append cells [none, none])
       hcfgCellAppendMap
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceLeftCells_eq_gapLeft
+theorem SelectedMergePaddedEmitterParsedInnerSourceLeftCells_eq_gapLeft
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceLeftCells p =
       List.append
@@ -709,8 +694,7 @@ theorem
     SelectedMergePaddedEmitterOuterTransitionBaseLeft, List.reverse_append,
     List.map_reverse, List.append_assoc] using hleft
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceBits_eq_markedPrefix_fieldTail
+theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_markedPrefix_fieldTail
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceBits p =
       List.append
@@ -727,8 +711,7 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceTailBits_eq_markedBody_outerSuffix
+theorem SelectedMergePaddedEmitterParsedInnerSourceTailBits_eq_markedBody_outerSuffix
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceTailBits p =
       List.append
@@ -755,8 +738,7 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
     List.append_assoc] at h ⊢
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerSourceBits_eq_remainderDeleteSplit
+theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_remainderDeleteSplit
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerSourceBits p =
       List.append
@@ -771,8 +753,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits,
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteSuffixBits]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_true
+theorem SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_true
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits true p =
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
@@ -785,8 +766,7 @@ theorem
               p.L.rejectHit []))) := by
   rfl
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_false
+theorem SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_false
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits false p =
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
@@ -799,8 +779,7 @@ theorem
               p.S.hit []))) := by
   rfl
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_true_eq_targetFieldTailBits
+theorem SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_true_eq_targetFieldTailBits
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits true p =
       SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits true p := by
@@ -833,8 +812,7 @@ theorem
           p.L.rejectHit [])]
   rfl
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_false_eq_targetFieldTailBits
+theorem SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_false_eq_targetFieldTailBits
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits false p =
       SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits false p := by
@@ -869,8 +847,7 @@ theorem
       p.S.config]
   simp [SelectedMergePaddedEmitterParsedInnerTargetFieldTailBits_false]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_eq_targetFieldTailBits
+theorem SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_eq_targetFieldTailBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits
         useAccept p =
@@ -886,8 +863,7 @@ theorem
 
 -- Accept-branch transport replaces the inner accept fields with the outer
 -- simulator config/hit fields and keeps the reject branch fields.
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_true_eq_flatFields
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_true_eq_flatFields
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits true p =
       List.append
@@ -904,8 +880,7 @@ theorem
 
 -- Reject-branch transport is the dual shape: preserve the accept branch fields
 -- and replace the reject branch fields with the outer simulator fields.
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_false_eq_flatFields
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits_false_eq_flatFields
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits false p =
       List.append
@@ -920,8 +895,7 @@ theorem
                 p)))) := by
   rfl
 
-theorem
-    SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_fieldTail
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
       List.append
@@ -966,8 +940,7 @@ theorem
       encodeCodeWordAsInput,
       List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_expandedTarget
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_expandedTarget
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
       List.append
@@ -978,8 +951,7 @@ theorem
   rw [
     SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits_eq_targetFieldTailBits]
 
-theorem
-    SelectedMergePaddedEmitterDecodedHandoffBits_eq_postPrefixTargetBits
+theorem SelectedMergePaddedEmitterDecodedHandoffBits_eq_postPrefixTargetBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterDecodedHandoffBits useAccept p =
       SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits
@@ -988,8 +960,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits,
     SelectedMergePaddedEmitterDecodedHandoffBits_eq_outputPrefix_expandedTarget]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetTailBits_eq_outputPrefixTail
+theorem SelectedMergePaddedEmitterParsedInnerTargetTailBits_eq_outputPrefixTail
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetTailBits useAccept p =
       List.append
@@ -1031,8 +1002,7 @@ theorem
       CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
       encodeCodeWordAsInput, List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_targetWindow
+theorem SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_targetWindow
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
       SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p := by
@@ -1042,8 +1012,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerTargetPaddingCells, List.map_append,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetCells_filterMap_eq_bits
+theorem SelectedMergePaddedEmitterParsedInnerTargetCells_filterMap_eq_bits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     (SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p).filterMap
         (fun cell => cell) =
@@ -1058,8 +1027,7 @@ theorem
   rw [hcells] at hnorm
   exact hnorm
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerTargetCells_eq_split
+theorem SelectedMergePaddedEmitterParsedInnerTargetCells_eq_split
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerTargetCells useAccept p =
       SelectedMergePaddedEmitterParsedInnerTargetSplitCells useAccept p := by
@@ -1069,8 +1037,7 @@ theorem
   simp [SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
     List.map_append, List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_split
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_split
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
@@ -1079,8 +1046,7 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_sourceWindow,
     SelectedMergePaddedEmitterParsedInnerSourceCells_eq_split]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape_cells_eq_split
+theorem SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape_cells_eq_split
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p) =
@@ -1092,8 +1058,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerSourceSplitCells,
     SelectedMergePaddedEmitterOuterTransitionBaseLeft]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_gapCompactorSource
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_gapCompactorSource
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
@@ -1103,8 +1068,7 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_cells_eq_split,
     SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape_cells_eq_split]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_eq_gapCompactorSource
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_eq_gapCompactorSource
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p =
       SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p := by
@@ -1123,8 +1087,7 @@ theorem
     CommonGround.FiniteTransducers.tapeAtCells,
     SelectedMergePaddedEmitterParsedInnerGapBaseLeft]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape_normalizedOutput
+theorem SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape p) =
@@ -1136,8 +1099,7 @@ theorem
     SelectedMergePaddedEmitterOuterTransitionBaseLeft,
     Function.comp_def]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerGapCompactorDescription_haltsFromTape
+theorem selectedMergePaddedEmitterParsedInnerGapCompactorDescription_haltsFromTape
     (p : SelectedMergeEmitterPayload) :
     CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p)
@@ -1161,8 +1123,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape] using
     hgap
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape_moveLeft_moveLeft_eq_rewindSource
+theorem SelectedMergePaddedEmitterParsedInnerGapCompactorTargetTape_moveLeft_moveLeft_eq_rewindSource
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.left
@@ -1178,8 +1139,7 @@ theorem
     SelectedMergePaddedEmitterOuterTransitionBaseLeft, List.map_reverse,
     List.reverse_append, List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostGapRewindTargetTape_eq_deleteSourceTape
+theorem SelectedMergePaddedEmitterParsedInnerPostGapRewindTargetTape_eq_deleteSourceTape
     (p : SelectedMergeEmitterPayload) :
     CommonGround.FiniteTransducers.rightEdgeRewindTargetTapeWithBase
         []
@@ -1191,8 +1151,7 @@ theorem
     CommonGround.FiniteTransducers.FSTStatefulOptionAppendSourceTapeWithPadding,
     CommonGround.FiniteTransducers.tapeAtCells]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerRightEdgeRewindDescription_haltsFromPostGap
+theorem selectedMergePaddedEmitterParsedInnerRightEdgeRewindDescription_haltsFromPostGap
     (p : SelectedMergeEmitterPayload) :
     CommonGround.FiniteTransducers.rightEdgeRewindDescription.HaltsFromTape
       (Tape.move Direction.left
@@ -1209,16 +1168,14 @@ theorem
       (SelectedMergePaddedEmitterParsedInnerSourceBits p)
       [none, none]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_subroutineReady :
+theorem selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_subroutineReady :
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteDescription.SubroutineReady := by
   exact
     CommonGround.FiniteTransducers.generatedDeleteWindowDescription_subroutineReady
       SelectedMergePaddedEmitterParsedInnerRemainderDeletePrefixBits.length
       SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length
 
-theorem
-    selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_haltsFromDeleteSource
+theorem selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_haltsFromDeleteSource
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerDeleteSourceTape p)
@@ -1237,16 +1194,14 @@ theorem
         1
         [none, none]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerGapThenLeftDescription_subroutineReady :
+theorem selectedMergePaddedEmitterParsedInnerGapThenLeftDescription_subroutineReady :
     SelectedMergePaddedEmitterParsedInnerGapThenLeftDescription.SubroutineReady := by
   exact
     seqSubroutine_subroutineReady
       CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription_subroutineReady
       CommonGround.FiniteTransducers.leftMoveOnceDescription_subroutineReady
 
-theorem
-    selectedMergePaddedEmitterParsedInnerGapThenLeftDescription_haltsFromTape
+theorem selectedMergePaddedEmitterParsedInnerGapThenLeftDescription_haltsFromTape
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerGapThenLeftDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p)
@@ -1272,8 +1227,7 @@ theorem
       rfl
       hleft
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostGapRewindSourceTape_move_left_move_right
+theorem SelectedMergePaddedEmitterParsedInnerPostGapRewindSourceTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -1287,8 +1241,7 @@ theorem
         (none : Option Bool)
         [none]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerRightEdgeRewindDescription_haltsFromRewindSource
+theorem selectedMergePaddedEmitterParsedInnerRightEdgeRewindDescription_haltsFromRewindSource
     (p : SelectedMergeEmitterPayload) :
     CommonGround.FiniteTransducers.rightEdgeRewindDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerPostGapRewindSourceTape p)
@@ -1301,16 +1254,14 @@ theorem
       (SelectedMergePaddedEmitterParsedInnerSourceBits p)
       [none, none]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPrefixRewindDescription_subroutineReady :
+theorem selectedMergePaddedEmitterParsedInnerPrefixRewindDescription_subroutineReady :
     SelectedMergePaddedEmitterParsedInnerPrefixRewindDescription.SubroutineReady := by
   exact
     CommonGround.FiniteTransducers.canonicalSeqDescription_subroutineReady
       selectedMergePaddedEmitterParsedInnerGapThenLeftDescription_subroutineReady
       CommonGround.FiniteTransducers.rightEdgeRewindDescription_subroutineReady
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPrefixRewindDescription_haltsFromTape
+theorem selectedMergePaddedEmitterParsedInnerPrefixRewindDescription_haltsFromTape
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPrefixRewindDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p)
@@ -1326,8 +1277,7 @@ theorem
       (selectedMergePaddedEmitterParsedInnerRightEdgeRewindDescription_haltsFromRewindSource
         p)
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerDeleteSourceTape_move_left_move_right
+theorem SelectedMergePaddedEmitterParsedInnerDeleteSourceTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -1364,16 +1314,14 @@ theorem
                   CommonGround.FiniteTransducers.FSTStatefulOptionAppendSourceTapeWithPadding,
                   CommonGround.FiniteTransducers.tapeAtCells])
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady :
+theorem selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_subroutineReady :
     SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription.SubroutineReady := by
   exact
     CommonGround.FiniteTransducers.canonicalSeqDescription_subroutineReady
       selectedMergePaddedEmitterParsedInnerPrefixRewindDescription_subroutineReady
       selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_subroutineReady
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromTape
+theorem selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromTape
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerGapCompactorSourceTape p)
@@ -1389,8 +1337,7 @@ theorem
       (selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_haltsFromDeleteSource
         p)
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromParsedTape
+theorem selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromParsedTape
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPrefixCleanupDescription.HaltsFromTape
       (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
@@ -1401,8 +1348,7 @@ theorem
     selectedMergePaddedEmitterParsedInnerPrefixCleanupDescription_haltsFromTape
       p
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_move_left_move_right
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -1430,8 +1376,7 @@ theorem
       (right := [])
       (by simp [CommonGround.FiniteTransducers.tapeAtCells])
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_eq_postPrefixGapCloseSource
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_eq_postPrefixGapCloseSource
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p =
       CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
@@ -1476,8 +1421,7 @@ theorem
     ← List.map_reverse,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_cells
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_cells
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
@@ -1506,8 +1450,7 @@ theorem
     rfl rfl]
   simp [List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_split
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_split
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
@@ -1519,8 +1462,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_cells]
   simp [List.filterMap_append, Function.comp_def]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
@@ -1534,8 +1476,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_expandedSource
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_expandedSource
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
@@ -1548,8 +1489,7 @@ theorem
   rw [
     SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_postPrefixSource
+theorem SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_postPrefixSource
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p) =
@@ -1558,8 +1498,7 @@ theorem
     SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits,
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape_normalizedOutput_expandedSource]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_cells
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_cells
     (p : SelectedMergeEmitterPayload) :
     Tape.cells
         (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) =
@@ -1573,8 +1512,7 @@ theorem
   rw [
     CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_cells]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_normalizedOutput
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p) =
@@ -1584,8 +1522,7 @@ theorem
     CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_normalizedOutput]
   simp
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_move_left_move_right
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -1603,8 +1540,7 @@ theorem
         (none : Option Bool)
         [none, none]
 
-theorem
-    SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_eq_postPrefixGapCloseTarget
+theorem SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_eq_postPrefixGapCloseTarget
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p =
       CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
@@ -1625,14 +1561,12 @@ theorem
     SelectedMergePaddedEmitterParsedInnerSourceFieldTailExpandedBits_eq_sourceFieldTailBits,
     encodeCodeSymbolAsInput, List.append_assoc]
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_subroutineReady :
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_subroutineReady :
     SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription.SubroutineReady := by
   exact
     CommonGround.FiniteTransducers.sentinelGapCompactorDescription_subroutineReady
 
-theorem
-    selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_haltsFromTape
+theorem selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_haltsFromTape
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription.HaltsFromTape
       (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p)
@@ -1669,8 +1603,7 @@ theorem selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec :
       selectedMergePaddedEmitterParsedInnerPostPrefixGapCloseDescription_haltsFromTape
         p
 
-theorem
-    SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split
+theorem SelectedMergePaddedEmitterDecodedHandoffTape_cells_eq_split
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p) =
       SelectedMergePaddedEmitterParsedInnerTargetSplitCells useAccept p := by

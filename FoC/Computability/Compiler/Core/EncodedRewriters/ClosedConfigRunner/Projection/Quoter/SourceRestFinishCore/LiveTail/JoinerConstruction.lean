@@ -39,8 +39,7 @@ def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     assemblySourceRestLiveTailEmitterRawTail
     assemblySourceRestLiveTailEmitterQuoteRest
 
-theorem
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
     (finish : MachineDescription) :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish ↔
       MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish := by
@@ -57,8 +56,7 @@ theorem
     | mk w sourceRestBits stage =>
         exact hfinish.right w sourceRestBits stage
 
-theorem
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
+theorem MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
     (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction) :
     MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
   rcases h with ⟨finish, hfinish⟩
@@ -67,8 +65,7 @@ theorem
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
         finish).mp hfinish⟩
 
-theorem
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_assembly
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_assembly
     (h : MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -92,8 +89,7 @@ theorem mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction_impossible :
 Logical adapter only.  This theorem is useful when reading old attempts, but
 the guardrail above proves that its premise cannot be supplied.
 -/
-theorem
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSource
     (h : MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction) :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -141,8 +137,7 @@ def
   exists finish : MachineDescription,
     MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec finish
 
-theorem
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
+theorem MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
     (hjoin :
       MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
     MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
@@ -159,8 +154,7 @@ Finite-machine obligation for Phase 3 of the mixed parser-stack finisher.  It
 joins the already-computed quoted source-rest field onto the emitted prefix and
 leaves {lit}`stageBits ++ sourceRestBits` as the live right tail.
 -/
-theorem
-    mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySourceRest :
     MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :=
   MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
     mixedOptionCellQuoteLiveTailJoinerConstruction

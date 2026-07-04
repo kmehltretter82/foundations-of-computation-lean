@@ -606,8 +606,7 @@ theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix
   rw [sourceScannerRightHandoffTape_normalizedOutput]
   simp [Function.comp_def, List.map_reverse]
 
-theorem
-    sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
+theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_header_input_sourceSuffix
     (L : DovetailLayout) :
     Tape.normalizedOutput
         (sourceScannerRightHandoffTape L
@@ -619,8 +618,7 @@ theorem
   rw [sourceScannerRightHandoffTape_normalizedOutput_outputPrefix,
     outputPrefixBits_append_sourceFieldBits]
 
-theorem
-    sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_quoter_bits
+theorem sourceScannerRightHandoffTape_normalizedOutput_outputPrefix_eq_quoter_bits
     (L : DovetailLayout) :
     exists b : Bool,
     exists rest : Word Bool,
@@ -722,8 +720,7 @@ theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_source
         (ParsedLayoutBits L).length
   exact Nat.le_trans hsource htarget
 
-theorem
-    SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_checkedInput
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_checkedInput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength (ParsedLayoutCheckedTape L) <=
       Tape.contextLength
@@ -774,8 +771,7 @@ theorem dovetailScanner_finalHitFlagsRestoredLeftWithBase_length
     List.length_append]
   lia
 
-theorem
-    SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_sourceScannerRightHandoff
+theorem SelectedProjectionEquivEmitterPaddedOutputTape_contextLength_ge_sourceScannerRightHandoff
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.contextLength
         (SelectedProjectionTailProjector.sourceScannerRightHandoffTape L

@@ -633,8 +633,7 @@ def SelectedMergePaddedEmitterAfterHitTape
             (((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse)))))
     []
 
-theorem
-    selectedMergePaddedEmitter_cellListCanonicalRestoredLeftWithBase_reverse_filterMap
+theorem selectedMergePaddedEmitter_cellListCanonicalRestoredLeftWithBase_reverse_filterMap
     (cells baseLeft : List (Option Bool)) :
     (CanonicalLayouts.DovetailLayoutScanner.cellListCanonicalRestoredLeftWithBase
         cells baseLeft).reverse.filterMap (fun cell => cell) =

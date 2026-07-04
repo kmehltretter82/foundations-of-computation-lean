@@ -174,8 +174,7 @@ def StageInputRecognizerConstruction : Prop :=
   exists recognizer : MachineDescription,
     StageInputRecognizerSpec recognizer
 
-theorem
-    stageInputSecondBitMarkedHandoffTape_move_left
+theorem stageInputSecondBitMarkedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (stageInputSecondBitMarkedHandoffTape w stage) =
@@ -208,8 +207,7 @@ theorem
         encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
-private theorem
-    stageInputSecondBitMarkedCheckedHandoffTape_move_left
+private theorem stageInputSecondBitMarkedCheckedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (stageInputSecondBitMarkedCheckedHandoffTape w stage) =
@@ -1004,8 +1002,7 @@ private theorem stageInputIdentityDescription_spec_of_recognizer
     rw [hT, hTmid]
     exact stageInputCheckedInputTape_move_left_move_right w stage
 
-theorem
-    stageInputIdentityClosedHandoffConstruction_of_recognizer
+theorem stageInputIdentityClosedHandoffConstruction_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     StageInputIdentityClosedHandoffConstruction :=

@@ -138,8 +138,7 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAt
   simp [transitionBase, parsedCells, stageBase,
     List.map_append, List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_sourceLeftBitsRev_tapeAtCells
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_sourceLeftBitsRev_tapeAtCells
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p =
       DovetailInitialLayoutInitializer.tapeAtCells
@@ -152,8 +151,7 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceLeftBitsRev_tapeAtCells
       p
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_sourceBits
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
@@ -166,8 +164,7 @@ theorem
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
     Tape.normalizedOutput, Tape.cells, Function.comp_def]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_fields
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_fields
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
@@ -189,8 +186,7 @@ theorem
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_normalizedOutput_eq_sourceBits,
     SelectedMergePaddedEmitterAfterTransitionSourceBits_eq_fields]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
       List.append [none]
@@ -205,8 +201,7 @@ theorem
   simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
     List.map_reverse]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_fields
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_cells_eq_fields
     (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
       List.append [none]
@@ -264,8 +259,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutSourceBits_eq_markedBodyBits
     CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_nil_eq_first_body
       p.L
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_dovetailLayoutFieldBits
+theorem SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape_eq_dovetailLayoutFieldBits
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p =
       DovetailInitialLayoutInitializer.tapeAtCells
@@ -455,8 +449,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape
           (SelectedMergePaddedEmitterNestedLayoutParsedLeft p))))
     [none, none]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutParsedLeft_eq_markedBodyRestoredBitsRev
+theorem SelectedMergePaddedEmitterNestedLayoutParsedLeft_eq_markedBodyRestoredBitsRev
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterNestedLayoutParsedLeft p =
       List.append
@@ -467,8 +460,7 @@ theorem
     (markedDovetailLayoutBodyRestoredBitsRev_map_some_withBase
       p.L SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft).symm
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_reverse_filterMap :
+theorem SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_reverse_filterMap :
     SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft.reverse.filterMap
         (fun cell => cell) =
       encodeCodeSymbolAsInput MachineCodeSymbol.transition := by
@@ -476,8 +468,7 @@ theorem
     SelectedMergePaddedEmitterOuterTransitionBaseLeft,
     Function.comp_def]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_filterMap_reverse :
+theorem SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft_filterMap_reverse :
     (SelectedMergePaddedEmitterNestedLayoutBodyBaseLeft.filterMap
         (fun cell => cell)).reverse =
       encodeCodeSymbolAsInput MachineCodeSymbol.transition := by
@@ -485,8 +476,7 @@ theorem
     SelectedMergePaddedEmitterOuterTransitionBaseLeft,
     Function.comp_def]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutParsedLeft_reverse_filterMap
+theorem SelectedMergePaddedEmitterNestedLayoutParsedLeft_reverse_filterMap
     (p : SelectedMergeEmitterPayload) :
     (SelectedMergePaddedEmitterNestedLayoutParsedLeft p).reverse.filterMap
         (fun cell => cell) =
@@ -564,8 +554,7 @@ theorem SelectedMergePaddedEmitterParsedInnerSourceBits_eq_nestedFields
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_markedBody
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
@@ -653,8 +642,7 @@ theorem
     List.append_assoc]
     using hcfgWithHit
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_sourceBits
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p) =
@@ -671,8 +659,7 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
     List.append_assoc]
 
-theorem
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right

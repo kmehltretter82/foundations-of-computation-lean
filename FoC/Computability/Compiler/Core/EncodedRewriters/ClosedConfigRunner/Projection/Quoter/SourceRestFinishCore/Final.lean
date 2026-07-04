@@ -24,8 +24,7 @@ namespace SelectedProjectionInputQuoterFiniteLeaf
 open DovetailInitialLayoutInitializer
 open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
-theorem
-    MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_prefixSeparated_and_join
+theorem MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_prefixSeparated_and_join
     (hprefix :
       MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest)
     (hjoin :
@@ -70,40 +69,34 @@ The raw source word has no general delimiter for arbitrary Bool-word splits, so
 the remaining leaf is stated at the parsed internal-marker layout where the live
 tail boundary is part of the encoded assembly/source-rest structure.
 -/
-theorem
-    mixedParserStackWholeSourceFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackWholeSourceFinisherConstruction_for_assemblySourceRest :
     MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest :=
   MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_prefixSeparated_and_join
     mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest
     mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySourceRest
 
-theorem
-    mixedParserStackDefaultedInternalMarkerFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackDefaultedInternalMarkerFinisherConstruction_for_assemblySourceRest :
     MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest :=
   MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest_of_wholeSource
     mixedParserStackWholeSourceFinisherConstruction_for_assemblySourceRest
 
-theorem
-    mixedParserStackTrueLeftBoundaryFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackTrueLeftBoundaryFinisherConstruction_for_assemblySourceRest :
     MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest :=
   MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest_of_defaultedInternalMarker
     mixedParserStackDefaultedInternalMarkerFinisherConstruction_for_assemblySourceRest
 
-theorem
-    mixedParserStackSentinelSourceFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackSentinelSourceFinisherConstruction_for_assemblySourceRest :
     MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest :=
   MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest_of_trueLeftBoundary
     mixedParserStackTrueLeftBoundaryFinisherConstruction_for_assemblySourceRest
 
-theorem
-    assemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction :
+theorem assemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction :
     AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction := by
   exact
     AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction_of_sentinelSource
       mixedParserStackSentinelSourceFinisherConstruction_for_assemblySourceRest
 
-theorem
-    assemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction :
+theorem assemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction :
     AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction := by
   exact
     AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction_of_afterSourceRestScan
@@ -119,14 +112,12 @@ theorem assemblySourceRestRawBoolSourceStartFinisherConstruction :
   AssemblySourceRestRawBoolSourceStartFinisherConstruction_of_reusableQuote
     assemblySourceRestReusableQuoteSourceStartFinisherConstruction
 
-theorem
-    mixedParserStackSourceStartFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackSourceStartFinisherConstruction_for_assemblySourceRest :
     MixedParserStackSourceStartFinisherConstructionForAssemblySourceRest :=
   MixedParserStackSourceStartFinisherConstructionForAssemblySourceRest_of_rawBool
     assemblySourceRestRawBoolSourceStartFinisherConstruction
 
-theorem
-    mixedParserStackRightBoundaryFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackRightBoundaryFinisherConstruction_for_assemblySourceRest :
     MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest :=
   MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest_of_sourceStart
     mixedParserStackSourceStartFinisherConstruction_for_assemblySourceRest

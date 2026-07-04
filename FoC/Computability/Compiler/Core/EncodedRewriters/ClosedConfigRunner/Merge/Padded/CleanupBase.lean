@@ -1024,8 +1024,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_outputCode
   rw [SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_targetBits,
     SelectedMergePaddedEmitterTargetBits_eq_outputCode]
 
-theorem
-    SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_transition_outputTail
+theorem SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_transition_outputTail
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
       List.append

@@ -148,8 +148,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_afterTransiti
       encodeCodeSymbolAsInput, Tape.contextLength] <;>
     lia
 
-theorem
-    SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_fields
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_fields
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =
@@ -164,8 +163,7 @@ theorem
   simp [SelectedMergePaddedEmitterOuterTailBits,
     encodeCodeWordAsInput, encodeCodeSymbolAsInput]
 
-theorem
-    SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_sourceFields
+theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_normalizedOutput_eq_sourceFields
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterTransitionPaddedTape p) =

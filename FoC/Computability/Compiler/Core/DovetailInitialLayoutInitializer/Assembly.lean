@@ -45,8 +45,7 @@ def AppendFinalBoolFlagsReturnDescription :
 
 private abbrev AFFR := AppendFinalBoolFlagsReturnDescription
 
-theorem
-    appendFinalBoolFlagsReturnDescription_subroutineReady :
+theorem appendFinalBoolFlagsReturnDescription_subroutineReady :
     AFFR.SubroutineReady := by
   exact
     transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
@@ -62,8 +61,7 @@ def AppendSecondInputTapeAndFlagsDescription
 
 private abbrev ASITF := AppendSecondInputTapeAndFlagsDescription
 
-theorem
-    appendSecondInputTapeAndFlagsDescription_subroutineReady
+theorem appendSecondInputTapeAndFlagsDescription_subroutineReady
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     (ASITF copier).SubroutineReady :=
@@ -80,8 +78,7 @@ def AppendRejectThenInputTapeAndFlagsDescription
 
 private abbrev ARTIF := AppendRejectThenInputTapeAndFlagsDescription
 
-theorem
-    appendRejectThenInputTapeAndFlagsDescription_subroutineReady
+theorem appendRejectThenInputTapeAndFlagsDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     (ARTIF reject copier).SubroutineReady :=
@@ -100,8 +97,7 @@ def AppendFirstInputTapeThenRejectDescription
 
 private abbrev AFITR := AppendFirstInputTapeThenRejectDescription
 
-theorem
-    appendFirstInputTapeThenRejectDescription_subroutineReady
+theorem appendFirstInputTapeThenRejectDescription_subroutineReady
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     (AFITR reject copier).SubroutineReady :=
@@ -119,8 +115,7 @@ def DescriptionWithCopier
 
 private abbrev DWC := DescriptionWithCopier
 
-theorem
-    descriptionWithCopier_subroutineReady
+theorem descriptionWithCopier_subroutineReady
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     (DWC accept reject copier).SubroutineReady :=
@@ -130,8 +125,7 @@ theorem
     (appendFirstInputTapeThenRejectDescription_subroutineReady
       hcopier)
 
-theorem
-    appendSecondInputTapeAndFlagsDescription_run
+theorem appendSecondInputTapeAndFlagsDescription_run
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
@@ -214,8 +208,7 @@ theorem
   simpa [AppendSecondInputTapeAndFlagsDescription,
     A, B] using hn
 
-theorem
-    appendRejectThenInputTapeAndFlagsDescription_run
+theorem appendRejectThenInputTapeAndFlagsDescription_run
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
@@ -308,8 +301,7 @@ theorem
   simpa [AppendRejectThenInputTapeAndFlagsDescription,
     A, B] using hn
 
-theorem
-    appendFirstInputTapeThenRejectDescription_run
+theorem appendFirstInputTapeThenRejectDescription_run
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
@@ -396,8 +388,7 @@ theorem
   simpa [AppendFirstInputTapeThenRejectDescription,
     A, B] using hn
 
-theorem
-    descriptionWithCopier_run_bits
+theorem descriptionWithCopier_run_bits
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
@@ -485,8 +476,7 @@ theorem
   simpa [DescriptionWithCopier,
     initial, A, B] using hn
 
-theorem
-    descriptionWithCopier_run_bits_checked
+theorem descriptionWithCopier_run_bits_checked
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
@@ -1063,8 +1053,7 @@ private theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     encodeCodeSymbolAsInput,
     List.append_assoc]
 
-theorem
-    descriptionWithCopier_forward
+theorem descriptionWithCopier_forward
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     ForwardSpec

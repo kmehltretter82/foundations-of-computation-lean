@@ -1413,8 +1413,7 @@ theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_headerQuote
   simp [optionBitDefaultFalse, Function.comp_def, List.map_append,
     List.append_assoc]
 
-theorem
-    assemblySourceRestFinishTargetTape_defaultedCells_eq_encodeBoolWordAppend
+theorem assemblySourceRestFinishTargetTape_defaultedCells_eq_encodeBoolWordAppend
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells

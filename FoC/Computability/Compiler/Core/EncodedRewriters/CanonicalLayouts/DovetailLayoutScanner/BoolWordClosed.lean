@@ -1390,8 +1390,7 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_moveRigh
         boolWordSuffixScannerDescription_runConfig_finish_moveRight_suffix_ne_halt
           bits baseLeft suffixTail m)
 
-theorem
-    boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff_phaseBridge
+theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_handoff_phaseBridge
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     (suffix : Word MachineCodeSymbol)
     {Tout : Tape Bool} {n : Nat}

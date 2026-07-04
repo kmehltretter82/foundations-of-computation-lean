@@ -49,8 +49,7 @@ def MixedParserStackWholeSourceAfterRawTailScanTape
           ((preservingCellPassCellBits sourceRestBits).map some)
           [none])
 
-theorem
-    rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape_to_afterRawTailScan
+theorem rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape_to_afterRawTailScan
     (w sourceRestBits : Word Bool) (stage : Nat) :
     CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription.HaltsFromTape
       (MixedParserStackWholeSourcePrefixQuotedSeparatedTape
@@ -65,8 +64,7 @@ theorem
     rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape
       w sourceRestBits stage head rawTailRest hraw
 
-theorem
-    rightBlankGapPayloadScanTargetTape_move_left_move_right
+theorem rightBlankGapPayloadScanTargetTape_move_left_move_right
     (baseLeft : List (Option Bool)) (gap : Nat)
     (current : Bool) (payloadRest : Word Bool)
     (padding : List (Option Bool)) :
@@ -146,8 +144,7 @@ theorem rightBlankGapPayloadScanTargetTape_cells
     padding (some current) none]
   simp [List.reverse_append, List.map_reverse, List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourceAfterRawTailScanTape_move_right_eq_rightEndSource
+theorem MixedParserStackWholeSourceAfterRawTailScanTape_move_right_eq_rightEndSource
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (rawTailRest : Word Bool)
     (hraw :
@@ -222,8 +219,7 @@ theorem
           [none])
       (some head)
 
-theorem
-    MixedParserStackWholeSourceAfterRawTailScanTape_defaultedCells_computed
+theorem MixedParserStackWholeSourceAfterRawTailScanTape_defaultedCells_computed
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -249,8 +245,7 @@ theorem
     optionBitDefaultFalse, optionBitDefaultFalse_map_some,
     List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourceAfterRawTailScanTape_move_left_move_right
+theorem MixedParserStackWholeSourceAfterRawTailScanTape_move_left_move_right
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -385,8 +380,7 @@ theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_q
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast]
   simp [tapeAtCells, Tape.move, Tape.moveRight]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_preservingCons
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_rawTailLast_preservingCons
     (emittedPrefix rawTailInit sourceRestTail : Word Bool)
     (last bit : Bool) :
     Tape.move Direction.right
@@ -407,8 +401,7 @@ theorem
   rw [preservingCellPassCellBits_cons_explicit_map_some]
   simp [tapeAtCells, Tape.move, Tape.moveRight]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
     (w sourceRestTail : Word Bool) (bit : Bool) (stage : Nat) :
     exists rawTailInit : Word Bool,
     exists last : Bool,
@@ -493,8 +486,7 @@ theorem mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_cons
       List.map_map, optionBitDefaultFalse,
       optionBitDefaultFalse_map_some, List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape
+theorem MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
     MixedParserStackWholeSourceAfterRawTailScanTape
         w sourceRestBits stage =
@@ -518,8 +510,7 @@ theorem
   | cons head rawTailRest =>
       simp [mixedOptionCellQuoteLiveTailSeparatedTape]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailSeparatedTape
@@ -548,8 +539,7 @@ theorem
       (preservingCellPassCellBits sourceRestBits)
       head rawTailRest
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly
+theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailJoinedTape
@@ -575,8 +565,7 @@ theorem
       (preservingCellPassCellBits sourceRestBits)
       head rawTailRest
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailSeparatedTape
@@ -599,8 +588,7 @@ theorem
   rw [assemblySourceRestFinishRawTailBits_map_some]
   simp [List.append_assoc]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailJoinedTape
@@ -620,8 +608,7 @@ theorem
   rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly]
   rw [assemblySourceRestFinishRawTailBits_map_some]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_sourceRestCons
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_cells_assembly_sourceRestCons
     (w : Word Bool) (bit : Bool) (sourceRestTail : Word Bool)
     (stage : Nat) :
     Tape.cells
@@ -649,8 +636,7 @@ theorem
   rw [preservingCellPassCellBits_cons_explicit_map_some]
   simp
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_sourceRestCons
+theorem mixedOptionCellQuoteLiveTailJoinedTape_cells_assembly_sourceRestCons
     (w : Word Bool) (bit : Bool) (sourceRestTail : Word Bool)
     (stage : Nat) :
     Tape.cells
@@ -675,8 +661,7 @@ theorem
   rw [preservingCellPassCellBits_cons_explicit_map_some]
   simp
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_eq_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_eq_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -697,8 +682,7 @@ theorem
   rw [assemblySourceRestFinishRawTailBits, hstage]
   simp [mixedOptionCellQuoteLiveTailSeparatedTape]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_eq_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_eq_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
     mixedOptionCellQuoteLiveTailJoinedTape
         (assemblySourceRestFinishPrefixQuoteOutputBits
@@ -718,8 +702,7 @@ theorem
     assemblySourceRestFinishRawTailBits]
   simp [List.map_append]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_head_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_head_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -735,8 +718,7 @@ theorem
   rw [hstage]
   simp [tapeAtCells]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_left_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_left_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
     (mixedOptionCellQuoteLiveTailJoinedTape
         (assemblySourceRestFinishPrefixQuoteOutputBits
@@ -753,8 +735,7 @@ theorem
   rw [hstage]
   simp [tapeAtCells]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_right_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_right_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -770,8 +751,7 @@ theorem
   rw [hstage]
   simp [tapeAtCells, List.map_append]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
+theorem mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
     mixedOptionCellQuoteLiveTailJoinedTape
         (assemblySourceRestFinishPrefixQuoteOutputBits
@@ -783,8 +763,7 @@ theorem
   rw [mixedOptionCellQuoteLiveTailJoinedTape,
     assemblySourceRestFinishQuoteRestJoinedTape]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_assembly
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -803,8 +782,7 @@ theorem
               [false])) := by
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_eq_prefixQuotedSeparatedBits
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_eq_prefixQuotedSeparatedBits
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -818,8 +796,7 @@ theorem
   rw [mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_assembly]
   rfl
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_assembly
+theorem mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -845,8 +822,7 @@ theorem
       (preservingCellPassCellBits sourceRestBits)
       head rawTailRest
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_eq_targetBits
+theorem mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_eq_targetBits
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -859,8 +835,7 @@ theorem
   rw [mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_assembly]
   rw [assemblySourceRestFinishTargetBits]
 
-theorem
-    assemblySourceRestLiveTailJoinerSeparatedTape_eq_afterRawTailScanTape
+theorem assemblySourceRestLiveTailJoinerSeparatedTape_eq_afterRawTailScanTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
     mixedOptionCellQuoteLiveTailSeparatedTape
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
@@ -879,8 +854,7 @@ theorem
 
 -- Family-level source shape for the remaining assembly joiner leaf.  This is
 -- the narrowed replacement for the impossible arbitrary prefix/source split.
-theorem
-    assemblySourceRestLiveTailJoinerSeparatedTape_defaultedCells
+theorem assemblySourceRestLiveTailJoinerSeparatedTape_defaultedCells
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -899,8 +873,7 @@ theorem
         mixedOptionCellQuoteLiveTailSeparatedTape_defaultedCells_eq_prefixQuotedSeparatedBits
           w sourceRestBits stage
 
-theorem
-    assemblySourceRestLiveTailJoinerJoinedTape_eq_quoteRestJoinedTape
+theorem assemblySourceRestLiveTailJoinerJoinedTape_eq_quoteRestJoinedTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
     mixedOptionCellQuoteLiveTailJoinedTape
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
@@ -919,8 +892,7 @@ theorem
 
 -- Family-level target shape for the assembly joiner.  The finite leaf must
 -- move the already-computed quote-rest bits before this live raw tail.
-theorem
-    assemblySourceRestLiveTailJoinerJoinedTape_defaultedCells
+theorem assemblySourceRestLiveTailJoinerJoinedTape_defaultedCells
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -938,8 +910,7 @@ theorem
         mixedOptionCellQuoteLiveTailJoinedTape_defaultedCells_eq_targetBits
           w sourceRestBits stage
 
-theorem
-    assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape
+theorem assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
     mixedOptionCellQuoteLiveTailJoinedTape
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
@@ -968,8 +939,7 @@ def mixedOptionCellQuoteLiveTailStageSourceRawTail
       stage)
     sourceRestBits
 
-theorem
-    mixedOptionCellQuoteLiveTailStageSourceRawTail_eq_assemblyRawTail
+theorem mixedOptionCellQuoteLiveTailStageSourceRawTail_eq_assemblyRawTail
     (sourceRestBits : Word Bool) (stage : Nat) :
     mixedOptionCellQuoteLiveTailStageSourceRawTail sourceRestBits stage =
       assemblySourceRestFinishRawTailBits sourceRestBits stage := by
@@ -985,8 +955,7 @@ theorem mixedOptionCellQuoteLiveTailStageSourceRawTail_map_some
         (sourceRestBits.map some) := by
   simp [mixedOptionCellQuoteLiveTailStageSourceRawTail, List.map_append]
 
-theorem
-    mixedOptionCellQuoteLiveTailSeparatedTape_eq_stageSource_stageSplit
+theorem mixedOptionCellQuoteLiveTailSeparatedTape_eq_stageSource_stageSplit
     (emittedPrefix sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -1006,8 +975,7 @@ theorem
   rw [mixedOptionCellQuoteLiveTailStageSourceRawTail, hstage]
   simp [mixedOptionCellQuoteLiveTailSeparatedTape]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_eq_stageSource_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_eq_stageSource_stageSplit
     (emittedPrefix sourceRestBits : Word Bool) (stage : Nat) :
     mixedOptionCellQuoteLiveTailJoinedTape
         emittedPrefix
@@ -1025,8 +993,7 @@ theorem
     mixedOptionCellQuoteLiveTailStageSourceRawTail]
   simp [List.map_append]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_head_stageSource_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_head_stageSource_stageSplit
     (emittedPrefix sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -1042,8 +1009,7 @@ theorem
   rw [hstage]
   simp [tapeAtCells]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_left_stageSource_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_left_stageSource_stageSplit
     (emittedPrefix sourceRestBits : Word Bool) (stage : Nat) :
     (mixedOptionCellQuoteLiveTailJoinedTape
         emittedPrefix
@@ -1058,8 +1024,7 @@ theorem
   rw [hstage]
   simp [tapeAtCells]
 
-theorem
-    mixedOptionCellQuoteLiveTailJoinedTape_right_stageSource_stageSplit
+theorem mixedOptionCellQuoteLiveTailJoinedTape_right_stageSource_stageSplit
     (emittedPrefix sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (stageTail : Word Bool)
     (hstage :
@@ -1096,8 +1061,7 @@ def MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish
 
-theorem
-    mixedOptionCellQuoteLiveTailStageSourceJoiner_source_ambiguous :
+theorem mixedOptionCellQuoteLiveTailStageSourceJoiner_source_ambiguous :
     mixedOptionCellQuoteLiveTailSeparatedTape
         DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
         (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 0)
@@ -1108,8 +1072,7 @@ theorem
         (preservingCellPassCellBits [false]) := by
   decide
 
-theorem
-    mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous :
+theorem mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous :
     mixedOptionCellQuoteLiveTailJoinedTape
         DovetailInitialLayoutInitializer.StageInputMarkedScanner.tickBits
         (mixedOptionCellQuoteLiveTailStageSourceRawTail [false] 0)
@@ -1120,8 +1083,7 @@ theorem
         (preservingCellPassCellBits [false]) := by
   decide
 
-theorem
-    not_MixedOptionCellQuoteLiveTailStageSourceJoinerSpec
+theorem not_MixedOptionCellQuoteLiveTailStageSourceJoinerSpec
     (finish : MachineDescription) :
     ¬ MixedOptionCellQuoteLiveTailStageSourceJoinerSpec finish := by
   intro hfinish
@@ -1151,8 +1113,7 @@ theorem
     mixedOptionCellQuoteLiveTailStageSourceJoiner_target_not_ambiguous
       htargets
 
-theorem
-    not_MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
+theorem not_MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction :
     ¬ MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction := by
   intro hconstruction
   rcases hconstruction with ⟨finish, hfinish⟩

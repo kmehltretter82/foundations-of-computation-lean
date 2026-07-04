@@ -36,8 +36,7 @@ def assemblySourceRestReusableQuoteAfterSourceRestScanTape
       ((preservingCellPassCellBits sourceRestBits).map some)
       [none])
 
-theorem
-    scanRightToBlankLeftDescription_haltsFrom_defaultedSourceRestBoundary_to_afterSourceRest
+theorem scanRightToBlankLeftDescription_haltsFrom_defaultedSourceRestBoundary_to_afterSourceRest
     (w sourceRestBits : Word Bool) (stage : Nat) :
     scanRightToBlankLeftDescription.HaltsFromTape
       (MixedParserStackRewriterDefaultedSourceRestBoundaryTape
@@ -81,8 +80,7 @@ theorem assemblySourceRestReusableQuoteAfterSourceRestScanTape_move_right
       simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
         hleft]
 
-theorem
-    assemblySourceRestReusableQuoteAfterSourceRestScanTape_move_left_move_right
+theorem assemblySourceRestReusableQuoteAfterSourceRestScanTape_move_left_move_right
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -147,8 +145,7 @@ theorem assemblySourceRestReusableQuoteAfterSourceRestScanTape_defaultedCells
   simp [List.map_append, List.map_map, optionBitDefaultFalse,
     optionBitDefaultFalse_map_some, hprefix]
 
-theorem
-    assemblySourceRestReusableQuoteAfterSourceRestScanTape_eq_mixedParserStackSource_withSentinel
+theorem assemblySourceRestReusableQuoteAfterSourceRestScanTape_eq_mixedParserStackSource_withSentinel
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestReusableQuoteAfterSourceRestScanTape
         w sourceRestBits stage =
@@ -190,8 +187,7 @@ theorem assemblySourceRestFinishTargetTape_eq_rawBoolReusableQuoteTargetTape
   rw [assemblySourceRestFinishTargetTape_eq_rawBoolSourceStartTargetTape,
     assemblySourceRestFinishRawBoolSourceStartTargetTape_eq_reusableQuote]
 
-theorem
-    MixedParserStackRewriterTargetTape_eq_rawBoolReusableQuoteTargetTape_computed
+theorem MixedParserStackRewriterTargetTape_eq_rawBoolReusableQuoteTargetTape_computed
     (w sourceRestBits : Word Bool) (stage : Nat) :
     MixedParserStackRewriterTargetTape
         (MixedParserStackRewriterPrefixQuote
@@ -212,8 +208,7 @@ theorem
   rw [MixedParserStackRewriterTargetTape_eq_targetTape_computed,
     assemblySourceRestFinishTargetTape_eq_rawBoolReusableQuoteTargetTape]
 
-theorem
-    mixedParserStackSeekLeftBoundaryDescription_run_payloadRev_withSentinel
+theorem mixedParserStackSeekLeftBoundaryDescription_run_payloadRev_withSentinel
     (scanRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     mixedParserStackSeekLeftBoundaryDescription.runConfig
@@ -278,8 +273,7 @@ theorem
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih prev (some current :: right)
 
-theorem
-    mixedParserStackSeekLeftBoundaryDescription_run_markerLeft_withSentinel
+theorem mixedParserStackSeekLeftBoundaryDescription_run_markerLeft_withSentinel
     (right : List (Option Bool)) :
     mixedParserStackSeekLeftBoundaryDescription.runConfig 6
         { state := mixedParserStackSeekLeftBoundaryDescription.start
@@ -301,8 +295,7 @@ theorem
     Matches, transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft]
 
-theorem
-    mixedParserStackSeekLeftBoundaryDescription_run_payloadToLeftBoundary_withSentinel
+theorem mixedParserStackSeekLeftBoundaryDescription_run_payloadToLeftBoundary_withSentinel
     (scanRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     mixedParserStackSeekLeftBoundaryDescription.runConfig
@@ -332,8 +325,7 @@ theorem
   rw [
     mixedParserStackSeekLeftBoundaryDescription_run_markerLeft_withSentinel]
 
-theorem
-    MixedParserStackRewriterSentinelSourceTape_eq_seekLeftBoundarySource
+theorem MixedParserStackRewriterSentinelSourceTape_eq_seekLeftBoundarySource
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat)
     (scanRev : Word Bool) (current : Bool)
     (hpayload :
@@ -407,8 +399,7 @@ theorem
   simp [List.reverse_append, List.append_assoc, hpayloadCells',
     tapeAtCells, Tape.move, Tape.moveLeft]
 
-theorem
-    mixedParserStackSeekLeftBoundaryDescription_haltsFrom_sentinelSourceTape
+theorem mixedParserStackSeekLeftBoundaryDescription_haltsFrom_sentinelSourceTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     mixedParserStackSeekLeftBoundaryDescription.HaltsFromTape
       (MixedParserStackRewriterSourceTape
@@ -486,8 +477,7 @@ def MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest :
   exists finish : MachineDescription,
     MixedParserStackSentinelSourceFinisherAssemblySourceRestSpec finish
 
-theorem
-    AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction_of_sentinelSource
+theorem AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction_of_sentinelSource
     (h : MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest) :
     AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -498,8 +488,7 @@ theorem
   simpa [MixedParserStackRewriterTargetTape_eq_rawBoolReusableQuoteTargetTape_computed]
     using hfinish.right w sourceRestBits stage
 
-theorem
-    AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction_of_afterSourceRestScan
+theorem AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction_of_afterSourceRestScan
     (h : AssemblySourceRestReusableQuoteAfterSourceRestScanFinisherConstruction) :
     AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -520,8 +509,7 @@ theorem
           w sourceRestBits stage)
         (hfinish.right w sourceRestBits stage)
 
-theorem
-    MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest_of_trueLeftBoundary
+theorem MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest_of_trueLeftBoundary
     (h :
       MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest) :
     MixedParserStackSentinelSourceFinisherConstructionForAssemblySourceRest := by
@@ -600,8 +588,7 @@ theorem MixedParserStackRewriterWholeSourceTargetTape_defaultedCells_assembly
   simp [List.map_append, List.map_map, optionBitDefaultFalse_map_some,
     List.append_assoc]
 
-theorem
-    MixedParserStackRewriterWholeSourceTargetTape_defaultedCells_eq_targetBits
+theorem MixedParserStackRewriterWholeSourceTargetTape_defaultedCells_eq_targetBits
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -615,8 +602,7 @@ theorem
   exact assemblySourceRestFinishTargetTape_defaultedCells_eq_targetBits
     w sourceRestBits stage
 
-theorem
-    MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape
+theorem MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
     MixedParserStackRewriterWholeSourceTargetTape
         (MixedParserStackRewriterTrueSourceCells
@@ -649,8 +635,7 @@ def MixedParserStackWholeSourcePrefixQuotedSeparatedTape
           ((preservingCellPassCellBits sourceRestBits).map some)
           [none]))
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_cells
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_cells
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (MixedParserStackWholeSourcePrefixQuotedSeparatedTape
@@ -680,8 +665,7 @@ theorem
   simp [tapeAtCells, Tape.cells, List.map_reverse,
     List.map_append, List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -707,8 +691,7 @@ theorem
   simp [List.map_append, List.map_map, optionBitDefaultFalse,
     optionBitDefaultFalse_map_some, List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells_computed
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells_computed
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -728,8 +711,7 @@ theorem
   rw [assemblySourceRestFinishPrefixQuoteOutputBits]
   simp [List.append_assoc]
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_move_left_move_right
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_move_left_move_right
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -892,8 +874,7 @@ theorem assemblySourceRestFinishRightPayloadBits_eq_stageInputTailPrefix_append_
   rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
   rw [assemblySourceRestFinishParserMarkerRightBits_eq_stageInputTailPrefix]
 
-theorem
-    assemblySourceRestFinishRightPayloadBits_eq_stageInputSecondBitTail_append_sourceRest
+theorem assemblySourceRestFinishRightPayloadBits_eq_stageInputSecondBitTail_append_sourceRest
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishRightPayloadBits w sourceRestBits stage =
       List.append
@@ -977,8 +958,7 @@ theorem assemblySourceRestFinishPrefixQuoteOutputBits_map_some_eq_marker_chunks
   rw [assemblySourceRestFinishPrefixQuoteOutputBits_eq_marker_chunks]
   simp [List.map_append]
 
-theorem
-    MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape
+theorem MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSourceTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     MixedParserStackRewriterDefaultedInternalMarkerTape
         w sourceRestBits quoteRestBits stage =
@@ -993,8 +973,7 @@ theorem
   rw [MixedParserStackRewriterDefaultedInternalMarkerTape,
     mixedOptionCellQuoteLiveTailEmitterSourceTape]
 
-theorem
-    MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+theorem MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     MixedParserStackRewriterDefaultedInternalMarkerTape
         w sourceRestBits quoteRestBits stage =
@@ -1011,8 +990,7 @@ theorem
   rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
   rw [mixedOptionCellQuoteLiveTailEmitterSourceTape_eq_split]
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape
         w sourceRestBits stage =
@@ -1027,8 +1005,7 @@ theorem
   rw [MixedParserStackRewriterLengthHeader_eq_assemblyLengthHeader]
   rw [assemblySourceRestFinishPrefixQuoteOutputBits]
 
-theorem
-    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_assembly
+theorem mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells_assembly
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1049,8 +1026,7 @@ theorem
   exact MixedParserStackRewriterDefaultedInternalMarkerTape_defaultedCells
     w sourceRestBits quoteRestBits stage
 
-theorem
-    mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_cells_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_cells_assembly_stageSplit
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
@@ -1075,8 +1051,7 @@ theorem
   simp [assemblySourceRestFinishRawTailBits, List.reverse_append,
     List.map_append, List.append_assoc]
 
-theorem
-    mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_assembly
+theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_assembly
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1099,8 +1074,7 @@ theorem
     MixedParserStackWholeSourcePrefixQuotedSeparatedTape_defaultedCells_computed
       w sourceRestBits stage
 
-theorem
-    mixedOptionCellQuoteLiveTailEmitterTargetTape_cells_assembly_stageSplit
+theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_cells_assembly_stageSplit
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.cells
         (mixedOptionCellQuoteLiveTailEmitterTargetTape
@@ -1132,8 +1106,7 @@ def assemblySourceRestFinishPrefixQuotedSeparatedBits
       (false ::
         List.append (preservingCellPassCellBits sourceRestBits) [false]))
 
-theorem
-    mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparatedBits
+theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparatedBits
     (w sourceRestBits : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1239,8 +1212,7 @@ def assemblySourceRestLiveTailEmitterTargetBits
 
 -- Family-level source shape for the remaining assembly emitter leaf.  This
 -- packages the generic split-source tape view at the exact assembly parameters.
-theorem
-    assemblySourceRestLiveTailEmitterSourceTape_defaultedCells
+theorem assemblySourceRestLiveTailEmitterSourceTape_defaultedCells
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1260,8 +1232,7 @@ theorem
 
 -- Family-level target shape for the emitter leaf before the joiner consumes
 -- the separated quote-rest field.
-theorem
-    assemblySourceRestLiveTailEmitterTargetTape_defaultedCells
+theorem assemblySourceRestLiveTailEmitterTargetTape_defaultedCells
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1277,8 +1248,7 @@ theorem
       (assemblySourceRestLiveTailEmitterRawTail p)
       (assemblySourceRestLiveTailEmitterQuoteRest p)
 
-theorem
-    assemblySourceRestLiveTailEmitterQuoteScan_append_stageNatBits_eq_stageInputSecondBitTail
+theorem assemblySourceRestLiveTailEmitterQuoteScan_append_stageNatBits_eq_stageInputSecondBitTail
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.append
         (assemblySourceRestLiveTailEmitterQuoteScan p)
@@ -1292,8 +1262,7 @@ theorem
       rw [
         DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTail_eq_prefix_stageNat]
 
-theorem
-    assemblySourceRestLiveTailEmitterQuoteScan_append_rawTail_eq_rightPayload
+theorem assemblySourceRestLiveTailEmitterQuoteScan_append_rawTail_eq_rightPayload
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.append
         (assemblySourceRestLiveTailEmitterQuoteScan p)
@@ -1306,8 +1275,7 @@ theorem
         assemblySourceRestLiveTailEmitterRawTail]
       rw [assemblySourceRestFinishRightPayloadBits_eq_markerRight_append_rawTail]
 
-theorem
-    assemblySourceRestLiveTailEmitterSourceBits_eq_defaultedSource
+theorem assemblySourceRestLiveTailEmitterSourceBits_eq_defaultedSource
     (p : AssemblySourceRestLiveTailEmitterParam) :
     assemblySourceRestLiveTailEmitterSourceBits p =
       false ::
@@ -1328,8 +1296,7 @@ theorem
 
 -- The assembly source tape's defaulted cells are the original defaulted parser
 -- source plus the reusable quote-rest field behind the structural blank.
-theorem
-    assemblySourceRestLiveTailEmitterSourceTape_defaultedCells_eq_defaultedSource
+theorem assemblySourceRestLiveTailEmitterSourceTape_defaultedCells_eq_defaultedSource
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1348,8 +1315,7 @@ theorem
   rw [assemblySourceRestLiveTailEmitterSourceTape_defaultedCells,
     assemblySourceRestLiveTailEmitterSourceBits_eq_defaultedSource]
 
-theorem
-    assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated
+theorem assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated
     (p : AssemblySourceRestLiveTailEmitterParam) :
     assemblySourceRestLiveTailEmitterTargetBits p =
       assemblySourceRestFinishPrefixQuotedSeparatedBits
@@ -1365,8 +1331,7 @@ theorem
 
 -- The emitter target is exactly the separated prefix/raw-tail/quote-rest bit
 -- view that the live-tail joiner later consumes.
-theorem
-    assemblySourceRestLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparated
+theorem assemblySourceRestLiveTailEmitterTargetTape_defaultedCells_eq_prefixQuotedSeparated
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.map optionBitDefaultFalse
         (Tape.cells
@@ -1379,8 +1344,7 @@ theorem
   rw [assemblySourceRestLiveTailEmitterTargetTape_defaultedCells,
     assemblySourceRestLiveTailEmitterTargetBits_eq_prefixQuotedSeparated]
 
-theorem
-    assemblySourceRestLiveTailEmitterEmittedPrefix_append_quoteRest_eq_targetPrefix
+theorem assemblySourceRestLiveTailEmitterEmittedPrefix_append_quoteRest_eq_targetPrefix
     (p : AssemblySourceRestLiveTailEmitterParam) :
     List.append
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
@@ -1395,8 +1359,7 @@ theorem
         (assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote
           w sourceRestBits stage).symm
 
-theorem
-    assemblySourceRestLiveTailEmitterSourceTape_eq_defaultedInternalMarkerTape
+theorem assemblySourceRestLiveTailEmitterSourceTape_eq_defaultedInternalMarkerTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
     mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
         (assemblySourceRestLiveTailEmitterLeftRev p)
@@ -1417,8 +1380,7 @@ theorem
           w sourceRestBits (preservingCellPassCellBits sourceRestBits)
           stage).symm
 
-theorem
-    assemblySourceRestLiveTailEmitterTargetTape_eq_prefixQuotedSeparatedTape
+theorem assemblySourceRestLiveTailEmitterTargetTape_eq_prefixQuotedSeparatedTape
     (p : AssemblySourceRestLiveTailEmitterParam) :
     mixedOptionCellQuoteLiveTailEmitterTargetTape
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
@@ -1435,8 +1397,7 @@ theorem
         (MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape
           w sourceRestBits stage).symm
 
-theorem
-    MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
+theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (rawTailRest : Word Bool)
     (hraw :
@@ -1465,8 +1426,7 @@ theorem
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
     CommonGround.FiniteTransducers.tapeAtCells]
 
-theorem
-    rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape
+theorem rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (rawTailRest : Word Bool)
     (hraw :

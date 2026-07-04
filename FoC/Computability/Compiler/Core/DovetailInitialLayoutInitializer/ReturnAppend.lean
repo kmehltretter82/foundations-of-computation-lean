@@ -62,8 +62,7 @@ def TransitionPrefixedThenAppendCodeWordLastDescription
     (AppendCodeWordLastDescription code)
     Direction.right
 
-theorem
-    transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
+theorem transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedThenAppendCodeWordLastDescription
       code).SubroutineReady :=
@@ -71,8 +70,7 @@ theorem
     markTransitionSecondBitDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
-theorem
-    transitionPrefixedThenAppendCodeWordLastDescription_run
+theorem transitionPrefixedThenAppendCodeWordLastDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
     exists steps : Nat,
@@ -214,8 +212,7 @@ theorem returnToCurrentMarkerDescription_run
       rw [returnToCurrentMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
-theorem
-    returnToCurrentMarkerDescription_run_after_append_four_atCells
+theorem returnToCurrentMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (leftOfMarker : List (Option Bool))
     (b0 b1 b2 b3 : Bool) :
     RTCM.runConfig
@@ -236,8 +233,7 @@ theorem
       (List.append [b1, b0] pre.reverse) b2
       leftOfMarker [some b3]
 
-theorem
-    returnToCurrentMarkerDescription_run_after_append_atCells :
+theorem returnToCurrentMarkerDescription_run_after_append_atCells :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
         forall pre : Word Bool,
@@ -305,8 +301,7 @@ def AppendCodeWordReturnToCurrentMarkerDescription
     RTCM
     Direction.left
 
-theorem
-    appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
+theorem appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (AppendCodeWordReturnToCurrentMarkerDescription
       code).SubroutineReady :=
@@ -314,8 +309,7 @@ theorem
     (appendCodeWordLastDescription_subroutineReady code hcode)
     returnToCurrentMarkerDescription_subroutineReady
 
-theorem
-    appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
+theorem appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (pre remaining : Word Bool)
     (leftOfMarker : List (Option Bool)) :
@@ -702,8 +696,7 @@ theorem inputTapeRightCellsDirectCopierDescription_subroutineReady :
     ITCD (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_step_scan20
+theorem inputTapeRightCellsDirectCopierDescription_step_scan20
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     ITCD.stepConfig
         (config 20 leftRev (some bit :: rest.map some)) =
@@ -717,8 +710,7 @@ theorem
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_run_scan20
+theorem inputTapeRightCellsDirectCopierDescription_run_scan20
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     ITCD.runConfig
         remaining.length
@@ -734,8 +726,7 @@ theorem
         inputTapeRightCellsDirectCopierDescription_step_scan20,
         ih, List.append_assoc]
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_run_write_tick
+theorem inputTapeRightCellsDirectCopierDescription_run_write_tick
     (leftRev : List (Option Bool)) :
     ITCD.runConfig 4
         (config 20 leftRev []) =
@@ -749,8 +740,7 @@ theorem
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_step_return24
+theorem inputTapeRightCellsDirectCopierDescription_step_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -768,8 +758,7 @@ theorem
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_run_return24
+theorem inputTapeRightCellsDirectCopierDescription_run_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
     ITCD.runConfig
@@ -797,8 +786,7 @@ theorem
       rw [inputTapeRightCellsDirectCopierDescription_step_return24]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_run_advance25_to0
+theorem inputTapeRightCellsDirectCopierDescription_run_advance25_to0
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig 3
@@ -814,8 +802,7 @@ theorem
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem
-    inputTapeRightCellsDirectCopierDescription_run_copy_tick
+theorem inputTapeRightCellsDirectCopierDescription_run_copy_tick
     (leftOfMarker : List (Option Bool))
     (pre remaining : Word Bool) :
     exists steps : Nat,
@@ -910,16 +897,14 @@ def AppendCodeSymbolReturnToCurrentMarkerDescription
     (symbol : MachineCodeSymbol) : MachineDescription :=
   AppendCodeWordReturnToCurrentMarkerDescription [symbol]
 
-theorem
-    appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
+theorem appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolReturnToCurrentMarkerDescription
       symbol).SubroutineReady :=
   appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     [symbol] (by intro h; cases h)
 
-theorem
-    appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
+theorem appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
     (symbol : MachineCodeSymbol)
     (pre remaining : Word Bool)
     (leftOfMarker : List (Option Bool)) :
@@ -1022,8 +1007,7 @@ theorem returnToTransitionMarkerDescription_run
       rw [returnToTransitionMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
-theorem
-    returnToTransitionMarkerDescription_run_after_append_four_atCells
+theorem returnToTransitionMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (b0 b1 b2 b3 : Bool) :
     RTTM.runConfig
         (pre.length + 5)
@@ -1043,8 +1027,7 @@ theorem
     returnToTransitionMarkerDescription_run
       (List.append [b1, b0] pre.reverse) b2 [some b3]
 
-theorem
-    returnToTransitionMarkerDescription_run_after_append_atCells :
+theorem returnToTransitionMarkerDescription_run_after_append_atCells :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
         forall pre : Word Bool,
@@ -1112,8 +1095,7 @@ def MarkedPrefixAppendCodeWordReturnDescription
     RTTM
     Direction.left
 
-theorem
-    markedPrefixAppendCodeWordReturnDescription_subroutineReady
+theorem markedPrefixAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (MarkedPrefixAppendCodeWordReturnDescription
       code).SubroutineReady :=
@@ -1261,8 +1243,7 @@ def MarkedPrefixAppendNatReturnDescription
   MarkedPrefixAppendCodeWordReturnDescription
     (encodeNat n)
 
-theorem
-    markedPrefixAppendNatReturnDescription_subroutineReady
+theorem markedPrefixAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixAppendNatReturnDescription
       n).SubroutineReady :=
@@ -1338,8 +1319,7 @@ theorem stageInputBits_exists_cons
   | cons b rest =>
       exact ⟨b, rest, rfl⟩
 
-theorem
-    markedPrefixAppendCodeWordReturnDescription_run_stageInput
+theorem markedPrefixAppendCodeWordReturnDescription_run_stageInput
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
@@ -1431,8 +1411,7 @@ def TransitionPrefixedAppendCodeWordReturnDescription
     RTTM
     Direction.left
 
-theorem
-    transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
+theorem transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (TransitionPrefixedAppendCodeWordReturnDescription
       code).SubroutineReady :=
@@ -1521,8 +1500,7 @@ def TransitionPrefixedAppendNatReturnDescription
   TransitionPrefixedAppendCodeWordReturnDescription
     (encodeNat n)
 
-theorem
-    transitionPrefixedAppendNatReturnDescription_subroutineReady
+theorem transitionPrefixedAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (TransitionPrefixedAppendNatReturnDescription
       n).SubroutineReady :=

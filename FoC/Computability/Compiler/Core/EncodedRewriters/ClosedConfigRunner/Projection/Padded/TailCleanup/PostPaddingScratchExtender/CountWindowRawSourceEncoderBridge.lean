@@ -44,8 +44,7 @@ theorem selectedProjectionPaddedTailCleanupPostCountTailCells_zero_append_replic
       selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
       List.append_assoc]
 
-theorem
-    selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder_bridge
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder_bridge
     (hencoder : CountWindowRawSourceEncoderEquivConstruction) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction := by
   rcases hencoder with ⟨encoder, hencoderSpec⟩
@@ -137,8 +136,7 @@ theorem
         rw [← hsource, ← htarget]
         exact hrun⟩
 
-theorem
-    selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_countWindowRawSourceEncoderBridge :
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_countWindowRawSourceEncoderBridge :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction := by
   exact
     selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_of_countWindowRawSourceEncoder_bridge

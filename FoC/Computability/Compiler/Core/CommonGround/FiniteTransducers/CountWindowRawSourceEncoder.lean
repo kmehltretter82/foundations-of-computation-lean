@@ -243,8 +243,7 @@ def countWindowRawSourceEncoderTargetTapeNoCountPadding
               (count.map some))
             tail))))
 
-theorem
-    countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells
+theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     countWindowRawSourceEncoderTargetTapeNoCountPadding
         skipped count tail =
@@ -335,8 +334,7 @@ private theorem countWindowRawSourceEncoderEncodedLayoutCells_length
     encodeCodeSymbolAsInput]
   lia
 
-theorem
-    countWindowRawSourceEncoderEncodedLayoutCells_length_gt_sourcePrefix
+theorem countWindowRawSourceEncoderEncodedLayoutCells_length_gt_sourcePrefix
     (skipped count : Word Bool) :
     (List.append skipped count).length + 3 + count.length <
       (countWindowRawSourceEncoderEncodedLayoutCells
@@ -372,8 +370,7 @@ theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_headerBoolWord
     countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells]
   rw [countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord]
 
-theorem
-    countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_headerBits
+theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_headerBits
     (pref right : List (Option Bool)) :
     Tape.move Direction.right
         (Tape.move Direction.left
@@ -388,8 +385,7 @@ theorem
   cases pref <;> cases right <;>
     simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem
-    countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
+theorem countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     rightEdgeRewindDescription.HaltsFromTape
@@ -406,8 +402,7 @@ theorem
         (List.append skipped count))
       tailFirst tail
 
-theorem
-    countWindowRawSourceEncoderEncodedLayoutPreRewindTape_moveRight
+theorem countWindowRawSourceEncoderEncodedLayoutPreRewindTape_moveRight
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     Tape.move Direction.right
@@ -452,8 +447,7 @@ theorem
         some)
       (some tailFirst :: tail)
 
-theorem
-    countWindowRawSourceEncoderTargetTapeNoCountPadding_equiv_leftPadding
+theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_equiv_leftPadding
     (padding : Nat) (skipped count : Word Bool)
     (tail : List (Option Bool)) :
     Tape.Equiv
@@ -866,8 +860,7 @@ def countWindowRawSourceEncoderScanToCountWindowStartDescription :
   seqSubroutine rightEdgeScanDescription
     rightMoveAcrossThreeBlanksDescription Direction.right
 
-theorem
-    countWindowRawSourceEncoderScanToCountWindowStartDescription_subroutineReady :
+theorem countWindowRawSourceEncoderScanToCountWindowStartDescription_subroutineReady :
     countWindowRawSourceEncoderScanToCountWindowStartDescription.SubroutineReady :=
   seqSubroutine_subroutineReady
     rightEdgeScanDescription_subroutineReady
@@ -896,8 +889,7 @@ theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
         (List.replicate count.length (none : Option Bool))
         tail)
 
-theorem
-    countWindowRawSourceEncoderRightEdgeTape_moveRight_eq_countedSuffixExtraBlank
+theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_eq_countedSuffixExtraBlank
     (skipped suffixRest : Word Bool) (suffixFirst : Bool)
     (tail : List (Option Bool)) :
     Tape.move Direction.right
@@ -922,8 +914,7 @@ theorem countWindowRawSourceEncoderSourceTape_eq_countedSuffixRestored
     countWindowRawSourceEncoderSourceTape, List.replicate_succ,
     List.append_assoc]
 
-theorem
-    countWindowRawSourceEncoderScanToCountWindowStartDescription_haltsFromTape
+theorem countWindowRawSourceEncoderScanToCountWindowStartDescription_haltsFromTape
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     countWindowRawSourceEncoderScanToCountWindowStartDescription.HaltsFromTape
       (countWindowRawSourceEncoderSourceTape skipped count tail)
@@ -1004,15 +995,13 @@ def countWindowRawSourceEncoderScanToBeforeCountWindowDescription :
   seqSubroutine rightEdgeScanDescription
     rightMoveAcrossTwoBlanksDescription Direction.right
 
-theorem
-    countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady :
+theorem countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady :
     countWindowRawSourceEncoderScanToBeforeCountWindowDescription.SubroutineReady :=
   seqSubroutine_subroutineReady
     rightEdgeScanDescription_subroutineReady
     rightMoveAcrossTwoBlanksDescription_subroutineReady
 
-theorem
-    countWindowRawSourceEncoderScanToBeforeCountWindowDescription_haltsFromTape
+theorem countWindowRawSourceEncoderScanToBeforeCountWindowDescription_haltsFromTape
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     countWindowRawSourceEncoderScanToBeforeCountWindowDescription.HaltsFromTape
       (countWindowRawSourceEncoderSourceTape skipped count tail)
@@ -1227,15 +1216,13 @@ def countWindowRawSourceEncoderScanToTailPastFirstDescription :
     countWindowRawSourceEncoderScanToBeforeCountWindowDescription
     rightBlankRunTailFirstScannerDescription Direction.right
 
-theorem
-    countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady :
+theorem countWindowRawSourceEncoderScanToTailPastFirstDescription_subroutineReady :
     countWindowRawSourceEncoderScanToTailPastFirstDescription.SubroutineReady :=
   seqSubroutine_subroutineReady
     countWindowRawSourceEncoderScanToBeforeCountWindowDescription_subroutineReady
     rightBlankRunTailFirstScannerDescription_subroutineReady
 
-theorem
-    countWindowRawSourceEncoderScanToTailPastFirstDescription_haltsFromTape
+theorem countWindowRawSourceEncoderScanToTailPastFirstDescription_haltsFromTape
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     countWindowRawSourceEncoderScanToTailPastFirstDescription.HaltsFromTape
@@ -1484,8 +1471,7 @@ def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction :
   exists emitter : MachineDescription,
     CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec emitter
 
-theorem
-    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
+theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
     (hemitter :
       CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction) :
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
@@ -1509,8 +1495,7 @@ theorem
         (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
           skipped count tailFirst tail).toEquiv
 
-theorem
-    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter
+theorem countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter
     (hemitter :
       CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction) :
     CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by
@@ -1626,8 +1611,7 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
-theorem
-    countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
+theorem countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
     CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction := by
   rcases
       CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.construction_core
@@ -1645,15 +1629,13 @@ theorem
     countWindowRawSourceEncoderEncodedLayoutBits] using
       hemitter.right skipped count tailFirst tail
 
-theorem
-    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
+theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
   exact
     countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
       countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
 
-theorem
-    countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
+theorem countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
     CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by
   exact
     countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter

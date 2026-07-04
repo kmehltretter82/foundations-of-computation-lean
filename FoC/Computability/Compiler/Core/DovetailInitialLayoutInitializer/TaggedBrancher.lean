@@ -111,8 +111,7 @@ private theorem sharedExitRetargetTransition_sameKey_source
   · exact Nat.add_left_cancel h.left
   · exact h.right
 
-theorem
-    restoreFirstBitTaggedBrancherDescription_subroutineReady
+theorem restoreFirstBitTaggedBrancherDescription_subroutineReady
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -389,8 +388,7 @@ theorem
         ⟨base, _hbase, rfl⟩ |
         ⟨base, _hbase, rfl⟩ <;> simp <;> lia
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_lookup_blank
+private theorem restoreFirstBitTaggedBrancherDescription_lookup_blank
     {blankBranch falseBranch trueBranch : MachineDescription}
     (_hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -630,8 +628,7 @@ private theorem
         blankBranch.transitions <;>
     simp
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_step_blank
+private theorem restoreFirstBitTaggedBrancherDescription_step_blank
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -768,8 +765,7 @@ theorem restoreFirstBitTaggedBrancherDescription_run_none
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_lookup_false
+private theorem restoreFirstBitTaggedBrancherDescription_lookup_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (_hfalse : falseBranch.SubroutineReady)
@@ -1021,8 +1017,7 @@ private theorem
         falseBranch.transitions <;>
     simp
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_step_false
+private theorem restoreFirstBitTaggedBrancherDescription_step_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -1100,8 +1095,7 @@ private theorem restoreFirstBitTaggedBrancherDescription_run_false_branch
             stepConfig_state_bound hfalse.left hstep
           simp [runConfig, hstep, ih next hnextState]
 
-theorem
-    restoreFirstBitTaggedBrancherDescription_run_false
+theorem restoreFirstBitTaggedBrancherDescription_run_false
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -1169,8 +1163,7 @@ theorem
   simp [RestoreFirstBitTaggedBrancherDescription,
     sharedExitBranchConfiguration]
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_lookup_true
+private theorem restoreFirstBitTaggedBrancherDescription_lookup_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)
@@ -1447,8 +1440,7 @@ private theorem
         trueBranch.transitions <;>
     simp
 
-private theorem
-    restoreFirstBitTaggedBrancherDescription_step_true
+private theorem restoreFirstBitTaggedBrancherDescription_step_true
     {blankBranch falseBranch trueBranch : MachineDescription}
     (hblank : blankBranch.SubroutineReady)
     (hfalse : falseBranch.SubroutineReady)

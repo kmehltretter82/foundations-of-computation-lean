@@ -123,8 +123,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_cells
     CanonicalLayouts.DovetailLayoutScanner.transitionPrefixBits,
     encodeCodeSymbolAsInput]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_normalizedOutput
+theorem SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape p) =
@@ -144,8 +143,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutContextParsedTape_cells
     SelectedMergePaddedEmitterParsedInnerSourceBits,
     encodeCodeSymbolAsInput]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutContextParsedTape_normalizedOutput
+theorem SelectedMergePaddedEmitterNestedLayoutContextParsedTape_normalizedOutput
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterNestedLayoutContextParsedTape p) =
@@ -170,8 +168,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutRawSourceTape_move_left_move_right
   simp [DovetailInitialLayoutInitializer.tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutRawParsedTape_move_left_move_right
+theorem SelectedMergePaddedEmitterNestedLayoutRawParsedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -190,8 +187,7 @@ theorem
       CanonicalLayouts.DovetailLayoutScanner.restoredCheckedHandoffTapeFromTail,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_move_left_move_right
+theorem SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -204,8 +200,7 @@ theorem
     CanonicalLayouts.DovetailLayoutScanner.transitionPrefixBits,
     encodeCodeSymbolAsInput]
 
-theorem
-    SelectedMergePaddedEmitterNestedLayoutContextParsedTape_move_left_move_right
+theorem SelectedMergePaddedEmitterNestedLayoutContextParsedTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -237,8 +232,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsFrom_raw_nestedLayout
   · simpa [MachineDescription.HaltsFromTapeIn] using
       congrArg MachineDescription.Configuration.tape hsteps
 
-theorem
-    checkedDovetailLayoutScannerDescription_haltsFrom_mergeNestedLayoutRawSource
+theorem checkedDovetailLayoutScannerDescription_haltsFrom_mergeNestedLayoutRawSource
     (p : SelectedMergeEmitterPayload) :
     CanonicalLayouts.DovetailLayoutScanner.CheckedDovetailLayoutScannerDescription.HaltsFromTape
       (SelectedMergePaddedEmitterNestedLayoutRawSourceTape p)
@@ -280,8 +274,7 @@ def SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerSpec
 
 -- If a deterministic restorer starts from a tape determined only by `p.L`,
 -- then payloads with the same inner layout must have identical restored targets.
-theorem
-    selectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerSpec_target_eq_of_layout_eq
+theorem selectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerSpec_target_eq_of_layout_eq
     {restorer : MachineDescription}
     (hrestorer :
       SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerSpec
@@ -324,8 +317,7 @@ def SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction :
 
 -- The current restorer contract is inconsistent: two payloads share the same
 -- inner layout source but require different outer-stage target tapes.
-theorem
-    selectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction_impossible :
+theorem selectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction_impossible :
     ¬ SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction := by
   intro h
   rcases h with ⟨restorer, hrestorer⟩

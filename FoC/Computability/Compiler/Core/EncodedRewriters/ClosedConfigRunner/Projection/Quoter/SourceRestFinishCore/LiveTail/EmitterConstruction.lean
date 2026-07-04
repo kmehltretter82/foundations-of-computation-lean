@@ -43,8 +43,7 @@ def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
     assemblySourceRestLiveTailEmitterQuoteRest
     assemblySourceRestLiveTailEmitterEmittedPrefix
 
-theorem
-    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
     (finish : MachineDescription) :
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish ↔
       MixedOptionCellQuoteLiveTailEmitterForAssemblySourceRestSpec finish := by
@@ -61,8 +60,7 @@ theorem
     | mk w sourceRestBits stage =>
         exact hfinish.right w sourceRestBits stage
 
-theorem
-    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+theorem MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
     (h : MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction) :
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
   rcases h with ⟨finish, hfinish⟩
@@ -71,8 +69,7 @@ theorem
       (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
         finish).mp hfinish⟩
 
-theorem
-    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction_of_assembly
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction_of_assembly
     (h : MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -91,8 +88,7 @@ It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
 live raw tail to the right, and keeps the already-computed quote-rest separated
 for the live-tail joiner.
 -/
-theorem
-    mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
+theorem mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
   exact
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
@@ -116,8 +112,7 @@ def
   exists finish : MachineDescription,
     MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec finish
 
-theorem
-    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitter
+theorem MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitter
     (hemitter :
       MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
     MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest := by
@@ -134,8 +129,7 @@ finisher.  It emits the header and quoted parser-prefix/stage prefix, leaves
 the live raw tail on the right, and keeps the reusable source-rest quote behind
 the structural blank for the final join phase.
 -/
-theorem
-    mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest :
+theorem mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest :
     MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest :=
   MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitter
     mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest

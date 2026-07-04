@@ -27,8 +27,7 @@ def DescriptionWithValidatorCopier
     Direction.left
      /-- {name}`descriptionWithValidatorCopier_subroutineReady` packages a subroutine-ready composition step. -/
 
-theorem
-    descriptionWithValidatorCopier_subroutineReady
+theorem descriptionWithValidatorCopier_subroutineReady
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -40,8 +39,7 @@ theorem
       hcopier)
      /-- {name}`descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
 
-theorem
-    descriptionWithValidatorCopier_run_bits
+theorem descriptionWithValidatorCopier_run_bits
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -123,8 +121,7 @@ theorem
     A, B, initial, stageInputBits] using hn
      /-- {name}`descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
 
-theorem
-    descriptionWithValidatorCopier_forward
+theorem descriptionWithValidatorCopier_forward
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -146,8 +143,7 @@ theorem
         congrArg Configuration.tape hn⟩
      /-- {name}`descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
 
-theorem
-    descriptionWithValidatorCopier_closed
+theorem descriptionWithValidatorCopier_closed
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :

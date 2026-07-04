@@ -146,8 +146,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
     (parser emitter : MachineDescription) : MachineDescription :=
   SeqViaCanonical parser emitter
 
-theorem
-    selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
+theorem selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
     {useAccept : Bool} {parser emitter : MachineDescription}
     (hparser :
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser)
@@ -168,8 +167,7 @@ theorem
           p)
         (hemitter.right p)
 
-theorem
-    selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
+theorem selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
     {useAccept : Bool}
     (hparser :
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction)

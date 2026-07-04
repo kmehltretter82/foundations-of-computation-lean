@@ -511,8 +511,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_eq_tapeAtCells_fields
                       [])))))))
       (SimulatorLayout.asBoolInput p.S).length
 
-theorem
-    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_eq_parsedLayoutBits
     (useAccept : Bool) (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p) =
@@ -551,8 +550,7 @@ theorem selectedMergeOutputLayout_reject_run
   simp [SelectedMergeOutputLayout, ConfigRunnerAfterReject,
     RejectSimulatorLayout, SimulatorLayout.run]
 
-theorem
-    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_accept_run
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_accept_run
     (accept : MachineDescription) (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedMergeEquivEmitterPaddedOutputTape true
@@ -593,8 +591,7 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_equiv_accept_run
             SimulatorLayout.run] using
             decodeCodeWordAsInput_parsedLayoutBits L }
 
-theorem
-    SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_reject_run
+theorem SelectedMergeEquivEmitterPaddedOutputTape_normalizedOutput_reject_run
     (reject : MachineDescription) (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedMergeEquivEmitterPaddedOutputTape false

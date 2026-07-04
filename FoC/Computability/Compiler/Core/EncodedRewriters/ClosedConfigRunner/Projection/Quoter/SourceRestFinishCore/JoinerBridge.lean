@@ -34,8 +34,7 @@ theorem scanQuoteRestToLocalGapSourceDescription_subroutineReady :
     scanRightToBlankLeftDescription_subroutineReady
     CommonGround.FiniteTransducers.rightMoveOnceDescription_subroutineReady
 
-theorem
-    scanRightToBlankLeftHaltTapeWithRight_move_right_eq_localGapSource
+theorem scanRightToBlankLeftHaltTapeWithRight_move_right_eq_localGapSource
     (baseLeft : List (Option Bool)) (current : Bool)
     (leftRest : Word Bool) (rightPadding : List (Option Bool)) :
     Tape.move Direction.right
@@ -49,8 +48,7 @@ theorem
     tapeAtCells, CommonGround.FiniteTransducers.tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem
-    scanRightToBlankLeftHaltTapeWithRight_move_left_move_right_reverse_cons
+theorem scanRightToBlankLeftHaltTapeWithRight_move_left_move_right_reverse_cons
     (leftRev : List (Option Bool)) (current : Bool)
     (leftRest : Word Bool) (right : List (Option Bool)) :
     Tape.move Direction.left

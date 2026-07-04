@@ -84,8 +84,7 @@ def MixedParserStackFinisherConstructionForAssemblySourceRest : Prop :=
   exists finish : MachineDescription,
     MixedParserStackFinisherAssemblySourceRestSpec finish
 
-theorem
-    assemblySourceRestFinishLeftBoundaryCoreConstruction_of_mixedParserStackFinisher
+theorem assemblySourceRestFinishLeftBoundaryCoreConstruction_of_mixedParserStackFinisher
     (h : MixedParserStackFinisherConstructionForAssemblySourceRest) :
     AssemblySourceRestFinishLeftBoundaryCoreConstruction := by
   rcases h with ⟨finish, hfinish⟩
@@ -246,8 +245,7 @@ def AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction :
   exists finish : MachineDescription,
     AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherSpec finish
 
-theorem
-    MixedParserStackRewriterDefaultedSourceRestBoundaryTape_move_left_move_right
+theorem MixedParserStackRewriterDefaultedSourceRestBoundaryTape_move_left_move_right
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -264,8 +262,7 @@ theorem
       cases tail <;>
         simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem
-    AssemblySourceRestReusableQuoteSourceStartFinisherConstruction_of_sourceRestBoundary
+theorem AssemblySourceRestReusableQuoteSourceStartFinisherConstruction_of_sourceRestBoundary
     (h :
       AssemblySourceRestReusableQuoteSourceRestBoundaryFinisherConstruction) :
     AssemblySourceRestReusableQuoteSourceStartFinisherConstruction := by
@@ -326,8 +323,7 @@ theorem MixedParserStackSourceStartFinisherConstructionForAssemblySourceRest_of_
   rw [MixedParserStackRewriterWholeSourceTargetTape_eq_rawBoolTargetTape]
   exact hfinish.right w sourceRestBits stage
 
-theorem
-    MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest_of_sourceStart
+theorem MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest_of_sourceStart
     (h :
       MixedParserStackSourceStartFinisherConstructionForAssemblySourceRest) :
     MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest := by
@@ -356,8 +352,7 @@ theorem
           stage)
         (hfinish.right w sourceRestBits stage)
 
-theorem
-    MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_rightBoundary
+theorem MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest_of_rightBoundary
     (h :
       MixedParserStackRightBoundaryFinisherConstructionForAssemblySourceRest) :
     MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest := by
@@ -385,8 +380,7 @@ theorem
           stage)
         (hfinish.right w sourceRestBits stage)
 
-theorem
-    MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest_of_wholeSource
+theorem MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest_of_wholeSource
     (h :
       MixedParserStackWholeSourceFinisherConstructionForAssemblySourceRest) :
     MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest := by
@@ -396,8 +390,7 @@ theorem
   simpa [MixedParserStackRewriterTargetTape_eq_wholeSourceTargetTape]
     using hfinish.right w sourceRestBits stage
 
-theorem
-    MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest_of_defaultedInternalMarker
+theorem MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest_of_defaultedInternalMarker
     (h :
       MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest) :
     MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest := by
@@ -454,8 +447,7 @@ theorem MixedParserStackRewriterTrueLeftBoundaryTape_move_left_move_right
           assemblySourceRestFinishParserMarkerLeftCells,
           transitionPrefixLeftTail, tapeAtCells])
 
-theorem
-    MixedParserStackFinisherConstructionForAssemblySourceRest_of_trueLeftBoundary
+theorem MixedParserStackFinisherConstructionForAssemblySourceRest_of_trueLeftBoundary
     (h :
       MixedParserStackTrueLeftBoundaryFinisherConstructionForAssemblySourceRest) :
     MixedParserStackFinisherConstructionForAssemblySourceRest := by
