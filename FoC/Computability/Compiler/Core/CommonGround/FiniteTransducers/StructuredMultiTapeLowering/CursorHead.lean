@@ -814,6 +814,83 @@ def AtTapeHeadCellCodeWithRightNeighbor
               (logicalCellListCode (next :: rightRest))
               (encodedStructuredTapeCells rest)))
 
+def AtTapeHeadCellCodeAtLeftBoundary
+    (logical : List (Tape Bool)) (tapeIndex : Nat)
+    (physical : Tape Bool) : Prop :=
+  exists current : Option Bool,
+  exists right : List (Option Bool),
+  exists rest : List (Tape Bool),
+    logical.drop tapeIndex =
+      { left := []
+        head := current
+        right := right } :: rest ∧
+      physical =
+        tapeAtEncodedSplit
+          (List.append
+            (encodedPrefixBeforeTape logical tapeIndex)
+            (List.append tapeSeparatorCells headMarkerCells))
+          (List.append (logicalCellCode current)
+            (List.append (logicalCellListCode right)
+              (encodedStructuredTapeCells rest)))
+
+def AtTapeHeadCellCodeAtRightBoundary
+    (logical : List (Tape Bool)) (tapeIndex : Nat)
+    (physical : Tape Bool) : Prop :=
+  exists current : Option Bool,
+  exists left : List (Option Bool),
+  exists rest : List (Tape Bool),
+    logical.drop tapeIndex =
+      { left := left
+        head := current
+        right := [] } :: rest ∧
+      physical =
+        tapeAtEncodedSplit
+          (List.append
+            (encodedPrefixBeforeTape logical tapeIndex)
+            (List.append tapeSeparatorCells
+              (List.append (logicalCellListCode left.reverse)
+                headMarkerCells)))
+          (List.append (logicalCellCode current)
+            (encodedStructuredTapeCells rest))
+
+theorem atTapeHeadCellCode_left_cases
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (h : AtTapeHeadCellCode logical tapeIndex physical) :
+    AtTapeHeadCellCodeWithLeftNeighbor logical tapeIndex physical ∨
+      AtTapeHeadCellCodeAtLeftBoundary logical tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  cases T with
+  | mk left head right =>
+      cases left with
+      | nil =>
+          right
+          exact ⟨head, right, rest, hdrop, by
+            simpa using hphysical⟩
+      | cons previous leftRest =>
+          left
+          exact ⟨previous, leftRest, head, right, rest, hdrop,
+            by simpa using hphysical⟩
+
+theorem atTapeHeadCellCode_right_cases
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (h : AtTapeHeadCellCode logical tapeIndex physical) :
+    AtTapeHeadCellCodeWithRightNeighbor logical tapeIndex physical ∨
+      AtTapeHeadCellCodeAtRightBoundary logical tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  cases T with
+  | mk left head right =>
+      cases right with
+      | nil =>
+          right
+          exact ⟨head, left, rest, hdrop, by
+            simpa using hphysical⟩
+      | cons next rightRest =>
+          left
+          exact ⟨head, next, left, rightRest, rest, hdrop,
+            by simpa using hphysical⟩
+
 /--
 Move a head marker one logical cell to the left by swapping the marker with the
 two-cell code immediately before it.
