@@ -422,7 +422,7 @@ theorem outputCode_eq_expanded
                       (encodeBoolAppend false []))))))) := by
   exact dovetailInitialLayoutCode_output_eq_expanded accept reject w stage
 
-theorem outputTape_eq_expanded
+private theorem outputTape_eq_expanded
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
     OutputTape accept reject w stage =
@@ -441,7 +441,7 @@ theorem outputTape_eq_expanded
   rw [OutputTape,
     outputCode_eq_expanded]
 
-theorem suffixCode_eq_configurations
+private theorem suffixCode_eq_configurations
     (accept reject : MachineDescription)
     (w : Word Bool) :
     SuffixCode accept reject w =
@@ -669,19 +669,19 @@ def markedBoolPayloadCells
     (w : Word Bool) : List (Option Bool) :=
   markedCellsCodeCells (w.map some)
 
-def markedBoolWordCells
+private def markedBoolWordCells
     (w : Word Bool) : List (Option Bool) :=
   List.append (markedLengthTickPrefix w.length)
     (List.append (codeSymbolCells MachineCodeSymbol.done)
       (markedBoolPayloadCells w))
 
-def consumedBoolWordCells
+private def consumedBoolWordCells
     (w : Word Bool) : List (Option Bool) :=
   List.append (consumedLengthTickPrefix w.length)
     (List.append (codeSymbolCells MachineCodeSymbol.done)
       (markedBoolPayloadCells w))
 
-theorem repeatedCells_append
+private theorem repeatedCells_append
     (chunk : List (Option Bool)) (n : Nat)
     (tail : List (Option Bool)) :
     List.append (repeatedCells chunk n) tail =
@@ -707,7 +707,7 @@ theorem repeatedCells_succ_right
       rw [ih]
       simp [List.append_assoc]
 
-theorem repeatedCells_length
+private theorem repeatedCells_length
     (chunk : List (Option Bool)) (n : Nat) :
     (repeatedCells chunk n).length = chunk.length * n := by
   induction n with
@@ -720,7 +720,7 @@ theorem repeatedCells_length
       rw [Nat.mul_succ]
       lia
 
-theorem repeatedCells_reverse
+private theorem repeatedCells_reverse
     (chunk : List (Option Bool)) (n : Nat) :
     (repeatedCells chunk n).reverse =
       repeatedCells chunk.reverse n := by
@@ -733,7 +733,7 @@ theorem repeatedCells_reverse
           repeatedCells chunk.reverse (n + 1)
       simp [List.reverse_append, ih, repeatedCells_succ_right]
 
-theorem natCodeCells_eq_tick_prefix_done
+private theorem natCodeCells_eq_tick_prefix_done
     (n : Nat) :
     natCodeCells n =
       List.append
@@ -756,7 +756,7 @@ theorem natCodeCells_eq_tick_prefix_done
               (codeSymbolCells MachineCodeSymbol.done))
       rw [ih]
 
-theorem markedCellCodeCells_restore
+private theorem markedCellCodeCells_restore
     (cell : Option Bool) :
     markedCellCodeCells cell =
       match cell with
@@ -769,7 +769,7 @@ theorem markedCellCodeCells_restore
   | some b =>
       cases b <;> rfl
 
-theorem codeCells_replicate_tick
+private theorem codeCells_replicate_tick
     (n : Nat) :
     codeCells (List.replicate n MachineCodeSymbol.tick) =
       repeatedCells

@@ -454,7 +454,7 @@ private theorem stageInputBits_code_inv
     DovetailLayout.decodeStageInputComplete_eq_some_stageInputCode
       (stageInputBits_code_decode hbits)
 
-theorem stageInputMarkedScannerDescription_closed
+private theorem stageInputMarkedScannerDescription_closed
     (code : Word MachineCodeSymbol) (Tmark T : Tape Bool)
     (hmark :
       MarkStageInputSecondBitDescription.HaltsWithTape
