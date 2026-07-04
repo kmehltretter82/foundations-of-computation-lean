@@ -57,11 +57,11 @@ def generatedDeleteWindowDescription
     (deleteWindowEmit keep delete)
     []
 
-theorem deleteWindow_start_lt (keep delete : Nat) :
+private theorem deleteWindow_start_lt (keep delete : Nat) :
     0 < deleteWindowScanStateCount keep delete := by
   simp [deleteWindowScanStateCount]
 
-theorem deleteWindow_next_lt (keep delete : Nat) :
+private theorem deleteWindow_next_lt (keep delete : Nat) :
     forall state bit,
       state < deleteWindowScanStateCount keep delete ->
         deleteWindowNext keep delete state bit <
@@ -84,7 +84,7 @@ theorem generatedDeleteWindowDescription_subroutineReady
       (deleteWindow_start_lt keep delete)
       (deleteWindow_next_lt keep delete)
 
-theorem deleteWindowAfter_before
+private theorem deleteWindowAfter_before
     (keep delete state : Nat) (input : Word Bool)
     (h : state + input.length ≤ keep) :
     statefulOptionAfter (deleteWindowNext keep delete) state input =
@@ -107,7 +107,7 @@ theorem deleteWindowAfter_before
       simp [statefulOptionAfter, deleteWindowNext, hltBoundary, hih]
       lia
 
-theorem deleteWindowOutput_before
+private theorem deleteWindowOutput_before
     (keep delete state : Nat) (input : Word Bool)
     (h : state + input.length ≤ keep) :
     statefulOptionOutputFrom
@@ -141,7 +141,7 @@ theorem deleteWindowOutput_before
         hnotKeep, optionEmitWord, deleteWindowNext, hltBoundary,
         hih]
 
-theorem deleteWindowCells_before
+private theorem deleteWindowCells_before
     (keep delete state : Nat) (input : Word Bool)
     (h : state + input.length ≤ keep) :
     statefulOptionCellsFrom
@@ -167,7 +167,7 @@ theorem deleteWindowCells_before
       simp [statefulOptionCellsFrom, deleteWindowEmit,
         hnotKeep, deleteWindowNext, hltBoundary, hih]
 
-theorem deleteWindowAfter_delete
+private theorem deleteWindowAfter_delete
     (keep delete state : Nat) (input : Word Bool)
     (hge : keep ≤ state)
     (hlen : state + input.length = deleteWindowBoundary keep delete) :
@@ -191,7 +191,7 @@ theorem deleteWindowAfter_delete
       have hih := ih (state + 1) hgeNext hlenNext
       simp [statefulOptionAfter, deleteWindowNext, hltBoundary, hih]
 
-theorem deleteWindowOutput_delete
+private theorem deleteWindowOutput_delete
     (keep delete state : Nat) (input : Word Bool)
     (hge : keep ≤ state)
     (hlen : state + input.length = deleteWindowBoundary keep delete) :
@@ -222,7 +222,7 @@ theorem deleteWindowOutput_delete
       simp [statefulOptionOutputFrom, deleteWindowEmit, hdelete,
         optionEmitWord, deleteWindowNext, hih]
 
-theorem deleteWindowCells_delete
+private theorem deleteWindowCells_delete
     (keep delete state : Nat) (input : Word Bool)
     (hge : keep ≤ state)
     (hlen : state + input.length = deleteWindowBoundary keep delete) :
@@ -259,7 +259,7 @@ theorem deleteWindowCells_delete
       simp [statefulOptionCellsFrom, deleteWindowEmit, hdelete,
         deleteWindowNext, hih]
 
-theorem deleteWindowAfter_suffix
+private theorem deleteWindowAfter_suffix
     (keep delete : Nat) (suffix : Word Bool) :
     statefulOptionAfter
         (deleteWindowNext keep delete)
@@ -271,7 +271,7 @@ theorem deleteWindowAfter_suffix
   | cons bit rest ih =>
       simp [statefulOptionAfter, deleteWindowNext, ih]
 
-theorem deleteWindowOutput_suffix
+private theorem deleteWindowOutput_suffix
     (keep delete : Nat) (suffix : Word Bool) :
     statefulOptionOutputFrom
         (deleteWindowNext keep delete)
@@ -291,7 +291,7 @@ theorem deleteWindowOutput_suffix
       simp [statefulOptionOutputFrom, deleteWindowEmit,
         optionEmitWord, deleteWindowNext, ih]
 
-theorem deleteWindowCells_suffix
+private theorem deleteWindowCells_suffix
     (keep delete : Nat) (suffix : Word Bool) :
     statefulOptionCellsFrom
         (deleteWindowNext keep delete)
@@ -311,7 +311,7 @@ theorem deleteWindowCells_suffix
       simp [statefulOptionCellsFrom, deleteWindowEmit,
         deleteWindowNext, ih]
 
-theorem deleteWindowOutputFrom_split
+private theorem deleteWindowOutputFrom_split
     (keep delete : Nat)
     (pref deleted suffix : Word Bool)
     (hpref : pref.length = keep)
@@ -413,7 +413,7 @@ theorem deleteWindowCellsFrom_split
   rw [hdeletedCells, hdeletedAfter]
   rw [deleteWindowCells_suffix]
 
-theorem deleteWindowTransducer_runsToOutput_split
+private theorem deleteWindowTransducer_runsToOutput_split
     (keep delete : Nat)
     (pref deleted suffix : Word Bool)
     (hpref : pref.length = keep)

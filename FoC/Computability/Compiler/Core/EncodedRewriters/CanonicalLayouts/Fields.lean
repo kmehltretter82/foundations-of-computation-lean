@@ -265,7 +265,7 @@ theorem decodeConfigurationComplete_eq_some_encode
           | cons _ _ =>
               simp [hdecode] at h
 
-theorem encodeNat_cons (n : Nat) :
+private theorem encodeNat_cons (n : Nat) :
     exists symbol : MachineCodeSymbol,
     exists tail : Word MachineCodeSymbol,
       encodeNat n = symbol :: tail := by

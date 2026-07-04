@@ -313,13 +313,13 @@ def appendRightLastTapeAtCells
     head := some b3
     right := [] }
 
-theorem appendScanTapeAtCells_of_bits
+private theorem appendScanTapeAtCells_of_bits
     (leftRev remaining : Word Bool) :
     appendScanTapeAtCells (leftRev.map some) remaining =
       appendRightScanTape leftRev remaining := by
   cases remaining <;> rfl
 
-theorem appendRightLastTapeAtCells_of_bits
+private theorem appendRightLastTapeAtCells_of_bits
     (leftRev : Word Bool) (b0 b1 b2 b3 : Bool) :
     appendRightLastTapeAtCells
         (leftRev.map some) b0 b1 b2 b3 =
@@ -554,7 +554,7 @@ theorem appendCodeSymbolLastDescription_run_halt
       appendFixedFourBitsLastDescription_run_halt
         _ _ _ _ w
 
-theorem appendCodeSymbolLastTape_move_right
+private theorem appendCodeSymbolLastTape_move_right
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
         (appendCodeSymbolLastTape leftRev symbol) =
@@ -736,7 +736,7 @@ def appendCodeSymbolLastTapeAtCells
       appendRightLastTapeAtCells leftRev b0 b1 b2 b3
   | _ => appendScanTapeAtCells leftRev []
 
-theorem appendCodeSymbolLastTapeAtCells_of_bits
+private theorem appendCodeSymbolLastTapeAtCells_of_bits
     (leftRev : Word Bool) (symbol : MachineCodeSymbol) :
     appendCodeSymbolLastTapeAtCells
         (leftRev.map some) symbol =
@@ -783,7 +783,7 @@ theorem appendCodeSymbolLastDescription_run_from_scan_atCellsChecked
       appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
         _ _ _ _ leftRev remaining
 
-theorem appendCodeSymbolLastTapeAtCells_move_right
+private theorem appendCodeSymbolLastTapeAtCells_move_right
     (leftRev : List (Option Bool)) (symbol : MachineCodeSymbol) :
     Tape.move Direction.right
         (appendCodeSymbolLastTapeAtCells leftRev symbol) =
@@ -810,7 +810,7 @@ def appendCodeWordLastTapeAtCells
           leftRev)
         (next :: rest)
 
-theorem appendCodeWordLastTapeAtCells_of_bits :
+private theorem appendCodeWordLastTapeAtCells_of_bits :
     forall code : Word MachineCodeSymbol,
     forall leftRev : Word Bool,
       appendCodeWordLastTapeAtCells

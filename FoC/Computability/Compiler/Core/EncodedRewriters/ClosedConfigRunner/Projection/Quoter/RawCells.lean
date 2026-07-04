@@ -957,7 +957,7 @@ def SelectedProjectionInputQuoterPostBoundaryConstruction : Prop :=
   exists post : MachineDescription,
     SelectedProjectionInputQuoterPostBoundarySpec post
 
-theorem sourceRestFieldBits_cons_cons
+private theorem sourceRestFieldBits_cons_cons
     (L : DovetailLayout) :
     exists head : Bool,
     exists next : Bool,
@@ -983,7 +983,7 @@ theorem sourceRestFieldBits_cons_cons
     CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
     hstate]
 
-theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_prefixBoundaryTape
+private theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_prefixBoundaryTape
     (L : DovetailLayout) :
     selectedProjectionInputQuoterPostBoundarySourceTape L =
       selectedProjectionInputQuoterPrefixBoundaryTape L := by
@@ -998,7 +998,7 @@ theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_prefixBoundaryTap
       (some head) (some next)
       (List.append (right.map some) [none])
 
-theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_sourceRestBoundary
+private theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_sourceRestBoundary
     (L : DovetailLayout) :
     selectedProjectionInputQuoterPostBoundarySourceTape L =
       tapeAtCells
@@ -1025,7 +1025,7 @@ theorem preservingCellPassDescription_haltsFrom_postBoundarySourceTape
       (assemblySourceRestBoundaryLeftRev L.input L.stage)
       head (next :: right)
 
-theorem selectedProjectionInputQuoterExactTargetTape_eq_sourceTape_outputPrefix
+private theorem selectedProjectionInputQuoterExactTargetTape_eq_sourceTape_outputPrefix
     (L : DovetailLayout) :
     SelectedProjectionInputQuoterExactTargetTape L =
       SelectedProjectionTailProjector.sourceTape L
@@ -1047,7 +1047,7 @@ def selectedProjectionInputQuoterRawCellQuoteTargetTape
       some)
     ((SelectedProjectionTailProjector.sourceFieldBits L).map some)
 
-theorem selectedProjectionInputQuoterExactTargetTape_eq_rawCellQuoteTargetTape
+private theorem selectedProjectionInputQuoterExactTargetTape_eq_rawCellQuoteTargetTape
     (L : DovetailLayout) :
     SelectedProjectionInputQuoterExactTargetTape L =
       selectedProjectionInputQuoterRawCellQuoteTargetTape L := by
@@ -1059,7 +1059,7 @@ theorem selectedProjectionInputQuoterExactTargetTape_eq_rawCellQuoteTargetTape
   rw [SelectedProjectionTailProjector.parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits]
   rw [← preservingCellPassQuoteBits_eq_encodeBoolWordAppend]
 
-theorem selectedProjectionInputQuoterBoundaryDefaultBits_eq_parsedLayoutBits
+private theorem selectedProjectionInputQuoterBoundaryDefaultBits_eq_parsedLayoutBits
     (L : DovetailLayout) :
     List.append
         (List.map optionBitDefaultFalse
@@ -1097,7 +1097,7 @@ def selectedProjectionInputQuoterRawCellQuoteTargetShapeTape
       L).reverse.map some)
     ((SelectedProjectionTailProjector.sourceFieldBits L).map some)
 
-theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_haltTape
+private theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_haltTape
     (L : DovetailLayout) :
     selectedProjectionInputQuoterAfterSourceRestPassTape L =
       preservingCellPassHaltTape
@@ -1113,7 +1113,7 @@ theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_haltTape
     ⟨cell, tail, hright⟩
   exact Tape.move_left_move_right_eq_self_of_right_cons _ hright
 
-theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells
+private theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells
     (L : DovetailLayout) :
     selectedProjectionInputQuoterAfterSourceRestPassTape L =
       selectedProjectionInputQuoterAfterSourceRestSourceShapeTape L := by
@@ -1127,7 +1127,7 @@ theorem selectedProjectionInputQuoterAfterSourceRestPassTape_eq_tapeAtCells
       (assemblySourceRestBoundaryLeftRev L.input L.stage)
       head (next :: right)
 
-theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_eq_shapeTape
+private theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_eq_shapeTape
     (L : DovetailLayout) :
     selectedProjectionInputQuoterRawCellQuoteTargetTape L =
       selectedProjectionInputQuoterRawCellQuoteTargetShapeTape L := by
@@ -1136,7 +1136,7 @@ theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_eq_shapeTape
   rw [SelectedProjectionInputQuoterExactTargetTape,
     SelectedProjectionTailProjector.sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
 
-theorem selectedProjectionInputQuoterAfterSourceRestPassTape_cells
+private theorem selectedProjectionInputQuoterAfterSourceRestPassTape_cells
     (L : DovetailLayout) :
     Tape.cells (selectedProjectionInputQuoterAfterSourceRestPassTape L) =
       List.append
@@ -1159,7 +1159,7 @@ theorem selectedProjectionInputQuoterAfterSourceRestPassTape_cells
       preservingCellPassZeroBits, preservingCellPassOneBits,
       List.map_append, List.append_assoc]
 
-theorem selectedProjectionInputQuoterAfterSourceRestPassTape_defaultedCells
+private theorem selectedProjectionInputQuoterAfterSourceRestPassTape_defaultedCells
     (L : DovetailLayout) :
     List.map optionBitDefaultFalse
         (Tape.cells (selectedProjectionInputQuoterAfterSourceRestPassTape L)) =
@@ -1184,7 +1184,7 @@ theorem selectedProjectionInputQuoterAfterSourceRestPassTape_defaultedCells
               [false]))
       hprefix
 
-theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput
+private theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
         (selectedProjectionInputQuoterRawCellQuoteTargetTape L) =
@@ -1197,7 +1197,7 @@ theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput
   rw [SelectedProjectionTailProjector.sourceTape_normalizedOutput]
   simp [Function.comp_def, List.map_reverse]
 
-theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_cells
+private theorem selectedProjectionInputQuoterRawCellQuoteTargetTape_cells
     (L : DovetailLayout) :
     Tape.cells (selectedProjectionInputQuoterRawCellQuoteTargetTape L) =
       List.append
@@ -1253,7 +1253,7 @@ def SelectedProjectionInputQuoterAfterSourceRestShapeConstruction :
     SelectedProjectionInputQuoterAfterSourceRestShapeSpec finish
 
 
-theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
+private theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
     (L : DovetailLayout) :
     assemblySourceRestFinishTargetPrefixBits L.input
         (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
@@ -1264,7 +1264,7 @@ theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
     preservingCellPassHeaderQuoteBits_eq_outputPrefixStageInputSourceRestFieldBits
       L
 
-theorem assemblySourceRestFinishSourceBits_eq_parsedLayoutBits
+private theorem assemblySourceRestFinishSourceBits_eq_parsedLayoutBits
     (L : DovetailLayout) :
     assemblySourceRestFinishSourceBits L.input
         (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
@@ -1274,7 +1274,7 @@ theorem assemblySourceRestFinishSourceBits_eq_parsedLayoutBits
     (SelectedProjectionTailProjector.parsedLayoutBits_eq_transition_stageInput_sourceRestFieldBits
       L).symm
 
-theorem assemblySourceRestFinishTargetTape_selected_normalizedOutput
+private theorem assemblySourceRestFinishTargetTape_selected_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
         (assemblySourceRestFinishTargetTape L.input
@@ -1288,14 +1288,14 @@ theorem assemblySourceRestFinishTargetTape_selected_normalizedOutput
   rw [assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix]
   rw [SelectedProjectionTailProjector.sourceFieldBits_eq_stageNatBits_sourceRestFieldBits]
 
-theorem assemblySourceRestFinishSourceTape_selected_eq_shapeTape
+private theorem assemblySourceRestFinishSourceTape_selected_eq_shapeTape
     (L : DovetailLayout) :
     assemblySourceRestFinishSourceTape L.input
         (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
       selectedProjectionInputQuoterAfterSourceRestSourceShapeTape L := by
   rfl
 
-theorem assemblySourceRestFinishTargetTape_selected_eq_shapeTape
+private theorem assemblySourceRestFinishTargetTape_selected_eq_shapeTape
     (L : DovetailLayout) :
     assemblySourceRestFinishTargetTape L.input
         (SelectedProjectionTailProjector.sourceRestFieldBits L) L.stage =
@@ -1345,7 +1345,7 @@ theorem scanRightToBlankLeftDescription_haltsFrom_afterSourceRestPassTape
       (preservingCellPassCellBits
         (SelectedProjectionTailProjector.sourceRestFieldBits L))
 
-theorem selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right
+private theorem selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right
     (L : DovetailLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -1395,7 +1395,7 @@ theorem scanLeftToBlankLeftDescription_haltsFrom_afterSourceRestQuoteBoundaryTap
         (assemblySourceRestBoundaryLeftRev L.input L.stage))
       scanRev current
 
-theorem selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right
+private theorem selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right
     (L : DovetailLayout) :
     Tape.move Direction.left
         (Tape.move Direction.right

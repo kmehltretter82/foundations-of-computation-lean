@@ -22,7 +22,7 @@ def projectionScanState340 : Nat -> Nat
   | 2 => 342
   | _ => 343
 
-theorem run_scan340_step
+private theorem run_scan340_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
@@ -106,7 +106,7 @@ theorem run_scan340_step
                   | succ count =>
                       have hfalse : False := by lia
                       exact False.elim hfalse
-theorem run_scan340_cells
+private theorem run_scan340_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
@@ -147,7 +147,7 @@ theorem run_scan340_cells
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
-theorem run_scan340_boundary
+private theorem run_scan340_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
         (projectionConfig 340 (none :: none :: none :: base) (none :: tail)) =
@@ -162,7 +162,7 @@ theorem run_scan340_boundary
           rfl
       | some b =>
           cases b <;> rfl
-theorem run_scan340_cells_to_boundary
+private theorem run_scan340_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
@@ -193,7 +193,7 @@ theorem run_scan340_cells_to_boundary
   simpa [List.append_assoc] using
     run_scan340_boundary
       base (List.append cellsRev.reverse tail)
-theorem run_state300_marked_tick
+private theorem run_state300_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 300 leftRev
@@ -282,7 +282,7 @@ theorem run_state320_tick
           rfl
       | some b =>
           cases b <;> rfl
-theorem run_state320_ticks
+private theorem run_state320_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * count)
         (projectionConfig 320 leftRev
@@ -323,7 +323,7 @@ theorem run_state320_ticks
       rw [run_state320_tick]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
-theorem run_state320_done
+private theorem run_state320_done
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 320 leftRev
@@ -355,7 +355,7 @@ theorem run_state300_done
           rfl
       | some b =>
           cases b <;> rfl
-theorem run_state330_marked_payload_cell
+private theorem run_state330_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 330 leftRev
@@ -373,7 +373,7 @@ theorem run_state330_marked_payload_cell
             rfl
         | some b =>
             cases b <;> rfl
-theorem run_state330_marked_payload_cell_append
+private theorem run_state330_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 330 leftRev
@@ -400,7 +400,7 @@ theorem run_state330_marked_payload_cell_append
             rfl
         | some b =>
             cases b <;> rfl
-theorem run_state330_marked_payload
+private theorem run_state330_marked_payload
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * w.length)
         (projectionConfig 330 leftRev
@@ -428,7 +428,7 @@ theorem run_state330_marked_payload
       rw [run_state330_marked_payload_cell_append]
       rw [ih]
       simp [List.reverse_append, List.append_assoc]
-theorem run_state330_mark_payload_cell
+private theorem run_state330_mark_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 330 leftRev
@@ -449,7 +449,7 @@ theorem run_state330_mark_payload_cell
             rfl
         | some b =>
             cases b <;> rfl
-theorem run_state350_marked_payload_cell
+private theorem run_state350_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 350 leftRev
@@ -467,7 +467,7 @@ theorem run_state350_marked_payload_cell
             rfl
         | some b =>
             cases b <;> rfl
-theorem run_state350_marked_payload_cell_append
+private theorem run_state350_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 350 leftRev
@@ -528,7 +528,7 @@ def projectionScanState360 : Nat -> Nat
   | 1 => 361
   | 2 => 362
   | _ => 363
-theorem run_scan360_step
+private theorem run_scan360_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
@@ -612,7 +612,7 @@ theorem run_scan360_step
                   | succ count =>
                       have hfalse : False := by lia
                       exact False.elim hfalse
-theorem run_scan360_cells
+private theorem run_scan360_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
@@ -653,7 +653,7 @@ theorem run_scan360_cells
       rw [ih (projectionScanCountStep count cell) hnext hrest
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
-theorem run_scan360_boundary
+private theorem run_scan360_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
         (projectionConfig 360
@@ -670,7 +670,7 @@ theorem run_scan360_boundary
           rfl
       | some b =>
           cases b <;> rfl
-theorem run_scan360_cells_to_boundary
+private theorem run_scan360_cells_to_boundary
     (cellsRev : List (Option Bool))
     (hsafe : projectionScanSafe 0 cellsRev)
     (hcount : projectionScanCountFold 0 cellsRev = 0)
@@ -701,7 +701,7 @@ theorem run_scan360_cells_to_boundary
   simpa [List.append_assoc] using
     run_scan360_boundary
       base (List.append cellsRev.reverse tail)
-theorem run_state350_blank_to_scan360
+private theorem run_state350_blank_to_scan360
     (cellsRev base : List (Option Bool)) :
     Description.runConfig 1
         (projectionConfig 350
@@ -728,7 +728,7 @@ def projectionResultFinishScanBackCellsRev
     (List.append projectionDoneCodeCells.reverse
       (projectionRepeatedCells projectionMarkedTickCodeCells
         marked.length).reverse)
-theorem projectionResultFinishScanBackCellsRev_scanCountFold
+private theorem projectionResultFinishScanBackCellsRev_scanCountFold
     (marked : Word Bool) :
     projectionScanCountFold 0
         (projectionResultFinishScanBackCellsRev marked) = 0 := by
@@ -738,7 +738,7 @@ theorem projectionResultFinishScanBackCellsRev_scanCountFold
     projectionScanCountFold_append,
     projectionDoneCodeCells_scanCountFold_reverse,
     projectionMarkedTickRepeated_scanCountFold_reverse]
-theorem projectionResultFinishScanBackCellsRev_scanSafe
+private theorem projectionResultFinishScanBackCellsRev_scanSafe
     (marked : Word Bool) :
     projectionScanSafe 0
         (projectionResultFinishScanBackCellsRev marked) := by
@@ -750,7 +750,7 @@ theorem projectionResultFinishScanBackCellsRev_scanSafe
     · exact projectionDoneCodeCells_scanSafe_reverse
     · rw [projectionDoneCodeCells_scanCountFold_reverse]
       exact projectionMarkedTickRepeated_scanSafe_reverse marked.length
-theorem projectionResultFinishScanBackCellsRev_length
+private theorem projectionResultFinishScanBackCellsRev_length
     (marked : Word Bool) :
     (projectionResultFinishScanBackCellsRev marked).length =
       8 * marked.length + 4 := by
@@ -1516,7 +1516,7 @@ theorem run_result_mark_one
           (hcount := projectionInputMarkScanBackCellsRev_scanCountFold marked rest true)
           (base := baseLeftRev)
           (tail := projectionInputMarkScanTail rest true suffix))
-theorem run_result_finish_marked
+private theorem run_result_finish_marked
     (marked : Word Bool) (baseLeftRev : List (Option Bool)) :
     Description.runConfig
         (16 * marked.length + 16)
@@ -1627,7 +1627,7 @@ def projectionResultRemainingCost
   12 * rest.length * rest.length +
     16 * marked.length * rest.length +
     34 * rest.length + 16 * marked.length + 16
-theorem run_result_bool_word_acc
+private theorem run_result_bool_word_acc
     (marked rest : Word Bool) (baseLeftRev : List (Option Bool)) :
     Description.runConfig
         (projectionResultRemainingCost marked rest)

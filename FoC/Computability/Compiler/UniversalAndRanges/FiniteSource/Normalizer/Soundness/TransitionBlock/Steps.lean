@@ -169,7 +169,7 @@ theorem codePrefixParserNormalizerMachine_computes_headerFields_to_findInitialCo
               codePrefixParserNormalizerMarkedHeaderLeft,
               List.map_append, List.append_assoc] using hhalt)))
 
-theorem codePrefixParserNormalizerMachine_computes_headerFields_to_needTransition_cons
+private theorem codePrefixParserNormalizerMachine_computes_headerFields_to_needTransition_cons
     (stateCount start halt : Nat)
     (t : TransitionDescription)
     (rest : List TransitionDescription)
@@ -340,7 +340,7 @@ theorem codePrefixParserNormalizerMachine_markPosition_empty_returnLeft_toBounda
       [some MachineCodeSymbol.header]
       current)
 
-theorem codePrefixParserNormalizerMachine_step_restoreSeekMarker_nonHeader
+private theorem codePrefixParserNormalizerMachine_step_restoreSeekMarker_nonHeader
     (saved : Option MachineCodeSymbol)
     {symbol : MachineCodeSymbol}
     (hsymbol : symbol ≠ MachineCodeSymbol.header)
@@ -424,7 +424,7 @@ theorem codePrefixParserNormalizerMachine_restoreSeekMarker_toBoundary
     (codePrefixParserNormalizerMachine_restoreReturnLeft_toBoundary
       leftSymbols prefixLeft (saved :: suffix) current)
 
-theorem codePrefixParserNormalizerMachine_step_seekCountDone_saved_tick
+private theorem codePrefixParserNormalizerMachine_step_seekCountDone_saved_tick
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -444,7 +444,7 @@ theorem codePrefixParserNormalizerMachine_step_seekCountDone_saved_tick
     (by simp [codePrefixParserNormalizerMachine,
       codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_findCount_tick
+private theorem codePrefixParserNormalizerMachine_step_findCount_tick
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -596,7 +596,7 @@ theorem codePrefixParserNormalizerRestoredTicksLeft_eq
         (codePrefixParserNormalizer_replicate_append_self
           (some MachineCodeSymbol.tick) ticks leftRev)
 
-theorem codePrefixParserNormalizerMachine_step_seekCountDone_saved_done
+private theorem codePrefixParserNormalizerMachine_step_seekCountDone_saved_done
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -637,7 +637,7 @@ theorem codePrefixParserNormalizerMachine_computes_seekCountDone_saved
     (codePrefixParserNormalizerMachine_step_seekCountDone_saved_done saved)
     leftRev count tokens
 
-theorem codePrefixParserNormalizerMachine_step_seekMarker_nonHeader
+private theorem codePrefixParserNormalizerMachine_step_seekMarker_nonHeader
     (saved : Option MachineCodeSymbol)
     {symbol : MachineCodeSymbol}
     (hsymbol : symbol ≠ MachineCodeSymbol.header)

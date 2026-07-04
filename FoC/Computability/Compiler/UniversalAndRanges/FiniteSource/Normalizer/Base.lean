@@ -15,7 +15,7 @@ namespace Computability
 
 open Languages
 
-theorem tape_normalizedOutput_move_left
+private theorem tape_normalizedOutput_move_left
     (T : Tape MachineCodeSymbol) :
     Tape.normalizedOutput (Tape.move Direction.left T) =
       Tape.normalizedOutput T := by
@@ -29,7 +29,7 @@ theorem tape_normalizedOutput_move_left
           simp [Tape.move, Tape.moveLeft, Tape.normalizedOutput,
             Tape.cells, List.reverse_cons, List.append_assoc]
 
-theorem tape_normalizedOutput_move_right
+private theorem tape_normalizedOutput_move_right
     (T : Tape MachineCodeSymbol) :
     Tape.normalizedOutput (Tape.move Direction.right T) =
       Tape.normalizedOutput T := by
@@ -44,7 +44,7 @@ theorem tape_normalizedOutput_move_right
           simp [Tape.move, Tape.moveRight, Tape.normalizedOutput,
             Tape.cells, List.reverse_cons, List.append_assoc]
 
-theorem tape_normalizedOutput_move
+private theorem tape_normalizedOutput_move
     (dir : Direction) (T : Tape MachineCodeSymbol) :
     Tape.normalizedOutput (Tape.move dir T) =
       Tape.normalizedOutput T := by
@@ -54,7 +54,7 @@ theorem tape_normalizedOutput_move
   | right =>
       exact tape_normalizedOutput_move_right T
 
-theorem tape_normalizedOutput_move_write_read
+private theorem tape_normalizedOutput_move_write_read
     (dir : Direction) (T : Tape MachineCodeSymbol) :
     Tape.normalizedOutput
         (Tape.move dir (Tape.write (Tape.read T) T)) =
@@ -458,7 +458,7 @@ theorem codePrefixParserNormalizer_step_tick_haltField
     simp [codePrefixParserNormalizerMachine,
       transitionListParserTape, codePrefixParserNormalizerKeep, Tape.read])
 
-theorem codePrefixParserNormalizer_step_done_haltField
+private theorem codePrefixParserNormalizer_step_done_haltField
     (leftRev suffix : Word MachineCodeSymbol) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.haltField
@@ -487,7 +487,7 @@ theorem codePrefixParserNormalizer_step_done_haltField
       codePrefixParserNormalizerTape, transitionListParserTape,
       Tape.read])
 
-theorem codePrefixParserNormalizer_computes_nat
+private theorem codePrefixParserNormalizer_computes_nat
     (current next : CodePrefixParserNormalizerState)
     (htick :
       forall leftRev suffix : Word MachineCodeSymbol,
@@ -929,7 +929,7 @@ theorem codePrefixParserNormalizerMachine_step_write_left_nonempty
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem codePrefixParserNormalizerMachine_step_write_left_boundary
+private theorem codePrefixParserNormalizerMachine_step_write_left_boundary
     {state next : CodePrefixParserNormalizerState}
     {suffix : List (Option MachineCodeSymbol)}
     {cell write : Option MachineCodeSymbol}
@@ -1384,7 +1384,7 @@ theorem codePrefixParserNormalizerMachine_computes_transition
                 simpa [afterMove, afterWrite, afterRead,
                   afterSource, afterTransition] using htarget)))))
 
-theorem codePrefixParserNormalizerMachine_step_returnLeft_some_nonempty
+private theorem codePrefixParserNormalizerMachine_step_returnLeft_some_nonempty
     (saved : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol)
@@ -1404,7 +1404,7 @@ theorem codePrefixParserNormalizerMachine_step_returnLeft_some_nonempty
       simp [codePrefixParserNormalizerMachine,
         codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_returnLeft_none
+private theorem codePrefixParserNormalizerMachine_step_returnLeft_none
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -1467,7 +1467,7 @@ theorem codePrefixParserNormalizerMachine_returnLeft_toBoundary
           (by
             simpa [List.append_assoc] using htail)
 
-theorem codePrefixParserNormalizerMachine_step_restoreReturnLeft_some_nonempty
+private theorem codePrefixParserNormalizerMachine_step_restoreReturnLeft_some_nonempty
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol)
     (symbol : MachineCodeSymbol) :
@@ -1486,7 +1486,7 @@ theorem codePrefixParserNormalizerMachine_step_restoreReturnLeft_some_nonempty
       simp [codePrefixParserNormalizerMachine,
         codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_restoreReturnLeft_none
+private theorem codePrefixParserNormalizerMachine_step_restoreReturnLeft_none
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.restoreReturnLeft

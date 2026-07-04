@@ -20,13 +20,13 @@ open MachineDescription
 namespace CommonGround
 namespace FiniteTransducers
 
-theorem optionAppendFinalTransducer_some_eq_bitMap
+private theorem optionAppendFinalTransducer_some_eq_bitMap
     (emit : Bool -> Bool) (final : Word Bool) :
     optionAppendFinalTransducer (fun bit => some (emit bit)) final =
       bitMapAppendFinalTransducer emit final := by
   rfl
 
-theorem optionAppendFinalTransducer_none_eq_erase
+private theorem optionAppendFinalTransducer_none_eq_erase
     (final : Word Bool) :
     optionAppendFinalTransducer (fun _bit => none) final =
       eraseAppendFinalTransducer final := by

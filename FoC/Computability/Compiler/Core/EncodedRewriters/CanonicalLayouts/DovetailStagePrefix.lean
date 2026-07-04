@@ -175,7 +175,7 @@ theorem natBits_eq_encodeNatAppend
   rw [encodeCodeWordAsInput_append]
   rfl
 
-theorem runConfig_eq_of_transitions_eq
+private theorem runConfig_eq_of_transitions_eq
     (D E : MachineDescription)
     (htrans : D.transitions = E.transitions)
     (n : Nat) (c : Configuration) :
@@ -202,39 +202,39 @@ theorem runConfig_eq_of_transitions_eq
       | some next =>
           exact ih next
 
-theorem markedPrefix_lookup_210_false :
+private theorem markedPrefix_lookup_210_false :
     MarkedPrefixScannerDescription.lookupTransition 210 (some false) =
       some
         (keepMove 210 (some false) Direction.left
           MarkedPrefixScannerDescription.halt) := by
   decide
 
-theorem markedPrefix_lookup_210_true :
+private theorem markedPrefix_lookup_210_true :
     MarkedPrefixScannerDescription.lookupTransition 210 (some true) =
       some
         (keepMove 210 (some true) Direction.left
           MarkedPrefixScannerDescription.halt) := by
   decide
 
-theorem nonemptyNatSuffix_lookup_210_false :
+private theorem nonemptyNatSuffix_lookup_210_false :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 (some false) =
       some
         (keepMove 210 (some false) Direction.left
           NonemptyNatSuffixScannerDescription.halt) := by
   decide
 
-theorem nonemptyNatSuffix_lookup_210_true :
+private theorem nonemptyNatSuffix_lookup_210_true :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 (some true) =
       some
         (keepMove 210 (some true) Direction.left
           NonemptyNatSuffixScannerDescription.halt) := by
   decide
 
-theorem nonemptyNatSuffix_lookup_210_none :
+private theorem nonemptyNatSuffix_lookup_210_none :
     NonemptyNatSuffixScannerDescription.lookupTransition 210 none = none := by
   decide
 
-theorem markedPrefix_run_state200_stageNat_to_state210
+private theorem markedPrefix_run_state200_stageNat_to_state210
     (stage : Nat) (left right : List (Option Bool)) :
     MarkedPrefixScannerDescription.runConfig (4 * stage + 4)
         (config 200 left
@@ -286,7 +286,7 @@ theorem markedPrefix_run_state200_stageNat_to_state210
         encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
-theorem markedPrefix_run_state210_handoff
+private theorem markedPrefix_run_state210_handoff
     (b : Bool) (cell : Option Bool)
     (left right : List (Option Bool)) :
     MarkedPrefixScannerDescription.runConfig 1
@@ -408,7 +408,7 @@ theorem natSuffix_run_state210_handoff
     MarkedPrefixScannerDescription (by rfl)]
   exact markedPrefix_run_state210_handoff b cell left right
 
-theorem nonemptyNatSuffix_run_state200_tick
+private theorem nonemptyNatSuffix_run_state200_tick
     (left right : List (Option Bool)) :
     NonemptyNatSuffixScannerDescription.runConfig 4
         (config 200 left
@@ -426,7 +426,7 @@ theorem nonemptyNatSuffix_run_state200_tick
       transition, encodeCodeSymbolAsInput,
       Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem nonemptyNatSuffix_run_state200_done_to_state210
+private theorem nonemptyNatSuffix_run_state200_done_to_state210
     (left right : List (Option Bool)) :
     NonemptyNatSuffixScannerDescription.runConfig 4
         (config 200 left
@@ -484,7 +484,7 @@ theorem nonemptyNatSuffix_run_state200_stageNat_to_state210
         encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
-theorem nonemptyNatSuffix_run_state210_handoff
+private theorem nonemptyNatSuffix_run_state210_handoff
     (b : Bool) (cell : Option Bool)
     (left right : List (Option Bool)) :
     NonemptyNatSuffixScannerDescription.runConfig 1
@@ -499,7 +499,7 @@ theorem nonemptyNatSuffix_run_state210_handoff
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft]
 
-theorem nonemptyNatSuffix_step_state210_none
+private theorem nonemptyNatSuffix_step_state210_none
     (left : List (Option Bool)) :
     NonemptyNatSuffixScannerDescription.stepConfig
         (config 210 left []) = none := by

@@ -228,7 +228,7 @@ theorem rightEdgeTape_defaultedCells
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
-theorem encodedLayoutBits_eq_headerQuoteBits
+private theorem encodedLayoutBits_eq_headerQuoteBits
     (layout : Word Bool) :
     encodedLayoutBits layout =
       List.append
@@ -242,7 +242,7 @@ theorem encodedLayoutBits_eq_headerQuoteBits
     (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
       layout).symm
 
-theorem encodedLayoutBits_eq_header_length_cells
+private theorem encodedLayoutBits_eq_header_length_cells
     (layout : Word Bool) :
     encodedLayoutBits layout =
       List.append
@@ -263,7 +263,7 @@ def rightToLeftEncodedLayoutBits (layout : Word Bool) : Word Bool :=
         layout.length).reverse
       (encodeCodeSymbolAsInput MachineCodeSymbol.header).reverse)
 
-theorem rightToLeftEncodedLayoutBits_eq_reverse
+private theorem rightToLeftEncodedLayoutBits_eq_reverse
     (layout : Word Bool) :
     rightToLeftEncodedLayoutBits layout =
       (encodedLayoutBits layout).reverse := by
@@ -292,7 +292,7 @@ theorem preRewindTape_eq_rightToLeftEncodedLayoutBits
           (some tailFirst :: tail)) := by
   rw [preRewindTape, rightEdgeTape_eq_rightToLeftEncodedLayoutBits]
 
-theorem tapeAtCells_moveRight_moveLeft_append_headerBits
+private theorem tapeAtCells_moveRight_moveLeft_append_headerBits
     (pref right : List (Option Bool)) :
     Tape.move Direction.right
         (Tape.move Direction.left

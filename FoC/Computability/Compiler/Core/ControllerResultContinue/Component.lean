@@ -375,7 +375,7 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
         simpa [inputBits, outputBits] using
           congrArg Configuration.tape hrun)
 
-theorem none_cons_replicate_none_append_none
+private theorem none_cons_replicate_none_append_none
     (n : Nat) :
     none ::
         List.append (List.replicate n (none : Option Bool)) [none] =
@@ -392,7 +392,7 @@ theorem none_cons_replicate_none_append_none
       rw [List.replicate_succ]
       exact congrArg (fun xs => none :: xs) ih
 
-theorem dropTrailingNone_append_boundary_blanks
+private theorem dropTrailingNone_append_boundary_blanks
     (xs : List (Option Bool)) (n : Nat) :
     Tape.dropTrailingNone
         (List.append xs
@@ -404,7 +404,7 @@ theorem dropTrailingNone_append_boundary_blanks
     FoC.Computability.dropTrailingNone_append_replicate_none
       xs (n + 2)
 
-theorem stageInputContinueBoundaryPaddedTape_equiv
+private theorem stageInputContinueBoundaryPaddedTape_equiv
     (prefixBits : Word Bool) (trail : Nat) :
     Tape.Equiv
       (DovetailInitialLayoutInitializer.tapeAtCells
@@ -448,7 +448,7 @@ theorem stageInputContinueBoundaryPaddedTape_equiv
           simpa [base, List.append_assoc] using
             hactual.trans hcanon.symm)
 
-theorem tapeAtCells_move_left_of_cells_ne_nil
+private theorem tapeAtCells_move_left_of_cells_ne_nil
     (leftCell : Option Bool) (leftRev cells : List (Option Bool))
     (hcells : cells ≠ []) :
     Tape.move Direction.left
@@ -473,7 +473,7 @@ def projectionStageInputBitsLeftRev
   List.append [true, false, false]
     (stageInputContinueStagePrefixBits input stage).reverse
 
-theorem projectionStageInputBitsLeftRev_payload_cells
+private theorem projectionStageInputBitsLeftRev_payload_cells
     (input : Word Bool) (stage : Nat) :
     List.append
         ((projectionStageInputBitsLeftRev input stage).reverse.map some)
@@ -486,7 +486,7 @@ theorem projectionStageInputBitsLeftRev_payload_cells
     encodeCodeSymbolAsInput,
     List.map_append, List.append_assoc]
 
-theorem projectionStageInputBitsLeftRev_payload_cells_mapped
+private theorem projectionStageInputBitsLeftRev_payload_cells_mapped
     (input : Word Bool) (stage : Nat) :
     List.append
         ((projectionStageInputBitsLeftRev input stage).map some).reverse
@@ -497,7 +497,7 @@ theorem projectionStageInputBitsLeftRev_payload_cells_mapped
   simpa [List.map_reverse] using
     projectionStageInputBitsLeftRev_payload_cells input stage
 
-theorem stageInputContinueStagePrefixBits_map_reverse
+private theorem stageInputContinueStagePrefixBits_map_reverse
     (input : Word Bool) (stage : Nat) :
     (List.map some
         (stageInputContinueStagePrefixBits input stage)).reverse =
@@ -513,7 +513,7 @@ theorem stageInputContinueStagePrefixBits_map_reverse
   simp [encodeBoolWord, List.map_append,
     List.reverse_append]
 
-theorem replicate_none_succ_append
+private theorem replicate_none_succ_append
     (n : Nat) (tail : List (Option Bool)) :
     List.append (List.replicate (n + 1) none) tail =
       none :: List.append (List.replicate n none) tail := by
@@ -523,7 +523,7 @@ theorem replicate_none_succ_append
   | succ n ih =>
       simp [List.replicate_succ]
 
-theorem replicate_none_append_replicate
+private theorem replicate_none_append_replicate
     (m n : Nat) (tail : List (Option Bool)) :
     List.append (List.replicate m none)
         (List.append (List.replicate n none) tail) =
@@ -537,7 +537,7 @@ theorem replicate_none_append_replicate
       rw [List.replicate_succ]
       exact congrArg (fun xs => none :: xs) ih
 
-theorem projectionFinalTape_move_left_eq_tailBlock
+private theorem projectionFinalTape_move_left_eq_tailBlock
     (input result : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (ControllerStageInputProjection.finalTape

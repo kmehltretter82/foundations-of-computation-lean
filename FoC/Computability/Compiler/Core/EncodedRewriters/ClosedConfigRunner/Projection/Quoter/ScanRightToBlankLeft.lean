@@ -291,7 +291,7 @@ theorem scanLeftToBlankLeftDescription_run_scanRev
         List.reverse_cons, List.append_assoc] using
         ih prev (some current :: right)
 
-theorem scanRightToBlankLeftHaltTape_eq_scanRev
+private theorem scanRightToBlankLeftHaltTape_eq_scanRev
     (leftBase : List (Option Bool)) (scanRev : Word Bool)
     (current : Bool) :
     scanRightToBlankLeftHaltTape (none :: leftBase)

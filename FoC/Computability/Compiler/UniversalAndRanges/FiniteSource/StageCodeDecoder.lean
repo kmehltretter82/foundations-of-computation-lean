@@ -85,7 +85,7 @@ def stageCodeDecoderMachine :
     | _, _ => none
   statesFinite := StageCodeDecoderState.finite
 
-theorem stageCodeDecoderMachine_step_tick
+private theorem stageCodeDecoderMachine_step_tick
     (leftRev suffix : Word MachineCodeSymbol) :
     TuringMachine.Step stageCodeDecoderMachine
       { state := StageCodeDecoderState.scan
@@ -102,7 +102,7 @@ theorem stageCodeDecoderMachine_step_tick
     simp [stageCodeDecoderMachine,
       stageCodeDecoderTape, Tape.read])
 
-theorem stageCodeDecoderMachine_step_done
+private theorem stageCodeDecoderMachine_step_done
     (leftRev suffix : Word MachineCodeSymbol) :
     TuringMachine.Step stageCodeDecoderMachine
       { state := StageCodeDecoderState.scan
@@ -119,7 +119,7 @@ theorem stageCodeDecoderMachine_step_done
     simp [stageCodeDecoderMachine,
       stageCodeDecoderTape, Tape.read])
 
-theorem stageCodeDecoderMachine_haltsFromIn_encodeNatAppend
+private theorem stageCodeDecoderMachine_haltsFromIn_encodeNatAppend
     (leftRev : Word MachineCodeSymbol)
     (stage : Nat)
     (encoded : Word MachineCodeSymbol) :
@@ -157,7 +157,7 @@ theorem stageCodeDecoderMachine_haltsFromIn_encodeNatAppend
               (CodePrefixRecognizerStageCode encoded stage))
         hcomp
 
-theorem stageCodeDecoderMachine_haltsFromIn_only_encodeNatAppend
+private theorem stageCodeDecoderMachine_haltsFromIn_only_encodeNatAppend
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -261,7 +261,7 @@ theorem stageCodeDecoderMachine_haltsFromIn_only_encodeNatAppend
                       simp [stageCodeDecoderMachine,
                         stageCodeDecoderTape, Tape.read] at haction
 
-theorem stageCodeDecoderMachine_spec
+private theorem stageCodeDecoderMachine_spec
     (tokens : Word MachineCodeSymbol) :
     TuringMachine.HaltsOnInput stageCodeDecoderMachine tokens <->
       exists stage : Nat,

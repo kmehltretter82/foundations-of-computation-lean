@@ -25,19 +25,19 @@ def transitionListParserMarkedTail
   | [] => [some MachineCodeSymbol.header]
   | _ :: suffix => some MachineCodeSymbol.header :: suffix.map some
 
-theorem transitionListParserMarkedTail_cons
+private theorem transitionListParserMarkedTail_cons
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol) :
     transitionListParserMarkedTail (symbol :: suffix) =
       some MachineCodeSymbol.header :: suffix.map some := by
   rfl
 
-theorem transitionListParserSavedHead_cons
+private theorem transitionListParserSavedHead_cons
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol) :
     transitionListParserSavedHead (symbol :: suffix) =
       some symbol := by
   rfl
 
-theorem transitionListParserMachine_haltsFrom_markPosition_after_oneCount
+private theorem transitionListParserMachine_haltsFrom_markPosition_after_oneCount
     (tail suffix : Word MachineCodeSymbol) :
     TuringMachine.HaltsFrom transitionListParserMachine
       { state := TransitionListParserState.markPosition
@@ -238,7 +238,7 @@ theorem transitionListParserMachine_computes_seekMarker_prefix
           (by
             simpa [List.append_assoc] using hcomp)
 
-theorem transitionListParserMachine_computes_oneTransition_to_markPosition
+private theorem transitionListParserMachine_computes_oneTransition_to_markPosition
     (t : TransitionDescription) (suffix : Word MachineCodeSymbol) :
     TuringMachine.Computes transitionListParserMachine
       { state :=
@@ -304,7 +304,7 @@ theorem transitionListParserMachine_computes_oneTransition_to_markPosition
             List.reverse_append, List.map_append,
             List.append_assoc] using hparse))
 
-theorem transitionListParserMachine_halts_oneTransition
+private theorem transitionListParserMachine_halts_oneTransition
     (t : TransitionDescription) (suffix : Word MachineCodeSymbol) :
     TuringMachine.HaltsOnInput transitionListParserMachine
       (MachineDescription.encodeNatAppend 1
@@ -329,7 +329,7 @@ theorem transitionListParserMachine_halts_oneTransition
     transitionListParserMachine,
     transitionListParserOptionTape_nil_eq_input] using hfrom
 
-theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
+private theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
     (blanks : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre)
@@ -745,7 +745,7 @@ theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
             List.map_append, List.reverse_append, List.replicate_succ,
             List.append_assoc, hrest] using hcomp'''
 
-theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
+private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
     (blanks : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre)
@@ -1022,7 +1022,7 @@ theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoundary
                   List.append_assoc] using hreturnBoundary)
               hfind
 
-theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContext
+private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContext
     (blanks : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre)
@@ -1241,7 +1241,7 @@ theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContext
           hpre' u more suffix
       exact TuringMachine.halts_from_of_computes_prefix hstep hhalt
 
-theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContinuation
+private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalContinuation
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
@@ -1306,7 +1306,7 @@ theorem transitionListParserMachine_halts_count_zero
     transitionListParserMachine,
     transitionListParserOptionTape_nil_eq_input] using hhalts
 
-theorem transitionListParserMachine_count_zero_spec
+private theorem transitionListParserMachine_count_zero_spec
     (tokens : Word MachineCodeSymbol) :
     TuringMachine.HaltsOnInput transitionListParserMachine
         (MachineDescription.encodeNatAppend 0 tokens) ∧
@@ -1318,7 +1318,7 @@ theorem transitionListParserMachine_count_zero_spec
     ⟨transitionListParserMachine_halts_count_zero tokens,
       ⟨[], tokens, rfl⟩⟩
 
-theorem transitionListParserMachine_halts_consTransition
+private theorem transitionListParserMachine_halts_consTransition
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol)

@@ -114,7 +114,7 @@ theorem cellListSuffixScannerDescription_initial_eq_config
       config 100 [] (bits.map some) := by
   cases bits <;> rfl
 
-theorem cellListSuffix_lookup_150_false :
+private theorem cellListSuffix_lookup_150_false :
     CLSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
         CLSS.halt) := by
@@ -206,13 +206,13 @@ theorem map_some_append (left right : Word Bool) :
   exact map_some_append (markedCellsCodeBits cells)
     (markedCellCodeBits cell)
 
-theorem cellCodeBits_eq
+private theorem cellCodeBits_eq
     (cell : Option Bool) :
     cellCodeBits cell =
       encodeCodeWordAsInput
         (encodeCell cell) := rfl
 
-theorem cellsCodeBits_eq_encodeCellsAppend
+private theorem cellsCodeBits_eq_encodeCellsAppend
     (cells : List (Option Bool)) :
     cellsCodeBits cells =
       encodeCodeWordAsInput
@@ -292,7 +292,7 @@ theorem boolBits_eq_encodeBoolAppend
   simpa [encodeBoolAppend] using
     cellBits_eq_encodeCellAppend (some b) suffix
 
-theorem tapeBits_eq_encodeTapeAppend
+private theorem tapeBits_eq_encodeTapeAppend
     (T : Tape Bool) (suffix : Word MachineCodeSymbol) :
     encodeCodeWordAsInput
         (encodeTapeAppend T suffix) =
@@ -309,7 +309,7 @@ theorem tapeBits_eq_encodeTapeAppend
       rw [cellBits_eq_encodeCellAppend]
       rw [cellListBits_eq_encodeCellListAppend]
 
-theorem configurationBits_eq_encodeConfigurationAppend
+private theorem configurationBits_eq_encodeConfigurationAppend
     (cfg : Configuration)
     (suffix : Word MachineCodeSymbol) :
     encodeCodeWordAsInput
@@ -428,7 +428,7 @@ def dovetailLayoutFieldBits
             (boolFieldBits L.acceptHit
               (boolFieldBits L.rejectHit suffixBits))))))
 
-theorem tapeFieldBits_eq_encodeTapeAppend
+private theorem tapeFieldBits_eq_encodeTapeAppend
     (T : Tape Bool) (suffix : Word MachineCodeSymbol) :
     encodeCodeWordAsInput
         (encodeTapeAppend T suffix) =
@@ -589,7 +589,7 @@ theorem run_cellSuffix_raw_to_handoff_withBase
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
 
-theorem run_boolSuffix_raw_to_handoff_withBase
+private theorem run_boolSuffix_raw_to_handoff_withBase
     (cellBit : Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
     exists steps : Nat,
@@ -680,7 +680,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
               (some true :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
 
-theorem boolSuffixHandoffConfigWithBase_move_right
+private theorem boolSuffixHandoffConfigWithBase_move_right
     (cellBit : Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
     Tape.move Direction.right
@@ -1029,7 +1029,7 @@ theorem boolFinalHandoffConfigWithBase_move_right
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput]
 
-theorem boolFinalHandoffConfigWithBaseAndRight_move_right
+private theorem boolFinalHandoffConfigWithBaseAndRight_move_right
     (flag : Bool) (baseLeft rightPadding : List (Option Bool)) :
     Tape.move Direction.right
         (boolFinalHandoffConfigWithBaseAndRight
@@ -1103,7 +1103,7 @@ def transitionPrefixHandoffConfigWithBase
             baseLeft)
           (suffixBits.map some)) }
 
-theorem run_transitionPrefix_raw_to_handoff_withBase
+private theorem run_transitionPrefix_raw_to_handoff_withBase
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
     exists steps : Nat,
@@ -1125,7 +1125,7 @@ theorem run_transitionPrefix_raw_to_handoff_withBase
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight]
 
-theorem transitionPrefixHandoffConfigWithBase_move_right
+private theorem transitionPrefixHandoffConfigWithBase_move_right
     (baseLeft : List (Option Bool)) (b : Bool)
     (suffixTail : Word Bool) :
     Tape.move Direction.right
@@ -1193,7 +1193,7 @@ theorem run_cellList_state100_tick
       | some b =>
           cases b <;> rfl
 
-theorem run_cellList_state100_done
+private theorem run_cellList_state100_done
     (left tail : List (Option Bool)) :
     CLSS.runConfig 4
         (config 100 left
@@ -1227,7 +1227,7 @@ theorem run_cellList_state120_tick
     encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem run_cellList_state120_done
+private theorem run_cellList_state120_done
     (left right : List (Option Bool)) :
     CLSS.runConfig 4
         (config 120 left
@@ -1272,7 +1272,7 @@ theorem run_cellList_state120_stageNat
         encodeCodeSymbolAsInput,
         List.map_append, List.append_assoc]
 
-theorem run_cellList_state130_markedCell
+private theorem run_cellList_state130_markedCell
     (cell : Option Bool) (left right : List (Option Bool)) :
     CLSS.runConfig 4
         (config 130 left
@@ -1390,7 +1390,7 @@ theorem run_cellList_state140_returnToLengthMarker
       rw [ih]
       simp [List.map_append, List.append_assoc]
 
-theorem run_cellList_state150_markedCell
+private theorem run_cellList_state150_markedCell
     (cell : Option Bool) (left right : List (Option Bool)) :
     CLSS.runConfig 4
         (config 150 left
@@ -1677,7 +1677,7 @@ def cellListMarkingReturnScanRev
     (List.append (markedCellsCodeBits processed).reverse
       (stageNatBits rest.length).reverse)
 
-theorem run_cellList_raw_mark_current_to_state100
+private theorem run_cellList_raw_mark_current_to_state100
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -1735,7 +1735,7 @@ theorem run_cellList_raw_mark_current_to_state100
           List.map_append, List.reverse_append, List.append_assoc] using
             hreturn
 
-theorem run_cellList_raw_mark_current_to_state100_withBase
+private theorem run_cellList_raw_mark_current_to_state100_withBase
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -1801,7 +1801,7 @@ theorem run_cellList_raw_mark_current_to_state100_withBase
           List.map_append, List.reverse_append, List.append_assoc] using
             hreturn
 
-theorem run_cellList_raw_mark_current_to_state100_withBaseAndRight
+private theorem run_cellList_raw_mark_current_to_state100_withBaseAndRight
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool)
     (rightPadding : List (Option Bool)) :
@@ -1868,7 +1868,7 @@ theorem run_cellList_raw_mark_current_to_state100_withBaseAndRight
           List.map_append, List.reverse_append, List.append_assoc] using
             hreturn
 
-theorem run_cellList_raw_marking_loop_from_state100
+private theorem run_cellList_raw_marking_loop_from_state100
     (processed cells : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
       CLSS.runConfig steps
@@ -2057,7 +2057,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
         markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
         List.length_append, List.map_append, List.append_assoc] using hrec
 
-theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
+private theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
     (baseLeft processed cells : List (Option Bool))
     (suffixBits : Word Bool) (rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -2160,7 +2160,7 @@ theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
         markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
         List.length_append, List.map_append, List.append_assoc] using hrec
 
-theorem run_cellList_mark_current_to_state100
+private theorem run_cellList_mark_current_to_state100
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -2216,7 +2216,7 @@ theorem run_cellList_mark_current_to_state100
           cellCodeTailCells, List.map_append, List.reverse_append,
           List.append_assoc] using hreturn
 
-theorem run_cellList_marking_loop_from_state120
+private theorem run_cellList_marking_loop_from_state120
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -2292,7 +2292,7 @@ theorem run_cellList_marking_loop_from_state120
         cellsCodeBits, List.length_append, List.map_append,
         List.append_assoc] using hrec
 
-theorem run_cellList_state150_handoff_false
+private theorem run_cellList_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
     CLSS.runConfig 1
         (config 150 (cell :: left) (some false :: right)) =
@@ -2305,7 +2305,7 @@ theorem run_cellList_state150_handoff_false
       transition,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
-theorem run_cellList_finish_to_handoff
+private theorem run_cellList_finish_to_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
       CLSS.runConfig steps
@@ -2333,7 +2333,7 @@ theorem run_cellList_finish_to_handoff
         run_cellList_state150_handoff_false cell left
           (suffixTail.map some)
 
-theorem run_cellList_canonical_finish_to_handoff
+private theorem run_cellList_canonical_finish_to_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
       CLSS.runConfig steps
@@ -2362,7 +2362,7 @@ theorem run_cellList_canonical_finish_to_handoff
         run_cellList_state150_handoff_false cell left
           (suffixTail.map some)
 
-theorem run_cellList_canonical_finish_to_handoff_withBase
+private theorem run_cellList_canonical_finish_to_handoff_withBase
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
       CLSS.runConfig steps
@@ -2394,7 +2394,7 @@ theorem run_cellList_canonical_finish_to_handoff_withBase
         run_cellList_state150_handoff_false cell left
           (suffixTail.map some)
 
-theorem run_cellList_canonical_finish_to_handoff_withBaseAndRight
+private theorem run_cellList_canonical_finish_to_handoff_withBaseAndRight
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool)
     (rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -2428,7 +2428,7 @@ theorem run_cellList_canonical_finish_to_handoff_withBaseAndRight
         run_cellList_state150_handoff_false cell left
           (List.append (suffixTail.map some) rightPadding)
 
-theorem run_cellList_raw_to_canonical_handoff
+private theorem run_cellList_raw_to_canonical_handoff
     (cells : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,
       CLSS.runConfig steps
@@ -2611,7 +2611,7 @@ theorem run_boolWord_raw_to_canonical_handoff_withBase
     run_cellList_raw_to_canonical_handoff_withBase
       (w.map some) baseLeft suffixTail
 
-theorem run_cellList_marking_loop_to_handoff
+private theorem run_cellList_marking_loop_to_handoff
     (processed : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) (suffixTail : Word Bool) :
     exists steps : Nat,

@@ -191,7 +191,7 @@ theorem resultNoneGuardRewindDescription_run_scanned
   simp only [List.reverse_reverse]
   exact resultNoneGuardRewindDescription_run_finish bits
 
-theorem resultNoneGuardRewind_dropTrailingNone_map_some
+private theorem resultNoneGuardRewind_dropTrailingNone_map_some
     (bits : Word Bool) :
     Tape.dropTrailingNone (bits.map some) = bits.map some := by
   induction bits with
@@ -201,7 +201,7 @@ theorem resultNoneGuardRewind_dropTrailingNone_map_some
       cases b <;>
         simp [Tape.dropTrailingNone, ih]
 
-theorem resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks
+private theorem resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks
     (bits : Word Bool) :
     Tape.dropTrailingNone (bits.map some ++ [none, none]) =
       bits.map some := by
@@ -212,7 +212,7 @@ theorem resultNoneGuardRewind_dropTrailingNone_map_some_append_blanks
       cases b <;>
         simp [Tape.dropTrailingNone, ih]
 
-theorem resultNoneGuardRewindFinalTape_handoff_equiv
+private theorem resultNoneGuardRewindFinalTape_handoff_equiv
     (bits : Word Bool) :
     Tape.Equiv
       (resultNoneGuardRewindFinalTape bits)
@@ -816,7 +816,7 @@ theorem resultNoneGuardScanRewindDescription_haltsWithTape_code_of_accepts
     code haccept]
   exact ⟨rfl, rfl⟩
 
-theorem resultNoneGuard_moveLeft_moveRight_input_equiv
+private theorem resultNoneGuard_moveLeft_moveRight_input_equiv
     (bits : Word Bool) :
     Tape.Equiv
       (Tape.move Direction.left
@@ -838,7 +838,7 @@ theorem resultNoneGuard_moveLeft_moveRight_input_equiv
               Tape.moveRight, Tape.Equiv, Tape.dropTrailingNone,
               resultNoneGuardRewind_dropTrailingNone_map_some]
 
-theorem resultNoneGuardRewindFinalTape_moveLeft_input_equiv
+private theorem resultNoneGuardRewindFinalTape_moveLeft_input_equiv
     (bits : Word Bool) :
     Tape.Equiv
       (Tape.move Direction.left

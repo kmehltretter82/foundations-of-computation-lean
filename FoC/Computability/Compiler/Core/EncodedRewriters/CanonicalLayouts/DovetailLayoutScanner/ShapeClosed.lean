@@ -122,7 +122,7 @@ theorem encodeCodeWordAsInput_transition_prefix_inv
             encodeCodeSymbolAsInput] at h
           cases h
 
-theorem encodeCodeWordAsInput_nat_opener_inv
+private theorem encodeCodeWordAsInput_nat_opener_inv
     {code : Word MachineCodeSymbol} {doneBit : Bool}
     {tail : Word Bool}
     (h :

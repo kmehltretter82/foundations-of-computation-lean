@@ -14,7 +14,7 @@ namespace Computability
 namespace ControllerStageInputProjection
 open Languages
 open MachineDescription
-theorem run_state300_decodeBoolWord_none_ne_halt
+private theorem run_state300_decodeBoolWord_none_ne_halt
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : decodeBoolWord tokens = none)
@@ -79,7 +79,7 @@ theorem run_state300_decodeBoolWord_none_ne_halt
               ([] : Word Bool) cells suffix baseLeftRev hword n
       | some decoded =>
           simp [hcells, hword] at hdecode
-theorem run_input_tail_decodeCells_none_ne_halt
+private theorem run_input_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (len : Nat)
     (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -206,7 +206,7 @@ theorem run_input_tail_decodeCells_none_ne_halt
                         baseLeftRev hrest m
               | some parsedRest =>
                   simp [decodeCells, hcell, hrest] at hdecode
-theorem run_input_tail_cellsToWord_none_ne_halt
+private theorem run_input_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
@@ -384,7 +384,7 @@ theorem run_state100_decodeBoolWord_none_ne_halt
               ([] : Word Bool) cells suffix baseLeftRev hword n
       | some decoded =>
           simp [hcells, hword] at hdecode
-theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
+private theorem run_input_bool_word_acc_stage_decodeNat_none_ne_halt
     (marked restInput : Word Bool) (tokens : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none)

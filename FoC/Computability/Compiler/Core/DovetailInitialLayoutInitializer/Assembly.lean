@@ -32,7 +32,7 @@ def finalBoolFlagsCode :
   encodeBoolAppend false
     (encodeBoolAppend false [])
 
-theorem finalBoolFlagsCode_ne_nil :
+private theorem finalBoolFlagsCode_ne_nil :
     finalBoolFlagsCode ≠ [] := by
   simp [finalBoolFlagsCode,
     encodeBoolAppend,
@@ -571,7 +571,7 @@ theorem
   simpa [DescriptionWithCopier,
     A, B] using hn
 
-theorem codeCells_encodeNat
+private theorem codeCells_encodeNat
     (n : Nat) :
     codeCells (encodeNat n) =
       natCodeCells n := by
@@ -588,7 +588,7 @@ theorem codeCells_encodeNat
             (natCodeCells n)
       rw [ih]
 
-theorem codeCells_encodeNatAppend
+private theorem codeCells_encodeNatAppend
     (n : Nat) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeNatAppend n suffix) =
@@ -597,7 +597,7 @@ theorem codeCells_encodeNatAppend
   rw [encodeNatAppend, codeCells_append,
     codeCells_encodeNat]
 
-theorem codeCells_encodeCell
+private theorem codeCells_encodeCell
     (cell : Option Bool) :
     codeCells (encodeCell cell) =
       cellCodeCells cell := by
@@ -607,7 +607,7 @@ theorem codeCells_encodeCell
   | some b =>
       cases b <;> rfl
 
-theorem codeCells_encodeCellAppend
+private theorem codeCells_encodeCellAppend
     (cell : Option Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeCellAppend cell suffix) =
@@ -616,7 +616,7 @@ theorem codeCells_encodeCellAppend
   rw [encodeCellAppend, codeCells_append,
     codeCells_encodeCell]
 
-theorem codeCells_encodeCellsAppend
+private theorem codeCells_encodeCellsAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeCellsAppend cells suffix) =
@@ -630,7 +630,7 @@ theorem codeCells_encodeCellsAppend
         codeCells_encodeCellAppend, ih]
       simp [cellsCodeCells, List.append_assoc]
 
-theorem codeCells_encodeCellListAppend
+private theorem codeCells_encodeCellListAppend
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeCellListAppend cells suffix) =
@@ -653,7 +653,7 @@ def inputTapeCodeCells :
           (List.append (natCodeCells rest.length)
             (cellsCodeCells (rest.map some))))
 
-theorem codeCells_encodeTapeAppend_input
+private theorem codeCells_encodeTapeAppend_input
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeTapeAppend (Tape.input w) suffix) =
@@ -679,7 +679,7 @@ def boolCodeCells (b : Bool) :
     List (Option Bool) :=
   cellCodeCells (some b)
 
-theorem codeCells_encodeBoolAppend
+private theorem codeCells_encodeBoolAppend
     (b : Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeBoolAppend b suffix) =
@@ -689,7 +689,7 @@ theorem codeCells_encodeBoolAppend
     codeCells_encodeCellAppend]
   rfl
 
-theorem codeCells_encodeBoolWordAppend
+private theorem codeCells_encodeBoolWordAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     codeCells
         (encodeBoolWordAppend w suffix) =
@@ -700,7 +700,7 @@ theorem codeCells_encodeBoolWordAppend
   simp [boolWordCells, boolPayloadCells,
     List.append_assoc]
 
-theorem stageInputCells_eq_bool_word_nat
+private theorem stageInputCells_eq_bool_word_nat
     (w : Word Bool) (stage : Nat) :
     stageInputCells w stage =
       List.append (boolWordCells w)
@@ -712,7 +712,7 @@ theorem stageInputCells_eq_bool_word_nat
     codeCells_encodeNatAppend]
   simp [codeCells, encodeCodeWordAsInput]
 
-theorem suffixCells_eq_field_blocks
+private theorem suffixCells_eq_field_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) :
     suffixCells accept reject w =
@@ -731,7 +731,7 @@ theorem suffixCells_eq_field_blocks
     codeCells_encodeBoolAppend]
   simp [codeCells, encodeCodeWordAsInput]
 
-theorem outputCells_eq_stageInput_append_suffix
+private theorem outputCells_eq_stageInput_append_suffix
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
     outputCells accept reject w stage =
@@ -765,7 +765,7 @@ theorem outputCells_eq_stageInput_append_suffix
     (encodeCodeWordAsInput
       (SuffixCode accept reject w))
 
-theorem outputCells_eq_phase_blocks
+private theorem outputCells_eq_phase_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
     outputCells accept reject w stage =
@@ -777,7 +777,7 @@ theorem outputCells_eq_phase_blocks
     stageInputCells_eq_bool_word_nat]
   simp [List.append_assoc]
 
-theorem outputCells_eq_full_field_blocks
+private theorem outputCells_eq_full_field_blocks
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
     outputCells accept reject w stage =
@@ -793,7 +793,7 @@ theorem outputCells_eq_full_field_blocks
   rw [outputCells_eq_phase_blocks,
     suffixCells_eq_field_blocks]
 
-theorem tapeAtCells_eq_input_transition_prefixed
+private theorem tapeAtCells_eq_input_transition_prefixed
     (tail : Word Bool) :
     tapeAtCells []
         ((List.append
@@ -806,7 +806,7 @@ theorem tapeAtCells_eq_input_transition_prefixed
   simp [tapeAtCells,
     encodeCodeSymbolAsInput, Tape.input]
 
-theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
+private theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
     (tail : Word Bool) :
     tapeAtCells
         [some false]
@@ -821,7 +821,7 @@ theorem tapeAtCells_right_eq_move_right_input_transition_prefixed
     encodeCodeSymbolAsInput, Tape.input,
     Tape.move, Tape.moveRight]
 
-theorem outputTape_eq_cells
+private theorem outputTape_eq_cells
     (accept reject : MachineDescription)
     (w : Word Bool) (stage : Nat) :
     OutputTape accept reject w stage =
@@ -845,7 +845,7 @@ theorem outputTape_eq_cells
             accept reject w)))]
   rw [map_some_append]
 
-theorem natCodeCells_eq_bits
+private theorem natCodeCells_eq_bits
     (n : Nat) :
     natCodeCells n =
       (natBits n).map some := by
@@ -862,7 +862,7 @@ theorem inputTapeCodeCells_eq_bits
   simpa [inputTapeBits, codeCells,
     encodeCodeWordAsInput] using h.symm
 
-theorem finalBoolFlagsCodeCells_eq_bits :
+private theorem finalBoolFlagsCodeCells_eq_bits :
     List.append (boolCodeCells false)
         (boolCodeCells false) =
       (encodeCodeWordAsInput
@@ -911,7 +911,7 @@ theorem outputTape_eq_bits
   simp [stageInputCells, stageInputBits,
     codeCells, List.map_append]
 
-theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
+private theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
     (n : Nat) :
     inputTapeRightCellsDirectCopierNatBits n =
       List.append (inputTapeRightCellsDirectCopierTickBits n)
@@ -927,7 +927,7 @@ theorem inputTapeRightCellsDirectCopierNatBits_eq_ticks_done
             inputTapeRightCellsDirectCopierDoneBits
       rw [ih]
 
-theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
+private theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
     (rest : Word Bool) (stage : Nat) :
     encodeCodeWordAsInput
         (encodeCellsAppend (rest.map some)
@@ -946,7 +946,7 @@ theorem inputTapeRightCellsDirectCopierCellBits_append_natBits
   rw [encodeCodeWordAsInput_append]
   rfl
 
-theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
+private theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
     (rest : Word Bool) :
     encodeCodeWordAsInput
         (inputTapeRightCellsCode rest) =
@@ -967,7 +967,7 @@ theorem inputTapeRightCellsDirectCopierRightCellsCodeBits_eq
       inputTapeRightCellsDirectCopierDoneBits
       (inputTapeRightCellsDirectCopierCellBits rest)
 
-theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
+private theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     encodeCodeWordAsInput
         (List.append (encodeNat rest.length)
@@ -993,7 +993,7 @@ theorem inputTapeRightCellsDirectCopierStageInputTailBits_eq
       inputTapeRightCellsDirectCopierCellBits_append_natBits,
       List.append_assoc]
 
-theorem stageInputBits_cons_eq_directCopierBits
+private theorem stageInputBits_cons_eq_directCopierBits
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     stageInputBits (b :: rest) stage =
       List.append
@@ -1035,7 +1035,7 @@ theorem stageInputBits_cons_eq_directCopierBits
       (inputTapeRightCellsDirectCopierStageInputTailBits_eq
         true rest stage)
 
-theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
+private theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     List.append
@@ -1047,7 +1047,7 @@ theorem inputTapeRightCellsDirectCopierCoreSourceBits_eq
   simp [inputTapeRightCellsDirectCopierCoreSourceBits,
     List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
+private theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     inputTapeRightCellsDirectCopierCoreOutputBits b rest stage suffixBits =
@@ -1106,7 +1106,7 @@ theorem appendInputTapeRightCellsReturnSpec_realizer :
     simpa [houtput, List.map_append,
       List.append_assoc] using hsteps
 
-theorem appendInputTapeHeadTaggedBrancher_realizer :
+private theorem appendInputTapeHeadTaggedBrancher_realizer :
     AppendInputTapeHeadTaggedBrancherConstruction := by
   intro rightCopier hrightCopier
   let blankBranch := AppendEmptyInputTapeSecondBitReturnDescription
@@ -1251,7 +1251,7 @@ theorem appendInputTapeHeadTaggedBrancher_realizer :
       refine ⟨steps, ?_⟩
       simpa [brancher, T, Tout] using hsteps
 
-theorem appendInputTapeHeadDispatcher_realizer :
+private theorem appendInputTapeHeadDispatcher_realizer :
     AppendInputTapeHeadDispatcherConstruction := by
   intro rightCopier hrightCopier
   rcases
@@ -1276,13 +1276,13 @@ theorem appendInputTapeReturnSpec_realizer :
     ⟨copier,
       appendInputTapeReturnSpec_of_headDispatcher hcopier⟩
 
-theorem stageInputMarkedScanner_realizer :
+private theorem stageInputMarkedScanner_realizer :
     StageInputMarkedScannerConstruction := by
   exact
     ⟨SIMS,
       stageInputMarkedScannerDescription_spec⟩
 
-theorem stageInputMarkedCore_realizer :
+private theorem stageInputMarkedCore_realizer :
     StageInputMarkedCoreConstruction := by
   rcases stageInputMarkedScanner_realizer with
     ⟨scanner, hscanner⟩
@@ -1290,7 +1290,7 @@ theorem stageInputMarkedCore_realizer :
     ⟨SIMC scanner,
       stageInputMarkedCoreSpec_of_markedScanner hscanner⟩
 
-theorem stageInputRecognizer_realizer :
+private theorem stageInputRecognizer_realizer :
     StageInputRecognizerConstruction := by
   rcases stageInputMarkedCore_realizer with
     ⟨markedCore, hmarkedCore⟩
@@ -1298,7 +1298,7 @@ theorem stageInputRecognizer_realizer :
     ⟨SIR markedCore,
       stageInputRecognizerSpec_of_markedCore hmarkedCore⟩
 
-theorem stageInputIdentityClosedHandoff_realizer :
+private theorem stageInputIdentityClosedHandoff_realizer :
     StageInputIdentityClosedHandoffConstruction := by
   rcases stageInputRecognizer_realizer with
     ⟨recognizer, hrecognizer⟩

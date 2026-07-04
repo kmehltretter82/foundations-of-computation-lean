@@ -44,7 +44,7 @@ theorem codePrefixParserNormalizerRestoredTail_normalized
       codePrefixParserNormalizer_filterMap_comp_some,
       List.filterMap_append]
 
-theorem codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition_saved
+private theorem codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition_saved
     (prefixLeft : List (Option MachineCodeSymbol))
     (blanks count : Nat)
     (pre : Word MachineCodeSymbol)
@@ -381,7 +381,7 @@ theorem codePrefixParserNormalizerMachine_computes_markPosition_context_empty_to
     codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition_saved
       prefixLeft blanks count pre hpre none []
 
-theorem codePrefixParserNormalizerMachine_computes_markPosition_context_zero_halt
+private theorem codePrefixParserNormalizerMachine_computes_markPosition_context_zero_halt
     (prefixLeft : List (Option MachineCodeSymbol))
     (blanks : Nat)
     (pre input : Word MachineCodeSymbol)
@@ -925,7 +925,7 @@ theorem codePrefixParserNormalizerMachine_computes_markPosition_context_halt
                   List.append_assoc, Nat.add_assoc, Nat.add_comm,
                   Nat.add_left_comm] using htail))
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_markPosition_context_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_markPosition_context_inv
     (prefixLeft : List (Option MachineCodeSymbol))
     (count : Nat) :
     forall (blanks : Nat) (pre tokens : Word MachineCodeSymbol),

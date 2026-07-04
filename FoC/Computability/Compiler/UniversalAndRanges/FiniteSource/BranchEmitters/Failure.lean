@@ -13,7 +13,7 @@ namespace Computability
 
 open Languages
 
-theorem codePrefixParserBranch_failure_boundary
+private theorem codePrefixParserBranch_failure_boundary
     (rightBlanks : Nat) :
     codePrefixParserBranchHaltsFromWithOutput
       { state := CodePrefixParserBranchState.failureEraseLeft
@@ -79,7 +79,7 @@ theorem codePrefixParserBranch_failure_boundary
   · simp [final, codePrefixParserBranchFalseOutput,
       transitionListParserOptionTape_normalizedOutput]
 
-theorem codePrefixParserBranch_failure_eraseLeft_symbol
+private theorem codePrefixParserBranch_failure_eraseLeft_symbol
     (leftRev : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
     (rightBlanks : Nat) :
@@ -143,7 +143,7 @@ theorem codePrefixParserBranch_failure_eraseLeft_symbol
       simpa [List.replicate_succ, Nat.add_comm] using
         TuringMachine.Computes.step hstep hcomp
 
-theorem codePrefixParserBranch_failure_eraseRight
+private theorem codePrefixParserBranch_failure_eraseRight
     (leftRev rest : Word MachineCodeSymbol) :
     codePrefixParserBranchHaltsFromWithOutput
       { state := CodePrefixParserBranchState.failureEraseRight
@@ -237,7 +237,7 @@ theorem codePrefixParserBranch_failure_eraseRight
         ⟨final, hcomp, hhalt, hout⟩
       exact ⟨final, TuringMachine.Computes.step hstep hcomp, hhalt, hout⟩
 
-theorem codePrefixParserBranch_failure_eraseRight_blanks
+private theorem codePrefixParserBranch_failure_eraseRight_blanks
     (leftRev rest : Word MachineCodeSymbol) (rightBlanks : Nat) :
     codePrefixParserBranchHaltsFromWithOutput
       { state := CodePrefixParserBranchState.failureEraseRight
@@ -426,7 +426,7 @@ theorem codePrefixParserBranch_failure_eraseRight_blanks
         ⟨final, hcomp, hhalt, hout⟩
       exact ⟨final, TuringMachine.Computes.step hstep hcomp, hhalt, hout⟩
 
-theorem codePrefixParserBranch_failure_seekBoundary_marker
+private theorem codePrefixParserBranch_failure_seekBoundary_marker
     (prefixLeft right : Word MachineCodeSymbol) (rightBlanks : Nat) :
     codePrefixParserBranchHaltsFromWithOutput
       { state := CodePrefixParserBranchState.failureSeekBoundary
@@ -480,7 +480,7 @@ theorem codePrefixParserBranch_failure_seekBoundary_marker
     ⟨final, hcomp, hhalt, hout⟩
   exact ⟨final, TuringMachine.Computes.step hstep hcomp, hhalt, hout⟩
 
-theorem codePrefixParserBranch_failure_seekBoundary_symbol
+private theorem codePrefixParserBranch_failure_seekBoundary_symbol
     (leftSymbols prefixLeft right : Word MachineCodeSymbol)
     (current : MachineCodeSymbol) (rightBlanks : Nat) :
     codePrefixParserBranchHaltsFromWithOutput

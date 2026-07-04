@@ -117,7 +117,7 @@ theorem projectionRepeatedCells_succ_right
       rw [ih]
       simp [List.append_assoc]
 
-theorem projectionRepeatedCells_append_self_comm
+private theorem projectionRepeatedCells_append_self_comm
     (chunk : List (Option Bool)) (n : Nat) :
     List.append (projectionRepeatedCells chunk n) chunk =
       List.append chunk (projectionRepeatedCells chunk n) := by
@@ -162,7 +162,7 @@ def projectionMarkedBoolPayloadCells : Word Bool -> List (Option Bool)
       List.append (projectionMarkedBoolCellCodeCells b)
         (projectionMarkedBoolPayloadCells rest)
 
-theorem projectionBoolPayloadCells_length
+private theorem projectionBoolPayloadCells_length
     (w : Word Bool) :
     (projectionBoolPayloadCells w).length = 4 * w.length := by
   induction w with
@@ -262,7 +262,7 @@ def projectionAllMarkedBoolWordCells (w : Word Bool) :
 def projectionStageTickCellsRev (stage : Nat) : List (Option Bool) :=
   (projectionCodeCells (List.replicate stage MachineCodeSymbol.tick)).reverse
 
-theorem projectionCodeCells_append
+private theorem projectionCodeCells_append
     (pre suffix : Word MachineCodeSymbol) :
     projectionCodeCells (List.append pre suffix) =
       List.append (projectionCodeCells pre) (projectionCodeCells suffix) := by
@@ -334,7 +334,7 @@ theorem projectionCodeCells_replicate_tick
         projectionTickCodeCells, encodeCodeWordAsInput,
         htail]
 
-theorem projectionBoolPayloadCells_eq
+private theorem projectionBoolPayloadCells_eq
     (w : Word Bool) :
     projectionBoolPayloadCells w =
       projectionCodeCells ((w.map fun b =>
@@ -383,7 +383,7 @@ theorem projectionCodeCells_encodeNatAppend
       rw [ih]
       simp [List.append_assoc]
 
-theorem projectionBoolPayloadCells_append_eq_encodeCellsAppend
+private theorem projectionBoolPayloadCells_append_eq_encodeCellsAppend
     (w : Word Bool) (suffix : Word MachineCodeSymbol) :
     List.append (projectionBoolPayloadCells w) (projectionCodeCells suffix) =
       projectionCodeCells
@@ -655,7 +655,7 @@ theorem run_stage_tick
       | some b =>
           cases b <;> rfl
 
-theorem run_stage_done
+private theorem run_stage_done
     (leftRev rest : List (Option Bool)) :
     Description.runConfig 12
         (projectionConfig 200 leftRev
@@ -665,7 +665,7 @@ theorem run_stage_done
         (some false :: rest) := by
   rfl
 
-theorem projectionStageTickCellsRev_succ
+private theorem projectionStageTickCellsRev_succ
     (stage : Nat) :
     projectionStageTickCellsRev (stage + 1) =
       List.append (projectionStageTickCellsRev stage)
@@ -776,7 +776,7 @@ theorem run_stage_nat_bool_word_suffix
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
-theorem run_cleanup_marked_tick
+private theorem run_cleanup_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 367 leftRev
@@ -793,7 +793,7 @@ theorem run_cleanup_marked_tick
       | some b =>
           cases b <;> rfl
 
-theorem run_cleanup_marked_ticks
+private theorem run_cleanup_marked_ticks
     (count : Nat) (leftRev tail : List (Option Bool)) :
     Description.runConfig (4 * count)
         (projectionConfig 367 leftRev
@@ -839,7 +839,7 @@ theorem run_cleanup_marked_ticks
       rw [hrep]
       simp [List.append_assoc]
 
-theorem run_cleanup_done
+private theorem run_cleanup_done
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 367 leftRev
@@ -856,7 +856,7 @@ theorem run_cleanup_done
       | some b =>
           cases b <;> rfl
 
-theorem run_cleanup_marked_payload_cell
+private theorem run_cleanup_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 380 leftRev
@@ -874,7 +874,7 @@ theorem run_cleanup_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
-theorem run_cleanup_marked_payload
+private theorem run_cleanup_marked_payload
     (w : Word Bool) (leftRev : List (Option Bool)) :
     Description.runConfig
         (4 * w.length + 1)
@@ -916,7 +916,7 @@ theorem run_cleanup_marked_payload
       rw [hrep]
       simp [List.append_assoc]
 
-theorem run_cleanup_marked_payload_to_tail
+private theorem run_cleanup_marked_payload_to_tail
     (w : Word Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig
         (4 * w.length)
@@ -1033,7 +1033,7 @@ theorem state_ne_halt_of_stepConfig_none
   rw [hrun]
   exact hstate
 
-theorem run_state380_true_ne_halt
+private theorem run_state380_true_ne_halt
     (leftRev tail : List (Option Bool)) (n : Nat) :
     (Description.runConfig n
       (projectionConfig 380 leftRev (some true :: tail))).state ≠
@@ -1043,7 +1043,7 @@ theorem run_state380_true_ne_halt
   · rfl
   · simp [projectionConfig, Description]
 
-theorem run_state381_nonblank_ne_halt
+private theorem run_state381_nonblank_ne_halt
     (b : Bool) (leftRev tail : List (Option Bool)) (n : Nat) :
     (Description.runConfig n
       (projectionConfig 381 leftRev (some b :: tail))).state ≠
@@ -1053,7 +1053,7 @@ theorem run_state381_nonblank_ne_halt
   · cases b <;> rfl
   · simp [projectionConfig, Description]
 
-theorem run_state380_false_nonblank_next_ne_halt
+private theorem run_state380_false_nonblank_next_ne_halt
     (b : Bool) (leftRev tail : List (Option Bool)) (n : Nat) :
     (Description.runConfig (n + 1)
       (projectionConfig 380 leftRev (some false :: some b :: tail))).state ≠
@@ -1066,7 +1066,7 @@ theorem run_state380_false_nonblank_next_ne_halt
     run_state381_nonblank_ne_halt
       b (none :: leftRev) tail n
 
-theorem run_cleanup_code_suffix_ne_halt
+private theorem run_cleanup_code_suffix_ne_halt
     (symbol : MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
     (Description.runConfig n
@@ -1136,7 +1136,7 @@ theorem run_cleanup_code_suffix_ne_halt
               List.map some (encodeCodeWordAsInput suffix))
             (n + 1)
 
-theorem run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
+private theorem run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
     (w : Word Bool) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
@@ -1157,7 +1157,7 @@ theorem run_cleanup_all_marked_code_suffix_after_prefix_ne_halt
           (List.append (List.replicate (4 * w.length) none) leftRev)))
       n
 
-theorem run_cleanup_all_marked
+private theorem run_cleanup_all_marked
     (w : Word Bool) (leftRev : List (Option Bool)) :
     Description.runConfig
         (8 * w.length + 5)
@@ -1206,7 +1206,7 @@ theorem run_cleanup_all_marked
   rw [run_cleanup_marked_payload]
   simp
 
-theorem run_cleanup_all_marked_code_suffix_fixed_halt_iff
+private theorem run_cleanup_all_marked_code_suffix_fixed_halt_iff
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) :
     (Description.runConfig

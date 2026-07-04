@@ -35,7 +35,7 @@ def checkedNonemptyBoolWordQuoteDirectSourceBits
         (List.append (inputTapeRightCellsDirectCopierCellBits rest)
           (encodeCodeWordAsInput suffix))))
 
-theorem inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
+private theorem inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
     (n : Nat) :
     List.append (inputTapeRightCellsDirectCopierTickBits n)
         inputTapeRightCellsDirectCopierDoneBits =
@@ -71,7 +71,7 @@ theorem inputTapeRightCellsDirectCopierTickDoneBits_eq_natBits
             (encodeNat (n + 1)) := by
             rfl
 
-theorem inputTapeRightCellsDirectCopierCellBits_append_suffix
+private theorem inputTapeRightCellsDirectCopierCellBits_append_suffix
     (cells : Word Bool) (suffix : Word MachineCodeSymbol) :
     List.append (inputTapeRightCellsDirectCopierCellBits cells)
         (encodeCodeWordAsInput suffix) =

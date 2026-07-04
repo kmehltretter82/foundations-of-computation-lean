@@ -100,7 +100,7 @@ theorem projectionScanSafe_append
       rcases hleft with ⟨hcell, hrest⟩
       exact ⟨hcell, ih hrest hright⟩
 
-theorem projectionScanCountFold_repeated_zero
+private theorem projectionScanCountFold_repeated_zero
     (chunk : List (Option Bool))
     (hchunk : projectionScanCountFold 0 chunk = 0)
     (count : Nat) :
@@ -114,7 +114,7 @@ theorem projectionScanCountFold_repeated_zero
             (List.append chunk (projectionRepeatedCells chunk count)) = 0
       rw [projectionScanCountFold_append, hchunk, ih]
 
-theorem projectionScanSafe_repeated_zero
+private theorem projectionScanSafe_repeated_zero
     (chunk : List (Option Bool))
     (hsafe : projectionScanSafe 0 chunk)
     (hchunk : projectionScanCountFold 0 chunk = 0)
@@ -132,22 +132,22 @@ theorem projectionScanSafe_repeated_zero
       · rw [hchunk]
         exact ih
 
-theorem projectionMarkedTickCodeCells_scanSafe_reverse :
+private theorem projectionMarkedTickCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionMarkedTickCodeCells.reverse := by
   simp [projectionMarkedTickCodeCells, projectionScanSafe,
     projectionScanCountStep]
 
-theorem projectionMarkedTickCodeCells_scanCountFold_reverse :
+private theorem projectionMarkedTickCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionMarkedTickCodeCells.reverse = 0 := by
   simp [projectionMarkedTickCodeCells, projectionScanCountFold,
     projectionScanCountStep]
 
-theorem projectionTickCodeCells_scanSafe_reverse :
+private theorem projectionTickCodeCells_scanSafe_reverse :
     projectionScanSafe 0 projectionTickCodeCells.reverse := by
   simp [projectionTickCodeCells, encodeCodeSymbolAsInput,
     projectionScanSafe, projectionScanCountStep]
 
-theorem projectionTickCodeCells_scanCountFold_reverse :
+private theorem projectionTickCodeCells_scanCountFold_reverse :
     projectionScanCountFold 0 projectionTickCodeCells.reverse = 0 := by
   simp [projectionTickCodeCells, encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
@@ -162,14 +162,14 @@ theorem projectionDoneCodeCells_scanCountFold_reverse :
   simp [projectionDoneCodeCells, encodeCodeSymbolAsInput,
     projectionScanCountFold, projectionScanCountStep]
 
-theorem projectionMarkedBoolCellCodeCells_scanSafe_reverse
+private theorem projectionMarkedBoolCellCodeCells_scanSafe_reverse
     (b : Bool) :
     projectionScanSafe 0 (projectionMarkedBoolCellCodeCells b).reverse := by
   cases b <;>
     simp [projectionMarkedBoolCellCodeCells, projectionScanSafe,
       projectionScanCountStep]
 
-theorem projectionMarkedBoolCellCodeCells_scanCountFold_reverse
+private theorem projectionMarkedBoolCellCodeCells_scanCountFold_reverse
     (b : Bool) :
     projectionScanCountFold 0 (projectionMarkedBoolCellCodeCells b).reverse =
       0 := by
@@ -210,7 +210,7 @@ theorem projectionMarkedBoolPayloadCells_scanSafe_reverse
       · rw [projectionMarkedBoolPayloadCells_scanCountFold_reverse rest]
         exact projectionMarkedBoolCellCodeCells_scanSafe_reverse b
 
-theorem run_scan140_step
+private theorem run_scan140_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
@@ -295,7 +295,7 @@ theorem run_scan140_step
                       have hfalse : False := by lia
                       exact False.elim hfalse
 
-theorem run_scan140_cells
+private theorem run_scan140_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
@@ -337,7 +337,7 @@ theorem run_scan140_cells
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-theorem run_scan140_boundary
+private theorem run_scan140_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
         (projectionConfig 140 (none :: none :: none :: base) (none :: tail)) =
@@ -391,7 +391,7 @@ def projectionScanState160 : Nat -> Nat
   | 2 => 162
   | _ => 163
 
-theorem run_scan160_step
+private theorem run_scan160_step
     (count : Nat) (hcount : count ≤ 3)
     (cell : Option Bool) (rest leftOfBoundary tail : List (Option Bool))
     (boundaryHead : Option Bool)
@@ -476,7 +476,7 @@ theorem run_scan160_step
                       have hfalse : False := by lia
                       exact False.elim hfalse
 
-theorem run_scan160_cells
+private theorem run_scan160_cells
     (cellsRev : List (Option Bool)) (count : Nat) (hcount : count ≤ 3)
     (hsafe : projectionScanSafe count cellsRev)
     (leftOfBoundary : List (Option Bool)) (boundaryHead : Option Bool)
@@ -518,7 +518,7 @@ theorem run_scan160_cells
         (cell :: tail)]
       simp [projectionScanCountFold, List.append_assoc]
 
-theorem run_scan160_boundary
+private theorem run_scan160_boundary
     (base tail : List (Option Bool)) :
     Description.runConfig 7
         (projectionConfig 160 (none :: none :: none :: base) (none :: tail)) =
@@ -566,7 +566,7 @@ theorem run_scan160_cells_to_boundary
     run_scan160_boundary
       base (List.append cellsRev.reverse tail)
 
-theorem run_state100_marked_tick
+private theorem run_state100_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 100 leftRev
@@ -718,7 +718,7 @@ theorem run_state120_done
       | some b =>
           cases b <;> rfl
 
-theorem run_state130_marked_payload_cell
+private theorem run_state130_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 130 leftRev
@@ -737,7 +737,7 @@ theorem run_state130_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
-theorem run_state130_marked_payload_cell_append
+private theorem run_state130_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 130 leftRev
@@ -811,7 +811,7 @@ theorem run_state100_done
       | some b =>
           cases b <;> rfl
 
-theorem run_state150_marked_payload_cell
+private theorem run_state150_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 150 leftRev
@@ -830,7 +830,7 @@ theorem run_state150_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
-theorem run_state150_marked_payload_cell_append
+private theorem run_state150_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 150 leftRev
@@ -896,7 +896,7 @@ theorem run_state150_to_scan160
         (some false :: some false :: tail) := by
   rfl
 
-theorem run_state170_marked_tick
+private theorem run_state170_marked_tick
     (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 170 leftRev
@@ -976,7 +976,7 @@ theorem run_state170_done
       | some b =>
           cases b <;> rfl
 
-theorem run_state180_marked_payload_cell
+private theorem run_state180_marked_payload_cell
     (b : Bool) (leftRev tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 180 leftRev
@@ -995,7 +995,7 @@ theorem run_state180_marked_payload_cell
         | some b =>
             cases b <;> rfl
 
-theorem run_state180_marked_payload_cell_append
+private theorem run_state180_marked_payload_cell_append
     (b : Bool) (leftRev middle tail : List (Option Bool)) :
     Description.runConfig 4
         (projectionConfig 180 leftRev
@@ -1118,14 +1118,14 @@ def projectionInputMarkScanTail
   projectionMarkedBoolCellScanTailHead b ::
     List.append (projectionBoolPayloadCells rest) (projectionCodeCells suffix)
 
-theorem projectionMarkedBoolCellScanPrefixRev_scanSafe
+private theorem projectionMarkedBoolCellScanPrefixRev_scanSafe
     (b : Bool) :
     projectionScanSafe 0 (projectionMarkedBoolCellScanPrefixRev b) := by
   cases b <;>
     simp [projectionMarkedBoolCellScanPrefixRev, projectionScanSafe,
       projectionScanCountStep]
 
-theorem projectionMarkedBoolCellScanPrefixRev_scanCountFold
+private theorem projectionMarkedBoolCellScanPrefixRev_scanCountFold
     (b : Bool) :
     projectionScanCountFold 0 (projectionMarkedBoolCellScanPrefixRev b) =
       0 := by
@@ -1133,14 +1133,14 @@ theorem projectionMarkedBoolCellScanPrefixRev_scanCountFold
     simp [projectionMarkedBoolCellScanPrefixRev, projectionScanCountFold,
       projectionScanCountStep]
 
-theorem projectionCodeCells_replicate_tick_length
+private theorem projectionCodeCells_replicate_tick_length
     (n : Nat) :
     (projectionCodeCells
       (List.replicate n MachineCodeSymbol.tick)).length = 4 * n := by
   rw [projectionCodeCells_replicate_tick, projectionRepeatedCells_length]
   simp [projectionTickCodeCells, encodeCodeSymbolAsInput]
 
-theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
+private theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
     (n : Nat) :
     projectionScanCountFold 0
         (projectionCodeCells
@@ -1150,7 +1150,7 @@ theorem projectionCodeCells_replicate_tick_scanCountFold_reverse
     projectionScanCountFold_repeated_zero projectionTickCodeCells.reverse
       projectionTickCodeCells_scanCountFold_reverse n
 
-theorem projectionCodeCells_replicate_tick_scanSafe_reverse
+private theorem projectionCodeCells_replicate_tick_scanSafe_reverse
     (n : Nat) :
     projectionScanSafe 0
         (projectionCodeCells
@@ -1183,7 +1183,7 @@ theorem projectionMarkedTickRepeated_scanSafe_reverse
       projectionMarkedTickCodeCells_scanSafe_reverse
       projectionMarkedTickCodeCells_scanCountFold_reverse count
 
-theorem projectionInputMarkPreviousCells_scanCountFold_reverse
+private theorem projectionInputMarkPreviousCells_scanCountFold_reverse
     (marked rest : Word Bool) :
     projectionScanCountFold 0
         (projectionInputMarkPreviousCells marked rest).reverse = 0 := by
@@ -1207,7 +1207,7 @@ theorem projectionInputMarkPreviousCells_scanCountFold_reverse
     projectionCodeCells_replicate_tick_scanCountFold_reverse,
     projectionMarkedTickRepeated_scanCountFold_reverse]
 
-theorem projectionInputMarkPreviousCells_scanSafe_reverse
+private theorem projectionInputMarkPreviousCells_scanSafe_reverse
     (marked rest : Word Bool) :
     projectionScanSafe 0
         (projectionInputMarkPreviousCells marked rest).reverse := by

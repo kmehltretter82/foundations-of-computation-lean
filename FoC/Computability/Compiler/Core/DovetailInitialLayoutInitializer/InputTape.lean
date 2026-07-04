@@ -269,7 +269,7 @@ def stageInputBits
   encodeCodeWordAsInput
     (PairedRecognizerDovetailStageInputCode w stage)
 
-theorem stageInputBits_move_left_move_right_input
+private theorem stageInputBits_move_left_move_right_input
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
@@ -305,7 +305,7 @@ theorem stageInputBits_move_left_move_right_input
           encodeCodeSymbolAsInput,
           Tape.input, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem tape_eq_move_right_input_of_move_left_eq_input_cons_cons
+private theorem tape_eq_move_right_input_of_move_left_eq_input_cons_cons
     {a b : Bool} {rest : Word Bool} {T : Tape Bool}
     (h : Tape.move Direction.left T = Tape.input (a :: b :: rest)) :
     T = Tape.move Direction.right (Tape.input (a :: b :: rest)) := by
@@ -322,7 +322,7 @@ theorem tape_eq_move_right_input_of_move_left_eq_input_cons_cons
           | cons second more =>
               simp [Tape.move, Tape.moveLeft, Tape.input] at h
 
-theorem stageInputBits_exists_cons_cons
+private theorem stageInputBits_exists_cons_cons
     (w : Word Bool) (stage : Nat) :
     exists a : Bool,
     exists b : Bool,
@@ -463,7 +463,7 @@ theorem
     emptyInputTapeCode
     emptyInputTapeCode_ne_nil
 
-theorem inputTapeBits_nil :
+private theorem inputTapeBits_nil :
     inputTapeBits ([] : Word Bool) =
       encodeCodeWordAsInput
         emptyInputTapeCode := by
@@ -512,7 +512,7 @@ def inputTapeRightCellsCode
     (rest : Word Bool) : Word MachineCodeSymbol :=
   encodeCellListAppend (rest.map some) []
 
-theorem inputTapeRightCellsCode_eq_nat_cells
+private theorem inputTapeRightCellsCode_eq_nat_cells
     (rest : Word Bool) :
     inputTapeRightCellsCode rest =
       encodeNatAppend rest.length
@@ -520,7 +520,7 @@ theorem inputTapeRightCellsCode_eq_nat_cells
   simp [inputTapeRightCellsCode,
     encodeCellListAppend]
 
-theorem inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells
+private theorem inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells
     (b : Bool) (rest : Word Bool) :
     inputTapeRightCellsCode (b :: rest) =
       MachineCodeSymbol.tick ::
@@ -548,7 +548,7 @@ theorem inputTapeRightCellsBits_eq_nat_cells
     encodeCodeWordAsInput_append]
   rfl
 
-theorem inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
+private theorem inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
     (b : Bool) (rest : Word Bool) :
     encodeCodeWordAsInput
         (inputTapeRightCellsCode (b :: rest)) =
@@ -561,7 +561,7 @@ theorem inputTapeRightCellsBits_cons_eq_tick_nat_cell_cells
   rw [inputTapeRightCellsCode_cons_eq_tick_nat_cell_cells]
   rfl
 
-theorem inputTapeHeadPrefixCode_ne_nil
+private theorem inputTapeHeadPrefixCode_ne_nil
     (b : Bool) :
     inputTapeHeadPrefixCode b ≠ [] := by
   cases b <;>
@@ -572,7 +572,7 @@ theorem inputTapeHeadPrefixCode_ne_nil
       encodeCellAppend,
       encodeCell]
 
-theorem inputTapeBits_cons_eq_headPrefix_append
+private theorem inputTapeBits_cons_eq_headPrefix_append
     (b : Bool) (rest : Word Bool) :
     inputTapeBits (b :: rest) =
       List.append
@@ -791,7 +791,7 @@ def AppendEmptyRightCellsReturnDescription :
 
 private abbrev AERCR := AppendEmptyRightCellsReturnDescription
 
-theorem inputTapeRightCellsCode_nil_ne_nil :
+private theorem inputTapeRightCellsCode_nil_ne_nil :
     inputTapeRightCellsCode ([] : Word Bool) ≠ [] := by
   simp [inputTapeRightCellsCode,
     encodeCellListAppend,

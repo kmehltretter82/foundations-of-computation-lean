@@ -316,7 +316,7 @@ def returnToFirstMarkerScanConfig
       config 1 (List.append (rest.map some) [none])
         (some bit :: List.append (scanned.map some) [none])
 
-theorem run_returnToFirstMarker_scan
+private theorem run_returnToFirstMarker_scan
     (remainingRev scanned : Word Bool) :
     ReturnToFirstMarkerDescription.runConfig
         (remainingRev.length + 1)
@@ -502,7 +502,7 @@ def cellListCanonicalLengthPrefixBitsRev : Nat -> Word Bool
       List.append tickBits.reverse
         (cellListCanonicalLengthPrefixBitsRev n)
 
-theorem cellListCanonicalLengthPrefixBitsRev_map_some
+private theorem cellListCanonicalLengthPrefixBitsRev_map_some
     (n : Nat) :
     (cellListCanonicalLengthPrefixBitsRev n).map some =
       cellListCanonicalLengthPrefixRev n := by
@@ -530,7 +530,7 @@ theorem cellListCanonicalRestoredBitsRev_map_some_withBase
     cellListCanonicalLengthPrefixBitsRev_map_some,
     List.map_append, List.map_reverse, List.append_assoc]
 
-theorem cellListCanonicalFinishStartLeftWithBase_append_base
+private theorem cellListCanonicalFinishStartLeftWithBase_append_base
     (cells baseLeft extra : List (Option Bool)) :
     cellListCanonicalFinishStartLeftWithBase
         cells (List.append baseLeft extra) =
@@ -551,7 +551,7 @@ theorem cellListCanonicalRestoredLeftWithBase_append_base
   rw [cellListCanonicalFinishStartLeftWithBase_append_base]
   simp [List.append_assoc]
 
-theorem cellListFieldBits_append_nil
+private theorem cellListFieldBits_append_nil
     (cells : List (Option Bool)) (suffixBits : Word Bool) :
     List.append (cellListFieldBits cells []) suffixBits =
       cellListFieldBits cells suffixBits := by
@@ -563,7 +563,7 @@ theorem cellFieldBits_append_nil
       cellFieldBits cell suffixBits := by
   simp [cellFieldBits]
 
-theorem tapeFieldBits_append_nil
+private theorem tapeFieldBits_append_nil
     (T : Tape Bool) (suffixBits : Word Bool) :
     List.append (tapeFieldBits T []) suffixBits =
       tapeFieldBits T suffixBits := by
@@ -577,7 +577,7 @@ theorem configurationFieldBits_append_nil
   simp [configurationFieldBits, tapeFieldBits, cellFieldBits,
     cellListFieldBits, List.append_assoc]
 
-theorem cellListCanonicalLengthPrefixBitsRev_reverse_append_tick
+private theorem cellListCanonicalLengthPrefixBitsRev_reverse_append_tick
     (n : Nat) :
     List.append (cellListCanonicalLengthPrefixBitsRev n).reverse tickBits =
       List.append tickBits
@@ -608,7 +608,7 @@ theorem cellListCanonicalLengthPrefixBitsRev_reverse_append_tick
               simp [cellListCanonicalLengthPrefixBitsRev,
                 List.reverse_append, List.append_assoc]
 
-theorem cellListCanonicalLengthPrefixBitsRev_reverse_append_done
+private theorem cellListCanonicalLengthPrefixBitsRev_reverse_append_done
     (n : Nat) :
     List.append (cellListCanonicalLengthPrefixBitsRev n).reverse doneBits =
       stageNatBits n := by

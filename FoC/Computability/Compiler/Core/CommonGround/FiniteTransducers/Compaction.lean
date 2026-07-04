@@ -70,7 +70,7 @@ structure RightEndCompactionMachineContract
         (rightEndCompactionSourceTape leftCells)
         (rightEndCompactionTargetTape leftCells extraScratch)
 
-theorem filterMap_replicate_none
+private theorem filterMap_replicate_none
     (n : Nat) :
     (List.replicate n (none : Option Bool)).filterMap
         (fun cell => cell) = [] := by
@@ -80,12 +80,12 @@ theorem filterMap_replicate_none
   | succ n ih =>
       simp [List.replicate, ih]
 
-theorem filterMap_map_some
+private theorem filterMap_map_some
     (bits : Word Bool) :
     (bits.map some).filterMap (fun cell => cell) = bits := by
   simp [Function.comp_def]
 
-theorem filterMap_length_le
+private theorem filterMap_length_le
     (cells : List (Option Bool)) :
     (cells.filterMap (fun cell => cell)).length <= cells.length := by
   induction cells with
@@ -94,7 +94,7 @@ theorem filterMap_length_le
   | cons cell rest ih =>
       cases cell <;> simp [ih] <;> lia
 
-theorem rightScratchOutputCells_filterMap
+private theorem rightScratchOutputCells_filterMap
     (output : Word Bool) (scratchWidth : Nat) :
     (rightScratchOutputCells output scratchWidth).filterMap
         (fun cell => cell) =
@@ -102,7 +102,7 @@ theorem rightScratchOutputCells_filterMap
   simp [rightScratchOutputCells, List.filterMap_append,
     Function.comp_def]
 
-theorem rightScratchOutputCells_length
+private theorem rightScratchOutputCells_length
     (output : Word Bool) (scratchWidth : Nat) :
     (rightScratchOutputCells output scratchWidth).length =
       output.length + scratchWidth := by
@@ -127,7 +127,7 @@ theorem FSTTargetTape_cells_eq_rightScratchOutputCells
   rw [houtput]
   exact FSTTargetTape_cells_cons_cons first second rest scratchWidth
 
-theorem compactedCellsWithScratch_filterMap
+private theorem compactedCellsWithScratch_filterMap
     (cells : List (Option Bool)) (extraScratch : Nat) :
     (compactedCellsWithScratch cells extraScratch).filterMap
         (fun cell => cell) =
@@ -138,7 +138,7 @@ theorem compactedCellsWithScratch_filterMap
     (cells.length - (cells.filterMap (fun cell => cell)).length +
       extraScratch)
 
-theorem compactedCellsWithScratch_length
+private theorem compactedCellsWithScratch_length
     (cells : List (Option Bool)) (extraScratch : Nat) :
     (compactedCellsWithScratch cells extraScratch).length =
       cells.length + extraScratch := by
@@ -146,7 +146,7 @@ theorem compactedCellsWithScratch_length
   rw [compactedCellsWithScratch, rightScratchOutputCells_length]
   lia
 
-theorem compactedCellsWithScratch_of_filterMap_length
+private theorem compactedCellsWithScratch_of_filterMap_length
     (cells : List (Option Bool)) (output : Word Bool)
     (baseScratch extraScratch : Nat)
     (hfilter : cells.filterMap (fun cell => cell) = output)
@@ -160,7 +160,7 @@ theorem compactedCellsWithScratch_of_filterMap_length
     lia
   rw [hscratch]
 
-theorem rightEndCompactionVisibleCells_filterMap
+private theorem rightEndCompactionVisibleCells_filterMap
     (leftCells : List (Option Bool)) :
     (rightEndCompactionVisibleCells leftCells).filterMap
         (fun cell => cell) =

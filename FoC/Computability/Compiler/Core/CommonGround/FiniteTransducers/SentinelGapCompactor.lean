@@ -689,7 +689,7 @@ theorem sentinelGapCompactorFinalPadding_eq_replicate_append
             congr 1
             lia
 
-theorem replicate_add_two_none
+private theorem replicate_add_two_none
     (n : Nat) :
     List.replicate (n + 2) (none : Option Bool) =
       none :: none :: List.replicate n (none : Option Bool) := by
@@ -702,7 +702,7 @@ theorem replicate_add_two_none
       rw [ih]
       rw [List.replicate_succ]
 
-theorem sentinelGapCompactorFinalPadding_cons_cons
+private theorem sentinelGapCompactorFinalPadding_cons_cons
     (gap paddingTail : Nat) :
     sentinelGapCompactorFinalPadding gap
         (Nat.succ (Nat.succ paddingTail)) [] =
@@ -1028,7 +1028,7 @@ theorem sentinelGapCompactorDescription_haltsFromTape_gapBase_zero
           leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_nil]
         simpa [sentinelGapCompactorFinalPadding] using hn.right
 
-theorem sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary
+private theorem sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary
     (pref bits : Word Bool) (leftBit : Bool)
     (padding : List (Option Bool)) :
     Tape.move Direction.left
@@ -1046,7 +1046,7 @@ theorem sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary
       Tape.move, Tape.moveLeft, List.reverse_append,
       List.map_reverse, List.append_assoc]
 
-theorem sentinelGapTarget_move_left_move_right_withBoundary_cons_cons
+private theorem sentinelGapTarget_move_left_move_right_withBoundary_cons_cons
     (pref bits : Word Bool) (leftBit : Bool)
     (pad nextPad : Option Bool) (padding : List (Option Bool)) :
     Tape.move Direction.left
@@ -1646,7 +1646,7 @@ theorem falseMarkerTargetRestoreDescription_subroutineReady :
     leftMoveTwiceDescription_subroutineReady
     restoreFalseMarkerRewindDescription_subroutineReady
 
-theorem falseMarkerTarget_move_left_left_eq_restoreSource
+private theorem falseMarkerTarget_move_left_left_eq_restoreSource
     (second : Bool) (rest : Word Bool)
     (padding : List (Option Bool)) :
     Tape.move Direction.left

@@ -24,7 +24,7 @@ def bitMapAppendFinalTransducer
     FiniteTransducer :=
   bitwiseOutputTransducer (fun bit => [emit bit]) final
 
-theorem bitwiseOutput_singleton_map
+private theorem bitwiseOutput_singleton_map
     (emit : Bool -> Bool) (input : Word Bool) :
     bitwiseOutput (fun bit => [emit bit]) input = input.map emit := by
   induction input with
@@ -87,7 +87,7 @@ def mapAppendWordTransitions
       first :: mapAppendWordScanFalseTransition emit ::
         mapAppendWordScanTrueTransition emit :: rest
 
-theorem mapAppendWordPrefix_deterministic
+private theorem mapAppendWordPrefix_deterministic
     (emit : Bool -> Bool) (first t u : TransitionDescription)
     (hfirstSource : first.source = 0)
     (hfirstRead : first.read = none)

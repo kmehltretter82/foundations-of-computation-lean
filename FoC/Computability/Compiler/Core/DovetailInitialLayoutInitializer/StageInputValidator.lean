@@ -23,7 +23,7 @@ def StageInputIdentityPrimitive :
     | some _ => some code
     | none => none
 
-theorem stageInputIdentityPrimitive_transform_eq_some_iff
+private theorem stageInputIdentityPrimitive_transform_eq_some_iff
     (code out : Word MachineCodeSymbol) :
     StageInputIdentityPrimitive.transform code = some out <->
       exists w : Word Bool,

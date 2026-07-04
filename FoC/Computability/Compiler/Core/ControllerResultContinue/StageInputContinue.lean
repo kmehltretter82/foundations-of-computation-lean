@@ -23,19 +23,19 @@ def stageInputContinueNatTail : Nat -> Word MachineCodeSymbol
   | 0 => [MachineCodeSymbol.tick, MachineCodeSymbol.done, MachineCodeSymbol.done]
   | n + 1 => MachineCodeSymbol.tick :: stageInputContinueNatTail n
 
-theorem encodeNatAppend_succ
+private theorem encodeNatAppend_succ
     (n : Nat) (suffix : Word MachineCodeSymbol) :
     encodeNatAppend (n + 1) suffix =
       MachineCodeSymbol.tick ::
         encodeNatAppend n suffix := by
   rfl
 
-theorem encodeBoolWordAppend_nil_nil :
+private theorem encodeBoolWordAppend_nil_nil :
     encodeBoolWordAppend ([] : Word Bool) [] =
       [MachineCodeSymbol.done] := by
   rfl
 
-theorem stageInputContinueNatTail_eq_encode
+private theorem stageInputContinueNatTail_eq_encode
     (stage : Nat) :
     stageInputContinueNatTail stage =
       encodeNatAppend (stage + 1)
@@ -51,7 +51,7 @@ theorem stageInputContinueNatTail_eq_encode
       rw [ih]
       rfl
 
-theorem stageInputContinue_output_eq_header_input_tail
+private theorem stageInputContinue_output_eq_header_input_tail
     (input : Word Bool) (stage : Nat) :
     DovetailControllerLayout.encode
         { input := input, stage := stage + 1, result := [] } =
@@ -61,7 +61,7 @@ theorem stageInputContinue_output_eq_header_input_tail
   rw [stageInputContinueNatTail_eq_encode]
   rfl
 
-theorem stageInputContinue_nextStage_eq_header_input_tail
+private theorem stageInputContinue_nextStage_eq_header_input_tail
     (C : DovetailControllerLayout) :
     DovetailControllerLayout.encode
         (DovetailControllerLayout.nextStage C) =
@@ -71,7 +71,7 @@ theorem stageInputContinue_nextStage_eq_header_input_tail
   cases C
   exact stageInputContinue_output_eq_header_input_tail _ _
 
-theorem stageInputContinue_stageInputCode_eq_input_stage
+private theorem stageInputContinue_stageInputCode_eq_input_stage
     (input : Word Bool) (stage : Nat) :
     DovetailLayout.stageInputCode input stage =
       encodeBoolWordAppend input
@@ -83,7 +83,7 @@ def stageInputContinueStagePrefix
   encodeBoolWordAppend input
     (List.replicate stage MachineCodeSymbol.tick)
 
-theorem stageInputContinueNatTail_eq_replicate
+private theorem stageInputContinueNatTail_eq_replicate
     (stage : Nat) :
     stageInputContinueNatTail stage =
       List.append (List.replicate stage MachineCodeSymbol.tick)
@@ -101,7 +101,7 @@ theorem stageInputContinueNatTail_eq_replicate
                 MachineCodeSymbol.done]
       rw [ih]
 
-theorem stageInputContinue_stageInputCode_eq_prefix_done
+private theorem stageInputContinue_stageInputCode_eq_prefix_done
     (input : Word Bool) (stage : Nat) :
     DovetailLayout.stageInputCode input stage =
       List.append (stageInputContinueStagePrefix input stage)
@@ -119,7 +119,7 @@ theorem stageInputContinue_stageInputCode_eq_prefix_done
       (List.replicate stage MachineCodeSymbol.tick)
       [MachineCodeSymbol.done]
 
-theorem stageInputContinue_output_eq_header_prefix_tail
+private theorem stageInputContinue_output_eq_header_prefix_tail
     (input : Word Bool) (stage : Nat) :
     DovetailControllerLayout.encode
         { input := input, stage := stage + 1, result := [] } =
@@ -156,7 +156,7 @@ def stageInputContinueBitsOutputFromPrefix
       (List.append stageInputContinueTickBits
         stageInputContinueDoneDoneBits))
 
-theorem stageInputContinue_stageInputBits_eq_prefix_done
+private theorem stageInputContinue_stageInputBits_eq_prefix_done
     (input : Word Bool) (stage : Nat) :
     DovetailInitialLayoutInitializer.stageInputBits input stage =
       List.append
@@ -401,7 +401,7 @@ theorem stageInputContinueCheckedRewriterDescription_run_rewrite_last
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem stageInputContinueDoneDoneBits_eq :
+private theorem stageInputContinueDoneDoneBits_eq :
     stageInputContinueDoneDoneBits =
       [false, false, true, true, false, false, true, true] := by
   rfl

@@ -44,7 +44,7 @@ def statefulOptionOutputFrom
         (optionEmitWord (emit state) bit)
         (statefulOptionOutputFrom next emit (next state bit) rest)
 
-theorem statefulOptionAfter_append
+private theorem statefulOptionAfter_append
     (next : Nat -> Bool -> Nat)
     (state : Nat) (xs ys : Word Bool) :
     statefulOptionAfter next state (List.append xs ys) =
@@ -98,7 +98,7 @@ theorem statefulOptionOutputFrom_append
           exact congrArg (fun tail => out :: tail)
             (ih (next state bit))
 
-theorem statefulOptionOutputFrom_eq_filterMap_cells
+private theorem statefulOptionOutputFrom_eq_filterMap_cells
     (next : Nat -> Bool -> Nat)
     (emit : Nat -> Bool -> Option Bool)
     (state : Nat) (input : Word Bool) :

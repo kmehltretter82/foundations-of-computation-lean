@@ -13,7 +13,7 @@ namespace Computability
 
 open Languages
 
-theorem codePrefixParserBranch_failure_nat_noBoundary
+private theorem codePrefixParserBranch_failure_nat_noBoundary
     {current : CodePrefixParserNormalizerState}
     (hnotHalt : current ≠ CodePrefixParserNormalizerState.halt)
     (hboundary :
@@ -267,7 +267,7 @@ theorem codePrefixParserBranch_computes_nat_noBoundary
     transitionListParserTape_eq_optionTape_map,
     List.map_append, List.map_reverse] using hbranch
 
-theorem codePrefixParserBranch_failure_nat_boundary
+private theorem codePrefixParserBranch_failure_nat_boundary
     {current : CodePrefixParserNormalizerState}
     (hboundary :
       codePrefixParserBranchFailureNeedsBoundary current = true)
@@ -401,7 +401,7 @@ theorem codePrefixParserBranch_failure_nat_boundary
                 simpa [transitionListParserOptionTape, Tape.read] using
                   hstuck_bad MachineCodeSymbol.moveRight (by simp) (by simp))
 
-theorem codePrefixParserBranch_failure_cell_boundary
+private theorem codePrefixParserBranch_failure_cell_boundary
     {current : CodePrefixParserNormalizerState}
     (hboundary :
       codePrefixParserBranchFailureNeedsBoundary current = true)
@@ -494,7 +494,7 @@ theorem codePrefixParserBranch_failure_cell_boundary
                   hstuck_bad MachineCodeSymbol.moveRight
                     (by simp) (by simp) (by simp))
 
-theorem codePrefixParserBranch_failure_direction_boundary
+private theorem codePrefixParserBranch_failure_direction_boundary
     {current : CodePrefixParserNormalizerState}
     (hboundary :
       codePrefixParserBranchFailureNeedsBoundary current = true)
@@ -610,7 +610,7 @@ theorem codePrefixParserBranch_failure_sourceNat_boundary
         simp [codePrefixParserNormalizerMachine] at htick hdone ⊢)
       leftSymbols prefixLeft tokens hdecode
 
-theorem codePrefixParserBranch_failure_seekCountDoneInitial_boundary
+private theorem codePrefixParserBranch_failure_seekCountDoneInitial_boundary
     (leftSymbols prefixLeft tokens : Word MachineCodeSymbol)
     (hdecode : MachineDescription.decodeNat tokens = none) :
     codePrefixParserBranchHaltsFromWithOutput

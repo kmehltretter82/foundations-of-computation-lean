@@ -47,7 +47,7 @@ theorem transitionListParserOptionTape_normalizedOutput
     simp [Tape.normalizedOutput, Tape.cells,
       transitionListParserOptionTape, List.filterMap_append]
 
-theorem codePrefixParserNormalizer_replicate_append_singleton_tick
+private theorem codePrefixParserNormalizer_replicate_append_singleton_tick
     (n : Nat) :
     List.append
         (List.replicate n (some MachineCodeSymbol.tick))
@@ -179,7 +179,7 @@ theorem codePrefixParserNormalizerMachine_step_findInitialCount_tick
     (by
       simp [codePrefixParserNormalizerMachine])
 
-theorem codePrefixParserNormalizerMachine_step_findInitialCount_done
+private theorem codePrefixParserNormalizerMachine_step_findInitialCount_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.findInitialCount
@@ -215,7 +215,7 @@ theorem codePrefixParserNormalizerMachine_step_findInitialCount_done
             simp [codePrefixParserNormalizerMachine,
               codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_findCount_initial_done
+private theorem codePrefixParserNormalizerMachine_step_findCount_initial_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state :=
@@ -275,7 +275,7 @@ theorem codePrefixParserNormalizerMachine_step_findCount_blank
         simp [codePrefixParserNormalizerMachine,
           codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_findCount_saved_done
+private theorem codePrefixParserNormalizerMachine_step_findCount_saved_done
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -293,7 +293,7 @@ theorem codePrefixParserNormalizerMachine_step_findCount_saved_done
     (by simp [codePrefixParserNormalizerMachine,
       codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_restoreLeft_blank
+private theorem codePrefixParserNormalizerMachine_step_restoreLeft_blank
     (leftHead : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
@@ -318,7 +318,7 @@ theorem codePrefixParserNormalizerMachine_step_restoreLeft_blank
       simp [codePrefixParserNormalizerMachine,
         codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_restoreLeft_none
+private theorem codePrefixParserNormalizerMachine_step_restoreLeft_none
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.restoreLeft
@@ -339,7 +339,7 @@ theorem codePrefixParserNormalizerMachine_step_restoreLeft_none
     (by
       simp [codePrefixParserNormalizerMachine])
 
-theorem codePrefixParserNormalizer_replicate_tick_append_tick
+private theorem codePrefixParserNormalizer_replicate_tick_append_tick
     (n : Nat) (tail : List (Option MachineCodeSymbol)) :
     List.append (List.replicate n (some MachineCodeSymbol.tick))
         (some MachineCodeSymbol.tick :: tail) =
@@ -506,7 +506,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_saved_blanks_done
                 (some MachineCodeSymbol.blank) blanks leftRev]
             exact ih (some MachineCodeSymbol.blank :: leftRev))
 
-theorem codePrefixParserNormalizerMachine_step_restoreForward_tick
+private theorem codePrefixParserNormalizerMachine_step_restoreForward_tick
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.restoreForward
@@ -527,7 +527,7 @@ theorem codePrefixParserNormalizerMachine_step_restoreForward_tick
       simp [codePrefixParserNormalizerMachine,
         codePrefixParserNormalizerKeep])
 
-theorem codePrefixParserNormalizerMachine_step_restoreForward_done
+private theorem codePrefixParserNormalizerMachine_step_restoreForward_done
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.restoreForward
@@ -718,7 +718,7 @@ theorem codePrefixParserNormalizerMachine_computes_restoreForward_ticks
             simpa [codePrefixParserNormalizerRestoredTicksLeft] using
               ih (some MachineCodeSymbol.tick :: leftRev))
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_head
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_head
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -798,7 +798,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_head
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_nat
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_nat
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -900,7 +900,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_nat
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_nat
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_nat
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -1002,7 +1002,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_nat
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_haltField_nat
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_haltField_nat
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -1104,7 +1104,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_haltField_nat
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_fields
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_fields
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -1227,7 +1227,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_startField_fields
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_fields
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_fields
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -1351,7 +1351,7 @@ theorem codePrefixParserNormalizerMachine_haltsFromIn_stateCount_fields
                         codePrefixParserNormalizerTape,
                         transitionListParserTape, Tape.read] at haction
 
-theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_fields
+private theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_fields
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -1465,7 +1465,7 @@ into soundness and completeness directions; the packaged spec below keeps
 downstream construction code independent of that split.
 -/
 
-theorem codePrefixParserNormalizerMachine_haltsWithOutputIn_needHeader_fields
+private theorem codePrefixParserNormalizerMachine_haltsWithOutputIn_needHeader_fields
     {steps : Nat} {tokens out : Word MachineCodeSymbol}
     (h :
       TuringMachine.HaltsWithOutputIn

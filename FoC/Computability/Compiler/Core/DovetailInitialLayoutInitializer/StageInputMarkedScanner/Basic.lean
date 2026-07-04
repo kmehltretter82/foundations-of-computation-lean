@@ -135,7 +135,7 @@ def markedCellsBits : Word Bool -> Word Bool
       List.append (markedCellBits b) (markedCellsBits rest) := by
   rfl
 
-theorem markedCellsBits_append
+private theorem markedCellsBits_append
     (w tail : Word Bool) :
     markedCellsBits (List.append w tail) =
       List.append (markedCellsBits w) (markedCellsBits tail) := by
@@ -147,7 +147,7 @@ theorem markedCellsBits_append
       exact congrArg (fun bits =>
         List.append (markedCellBits b) bits) ih
 
-theorem markedCellsBits_append_single
+private theorem markedCellsBits_append_single
     (w : Word Bool) (b : Bool) :
     markedCellsBits (List.append w [b]) =
       List.append (markedCellsBits w) (markedCellBits b) := by
@@ -162,15 +162,15 @@ theorem markedCellsBits_append_single_map
   simpa [List.map_append] using
     congrArg (List.map some) (markedCellsBits_append_single w b)
 
-theorem cellBits_length (b : Bool) :
+private theorem cellBits_length (b : Bool) :
     (cellBits b).length = 4 := by
   cases b <;> rfl
 
-theorem markedCellBits_length (b : Bool) :
+private theorem markedCellBits_length (b : Bool) :
     (markedCellBits b).length = 4 := by
   cases b <;> rfl
 
-theorem markedCellsBits_length
+private theorem markedCellsBits_length
     (w : Word Bool) :
     (markedCellsBits w).length = 4 * w.length := by
   induction w with
@@ -453,7 +453,7 @@ theorem run_state100_done
       | some b =>
           cases b <;> rfl
 
-theorem run_state150_markedCell
+private theorem run_state150_markedCell
     (b : Bool) (left right : List (Option Bool)) :
     SIMS.runConfig 4
         (config 150 left
@@ -517,7 +517,7 @@ theorem run_state150_to_state160
     transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem run_state150_stageNat_to_state160
+private theorem run_state150_stageNat_to_state160
     (stage : Nat) (left : List (Option Bool)) :
     SIMS.runConfig 2
         (config 150 left ((stageNatBits stage).map some)) =
@@ -528,7 +528,7 @@ theorem run_state150_stageNat_to_state160
   rw [htail]
   simpa using run_state150_to_state160 left (tail.map some)
 
-theorem run_state150_markedCells_to_state160
+private theorem run_state150_markedCells_to_state160
     (processed : Word Bool) (stage : Nat)
     (left : List (Option Bool)) :
     SIMS.runConfig
@@ -621,7 +621,7 @@ theorem run_state200_tick
 def donePrefixRev : List (Option Bool) :=
   [some true, some false, some false]
 
-theorem run_state200_done_blank
+private theorem run_state200_done_blank
     (left right : List (Option Bool)) :
     SIMS.runConfig 5
         (config 200 left
@@ -700,7 +700,7 @@ theorem run_state120_stageNat
         encodeCodeSymbolAsInput,
         List.map_append, List.append_assoc]
 
-theorem run_state130_markedCell
+private theorem run_state130_markedCell
     (b : Bool) (left right : List (Option Bool)) :
     SIMS.runConfig 4
         (config 130 left
@@ -824,7 +824,7 @@ theorem run_state140_returnToLengthMarker
       rw [ih]
       simp [List.map_append, List.append_assoc]
 
-theorem run_state220_some_cons
+private theorem run_state220_some_cons
     (b : Bool) (left : List (Option Bool))
     (cell : Option Bool) (right : List (Option Bool)) :
     SIMS.runConfig 1
@@ -839,7 +839,7 @@ theorem run_state220_some_cons
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
-theorem run_state220_some_nil
+private theorem run_state220_some_nil
     (b : Bool) (right : List (Option Bool)) :
     SIMS.runConfig 1
         (config 220 [] (some b :: right)) =
@@ -853,7 +853,7 @@ theorem run_state220_some_nil
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft]
 
-theorem run_state220_none
+private theorem run_state220_none
     (left right : List (Option Bool)) :
     SIMS.runConfig 1
         (config 220 left (none :: right)) =
@@ -877,7 +877,7 @@ def state220ScanConfig
       config 220 (List.append (rest.map some) (boundary :: leftTail))
         (some b :: right)
 
-theorem run_state220_bits_to_boundary
+private theorem run_state220_bits_to_boundary
     (bitsToLeft : Word Bool) (boundary : Option Bool)
     (leftTail right : List (Option Bool)) :
     SIMS.runConfig bitsToLeft.length
@@ -922,7 +922,7 @@ theorem run_state220_bits_to_boundary
           simp [state220ScanConfig] at h
           simpa [List.map_append, List.append_assoc] using h
 
-theorem run_state200_done_end
+private theorem run_state200_done_end
     (pre : Word Bool) (boundary : Option Bool)
     (leftTail : List (Option Bool)) :
     SIMS.runConfig 5
@@ -941,7 +941,7 @@ theorem run_state200_done_end
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
     List.reverse_append]
 
-theorem run_state200_stageNat_end
+private theorem run_state200_stageNat_end
     (stage : Nat) (pre : Word Bool) (boundary : Option Bool)
     (leftTail : List (Option Bool)) :
     SIMS.runConfig (4 * stage + 5)
@@ -978,7 +978,7 @@ nonempty payload first enters state {lit}`120` after marking the current length
 tick.
 -/
 
-theorem run_start_cons_to_state120
+private theorem run_start_cons_to_state120
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     SIMS.runConfig 6
         { state := SIMS.start
@@ -1041,7 +1041,7 @@ theorem run_start_cons_to_state120
               List.map some (stageNatBits stage))) = cells
     cases cells <;> rfl
 
-theorem run_start_nil_to_state200
+private theorem run_start_nil_to_state200
     (stage : Nat) :
     SIMS.runConfig 18
         { state := SIMS.start
@@ -1065,7 +1065,7 @@ theorem run_start_nil_to_state200
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem run_start_nil
+private theorem run_start_nil
     (stage : Nat) :
     SIMS.runConfig (30 + 8 * stage)
         { state := SIMS.start
@@ -1215,7 +1215,7 @@ def markingReturnScanRev
     (List.append (markedCellsBits processed).reverse
       (stageNatBits rest.length).reverse)
 
-theorem run_mark_current_to_state100
+private theorem run_mark_current_to_state100
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) :
     exists steps : Nat,
@@ -1245,7 +1245,7 @@ theorem run_mark_current_to_state100
     markedCellBits, List.map_append, List.reverse_append,
     List.append_assoc] using hreturn
 
-theorem run_marking_loop_from_state120
+private theorem run_marking_loop_from_state120
     (processed : Word Bool) (b : Bool) (rest : Word Bool)
     (stage : Nat) :
     exists steps : Nat,
@@ -1343,7 +1343,7 @@ def repeatedTickBits : Nat -> Word Bool
   | 0 => []
   | n + 1 => List.append (repeatedTickBits n) tickBits
 
-theorem repeatedTickBits_append_tick_comm (n : Nat) :
+private theorem repeatedTickBits_append_tick_comm (n : Nat) :
     List.append (repeatedTickBits n) tickBits =
       List.append tickBits (repeatedTickBits n) := by
   induction n with
@@ -1366,7 +1366,7 @@ theorem repeatedTickBits_append_tick_comm (n : Nat) :
             (List.append (repeatedTickBits n) tickBits) := by
               simp [List.append_assoc]
 
-theorem stageNatBits_eq_repeatedTickBits_doneBits (n : Nat) :
+private theorem stageNatBits_eq_repeatedTickBits_doneBits (n : Nat) :
     stageNatBits n =
       List.append (repeatedTickBits n) doneBits := by
   induction n with
@@ -1395,7 +1395,7 @@ theorem stageNatBits_eq_repeatedTickBits_doneBits (n : Nat) :
             (List.append tickBits doneBits) := by
               simp [List.append_assoc]
 
-theorem finishLengthPrefixScanBits_reverse_repeatedTickBits
+private theorem finishLengthPrefixScanBits_reverse_repeatedTickBits
     (n : Nat) :
     (finishLengthPrefixScanBits n).reverse =
       List.append [true, false] (repeatedTickBits n) := by
@@ -1407,7 +1407,7 @@ theorem finishLengthPrefixScanBits_reverse_repeatedTickBits
         tickBits, encodeCodeSymbolAsInput,
         ih, List.append_assoc]
 
-theorem finishLengthPrefixScanBits_reverse_doneBits (n : Nat) :
+private theorem finishLengthPrefixScanBits_reverse_doneBits (n : Nat) :
     List.append (finishLengthPrefixScanBits n).reverse doneBits =
       List.append [true, false] (stageNatBits n) := by
   rw [finishLengthPrefixScanBits_reverse_repeatedTickBits]
@@ -1453,7 +1453,7 @@ def state160ScanConfig
       config 160 (List.append (rest.map some) (boundary :: leftTail))
         (some b :: right)
 
-theorem run_state160_some_cons
+private theorem run_state160_some_cons
     (b : Bool) (cell : Option Bool)
     (left right : List (Option Bool)) :
     SIMS.runConfig 1
@@ -1601,7 +1601,7 @@ def CheckedBoundaryScanStart
     (cfg : Configuration) : Prop :=
   cfg = checkedBoundaryScanConfig w stage
 
-theorem run_state120_marking_loop
+private theorem run_state120_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -1614,7 +1614,7 @@ theorem run_state120_marking_loop
   simpa [state120AfterStartConfig, markingState120,
     activeLengthPrefixRev_zero] using hsteps
 
-theorem run_start_cons_marking_loop
+private theorem run_start_cons_marking_loop
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -1635,7 +1635,7 @@ theorem run_start_cons_marking_loop
   rw [run_start_cons_to_state120]
   exact hloop
 
-theorem run_finish_restore_cells
+private theorem run_finish_restore_cells
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -1645,7 +1645,7 @@ theorem run_finish_restore_cells
   simpa [finishStartConfig, state160AfterRestoreConfig] using
     run_state150_markedCells_to_state160 w stage (finishStartLeft w)
 
-theorem run_finish_scan_left_to_append
+private theorem run_finish_scan_left_to_append
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
     exists cfg : Configuration,
@@ -1679,7 +1679,7 @@ theorem run_finish_scan_left_to_append
   simp [appendBlankStartConfig, markedStageNatBits, bits, scanRight,
     finishScanBits_reverse_nonempty, List.map_append, List.append_assoc]
 
-theorem run_finish_append_blank
+private theorem run_finish_append_blank
     {w : Word Bool} {stage : Nat}
     {cfg : Configuration}
     (hcfg : AppendBlankStart w stage cfg) :
@@ -1736,7 +1736,7 @@ theorem run_finish_append_blank
   simp [checkedBoundaryScanConfig,
     stageInputSecondBitTail_eq_prefix_stageNat, tailPrefix]
 
-theorem run_finish_boundary_to_halt
+private theorem run_finish_boundary_to_halt
     {w : Word Bool} {stage : Nat}
     {cfg : Configuration}
     (hcfg : CheckedBoundaryScanStart w stage cfg) :
@@ -1769,7 +1769,7 @@ theorem run_finish_boundary_to_halt
     cells
   cases cells <;> rfl
 
-theorem run_forward_finish
+private theorem run_forward_finish
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -1797,7 +1797,7 @@ theorem run_forward_finish
   rw [hblank]
   exact hhalt
 
-theorem run_start_forward_cons
+private theorem run_start_forward_cons
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     exists steps : Nat,
       SIMS.runConfig steps

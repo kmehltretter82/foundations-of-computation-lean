@@ -37,7 +37,7 @@ def mirroredDescription (D : MachineDescription) :
     MachineDescription :=
   { D with transitions := D.transitions.map mirroredTransition }
 
-theorem mirroredDirection_involutive (dir : Direction) :
+private theorem mirroredDirection_involutive (dir : Direction) :
     mirroredDirection (mirroredDirection dir) = dir := by
   cases dir <;> rfl
 
@@ -45,7 +45,7 @@ theorem mirroredTape_involutive (T : Tape Bool) :
     mirroredTape (mirroredTape T) = T := by
   cases T <;> rfl
 
-theorem mirroredTransition_involutive (row : TransitionDescription) :
+private theorem mirroredTransition_involutive (row : TransitionDescription) :
     mirroredTransition (mirroredTransition row) = row := by
   cases row
   simp [mirroredTransition, mirroredDirection_involutive]
@@ -68,7 +68,7 @@ theorem mirroredTape_move (dir : Direction) (T : Tape Bool) :
         simp [mirroredTape, mirroredDirection, Tape.move,
           Tape.moveLeft, Tape.moveRight]
 
-theorem mirroredTransition_matches
+private theorem mirroredTransition_matches
     (source : Nat) (read : Option Bool)
     (row : TransitionDescription) :
     Matches source read (mirroredTransition row) =

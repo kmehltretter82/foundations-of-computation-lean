@@ -45,7 +45,7 @@ def state100AfterMarkedWithTailBits
         (List.append ((markedCellBits b).map some)
           (List.append ((cellsBits rest).map some)
             (tailBits.map some)))))
-theorem run_mark_current_to_state100_with_tailBits
+private theorem run_mark_current_to_state100_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -74,7 +74,7 @@ theorem run_mark_current_to_state100_with_tailBits
     activeLengthPrefixRestored, markedCellBits,
     List.map_append, List.reverse_append, List.append_assoc]
     using hreturn
-theorem run_marking_loop_from_state120_with_tailBits
+private theorem run_marking_loop_from_state120_with_tailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -140,7 +140,7 @@ theorem run_marking_loop_from_state120_with_tailBits
       rw [markedCellsBits_append_single_map] at hrec
       simpa [activeLengthPrefixRev_succ, cellsBits_cons,
         List.length_append, List.map_append, List.append_assoc] using hrec
-theorem run_state120_bool_tail_to_finish
+private theorem run_state120_bool_tail_to_finish
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -169,7 +169,7 @@ def appendBlankStartConfigWithTailBits
   config 180 [none, some false]
     (List.append ((stageInputSecondBitTailPrefix w).map some)
       (some false :: none :: tailBits.map some))
-theorem run_finish_restore_cells_tailBits
+private theorem run_finish_restore_cells_tailBits
     (w tailBits : Word Bool) :
     SIMS.runConfig (4 * w.length + 2)
         (finishStartConfigWithTailBits w (false :: false :: tailBits)) =
@@ -185,7 +185,7 @@ theorem run_finish_restore_cells_tailBits
   rw [run_state150_markedCells]
   rw [run_state150_to_state160]
   simp [state160AfterRestoreWithTailBits]
-theorem run_finish_scan_left_to_append_tailBits
+private theorem run_finish_scan_left_to_append_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -215,7 +215,7 @@ theorem run_finish_scan_left_to_append_tailBits
   rw [run_state170_none_to_state180]
   simp [appendBlankStartConfigWithTailBits, bits, scanRight,
     finishScanBits_reverse_nonempty, List.map_append, List.append_assoc]
-theorem run_append_blank_to_state200_tailBits
+private theorem run_append_blank_to_state200_tailBits
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -245,7 +245,7 @@ theorem run_append_blank_to_state200_tailBits
   rw [runConfig_add]
   rw [run_state180_some]
   rw [run_state180_none_cons]
-theorem run_finish_tail_false_false_to_state200
+private theorem run_finish_tail_false_false_to_state200
     (b : Bool) (rest tailBits : Word Bool) :
     exists steps : Nat,
       SIMS.runConfig steps
@@ -272,7 +272,7 @@ theorem run_finish_tail_false_false_to_state200
   rw [runConfig_add]
   rw [hscan]
   exact happend
-theorem decodeBoolWord_tick_tail_shape
+private theorem decodeBoolWord_tick_tail_shape
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     (hinput :
       decodeBoolWord
@@ -306,7 +306,7 @@ theorem decodeBoolWord_tick_tail_shape
         encodeCellAppend,
         encodeCell] at htokens
       exact htokens
-theorem run_finish_tail_blank_ne_halt
+private theorem run_finish_tail_blank_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (SIMS.runConfig n
@@ -343,7 +343,7 @@ theorem run_finish_tail_blank_ne_halt
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-theorem run_finish_tail_zero_ne_halt
+private theorem run_finish_tail_zero_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (SIMS.runConfig n
@@ -380,7 +380,7 @@ theorem run_finish_tail_zero_ne_halt
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-theorem run_finish_tail_one_ne_halt
+private theorem run_finish_tail_one_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (SIMS.runConfig n
@@ -417,7 +417,7 @@ theorem run_finish_tail_one_ne_halt
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-theorem run_finish_tail_moveLeft_ne_halt
+private theorem run_finish_tail_moveLeft_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (SIMS.runConfig n
@@ -454,7 +454,7 @@ theorem run_finish_tail_moveLeft_ne_halt
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-theorem run_finish_tail_moveRight_ne_halt
+private theorem run_finish_tail_moveRight_ne_halt
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
     (SIMS.runConfig n
@@ -491,7 +491,7 @@ theorem run_finish_tail_moveRight_ne_halt
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-theorem encode_bool_tail_input_bits
+private theorem encode_bool_tail_input_bits
     (b : Bool) (restW : Word Bool)
     (suffix : Word MachineCodeSymbol) :
     (encodeCodeWordAsInput
@@ -569,7 +569,7 @@ theorem encode_bool_tail_input_bits
             suffix)) = _
     rw [encodeCodeWordAsInput_append]
     simp [List.map_append]
-theorem state120_tick_tail_stageSuffixDecoder_inv
+private theorem state120_tick_tail_stageSuffixDecoder_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     {T : Tape Bool}
     (hscanner :
@@ -883,7 +883,7 @@ theorem state120_tick_tail_stageSuffixDecoder_inv
                 hscannerFinish
           exact False.elim (hno hhalt)
 
-theorem state120_tick_tail_stage_suffix_inv
+private theorem state120_tick_tail_stage_suffix_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     {T : Tape Bool}
     (hscanner :
@@ -901,7 +901,7 @@ theorem state120_tick_tail_stage_suffix_inv
       suffix = encodeNat stage :=
   state120_tick_tail_stageSuffixDecoder_inv hscanner hinput
 
-theorem state120_tick_tail_code_inv
+private theorem state120_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
@@ -929,7 +929,7 @@ theorem state120_tick_tail_code_inv
         some (stage, []) by
     simpa [encodeNatAppend] using
       decodeNat_encodeNatAppend stage []]
-theorem scanner_marked_tick_tail_code_inv
+private theorem scanner_marked_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,

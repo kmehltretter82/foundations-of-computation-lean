@@ -184,7 +184,7 @@ def countWindowRawSourceEncoderTailPastFirstTape
             [none]))
     tail
 
-theorem countWindowRawSourceEncoderCellFieldCells_append
+private theorem countWindowRawSourceEncoderCellFieldCells_append
     (left right : List (Option Bool)) :
     countWindowRawSourceEncoderCellFieldCells
         (List.append left right) =
@@ -196,7 +196,7 @@ theorem countWindowRawSourceEncoderCellFieldCells_append
     EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits_append]
   simp [List.map_append]
 
-theorem countWindowRawSourceEncoderCellFieldCells_map_append
+private theorem countWindowRawSourceEncoderCellFieldCells_map_append
     (left right : Word Bool) :
     countWindowRawSourceEncoderCellFieldCells
         ((List.append left right).map some) =
@@ -283,7 +283,7 @@ theorem countWindowRawSourceEncoderTargetTape_equiv_noCountPadding
               tail))))
       count.length
 
-theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
+private theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
     (layout : Word Bool) :
     countWindowRawSourceEncoderEncodedLayoutCells layout =
       (encodeCodeWordAsInput
@@ -299,7 +299,7 @@ theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
       layout []]
   simp [encodeCodeWordAsInput, List.map_append]
 
-theorem countWindowRawSourceEncoderCellFieldCells_length
+private theorem countWindowRawSourceEncoderCellFieldCells_length
     (cells : List (Option Bool)) :
     (countWindowRawSourceEncoderCellFieldCells cells).length =
       4 * cells.length := by
@@ -323,7 +323,7 @@ theorem countWindowRawSourceEncoderCellFieldCells_length
               ih, Nat.mul_add, Nat.add_comm] <;>
             lia
 
-theorem countWindowRawSourceEncoderEncodedLayoutCells_length
+private theorem countWindowRawSourceEncoderEncodedLayoutCells_length
     (layout : Word Bool) :
     (countWindowRawSourceEncoderEncodedLayoutCells layout).length =
       8 * layout.length + 8 := by
@@ -345,7 +345,7 @@ theorem
   simp [List.length_append]
   lia
 
-theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
+private theorem countWindowRawSourceEncoderOutputCells_eq_headerBoolWord
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     countWindowRawSourceEncoderOutputCells skipped count tail =
       List.append
@@ -537,7 +537,7 @@ theorem countWindowRawSourceEncoderHeaderGapEmitterDescription_step_finish
       lookupTransition, Matches, transition, Tape.read, Tape.write,
       Tape.move, Tape.moveRight]
 
-theorem countWindowRawSourceEncoderHeaderGapEmitterOutput_bits_eq
+private theorem countWindowRawSourceEncoderHeaderGapEmitterOutput_bits_eq
     (layout : Word Bool) :
     List.append
         (List.append
@@ -713,7 +713,7 @@ theorem leftMoveToRawBoundaryDescription_haltsFromTape
   constructor <;>
     rw [leftMoveToRawBoundaryDescription_run]
 
-theorem countWindowRawSourceEncoderCountWindowStart_to_rawBoundary
+private theorem countWindowRawSourceEncoderCountWindowStart_to_rawBoundary
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     leftMoveToRawBoundaryDescription.HaltsFromTape
@@ -1114,7 +1114,7 @@ theorem rightBlankRunTailFirstScannerDescription_step_tailFirst
       stepConfig, lookupTransition, Matches, transition, tapeAtCells,
       Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem countWindowRawSourceEncoder_replicate_none_append_cons
+private theorem countWindowRawSourceEncoder_replicate_none_append_cons
     (n : Nat) (left : List (Option Bool)) :
     List.append (List.replicate n (none : Option Bool))
         (none :: left) =

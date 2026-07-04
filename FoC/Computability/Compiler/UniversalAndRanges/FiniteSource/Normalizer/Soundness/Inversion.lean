@@ -33,7 +33,7 @@ theorem codePrefixParserNormalizerMachine_not_haltsFrom_of_stuck
   | step hstep _ =>
       exact hnostep _ hstep
 
-theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_empty
+private theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_empty
     (leftRev : List (Option MachineCodeSymbol)) :
     ¬ TuringMachine.HaltsFrom codePrefixParserNormalizerMachine
       { state := CodePrefixParserNormalizerState.needTransition
@@ -46,7 +46,7 @@ theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_empty
         simp [codePrefixParserNormalizerMachine,
           transitionListParserOptionTape, Tape.read] at htransition
 
-theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_nonTransition
+private theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_nonTransition
     {symbol : MachineCodeSymbol}
     (hsymbol : symbol ≠ MachineCodeSymbol.transition)
     (leftRev : List (Option MachineCodeSymbol))
@@ -80,7 +80,7 @@ theorem codePrefixParserNormalizerMachine_not_haltsFrom_needTransition_none
         simp [codePrefixParserNormalizerMachine,
           transitionListParserOptionTape, Tape.read] at htransition
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_sourceNat_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_sourceNat_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -175,7 +175,7 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_sourceNat_inv
       | moveRight =>
         exact False.elim (hstuck (by simp) h)
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_readCell_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_readCell_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -268,7 +268,7 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_readCell_inv
       | moveRight =>
         exact False.elim (hstuck (by simp) h)
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_writeCell_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_writeCell_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -361,7 +361,7 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_writeCell_inv
       | moveRight =>
         exact False.elim (hstuck (by simp) h)
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_moveField_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_moveField_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -446,7 +446,7 @@ theorem codePrefixParserNormalizerMachine_haltsFrom_moveField_inv
       | one =>
         exact False.elim (hstuck (by simp) h)
 
-theorem codePrefixParserNormalizerMachine_haltsFrom_targetNat_inv
+private theorem codePrefixParserNormalizerMachine_haltsFrom_targetNat_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :

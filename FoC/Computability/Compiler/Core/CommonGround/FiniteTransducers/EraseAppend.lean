@@ -23,7 +23,7 @@ def eraseAppendFinalTransducer
     (final : Word Bool) : FiniteTransducer :=
   bitwiseOutputTransducer (fun _bit => []) final
 
-theorem bitwiseOutput_empty
+private theorem bitwiseOutput_empty
     (input : Word Bool) :
     bitwiseOutput (fun _bit => []) input = [] := by
   induction input with
@@ -82,7 +82,7 @@ def eraseAppendWordTransitions
       first :: eraseAppendWordScanFalseTransition ::
         eraseAppendWordScanTrueTransition :: rest
 
-theorem eraseAppendWordPrefix_deterministic
+private theorem eraseAppendWordPrefix_deterministic
     (first t u : TransitionDescription)
     (hfirstSource : first.source = 0)
     (hfirstRead : first.read = none)
@@ -119,7 +119,7 @@ def FSTEraseAppendFinalWordTargetTape
       (List.replicate leftScratch (none : Option Bool)))
     final
 
-theorem filterMap_bool_none
+private theorem filterMap_bool_none
     (input : Word Bool) :
     List.filterMap (fun _bit : Bool => (none : Option Bool)) input =
       [] := by

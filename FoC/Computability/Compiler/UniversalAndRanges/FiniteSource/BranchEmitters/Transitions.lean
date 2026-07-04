@@ -13,7 +13,7 @@ namespace Computability
 
 open Languages
 
-theorem codePrefixParserBranch_computes_needTransition_transition
+private theorem codePrefixParserBranch_computes_needTransition_transition
     (leftSymbols prefixLeft suffix : Word MachineCodeSymbol) :
     TuringMachine.Computes codePrefixParserBranchMachine
       { state := CodePrefixParserBranchState.normalizer
@@ -38,7 +38,7 @@ theorem codePrefixParserBranch_computes_needTransition_transition
           (none :: prefixLeft.map some))
         suffix)
 
-theorem codePrefixParserBranch_computes_nat_boundary
+private theorem codePrefixParserBranch_computes_nat_boundary
     {current next : CodePrefixParserNormalizerState}
     (htick :
       forall leftRev suffix : List (Option MachineCodeSymbol),
@@ -93,7 +93,7 @@ theorem codePrefixParserBranch_computes_nat_boundary
     List.append_assoc] using
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
-theorem codePrefixParserBranch_computes_readCell_boundary
+private theorem codePrefixParserBranch_computes_readCell_boundary
     (leftSymbols prefixLeft tokens suffix : Word MachineCodeSymbol)
     (cell : Option Bool)
     (hdecode : MachineDescription.decodeCell tokens = some (cell, suffix)) :
@@ -127,7 +127,7 @@ theorem codePrefixParserBranch_computes_readCell_boundary
     List.append_assoc] using
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
-theorem codePrefixParserBranch_computes_writeCell_boundary
+private theorem codePrefixParserBranch_computes_writeCell_boundary
     (leftSymbols prefixLeft tokens suffix : Word MachineCodeSymbol)
     (cell : Option Bool)
     (hdecode : MachineDescription.decodeCell tokens = some (cell, suffix)) :
@@ -161,7 +161,7 @@ theorem codePrefixParserBranch_computes_writeCell_boundary
     List.append_assoc] using
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
-theorem codePrefixParserBranch_computes_moveField_boundary
+private theorem codePrefixParserBranch_computes_moveField_boundary
     (leftSymbols prefixLeft tokens suffix : Word MachineCodeSymbol)
     (dir : Direction)
     (hdecode :
@@ -196,7 +196,7 @@ theorem codePrefixParserBranch_computes_moveField_boundary
     List.append_assoc] using
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
-theorem codePrefixParserBranch_failure_transitionRecord_boundary
+private theorem codePrefixParserBranch_failure_transitionRecord_boundary
     (leftSymbols prefixLeft tokens : Word MachineCodeSymbol)
     (hdecode : MachineDescription.decodeTransition tokens = none) :
     codePrefixParserBranchHaltsFromWithOutput
@@ -453,7 +453,7 @@ theorem codePrefixParserBranch_failure_transitionRecord_boundary
                   simp [codePrefixParserNormalizerMachine,
                     transitionListParserOptionTape, Tape.read])
 
-theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_boundary
+private theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_boundary
     (count : Nat)
     (prefixLeft : Word MachineCodeSymbol)
     (blanks : Nat)
@@ -629,7 +629,7 @@ theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_boundary
                 (TuringMachine.computes_trans hmark hcomp),
               hhalt, hout⟩
 
-theorem codePrefixParserBranch_failure_decodeTransitions_findInitialCount
+private theorem codePrefixParserBranch_failure_decodeTransitions_findInitialCount
     (count : Nat)
     (prefixLeft tokens : Word MachineCodeSymbol)
     (hdecode :

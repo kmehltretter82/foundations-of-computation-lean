@@ -614,7 +614,7 @@ def boolWordMarkingTailReturnScanRev
     (List.append (markedCellsCodeBits (marked.map some)).reverse
       (stageNatBits remainingLengthTail).reverse)
 
-theorem boolWordMarkingTail_to_first_payload
+private theorem boolWordMarkingTail_to_first_payload
     (baseLeft : List (Option Bool)) (marked : Word Bool)
     (remainingLengthTail : Nat) (tokens : Word MachineCodeSymbol) :
     BWSS.runConfig
@@ -652,7 +652,7 @@ theorem boolWordMarkingTail_to_first_payload
   rw [run_boolWordSuffix_state120_stageNat]
   rw [run_boolWordSuffix_state130_markedBits]
 
-theorem boolWordMarkingTail_mark_one
+private theorem boolWordMarkingTail_mark_one
     (baseLeft : List (Option Bool)) (marked : Word Bool)
     (remainingLengthTail : Nat) (b : Bool)
     (restAfterCell : Word MachineCodeSymbol) :
@@ -775,7 +775,7 @@ theorem boolWordMarkingTail_mark_one
   rw [hleftNext]
   simp
 
-theorem boolWordMarkingTail_decodeCells_none_ne_halt
+private theorem boolWordMarkingTail_decodeCells_none_ne_halt
     (baseLeft : List (Option Bool)) (marked : Word Bool)
     (remainingCells : Nat) (tokens : Word MachineCodeSymbol)
     (hdecode :
@@ -871,7 +871,7 @@ theorem boolWordMarkingTail_decodeCells_none_ne_halt
                   simp [decodeCells, hcell, hrest]
                     at hdecode
 
-theorem boolWordMarkingTail_cellsToWord_none_ne_halt
+private theorem boolWordMarkingTail_cellsToWord_none_ne_halt
     (baseLeft : List (Option Bool)) (marked : Word Bool)
     (cells : List (Option Bool)) (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
@@ -1168,17 +1168,17 @@ theorem boolWordCanonicalHandoffConfigWithBase_move_right_all
     cellListCanonicalHandoffConfigWithBase_move_right_all
       (bits.map some) baseLeft suffixBits
 
-theorem boolWordSuffix_lookup_150_none :
+private theorem boolWordSuffix_lookup_150_none :
     BWSS.lookupTransition 150 none = none := by
   decide
 
-theorem boolWordSuffix_lookup_150_true :
+private theorem boolWordSuffix_lookup_150_true :
     BWSS.lookupTransition 150 (some true) =
       some
         (writeMove 150 (some true) (some false) Direction.right 152) := by
   decide
 
-theorem boolWordSuffix_lookup_152_false :
+private theorem boolWordSuffix_lookup_152_false :
     BWSS.lookupTransition 152 (some false) =
       none := by
   decide

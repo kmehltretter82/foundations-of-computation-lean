@@ -20,7 +20,7 @@ namespace DovetailInitialLayoutInitializer
 
 private abbrev CIH := ControllerInitialRawBoolWordHeaderEmitterDescription
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan40
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan40
     (leftRev : List (Option Bool)) (rest output : Word Bool) :
     CIH.runConfig
         (rest.length + 1)
@@ -84,7 +84,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan40
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan50
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan50
     (leftRev : List (Option Bool)) (rest output : Word Bool) :
     CIH.runConfig
         (rest.length + 1)
@@ -148,7 +148,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan50
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan41
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan41
     (leftRev : List (Option Bool)) (output : Word Bool) :
     CIH.runConfig
         (output.length + 1)
@@ -205,7 +205,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan41
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan51
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan51
     (leftRev : List (Option Bool)) (output : Word Bool) :
     CIH.runConfig
         (output.length + 1)
@@ -262,7 +262,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan51
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_writeZero42
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_writeZero42
     (leftRev : List (Option Bool)) (rawRev output : Word Bool) :
     CIH.runConfig 4
         (config 42
@@ -284,7 +284,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_writeZero42
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_writeOne52
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_writeOne52
     (leftRev : List (Option Bool)) (rawRev output : Word Bool) :
     CIH.runConfig 4
         (config 52
@@ -306,7 +306,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_writeOne52
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan47
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan47
     (leftRev : List (Option Bool)) (rawRev outputRev : Word Bool)
     (right : List (Option Bool)) :
     CIH.runConfig
@@ -387,7 +387,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan47
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan57
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan57
     (leftRev : List (Option Bool)) (rawRev outputRev : Word Bool)
     (right : List (Option Bool)) :
     CIH.runConfig
@@ -468,7 +468,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan57
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_return46
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_return46
     (leftRev : List (Option Bool)) (scanRev : Word Bool)
     (right : List (Option Bool)) :
     CIH.runConfig
@@ -540,7 +540,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_return46
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_return56
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_return56
     (leftRev : List (Option Bool)) (scanRev : Word Bool)
     (right : List (Option Bool)) :
     CIH.runConfig
@@ -612,7 +612,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_return56
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_cell_false
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_cell_false
     (leftRev : List (Option Bool)) (rest output : Word Bool) :
     ∃ steps : Nat,
       CIH.runConfig steps
@@ -692,7 +692,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_cell_false
   rw [controllerInitialRawBoolWordHeaderEmitter_run_return46]
   simp [outputRev, List.map_append, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_cell_true
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_cell_true
     (leftRev : List (Option Bool)) (rest output : Word Bool) :
     ∃ steps : Nat,
       CIH.runConfig steps
@@ -782,14 +782,14 @@ def controllerInitialRawBoolWordHeaderEmitterCellBits :
       List.append [false, true, true, false]
         (controllerInitialRawBoolWordHeaderEmitterCellBits rest)
 
-theorem controllerInitialRawBoolWordHeaderEmitter_replicate_none_append_cons
+private theorem controllerInitialRawBoolWordHeaderEmitter_replicate_none_append_cons
     (n : Nat) (tail : List (Option Bool)) :
     List.append (List.replicate n none) (none :: tail) =
       none :: List.append (List.replicate n none) tail := by
   exact list_replicate_append_cons_eq_cons_append
     (none : Option Bool) n tail
 
-theorem controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding
+private theorem controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding
     (n : Nat) :
     (none : Option Bool) ::
         List.append (List.replicate n (none : Option Bool)) [none] =
@@ -799,7 +799,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding
       (list_replicate_append_cons_eq_cons_append
         (none : Option Bool) n [])
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_cellPass
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_cellPass
     (leftRev : List (Option Bool)) (w output : Word Bool) :
     ∃ steps : Nat,
       CIH.runConfig steps
@@ -866,7 +866,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_cellPass
         simp [controllerInitialRawBoolWordHeaderEmitterCellBits,
           List.map_append, List.replicate_succ, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan8
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan8
     (rawRev outputRev : Word Bool) (right : List (Option Bool)) :
     CIH.runConfig
         (outputRev.length + 1)
@@ -940,7 +940,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan8
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_return6
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_return6
     (scanRev : Word Bool) (right : List (Option Bool)) :
     CIH.runConfig
         (scanRev.length + 1)
@@ -1011,7 +1011,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_return6
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_headerPrelude
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_headerPrelude
     (w : Word Bool) :
     ∃ steps : Nat,
       CIH.runConfig steps
@@ -1076,7 +1076,7 @@ def controllerInitialRawBoolWordHeaderEmitterBoundaryReturnTapeWithSentinel
         head := some b
         right := right }
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_writeDone31_sentinel
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_writeDone31_sentinel
     (rawLeft : List (Option Bool)) (output : Word Bool) :
     CIH.runConfig 4
         (config 31
@@ -1097,7 +1097,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_writeDone31_sentinel
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan37_sentinel
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan37_sentinel
     (rawRev outputRev : Word Bool) (right : List (Option Bool)) :
     CIH.runConfig
         (outputRev.length + 1)
@@ -1176,7 +1176,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan37_sentinel
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_return35_sentinel
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_return35_sentinel
     (scanRev : Word Bool) (right : List (Option Bool)) :
     CIH.runConfig
         (scanRev.length + 1)
@@ -1247,7 +1247,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_return35_sentinel
         rw [ih (some true :: right)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_doneSeparator_sentinel
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_doneSeparator_sentinel
     (rawRev output : Word Bool) :
     ∃ steps : Nat,
       CIH.runConfig steps
@@ -1318,7 +1318,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_doneSeparator_sentinel
   rw [controllerInitialRawBoolWordHeaderEmitter_run_return35_sentinel]
   simp [outputRev, List.map_append, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_scan60
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_scan60
     (leftRev : List (Option Bool)) (output : Word Bool) :
     CIH.runConfig
         (output.length + 1)
@@ -1375,7 +1375,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_scan60
         rw [ih (some true :: leftRev)]
         simp [List.reverse_cons, List.append_assoc]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_writeSuffix61
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_writeSuffix61
     (leftRev : List (Option Bool)) :
     CIH.runConfig 7
         (config 61 leftRev []) =
@@ -1393,7 +1393,7 @@ theorem controllerInitialRawBoolWordHeaderEmitter_run_writeSuffix61
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveRight]
 
-theorem controllerInitialRawBoolWordHeaderEmitter_run_finishSuffix
+private theorem controllerInitialRawBoolWordHeaderEmitter_run_finishSuffix
     (leftRev : List (Option Bool)) (output : Word Bool) :
     CIH.runConfig
         (1 + ((output.length + 1) + 7))
@@ -1473,7 +1473,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterCellBits_append_suffix
           encodeCodeSymbolAsInput,
           List.append_assoc] using ih
 
-theorem controllerInitialRawBoolWordHeaderEmitterOutput_bits_eq
+private theorem controllerInitialRawBoolWordHeaderEmitterOutput_bits_eq
     (w : Word Bool) :
     List.append
         (List.append

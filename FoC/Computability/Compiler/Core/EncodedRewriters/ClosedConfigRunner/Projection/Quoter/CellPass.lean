@@ -1075,7 +1075,7 @@ theorem preservingCellPassCellBits_length (cells : Word Bool) :
         simp [preservingCellPassCellBits, preservingCellPassZeroBits,
           preservingCellPassOneBits, ih, Nat.mul_succ]
 
-theorem preservingCellPassCellBits_append_suffix
+private theorem preservingCellPassCellBits_append_suffix
     (cells : Word Bool) (suffix : Word MachineCodeSymbol) :
     List.append (preservingCellPassCellBits cells)
         (encodeCodeWordAsInput suffix) =
@@ -1095,7 +1095,7 @@ theorem preservingCellPassCellBits_append_suffix
           encodeCodeWordAsInput, encodeCodeSymbolAsInput,
           List.append_assoc] using ih
 
-theorem preservingCellPassCellBits_eq_encodeCellsAppend
+private theorem preservingCellPassCellBits_eq_encodeCellsAppend
     (cells : Word Bool) :
     preservingCellPassCellBits cells =
       encodeCodeWordAsInput
@@ -1384,7 +1384,7 @@ theorem preservingCellPassDescription_haltsFrom_nonempty_cells_oneBlank
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem preservingCellPassHaltTape_normalizedOutput
+private theorem preservingCellPassHaltTape_normalizedOutput
     (leftRev : List (Option Bool)) (cells output : Word Bool) :
     Tape.normalizedOutput
         (preservingCellPassHaltTape leftRev cells output) =

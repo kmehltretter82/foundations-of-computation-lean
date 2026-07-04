@@ -86,7 +86,7 @@ theorem assemblyPrefixDescription_subroutineReady :
     AP (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem runConfig_eq_of_transitions
+private theorem runConfig_eq_of_transitions
     {D E : MachineDescription}
     (htrans : D.transitions = E.transitions)
     (n : Nat) (c : Configuration) :
@@ -283,7 +283,7 @@ theorem optionBitDefaultFalse_map_some
   | cons b bits ih =>
       simp [optionBitDefaultFalse, ih]
 
-theorem assemblyBoundaryLeft_empty_defaultBits
+private theorem assemblyBoundaryLeft_empty_defaultBits
     (stage : Nat) :
     List.map optionBitDefaultFalse
         (List.reverse
@@ -302,7 +302,7 @@ theorem assemblyBoundaryLeft_empty_defaultBits
     optionBitDefaultFalse_map_some,
     encodeCodeSymbolAsInput, List.reverse_append]
 
-theorem assemblyBoundaryLeft_nonempty_defaultBits
+private theorem assemblyBoundaryLeft_nonempty_defaultBits
     (b : Bool) (rest : Word Bool) (stage : Nat) :
     List.map optionBitDefaultFalse
         (List.reverse

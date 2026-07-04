@@ -21,7 +21,7 @@ namespace DovetailLayoutScanner
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 open CommonGround.SeqComposition
-theorem rightHandoffSequential_runConfig_exists
+private theorem rightHandoffSequential_runConfig_exists
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
     {nA : Nat} {Tin Tmid Tout : Tape Bool}
@@ -154,7 +154,7 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
         boolFinalScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_finalHitFlags_raw_to_handoff_withBaseAndRight
+private theorem run_finalHitFlags_raw_to_handoff_withBaseAndRight
     (acceptHit rejectHit : Bool)
     (baseLeft rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -257,7 +257,7 @@ theorem run_finalHitFlags_raw_to_handoff_withBaseAndRight
         boolFinalScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_cellThenCellList_raw_to_handoff_withBase
+private theorem run_cellThenCellList_raw_to_handoff_withBase
     (head : Option Bool) (right baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
@@ -345,7 +345,7 @@ theorem run_cellThenCellList_raw_to_handoff_withBase
       cellListSuffixScannerDescription_subroutineReady
       hArun hBReach
 
-theorem run_cellThenCellList_raw_to_handoff_withBaseAndRight
+private theorem run_cellThenCellList_raw_to_handoff_withBaseAndRight
     (head : Option Bool) (right baseLeft : List (Option Bool))
     (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -553,7 +553,7 @@ theorem run_tapeSuffix_raw_to_handoff_withBase
         cellListSuffixScannerDescription_subroutineReady)
       hArun hBReach
 
-theorem run_tapeSuffix_raw_to_handoff_withBaseAndRight
+private theorem run_tapeSuffix_raw_to_handoff_withBaseAndRight
     (T : Tape Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -900,7 +900,7 @@ theorem run_configurationSuffix_raw_to_handoff_withBaseAndRight
         tapeSuffixScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
+private theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
     (rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft : List (Option Bool)) :
@@ -1014,7 +1014,7 @@ theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBase
       finalHitFlagsScannerDescription_subroutineReady
       hArun hBReach
 
-theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBaseAndRight
+private theorem run_rejectConfigAndFinalFlags_raw_to_handoff_withBaseAndRight
     (rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft rightPadding : List (Option Bool)) :
@@ -1259,7 +1259,7 @@ theorem run_configurationsAndFinalFlags_raw_to_handoff_withBase
       rejectConfigAndFinalFlagsScannerDescription_subroutineReady
       hArun hBReach
 
-theorem run_configurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+private theorem run_configurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
     (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
     (baseLeft rightPadding : List (Option Bool)) :
@@ -1506,7 +1506,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         configurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+private theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
     (stage : Nat)
     (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
@@ -1765,7 +1765,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
+private theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRight
     (input : Word Bool) (stage : Nat)
     (acceptConfig rejectConfig : Configuration)
     (acceptHit rejectHit : Bool)
@@ -1911,7 +1911,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndRigh
         stageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
+private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -2034,7 +2034,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
         inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
+private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
     (L : DovetailLayout)
     (baseLeft : List (Option Bool)) :
     exists steps : Nat,
@@ -2066,7 +2066,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase
   run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
     L baseLeft
 
-theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
+private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
     (L : DovetailLayout)
     (baseLeft rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -2201,7 +2201,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
         inputStageConfigurationsAndFinalFlagsScannerDescription_subroutineReady
         hArun hBReach
 
-theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight
+private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight
     (L : DovetailLayout)
     (baseLeft rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -2236,7 +2236,7 @@ theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight
   run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_phaseChain
     L baseLeft rightPadding
 
-theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
+private theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
     (L : DovetailLayout) :
     exists steps : Nat,
       (seqSubroutine
@@ -2347,7 +2347,7 @@ theorem run_markedDovetailLayoutBody_return_to_checkedHandoff
       returnToFirstMarkerDescription_subroutineReady
       hArun hBReach
 
-theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
+private theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChain
     (L : DovetailLayout) :
     exists steps : Nat,
       CDL.runConfig steps

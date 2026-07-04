@@ -113,7 +113,7 @@ theorem boolWordSuffixScannerDescription_initial_eq_config
       config 100 [] (bits.map some) := by
   cases bits <;> rfl
 
-theorem boolWordSuffix_lookup_150_false :
+private theorem boolWordSuffix_lookup_150_false :
     BWSS.lookupTransition 150 (some false) =
       some (keepMove 150 (some false) Direction.left
         BWSS.halt) := by
@@ -154,7 +154,7 @@ theorem run_boolWordSuffix_state100_tick
       | some b =>
           cases b <;> rfl
 
-theorem run_boolWordSuffix_state100_done
+private theorem run_boolWordSuffix_state100_done
     (left tail : List (Option Bool)) :
     BWSS.runConfig 4
         (config 100 left
@@ -344,7 +344,7 @@ theorem run_boolWordSuffix_state140_returnToLengthMarker
       rw [ih]
       simp [List.map_append, List.append_assoc]
 
-theorem run_boolWordSuffix_state150_markedBit
+private theorem run_boolWordSuffix_state150_markedBit
     (bit : Bool) (left right : List (Option Bool)) :
     BWSS.runConfig 4
         (config 150 left
@@ -396,7 +396,7 @@ theorem run_boolWordSuffix_state150_markedBits
       simp [cellsCodeBits, List.reverse_append, List.map_append,
         List.append_assoc]
 
-theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
+private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
     (baseLeft : List (Option Bool)) (processed : Word Bool)
     (bit : Bool) (rest : Word Bool) (suffixBits : Word Bool) :
     exists steps : Nat,
@@ -448,7 +448,7 @@ theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
       List.map_append, List.reverse_append, List.append_assoc] using
         hreturn
 
-theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
+private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
     (baseLeft : List (Option Bool)) (processed : Word Bool)
     (bit : Bool) (rest : Word Bool) (suffixBits : Word Bool)
     (rightPadding : List (Option Bool)) :
@@ -623,7 +623,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
         markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
         List.length_append, List.map_append, List.append_assoc] using hrec'
 
-theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
+private theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
     (baseLeft : List (Option Bool)) (processed cells : Word Bool)
     (suffixBits : Word Bool) (rightPadding : List (Option Bool)) :
     exists steps : Nat,
@@ -748,7 +748,7 @@ theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBaseAndRight
         markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
         List.length_append, List.map_append, List.append_assoc] using hrec'
 
-theorem run_boolWordSuffix_state150_handoff_false
+private theorem run_boolWordSuffix_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
     BWSS.runConfig 1
         (config 150 (cell :: left) (some false :: right)) =
@@ -761,7 +761,7 @@ theorem run_boolWordSuffix_state150_handoff_false
       transition,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
-theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
+private theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) :
     exists steps : Nat,
@@ -800,7 +800,7 @@ theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
         run_boolWordSuffix_state150_handoff_false cell left
           (suffixTail.map some)
 
-theorem run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
+private theorem run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
     (w : Word Bool) (baseLeft : List (Option Bool))
     (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
     exists steps : Nat,

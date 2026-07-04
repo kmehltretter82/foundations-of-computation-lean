@@ -584,7 +584,7 @@ def cellListMarkingTailReturnScanRev
     (List.append (markedCellsCodeBits marked).reverse
       (stageNatBits remainingLengthTail).reverse)
 
-theorem cellListMarkingTail_to_first_payload
+private theorem cellListMarkingTail_to_first_payload
     (baseLeft marked : List (Option Bool))
     (remainingLengthTail : Nat) (tokens : Word MachineCodeSymbol) :
     CLSS.runConfig
@@ -620,7 +620,7 @@ theorem cellListMarkingTail_to_first_payload
   rw [run_cellList_state120_stageNat]
   rw [run_cellList_state130_markedCells]
 
-theorem cellListMarkingTail_mark_one
+private theorem cellListMarkingTail_mark_one
     (baseLeft marked : List (Option Bool))
     (remainingLengthTail : Nat) (cell : Option Bool)
     (restAfterCell : Word MachineCodeSymbol) :
@@ -830,7 +830,7 @@ theorem cellListMarkingTail_mark_one
         rw [hleftNext]
         simp
 
-theorem cellListMarkingTail_decodeCells_none_ne_halt
+private theorem cellListMarkingTail_decodeCells_none_ne_halt
     (baseLeft marked : List (Option Bool))
     (remainingCells : Nat) (tokens : Word MachineCodeSymbol)
     (hdecode :
@@ -1080,7 +1080,7 @@ theorem cellListSuffixScannerDescription_runConfig_encodeCellListAppend_handoff_
         simpa [cellListBits_eq_encodeCellListAppend, hsuffix,
           List.map_append, cellListFieldBits] using h)
 
-theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
+private theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
     (cells baseLeft : List (Option Bool)) (n : Nat) :
     (CLSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase cells baseLeft [])).state ≠
@@ -1108,7 +1108,7 @@ theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
   · change (150 : Nat) ≠ 999
     lia
 
-theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
+private theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_halt
     (cells baseLeft : List (Option Bool)) (tail : Word Bool) (n : Nat) :
     (CLSS.runConfig n
       (cellListCanonicalFinishStartConfigWithBase cells baseLeft

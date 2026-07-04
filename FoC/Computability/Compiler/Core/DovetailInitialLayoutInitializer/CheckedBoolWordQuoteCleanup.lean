@@ -38,7 +38,7 @@ def checkedNonemptyBoolWordQuoteNativeHaltTape
           (encodeNatAppend stage suffix))
         (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits rest)).map some))
 
-theorem checkedNonemptyBoolWordQuoteExactBits_eq
+private theorem checkedNonemptyBoolWordQuoteExactBits_eq
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     checkedNonemptyBoolWordQuoteExactBits b rest stage suffix =
@@ -50,7 +50,7 @@ theorem checkedNonemptyBoolWordQuoteExactBits_eq
     encodeCodeWordAsInput,
     checkedNonemptyBoolWordQuoteDirectSourceBits_eq]
 
-theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
+private theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
     (rest : Word Bool) :
     3 ≤ (checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits rest).length := by
   unfold checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits
@@ -58,7 +58,7 @@ theorem checkedNonemptyBoolWordQuoteDirectCopiedTrailerBits_length_ge_three
   simp [encodeCodeSymbolAsInput, List.length_append]
   lia
 
-theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
+private theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     Tape.contextLength
@@ -75,7 +75,7 @@ theorem checkedNonemptyBoolWordQuoteNativeHaltTape_contextLength_gt_exact
     Tape.input, Tape.contextLength, List.length_append] at *
   lia
 
-theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
+private theorem checkedNonemptyBoolWordQuoteNativeHaltTape_not_run_exactInput
     (D : MachineDescription) (n : Nat)
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :

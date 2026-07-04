@@ -46,7 +46,7 @@ theorem runConfig_forward_inv
       rw [← h_forward]
       rfl
 
-theorem runConfig_halt_extend
+private theorem runConfig_halt_extend
     (D : MachineDescription) (c : Configuration)
     (m n : Nat) {Tout : Tape Bool}
     (h_free : D.HaltTransitionFree)
@@ -59,7 +59,7 @@ theorem runConfig_halt_extend
   rw [hn, runConfig_add, h_halt]
   exact runConfig_halt h_free Tout rem
 
-theorem run_boolWordSuffix_state130_markedCell
+private theorem run_boolWordSuffix_state130_markedCell
     (cell : Option Bool) (left right : List (Option Bool)) :
     BoolWordSuffixScannerDescription.runConfig 4
         (config 130 left
@@ -80,7 +80,7 @@ theorem run_boolWordSuffix_state130_markedCell
   | some bit =>
       simpa using run_boolWordSuffix_state130_markedBit bit left right
 
-theorem runConfig_forward_inv_lt
+private theorem runConfig_forward_inv_lt
     (D : MachineDescription) (c0 c1 : Configuration)
     (n k : Nat) {Tout : Tape Bool}
     (h_halt : D.runConfig n c0 = { state := D.halt, tape := Tout })

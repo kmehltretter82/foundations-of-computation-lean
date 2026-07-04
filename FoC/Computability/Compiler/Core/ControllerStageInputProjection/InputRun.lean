@@ -283,7 +283,7 @@ def projectionResultTailPayloadLeftRev
             (projectionRepeatedCells projectionMarkedTickCodeCells
               marked.length).reverse
             (List.append [none, none, none, none] baseLeftRev)))))
-theorem run_input_finish_marked_suffix
+private theorem run_input_finish_marked_suffix
     (marked : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
@@ -418,7 +418,7 @@ theorem run_input_finish_marked_suffix
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
-theorem run_input_finish_marked
+private theorem run_input_finish_marked
     (marked : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
     Description.runConfig
@@ -554,7 +554,7 @@ theorem run_input_finish_marked
   rw [run_state180_to_200]
   simp [projectionCodeCells_encodeBoolWord, List.reverse_append,
     List.append_assoc]
-theorem run_input_finish_marked_false_false_tail
+private theorem run_input_finish_marked_false_false_tail
     (marked : Word Bool) (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool)) :
     Description.runConfig
@@ -723,7 +723,7 @@ theorem run_input_finish_marked_to_state150_tail
         (projectionCodeCells suffix)
   rw [run_state100_done]
   rw [run_state150_marked_payload]
-theorem run_input_bool_word_acc
+private theorem run_input_bool_word_acc
     (marked rest : Word Bool) (stage : Nat) (result : Word Bool)
     (baseLeftRev : List (Option Bool)) :
     Description.runConfig
@@ -787,7 +787,7 @@ theorem run_input_bool_word
       ([] : Word Bool) w stage result baseLeftRev
   simpa [projectionInputRemainingCost, projectionInputBoolWordCost,
     projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
-theorem run_input_bool_word_acc_suffix
+private theorem run_input_bool_word_acc_suffix
     (marked rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol)
     (baseLeftRev : List (Option Bool)) :
@@ -889,7 +889,7 @@ theorem run_input_bool_word_acc_false_false_suffix
             List.append marked (b :: rest) := by
         simp [List.append_assoc]
       rw [hword]
-theorem run_input_bool_word_false_false_suffix
+private theorem run_input_bool_word_false_false_suffix
     (w : Word Bool) (suffix : Word MachineCodeSymbol)
     (tail : List (Option Bool))
     (baseLeftRev : List (Option Bool))

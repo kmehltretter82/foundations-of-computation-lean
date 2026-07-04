@@ -13,7 +13,7 @@ namespace StageInputMarkedScanner
 
 private abbrev SIMS := StageInputMarkedScannerDescription
 
-theorem stageInputBits_nil_eq_done_nat
+private theorem stageInputBits_nil_eq_done_nat
     (stage : Nat) :
     stageInputBits ([] : Word Bool) stage =
       false :: false :: true :: true ::
@@ -23,7 +23,7 @@ theorem stageInputBits_nil_eq_done_nat
   rw [stageInputSecondBitTail_nil]
   rfl
 
-theorem scanner_marked_done_tail_decodeNat_none_ne_halt
+private theorem scanner_marked_done_tail_decodeNat_none_ne_halt
     (rest : Word MachineCodeSymbol)
     (hdecode : decodeNat rest = none)
     (n : Nat) :
@@ -208,7 +208,7 @@ theorem scanner_marked_done_tail_decodeNat_none_ne_halt
                 change (152 : Nat) ≠ 999
                 lia)
 
-theorem scanner_marked_done_tail_decodeNat_inv
+private theorem scanner_marked_done_tail_decodeNat_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
@@ -240,7 +240,7 @@ theorem scanner_marked_done_tail_decodeNat_inv
       rcases parsed with ⟨stage, suffix⟩
       exact ⟨stage, suffix, rfl⟩
 
-theorem scanner_marked_done_tail_nat_inv
+private theorem scanner_marked_done_tail_nat_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
@@ -295,7 +295,7 @@ theorem scanner_marked_done_tail_nat_inv
     ⟨rem, hrem⟩
   exact state200_code_tail_nat_inv ⟨rem, hrem⟩
 
-theorem scanner_marked_done_tail_bits_shape_inv
+private theorem scanner_marked_done_tail_bits_shape_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
@@ -314,7 +314,7 @@ theorem scanner_marked_done_tail_bits_shape_inv
   subst rest
   exact ⟨stage, stageInputBits_nil_eq_done_nat stage⟩
 
-theorem scanner_marked_code_tail_bits_shape_inv
+private theorem scanner_marked_code_tail_bits_shape_inv
     {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
     (hbits :
       encodeCodeWordAsInput code =
@@ -337,7 +337,7 @@ theorem scanner_marked_code_tail_bits_shape_inv
       ⟨stage, hshape⟩
     exact ⟨([] : Word Bool), stage, hshape⟩
 
-theorem stageInputBits_false_false_tail_bridge
+private theorem stageInputBits_false_false_tail_bridge
     {code : Word MachineCodeSymbol} {tail w : Word Bool}
     {stage : Nat}
     (hbits :
@@ -356,7 +356,7 @@ theorem stageInputBits_false_false_tail_bridge
     injection hcanon with _ htailWithPrefix
     injection htailWithPrefix
 
-theorem scanner_marked_code_tail_shape_inv
+private theorem scanner_marked_code_tail_shape_inv
     {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
     (hbits :
       encodeCodeWordAsInput code =
@@ -377,7 +377,7 @@ theorem scanner_marked_code_tail_shape_inv
     ⟨hcode, htail⟩
   exact ⟨w, stage, hcode, htail⟩
 
-theorem scanner_marked_tail_tape_inv
+private theorem scanner_marked_tail_tape_inv
     {tail : Word Bool} {T : Tape Bool}
     {w : Word Bool} {stage : Nat}
     (hscanner :
@@ -399,7 +399,7 @@ theorem scanner_marked_tail_tape_inv
         simpa [markedTailStartConfig, markedStartConfig] using
           hforward)
 
-theorem scanner_marked_code_tail_inv
+private theorem scanner_marked_code_tail_inv
     {code : Word MachineCodeSymbol} {tail : Word Bool} {T : Tape Bool}
     (hbits :
       encodeCodeWordAsInput code =
@@ -427,7 +427,7 @@ canonical {lean}`stageInputBits` suffix, the code-level conclusion is delegated
 to {name}`DovetailLayout.decodeStageInputComplete`.
 -/
 
-theorem stageInputBits_code_decode
+private theorem stageInputBits_code_decode
     {code : Word MachineCodeSymbol} {w : Word Bool}
     {stage : Nat}
     (hbits :
@@ -443,7 +443,7 @@ theorem stageInputBits_code_decode
   simp [PairedRecognizerDovetailStageInputCode,
     DovetailLayout.decodeStageInputComplete_stageInputCode]
 
-theorem stageInputBits_code_inv
+private theorem stageInputBits_code_inv
     {code : Word MachineCodeSymbol} {w : Word Bool}
     {stage : Nat}
     (hbits :

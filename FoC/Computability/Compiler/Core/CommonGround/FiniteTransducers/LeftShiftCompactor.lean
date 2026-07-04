@@ -429,7 +429,7 @@ theorem leadingBlankLeftShiftTargetTapeWithPadding_cells
       tapeAtCells, Tape.cells, List.reverse_append,
       List.map_reverse, List.append_assoc]
 
-theorem leadingBlankGapBaseLeft_reverse
+private theorem leadingBlankGapBaseLeft_reverse
     (pref : Word Bool) (gap : Nat) :
     (leadingBlankGapBaseLeft pref gap).reverse =
       List.append (pref.map some)
@@ -437,7 +437,7 @@ theorem leadingBlankGapBaseLeft_reverse
   simp [leadingBlankGapBaseLeft, List.reverse_append,
     List.map_reverse]
 
-theorem leadingBlankLeftShiftTargetCells_eq_shifted
+private theorem leadingBlankLeftShiftTargetCells_eq_shifted
     (baseLeft : List (Option Bool)) (bits : Word Bool) :
     leadingBlankLeftShiftTargetCells baseLeft bits =
       List.append baseLeft.reverse
@@ -445,7 +445,7 @@ theorem leadingBlankLeftShiftTargetCells_eq_shifted
           (List.replicate 3 (none : Option Bool))) := by
   simp [leadingBlankLeftShiftTargetCells, List.replicate]
 
-theorem leadingBlankLeftShiftSourceCellsWithPadding_gap
+private theorem leadingBlankLeftShiftSourceCellsWithPadding_gap
     (pref suffix : Word Bool) (gap : Nat)
     (padding : List (Option Bool)) :
     leadingBlankLeftShiftSourceCellsWithPadding
@@ -460,7 +460,7 @@ theorem leadingBlankLeftShiftSourceCellsWithPadding_gap
     leadingBlankGapBaseLeft_reverse]
   simp [List.append_assoc]
 
-theorem leadingBlankLeftShiftTargetCellsWithPadding_gap
+private theorem leadingBlankLeftShiftTargetCellsWithPadding_gap
     (pref suffix : Word Bool) (gap : Nat)
     (padding : List (Option Bool)) :
     leadingBlankLeftShiftTargetCellsWithPadding
@@ -476,7 +476,7 @@ theorem leadingBlankLeftShiftTargetCellsWithPadding_gap
     leadingBlankGapBaseLeft_reverse]
   simp [List.append_assoc]
 
-theorem leadingBlankLeftShiftSourceCells_filterMap
+private theorem leadingBlankLeftShiftSourceCells_filterMap
     (baseLeft : List (Option Bool)) (bits : Word Bool) :
     (leadingBlankLeftShiftSourceCells baseLeft bits).filterMap
         (fun cell => cell) =
@@ -485,7 +485,7 @@ theorem leadingBlankLeftShiftSourceCells_filterMap
   simp [leadingBlankLeftShiftSourceCells, List.filterMap_append,
     Function.comp_def]
 
-theorem leadingBlankLeftShiftTargetCells_filterMap
+private theorem leadingBlankLeftShiftTargetCells_filterMap
     (baseLeft : List (Option Bool)) (bits : Word Bool) :
     (leadingBlankLeftShiftTargetCells baseLeft bits).filterMap
         (fun cell => cell) =
@@ -494,7 +494,7 @@ theorem leadingBlankLeftShiftTargetCells_filterMap
   simp [leadingBlankLeftShiftTargetCells, List.filterMap_append,
     Function.comp_def]
 
-theorem leadingBlankLeftShiftTargetVisiblePadding_filterMap
+private theorem leadingBlankLeftShiftTargetVisiblePadding_filterMap
     (padding : List (Option Bool)) :
     (leadingBlankLeftShiftTargetVisiblePadding padding).filterMap
         (fun cell => cell) =
@@ -513,7 +513,7 @@ theorem leadingBlankLeftShiftSourceCellsWithPadding_filterMap
   simp [leadingBlankLeftShiftSourceCellsWithPadding,
     List.filterMap_append, Function.comp_def]
 
-theorem leadingBlankLeftShiftTargetCellsWithPadding_filterMap
+private theorem leadingBlankLeftShiftTargetCellsWithPadding_filterMap
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     (padding : List (Option Bool)) :
   (leadingBlankLeftShiftTargetCellsWithPadding
@@ -586,7 +586,7 @@ theorem leadingBlankLeftShiftTargetTapeWithPadding_normalizedOutput
   exact leadingBlankLeftShiftTargetCellsWithPadding_filterMap
     baseLeft bits padding
 
-theorem leadingBlankLeftShift_normalizedOutput_preserved
+private theorem leadingBlankLeftShift_normalizedOutput_preserved
     (baseLeft : List (Option Bool)) (bits : Word Bool) :
     Tape.normalizedOutput
         (leadingBlankLeftShiftTargetTape baseLeft bits) =
@@ -595,7 +595,7 @@ theorem leadingBlankLeftShift_normalizedOutput_preserved
   rw [leadingBlankLeftShiftTargetTape_normalizedOutput,
     leadingBlankLeftShiftSourceTape_normalizedOutput]
 
-theorem leadingBlankLeftShift_withPadding_normalizedOutput_preserved
+private theorem leadingBlankLeftShift_withPadding_normalizedOutput_preserved
     (baseLeft : List (Option Bool)) (bits : Word Bool)
     (padding : List (Option Bool)) :
     Tape.normalizedOutput

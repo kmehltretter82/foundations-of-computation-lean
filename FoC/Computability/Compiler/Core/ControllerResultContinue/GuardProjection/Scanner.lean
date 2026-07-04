@@ -601,7 +601,7 @@ def resultNoneGuardScanBoundary
   resultNoneGuardScanBoundaryFrom
     ResultNoneGuardBoundary.other code
 
-theorem resultNoneGuardScanBoundaryFrom_append
+private theorem resultNoneGuardScanBoundaryFrom_append
     (boundary : ResultNoneGuardBoundary)
     (pre suffix : Word MachineCodeSymbol) :
     resultNoneGuardScanBoundaryFrom boundary
@@ -614,7 +614,7 @@ theorem resultNoneGuardScanBoundaryFrom_append
   | cons symbol rest ih =>
       exact ih (boundary.update symbol)
 
-theorem resultNoneGuardScanBoundaryFrom_encodeCells_some_other
+private theorem resultNoneGuardScanBoundaryFrom_encodeCells_some_other
     (w : Word Bool) :
     resultNoneGuardScanBoundaryFrom
         ResultNoneGuardBoundary.other
@@ -631,7 +631,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeCells_some_other
           resultNoneGuardScanBoundaryFrom,
           ResultNoneGuardBoundary.update, ih]
 
-theorem resultNoneGuardScanBoundaryFrom_encodeNat_from_tick
+private theorem resultNoneGuardScanBoundaryFrom_encodeNat_from_tick
     (n : Nat) :
     resultNoneGuardScanBoundaryFrom
         ResultNoneGuardBoundary.tick
@@ -645,7 +645,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeNat_from_tick
         resultNoneGuardScanBoundaryFrom,
         ResultNoneGuardBoundary.update] using ih
 
-theorem resultNoneGuardScanBoundaryFrom_encodeNat_succ
+private theorem resultNoneGuardScanBoundaryFrom_encodeNat_succ
     (boundary : ResultNoneGuardBoundary) (n : Nat) :
     resultNoneGuardScanBoundaryFrom boundary
         (encodeNat (n + 1)) =
@@ -655,7 +655,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeNat_succ
     ResultNoneGuardBoundary.update,
     resultNoneGuardScanBoundaryFrom_encodeNat_from_tick]
 
-theorem resultNoneGuardScanBoundaryFrom_encodeCells_singleton
+private theorem resultNoneGuardScanBoundaryFrom_encodeCells_singleton
     (b : Bool) :
     resultNoneGuardScanBoundaryFrom
         ResultNoneGuardBoundary.tickDone
@@ -665,7 +665,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeCells_singleton
   cases b <;>
     rfl
 
-theorem resultNoneGuardScanBoundaryFrom_encodeCells_cons_cons
+private theorem resultNoneGuardScanBoundaryFrom_encodeCells_cons_cons
     (first second : Bool) (rest : Word Bool) :
     resultNoneGuardScanBoundaryFrom
         ResultNoneGuardBoundary.tickDone
@@ -680,7 +680,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeCells_cons_cons
       ResultNoneGuardBoundary.update,
       resultNoneGuardScanBoundaryFrom_encodeCells_some_other]
 
-theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_singleton
+private theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_singleton
     (boundary : ResultNoneGuardBoundary) (b : Bool) :
     resultNoneGuardScanBoundaryFrom boundary
         (encodeBoolWord [b]) =
@@ -698,7 +698,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_singleton
   rw [resultNoneGuardScanBoundaryFrom_encodeNat_succ]
   exact resultNoneGuardScanBoundaryFrom_encodeCells_singleton b
 
-theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_cons_cons
+private theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_cons_cons
     (boundary : ResultNoneGuardBoundary)
     (first second : Bool) (rest : Word Bool) :
     resultNoneGuardScanBoundaryFrom boundary
@@ -719,7 +719,7 @@ theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_cons_cons
   exact resultNoneGuardScanBoundaryFrom_encodeCells_cons_cons
     first second rest
 
-theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_accepts_iff
+private theorem resultNoneGuardScanBoundaryFrom_encodeBoolWord_accepts_iff
     (boundary : ResultNoneGuardBoundary)
     (result : Word Bool) :
     (resultNoneGuardScanBoundaryFrom boundary
@@ -1118,7 +1118,7 @@ theorem resultNoneGuardScannerDescription_run_code_halt_of_accepts
       (resultNoneGuardScanBoundary code) haccept
       (encodeCodeWordAsInput code).reverse
 
-theorem resultNoneGuardScannedBlankTape_normalizedOutput
+private theorem resultNoneGuardScannedBlankTape_normalizedOutput
     (leftRev : Word Bool) :
     Tape.normalizedOutput
         (resultNoneGuardScannedBlankTape leftRev) =

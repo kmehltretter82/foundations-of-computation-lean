@@ -31,7 +31,7 @@ def optionAppendFinalTransducer
     FiniteTransducer :=
   bitwiseOutputTransducer (optionEmitWord emit) final
 
-theorem bitwiseOutput_optionEmitWord
+private theorem bitwiseOutput_optionEmitWord
     (emit : Bool -> Option Bool) (input : Word Bool) :
     bitwiseOutput (optionEmitWord emit) input =
       input.filterMap emit := by
@@ -99,7 +99,7 @@ def optionAppendWordTransitions
       first :: optionAppendWordScanFalseTransition emit ::
         optionAppendWordScanTrueTransition emit :: rest
 
-theorem optionAppendWordPrefix_deterministic
+private theorem optionAppendWordPrefix_deterministic
     (emit : Bool -> Option Bool) (first t u : TransitionDescription)
     (hfirstSource : first.source = 0)
     (hfirstRead : first.read = none)
@@ -137,7 +137,7 @@ def FSTOptionAppendFinalWordTargetTape
       (List.replicate leftScratch (none : Option Bool)))
     final
 
-theorem filterMap_option_reverse_map
+private theorem filterMap_option_reverse_map
     (emit : Bool -> Option Bool) (input : Word Bool) :
     List.filterMap (fun cell : Option Bool => cell)
         ((input.reverse.map emit).reverse) =

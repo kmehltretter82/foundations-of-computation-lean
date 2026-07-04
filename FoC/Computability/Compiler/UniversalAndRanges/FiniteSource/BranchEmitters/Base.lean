@@ -27,7 +27,7 @@ theorem codePrefixParserBranchTruePrefix_append
       MachineDescription.encodeBoolWordAppend [true] tokens := by
   rfl
 
-theorem codePrefixParserBranchFalseOutput_eq :
+private theorem codePrefixParserBranchFalseOutput_eq :
     codePrefixParserBranchFalseOutput =
       MachineDescription.encodeBoolWord [false] := by
   rfl
@@ -240,7 +240,7 @@ def codePrefixParserBranchHaltsFromWithOutput
       TuringMachine.Halted codePrefixParserBranchMachine final ∧
         Tape.normalizedOutput final.tape = out
 
-theorem codePrefixParserBranch_success_boundary
+private theorem codePrefixParserBranch_success_boundary
     (right : List (Option MachineCodeSymbol)) :
     codePrefixParserBranchHaltsFromWithOutput
       { state := CodePrefixParserBranchState.successSeekLeft
@@ -302,7 +302,7 @@ theorem codePrefixParserBranch_success_boundary
   · simp [final, codePrefixParserBranchTruePrefix,
       transitionListParserOptionTape_normalizedOutput]
 
-theorem codePrefixParserBranch_success_seek_symbol
+private theorem codePrefixParserBranch_success_seek_symbol
     (leftRev : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
     (right : List (Option MachineCodeSymbol)) :

@@ -84,7 +84,7 @@ def sharedExitBranchConfiguration
   state := if c.state = oldHalt then commonHalt else offset + c.state
   tape := c.tape
 
-theorem sharedExitRetargetTransition_sameAction
+private theorem sharedExitRetargetTransition_sameAction
     (offset oldHalt commonHalt : Nat)
     {t u : TransitionDescription}
     (h : TransitionDescription.SameAction t u) :
@@ -97,7 +97,7 @@ theorem sharedExitRetargetTransition_sameAction
   simp [TransitionDescription.SameAction,
     sharedExitRetargetTransition, hwrite, hmove, htarget]
 
-theorem sharedExitRetargetTransition_sameKey_source
+private theorem sharedExitRetargetTransition_sameKey_source
     {offset oldHalt commonHalt : Nat}
     {t u : TransitionDescription}
     (h :

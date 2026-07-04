@@ -29,7 +29,7 @@ def markedTailStartConfig (tail : Word Bool) :
       Tape.move Direction.right
         (tapeAtCells [some false] (none :: tail.map some)) }
 
-theorem no_halt_of_stepConfig_none
+private theorem no_halt_of_stepConfig_none
     {D : MachineDescription} {c : Configuration}
     {T : Tape Bool}
     (hstep : D.stepConfig c = none)
@@ -45,7 +45,7 @@ theorem no_halt_of_stepConfig_none
     simpa using congrArg Configuration.state hsteps
   exact hstate hstate'
 
-theorem scanner_marked_tail_false_no_halt
+private theorem scanner_marked_tail_false_no_halt
     {rest : Word Bool} {T : Tape Bool}
     (hscanner :
       exists steps : Nat,
@@ -116,7 +116,7 @@ theorem runConfig_halt_tape_functional_from_config
   MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
     hD h₁ h₂
 
-theorem scanner_state_ne_halt_of_later_ne_halt
+private theorem scanner_state_ne_halt_of_later_ne_halt
     {c : Configuration} {n k : Nat}
     (hle : n ≤ k)
     (hlater :
@@ -329,7 +329,7 @@ theorem run_marked_tail_done_false_false_to_state200
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem state120_natPrefixFailure_ne_halt
+private theorem state120_natPrefixFailure_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
     (SIMS.runConfig n
@@ -515,7 +515,7 @@ theorem run_state120_decodeNat_none_ne_halt
       SIMS.halt :=
   state120_natPrefixFailure_ne_halt tokens leftRev hdecode n
 
-theorem state130_cellPrefixFailure_ne_halt
+private theorem state130_cellPrefixFailure_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeCell tokens = none) (n : Nat) :
     (SIMS.runConfig n
@@ -715,7 +715,7 @@ def markingTailReturnScanRev
     (List.append (markedCellsBits marked).reverse
       (stageNatBits remainingLengthTail).reverse)
 
-theorem run_marking_tail_to_first_payload
+private theorem run_marking_tail_to_first_payload
     (marked : Word Bool) (remainingLengthTail : Nat)
     (tokens : Word MachineCodeSymbol) :
     SIMS.runConfig
@@ -742,7 +742,7 @@ theorem run_marking_tail_to_first_payload
   rw [run_state120_stageNat]
   rw [run_state130_markedCells]
 
-theorem run_marking_tail_mark_one
+private theorem run_marking_tail_mark_one
     (marked : Word Bool) (remainingLengthTail : Nat)
     (b : Bool) (restAfterCell : Word MachineCodeSymbol) :
     exists steps : Nat,
@@ -834,7 +834,7 @@ theorem run_marking_tail_mark_one
   rw [hleftNext]
   simp
 
-theorem markingTail_cellListFailure_ne_halt
+private theorem markingTail_cellListFailure_ne_halt
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol)
     (hdecode :
@@ -924,7 +924,7 @@ theorem markingTail_cellListFailure_ne_halt
                   simp [decodeCells, hcell, hrest]
                     at hdecode
 
-theorem run_marking_tail_decodeCells_none_ne_halt
+private theorem run_marking_tail_decodeCells_none_ne_halt
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol)
     (hdecode :
@@ -935,7 +935,7 @@ theorem run_marking_tail_decodeCells_none_ne_halt
       SIMS.halt :=
   markingTail_cellListFailure_ne_halt marked remainingCells tokens hdecode n
 
-theorem markingTail_boolWordFailure_ne_halt
+private theorem markingTail_boolWordFailure_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
@@ -1021,7 +1021,7 @@ theorem markingTail_boolWordFailure_ne_halt
           | some decoded =>
               simp [cellsToWord?, hrest] at hword
 
-theorem run_marking_tail_cellsToWord_none_ne_halt
+private theorem run_marking_tail_cellsToWord_none_ne_halt
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
@@ -1032,7 +1032,7 @@ theorem run_marking_tail_cellsToWord_none_ne_halt
       SIMS.halt :=
   markingTail_boolWordFailure_ne_halt marked cells suffix hword n
 
-theorem state120_boolWordFailure_ne_halt
+private theorem state120_boolWordFailure_ne_halt
     (rest : Word MachineCodeSymbol)
     (hdecode :
       decodeBoolWord
@@ -1109,7 +1109,7 @@ theorem state120_boolWordFailure_ne_halt
                 decodeNat, hnat, hcells, hword]
                 at hdecode
 
-theorem run_state120_decodeBoolWord_none_ne_halt
+private theorem run_state120_decodeBoolWord_none_ne_halt
     (rest : Word MachineCodeSymbol)
     (hdecode :
       decodeBoolWord
@@ -1138,7 +1138,7 @@ theorem run_state200_done_to_state210
     encodeCodeSymbolAsInput,
     Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem run_state200_stageNat_to_state210
+private theorem run_state200_stageNat_to_state210
     (stage : Nat) (left right : List (Option Bool)) :
     SIMS.runConfig (4 * stage + 4)
         (config 200 left
@@ -1178,7 +1178,7 @@ theorem run_state200_stageNat_to_state210
         encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
-theorem run_state210_encoded_cons_ne_halt
+private theorem run_state210_encoded_cons_ne_halt
     (symbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
     (SIMS.runConfig n
@@ -1381,7 +1381,7 @@ theorem run_state200_decodeNat_none_ne_halt
                 change (200 : Nat) ≠ 999
                 lia)
 
-theorem state200_nonemptySuffixFailure_ne_halt
+private theorem state200_nonemptySuffixFailure_ne_halt
     (stage : Nat) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :
@@ -1429,7 +1429,7 @@ theorem state200_nonemptySuffixFailure_ne_halt
     exact run_state210_encoded_cons_ne_halt symbol suffix
       (List.append ((stageNatBits stage).reverse.map some) leftRev) m
 
-theorem run_state200_stageNat_suffix_ne_halt
+private theorem run_state200_stageNat_suffix_ne_halt
     (stage : Nat) (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol)
     (leftRev : List (Option Bool)) (n : Nat) :

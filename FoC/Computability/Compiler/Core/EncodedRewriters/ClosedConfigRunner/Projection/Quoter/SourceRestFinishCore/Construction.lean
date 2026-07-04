@@ -526,7 +526,7 @@ theorem assemblySourceRestFinishQuoteRestJoinedTape_eq_targetTape
   rw [assemblySourceRestFinishQuoteRestJoinedTape,
     assemblySourceRestFinishTargetTape_eq_tapeAtCells_segments]
 
-theorem assemblySourceRestFinishTailCopiedTape_eq_targetTape
+private theorem assemblySourceRestFinishTailCopiedTape_eq_targetTape
     (w sourceRestBits : Word Bool) (stage : Nat) :
     assemblySourceRestFinishTailCopiedTape w sourceRestBits stage =
       assemblySourceRestFinishTargetTape w sourceRestBits stage := by
@@ -540,7 +540,7 @@ core construction is the copier that consumes the mixed parser-stack layout and
 emits the normalized target tape.
 -/
 
-theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
+private theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape
     (w : Word Bool) (b : Bool) (rest : Word Bool) (stage : Nat) :
     preservingCellPassHaltTape
         (assemblySourceRestBoundaryLeftRev w stage) (b :: rest) [] =
@@ -596,7 +596,7 @@ theorem scanLeftToBlankLeftDescription_haltsFrom_finishQuoteBoundaryTape
             (assemblySourceRestBoundaryLeftRev w stage))
           scanRev current
 
-theorem assemblySourceRestFinishLeftBoundaryTape_move_left_move_right
+private theorem assemblySourceRestFinishLeftBoundaryTape_move_left_move_right
     (w sourceRestBits : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right

@@ -241,7 +241,7 @@ def transitionListParserMachine :
 
 private abbrev TLPM := transitionListParserMachine
 
-theorem transitionListParserMachine_haltingTransitionsDisabled :
+private theorem transitionListParserMachine_haltingTransitionsDisabled :
     TuringMachine.HaltingTransitionsDisabled
       TLPM := by
   intro cell
@@ -397,7 +397,7 @@ theorem transitionListParserOptionTape_nil_eq_input
       Tape.input tokens := by
   cases tokens <;> rfl
 
-theorem transitionListParserMachine_not_haltsFrom_of_stuck
+private theorem transitionListParserMachine_not_haltsFrom_of_stuck
     {c : TuringMachine.Configuration MachineCodeSymbol
       TransitionListParserState}
     (hnotHalt :
@@ -483,7 +483,7 @@ theorem transitionListParserNoHeader_append
   · exact hleft symbol hmem
   · exact hright symbol hmem
 
-theorem transitionListParserNoHeader_cons
+private theorem transitionListParserNoHeader_cons
     {head : MachineCodeSymbol} {tail : List MachineCodeSymbol}
     (hhead : head ≠ MachineCodeSymbol.header)
     (htail : transitionListParserNoHeader tail) :
@@ -494,7 +494,7 @@ theorem transitionListParserNoHeader_cons
     exact hhead
   · exact htail symbol hmem
 
-theorem transitionListParser_encodeNat_noHeader
+private theorem transitionListParser_encodeNat_noHeader
     (n : Nat) :
     transitionListParserNoHeader (MachineDescription.encodeNat n) := by
   induction n with
@@ -508,7 +508,7 @@ theorem transitionListParser_encodeNat_noHeader
         transitionListParserNoHeader_cons
           (by simp) ih
 
-theorem transitionListParser_encodeCell_noHeader
+private theorem transitionListParser_encodeCell_noHeader
     (cell : Option Bool) :
     transitionListParserNoHeader
       (MachineDescription.encodeCell cell) := by
@@ -525,7 +525,7 @@ theorem transitionListParser_encodeCell_noHeader
         subst symbol <;>
         simp
 
-theorem transitionListParser_encodeDirection_noHeader
+private theorem transitionListParser_encodeDirection_noHeader
     (dir : Direction) :
     transitionListParserNoHeader
       (MachineDescription.encodeDirection dir) := by
@@ -535,7 +535,7 @@ theorem transitionListParser_encodeDirection_noHeader
     subst symbol <;>
     simp
 
-theorem transitionListParser_encodeNatAppend_noHeader
+private theorem transitionListParser_encodeNatAppend_noHeader
     (n : Nat) {suffix : List MachineCodeSymbol}
     (hsuffix : transitionListParserNoHeader suffix) :
     transitionListParserNoHeader
@@ -544,7 +544,7 @@ theorem transitionListParser_encodeNatAppend_noHeader
     transitionListParserNoHeader_append
       (transitionListParser_encodeNat_noHeader n) hsuffix
 
-theorem transitionListParser_encodeCellAppend_noHeader
+private theorem transitionListParser_encodeCellAppend_noHeader
     (cell : Option Bool) {suffix : List MachineCodeSymbol}
     (hsuffix : transitionListParserNoHeader suffix) :
     transitionListParserNoHeader
@@ -553,7 +553,7 @@ theorem transitionListParser_encodeCellAppend_noHeader
     transitionListParserNoHeader_append
       (transitionListParser_encodeCell_noHeader cell) hsuffix
 
-theorem transitionListParser_encodeDirectionAppend_noHeader
+private theorem transitionListParser_encodeDirectionAppend_noHeader
     (dir : Direction) {suffix : List MachineCodeSymbol}
     (hsuffix : transitionListParserNoHeader suffix) :
     transitionListParserNoHeader
@@ -588,7 +588,7 @@ theorem transitionListParser_encodeTransition_noHeader
         intro symbol hmem
         simp at hmem)
 
-theorem transitionListParser_encodeTransitionsAppend_noHeader
+private theorem transitionListParser_encodeTransitionsAppend_noHeader
     (transitions : List TransitionDescription)
     {suffix : List MachineCodeSymbol}
     (hsuffix : transitionListParserNoHeader suffix) :
@@ -621,7 +621,7 @@ theorem transitionListParserMachine_step_keep_right
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_write_right
+private theorem transitionListParserMachine_step_write_right
     {state next : TransitionListParserState}
     {leftRev suffix : List (Option MachineCodeSymbol)}
     {cell write : Option MachineCodeSymbol}
@@ -642,7 +642,7 @@ theorem transitionListParserMachine_step_write_right
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_keep_left_nonempty
+private theorem transitionListParserMachine_step_keep_left_nonempty
     {state next : TransitionListParserState}
     {leftTail suffix : List (Option MachineCodeSymbol)}
     {leftHead cell : Option MachineCodeSymbol}
@@ -663,7 +663,7 @@ theorem transitionListParserMachine_step_keep_left_nonempty
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_write_left_nonempty
+private theorem transitionListParserMachine_step_write_left_nonempty
     {state next : TransitionListParserState}
     {leftTail suffix : List (Option MachineCodeSymbol)}
     {leftHead cell write : Option MachineCodeSymbol}
@@ -684,7 +684,7 @@ theorem transitionListParserMachine_step_write_left_nonempty
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_write_left_empty
+private theorem transitionListParserMachine_step_write_left_empty
     {state next : TransitionListParserState}
     {leftTail : List (Option MachineCodeSymbol)}
     {leftHead write : Option MachineCodeSymbol}
@@ -705,7 +705,7 @@ theorem transitionListParserMachine_step_write_left_empty
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_keep_left_boundary
+private theorem transitionListParserMachine_step_keep_left_boundary
     {state next : TransitionListParserState}
     {suffix : List (Option MachineCodeSymbol)}
     {cell : Option MachineCodeSymbol}
@@ -725,7 +725,7 @@ theorem transitionListParserMachine_step_keep_left_boundary
   exact TuringMachine.Step.mk (by
     simpa [transitionListParserOptionTape, Tape.read] using htransition)
 
-theorem transitionListParserMachine_step_returnLeft_some_nonempty
+private theorem transitionListParserMachine_step_returnLeft_some_nonempty
     (saved : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol)
@@ -744,7 +744,7 @@ theorem transitionListParserMachine_step_returnLeft_some_nonempty
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_returnLeft_some_boundary
+private theorem transitionListParserMachine_step_returnLeft_some_boundary
     (saved : Option MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol))
     (symbol : MachineCodeSymbol) :
@@ -761,7 +761,7 @@ theorem transitionListParserMachine_step_returnLeft_some_boundary
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_returnLeft_none_boundary
+private theorem transitionListParserMachine_step_returnLeft_none_boundary
     (saved : Option MachineCodeSymbol)
     (suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
@@ -778,7 +778,7 @@ theorem transitionListParserMachine_step_returnLeft_none_boundary
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_returnLeft_none
+private theorem transitionListParserMachine_step_returnLeft_none
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
@@ -814,7 +814,7 @@ theorem transitionListParserMachine_step_findCount_done
         simp [transitionListParserMachine,
           transitionListParserKeep])
 
-theorem transitionListParserMachine_step_findCount_blank
+private theorem transitionListParserMachine_step_findCount_blank
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
@@ -850,7 +850,7 @@ theorem transitionListParserMachine_step_findCount_tick
         simp [transitionListParserMachine,
           transitionListParserKeep])
 
-theorem transitionListParserMachine_step_seekCountDone_tick
+private theorem transitionListParserMachine_step_seekCountDone_tick
     (marker : TransitionListParserMarker)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
@@ -868,7 +868,7 @@ theorem transitionListParserMachine_step_seekCountDone_tick
         simp [transitionListParserMachine,
           transitionListParserKeep])
 
-theorem transitionListParserMachine_step_seekCountDone_done_initial
+private theorem transitionListParserMachine_step_seekCountDone_done_initial
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
       { state :=
@@ -885,7 +885,7 @@ theorem transitionListParserMachine_step_seekCountDone_done_initial
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_seekCountDone_done_saved
+private theorem transitionListParserMachine_step_seekCountDone_done_saved
     (saved : Option MachineCodeSymbol)
     (leftRev suffix : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
@@ -959,7 +959,7 @@ theorem transitionListParserMachine_step_enterMarkedPosition
         simp [transitionListParserMachine,
           transitionListParserKeep])
 
-theorem transitionListParserMachine_step_enterMarkedPosition_empty
+private theorem transitionListParserMachine_step_enterMarkedPosition_empty
     (leftRev : List (Option MachineCodeSymbol)) :
     TuringMachine.Step TLPM
       { state := TransitionListParserState.enterMarkedPosition
@@ -975,7 +975,7 @@ theorem transitionListParserMachine_step_enterMarkedPosition_empty
           transitionListParserOptionTape, Tape.read,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_markPosition
+private theorem transitionListParserMachine_step_markPosition
     (saved : Option MachineCodeSymbol)
     (leftTail suffix : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol) :
@@ -992,7 +992,7 @@ theorem transitionListParserMachine_step_markPosition
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_step_markPosition_empty
+private theorem transitionListParserMachine_step_markPosition_empty
     (leftTail : List (Option MachineCodeSymbol))
     (leftHead : Option MachineCodeSymbol) :
     TuringMachine.Step TLPM
@@ -1068,7 +1068,7 @@ theorem transitionListParserMachine_step_targetNat_done
     (by simp [transitionListParserMachine,
       transitionListParserKeep])
 
-theorem transitionListParserMachine_computes_nat
+private theorem transitionListParserMachine_computes_nat
     {current next : TransitionListParserState}
     (htick :
       forall leftRev suffix : List (Option MachineCodeSymbol),
@@ -1201,7 +1201,7 @@ theorem transitionListParserMachine_computes_needTransition
       (by simp [transitionListParserMachine,
         transitionListParserKeep]))
 
-theorem transitionListParserMachine_computes_readCell
+private theorem transitionListParserMachine_computes_readCell
     (cell : Option Bool)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
@@ -1234,7 +1234,7 @@ theorem transitionListParserMachine_computes_readCell
               (by simp [transitionListParserMachine,
                 transitionListParserKeep]))
 
-theorem transitionListParserMachine_computes_writeCell
+private theorem transitionListParserMachine_computes_writeCell
     (cell : Option Bool)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
@@ -1267,7 +1267,7 @@ theorem transitionListParserMachine_computes_writeCell
               (by simp [transitionListParserMachine,
                 transitionListParserKeep]))
 
-theorem transitionListParserMachine_computes_moveField
+private theorem transitionListParserMachine_computes_moveField
     (dir : Direction)
     (leftRev : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol) :
@@ -1579,7 +1579,7 @@ theorem transitionListParserMachine_computes_nextTransition_to_markPosition
             List.reverse_append, List.map_append,
             List.append_assoc] using hparse))
 
-theorem transitionListParserMachine_returnLeft_noBoundary
+private theorem transitionListParserMachine_returnLeft_noBoundary
     (saved : Option MachineCodeSymbol)
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
@@ -1620,7 +1620,7 @@ theorem transitionListParserMachine_returnLeft_noBoundary
           (by
             simpa [List.append_assoc] using htail)
 
-theorem transitionListParserMachine_returnLeft_withBoundary
+private theorem transitionListParserMachine_returnLeft_withBoundary
     (saved : Option MachineCodeSymbol)
     (leftSymbols : Word MachineCodeSymbol)
     (current : MachineCodeSymbol)
@@ -1662,7 +1662,7 @@ theorem transitionListParserMachine_returnLeft_withBoundary
         (by
           simpa [List.append_assoc] using htail)
 
-theorem transitionListParserMachine_returnLeft_toBoundary
+private theorem transitionListParserMachine_returnLeft_toBoundary
     (saved : Option MachineCodeSymbol)
     (leftSymbols : Word MachineCodeSymbol)
     (prefixLeft suffix : List (Option MachineCodeSymbol))
@@ -1885,7 +1885,7 @@ theorem transitionListParserMachine_haltsFrom_findCount_blanks_done
             (TuringMachine.Computes.refl _))
           (ih (some MachineCodeSymbol.blank :: leftRev))
 
-theorem transitionListParser_replicate_blank_append_cons
+private theorem transitionListParser_replicate_blank_append_cons
     (blanks : Nat) (leftRev : List (Option MachineCodeSymbol)) :
     List.append
         (List.replicate blanks (some MachineCodeSymbol.blank))

@@ -72,7 +72,7 @@ def rightBlankGapPayloadScanTargetTapeImplicit
           baseLeft))
       [])
 
-theorem gapPayloadScan_replicate_none_append_none_cons
+private theorem gapPayloadScan_replicate_none_append_none_cons
     (n : Nat) (tail : List (Option Bool)) :
     List.append (List.replicate n (none : Option Bool))
         (none :: tail) =

@@ -17,7 +17,7 @@ open MachineDescription
 
 namespace ControllerStageInputProjection
 
-theorem final_normalizedOutput
+private theorem final_normalizedOutput
     (input result : Word Bool) (stage : Nat) :
     Tape.normalizedOutput
         (projectionTapeAtCells
@@ -372,7 +372,7 @@ theorem haltsWithOutput_encode
         final_normalizedOutput
           input result stage
 
-theorem state_ne_halt_of_later_ne_halt
+private theorem state_ne_halt_of_later_ne_halt
     {c : Configuration} {n k : Nat}
     (hle : n ≤ k)
     (hlater :
@@ -383,7 +383,7 @@ theorem state_ne_halt_of_later_ne_halt
   CommonGround.SeqComposition.runConfig_state_ne_halt_of_later_ne_halt
     haltTransitionFree hle hlater
 
-theorem ne_halt_of_reaches_stuck
+private theorem ne_halt_of_reaches_stuck
     {c stuck : Configuration} {k n : Nat}
     (hrun :
       Description.runConfig k c = stuck)
@@ -884,7 +884,7 @@ theorem run_state100_decodeNat_none_ne_halt
                 change (100 : Nat) ≠ 999
                 lia)
 
-theorem run_state320_decodeNat_none_ne_halt
+private theorem run_state320_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
     (Description.runConfig n
@@ -1118,7 +1118,7 @@ theorem run_state300_decodeNat_none_ne_halt
                 change (300 : Nat) ≠ 999
                 lia)
 
-theorem run_state330_decodeCell_none_ne_halt
+private theorem run_state330_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeCell tokens = none) (n : Nat) :
     (Description.runConfig n
@@ -1203,7 +1203,7 @@ theorem run_state330_decodeCell_none_ne_halt
                 change (330 : Nat) ≠ 999
                 lia)
 
-theorem run_state330_blank_cell_ne_halt
+private theorem run_state330_blank_cell_ne_halt
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
     (Description.runConfig n

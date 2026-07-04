@@ -58,7 +58,7 @@ theorem sourceTape_outputPrefix_eq_inputQuoterExactTargetTape
   rw [SelectedProjectionInputQuoterExactTargetTape,
     SelectedProjectionTailProjector.sourceTape_outputPrefix_eq_stageInputSourceRestFieldBits]
 
-theorem selectedProjectionInputQuoterExactSourceTape_normalizedOutput
+private theorem selectedProjectionInputQuoterExactSourceTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedProjectionInputQuoterExactSourceTape L) =
@@ -66,7 +66,7 @@ theorem selectedProjectionInputQuoterExactSourceTape_normalizedOutput
   rw [← parsedLayoutCheckedTape_eq_inputQuoterExactSourceTape L]
   exact parsedLayoutCheckedTape_normalizedOutput L
 
-theorem selectedProjectionInputQuoterExactTargetTape_normalizedOutput
+private theorem selectedProjectionInputQuoterExactTargetTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
         (SelectedProjectionInputQuoterExactTargetTape L) =

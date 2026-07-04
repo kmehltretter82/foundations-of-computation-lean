@@ -13,7 +13,7 @@ namespace Computability
 
 open Languages
 
-theorem transitionListParserMachine_haltsFromIn_sourceNat_inv
+private theorem transitionListParserMachine_haltsFromIn_sourceNat_inv
     {steps : Nat} {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -87,7 +87,7 @@ theorem transitionListParserMachine_haltsFromIn_sourceNat_inv
                       (M := transitionListParserMachine)
                       ⟨final, hrest, hhalt⟩)
 
-theorem transitionListParserMachine_haltsFrom_sourceNat_inv
+private theorem transitionListParserMachine_haltsFrom_sourceNat_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -111,7 +111,7 @@ theorem transitionListParserMachine_haltsFrom_sourceNat_inv
     ⟨steps, hsteps⟩
   exact transitionListParserMachine_haltsFromIn_sourceNat_inv hsteps
 
-theorem transitionListParserMachine_haltsFromIn_readCell_inv
+private theorem transitionListParserMachine_haltsFromIn_readCell_inv
     {steps : Nat} {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -251,7 +251,7 @@ theorem transitionListParserMachine_haltsFromIn_readCell_inv
                       simp [transitionListParserMachine,
                         transitionListParserOptionTape, Tape.read] at htransition
 
-theorem transitionListParserMachine_haltsFrom_readCell_inv
+private theorem transitionListParserMachine_haltsFrom_readCell_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -275,7 +275,7 @@ theorem transitionListParserMachine_haltsFrom_readCell_inv
     ⟨steps, hsteps⟩
   exact transitionListParserMachine_haltsFromIn_readCell_inv hsteps
 
-theorem transitionListParserMachine_haltsFromIn_writeCell_inv
+private theorem transitionListParserMachine_haltsFromIn_writeCell_inv
     {steps : Nat} {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -415,7 +415,7 @@ theorem transitionListParserMachine_haltsFromIn_writeCell_inv
                       simp [transitionListParserMachine,
                         transitionListParserOptionTape, Tape.read] at htransition
 
-theorem transitionListParserMachine_haltsFrom_writeCell_inv
+private theorem transitionListParserMachine_haltsFrom_writeCell_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -439,7 +439,7 @@ theorem transitionListParserMachine_haltsFrom_writeCell_inv
     ⟨steps, hsteps⟩
   exact transitionListParserMachine_haltsFromIn_writeCell_inv hsteps
 
-theorem transitionListParserMachine_haltsFromIn_moveField_inv
+private theorem transitionListParserMachine_haltsFromIn_moveField_inv
     {steps : Nat} {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -560,7 +560,7 @@ theorem transitionListParserMachine_haltsFromIn_moveField_inv
                       simp [transitionListParserMachine,
                         transitionListParserOptionTape, Tape.read] at htransition
 
-theorem transitionListParserMachine_haltsFrom_moveField_inv
+private theorem transitionListParserMachine_haltsFrom_moveField_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -584,7 +584,7 @@ theorem transitionListParserMachine_haltsFrom_moveField_inv
     ⟨steps, hsteps⟩
   exact transitionListParserMachine_haltsFromIn_moveField_inv hsteps
 
-theorem transitionListParserMachine_haltsFromIn_targetNat_inv
+private theorem transitionListParserMachine_haltsFromIn_targetNat_inv
     {steps : Nat} {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -658,7 +658,7 @@ theorem transitionListParserMachine_haltsFromIn_targetNat_inv
                       (M := transitionListParserMachine)
                       ⟨final, hrest, hhalt⟩)
 
-theorem transitionListParserMachine_haltsFrom_targetNat_inv
+private theorem transitionListParserMachine_haltsFrom_targetNat_inv
     {leftRev : List (Option MachineCodeSymbol)}
     {tokens : Word MachineCodeSymbol}
     (h :
@@ -694,7 +694,7 @@ def transitionListParserMarkedContextLeft
       pre).reverse.map some)
     (if boundary then [none] else [])
 
-theorem transitionListParserMachine_computes_markPosition_context_to_needTransition
+private theorem transitionListParserMachine_computes_markPosition_context_to_needTransition
     (boundary : Bool) (blanks count : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre)
@@ -1035,7 +1035,7 @@ theorem transitionListParserMachine_computes_markPosition_context_to_needTransit
                             rw [hleftDone]
                             exact TuringMachine.Computes.refl _)))))))
 
-theorem transitionListParserMachine_computes_markPosition_context_empty_to_needTransition
+private theorem transitionListParserMachine_computes_markPosition_context_empty_to_needTransition
     (boundary : Bool) (blanks count : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre) :
@@ -1342,7 +1342,7 @@ theorem transitionListParserMachine_computes_markPosition_context_empty_to_needT
                             rw [hleftDone]
                             exact TuringMachine.Computes.refl _)))))))
 
-theorem transitionListParserMachine_haltsFrom_markPosition_context_inv
+private theorem transitionListParserMachine_haltsFrom_markPosition_context_inv
     (count : Nat) :
     forall (boundary : Bool) (blanks : Nat)
       (pre tokens : Word MachineCodeSymbol),
@@ -1489,7 +1489,7 @@ theorem transitionListParserMachine_haltsFrom_markPosition_context_inv
                     (rest.map some))
                   hneed)
 
-theorem transitionListParserMachine_haltsFrom_needTransition_transition_inv
+private theorem transitionListParserMachine_haltsFrom_needTransition_transition_inv
     {count : Nat} {rest : Word MachineCodeSymbol}
     (h :
       TuringMachine.HaltsFrom transitionListParserMachine
@@ -1589,7 +1589,7 @@ theorem transitionListParserMachine_haltsFrom_needTransition_transition_inv
         rw [hcount, hrestTokens]
         exact hhalts
 
-theorem transitionListParserMachine_haltsFrom_needTransition_inv
+private theorem transitionListParserMachine_haltsFrom_needTransition_inv
     {count : Nat} {tokens : Word MachineCodeSymbol}
     (h :
       TuringMachine.HaltsFrom transitionListParserMachine
@@ -1627,7 +1627,7 @@ theorem transitionListParserMachine_haltsFrom_needTransition_inv
                 (rest.map some))
               h)
 
-theorem transitionListParserMachine_halts_succ_inv
+private theorem transitionListParserMachine_halts_succ_inv
     {count : Nat} {tokens : Word MachineCodeSymbol}
     (h :
       TuringMachine.HaltsOnInput transitionListParserMachine

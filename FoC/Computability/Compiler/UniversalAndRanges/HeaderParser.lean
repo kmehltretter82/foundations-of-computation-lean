@@ -65,7 +65,7 @@ def headerFieldsParserTape
         head := some symbol
         right := suffix.map some }
 
-theorem headerFieldsParserTape_move_right
+private theorem headerFieldsParserTape_move_right
     (leftRev : Word MachineCodeSymbol)
     (symbol : MachineCodeSymbol)
     (suffix : Word MachineCodeSymbol) :
@@ -360,7 +360,7 @@ theorem headerFieldsParserMachine_computesIn_nat
       simpa [MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, List.append_assoc] using hcomp
 
-theorem headerFieldsParserMachine_haltsFromIn_only_transitionCount
+private theorem headerFieldsParserMachine_haltsFromIn_only_transitionCount
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -476,7 +476,7 @@ theorem headerFieldsParserMachine_haltsFromIn_only_transitionCount
                         headerFieldsParserTape,
                         Tape.read] at haction
 
-theorem headerFieldsParserMachine_haltsFromIn_only_haltField
+private theorem headerFieldsParserMachine_haltsFromIn_only_haltField
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -631,7 +631,7 @@ theorem headerFieldsParserMachine_haltsFromIn_only_haltField
                         headerFieldsParserTape,
                         Tape.read] at haction
 
-theorem headerFieldsParserMachine_haltsFromIn_only_startField
+private theorem headerFieldsParserMachine_haltsFromIn_only_startField
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
@@ -789,7 +789,7 @@ theorem headerFieldsParserMachine_haltsFromIn_only_startField
                         headerFieldsParserTape,
                         Tape.read] at haction
 
-theorem headerFieldsParserMachine_haltsFromIn_only_stateCount
+private theorem headerFieldsParserMachine_haltsFromIn_only_stateCount
     {steps : Nat}
     {leftRev rest : Word MachineCodeSymbol}
     (h :
