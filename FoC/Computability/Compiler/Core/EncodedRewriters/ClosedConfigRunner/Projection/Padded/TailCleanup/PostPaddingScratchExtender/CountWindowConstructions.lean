@@ -1209,15 +1209,16 @@ theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_false
   rfl
 
 /--
-Finite-machine contract for the shared post-field materializer.  It rebuilds
-the full decoded {name}`ParsedLayoutBits` scan source from either branch's
-post-field right-edge tape.
+Finite-machine contract for one branch of the shared post-field materializer.
+It rebuilds the full decoded {name}`ParsedLayoutBits` scan source from the
+branch's post-field right-edge tape.
 -/
 def CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
+    (useAccept : Bool)
     (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
-    forall (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
-      (leftBit : Bool) (deletedTail : Word Bool),
+    forall (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+      (deletedTail : Word Bool),
       configurationFieldBits L.acceptConfig [] =
           false :: deletedTail ->
       countWindowPostFieldDecodedPrefixMaterializerPayload
@@ -1228,21 +1229,30 @@ def CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
           useAccept L pref leftBit deletedTail)
         (postFieldDecodedPrefixScanSourceTape useAccept L)
 
-/-- Existence wrapper for {name}`CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec`. -/
+/--
+Branch-indexed existence wrapper for
+{name}`CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec`.  The
+accept and reject branches may use different finite machines while sharing the
+same contract shape.
+-/
 def CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :
     Prop :=
+  forall useAccept : Bool,
   exists materializer : MachineDescription,
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
-      materializer
+      useAccept materializer
 
 /--
-Shared hard construction leaf for both post-field branches.  The remaining
-finite-machine work is here: reconstruct the decoded-prefix scan source from
-the branch-specific right-edge handoff tape.
+Branch-indexed hard construction leaf.  The remaining finite-machine work is
+here: for each branch, reconstruct the decoded-prefix scan source from that
+branch's right-edge handoff tape.
 -/
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  sorry
+  intro useAccept
+  cases useAccept
+  · sorry
+  · sorry
 
 /--
 Reject-specialized wrapper contract for the shared post-field materializer.
@@ -1272,7 +1282,7 @@ def RejectPostFieldDecodedPrefixScanSourceConstruction : Prop :=
 /--
 Accept-specialized wrapper contract for the shared post-field materializer.
 This preserves the older accept construction boundary while the implementation
-is supplied by the branch-independent materializer.
+is supplied by the branch-indexed materializer.
 -/
 def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
     (materializer : MachineDescription) : Prop :=
@@ -1303,7 +1313,7 @@ theorem rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMateria
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
     RejectPostFieldDecodedPrefixScanSourceConstruction := by
-  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  rcases hmaterializer false with ⟨materializer, hmaterializerSpec⟩
   exact
     ⟨materializer,
       hmaterializerSpec.left,
@@ -1312,7 +1322,7 @@ theorem rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMateria
           countWindowPostFieldDecodedPrefixMaterializerPayload_false,
           countWindowPostFieldDecodedPrefixMaterializerSourceTape_false] using
           hmaterializerSpec.right
-            false L pref leftBit deletedTail hdeleted hpayload⟩
+            L pref leftBit deletedTail hdeleted hpayload⟩
 
 /--
 Project the accept branch out of the shared count-window post-field
@@ -1322,7 +1332,7 @@ theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWind
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
     AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction := by
-  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  rcases hmaterializer true with ⟨materializer, hmaterializerSpec⟩
   exact
     ⟨materializer,
       hmaterializerSpec.left,
@@ -1332,7 +1342,7 @@ theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWind
           countWindowPostFieldDecodedPrefixMaterializerPayload_true,
           countWindowPostFieldDecodedPrefixMaterializerSourceTape_true] using
           hmaterializerSpec.right
-            true L pref leftBit deletedTail hdeleted hpayload⟩
+            L pref leftBit deletedTail hdeleted hpayload⟩
 
 def AcceptPostFieldDecodedPrefixScanToRewindSpec
     (scanner : MachineDescription) : Prop :=
