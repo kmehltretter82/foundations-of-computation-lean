@@ -636,13 +636,14 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruc
     (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
       h)
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sourceMaterializer
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
     {useAccept : Bool} {materializer : MachineDescription}
     (hmaterializer :
       SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
         useAccept materializer) :
-    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction
-      useAccept := by
+    exists postPadding : MachineDescription,
+      SelectedProjectionPaddedTailCleanupPostPaddingSpec
+        useAccept postPadding := by
   refine
     ⟨canonicalSeqDescription materializer
         (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription
@@ -673,13 +674,11 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMate
   rcases hmaterializers useAccept with
     ⟨materializer, hmaterializer⟩
   exact
-    selectedProjectionPaddedTailCleanupPostPaddingBranchConstruction_of_sourceMaterializer
+    selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
       hmaterializer
 
 /--
 Combined post-padding finite-machine leaf for selected-projection tail cleanup.
-The branch wrappers below project this single obligation into the accepting and
-rejecting branch contracts.
 -/
 theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
@@ -770,27 +769,9 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
       selectedProjectionPaddedTailCleanupPostEraseSpec_of_postPadding
         hpostPadding⟩
 
-/--
-Post-padding finite-machine leaf for selected-projection tail cleanup on the
-accepting projection branch.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true := by
-  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction true
-
-/--
-Post-padding finite-machine leaf for selected-projection tail cleanup on the
-rejecting projection branch.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false := by
-  exact selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction false
-
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
-    selectedProjectionPaddedTailCleanupPostPaddingAcceptConstruction
-    selectedProjectionPaddedTailCleanupPostPaddingRejectConstruction
+  selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=

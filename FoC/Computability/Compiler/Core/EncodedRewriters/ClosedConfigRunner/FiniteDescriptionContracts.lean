@@ -15,8 +15,7 @@ set_option doc.verso true
 
 This module owns the neutral finite-description boundary for selected
 projection and selected merge.  The selected-projection route exposed here is
-the padded/equivalence route used by the phase runner; exact and right-shifted
-selected-projection wrappers are adapter-level compatibility surfaces.
+the padded/equivalence route used by the phase runner.
 -/
 
 namespace FoC
@@ -29,10 +28,8 @@ namespace EncodedRewriters
 namespace BoundedLayoutRunner
 
 /-!
-Selected projection has several compatible surfaces. The canonical contract is
-phrased as a code-word emitter; the checked and equivalence contracts are
-machine-description adapters used when the source tape already carries parsed
-layout checks or padding.
+Selected projection is phrased as a code-word emitter, with a checked
+equivalence contract for the padded machine assembled by the phase runner.
 -/
 
 def SelectedProjectionEmitterSpec
@@ -66,20 +63,6 @@ def SelectedProjectionEmitterConstruction : Prop :=
   forall useAccept : Bool,
     exists emitter : MachineDescription,
       SelectedProjectionEmitterSpec useAccept emitter
-
-def SelectedProjectionCheckedEmitterSpec
-    (useAccept : Bool)
-    (emitter : MachineDescription) : Prop :=
-  ReadySpec emitter ∧
-    forall L : DovetailLayout,
-      emitter.HaltsFromTape
-        (ParsedLayoutCheckedTape L)
-        (SelectedProjectionOutputTape useAccept L)
-
-def SelectedProjectionCheckedEmitterConstruction : Prop :=
-  forall useAccept : Bool,
-    exists emitter : MachineDescription,
-      SelectedProjectionCheckedEmitterSpec useAccept emitter
 
 theorem selectedProjectionOutputCode_true
     (L : DovetailLayout) :
@@ -295,11 +278,6 @@ def SelectedProjectionEquivEmitterSpec
           (Tape.input (ParsedLayoutBits L))
           (SelectedProjectionOutputTape useAccept L)
 
-def SelectedProjectionEquivEmitterConstruction : Prop :=
-  forall useAccept : Bool,
-    exists emitter : MachineDescription,
-      SelectedProjectionEquivEmitterSpec useAccept emitter
-
 def SelectedProjectionCheckedEquivEmitterSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
@@ -346,79 +324,6 @@ theorem selectedProjectionEquivEmitterSpec_of_exact
         initial] using hhalt
     rw [hemitter.right.right L T hwith]
     exact Tape.Equiv.refl _
-
-theorem selectedProjectionEquivEmitterConstruction_of_exact
-    (h : SelectedProjectionEmitterConstruction) :
-    SelectedProjectionEquivEmitterConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨emitter, hemits⟩
-  exact
-    ⟨emitter, selectedProjectionEquivEmitterSpec_of_exact hemits⟩
-
-theorem selectedProjectionCheckedEquivEmitterSpec_of_equiv
-    {useAccept : Bool} {emitter : MachineDescription}
-    (hemitter : SelectedProjectionEquivEmitterSpec useAccept emitter) :
-    SelectedProjectionCheckedEquivEmitterSpec useAccept emitter := by
-  constructor
-  · exact hemitter.left
-  constructor
-  · intro L
-    rcases hemitter.right.left L with ⟨Tactual, hactual, hTactual⟩
-    have hcheckedEquiv :
-        Tape.Equiv (Tape.input (ParsedLayoutBits L))
-          (ParsedLayoutCheckedTape L) :=
-      Tape.Equiv.symm (checkedInputTape_equiv_input _)
-    rcases
-        HaltsFromTapeEquiv_of_input_equiv
-          hcheckedEquiv hactual with
-      ⟨Tchecked, hchecked, hTchecked⟩
-    exact
-      ⟨Tchecked, hchecked,
-        Tape.Equiv.trans hTchecked hTactual⟩
-  · intro L T hhalt
-    have hcheckedEquiv :
-        Tape.Equiv (ParsedLayoutCheckedTape L)
-          (Tape.input (ParsedLayoutBits L)) :=
-      checkedInputTape_equiv_input _
-    rcases
-        HaltsFromTapeEquiv_of_input_equiv
-          hcheckedEquiv hhalt with
-      ⟨Traw, hraw, hTraw⟩
-    have hclosed := hemitter.right.right L Traw hraw
-    exact Tape.Equiv.trans (Tape.Equiv.symm hTraw) hclosed
-
-theorem selectedProjectionCheckedEquivEmitterConstruction_of_equiv
-    (h : SelectedProjectionEquivEmitterConstruction) :
-    SelectedProjectionCheckedEquivEmitterConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨emitter, hemits⟩
-  exact
-    ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_equiv hemits⟩
-
-theorem selectedProjectionCheckedEquivEmitterSpec_of_checked
-    {useAccept : Bool} {emitter : MachineDescription}
-    (hemitter : SelectedProjectionCheckedEmitterSpec useAccept emitter) :
-    SelectedProjectionCheckedEquivEmitterSpec useAccept emitter := by
-  constructor
-  · exact hemitter.left
-  constructor
-  · intro L
-    exact HaltsFromTape.toEquiv (hemitter.right L)
-  · intro L T hhalt
-    have hT :
-        T = SelectedProjectionOutputTape useAccept L :=
-      haltsFromTape_functional_of_haltTransitionFree
-        hemitter.left.right hhalt (hemitter.right L)
-    rw [hT]
-    exact Tape.Equiv.refl _
-
-theorem selectedProjectionCheckedEquivEmitterConstruction_of_checked
-    (h : SelectedProjectionCheckedEmitterConstruction) :
-    SelectedProjectionCheckedEquivEmitterConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨emitter, hemits⟩
-  exact
-    ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_checked hemits⟩
 
 theorem selectedProjectionSpec_of_parser_equivEmitter
     {useAccept : Bool} {parser emitter : MachineDescription}
@@ -535,16 +440,6 @@ theorem selectedProjectionSpec_of_parser_emitter
       (SeqViaCanonical parser emitter) :=
   selectedProjectionSpec_of_parser_equivEmitter hparser
     (selectedProjectionEquivEmitterSpec_of_exact hemitter)
-
-theorem selectedProjectionFiniteDescriptionConstruction_of_equivEmitter
-    (hemitter : SelectedProjectionEquivEmitterConstruction) :
-    SelectedProjectionFiniteDescriptionConstruction := by
-  intro useAccept
-  rcases layoutCheckedParserConstruction_scaffold with ⟨parser, hparser⟩
-  rcases hemitter useAccept with ⟨emitter, hemits⟩
-  exact
-    ⟨SeqViaCanonical parser emitter,
-      selectedProjectionSpec_of_parser_equivEmitter hparser hemits⟩
 
 theorem selectedProjectionFiniteDescriptionConstruction_of_checkedEquivEmitter
     (hemitter : SelectedProjectionCheckedEquivEmitterConstruction) :

@@ -1579,23 +1579,6 @@ def SelectedProjectionPaddedTailCleanupPostPaddingConstruction :
       SelectedProjectionPaddedTailCleanupPostPaddingSpec
         useAccept postPadding
 
-def SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction
-    (useAccept : Bool) : Prop :=
-  exists postPadding : MachineDescription,
-    SelectedProjectionPaddedTailCleanupPostPaddingSpec
-      useAccept postPadding
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_branches
-    (hAccept :
-      SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction true)
-    (hReject :
-      SelectedProjectionPaddedTailCleanupPostPaddingBranchConstruction false) :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
-  intro useAccept
-  cases useAccept
-  · exact hReject
-  · exact hAccept
-
 end SelectedProjectionPaddedTailCleanup
 
 end BoundedLayoutRunner

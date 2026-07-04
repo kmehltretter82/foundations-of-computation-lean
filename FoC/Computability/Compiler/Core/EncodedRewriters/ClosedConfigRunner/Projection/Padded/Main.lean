@@ -5,9 +5,9 @@ set_option doc.verso true
 
 /-!
 This module assembles the padded selected-projection emitter from the input
-quoter and tail-cleanup components. It states the checked and unchecked padded
-emitter contracts and proves the bridge from component constructions to the
-public selected-projection construction.
+quoter and tail-cleanup components. It states the checked padded emitter
+contract and proves the bridge from component constructions to the public
+selected-projection construction.
 -/
 
 namespace FoC
@@ -18,20 +18,6 @@ open MachineDescription
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
-
-def SelectedProjectionEquivPaddedEmitterSpec
-    (useAccept : Bool)
-    (emitter : MachineDescription) : Prop :=
-  emitter.SubroutineReady ∧
-    forall L : DovetailLayout,
-      emitter.HaltsFromTapeEquiv
-        (Tape.input (ParsedLayoutBits L))
-        (SelectedProjectionEquivEmitterPaddedOutputTape useAccept L)
-
-def SelectedProjectionEquivPaddedEmitterConstruction : Prop :=
-  forall useAccept : Bool,
-    exists emitter : MachineDescription,
-      SelectedProjectionEquivPaddedEmitterSpec useAccept emitter
 
 def SelectedProjectionCheckedEquivPaddedEmitterSpec
     (useAccept : Bool)
@@ -97,20 +83,6 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
         hquoter.left htail.left hquoterRun.toEquiv hbridge
         (htail.right L)
 
-theorem selectedProjectionEquivPaddedEmitterSpec_haltsToOutput
-    {useAccept : Bool} {emitter : MachineDescription}
-    (hemits : SelectedProjectionEquivPaddedEmitterSpec useAccept emitter)
-    (L : DovetailLayout) :
-    emitter.HaltsFromTapeEquiv
-      (Tape.input (ParsedLayoutBits L))
-      (SelectedProjectionOutputTape useAccept L) := by
-  rcases hemits.right L with ⟨Tactual, hactual, hTequiv⟩
-  exact
-    ⟨Tactual, hactual,
-      Tape.Equiv.trans hTequiv
-        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
-          useAccept L)⟩
-
 theorem selectedProjectionCheckedEquivPaddedEmitterSpec_haltsToOutput
     {useAccept : Bool} {emitter : MachineDescription}
     (hemits :
@@ -153,29 +125,6 @@ theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
       selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
         hquoter htail⟩
 
-theorem selectedProjectionEquivEmitterSpec_of_padded
-    {useAccept : Bool} {emitter : MachineDescription}
-    (hemits : SelectedProjectionEquivPaddedEmitterSpec useAccept emitter) :
-    SelectedProjectionEquivEmitterSpec useAccept emitter := by
-  constructor
-  · exact hemits.left
-  constructor
-  · intro L
-    exact selectedProjectionEquivPaddedEmitterSpec_haltsToOutput hemits L
-  · intro L T hhalt
-    exact
-      closedFromTapeEquiv_of_haltsFromTapeEquiv
-        hemits.left (hemits.right L)
-        (SelectedProjectionEquivEmitterPaddedOutputTape_equiv
-          useAccept L) T hhalt
-
-theorem selectedProjectionEquivEmitterConstruction_of_padded
-    (h : SelectedProjectionEquivPaddedEmitterConstruction) :
-    SelectedProjectionEquivEmitterConstruction := by
-  intro useAccept
-  rcases h useAccept with ⟨emitter, hemits⟩
-  exact ⟨emitter, selectedProjectionEquivEmitterSpec_of_padded hemits⟩
-
 theorem selectedProjectionCheckedEquivEmitterSpec_of_padded
     {useAccept : Bool} {emitter : MachineDescription}
     (hemits :
@@ -203,27 +152,13 @@ theorem selectedProjectionCheckedEquivEmitterConstruction_of_padded
   exact
     ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_padded hemits⟩
 
-
-
-theorem selectedProjectionCheckedEquivPaddedEmitterComponentConstruction_scaffold :
-    SelectedProjectionCheckedEquivPaddedEmitterComponentConstruction :=
-  ⟨selectedProjectionInputQuoterConstruction_scaffold,
-    selectedProjectionPaddedTailEmitterConstruction_scaffold⟩
-
-theorem selectedProjectionCheckedEquivPaddedEmitterConstruction_scaffold :
-    SelectedProjectionCheckedEquivPaddedEmitterConstruction :=
-  selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
-    selectedProjectionCheckedEquivPaddedEmitterComponentConstruction_scaffold
-
-theorem selectedProjectionCheckedEquivEmitterConstruction_scaffold :
-    SelectedProjectionCheckedEquivEmitterConstruction :=
-  selectedProjectionCheckedEquivEmitterConstruction_of_padded
-    selectedProjectionCheckedEquivPaddedEmitterConstruction_scaffold
-
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_of_checkedEquivEmitter
-    selectedProjectionCheckedEquivEmitterConstruction_scaffold
+    (selectedProjectionCheckedEquivEmitterConstruction_of_padded
+      (selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
+        ⟨selectedProjectionInputQuoterConstruction_scaffold,
+          selectedProjectionPaddedTailEmitterConstruction_scaffold⟩))
 
 end BoundedLayoutRunner
 end EncodedRewriters
