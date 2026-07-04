@@ -11,7 +11,7 @@ namespace Computability
 
 open Languages
 
-theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+private theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
@@ -31,31 +31,22 @@ structure PairedRecognizerDovetailControllerCompilerCloseout where
   controllerSearchDriver :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction
 
-def pairedRecognizerDovetailControllerCompilerCloseout_of_constructions
-    (hattempt :
-      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
-    (hdriver :
-      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
-    PairedRecognizerDovetailControllerCompilerCloseout where
-  totalStageAttemptSubroutine := hattempt
-  controllerSearchDriver := hdriver
-
 structure PairedRecognizerDovetailFiniteControllerCompilerCloseout where
   totalStageAttemptSubroutine :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
   finiteStageLoopController :
     PairedRecognizerDovetailFiniteStageLoopControllerConstruction
 
-def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteStageLoopController
+private def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteStageLoopController
     (hattempt :
       PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
-    PairedRecognizerDovetailControllerCompilerCloseout :=
-  pairedRecognizerDovetailControllerCompilerCloseout_of_constructions
-    hattempt
-    (pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
-      hloop)
+    PairedRecognizerDovetailControllerCompilerCloseout where
+  totalStageAttemptSubroutine := hattempt
+  controllerSearchDriver :=
+    pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+      hloop
 
 def pairedRecognizerDovetailControllerCompilerCloseout_of_finiteControllerCloseout
     (hclose : PairedRecognizerDovetailFiniteControllerCompilerCloseout) :

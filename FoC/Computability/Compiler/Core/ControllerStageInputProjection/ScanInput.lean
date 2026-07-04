@@ -1330,7 +1330,7 @@ def projectionInputFinishSuffixTail
           (encodeNatAppend n
             (encodeBoolWord result))
 
-private theorem projectionCodeCells_encodeNatAppend_cons_cons
+theorem projectionCodeCells_encodeNatAppend_cons_cons
     (stage : Nat) (result : Word Bool) :
     projectionCodeCells
         (encodeNatAppend stage
@@ -1348,7 +1348,7 @@ def projectionInputFinishSuffixTailFor
       [some true, some false] ++
         projectionCodeCells (encodeNatAppend n suffix)
 
-private theorem projectionCodeCells_encodeNatAppend_cons_cons_suffix
+theorem projectionCodeCells_encodeNatAppend_cons_cons_suffix
     (stage : Nat) (suffix : Word MachineCodeSymbol) :
     projectionCodeCells (encodeNatAppend stage suffix) =
       some false :: some false ::
