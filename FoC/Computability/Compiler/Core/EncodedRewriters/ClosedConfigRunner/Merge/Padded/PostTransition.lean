@@ -1,7 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.BranchContracts
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.NestedLayoutParser
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.AcceptInner
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Merge.Padded.PostTransition.RejectInner
 
 set_option doc.verso true
 
@@ -17,35 +15,34 @@ namespace BoundedLayoutRunner
 /-!
 # Padded merge post-transition wrapper
 
-This wrapper composes the post-transition core shape lemmas with the three
-finite-machine leaves for the nested-layout parser and the accepting/rejecting
-inner emitters.
+This wrapper composes the post-transition core shape lemmas with the
+nested-layout parser and branch-parametric parsed-inner finite-machine leaves.
 -/
 
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction := by
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction true := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction_of_parsedInner
+    selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
       selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction
-      selectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction
+      (selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction true)
 
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction := by
+    SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction false := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction_of_parsedInner
+    selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
       selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction
-      selectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction
+      (selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction false)
 
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
+    SelectedMergePaddedEmitterAfterHitPaddedDecodedConstruction true := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sourceFields
+    selectedMergePaddedEmitterAfterHitPaddedDecodedConstruction_of_sourceFields
       selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction
 
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction :
-    SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction := by
+    SelectedMergePaddedEmitterAfterHitPaddedDecodedConstruction false := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction_of_sourceFields
+    selectedMergePaddedEmitterAfterHitPaddedDecodedConstruction_of_sourceFields
       selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction
 
 /--
@@ -55,7 +52,7 @@ padded equivalence branch.
 theorem selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction true := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction_of_decoded
+    selectedMergePaddedEmitterAfterHitPaddedConstruction_of_decoded
       selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction
 
 /--
@@ -65,7 +62,7 @@ padded equivalence branch.
 theorem selectedMergePaddedEmitterAfterHitPaddedRejectConstruction :
     SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction false := by
   exact
-    selectedMergePaddedEmitterAfterHitPaddedRejectConstruction_of_decoded
+    selectedMergePaddedEmitterAfterHitPaddedConstruction_of_decoded
       selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction
 
 /--

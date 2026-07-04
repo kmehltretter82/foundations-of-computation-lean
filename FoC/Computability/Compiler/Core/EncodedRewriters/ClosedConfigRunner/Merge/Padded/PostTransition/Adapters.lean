@@ -169,32 +169,6 @@ theorem
         (hemitter.right p)
 
 theorem
-    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec_of_parsedInner
-    {parser emitter : MachineDescription}
-    (hparser :
-      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser)
-    (hemitter :
-      SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerSpec emitter) :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec
-      (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
-        parser emitter) :=
-  selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
-    hparser hemitter
-
-theorem
-    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec_of_parsedInner
-    {parser emitter : MachineDescription}
-    (hparser :
-      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec parser)
-    (hemitter :
-      SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerSpec emitter) :
-    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec
-      (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsFromNestedParsed
-        parser emitter) :=
-  selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
-    hparser hemitter
-
-theorem
     selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
     {useAccept : Bool}
     (hparser :
@@ -212,30 +186,13 @@ theorem
       selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
         hparser hemits⟩
 
-theorem
-    selectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction_of_parsedInner
-    (hparser :
-      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction)
-    (hemitter :
-      SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :=
-  selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
-    hparser hemitter
-
-theorem
-    selectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction_of_parsedInner
-    (hparser :
-      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction)
-    (hemitter :
-      SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :=
-  selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner
-    hparser hemitter
-
-theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sourceFields
+theorem selectedMergePaddedEmitterAfterHitPaddedDecodedConstruction_of_sourceFields
+    {useAccept : Bool}
     (h :
-      SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction := by
+      SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction
+        useAccept) :
+    SelectedMergePaddedEmitterAfterHitPaddedDecodedConstruction
+      useAccept := by
   rcases h with ⟨emitter, hemits⟩
   refine ⟨emitter, ?_⟩
   constructor
@@ -244,43 +201,24 @@ theorem selectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction_of_sou
     rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape p]
     exact hemits.right p
 
-theorem selectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction_of_sourceFields
+theorem selectedMergePaddedEmitterAfterHitPaddedConstruction_of_decoded
+    {useAccept : Bool}
     (h :
-      SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction := by
+      SelectedMergePaddedEmitterAfterHitPaddedDecodedConstruction
+        useAccept) :
+    SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction useAccept := by
   rcases h with ⟨emitter, hemits⟩
   refine ⟨emitter, ?_⟩
   constructor
   · exact hemits.left
   · intro p
-    rw [SelectedMergePaddedEmitterAfterHitPaddedTape_eq_sourceFieldsTape p]
-    exact hemits.right p
-
-theorem selectedMergePaddedEmitterAfterHitPaddedAcceptConstruction_of_decoded
-    (h :
-      SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction true := by
-  rcases h with ⟨emitter, hemits⟩
-  refine ⟨emitter, ?_⟩
-  constructor
-  · exact hemits.left
-  · intro p
-    rw [←
-      SelectedMergePaddedEmitterAcceptDecodedHandoffTape_eq_outputTape p]
-    exact hemits.right p
-
-theorem selectedMergePaddedEmitterAfterHitPaddedRejectConstruction_of_decoded
-    (h :
-      SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction) :
-    SelectedMergePaddedEmitterAfterHitPaddedBranchConstruction false := by
-  rcases h with ⟨emitter, hemits⟩
-  refine ⟨emitter, ?_⟩
-  constructor
-  · exact hemits.left
-  · intro p
-    rw [←
-      SelectedMergePaddedEmitterRejectDecodedHandoffTape_eq_outputTape p]
-    exact hemits.right p
+    cases useAccept
+    · rw [←
+        SelectedMergePaddedEmitterRejectDecodedHandoffTape_eq_outputTape p]
+      exact hemits.right p
+    · rw [←
+        SelectedMergePaddedEmitterAcceptDecodedHandoffTape_eq_outputTape p]
+      exact hemits.right p
 
 end BoundedLayoutRunner
 end EncodedRewriters

@@ -62,23 +62,10 @@ def SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec
         (SelectedMergePaddedEmitterAfterHitPaddedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec true emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec false emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedConstruction :
-    Prop :=
+def SelectedMergePaddedEmitterAfterHitPaddedDecodedConstruction
+    (useAccept : Bool) : Prop :=
   exists emitter : MachineDescription,
-    SelectedMergePaddedEmitterAfterHitPaddedAcceptDecodedSpec emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    SelectedMergePaddedEmitterAfterHitPaddedRejectDecodedSpec emitter
+    SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec useAccept emitter
 
 def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec
     (useAccept : Bool) (emitter : MachineDescription) : Prop :=
@@ -88,27 +75,11 @@ def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec true emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec false emitter
-
 def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction
     (useAccept : Bool) : Prop :=
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec
       useAccept emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptSourceFieldsConstruction :
-    Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction true
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectSourceFieldsConstruction :
-    Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction false
 
 def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
     (parser : MachineDescription) : Prop :=
@@ -131,26 +102,10 @@ def SelectedMergePaddedEmitterAfterHitPaddedParsedInnerSpec
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedParsedInnerSpec true emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerSpec
-    (emitter : MachineDescription) : Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedParsedInnerSpec false emitter
-
 def SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
     (useAccept : Bool) : Prop :=
   exists emitter : MachineDescription,
     SelectedMergePaddedEmitterAfterHitPaddedParsedInnerSpec useAccept emitter
-
-def SelectedMergePaddedEmitterAfterHitPaddedAcceptParsedInnerConstruction :
-    Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction true
-
-def SelectedMergePaddedEmitterAfterHitPaddedRejectParsedInnerConstruction :
-    Prop :=
-  SelectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction false
 
 end BoundedLayoutRunner
 end EncodedRewriters
