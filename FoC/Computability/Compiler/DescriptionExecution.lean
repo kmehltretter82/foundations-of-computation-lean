@@ -324,31 +324,8 @@ def HaltsWithOutputIn (D : MachineDescription)
 
 instance (D : MachineDescription) (n : Nat) (w out : Word Bool) :
     Decidable (D.HaltsWithOutputIn n w out) := by
-  let final := D.runConfig n (D.initial w)
-  let normalized : List Bool := final.tape.normalizedOutput
-  let expected : List Bool := out
-  have hstateDec : Decidable (final.state = D.halt) := inferInstance
-  have houtDec : Decidable (normalized = expected) := inferInstance
-  cases hstateDec with
-  | isTrue hstate =>
-      cases houtDec with
-      | isTrue hout =>
-        exact isTrue (by
-        dsimp [HaltsWithOutputIn, final]
-        exact ⟨hstate, by
-          change (final.tape.normalizedOutput : List Bool) = (out : List Bool)
-          exact hout⟩)
-      | isFalse hout =>
-        exact isFalse (by
-        intro h
-        rcases h with ⟨_hstate, hout'⟩
-        exact hout (by
-          change (final.tape.normalizedOutput : List Bool) = (out : List Bool)
-          exact hout'))
-  | isFalse hstate =>
-      exact isFalse (by
-      intro h
-      exact hstate h.left)
+  dsimp [HaltsWithOutputIn]
+  infer_instance
 
 def HaltsWithExactOutputIn (D : MachineDescription)
     (n : Nat) (w out : Word Bool) : Prop :=
@@ -397,6 +374,83 @@ def HaltsFromTape (D : MachineDescription)
     (Tin Tout : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsFromTapeIn n Tin Tout
 
+-- Internal bridges from semantic halting predicates to exact `runConfig`
+-- equalities.  They keep the public functionality lemmas below short.
+private theorem runConfig_eq_halt_of_haltsWithTapeIn
+    {D : MachineDescription} {n : Nat} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTapeIn n w T) :
+    D.runConfig n (D.initial w) =
+      { state := D.halt, tape := T } := by
+  change D.runConfig n (D.initial w) = { state := D.halt, tape := T }
+  cases hfinal : D.runConfig n (D.initial w) with
+  | mk state tape =>
+      rcases h with ⟨hstate, htape⟩
+      simp [hfinal] at hstate htape
+      simp [hstate, htape]
+
+private theorem runConfig_eq_halt_of_haltsFromTapeIn
+    {D : MachineDescription} {n : Nat} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTapeIn n Tin Tout) :
+    D.runConfig n { state := D.start, tape := Tin } =
+      { state := D.halt, tape := Tout } := by
+  change
+    D.runConfig n { state := D.start, tape := Tin } =
+      { state := D.halt, tape := Tout }
+  cases hfinal : D.runConfig n { state := D.start, tape := Tin } with
+  | mk state tape =>
+      rcases h with ⟨hstate, htape⟩
+      simp [hfinal] at hstate htape
+      simp [hstate, htape]
+
+private theorem runConfig_eq_halt_own_tape_of_haltsWithOutputIn
+    {D : MachineDescription} {n : Nat} {w out : Word Bool}
+    (h : D.HaltsWithOutputIn n w out) :
+    D.runConfig n (D.initial w) =
+      { state := D.halt
+        tape := (D.runConfig n (D.initial w)).tape } := by
+  cases hfinal : D.runConfig n (D.initial w) with
+  | mk state tape =>
+      have hstate : state = D.halt := by
+        simpa [HaltsWithOutputIn, hfinal] using h.left
+      simp [hstate]
+
+private theorem runConfig_halt_tape_functional_core
+    {D : MachineDescription} {c : Configuration}
+    {n₁ n₂ : Nat} {T₁ T₂ : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (h₁ : D.runConfig n₁ c = { state := D.halt, tape := T₁ })
+    (h₂ : D.runConfig n₂ c = { state := D.halt, tape := T₂ }) :
+    T₁ = T₂ := by
+  have hordered :
+      forall {n m : Nat} {Tn Tm : Tape Bool},
+        n ≤ m ->
+        D.runConfig n c = { state := D.halt, tape := Tn } ->
+        D.runConfig m c = { state := D.halt, tape := Tm } ->
+          Tn = Tm := by
+    intro n m Tn Tm hle hn hm
+    let d := m - n
+    have hm_eq : m = n + d := by
+      lia
+    have hrunm :
+        D.runConfig m c = D.runConfig d (D.runConfig n c) := by
+      rw [hm_eq, runConfig_add]
+    have hstay :
+        D.runConfig d (D.runConfig n c) =
+          D.runConfig n c := by
+      rw [hn]
+      exact MachineDescription.runConfig_halt hD Tn d
+    have htape_m :
+        (D.runConfig m c).tape = Tn := by
+      rw [hrunm, hstay, hn]
+    have htm : (D.runConfig m c).tape = Tm := by
+      rw [hm]
+    rw [htm] at htape_m
+    exact htape_m.symm
+  by_cases hle : n₁ ≤ n₂
+  · exact hordered hle h₁ h₂
+  · have hle' : n₂ ≤ n₁ := by lia
+    exact (hordered hle' h₂ h₁).symm
+
 theorem haltsWithOutput_of_haltsWithTape
     {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
     (h : D.HaltsWithTape w T) :
@@ -412,13 +466,7 @@ theorem runConfig_eq_halt_of_haltsWithTape
       D.runConfig n { state := D.start, tape := Tape.input w } =
         { state := D.halt, tape := T } := by
   rcases h with ⟨n, hn⟩
-  refine ⟨n, ?_⟩
-  change D.runConfig n (D.initial w) = { state := D.halt, tape := T }
-  cases hfinal : D.runConfig n (D.initial w) with
-  | mk state tape =>
-      rcases hn with ⟨hstate, htape⟩
-      simp [hfinal] at hstate htape
-      simp [hstate, htape]
+  exact ⟨n, runConfig_eq_halt_of_haltsWithTapeIn hn⟩
 
 theorem runConfig_eq_halt_of_haltsFromTape
     {D : MachineDescription} {Tin Tout : Tape Bool}
@@ -427,13 +475,7 @@ theorem runConfig_eq_halt_of_haltsFromTape
       D.runConfig n { state := D.start, tape := Tin } =
         { state := D.halt, tape := Tout } := by
   rcases h with ⟨n, hn⟩
-  refine ⟨n, ?_⟩
-  change D.runConfig n { state := D.start, tape := Tin } = { state := D.halt, tape := Tout }
-  cases hfinal : D.runConfig n { state := D.start, tape := Tin } with
-  | mk state tape =>
-      rcases hn with ⟨hstate, htape⟩
-      simp [hfinal] at hstate htape
-      simp [hstate, htape]
+  exact ⟨n, runConfig_eq_halt_of_haltsFromTapeIn hn⟩
 
 theorem haltsWithExactOutputIn_iff_haltsWithTapeIn_output
     {D : MachineDescription} {n : Nat} {w out : Word Bool} :
@@ -490,48 +532,19 @@ theorem haltsWithOutput_functional_of_haltTransitionFree
   rcases h₁ with ⟨n₁, h₁⟩
   rcases h₂ with ⟨n₂, h₂⟩
   let c₀ := D.initial w
-  have hordered :
-      forall {n m : Nat} {outn outm : Word Bool},
-        n ≤ m ->
-        D.HaltsWithOutputIn n w outn ->
-        D.HaltsWithOutputIn m w outm ->
-          outn = outm := by
-    intro n m outn outm hle hn hm
-    let d := m - n
-    have hm_eq : m = n + d := by
-      lia
-    have hconfig_n :
-        D.runConfig n c₀ =
-          { state := D.halt, tape := (D.runConfig n c₀).tape } := by
-      cases hfinal : D.runConfig n c₀ with
-      | mk state tape =>
-          have hstate : state = D.halt := by
-            simpa [HaltsWithOutputIn, c₀, hfinal] using hn.left
-          simp [hstate]
-    have hrunm :
-        D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
-      rw [hm_eq, runConfig_add]
-    have hstay :
-        D.runConfig d (D.runConfig n c₀) =
-          D.runConfig n c₀ := by
-      rw [hconfig_n]
-      exact MachineDescription.runConfig_halt
-        hD (D.runConfig n c₀).tape d
-    have htapes :
-        (D.runConfig m c₀).tape = (D.runConfig n c₀).tape := by
-      rw [hrunm, hstay]
-    have hnout :
-        Tape.normalizedOutput (D.runConfig n c₀).tape = outn := by
-      simpa [HaltsWithOutputIn, c₀] using hn.right
-    have hmout :
-        Tape.normalizedOutput (D.runConfig m c₀).tape = outm := by
-      simpa [HaltsWithOutputIn, c₀] using hm.right
-    rw [htapes, hnout] at hmout
-    exact hmout
-  by_cases hle : n₁ ≤ n₂
-  · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by lia
-    exact (hordered hle' h₂ h₁).symm
+  have htapes :
+      (D.runConfig n₁ c₀).tape = (D.runConfig n₂ c₀).tape :=
+    runConfig_halt_tape_functional_core
+      (D := D) (c := c₀) hD
+      (runConfig_eq_halt_own_tape_of_haltsWithOutputIn h₁)
+      (runConfig_eq_halt_own_tape_of_haltsWithOutputIn h₂)
+  calc
+    out₁ = Tape.normalizedOutput (D.runConfig n₁ c₀).tape := by
+      simpa [HaltsWithOutputIn, c₀] using h₁.right.symm
+    _ = Tape.normalizedOutput (D.runConfig n₂ c₀).tape := by
+      rw [htapes]
+    _ = out₂ := by
+      simpa [HaltsWithOutputIn, c₀] using h₂.right
 
 theorem haltsWithOutputIn_functional_of_haltTransitionFree
     {D : MachineDescription} {w out1 out2 : Word Bool}
@@ -651,46 +664,11 @@ theorem haltsWithTape_functional_of_haltTransitionFree
     T₁ = T₂ := by
   rcases h₁ with ⟨n₁, h₁⟩
   rcases h₂ with ⟨n₂, h₂⟩
-  let c₀ := D.initial w
-  have hordered :
-      forall {n m : Nat} {Tn Tm : Tape Bool},
-        n ≤ m ->
-        D.HaltsWithTapeIn n w Tn ->
-        D.HaltsWithTapeIn m w Tm ->
-          Tn = Tm := by
-    intro n m Tn Tm hle hn hm
-    let d := m - n
-    have hm_eq : m = n + d := by
-      lia
-    have hconfig_n :
-        D.runConfig n c₀ =
-          { state := D.halt, tape := Tn } := by
-      cases hfinal : D.runConfig n c₀ with
-      | mk state tape =>
-          have hstate : state = D.halt := by
-            simpa [HaltsWithTapeIn, c₀, hfinal] using hn.left
-          have htape : tape = Tn := by
-            simpa [HaltsWithTapeIn, c₀, hfinal] using hn.right
-          simp [hstate, htape]
-    have hrunm :
-        D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
-      rw [hm_eq, runConfig_add]
-    have hstay :
-        D.runConfig d (D.runConfig n c₀) =
-          D.runConfig n c₀ := by
-      rw [hconfig_n]
-      exact MachineDescription.runConfig_halt hD Tn d
-    have htape_m :
-        (D.runConfig m c₀).tape = Tn := by
-      rw [hrunm, hstay, hconfig_n]
-    have htm : (D.runConfig m c₀).tape = Tm := by
-      simpa [HaltsWithTapeIn, c₀] using hm.right
-    rw [htm] at htape_m
-    exact htape_m.symm
-  by_cases hle : n₁ ≤ n₂
-  · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by lia
-    exact (hordered hle' h₂ h₁).symm
+  exact
+    runConfig_halt_tape_functional_core
+      (D := D) (c := D.initial w) hD
+      (runConfig_eq_halt_of_haltsWithTapeIn h₁)
+      (runConfig_eq_halt_of_haltsWithTapeIn h₂)
 
 theorem haltsFromTape_functional_of_haltTransitionFree
     {D : MachineDescription} {Tin T₁ T₂ : Tape Bool}
@@ -700,46 +678,11 @@ theorem haltsFromTape_functional_of_haltTransitionFree
     T₁ = T₂ := by
   rcases h₁ with ⟨n₁, h₁⟩
   rcases h₂ with ⟨n₂, h₂⟩
-  let c₀ := { state := D.start, tape := Tin : MachineDescription.Configuration }
-  have hordered :
-      forall {n m : Nat} {Tn Tm : Tape Bool},
-        n ≤ m ->
-        D.HaltsFromTapeIn n Tin Tn ->
-        D.HaltsFromTapeIn m Tin Tm ->
-          Tn = Tm := by
-    intro n m Tn Tm hle hn hm
-    let d := m - n
-    have hm_eq : m = n + d := by
-      lia
-    have hconfig_n :
-        D.runConfig n c₀ =
-          { state := D.halt, tape := Tn } := by
-      cases hfinal : D.runConfig n c₀ with
-      | mk state tape =>
-          have hstate : state = D.halt := by
-            simpa [HaltsFromTapeIn, c₀, hfinal] using hn.left
-          have htape : tape = Tn := by
-            simpa [HaltsFromTapeIn, c₀, hfinal] using hn.right
-          simp [hstate, htape]
-    have hrunm :
-        D.runConfig m c₀ = D.runConfig d (D.runConfig n c₀) := by
-      rw [hm_eq, runConfig_add]
-    have hstay :
-        D.runConfig d (D.runConfig n c₀) =
-          D.runConfig n c₀ := by
-      rw [hconfig_n]
-      exact MachineDescription.runConfig_halt hD Tn d
-    have htape_m :
-        (D.runConfig m c₀).tape = Tn := by
-      rw [hrunm, hstay, hconfig_n]
-    have htm : (D.runConfig m c₀).tape = Tm := by
-      simpa [HaltsFromTapeIn, c₀] using hm.right
-    rw [htm] at htape_m
-    exact htape_m.symm
-  by_cases hle : n₁ ≤ n₂
-  · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by lia
-    exact (hordered hle' h₂ h₁).symm
+  exact
+    runConfig_halt_tape_functional_core
+      (D := D) (c := { state := D.start, tape := Tin }) hD
+      (runConfig_eq_halt_of_haltsFromTapeIn h₁)
+      (runConfig_eq_halt_of_haltsFromTapeIn h₂)
 
 theorem runConfig_halt_tape_functional_of_haltTransitionFree
     {D : MachineDescription} {c : Configuration}
@@ -747,36 +690,8 @@ theorem runConfig_halt_tape_functional_of_haltTransitionFree
     (hD : D.HaltTransitionFree)
     (h₁ : D.runConfig n₁ c = { state := D.halt, tape := T₁ })
     (h₂ : D.runConfig n₂ c = { state := D.halt, tape := T₂ }) :
-    T₁ = T₂ := by
-  have hordered :
-      forall {n m : Nat} {Tn Tm : Tape Bool},
-        n ≤ m ->
-        D.runConfig n c = { state := D.halt, tape := Tn } ->
-        D.runConfig m c = { state := D.halt, tape := Tm } ->
-          Tn = Tm := by
-    intro n m Tn Tm hle hn hm
-    let d := m - n
-    have hm_eq : m = n + d := by
-      lia
-    have hrunm :
-        D.runConfig m c = D.runConfig d (D.runConfig n c) := by
-      rw [hm_eq, runConfig_add]
-    have hstay :
-        D.runConfig d (D.runConfig n c) =
-          D.runConfig n c := by
-      rw [hn]
-      exact MachineDescription.runConfig_halt hD Tn d
-    have htape_m :
-        (D.runConfig m c).tape = Tn := by
-      rw [hrunm, hstay, hn]
-    have htm : (D.runConfig m c).tape = Tm := by
-      rw [hm]
-    rw [htm] at htape_m
-    exact htape_m.symm
-  by_cases hle : n₁ ≤ n₂
-  · exact hordered hle h₁ h₂
-  · have hle' : n₂ ≤ n₁ := by lia
-    exact (hordered hle' h₂ h₁).symm
+    T₁ = T₂ :=
+  runConfig_halt_tape_functional_core hD h₁ h₂
 
 def ExactOutputRealizes
     (D : MachineDescription) (f : Word Bool -> Word Bool) : Prop :=
@@ -827,7 +742,7 @@ theorem exactIdentityDescription_haltTransitionFree :
   intro t
   simp [ExactIdentityDescription]
 
-theorem exactIdentityDescription_haltsWithExactOutputIn
+private theorem exactIdentityDescription_haltsWithExactOutputIn
     (w : Word Bool) :
     ExactIdentityDescription.HaltsWithExactOutputIn 0 w w := by
   constructor
@@ -841,7 +756,7 @@ theorem exactIdentityDescription_exactOutputRealizes :
   · intro w
     exact ⟨0, exactIdentityDescription_haltsWithExactOutputIn w⟩
 
-theorem exactIdentityDescription_runConfig_initial
+private theorem exactIdentityDescription_runConfig_initial
     (n : Nat) (w : Word Bool) :
     ExactIdentityDescription.runConfig n
         (ExactIdentityDescription.initial w) =
@@ -933,31 +848,11 @@ theorem eraseRightDescription_haltTransitionFree :
   rcases ht with rfl | rfl | rfl <;>
     simp [EraseRightDescription]
 
-theorem eraseRightTape_move_nonempty
-    (erased : Nat) (b : Bool) (rest : Word Bool) :
-    Tape.move Direction.right
-        (Tape.write none (eraseRightTape erased (b :: rest))) =
-      eraseRightTape (erased + 1) rest := by
-  cases rest with
-  | nil =>
-      simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
-        List.replicate_succ]
-  | cons c tail =>
-      simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
-        List.replicate_succ]
-
-theorem eraseRightTape_move_empty (erased : Nat) :
-    Tape.move Direction.right
-        (Tape.write none (eraseRightTape erased [])) =
-      eraseRightTape (erased + 1) [] := by
-  simp [eraseRightTape, Tape.move, Tape.moveRight, Tape.write,
-    List.replicate_succ]
-
 theorem eraseRightTape_zero_eq_input (w : Word Bool) :
     eraseRightTape 0 w = Tape.input w := by
   cases w <;> rfl
 
-theorem eraseRightDescription_step_nonempty
+private theorem eraseRightDescription_step_nonempty
     (erased : Nat) (b : Bool) (rest : Word Bool) :
     EraseRightDescription.stepConfig
         { state := 0, tape := eraseRightTape erased (b :: rest) } =
@@ -968,7 +863,7 @@ theorem eraseRightDescription_step_nonempty
         Matches, transition, Tape.read, eraseRightTape,
         Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
-theorem eraseRightDescription_step_empty
+private theorem eraseRightDescription_step_empty
     (erased : Nat) :
     EraseRightDescription.stepConfig
         { state := 0, tape := eraseRightTape erased [] } =
@@ -977,7 +872,7 @@ theorem eraseRightDescription_step_empty
     Matches, transition, Tape.read, eraseRightTape,
     Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
-theorem eraseRightDescription_run_scan
+private theorem eraseRightDescription_run_scan
     (erased : Nat) (w : Word Bool) :
     EraseRightDescription.runConfig w.length
         { state := 0, tape := eraseRightTape erased w } =
@@ -994,7 +889,7 @@ theorem eraseRightDescription_run_scan
         lia
       rw [hlen]
 
-theorem eraseRightDescription_run_halt (w : Word Bool) :
+private theorem eraseRightDescription_run_halt (w : Word Bool) :
     EraseRightDescription.runConfig (w.length + 1)
         (EraseRightDescription.initial w) =
       { state := 1, tape := eraseRightTape (w.length + 1) [] } := by
@@ -1059,7 +954,7 @@ theorem boolOutputDescription_haltTransitionFree (b : Bool) :
   rcases ht with rfl | rfl | rfl <;>
     simp [BoolOutputDescription]
 
-theorem boolOutputDescription_step_nonempty
+private theorem boolOutputDescription_step_nonempty
     (out : Bool) (erased : Nat) (b : Bool) (rest : Word Bool) :
     (BoolOutputDescription out).stepConfig
         { state := 0, tape := eraseRightTape erased (b :: rest) } =
@@ -1075,7 +970,7 @@ def boolOutputTape (erased : Nat) (b : Bool) : Tape Bool :=
     head := none
     right := [] }
 
-theorem boolOutputDescription_step_empty
+private theorem boolOutputDescription_step_empty
     (out : Bool) (erased : Nat) :
     (BoolOutputDescription out).stepConfig
         { state := 0, tape := eraseRightTape erased [] } =
@@ -1084,7 +979,7 @@ theorem boolOutputDescription_step_empty
     Matches, transition, Tape.read, eraseRightTape, boolOutputTape,
     Tape.write, Tape.move, Tape.moveRight]
 
-theorem boolOutputDescription_run_scan
+private theorem boolOutputDescription_run_scan
     (out : Bool) (erased : Nat) (w : Word Bool) :
     (BoolOutputDescription out).runConfig w.length
         { state := 0, tape := eraseRightTape erased w } =
@@ -1101,7 +996,7 @@ theorem boolOutputDescription_run_scan
       lia
     rw [hlen]
 
-theorem boolOutputDescription_run_halt
+private theorem boolOutputDescription_run_halt
     (out : Bool) (w : Word Bool) :
     (BoolOutputDescription out).runConfig (w.length + 1)
         ((BoolOutputDescription out).initial w) =
@@ -1305,7 +1200,7 @@ theorem appendRightScanTape_nil_eq_input
     appendRightScanTape [] w = Tape.input w := by
   cases w <;> rfl
 
-theorem appendFixedFourBitsRightDescription_step_scan_nonempty
+private theorem appendFixedFourBitsRightDescription_step_scan_nonempty
     (b0 b1 b2 b3 : Bool)
     (leftRev : Word Bool) (b : Bool) (rest : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
@@ -1317,7 +1212,7 @@ theorem appendFixedFourBitsRightDescription_step_scan_nonempty
         lookupTransition, Matches, transition, Tape.read,
         appendRightScanTape, Tape.write, Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsRightDescription_step_scan_empty
+private theorem appendFixedFourBitsRightDescription_step_scan_empty
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
         { state := 0, tape := appendRightScanTape leftRev [] } =
@@ -1327,7 +1222,7 @@ theorem appendFixedFourBitsRightDescription_step_scan_empty
     appendRightScanTape, appendRightWriteTape, Tape.write, Tape.move,
     Tape.moveRight]
 
-theorem appendFixedFourBitsRightDescription_step_write_one
+private theorem appendFixedFourBitsRightDescription_step_write_one
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
         { state := 1, tape := appendRightWriteTape leftRev [b0] } =
@@ -1336,7 +1231,7 @@ theorem appendFixedFourBitsRightDescription_step_write_one
     lookupTransition, Matches, transition, Tape.read,
     appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsRightDescription_step_write_two
+private theorem appendFixedFourBitsRightDescription_step_write_two
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
         { state := 2, tape := appendRightWriteTape leftRev [b0, b1] } =
@@ -1345,7 +1240,7 @@ theorem appendFixedFourBitsRightDescription_step_write_two
     lookupTransition, Matches, transition, Tape.read,
     appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsRightDescription_step_write_three
+private theorem appendFixedFourBitsRightDescription_step_write_three
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).stepConfig
         { state := 3, tape := appendRightWriteTape leftRev [b0, b1, b2] } =
@@ -1356,7 +1251,7 @@ theorem appendFixedFourBitsRightDescription_step_write_three
     lookupTransition, Matches, transition, Tape.read,
     appendRightWriteTape, Tape.write, Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsRightDescription_run_scan
+private theorem appendFixedFourBitsRightDescription_run_scan
     (b0 b1 b2 b3 : Bool)
     (leftRev remaining : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig
@@ -1373,7 +1268,7 @@ theorem appendFixedFourBitsRightDescription_run_scan
       appendFixedFourBitsRightDescription_step_scan_nonempty, ih,
       List.append_assoc]
 
-theorem appendFixedFourBitsRightDescription_run_write
+private theorem appendFixedFourBitsRightDescription_run_write
     (b0 b1 b2 b3 : Bool) (leftRev : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig 4
         { state := 0, tape := appendRightScanTape leftRev [] } =
@@ -1385,7 +1280,7 @@ theorem appendFixedFourBitsRightDescription_run_write
     appendFixedFourBitsRightDescription_step_write_two,
     appendFixedFourBitsRightDescription_step_write_three]
 
-theorem appendFixedFourBitsRightDescription_run_halt
+private theorem appendFixedFourBitsRightDescription_run_halt
     (b0 b1 b2 b3 : Bool) (w : Word Bool) :
     (AppendFixedFourBitsRightDescription b0 b1 b2 b3).runConfig
         (w.length + 4)
