@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Recognizable
 
 set_option doc.verso true
@@ -691,19 +692,6 @@ def scannerZeroBlock (zero : symbol) (n : Nat) : List (Option symbol) :=
 
 def scannerBlankBlock (n : Nat) : List (Option symbol) :=
   List.replicate n none
-
-theorem list_replicate_append_self
-    (a : α) (n : Nat) (rest : List α) :
-    List.replicate n a ++ a :: rest =
-      List.replicate (n + 1) a ++ rest := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      change
-        a :: (List.replicate n a ++ a :: rest) =
-          a :: (List.replicate (n + 1) a ++ rest)
-      rw [ih]
 
 theorem scannerZeroBlock_append_marker
     (zero : symbol) (n : Nat) (rest : List (Option symbol)) :
