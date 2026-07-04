@@ -391,6 +391,22 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction :
       SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
         useAccept restorer
 
+private def rawGapTape
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    List (Option Bool) -> Tape Bool
+  | gap =>
+    tapeAtCells [none]
+      (List.append
+        ((ParsedLayoutBits L).map some)
+        (List.append gap
+          (List.append
+            (List.replicate
+              (selectedProjectionPaddedTailCleanupScratchCountBits
+                useAccept L).length
+              (none : Option Bool))
+            (selectedProjectionPaddedTailCleanupPostCountTailCells
+              useAccept L extraScratch))))
+
 def selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     Tape Bool :=
@@ -585,46 +601,6 @@ def selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTap
         (none :: none ::
           List.replicate extraScratch (none : Option Bool))))
 
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserSpec
-    (eraser : MachineDescription) : Prop :=
-  eraser.SubroutineReady ∧
-    forall L : DovetailLayout,
-      eraser.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
-          true L 0)
-        (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
-          L 0)
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserSpec
-    (eraser : MachineDescription) : Prop :=
-  eraser.SubroutineReady ∧
-    forall L : DovetailLayout,
-      eraser.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
-          false L 0)
-        (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
-          L 0)
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
-    (normalizer : MachineDescription) : Prop :=
-  normalizer.SubroutineReady ∧
-    forall L : DovetailLayout,
-      normalizer.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
-          L 0)
-        (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
-          true L 0)
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
-    (normalizer : MachineDescription) : Prop :=
-  normalizer.SubroutineReady ∧
-    forall L : DovetailLayout,
-      normalizer.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
-          L 0)
-        (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
-          false L 0)
-
 def selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     Tape Bool :=
@@ -635,6 +611,26 @@ def selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
     selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
       L extraScratch
 
+def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+    (useAccept : Bool) (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    forall L : DovetailLayout,
+      eraser.HaltsFromTape
+        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
+          useAccept L 0)
+        (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+          useAccept L 0)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserSpec
+    (eraser : MachineDescription) : Prop :=
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+    true eraser
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserSpec
+    (eraser : MachineDescription) : Prop :=
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+    false eraser
+
 def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
@@ -644,6 +640,23 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldN
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
           useAccept L 0)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
+    (normalizer : MachineDescription) : Prop :=
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+    true normalizer
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
+    (normalizer : MachineDescription) : Prop :=
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+    false normalizer
+
+def selectedProjectionPaddedTailCleanupScratchCountPostFieldHandoffTape
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    Tape Bool :=
+  Tape.move Direction.right
+    (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+      useAccept L extraScratch)
 
 def selectedProjectionPaddedTailCleanupScratchCountAcceptPostFieldHandoffTape
     (L : DovetailLayout) (extraScratch : Nat) : Tape Bool :=
@@ -657,25 +670,25 @@ def selectedProjectionPaddedTailCleanupScratchCountRejectPostFieldHandoffTape
     (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
       L extraScratch)
 
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreSpec
-    (normalizer : MachineDescription) : Prop :=
+def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+    (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall L : DovetailLayout,
       normalizer.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountAcceptPostFieldHandoffTape
-          L 0)
+        (selectedProjectionPaddedTailCleanupScratchCountPostFieldHandoffTape
+          useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
-          true L 0)
+          useAccept L 0)
+
+def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreSpec
+    (normalizer : MachineDescription) : Prop :=
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+    true normalizer
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreSpec
     (normalizer : MachineDescription) : Prop :=
-  normalizer.SubroutineReady ∧
-    forall L : DovetailLayout,
-      normalizer.HaltsFromTape
-        (selectedProjectionPaddedTailCleanupScratchCountRejectPostFieldHandoffTape
-          L 0)
-        (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
-          false L 0)
+  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+    false normalizer
 
 theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSourceTape_eq
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -695,6 +708,31 @@ theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSour
     using
       selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape_move_right
         useAccept L extraScratch
+
+private theorem rawGapTape_eq_skipped_count
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat)
+    (gap : List (Option Bool)) :
+    rawGapTape useAccept L extraScratch gap =
+      tapeAtCells [none]
+        (List.append
+          ((selectedProjectionPaddedTailCleanupScratchSkippedBits
+            useAccept L).map some)
+          (List.append
+            ((selectedProjectionPaddedTailCleanupScratchCountBits
+              useAccept L).map some)
+            (List.append gap
+              (List.append
+                (List.replicate
+                  (selectedProjectionPaddedTailCleanupScratchCountBits
+                    useAccept L).length
+                  (none : Option Bool))
+                (selectedProjectionPaddedTailCleanupPostCountTailCells
+                  useAccept L extraScratch))))) := by
+  rw [rawGapTape]
+  rw [
+    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
+      useAccept L]
+  simp [List.map_append, List.append_assoc]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail_eq_skipped_count
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -716,11 +754,11 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
                   (none : Option Bool))
                 (selectedProjectionPaddedTailCleanupPostCountTailCells
                   useAccept L extraScratch)))) := by
-  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
-  rw [
-    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-      useAccept L]
-  simp [List.map_append, List.append_assoc]
+  simpa [
+    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail,
+    List.append_assoc] using
+    rawGapTape_eq_skipped_count
+      useAccept L extraScratch [none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_eq_skipped_count
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -743,11 +781,11 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
                   (none : Option Bool))
                 (selectedProjectionPaddedTailCleanupPostCountTailCells
                   useAccept L extraScratch)))) := by
-  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
-  rw [
-    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-      useAccept L]
-  simp [List.map_append, List.append_assoc]
+  simpa [
+    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank,
+    List.append_assoc] using
+    rawGapTape_eq_skipped_count
+      useAccept L extraScratch [none, none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape_move_left_move_right
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -770,15 +808,10 @@ theorem sourceRewindDescription_step_finish_withRight
       { state := sourceRewindDescription.halt
         tape := tapeAtCells [none]
           (List.append (bits.map some) rightCells) } := by
-  cases hright : List.append (bits.map some) rightCells with
-  | nil =>
-      simp [sourceRewindDescription, tapeAtCells, runConfig, stepConfig,
-        lookupTransition, Matches, transition, Tape.read, Tape.move,
-        Tape.moveRight, Tape.write]
-  | cons cell rest =>
-      simp [sourceRewindDescription, tapeAtCells, runConfig, stepConfig,
-        lookupTransition, Matches, transition, Tape.read, Tape.move,
-        Tape.moveRight, Tape.write]
+  cases List.append (bits.map some) rightCells <;>
+    simp [sourceRewindDescription, tapeAtCells, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.move,
+      Tape.moveRight, Tape.write]
 
 theorem sourceRewindDescription_run_from_leftStack_withRight
     (leftStack : Word Bool) (rightCells : List (Option Bool)) :
@@ -820,7 +853,7 @@ theorem sourceRewindDescription_run_from_leftStack_withRight
       rw [hstart]
       rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
       rw [runConfig_add]
-      have hscan :
+      rw [show
           sourceRewindDescription.runConfig (rest.length + 1)
               { state := 1
                 tape :=
@@ -832,11 +865,10 @@ theorem sourceRewindDescription_run_from_leftStack_withRight
                   (none ::
                     List.append
                       ((List.append rest.reverse [current]).map some)
-                      (none :: rightCells)) } := by
+                      (none :: rightCells)) } by
         simpa [tapeAtCells, DovetailInitialLayoutInitializer.tapeAtCells,
           List.append_assoc] using
-          sourceRewindDescription_run_scan rest current (none :: rightCells)
-      rw [hscan]
+          sourceRewindDescription_run_scan rest current (none :: rightCells)]
       simpa [List.map_append, List.append_assoc] using
         sourceRewindDescription_step_finish_withRight
           (List.append rest.reverse [current]) (none :: rightCells)
@@ -1191,6 +1223,18 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstru
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         useAccept encoder
 
+private theorem rawGapTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat)
+    (gap : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rawGapTape useAccept L extraScratch gap)) =
+      rawGapTape useAccept L extraScratch gap := by
+  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
+  rw [rawGapTape]
+  rw [htail]
+  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail_move_left_move_right
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     Tape.move Direction.left
@@ -1199,10 +1243,11 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
             useAccept L extraScratch)) =
       selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
         useAccept L extraScratch := by
-  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
-  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
-  rw [htail]
-  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  simpa [
+    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
+    using
+      rawGapTape_move_left_move_right
+        useAccept L extraScratch [none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_move_left_move_right
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -1212,10 +1257,11 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
             useAccept L extraScratch)) =
       selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank
         useAccept L extraScratch := by
-  rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
-  rw [selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
-  rw [htail]
-  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  simpa [
+    selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
+    using
+      rawGapTape_move_left_move_right
+        useAccept L extraScratch [none, none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape_move_left_move_right
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -1349,6 +1395,11 @@ theorem rightBlankGapPayloadScanTargetTape_move_left_move_right
         (none :: padding)
         (some current))
 
+private theorem eq_cons_tail {α : Type} {xs : List α} {x : α}
+    {tail : List α} (h : xs = x :: tail) :
+    xs = x :: xs.tail := by
+  simp [h]
+
 theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
     (L : DovetailLayout) :
     selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload
@@ -1360,25 +1411,14 @@ theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_c
       configurationFieldBits_cons_false L.rejectConfig
         (selectedProjectionPaddedTailCleanupSelectedHitBits true L) with
     ⟨payloadRest, hpayloadRest⟩
-  have hpayload :
-      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload
-          L =
-        false :: payloadRest := by
-    rw [selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload]
-    rw [selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-    exact
-        (configurationFieldBits_append_nil
-        L.rejectConfig
-        (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).trans
-        hpayloadRest
-  have htail :
-      payloadRest =
-        selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest
-          L := by
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest]
-      using (congrArg List.tail hpayload).symm
-  rw [hpayload, htail]
+  rw [selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest]
+  refine eq_cons_tail (tail := payloadRest) ?_
+  rw [selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload]
+  rw [selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+  exact
+    (configurationFieldBits_append_nil L.rejectConfig
+      (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).trans
+      hpayloadRest
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
     (L : DovetailLayout) :
@@ -1389,22 +1429,12 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_c
         L := by
   rcases configurationFieldBits_cons_false L.rejectConfig [] with
     ⟨payloadRest, hpayloadRest⟩
-  have hpayload :
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
-          L =
-        false :: payloadRest := by
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
-      selectedProjectionPaddedTailCleanupSelectedConfigBits]
-      using hpayloadRest
-  have htail :
-      payloadRest =
-        selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest
-        L := by
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest]
-      using (congrArg List.tail hpayload).symm
-  rw [hpayload, htail]
+  rw [selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest]
+  refine eq_cons_tail (tail := payloadRest) ?_
+  simpa [
+    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
+    selectedProjectionPaddedTailCleanupSelectedConfigBits]
+    using hpayloadRest
 
 theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_append_last
     (L : DovetailLayout) :
@@ -1449,6 +1479,129 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_a
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
       selectedProjectionPaddedTailCleanupSelectedConfigBits] using hcfg⟩
 
+theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFrom
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
+    leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription.HaltsFromTape
+      (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
+        useAccept L extraScratch)
+      (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+        useAccept L extraScratch) := by
+  rcases
+      CanonicalLayouts.DovetailStagePrefix.stageNatBits_reverse_map_some_cons
+        L.stage with
+    ⟨stageTail, hstageTail⟩
+  cases useAccept
+  · have hpayload :=
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
+        L
+    have h :=
+      leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
+        true L.acceptConfig
+        (List.append stageTail
+          (cellListCanonicalRestoredLeftWithBase
+            ((ParsedLayoutBits L).map some)
+            (postPaddingOutputPrefixHeaderBase [none])))
+        (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest
+          L)
+        (List.append (List.replicate 3 (none : Option Bool))
+          (List.append
+            ((selectedProjectionPaddedTailCleanupSelectedHitBits
+              false L).map some)
+            (none :: none ::
+              List.replicate extraScratch (none : Option Bool))))
+    have hfield :
+        configurationFieldBits L.acceptConfig
+            (false :: (configurationFieldBits L.rejectConfig []).tail) =
+          List.append (configurationFieldBits L.acceptConfig [])
+            (configurationFieldBits L.rejectConfig []) := by
+      rw [show
+          false ::
+              (configurationFieldBits L.rejectConfig []).tail =
+            configurationFieldBits L.rejectConfig [] by
+        simpa [
+          selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
+          selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
+          selectedProjectionPaddedTailCleanupSelectedConfigBits]
+          using hpayload.symm]
+      exact
+        (configurationFieldBits_append_nil L.acceptConfig
+          (configurationFieldBits L.rejectConfig [])).symm
+    simp only [
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits] at h
+    simp only [Bool.false_eq_true, if_false] at h
+    rw [hfield] at h
+    simpa [
+      selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
+      selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape,
+      selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape,
+      selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
+      hstageTail, hpayload,
+      selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      List.map_append, List.append_assoc] using h
+  · have hpayload :=
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
+        L
+    have h :=
+      leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
+        true L.acceptConfig
+        (List.append stageTail
+          (cellListCanonicalRestoredLeftWithBase
+            ((ParsedLayoutBits L).map some)
+            (postPaddingOutputPrefixHeaderBase [none])))
+        (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest
+          L)
+        (List.append (List.replicate 5 (none : Option Bool))
+          (List.replicate extraScratch (none : Option Bool)))
+    have hfield :
+        configurationFieldBits L.acceptConfig
+            (false ::
+              (List.append (configurationFieldBits L.rejectConfig [])
+                (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail) =
+          List.append (configurationFieldBits L.acceptConfig [])
+            (List.append (configurationFieldBits L.rejectConfig [])
+              (selectedProjectionPaddedTailCleanupSelectedHitBits true L)) := by
+      rw [show
+          false ::
+              (List.append (configurationFieldBits L.rejectConfig [])
+                (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail =
+            List.append (configurationFieldBits L.rejectConfig [])
+              (selectedProjectionPaddedTailCleanupSelectedHitBits true L) by
+        simpa [
+          selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
+          selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
+          selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+          using hpayload.symm]
+      exact
+        (configurationFieldBits_append_nil L.acceptConfig
+          (List.append (configurationFieldBits L.rejectConfig [])
+            (selectedProjectionPaddedTailCleanupSelectedHitBits true L))).symm
+    simp only [
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits] at h
+    simp only [if_true] at h
+    rw [hfield] at h
+    simpa [
+      selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
+      selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape,
+      selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape,
+      selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
+      hstageTail, hpayload,
+      selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupAfterStageTailCells,
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits,
+      List.map_append, List.append_assoc] using h
+
 theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldEraser_haltsFrom
     (L : DovetailLayout) (extraScratch : Nat) :
     leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription.HaltsFromTape
@@ -1456,66 +1609,10 @@ theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldEraser_ha
         true L extraScratch)
       (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
         L extraScratch) := by
-  rcases
-      CanonicalLayouts.DovetailStagePrefix.stageNatBits_reverse_map_some_cons
-        L.stage with
-    ⟨stageTail, hstageTail⟩
-  have hpayload :=
-    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
-      L
-  have h :=
-    leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
-      true L.acceptConfig
-      (List.append stageTail
-        (cellListCanonicalRestoredLeftWithBase
-          ((ParsedLayoutBits L).map some)
-          (postPaddingOutputPrefixHeaderBase [none])))
-      (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest
-        L)
-      (List.append (List.replicate 5 (none : Option Bool))
-        (List.replicate extraScratch (none : Option Bool)))
-  have hpayloadBits :
-      false ::
-          (List.append (configurationFieldBits L.rejectConfig [])
-            (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail =
-        List.append (configurationFieldBits L.rejectConfig [])
-          (selectedProjectionPaddedTailCleanupSelectedHitBits true L) := by
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
-      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
-      selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-      using hpayload.symm
-  have hfield :
-      configurationFieldBits L.acceptConfig
-          (false ::
-            (List.append (configurationFieldBits L.rejectConfig [])
-              (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail) =
-        List.append (configurationFieldBits L.acceptConfig [])
-          (List.append (configurationFieldBits L.rejectConfig [])
-            (selectedProjectionPaddedTailCleanupSelectedHitBits true L)) := by
-    rw [hpayloadBits]
-    exact
-      (configurationFieldBits_append_nil L.acceptConfig
-        (List.append (configurationFieldBits L.rejectConfig [])
-          (selectedProjectionPaddedTailCleanupSelectedHitBits true L))).symm
-  simp only [
-    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
-    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
-    selectedProjectionPaddedTailCleanupUnselectedConfigBits] at h
-  simp only [if_true] at h
-  rw [hfield] at h
-  simpa [
-    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
-    selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape,
-    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
-    hstageTail, hpayload,
-    selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
-    selectedProjectionPaddedTailCleanupAfterStageTailCells,
-    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
-    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
-    selectedProjectionPaddedTailCleanupSelectedConfigBits,
-    selectedProjectionPaddedTailCleanupUnselectedConfigBits,
-    List.map_append, List.append_assoc] using h
+  simpa [selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape]
+    using
+      selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFrom
+        true L extraScratch
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldEraser_haltsFrom
     (L : DovetailLayout) (extraScratch : Nat) :
@@ -1524,117 +1621,55 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldEraser_ha
         false L extraScratch)
       (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
         L extraScratch) := by
-  rcases
-      CanonicalLayouts.DovetailStagePrefix.stageNatBits_reverse_map_some_cons
-        L.stage with
-    ⟨stageTail, hstageTail⟩
-  have hpayload :=
-    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
-      L
-  have h :=
-    leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
-      true L.acceptConfig
-      (List.append stageTail
-        (cellListCanonicalRestoredLeftWithBase
-          ((ParsedLayoutBits L).map some)
-          (postPaddingOutputPrefixHeaderBase [none])))
-      (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest
-        L)
-      (List.append (List.replicate 3 (none : Option Bool))
-        (List.append
-          ((selectedProjectionPaddedTailCleanupSelectedHitBits
-            false L).map some)
-          (none :: none ::
-            List.replicate extraScratch (none : Option Bool))))
-  have hpayloadBits :
-      false ::
-          (configurationFieldBits L.rejectConfig []).tail =
-        configurationFieldBits L.rejectConfig [] := by
-    simpa [
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
-      selectedProjectionPaddedTailCleanupSelectedConfigBits]
-      using hpayload.symm
-  have hfield :
-      configurationFieldBits L.acceptConfig
-          (false :: (configurationFieldBits L.rejectConfig []).tail) =
-        List.append (configurationFieldBits L.acceptConfig [])
-          (configurationFieldBits L.rejectConfig []) := by
-    rw [hpayloadBits]
-    exact
-      (configurationFieldBits_append_nil L.acceptConfig
-        (configurationFieldBits L.rejectConfig [])).symm
-  simp only [
-    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
-    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
-    selectedProjectionPaddedTailCleanupSelectedConfigBits] at h
-  simp only [Bool.false_eq_true, if_false] at h
-  rw [hfield] at h
-  simpa [
-    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
-    selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape,
-    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
-    hstageTail, hpayload,
-    selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
-    selectedProjectionPaddedTailCleanupAfterStageTailCells,
-    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
-    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
-    selectedProjectionPaddedTailCleanupSelectedConfigBits,
-    selectedProjectionPaddedTailCleanupUnselectedConfigBits,
-    List.map_append, List.append_assoc] using h
+  simpa [selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape]
+    using
+      selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFrom
+        false L extraScratch
 
-theorem selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape_move_left_move_right
-    (L : DovetailLayout) (extraScratch : Nat) :
+theorem selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     Tape.move Direction.left
         (Tape.move Direction.right
-          (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
-            L extraScratch)) =
-      selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
-        L extraScratch := by
-  exact
-    rightBlankGapPayloadScanTargetTape_move_left_move_right
-      (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
-        L)
-      (configurationFieldBits L.acceptConfig []).length
-      false
-      (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest
-        L)
-      (List.append (List.replicate 5 (none : Option Bool))
-        (List.replicate extraScratch (none : Option Bool)))
+          (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+            useAccept L extraScratch)) =
+      selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+        useAccept L extraScratch := by
+  cases useAccept
+  · exact
+      rightBlankGapPayloadScanTargetTape_move_left_move_right
+        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+          L)
+        (configurationFieldBits L.acceptConfig []).length
+        false
+        (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest
+          L)
+        (List.append (List.replicate 3 (none : Option Bool))
+          (List.append
+            ((selectedProjectionPaddedTailCleanupSelectedHitBits
+              false L).map some)
+            (none :: none ::
+              List.replicate extraScratch (none : Option Bool))))
+  · exact
+      rightBlankGapPayloadScanTargetTape_move_left_move_right
+        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+          L)
+        (configurationFieldBits L.acceptConfig []).length
+        false
+        (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest
+          L)
+        (List.append (List.replicate 5 (none : Option Bool))
+          (List.replicate extraScratch (none : Option Bool)))
 
-theorem selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape_move_left_move_right
-    (L : DovetailLayout) (extraScratch : Nat) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
-            L extraScratch)) =
-      selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
-        L extraScratch := by
-  exact
-    rightBlankGapPayloadScanTargetTape_move_left_move_right
-      (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
-        L)
-      (configurationFieldBits L.acceptConfig []).length
-      false
-      (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest
-        L)
-      (List.append (List.replicate 3 (none : Option Bool))
-        (List.append
-          ((selectedProjectionPaddedTailCleanupSelectedHitBits
-            false L).map some)
-          (none :: none ::
-            List.replicate extraScratch (none : Option Bool))))
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
-    {eraser normalizer : MachineDescription}
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
+    {useAccept : Bool} {eraser normalizer : MachineDescription}
     (heraser :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserSpec
-        eraser)
+      SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+        useAccept eraser)
     (hnormalizer :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
-        normalizer) :
+      SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+        useAccept normalizer) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerSpec
-      true (canonicalSeqDescription eraser normalizer) := by
+      useAccept (canonicalSeqDescription eraser normalizer) := by
   constructor
   · exact
       canonicalSeqDescription_subroutineReady
@@ -1645,32 +1680,8 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefix
         heraser.left
         hnormalizer.left
         (heraser.right L)
-        (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape_move_left_move_right
-          L 0)
-        (hnormalizer.right L)
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
-    {eraser normalizer : MachineDescription}
-    (heraser :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserSpec
-        eraser)
-    (hnormalizer :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
-        normalizer) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerSpec
-      false (canonicalSeqDescription eraser normalizer) := by
-  constructor
-  · exact
-      canonicalSeqDescription_subroutineReady
-        heraser.left hnormalizer.left
-  · intro L
-    exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
-        heraser.left
-        hnormalizer.left
-        (heraser.right L)
-        (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape_move_left_move_right
-          L 0)
+        (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape_move_left_move_right
+          useAccept L 0)
         (hnormalizer.right L)
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerConstruction_of_firstFieldAndPostField
@@ -1683,7 +1694,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefix
   rcases hnormalizer with ⟨normalizer, hnormalizerSpec⟩
   exact
     ⟨canonicalSeqDescription eraser normalizer,
-      selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
+      selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
         heraserSpec hnormalizerSpec⟩
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerConstruction_of_firstFieldAndPostField
@@ -1696,15 +1707,16 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefix
   rcases hnormalizer with ⟨normalizer, hnormalizerSpec⟩
   exact
     ⟨canonicalSeqDescription eraser normalizer,
-      selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
+      selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerSpec_of_firstFieldAndPostField
         heraserSpec hnormalizerSpec⟩
 
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
-    {normalizer : MachineDescription}
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
+    {useAccept : Bool} {normalizer : MachineDescription}
     (h :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreSpec
-        normalizer) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
+      SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+        useAccept normalizer) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+      useAccept
       (seqSubroutine ExactIdentityDescription normalizer Direction.right) := by
   constructor
   · exact
@@ -1717,31 +1729,8 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefix
         CommonGround.Identity.exactIdentityDescription_subroutineReady
         h.left
         (CommonGround.Identity.exactIdentityDescription_haltsFromTape
-          (selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape
-            L 0))
-        rfl
-        (h.right L)
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
-    {normalizer : MachineDescription}
-    (h :
-      SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreSpec
-        normalizer) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
-      (seqSubroutine ExactIdentityDescription normalizer Direction.right) := by
-  constructor
-  · exact
-      seqSubroutine_subroutineReady
-        CommonGround.Identity.exactIdentityDescription_subroutineReady
-        h.left
-  · intro L
-    exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
-        CommonGround.Identity.exactIdentityDescription_subroutineReady
-        h.left
-        (CommonGround.Identity.exactIdentityDescription_haltsFromTape
-          (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
-            L 0))
+          (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
+            useAccept L 0))
         rfl
         (h.right L)
 
@@ -1752,7 +1741,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefix
   rcases h with ⟨normalizer, hnormalizer⟩
   exact
     ⟨seqSubroutine ExactIdentityDescription normalizer Direction.right,
-      selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
+      selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
         hnormalizer⟩
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction_of_handoffCore
@@ -1762,7 +1751,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefix
   rcases h with ⟨normalizer, hnormalizer⟩
   exact
     ⟨seqSubroutine ExactIdentityDescription normalizer Direction.right,
-      selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
+      selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec_of_handoffCore
         hnormalizer⟩
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecoderSpec_of_prefixScannerAndDecodedRestorer
