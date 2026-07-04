@@ -308,12 +308,12 @@ the controller layout with exactly the simulated boolean-word result installed.
 -/
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationRealizes
     (attempt invoker : MachineDescription) : Prop :=
-  CommonGround.ControllerInvocation.FramedSubroutineInvocationRealizes
+  CommonGround.ControllerInvocation.StageAttemptFramedRealizes
     attempt invoker
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
     Prop :=
-  CommonGround.ControllerInvocation.FramedSubroutineInvocationConstruction
+  CommonGround.ControllerInvocation.StageAttemptFramedConstruction
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData :
     Prop :=

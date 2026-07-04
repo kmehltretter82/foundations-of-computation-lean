@@ -93,16 +93,13 @@ def FixedDescriptionBoundedSimulatorFragmentRealizes
       FixedDescriptionBoundedSimulatorFragmentReaches
         entryTape exitTape phase fragment L
 
-abbrev FixedDescriptionBoundedSimulatorPhaseRealizes :=
-  FixedDescriptionBoundedSimulatorFragmentRealizes
-
-theorem fixedDescriptionBoundedSimulatorPhaseRealizes_standard_output
+theorem fixedDescriptionBoundedSimulatorFragmentRealizes_standard_output
     {phase :
       MachineDescription.SimulatorLayout ->
         MachineDescription.SimulatorLayout}
     {fragment : MachineDescription.Fragment}
     (h :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         phase fragment) :
@@ -144,7 +141,7 @@ theorem fixedDescriptionBoundedSimulatorPhaseRealizes_standard_output
 
 theorem fixedDescriptionBoundedSimulatorHandoffPhaseRealizes
     (move : Direction) :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       FixedDescriptionBoundedSimulatorLayoutTape
       (FixedDescriptionBoundedSimulatorHandoffTape move)
       id
@@ -158,7 +155,7 @@ theorem fixedDescriptionBoundedSimulatorHandoffPhaseRealizes
         (FixedDescriptionBoundedSimulatorLayoutTape L)
 
 theorem fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id
@@ -176,7 +173,7 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes :
 
 theorem fixedDescriptionBoundedSimulatorHaltPhaseRealizes
     (tape : MachineDescription.SimulatorLayout -> Tape Bool) :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       tape tape id MachineDescription.Fragment.halt := by
   constructor
   · exact MachineDescription.Fragment.halt_wellFormed
@@ -187,7 +184,7 @@ theorem fixedDescriptionBoundedSimulatorHaltPhaseRealizes
     · intro k hk
       lia
 
-theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+theorem fixedDescriptionBoundedSimulatorFragmentRealizes_seq
     {entryTape midTape exitTape :
       MachineDescription.SimulatorLayout -> Tape Bool}
     {phaseA phaseB :
@@ -195,13 +192,13 @@ theorem fixedDescriptionBoundedSimulatorPhaseRealizes_seq
         MachineDescription.SimulatorLayout}
     {A B : MachineDescription.Fragment} {handoffMove : Direction}
     (hA :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         entryTape midTape phaseA A)
     (hB :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         (fun L => Tape.move handoffMove (midTape L))
         exitTape phaseB B) :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       entryTape exitTape (fun L => phaseB (phaseA L))
       (MachineDescription.Fragment.seq A B handoffMove) := by
   constructor
@@ -224,22 +221,22 @@ structure FixedDescriptionBoundedSimulatorSkeletonPhaseRealizes
     (targets : FixedDescriptionBoundedSimulatorPhaseTargets D) :
     Prop where
   decodeLayout :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       FixedDescriptionBoundedSimulatorLayoutTape
       FixedDescriptionBoundedSimulatorLayoutTape
       targets.decodeLayout S.decodeLayout
   simulateStep :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape handoffMove)
       FixedDescriptionBoundedSimulatorLayoutTape
       targets.simulateStep S.simulateStep
   repeatControl :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape handoffMove)
       FixedDescriptionBoundedSimulatorLayoutTape
       targets.repeatControl S.repeatControl
   emitLayout :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape handoffMove)
       FixedDescriptionBoundedSimulatorLayoutTape
       targets.emitLayout S.emitLayout
@@ -337,13 +334,13 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
     FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness := by
   intro D S handoffMove targets htargets
   have hDecodeSim :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L => targets.simulateStep (targets.decodeLayout L))
         (MachineDescription.Fragment.seq
           S.decodeLayout S.simulateStep handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -354,7 +351,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
       (handoffMove := handoffMove)
       htargets.decodeLayout htargets.simulateStep
   have hDecodeSimRepeat :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L =>
@@ -364,7 +361,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
           (MachineDescription.Fragment.seq
             S.decodeLayout S.simulateStep handoffMove)
           S.repeatControl handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -377,7 +374,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
       (handoffMove := handoffMove)
       hDecodeSim htargets.repeatControl
   have hAllPhases :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L =>
@@ -390,7 +387,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
               S.decodeLayout S.simulateStep handoffMove)
             S.repeatControl handoffMove)
           S.emitLayout handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -407,7 +404,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
       hDecodeSimRepeat htargets.emitLayout
   intro L
   have hOutput :=
-    (fixedDescriptionBoundedSimulatorPhaseRealizes_standard_output
+    (fixedDescriptionBoundedSimulatorFragmentRealizes_standard_output
       hAllPhases).right L
   have hpipeline :
       targets.emitLayout

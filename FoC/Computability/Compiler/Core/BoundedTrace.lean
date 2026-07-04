@@ -28,9 +28,6 @@ def PairedRecognizerDovetailDescriptionCompilerPrinciple : Prop :=
           (fun w n => accept.HaltsIn n w)
           (fun w n => reject.HaltsIn n w)) D
 
-def FiniteSourcePairedRecognizerDovetailCompilerConstruction : Prop :=
-  PairedRecognizerDovetailDescriptionCompilerPrinciple
-
 def PairedRecognizerBoundedDovetailTableRealizes
     (accept reject decider : MachineDescription) : Prop :=
   decider.WellFormed ∧
@@ -44,10 +41,6 @@ def PairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
     exists decider : MachineDescription,
       PairedRecognizerBoundedDovetailTableRealizes accept reject decider
-
-def FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction :
-    Prop :=
-  PairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def FixedDescriptionBoundedSimulatorInput
     (L : SimulatorLayout) : Word Bool :=

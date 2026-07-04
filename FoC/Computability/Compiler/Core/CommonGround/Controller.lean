@@ -256,10 +256,6 @@ def StageAttemptFramedRealizes
     StageAttemptFramedForwardSpec attempt invoker ∧
       StageAttemptFramedClosedSpec attempt invoker
 
-abbrev FramedSubroutineInvocationRealizes :
-    MachineDescription -> MachineDescription -> Prop :=
-  StageAttemptFramedRealizes
-
 def StageAttemptProtectedRealizes
     (attempt invoker : MachineDescription) : Prop :=
   invoker.SubroutineReady ∧
@@ -487,20 +483,11 @@ def StageAttemptFramedConstruction : Prop :=
       exists invoker : MachineDescription,
         StageAttemptFramedRealizes attempt invoker
 
-abbrev FramedSubroutineInvocationConstruction : Prop :=
-  StageAttemptFramedConstruction
-
 def StageAttemptProtectedConstruction : Prop :=
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
       exists invoker : MachineDescription,
         StageAttemptProtectedRealizes attempt invoker
-
-abbrev ControllerStageAttemptWitnessedConstruction : Prop :=
-  StageAttemptWitnessedConstruction
-
-abbrev ControllerStageAttemptFramedInvocationConstruction : Prop :=
-  StageAttemptFramedConstruction
 
 def StageAttemptFramedOutputTape
     (C : DovetailControllerLayout) (result : Word Bool) :

@@ -458,7 +458,7 @@ theorem dovetailing_decidable_construction_of_concrete_description_compiler
 
 theorem concrete_dovetail_description_compiler_of_concrete_bool_description_compiler
     (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    SemanticDovetailDescriptionCompilerAssumption :=
+    DovetailDescriptionCompilerPrinciple :=
   Computability.dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     hcompile
 
@@ -816,13 +816,13 @@ theorem of_layoutSubroutine_and_runnerSearchDriver
 end PairedRecognizerDovetailCompiler
 
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption) :
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
     DovetailingDecidableConstruction Bool :=
   Computability.reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
     hcompile
 
 theorem paired_recognizer_dovetail_compiler_of_concrete_dovetail_description_compiler
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption) :
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
     ConcretePairedRecognizerDovetailCompilerConstruction :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     hcompile
@@ -845,7 +845,7 @@ theorem finite_dovetail_compiler_construction_iff_paired_recognizer_dovetail_com
   Computability.FiniteDovetailProgram.compilerConstruction_iff_pairedRecognizerDescriptionCompiler
 
 theorem finite_dovetail_compiler_construction_of_concrete_dovetail_description_compiler
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption) :
+    (hcompile : DovetailDescriptionCompilerPrinciple) :
     ConcreteFiniteDovetailCompilerConstruction :=
   Computability.FiniteDovetailProgram.compilerConstruction_of_dovetailDescriptionCompiler
     hcompile
@@ -864,7 +864,7 @@ theorem finite_dovetail_compiler_construction_of_bounded_dovetail_table_compiler
     hcompile
 
 theorem complementary_traces_recursive_language_of_concrete_dovetail_description_compiler
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption)
+    (hcompile : DovetailDescriptionCompilerPrinciple)
     {L : Language Bool}
     {accept reject : Word Bool -> Nat -> Prop}
     [∀ w n, Decidable (accept w n)]
@@ -875,7 +875,7 @@ theorem complementary_traces_recursive_language_of_concrete_dovetail_description
     hcompile htraces
 
 theorem re_and_co_re_recursive_language_of_concrete_dovetail_description_compiler
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption)
+    (hcompile : DovetailDescriptionCompilerPrinciple)
     {L : Language Bool}
     (h : RecursivelyEnumerableLanguageWithComplement L) :
     RecursiveLanguage L :=
@@ -884,7 +884,7 @@ theorem re_and_co_re_recursive_language_of_concrete_dovetail_description_compile
 
 theorem recursive_language_iff_re_and_co_re_of_concrete_dovetail_description_compiler
     (haccept : DecidableToAcceptableConstruction Bool)
-    (hcompile : SemanticDovetailDescriptionCompilerAssumption)
+    (hcompile : DovetailDescriptionCompilerPrinciple)
     (L : Language Bool) :
     RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
   Computability.recursive_iff_reCoRe_of_principles

@@ -168,7 +168,7 @@ machine-description closeout.
 structure BooleanSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
-  dovetailDescription : SemanticDovetailDescriptionCompilerAssumption
+  dovetailDescription : DovetailDescriptionCompilerPrinciple
   partialUnaryRangeDescription :
     SemanticPartialUnaryRangeCompilerAssumption
   grammarRecognizerDescription :
@@ -185,7 +185,7 @@ machine data.
 structure BooleanFiniteGrammarSection52Closeout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
-  dovetailDescription : SemanticDovetailDescriptionCompilerAssumption
+  dovetailDescription : DovetailDescriptionCompilerPrinciple
   finiteGrammarRecognizerDescription :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction
   recursivelyEnumerableToFiniteGrammar :
@@ -204,7 +204,7 @@ structure BooleanFiniteDataSection52CompilerCloseout where
   boundedTraceSearch : BoundedTraceSearchConstruction
   decidableToAcceptable : DecidableToAcceptablePrinciple Bool
   pairedDovetailDescription :
-    FiniteSourcePairedRecognizerDovetailCompilerConstruction
+    PairedRecognizerDovetailDescriptionCompilerPrinciple
   finiteGrammarRecognizerDescription :
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction
   descriptionRecognizerToFiniteGrammar :

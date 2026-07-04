@@ -116,11 +116,6 @@ def FixedDescriptionBoundedSimulatorCodeRightShiftedSpecConstruction : Prop :=
     exists runner : MachineDescription,
       FixedDescriptionBoundedSimulatorCodeRightShiftedSpec D runner
 
-/-- Closed complete simulator-layout parser needed by the right-shifted code leaf. -/
-abbrev FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction :
-    Prop :=
-  CommonGround.SimulatorLayouts.ClosedRecognizerConstruction
-
 /--
 Concrete parser leaf in the standard right-shifted code-word form: normalize a
 complete simulator-layout code word and reject malformed code words.
@@ -170,7 +165,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_haltsWithTape_of_transf
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_primitive
     (h :
       FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction) :
-    FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction := by
+    CommonGround.SimulatorLayouts.ClosedRecognizerConstruction := by
   rcases h with ⟨parser, hparser⟩
   refine ⟨parser, ?_⟩
   constructor
@@ -211,7 +206,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction_of_pr
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction_of_closedRecognizer
     (h :
-      FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction) :
+      CommonGround.SimulatorLayouts.ClosedRecognizerConstruction) :
     FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction := by
   rcases h with ⟨recognizer, hrecognizer⟩
   refine ⟨recognizer, ?_⟩
@@ -415,7 +410,7 @@ bounded-run emitter.
 -/
 def FixedDescriptionBoundedSimulatorCodeRightShiftedParserEmitterConstruction :
     Prop :=
-  FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction ∧
+  CommonGround.SimulatorLayouts.ClosedRecognizerConstruction ∧
     FixedDescriptionBoundedSimulatorCodeRightShiftedEmitterConstruction
 
 def FixedDescriptionBoundedSimulatorCodeRightShiftedRunner
@@ -645,14 +640,14 @@ def FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction :
     Prop :=
   forall D : MachineDescription,
     exists simulateStep : Fragment,
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L => SimulatorLayout.run D L.stage L)
         simulateStep
 
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_codeRightShifted :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id
@@ -672,10 +667,10 @@ theorem fixedDescriptionBoundedSimulatorHandoffTape_move_left_right
     CommonGround.LayoutTapes.InputTape] using
     CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
 
-theorem fixedDescriptionBoundedSimulatorPhaseRealizes_of_canonicalSpec
+theorem fixedDescriptionBoundedSimulatorFragmentRealizes_of_canonicalSpec
     {D sim : MachineDescription}
     (hsim : FixedDescriptionBoundedSimulatorCanonicalSpec D sim) :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       FixedDescriptionBoundedSimulatorLayoutTape
       FixedDescriptionBoundedSimulatorLayoutTape
       (fun L => SimulatorLayout.run D L.stage L)
@@ -718,7 +713,7 @@ theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_of_can
   intro D
   rcases hcanonical D with ⟨sim, hsim⟩
   refine ⟨Fragment.seq Fragment.halt sim.asFragment Direction.left, ?_⟩
-  refine fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+  refine fixedDescriptionBoundedSimulatorFragmentRealizes_seq
     (entryTape := FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
     (midTape := FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
     (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -732,7 +727,7 @@ theorem fixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction_of_can
       fixedDescriptionBoundedSimulatorHaltPhaseRealizes
         (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
   · simpa [id, fixedDescriptionBoundedSimulatorHandoffTape_move_left_right]
-      using fixedDescriptionBoundedSimulatorPhaseRealizes_of_canonicalSpec
+      using fixedDescriptionBoundedSimulatorFragmentRealizes_of_canonicalSpec
         hsim
 
 theorem fixedDescriptionBoundedSimulatorSkeletonPhaseConstruction_of_rightHandoffStepPhase
@@ -782,7 +777,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_specCons
       fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec hrunner⟩
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShiftedConstruction_of_parser_rightHandoffStep
-    (hparser : FixedDescriptionBoundedSimulatorCodeRightShiftedParserConstruction)
+    (hparser : CommonGround.SimulatorLayouts.ClosedRecognizerConstruction)
     (hstep :
       FixedDescriptionBoundedSimulatorRightHandoffStepPhaseConstruction) :
     FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction := by

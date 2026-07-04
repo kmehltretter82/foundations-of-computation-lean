@@ -29,7 +29,7 @@ def FixedDescriptionBoundedSimulatorStepPhaseConstruction_configRunner :
     Prop :=
   forall D : MachineDescription,
     exists simulateStep : Fragment,
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L => SimulatorLayout.run D L.stage L)
@@ -150,7 +150,7 @@ theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_paddedPhase_configR
         hsim⟩
 
 theorem fixedDescriptionBoundedSimulatorReturnFromRightPhaseRealizes_configRunner :
-    FixedDescriptionBoundedSimulatorPhaseRealizes
+    FixedDescriptionBoundedSimulatorFragmentRealizes
       (FixedDescriptionBoundedSimulatorHandoffTape Direction.right)
       FixedDescriptionBoundedSimulatorLayoutTape
       id

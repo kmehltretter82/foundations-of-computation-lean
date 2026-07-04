@@ -729,7 +729,7 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerC
       hclose)
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold :
-    FiniteSourcePairedRecognizerDovetailCompilerConstruction :=
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold
 

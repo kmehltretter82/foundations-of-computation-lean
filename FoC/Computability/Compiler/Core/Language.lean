@@ -143,16 +143,6 @@ def DescriptionProgramAcceptorCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Unit,
     exists D : MachineDescription, ProgramCompiledByDescription P D
 
-/-
-The next aliases separate semantic compiler assumptions from finite-source
-compiler targets.  A semantic assumption quantifies over arbitrary Lean staged
-programs or traces.  A finite-source construction has concrete finite data as
-input, such as a supplied {name}`MachineDescription`.
--/
-
-def SemanticDescriptionAcceptorCompilerAssumption : Prop :=
-  DescriptionProgramAcceptorCompilationPrinciple
-
 theorem programAcceptableByDescription_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
     {L : Language Bool}
@@ -174,19 +164,12 @@ def DescriptionProgramBoolDeciderCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Bool,
     exists D : MachineDescription, BoolProgramCompiledByDescription P D
 
-def SemanticDescriptionBoolDeciderCompilerAssumption : Prop :=
-  DescriptionProgramBoolDeciderCompilationPrinciple
-
 def DovetailDescriptionCompilerPrinciple : Prop :=
   forall (accept reject : Word Bool -> Nat -> Prop)
     [∀ w n, Decidable (accept w n)]
     [∀ w n, Decidable (reject w n)],
     exists D : MachineDescription,
       BoolProgramCompiledByDescription (DovetailProgram accept reject) D
-
-def SemanticDovetailDescriptionCompilerAssumption : Prop :=
-  DovetailDescriptionCompilerPrinciple
-
 
 end Computability
 end FoC

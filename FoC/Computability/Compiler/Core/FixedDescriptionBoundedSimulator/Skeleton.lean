@@ -17,13 +17,13 @@ namespace Computability
 open Languages
 open MachineDescription
 
-theorem fixedDescriptionBoundedSimulatorPhaseRealizes_standard_tape
+theorem fixedDescriptionBoundedSimulatorFragmentRealizes_standard_tape
     {phase :
       SimulatorLayout ->
         SimulatorLayout}
     {fragment : Fragment}
     (h :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         phase fragment)
@@ -56,13 +56,13 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
     FixedDescriptionBoundedSimulatorCanonicalSpec
       D (S.toDescription handoffMove) := by
   have hDecodeSim :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L => targets.simulateStep (targets.decodeLayout L))
         (Fragment.seq
           S.decodeLayout S.simulateStep handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -73,7 +73,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
       (handoffMove := handoffMove)
       htargets.decodeLayout htargets.simulateStep
   have hDecodeSimRepeat :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L =>
@@ -83,7 +83,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
           (Fragment.seq
             S.decodeLayout S.simulateStep handoffMove)
           S.repeatControl handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -96,7 +96,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
       (handoffMove := handoffMove)
       hDecodeSim htargets.repeatControl
   have hAllPhases :
-      FixedDescriptionBoundedSimulatorPhaseRealizes
+      FixedDescriptionBoundedSimulatorFragmentRealizes
         FixedDescriptionBoundedSimulatorLayoutTape
         FixedDescriptionBoundedSimulatorLayoutTape
         (fun L =>
@@ -109,7 +109,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
               S.decodeLayout S.simulateStep handoffMove)
             S.repeatControl handoffMove)
           S.emitLayout handoffMove) :=
-    fixedDescriptionBoundedSimulatorPhaseRealizes_seq
+    fixedDescriptionBoundedSimulatorFragmentRealizes_seq
       (entryTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (midTape := FixedDescriptionBoundedSimulatorLayoutTape)
       (exitTape := FixedDescriptionBoundedSimulatorLayoutTape)
@@ -135,7 +135,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
   constructor
   · intro L
     have hTape :=
-      fixedDescriptionBoundedSimulatorPhaseRealizes_standard_tape
+      fixedDescriptionBoundedSimulatorFragmentRealizes_standard_tape
         hAllPhases L
     have hpipeline :
         targets.emitLayout
@@ -160,7 +160,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes
           by
             intro L'
             have hTape :=
-              fixedDescriptionBoundedSimulatorPhaseRealizes_standard_tape
+              fixedDescriptionBoundedSimulatorFragmentRealizes_standard_tape
                 hAllPhases L'
             have hpipeline :
                 targets.emitLayout

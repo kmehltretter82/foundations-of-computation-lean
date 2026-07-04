@@ -110,19 +110,16 @@ def StagedBoolDeciderCompilationConstruction (alpha : Type u) : Prop :=
   ProgramBoolDeciderCompilationPrinciple alpha
 
 def SemanticDescriptionAcceptorCompilationAssumption : Prop :=
-  SemanticDescriptionAcceptorCompilerAssumption
+  DescriptionProgramAcceptorCompilationPrinciple
 
 def SemanticDescriptionBoolDeciderCompilationAssumption : Prop :=
-  SemanticDescriptionBoolDeciderCompilerAssumption
-
-def SemanticDovetailDescriptionCompilerAssumption : Prop :=
-  Computability.SemanticDovetailDescriptionCompilerAssumption
+  DescriptionProgramBoolDeciderCompilationPrinciple
 
 /-!
 The following three compatibility names are historical chapter-facing aliases.
 Despite the word {lit}`Concrete`, they are semantic compiler assumptions over
 Lean-level descriptions, not finite transition-table closeouts. Prefer the
-{lit}`Semantic...Assumption` names above in new theorem statements.
+semantic compiler-principle names above in new theorem statements.
 -/
 
 def ConcreteDescriptionAcceptorCompilationConstruction : Prop :=
@@ -132,10 +129,10 @@ def ConcreteDescriptionBoolDeciderCompilationConstruction : Prop :=
   SemanticDescriptionBoolDeciderCompilationAssumption
 
 def ConcreteDovetailDescriptionCompilerConstruction : Prop :=
-  SemanticDovetailDescriptionCompilerAssumption
+  DovetailDescriptionCompilerPrinciple
 
 def ConcreteFiniteSourcePairedRecognizerDovetailCompilerConstruction : Prop :=
-  FiniteSourcePairedRecognizerDovetailCompilerConstruction
+  PairedRecognizerDovetailDescriptionCompilerPrinciple
 
 def ConcretePairedRecognizerDovetailCompilerConstruction : Prop :=
   ConcreteFiniteSourcePairedRecognizerDovetailCompilerConstruction
@@ -150,7 +147,7 @@ def ConcreteBoolOutputDescription (b : Bool) : MachineDescription :=
   MachineDescription.BoolOutputDescription b
 
 def ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction : Prop :=
-  FiniteSourcePairedRecognizerBoundedDovetailTableCompilerConstruction
+  PairedRecognizerBoundedDovetailTableCompilerConstruction
 
 def ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction : Prop :=
   PairedRecognizerDovetailSearchDriverCompilerConstruction
