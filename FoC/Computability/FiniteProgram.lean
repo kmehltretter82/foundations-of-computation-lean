@@ -58,7 +58,7 @@ def toOutput? (T : Tape symbol) : Option (Word symbol) :=
       | some rest => some (a :: rest)
   | _ :: _, _ => none
 
-theorem outputRight?_map_some (w : Word symbol) :
+private theorem outputRight?_map_some (w : Word symbol) :
     outputRight? (w.map some) = some w := by
   induction w with
   | nil =>
@@ -66,7 +66,7 @@ theorem outputRight?_map_some (w : Word symbol) :
   | cons a rest ih =>
       simp [outputRight?, ih]
 
-theorem outputRight?_eq_some_map
+private theorem outputRight?_eq_some_map
     {cells : List (Option symbol)} {w : Word symbol}
     (h : outputRight? cells = some w) :
     cells = w.map some := by
@@ -89,7 +89,7 @@ theorem outputRight?_eq_some_map
               rw [ih hrest]
               simp
 
-theorem toOutput?_output (w : Word symbol) :
+private theorem toOutput?_output (w : Word symbol) :
     toOutput? (Tape.output w) = some w := by
   cases w with
   | nil =>
@@ -97,7 +97,7 @@ theorem toOutput?_output (w : Word symbol) :
   | cons a rest =>
       simp [Tape.output, Tape.input, toOutput?, outputRight?_map_some]
 
-theorem toOutput?_eq_some_output
+private theorem toOutput?_eq_some_output
     {T : Tape symbol} {w : Word symbol}
     (h : toOutput? T = some w) :
     T = Tape.output w := by
@@ -130,7 +130,7 @@ end Tape
 
 namespace MachineDescription
 
-theorem haltsWithOutputIn_output_unique {D : MachineDescription}
+private theorem haltsWithOutputIn_output_unique {D : MachineDescription}
     {n : Nat} {w out₁ out₂ : Word Bool}
     (h₁ : D.HaltsWithOutputIn n w out₁)
     (h₂ : D.HaltsWithOutputIn n w out₂) :
@@ -165,7 +165,7 @@ def toStagedProgram (P : FiniteAcceptorProgram) :
 def compile (P : FiniteAcceptorProgram) : MachineDescription :=
   P.description
 
-theorem toStagedProgram_run_iff
+private theorem toStagedProgram_run_iff
     (P : FiniteAcceptorProgram) (w : Word Bool) (n : Nat) :
     P.toStagedProgram.run w n = some [] <-> P.trace w n := by
   constructor
@@ -210,7 +210,7 @@ def CompilerConstruction : Prop :=
 theorem compilerConstruction : CompilerConstruction :=
   compiledByDescription
 
-theorem traceRecognizer_compiledByDescription
+private theorem traceRecognizer_compiledByDescription
     (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed) :
     ProgramCompiledByDescription

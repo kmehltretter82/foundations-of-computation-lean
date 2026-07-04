@@ -101,7 +101,7 @@ noncomputable def CodeCandidates (code : alpha -> Nat) :
       else
         none
 
-theorem codeCandidates_of_code
+private theorem codeCandidates_of_code
     {code : alpha -> Nat}
     (hcode : Foundation.Fn.Injective code)
     (x : alpha) :
@@ -136,7 +136,7 @@ def PairCodeDecodeWithFuel : Nat -> Nat -> Option (Nat × Nat)
 def PairCodeDecode (n : Nat) : Option (Nat × Nat) :=
   PairCodeDecodeWithFuel (n + 1) n
 
-theorem pairCodeDecodeWithFuel_even {fuel m : Nat}
+private theorem pairCodeDecodeWithFuel_even {fuel m : Nat}
     (hbound : 2 * m < fuel) :
     PairCodeDecodeWithFuel fuel (2 * m) = some (0, m) := by
   cases fuel with
@@ -158,7 +158,7 @@ theorem pairCodeDecodeWithFuel_even {fuel m : Nat}
             exact Nat.mul_div_right (m + 1) (by decide : 0 < 2)
           simp [PairCodeDecodeWithFuel, hmod, hdiv]
 
-theorem pairCodeDecodeWithFuel_odd {fuel m : Nat}
+private theorem pairCodeDecodeWithFuel_odd {fuel m : Nat}
     (hbound : 2 * m + 1 < fuel) :
     PairCodeDecodeWithFuel fuel (2 * m + 1) =
       match PairCodeDecodeWithFuel (fuel - 1) m with
@@ -175,7 +175,7 @@ theorem pairCodeDecodeWithFuel_odd {fuel m : Nat}
         simp [Nat.add_mul_div_left]
       simp [PairCodeDecodeWithFuel, hdiv]
 
-theorem pairCodeDecodeWithFuel_pairCode
+private theorem pairCodeDecodeWithFuel_pairCode
     {fuel left right : Nat}
     (hbound : Foundation.Countability.PairCode left right < fuel) :
     PairCodeDecodeWithFuel fuel
@@ -229,7 +229,7 @@ def BoundedTraceListing
         | none => none
         | some w => if trace w stage then some w else none
 
-theorem boundedTraceListing_pairCode_of_trace
+private theorem boundedTraceListing_pairCode_of_trace
     (candidates : Nat -> Option (Word alpha))
     (trace : Word alpha -> Nat -> Prop)
     [∀ w n, Decidable (trace w n)]
@@ -242,7 +242,7 @@ theorem boundedTraceListing_pairCode_of_trace
   simp [BoundedTraceListing, pairCodeDecode_pairCode,
     hcandidate, htrace]
 
-theorem boundedTraceListing_trace_of_some
+private theorem boundedTraceListing_trace_of_some
     {candidates : Nat -> Option (Word alpha)}
     {trace : Word alpha -> Nat -> Prop}
     [∀ w n, Decidable (trace w n)]

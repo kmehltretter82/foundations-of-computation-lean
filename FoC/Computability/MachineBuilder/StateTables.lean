@@ -41,14 +41,14 @@ def offsetStates (offset : Nat) (t : TransitionDescription) :
   move := t.move
   target := offset + t.target
 
-theorem offsetStates_sameAction
+private theorem offsetStates_sameAction
     (offset : Nat) (t u : TransitionDescription)
     (h : SameAction t u) :
     SameAction (offsetStates offset t) (offsetStates offset u) := by
   rcases h with ⟨hwrite, hmove, htarget⟩
   simp [SameAction, offsetStates, hwrite, hmove, htarget]
 
-theorem sameKey_of_offsetStates_sameKey
+private theorem sameKey_of_offsetStates_sameKey
     {offset : Nat} {t u : TransitionDescription}
     (h : SameKey (offsetStates offset t) (offsetStates offset u)) :
     SameKey t u := by
@@ -56,7 +56,7 @@ theorem sameKey_of_offsetStates_sameKey
   · exact Nat.add_left_cancel h.left
   · exact h.right
 
-theorem wellFormed_offsetStates
+private theorem wellFormed_offsetStates
     {stateCount offset : Nat} {t : TransitionDescription}
     (h : WellFormed stateCount t) :
     WellFormed (offset + stateCount) (offsetStates offset t) := by
@@ -77,7 +77,7 @@ def sharedExitRetargetStates
   move := t.move
   target := if t.target = oldHalt then commonHalt else offset + t.target
 
-theorem sharedExitRetargetStates_sameAction
+private theorem sharedExitRetargetStates_sameAction
     (offset oldHalt commonHalt : Nat)
     {t u : TransitionDescription}
     (h : SameAction t u) :
@@ -87,7 +87,7 @@ theorem sharedExitRetargetStates_sameAction
   rcases h with ⟨hwrite, hmove, htarget⟩
   simp [SameAction, sharedExitRetargetStates, hwrite, hmove, htarget]
 
-theorem sameKey_of_sharedExitRetargetStates_sameKey
+private theorem sameKey_of_sharedExitRetargetStates_sameKey
     {offset oldHalt commonHalt : Nat}
     {t u : TransitionDescription}
     (h :
@@ -99,7 +99,7 @@ theorem sameKey_of_sharedExitRetargetStates_sameKey
   · exact Nat.add_left_cancel h.left
   · exact h.right
 
-theorem wellFormed_sharedExitRetargetStates
+private theorem wellFormed_sharedExitRetargetStates
     {sourceStateCount targetStateCount offset oldHalt commonHalt : Nat}
     {t : TransitionDescription}
     (hmap :
@@ -115,7 +115,7 @@ theorem wellFormed_sharedExitRetargetStates
     · simp [sharedExitRetargetStates, htarget, hcommon]
     · simp [sharedExitRetargetStates, htarget, hmap t.target h.right]
 
-theorem sharedExitRetargetStates_source_ne_of_common_lt_offset
+private theorem sharedExitRetargetStates_source_ne_of_common_lt_offset
     {offset oldHalt commonHalt : Nat}
     (hcommon : commonHalt < offset)
     (t : TransitionDescription) :
@@ -130,7 +130,7 @@ theorem sharedExitRetargetStates_source_ne_of_common_lt_offset
   rw [hsource] at hlt
   exact Nat.lt_irrefl commonHalt hlt
 
-theorem sharedExitRetargetStates_source_ne_offset_halt
+private theorem sharedExitRetargetStates_source_ne_offset_halt
     {offset oldHalt commonHalt : Nat}
     {t : TransitionDescription}
     (hsource : t.source ≠ oldHalt) :
@@ -164,7 +164,7 @@ def HaltTransitionFree (D : MachineDescription) : Prop :=
 def SubroutineReady (D : MachineDescription) : Prop :=
   D.WellFormed ∧ D.HaltTransitionFree
 
-theorem extendStates_wellFormed
+private theorem extendStates_wellFormed
     {extra : Nat} {D : MachineDescription}
     (hD : D.WellFormed) :
     (extendStates extra D).WellFormed := by
@@ -185,13 +185,13 @@ theorem extendStates_wellFormed
   · intro t u ht hu hkey
     exact hD.right.right.right.right t u ht hu hkey
 
-theorem extendStates_haltTransitionFree
+private theorem extendStates_haltTransitionFree
     {extra : Nat} {D : MachineDescription}
     (hD : D.HaltTransitionFree) :
     (extendStates extra D).HaltTransitionFree :=
   hD
 
-theorem extendStates_subroutineReady
+private theorem extendStates_subroutineReady
     {extra : Nat} {D : MachineDescription}
     (hD : D.SubroutineReady) :
     (extendStates extra D).SubroutineReady :=
@@ -241,7 +241,7 @@ def offsetStates (offset : Nat) (D : MachineDescription) :
   transitions := D.transitions.map
     (TransitionDescription.offsetStates offset)
 
-theorem offsetStates_wellFormed
+private theorem offsetStates_wellFormed
     {offset : Nat} {D : MachineDescription}
     (hD : D.WellFormed) :
     (offsetStates offset D).WellFormed := by
@@ -267,7 +267,7 @@ theorem offsetStates_wellFormed
       (hD.right.right.right.right baseT baseU hbaseT hbaseU
         (TransitionDescription.sameKey_of_offsetStates_sameKey hkey))
 
-theorem offsetStates_haltTransitionFree
+private theorem offsetStates_haltTransitionFree
     {offset : Nat} {D : MachineDescription}
     (hD : D.HaltTransitionFree) :
     (offsetStates offset D).HaltTransitionFree := by
@@ -277,7 +277,7 @@ theorem offsetStates_haltTransitionFree
   intro hsource
   exact hD base hbase (Nat.add_left_cancel hsource)
 
-theorem offsetStates_subroutineReady
+private theorem offsetStates_subroutineReady
     {offset : Nat} {D : MachineDescription}
     (hD : D.SubroutineReady) :
     (offsetStates offset D).SubroutineReady :=
@@ -295,7 +295,7 @@ def sharedExitRetargetTransitions
     (TransitionDescription.sharedExitRetargetStates
       offset oldHalt commonHalt)
 
-theorem sharedExitRetargetTransitions_wellFormed
+private theorem sharedExitRetargetTransitions_wellFormed
     {targetStateCount offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     (hD : D.WellFormed)
@@ -313,7 +313,7 @@ theorem sharedExitRetargetTransitions_wellFormed
     TransitionDescription.wellFormed_sharedExitRetargetStates
       hmap hcommon (hD.right.right.right.left base hbase)
 
-theorem sharedExitRetargetTransitions_deterministic
+private theorem sharedExitRetargetTransitions_deterministic
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     (hD : D.WellFormed) :
@@ -333,7 +333,7 @@ theorem sharedExitRetargetTransitions_deterministic
         (TransitionDescription.sameKey_of_sharedExitRetargetStates_sameKey
           hkey))
 
-theorem sharedExitRetargetTransitions_no_common_source_of_lt_offset
+private theorem sharedExitRetargetTransitions_no_common_source_of_lt_offset
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     (hcommon : commonHalt < offset) :
@@ -347,7 +347,7 @@ theorem sharedExitRetargetTransitions_no_common_source_of_lt_offset
     TransitionDescription.sharedExitRetargetStates_source_ne_of_common_lt_offset
       hcommon base
 
-theorem sharedExitRetargetTransitions_no_offset_halt_source
+private theorem sharedExitRetargetTransitions_no_offset_halt_source
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     (hhalt : oldHalt = D.halt)
@@ -362,7 +362,7 @@ theorem sharedExitRetargetTransitions_no_offset_halt_source
     TransitionDescription.sharedExitRetargetStates_source_ne_offset_halt
       (by simpa [hhalt] using hD base hbase)
 
-theorem sharedExitRetargetTransitions_source_eq
+private theorem sharedExitRetargetTransitions_source_eq
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     {t : TransitionDescription}
@@ -374,7 +374,7 @@ theorem sharedExitRetargetTransitions_source_eq
   rcases ht with ⟨base, hbase, rfl⟩
   exact ⟨base, hbase, rfl⟩
 
-theorem sharedExitRetargetTransitions_source_lt
+private theorem sharedExitRetargetTransitions_source_lt
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     (hD : D.WellFormed)
@@ -388,7 +388,7 @@ theorem sharedExitRetargetTransitions_source_lt
   have hbaseSource := (hD.right.right.right.left base hbase).left
   lia
 
-theorem sharedExitRetargetTransitions_offset_le_source
+private theorem sharedExitRetargetTransitions_offset_le_source
     {offset oldHalt commonHalt : Nat}
     {D : MachineDescription}
     {t : TransitionDescription}
@@ -426,7 +426,7 @@ def disjointUnion (A B : MachineDescription) :
       B.transitions.map
         (TransitionDescription.offsetStates A.stateCount)
 
-theorem disjointUnion_wellFormed
+private theorem disjointUnion_wellFormed
     {A B : MachineDescription}
     (hA : A.WellFormed) (hB : B.WellFormed) :
     (disjointUnion A B).WellFormed := by
@@ -482,7 +482,7 @@ theorem disjointUnion_wellFormed
                   (TransitionDescription.sameKey_of_offsetStates_sameKey
                     hkey))
 
-theorem disjointUnion_haltTransitionFree
+private theorem disjointUnion_haltTransitionFree
     {A B : MachineDescription}
     (hAFormed : A.WellFormed)
     (hA : A.HaltTransitionFree) :
@@ -501,7 +501,7 @@ theorem disjointUnion_haltTransitionFree
           hsource
       lia
 
-theorem disjointUnion_subroutineReady
+private theorem disjointUnion_subroutineReady
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.WellFormed) :
     (disjointUnion A B).SubroutineReady :=
