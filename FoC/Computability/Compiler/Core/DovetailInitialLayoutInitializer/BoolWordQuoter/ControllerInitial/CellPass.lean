@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.Base
 
 set_option doc.verso true
@@ -785,24 +786,18 @@ theorem controllerInitialRawBoolWordHeaderEmitter_replicate_none_append_cons
     (n : Nat) (tail : List (Option Bool)) :
     List.append (List.replicate n none) (none :: tail) =
       none :: List.append (List.replicate n none) tail := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-      simpa [List.replicate_succ] using ih
+  exact list_replicate_append_cons_eq_cons_append
+    (none : Option Bool) n tail
 
 theorem controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding
     (n : Nat) :
     (none : Option Bool) ::
         List.append (List.replicate n (none : Option Bool)) [none] =
       none :: none :: List.replicate n (none : Option Bool) := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simpa [List.replicate_succ, List.append_assoc] using
-        congrArg
-          (fun tail : List (Option Bool) => (none : Option Bool) :: tail)
-          ih
+  simpa using
+    congrArg (fun tail => (none : Option Bool) :: tail)
+      (list_replicate_append_cons_eq_cons_append
+        (none : Option Bool) n [])
 
 theorem controllerInitialRawBoolWordHeaderEmitter_run_cellPass
     (leftRev : List (Option Bool)) (w output : Word Bool) :

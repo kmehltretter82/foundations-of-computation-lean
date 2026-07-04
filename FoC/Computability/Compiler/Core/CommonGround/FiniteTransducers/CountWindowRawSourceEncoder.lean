@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.CellPass
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
@@ -1166,20 +1167,7 @@ theorem countWindowRawSourceEncoder_replicate_none_append_cons
       List.append
         (List.replicate (n + 1) (none : Option Bool))
         left := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      change
-        none ::
-            List.append (List.replicate n (none : Option Bool))
-              (none :: left) =
-          List.append
-            (List.replicate (Nat.succ n + 1)
-              (none : Option Bool))
-            left
-      rw [ih]
-      rfl
+  exact list_replicate_append_self (none : Option Bool) n left
 
 theorem rightBlankRunTailFirstScannerDescription_run
     (blankCount : Nat) (left tail : List (Option Bool))

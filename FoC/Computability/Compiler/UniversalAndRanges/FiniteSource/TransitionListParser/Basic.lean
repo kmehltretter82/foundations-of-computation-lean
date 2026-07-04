@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.UniversalAndRanges.HeaderParser
 
 set_option doc.verso true
@@ -1892,11 +1893,9 @@ theorem transitionListParser_replicate_blank_append_cons
       List.append
         (List.replicate (blanks + 1) (some MachineCodeSymbol.blank))
         leftRev := by
-  induction blanks with
-  | zero =>
-      rfl
-  | succ blanks ih =>
-      simpa [List.replicate] using ih
+  exact
+    list_replicate_append_self
+      (some MachineCodeSymbol.blank) blanks leftRev
 
 theorem transitionListParser_blank_cons_replicate_append_none
     (blanks : Nat) :
@@ -1907,12 +1906,9 @@ theorem transitionListParser_blank_cons_replicate_append_none
       List.append
         (List.replicate blanks (some MachineCodeSymbol.blank))
         [some MachineCodeSymbol.blank, none] := by
-  induction blanks with
-  | zero =>
-      rfl
-  | succ blanks ih =>
-      simpa [List.replicate, List.append_assoc] using
-        congrArg (fun xs => some MachineCodeSymbol.blank :: xs) ih
+  exact
+    (list_replicate_append_cons_eq_cons_append
+      (some MachineCodeSymbol.blank) blanks [none]).symm
 
 theorem transitionListParserMachine_computes_findCount_blanks
     (marker : TransitionListParserMarker)

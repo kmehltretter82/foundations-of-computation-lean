@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
 
 set_option doc.verso true
@@ -77,24 +78,7 @@ theorem gapPayloadScan_replicate_none_append_none_cons
         (none :: tail) =
       List.append (List.replicate (n + 1) (none : Option Bool))
         tail := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      calc
-        List.append (List.replicate (n + 1) (none : Option Bool))
-            (none :: tail) =
-          none :: List.append (List.replicate n (none : Option Bool))
-            (none :: tail) := by
-              simp [List.replicate_succ]
-        _ =
-          none :: List.append
-            (List.replicate (n + 1) (none : Option Bool)) tail := by
-              rw [ih]
-        _ =
-          List.append
-            (List.replicate (n + 1 + 1) (none : Option Bool)) tail := by
-              simp [List.replicate_succ]
+  exact list_replicate_append_self (none : Option Bool) n tail
 
 theorem rightBlankGapPayloadScanDescription_wellFormed :
     rightBlankGapPayloadScanDescription.WellFormed := by
