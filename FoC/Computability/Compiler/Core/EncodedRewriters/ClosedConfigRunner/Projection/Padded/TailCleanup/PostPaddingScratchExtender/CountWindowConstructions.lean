@@ -1286,123 +1286,40 @@ def AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction :
       true materializer
 
 /--
-Reject branch adapter for the shared Boolean-word raw-bits decoder.  The
-branch-specific work here is only the source-shape bridge from the reject
-post-field handoff tape.
+Count-window-specific decoded-prefix materializer.  This cannot be supplied by
+the generic Boolean-word raw-bits decoder alone: the target padding rebuilds
+branch-specific post-count cells from the decoded {name}`ParsedLayoutBits`,
+not merely from the preserved source suffix.
+-/
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
+  sorry
+
+/--
+Reject branch projection of the count-window-specific materializer leaf.
 -/
 theorem rejectPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
     RejectPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  rcases boolWordRawBitsDecoderConstruction_core with
-    ⟨materializer, hmaterializerSpec⟩
-  refine ⟨materializer, ?_⟩
-  constructor
-  · exact hmaterializerSpec.left
-  · intro L pref leftBit deletedTail _hdeleted _hpayload
-    have hrun :=
-      hmaterializerSpec.right
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (ParsedLayoutBits L)
-        (List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            L.stage)
-          (List.append pref [leftBit]))
-        (rejectPostFieldHandoffRewindPadding L deletedTail)
-        (postFieldDecodedPrefixScanPadding false L)
-    have hsource :
-        boolWordRawBitsDecoderSourceTape
-            (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-            (ParsedLayoutBits L)
-            (List.append
-              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                L.stage)
-              (List.append pref [leftBit]))
-            (rejectPostFieldHandoffRewindPadding L deletedTail) =
-          rejectPostFieldDecodedPrefixRestorerSourceTape
-            L pref leftBit deletedTail := by
-      rw [boolWordRawBitsDecoderSourceTape,
-        rejectPostFieldDecodedPrefixRestorerSourceTape,
-        rejectPostFieldHandoffRewoundTape,
-        rejectPostFieldHandoffRewindBits,
-        selectedProjectionPaddedTailCleanupPrefixBits_eq_rawBitsDecoderPrefix]
-      simp [rightEdgeRewindTargetTape,
-        rightEdgeRewindTargetTapeWithBase, List.append_assoc]
-    have htarget :
-        boolWordRawBitsDecoderTargetTape
-            (ParsedLayoutBits L)
-            (postFieldDecodedPrefixScanPadding false L) =
-          postFieldDecodedPrefixScanSourceTape false L := by
-      rfl
-    rw [hsource, htarget] at hrun
-    simpa [countWindowPostFieldDecodedPrefixMaterializerSourceTape_false]
-      using hrun
+  exact
+    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
+      false
 
 /--
-Accept branch adapter for the shared Boolean-word raw-bits decoder.  It has
-the same encoded-prefix-to-raw-source bridge as reject, but starts from the
-accept handoff padding.
+Accept branch projection of the count-window-specific materializer leaf.
 -/
 theorem acceptPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
     AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  rcases boolWordRawBitsDecoderConstruction_core with
-    ⟨materializer, hmaterializerSpec⟩
-  refine ⟨materializer, ?_⟩
-  constructor
-  · exact hmaterializerSpec.left
-  · intro L pref leftBit deletedTail _hdeleted _hpayload
-    have hrun :=
-      hmaterializerSpec.right
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (ParsedLayoutBits L)
-        (List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            L.stage)
-          (List.append pref [leftBit]))
-        (none ::
-          none ::
-          leadingBlankLeftShiftTargetVisiblePadding
-            (postFieldHandoffAfterSentinelGapPadding
-              deletedTail [none, none, none, none, none]))
-        (postFieldDecodedPrefixScanPadding true L)
-    have hsource :
-        boolWordRawBitsDecoderSourceTape
-            (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-            (ParsedLayoutBits L)
-            (List.append
-              (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-                L.stage)
-              (List.append pref [leftBit]))
-            (none ::
-              none ::
-              leadingBlankLeftShiftTargetVisiblePadding
-                (postFieldHandoffAfterSentinelGapPadding
-                  deletedTail [none, none, none, none, none])) =
-          acceptPostFieldHandoffAfterRightEdgeRewindTape
-            L pref leftBit deletedTail := by
-      rw [boolWordRawBitsDecoderSourceTape,
-        acceptPostFieldHandoffAfterRightEdgeRewindTape,
-        selectedProjectionPaddedTailCleanupPrefixBits_eq_rawBitsDecoderPrefix]
-      simp [List.append_assoc]
-    have htarget :
-        boolWordRawBitsDecoderTargetTape
-            (ParsedLayoutBits L)
-            (postFieldDecodedPrefixScanPadding true L) =
-          postFieldDecodedPrefixScanSourceTape true L := by
-      rfl
-    rw [hsource, htarget] at hrun
-    simpa [countWindowPostFieldDecodedPrefixMaterializerSourceTape_true]
-      using hrun
+  exact
+    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
+      true
 
 /--
 Branch-indexed construction wrapper.  The hard finite-machine work is isolated
-in {name}`boolWordRawBitsDecoderConstruction_core`; the branch leaves above are
-shape adapters.
+in the count-window-specific leaf above; the branch leaves are projections.
 -/
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  intro useAccept
-  cases useAccept
-  · exact rejectPostFieldDecodedPrefixScanSourceMaterializerConstruction_core
-  · exact acceptPostFieldDecodedPrefixScanSourceMaterializerConstruction_core
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
 
 /--
 Reject-specialized wrapper contract for the shared post-field materializer.

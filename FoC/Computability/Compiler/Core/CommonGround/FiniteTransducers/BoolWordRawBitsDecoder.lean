@@ -7,9 +7,8 @@ set_option doc.verso true
 # Boolean-word raw-bits decoder
 
 This module packages the generic part of the encoded Boolean-word to raw-bits
-materializer.  The finite-machine leaf starts at a caller prefix, decodes the
-following encoded Boolean-word field, and rewrites the surrounding suffix area
-into the caller's target scan-source padding.
+materializer.  It decodes the fixed header-prefixed encoded Boolean-word field
+and preserves the caller suffix deterministically after the decoded raw bits.
 -/
 
 namespace FoC
@@ -33,49 +32,64 @@ def boolWordRawBitsDecoderEncodedFieldBits
     (stageNatBits bits.length)
     (cellsCodeBits (bits.map some))
 
+/-- The only caller prefix accepted by the generic decoder. -/
+def boolWordRawBitsDecoderHeaderBits : Word Bool :=
+  encodeCodeSymbolAsInput MachineCodeSymbol.header
+
 /--
-Source tape for the generic Boolean-word raw-bits decoder.  The finite leaf
-starts at the left edge of a caller prefix, decodes the following encoded
-Boolean-word field, and may use the caller suffix/padding to materialize the
-target boundary.
+Source tape for the generic Boolean-word raw-bits decoder.  The input starts
+with the canonical header bit pattern, then the encoded Boolean-word field,
+then a caller suffix and the usual right-edge padding.
 -/
 def boolWordRawBitsDecoderSourceTape
-    (prefixBits : Word Bool) (bits suffixTail : Word Bool)
+    (bits suffixTail : Word Bool)
     (rightPadding : List (Option Bool)) : Tape Bool :=
   rightEdgeRewindTargetTape
-    (List.append prefixBits
+    (List.append boolWordRawBitsDecoderHeaderBits
       (List.append
         (boolWordRawBitsDecoderEncodedFieldBits bits)
         suffixTail))
     rightPadding
 
 /--
+Deterministic target padding for the honest decoder: the decoded raw bits get
+their scan-stop blank, then the original Boolean suffix is preserved as option
+cells, followed by the original source boundary blank and right padding.
+-/
+def boolWordRawBitsDecoderPreservedPadding
+    (suffixTail : Word Bool) (rightPadding : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append (suffixTail.map some) (none :: rightPadding)
+
+/--
 Final raw-bits target: decoded Boolean bits in right-edge scan-source shape,
-with caller-owned padding.
+with the deterministic preserved suffix padding.
 -/
 def boolWordRawBitsDecoderTargetTape
-    (bits : Word Bool) (targetPadding : List (Option Bool)) : Tape Bool :=
-  rightEdgeScanSourceTapeFromLeft [none] bits targetPadding
+    (bits suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  rightEdgeScanSourceTapeFromLeft [none] bits
+    (boolWordRawBitsDecoderPreservedPadding suffixTail rightPadding)
 
 def BoolWordRawBitsDecoderSpec
     (decoder : MachineDescription) : Prop :=
   decoder.SubroutineReady ∧
-    forall (prefixBits bits suffixTail : Word Bool)
-      (rightPadding targetPadding : List (Option Bool)),
+    forall (bits suffixTail : Word Bool)
+      (rightPadding : List (Option Bool)),
       decoder.HaltsFromTape
         (boolWordRawBitsDecoderSourceTape
-          prefixBits bits suffixTail rightPadding)
+          bits suffixTail rightPadding)
         (boolWordRawBitsDecoderTargetTape
-          bits targetPadding)
+          bits suffixTail rightPadding)
 
 def BoolWordRawBitsDecoderConstruction : Prop :=
   exists decoder : MachineDescription,
     BoolWordRawBitsDecoderSpec decoder
 
 /--
-The finite-machine leaf for a prefix-aware Boolean-word materializer.  It
-decodes the encoded Boolean-word field and rewrites the caller-owned suffix
-area into the requested scan-source padding.
+The finite-machine leaf for the honest Boolean-word decoder.  It decodes the
+header-prefixed encoded field and preserves the suffix/right-padding shape
+specified above.
 -/
 theorem boolWordRawBitsDecoderConstruction_core :
     BoolWordRawBitsDecoderConstruction := by
