@@ -105,9 +105,15 @@ matches the expected read.
 -/
 def enabled :
     PhysicalPrimitive -> List (Tape Bool) -> Prop
+  | seekTape index, logical => index < logical.length
   | readHeadCell index expected, logical =>
-      Tape.read (Description.tapeAt logical index) = expected
-  | _, _ => True
+      index < logical.length ∧
+        Tape.read (Description.tapeAt logical index) = expected
+  | writeHeadCell index _cell, logical =>
+      index < logical.length
+  | moveHead index _move, logical =>
+      index < logical.length
+  | returnToBlockStart, _ => True
 
 @[simp] theorem apply_seekTape
     (index : Nat) (logical : List (Tape Bool)) :
@@ -127,20 +133,30 @@ def enabled :
 
 @[simp] theorem enabled_seekTape
     (index : Nat) (logical : List (Tape Bool)) :
-    enabled (seekTape index) logical := by
-  trivial
+    enabled (seekTape index) logical ↔ index < logical.length := by
+  rfl
+
+@[simp] theorem enabled_readHeadCell
+    (index : Nat) (expected : Option Bool)
+    (logical : List (Tape Bool)) :
+    enabled (readHeadCell index expected) logical ↔
+      index < logical.length ∧
+        Tape.read (Description.tapeAt logical index) = expected := by
+  rfl
 
 @[simp] theorem enabled_writeHeadCell
     (index : Nat) (cell : Option Bool)
     (logical : List (Tape Bool)) :
-    enabled (writeHeadCell index cell) logical := by
-  trivial
+    enabled (writeHeadCell index cell) logical ↔
+      index < logical.length := by
+  rfl
 
 @[simp] theorem enabled_moveHead
     (index : Nat) (move : HeadMove)
     (logical : List (Tape Bool)) :
-    enabled (moveHead index move) logical := by
-  trivial
+    enabled (moveHead index move) logical ↔
+      index < logical.length := by
+  rfl
 
 @[simp] theorem enabled_returnToBlockStart
     (logical : List (Tape Bool)) :
