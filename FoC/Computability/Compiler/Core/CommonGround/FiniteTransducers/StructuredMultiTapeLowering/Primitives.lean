@@ -1,3 +1,4 @@
+import FoC.Computability.MachineDescriptionWithStay
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.Layout
 
 set_option doc.verso true
@@ -258,6 +259,42 @@ def PhysicalPrimitiveContract.toEquiv
     exact MachineDescription.HaltsFromTape.toEquiv
       (h.realizes logical hlogical)
 
+/--
+Stay-machine contract for one concrete physical primitive.
+
+This is the authoring-side contract for routines whose implementation naturally
+uses logical stay moves.  Use {lit}`PhysicalPrimitiveContractWithStay.toCompiledEquiv`
+to expose the compiled ordinary machine through an equivalence contract.
+-/
+structure PhysicalPrimitiveContractWithStay
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        machine.HaltsFromTape
+          (encodedStructuredTapes logical)
+          (encodedStructuredTapes (primitive.apply logical))
+
+/--
+Compile a stay-machine primitive contract to an ordinary equivalence contract.
+
+The general stay compiler currently proves behavior preservation, while the
+compiled ordinary table's {lit}`SubroutineReady` proof is supplied by the concrete
+machine or by a future generic compiler-ready theorem.
+-/
+def PhysicalPrimitiveContractWithStay.toCompiledEquiv
+    {primitive : PhysicalPrimitive} {machine : MachineDescriptionWithStay}
+    (h : PhysicalPrimitiveContractWithStay primitive machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    PhysicalPrimitiveContractEquiv primitive machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro logical hlogical
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes logical hlogical)
+
 /-- Contract for a compiled sequence of physical primitives. -/
 structure PhysicalPrimitiveSequenceContract
     (primitives : List PhysicalPrimitive)
@@ -299,6 +336,32 @@ def PhysicalPrimitiveSequenceContract.toEquiv
     intro logical hlogical
     exact MachineDescription.HaltsFromTape.toEquiv
       (h.realizes logical hlogical)
+
+/-- Stay-machine contract for a compiled sequence of physical primitives. -/
+structure PhysicalPrimitiveSequenceContractWithStay
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTape
+          (encodedStructuredTapes logical)
+          (encodedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives logical))
+
+/-- Compile a stay-machine primitive-sequence contract to an equivalence contract. -/
+def PhysicalPrimitiveSequenceContractWithStay.toCompiledEquiv
+    {primitives : List PhysicalPrimitive}
+    {machine : MachineDescriptionWithStay}
+    (h : PhysicalPrimitiveSequenceContractWithStay primitives machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    PhysicalPrimitiveSequenceContractEquiv primitives machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro logical hlogical
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes logical hlogical)
 
 def readCheckPrimitivesAt
     (index : Nat) (expected : Option Bool) :
@@ -446,6 +509,76 @@ structure LowersTransition
             (encodedStructuredTapes
               (D.applyActions t.actions c.tapes))
 
+/--
+Equivalence contract for the physical machine that lowers one structured row.
+
+Use this when the row machine was compiled through stay moves, or otherwise
+only preserves the encoded endpoint up to {name}`Tape.Equiv`.
+-/
+structure LowersTransitionEquiv
+    (D : Description) (t : Transition)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          machine.HaltsFromTapeEquiv
+            (encodedStructuredTapes c.tapes)
+            (encodedStructuredTapes
+              (D.applyActions t.actions c.tapes))
+
+/-- Exact row lowerings can be used at equivalence boundaries. -/
+def LowersTransition.toEquiv
+    {D : Description} {t : Transition} {machine : MachineDescription}
+    (h : LowersTransition D t machine) :
+    LowersTransitionEquiv D t machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes c hc hsource hreads)
+
+/--
+Stay-machine contract for one structured row.
+
+This is the preferred proof target when the row implementation naturally uses
+logical stay moves.  The compiled ordinary machine is exported with
+{lit}`LowersTransitionWithStay.toCompiledEquiv`.
+-/
+structure LowersTransitionWithStay
+    (D : Description) (t : Transition)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          machine.HaltsFromTape
+            (encodedStructuredTapes c.tapes)
+            (encodedStructuredTapes
+              (D.applyActions t.actions c.tapes))
+
+/--
+Compile a stay-machine row contract to an ordinary equivalence row contract.
+
+The compiled machine's {lit}`SubroutineReady` proof is explicit for now; concrete
+row machines can usually prove it directly.
+-/
+def LowersTransitionWithStay.toCompiledEquiv
+    {D : Description} {t : Transition}
+    {machine : MachineDescriptionWithStay}
+    (h : LowersTransitionWithStay D t machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    LowersTransitionEquiv D t machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro c hc hsource hreads
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes c hc hsource hreads)
+
 def structuredTransitionTarget
     (D : Description) (t : Transition)
     (c : Configuration) : Configuration where
@@ -471,6 +604,19 @@ theorem lowersTransition_realizes_lookup
   have hmatch := Description.lookupTransition_match hlookup
   exact h.realizes c hc hmatch.left hmatch.right
 
+theorem lowersTransitionEquiv_realizes_lookup
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c : Configuration}
+    (h : LowersTransitionEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t) :
+    machine.HaltsFromTapeEquiv
+      (encodedStructuredTapes c.tapes)
+      (encodedStructuredTapes
+        (D.applyActions t.actions c.tapes)) := by
+  have hmatch := Description.lookupTransition_match hlookup
+  exact h.realizes c hc hmatch.left hmatch.right
+
 theorem lowersTransition_realizes_structured_step
     {D : Description} {t : Transition}
     {machine : MachineDescription} {c next : Configuration}
@@ -487,6 +633,23 @@ theorem lowersTransition_realizes_structured_step
     exact stepConfig_eq_some_of_lookupTransition hlookup
   · rw [hnext]
     exact lowersTransition_realizes_lookup h hc hlookup
+
+theorem lowersTransitionEquiv_realizes_structured_step
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c next : Configuration}
+    (h : LowersTransitionEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      machine.HaltsFromTapeEquiv
+        (encodedStructuredTapes c.tapes)
+        (encodedStructuredTapes next.tapes) := by
+  constructor
+  · rw [hnext]
+    exact stepConfig_eq_some_of_lookupTransition hlookup
+  · rw [hnext]
+    exact lowersTransitionEquiv_realizes_lookup h hc hlookup
 
 
 end MultiTapeLowering
