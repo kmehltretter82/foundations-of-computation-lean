@@ -17,7 +17,7 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
-def DescriptionWithValidatorCopier
+private def DescriptionWithValidatorCopier
     (accept reject validator copier : MachineDescription) :
     MachineDescription :=
   seqSubroutine
@@ -27,7 +27,7 @@ def DescriptionWithValidatorCopier
     Direction.left
      /-- {name}`descriptionWithValidatorCopier_subroutineReady` packages a subroutine-ready composition step. -/
 
-theorem descriptionWithValidatorCopier_subroutineReady
+private theorem descriptionWithValidatorCopier_subroutineReady
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -39,7 +39,7 @@ theorem descriptionWithValidatorCopier_subroutineReady
       hcopier)
      /-- {name}`descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
 
-theorem descriptionWithValidatorCopier_run_bits
+private theorem descriptionWithValidatorCopier_run_bits
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -121,7 +121,7 @@ theorem descriptionWithValidatorCopier_run_bits
     A, B, initial, stageInputBits] using hn
      /-- {name}`descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
 
-theorem descriptionWithValidatorCopier_forward
+private theorem descriptionWithValidatorCopier_forward
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -143,7 +143,7 @@ theorem descriptionWithValidatorCopier_forward
         congrArg Configuration.tape hn⟩
      /-- {name}`descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
 
-theorem descriptionWithValidatorCopier_closed
+private theorem descriptionWithValidatorCopier_closed
     {accept reject validator copier : MachineDescription}
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
@@ -197,7 +197,7 @@ theorem descriptionWithValidatorCopier_closed
   exact ⟨w, stage, rfl, hT⟩
 
  /-- {name}`rightShiftedSpec_of_rightShiftedOutputCompiled` states the finite-machine specification. -/
-theorem rightShiftedSpec_of_rightShiftedOutputCompiled
+private theorem rightShiftedSpec_of_rightShiftedOutputCompiled
     {accept reject initializer : MachineDescription}
     (hinit :
       TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
@@ -258,7 +258,7 @@ theorem rightShiftedSpec_of_rightShiftedOutputCompiled
     rfl
 
  /-- {name}`concreteMachineConstruction_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
-theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
+private theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
     (hcompile :
       RightShiftedOutputCompiledConstruction) :
     ConcreteMachineConstruction := by
@@ -270,7 +270,7 @@ theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
         hinit⟩
 
  /-- {name}`rightShiftedSpec_haltsWithOutput_iff` states the finite-machine specification. -/
-theorem rightShiftedSpec_haltsWithOutput_iff
+private theorem rightShiftedSpec_haltsWithOutput_iff
     {accept reject initializer : MachineDescription}
     (hinit :
       RightShiftedSpec
@@ -333,7 +333,7 @@ theorem rightShiftedSpec_haltsWithOutput_iff
         (hinit.right.left w stage)
 
  /-- {name}`tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec` states the finite-machine specification. -/
-theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
+private theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
     {accept reject initializer : MachineDescription}
     (hinit :
       RightShiftedSpec
@@ -365,7 +365,7 @@ theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
             ⟨w, stage, hcode, rfl⟩
 
  /-- {name}`tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
-theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
+private theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
     {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hD :
@@ -384,7 +384,7 @@ theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
     hD.right.right.right
 
  /-- {name}`finiteDescription_realizer` captures the core lemma for this local construction. -/
-theorem finiteDescription_realizer
+private theorem finiteDescription_realizer
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,
       RightShiftedSpec
@@ -409,7 +409,7 @@ theorem finiteDescription_realizer
         hvalidator hcopier
 
  /-- {name}`finiteDescriptionConstruction_scaffold` describes append/fold behavior used by later composition. -/
-theorem finiteDescriptionConstruction_scaffold :
+private theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction := by
   intro accept reject
   exact
@@ -417,7 +417,7 @@ theorem finiteDescriptionConstruction_scaffold :
       accept reject
 
  /-- {name}`rightShiftedOutputCompiledConstruction` captures the core lemma for this local construction. -/
-theorem rightShiftedOutputCompiledConstruction :
+private theorem rightShiftedOutputCompiledConstruction :
     RightShiftedOutputCompiledConstruction := by
   intro accept reject
   rcases
@@ -430,7 +430,7 @@ theorem rightShiftedOutputCompiledConstruction :
         hinit⟩
 
  /-- {name}`concreteMachineConstruction` captures the core lemma for this local construction. -/
-theorem concreteMachineConstruction :
+private theorem concreteMachineConstruction :
     ConcreteMachineConstruction :=
   concreteMachineConstruction_of_rightShiftedOutputCompiled
     rightShiftedOutputCompiledConstruction

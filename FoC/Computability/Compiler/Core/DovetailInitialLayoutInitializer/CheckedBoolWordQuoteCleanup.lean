@@ -20,7 +20,7 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
-def checkedNonemptyBoolWordQuoteExactBits
+private def checkedNonemptyBoolWordQuoteExactBits
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) : Word Bool :=
   encodeCodeWordAsInput
@@ -28,7 +28,7 @@ def checkedNonemptyBoolWordQuoteExactBits
       encodeBoolWordAppend (b :: rest)
         (encodeNatAppend stage suffix))
 
-def checkedNonemptyBoolWordQuoteNativeHaltTape
+private def checkedNonemptyBoolWordQuoteNativeHaltTape
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) : Tape Bool :=
   tapeAtCells [some false]

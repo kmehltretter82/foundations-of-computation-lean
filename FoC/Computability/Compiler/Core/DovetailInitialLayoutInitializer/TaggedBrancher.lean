@@ -16,7 +16,7 @@ open MachineDescription
 
 namespace DovetailInitialLayoutInitializer
 
-def sharedExitRetargetTransition
+private def sharedExitRetargetTransition
     (offset oldHalt commonHalt : Nat)
     (t : TransitionDescription) : TransitionDescription where
   source := offset + t.source
@@ -25,17 +25,17 @@ def sharedExitRetargetTransition
   move := t.move
   target := if t.target = oldHalt then commonHalt else offset + t.target
 
-def taggedBranchBlankOffset : Nat := 2
+private def taggedBranchBlankOffset : Nat := 2
 
-def taggedBranchFalseOffset
+private def taggedBranchFalseOffset
     (blankBranch : MachineDescription) : Nat :=
   taggedBranchBlankOffset + blankBranch.stateCount
 
-def taggedBranchTrueOffset
+private def taggedBranchTrueOffset
     (blankBranch falseBranch : MachineDescription) : Nat :=
   taggedBranchFalseOffset blankBranch + falseBranch.stateCount
 
-def taggedBranchStateCount
+private def taggedBranchStateCount
     (blankBranch falseBranch trueBranch : MachineDescription) : Nat :=
   taggedBranchTrueOffset blankBranch falseBranch +
     trueBranch.stateCount
@@ -77,7 +77,7 @@ def RestoreFirstBitTaggedBrancherDescription
 
 private abbrev RFB := RestoreFirstBitTaggedBrancherDescription
 
-def sharedExitBranchConfiguration
+private def sharedExitBranchConfiguration
     (offset oldHalt commonHalt : Nat)
     (c : Configuration) :
     Configuration where
