@@ -229,6 +229,35 @@ structure PhysicalPrimitiveContract
           (encodedStructuredTapes logical)
           (encodedStructuredTapes (primitive.apply logical))
 
+/--
+Equivalence contract for one concrete physical primitive machine.
+
+This is the right contract for routines compiled through stay moves or other
+cursor maneuvers that may store extra edge blanks without changing the
+represented logical tapes.
+-/
+structure PhysicalPrimitiveContractEquiv
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        machine.HaltsFromTapeEquiv
+          (encodedStructuredTapes logical)
+          (encodedStructuredTapes (primitive.apply logical))
+
+/-- Exact primitive contracts can always be used at equivalence boundaries. -/
+def PhysicalPrimitiveContract.toEquiv
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveContract primitive machine) :
+    PhysicalPrimitiveContractEquiv primitive machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes logical hlogical)
+
 /-- Contract for a compiled sequence of physical primitives. -/
 structure PhysicalPrimitiveSequenceContract
     (primitives : List PhysicalPrimitive)
@@ -241,6 +270,35 @@ structure PhysicalPrimitiveSequenceContract
           (encodedStructuredTapes logical)
           (encodedStructuredTapes
             (applyPhysicalPrimitiveSequence primitives logical))
+
+/--
+Equivalence contract for a compiled sequence of physical primitives.
+
+The endpoint is compared by {name}`Tape.Equiv`, which is stable under the
+ordinary stay compiler's right-then-left bounce at tape edges.
+-/
+structure PhysicalPrimitiveSequenceContractEquiv
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTapeEquiv
+          (encodedStructuredTapes logical)
+          (encodedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives logical))
+
+/-- Exact primitive-sequence contracts can be reused as equivalence contracts. -/
+def PhysicalPrimitiveSequenceContract.toEquiv
+    {primitives : List PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveSequenceContract primitives machine) :
+    PhysicalPrimitiveSequenceContractEquiv primitives machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes logical hlogical)
 
 def readCheckPrimitivesAt
     (index : Nat) (expected : Option Bool) :
