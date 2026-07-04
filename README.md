@@ -91,6 +91,13 @@ Build the in-source literate HTML companion with Verso:
 lake build :literateHtml
 ```
 
+Build the project documentation target, currently an alias for the Verso
+literate HTML site:
+
+```sh
+lake build :docs
+```
+
 The generated site is written to `.lake/build/literate-html/`. For local
 preview, serve it over HTTP rather than opening files directly:
 

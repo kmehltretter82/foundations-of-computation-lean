@@ -33,8 +33,10 @@ The generated-reference workflow should be optional:
 - Do not commit generated HTML output.
 
 Until that tooling is added, the Verso literate site remains the public reading
-surface, and API navigation should improve by strengthening module and
-declaration docstrings in the Lean files themselves.
+surface. The package target `lake build :docs` is intentionally an alias for
+that site, so users have one stable documentation command while API navigation
+improves by strengthening module and declaration docstrings in the Lean files
+themselves.
 
 ## Local Checks
 
@@ -43,6 +45,12 @@ checks such as:
 
 ```sh
 lake env lean FoC/Computability.lean
+```
+
+Build the generated documentation with:
+
+```sh
+lake build :docs
 ```
 
 Run full `lake build` only at stable checkpoints, before commits that affect
