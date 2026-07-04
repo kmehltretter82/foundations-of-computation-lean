@@ -178,24 +178,24 @@ has the expected language-theoretic shape.
 theorem union_grammar_generates_left (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal} (hw : w ∈ CFG.GeneratedLanguage G) :
     w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) :=
-  CFL.unionGrammar_generates_left G H hw
+  CFG.union_generates_left G H hw
 
 theorem union_grammar_generates_right (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal} (hw : w ∈ CFG.GeneratedLanguage H) :
     w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) :=
-  CFL.unionGrammar_generates_right G H hw
+  CFG.union_generates_right G H hw
 
 theorem union_grammar_generates_inv (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal}
     (h : w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H)) :
     w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
-  CFL.unionGrammar_generates_inv G H h
+  CFG.union_generates_inv G H h
 
 theorem union_grammar_language_exact (G : CFG terminal left) (H : CFG terminal right)
     (w : Word terminal) :
     w ∈ CFG.GeneratedLanguage (CFG.UnionGrammar G H) <->
       w ∈ Language.Union (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
-  CFL.unionGrammar_language_exact G H w
+  CFG.union_generated_language_exact G H w
 
 theorem context_free_languages_closed_under_union {L M : Language terminal}
     (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
@@ -206,19 +206,19 @@ theorem concat_grammar_generates (G : CFG terminal left) (H : CFG terminal right
     {x y : Word terminal}
     (hx : x ∈ CFG.GeneratedLanguage G) (hy : y ∈ CFG.GeneratedLanguage H) :
     Word.Concat x y ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H) :=
-  CFL.concatGrammar_generates G H hx hy
+  CFG.concat_generates G H hx hy
 
 theorem concat_grammar_generates_inv (G : CFG terminal left) (H : CFG terminal right)
     {w : Word terminal}
     (h : w ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H)) :
     w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
-  CFL.concatGrammar_generates_inv G H h
+  CFG.concat_generates_inv G H h
 
 theorem concat_grammar_language_exact (G : CFG terminal left) (H : CFG terminal right)
     (w : Word terminal) :
     w ∈ CFG.GeneratedLanguage (CFG.ConcatGrammar G H) <->
       w ∈ Language.Concat (CFG.GeneratedLanguage G) (CFG.GeneratedLanguage H) :=
-  CFL.concatGrammar_language_exact G H w
+  CFG.concat_generated_language_exact G H w
 
 theorem context_free_languages_closed_under_concatenation {L M : Language terminal}
     (hL : ContextFreeLanguage L) (hM : ContextFreeLanguage M) :
@@ -227,24 +227,24 @@ theorem context_free_languages_closed_under_concatenation {L M : Language termin
 
 theorem star_grammar_generates_empty (G : CFG terminal nt) :
     ([] : Word terminal) ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
-  CFL.starGrammar_generates_empty G
+  CFG.star_generates_empty G
 
 theorem star_grammar_generates_cons (G : CFG terminal nt)
     {x y : Word terminal}
     (hx : x ∈ CFG.GeneratedLanguage G)
     (hy : y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
     Word.Concat x y ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) :=
-  CFL.starGrammar_generates_cons G hx hy
+  CFG.star_generates_cons G hx hy
 
 theorem star_grammar_generates_inv (G : CFG terminal nt) {w : Word terminal}
     (h : w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G)) :
     w ∈ Language.Star (CFG.GeneratedLanguage G) :=
-  CFL.starGrammar_generates_inv G h
+  CFG.star_generates_inv G h
 
 theorem star_grammar_language_exact (G : CFG terminal nt) (w : Word terminal) :
     w ∈ CFG.GeneratedLanguage (CFG.StarGrammar G) <->
       w ∈ Language.Star (CFG.GeneratedLanguage G) :=
-  CFL.starGrammar_language_exact G w
+  CFG.star_generated_language_exact G w
 
 theorem context_free_languages_closed_under_kleene_star {L : Language terminal}
     (hL : ContextFreeLanguage L) :

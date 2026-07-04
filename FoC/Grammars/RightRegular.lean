@@ -262,10 +262,10 @@ theorem leftRegularLanguage_reverse_rightRegular {L : Language terminal}
             constructor
             · intro hw
               have hrev :=
-                (reverseGrammar_language_exact G w).mp hw
+                (CFG.reverseGrammar_language_exact G w).mp hw
               exact (hG.right (Word.Reverse w)).mp hrev
             · intro hw
-              exact (reverseGrammar_language_exact G w).mpr
+              exact (CFG.reverseGrammar_language_exact G w).mpr
                 ((hG.right (Word.Reverse w)).mpr hw)
 
 theorem rightRegularLanguage_reverse_leftRegular {L : Language terminal}
@@ -283,10 +283,10 @@ theorem rightRegularLanguage_reverse_leftRegular {L : Language terminal}
             constructor
             · intro hw
               have hrev :=
-                (reverseGrammar_language_exact G w).mp hw
+                (CFG.reverseGrammar_language_exact G w).mp hw
               exact (hG.right (Word.Reverse w)).mp hrev
             · intro hw
-              exact (reverseGrammar_language_exact G w).mpr
+              exact (CFG.reverseGrammar_language_exact G w).mpr
                 ((hG.right (Word.Reverse w)).mpr hw)
 
 theorem leftRegularLanguage_iff_reverse_rightRegular {L : Language terminal} :

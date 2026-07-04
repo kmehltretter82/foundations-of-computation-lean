@@ -624,7 +624,7 @@ def ClosedUnderComplement (C : Language terminal -> Prop) : Prop :=
 theorem finite_production_context_free {L : Language terminal}
     (hL : FiniteProductionContextFreeLanguage L) :
     CFL.ContextFreeLanguage L :=
-  CFL.finiteProduction_contextFree hL
+  hL
 
 theorem finite_production_context_free_of_equal {L M : Language terminal}
     (hEq : Language.Equal L M)
@@ -656,7 +656,7 @@ theorem finite_production_rhs_length_bound {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     exists B : Nat,
       B > 0 ∧ forall A rhs, G.produces A rhs -> rhs.length < B :=
-  CFL.finiteProduction_rhs_length_bound hG
+  CFG.finiteProductions_rhs_length_bound hG
 
 theorem finite_production_grammar_pumping_property
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
