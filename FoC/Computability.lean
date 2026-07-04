@@ -1,4 +1,6 @@
 import FoC.Computability.Tape
+import FoC.Computability.ListLemmas
+import FoC.Computability.TapeLemmas
 import FoC.Computability.TuringMachine
 import FoC.Computability.Computable
 import FoC.Computability.Recognizable

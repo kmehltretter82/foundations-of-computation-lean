@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.ClosedBasic
 
@@ -181,7 +182,9 @@ theorem tapeAtCells_move_right_move_left_cons
         (Tape.move Direction.left
           (tapeAtCells (cell :: left) (head :: right))) =
       tapeAtCells (cell :: left) (head :: right) := by
-  rfl
+  exact
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
+      cell left head right
 
 theorem runConfig_eq_of_transitions_eq
     (D E : MachineDescription)

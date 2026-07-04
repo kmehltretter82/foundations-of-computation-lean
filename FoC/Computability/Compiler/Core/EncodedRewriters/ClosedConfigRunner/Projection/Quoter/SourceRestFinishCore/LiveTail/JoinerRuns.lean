@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterRuns
 
 set_option doc.verso true
@@ -72,9 +73,9 @@ theorem commonGround_tapeAtCells_move_right_move_left_append_cons
             (List.append pref (cell :: tail)) right)) =
       CommonGround.FiniteTransducers.tapeAtCells
         (List.append pref (cell :: tail)) right := by
-  cases pref <;> cases right <;>
-    simp [CommonGround.FiniteTransducers.tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_append_cons
+      pref tail right cell
 
 theorem commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
     (pref tail right : List (Option Bool)) (cell head : Option Bool) :
@@ -84,10 +85,9 @@ theorem commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
             (List.append pref (cell :: tail)) (head :: right))) =
       List.append tail.reverse
         (cell :: List.append pref.reverse (head :: right)) := by
-  cases pref <;>
-    simp [CommonGround.FiniteTransducers.tapeAtCells,
-      Tape.cells, Tape.move, Tape.moveLeft, List.reverse_append,
-      List.append_assoc]
+  exact
+    CommonGround.FiniteTransducers.tapeAtCells_move_left_cells_append_cons_right_cons
+      pref tail right cell head
 
 theorem
     rightBlankGapPayloadScanTargetTape_move_left_move_right

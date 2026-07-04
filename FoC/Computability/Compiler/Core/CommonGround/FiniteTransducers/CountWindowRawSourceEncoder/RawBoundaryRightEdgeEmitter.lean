@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
@@ -166,8 +167,9 @@ theorem tapeAtCells_moveRight_moveLeft_append_none
         (Tape.move Direction.left
           (tapeAtCells (List.append pref [none]) right)) =
       tapeAtCells (List.append pref [none]) right := by
-  cases pref <;> cases right <;>
-    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    tapeAtCells_move_right_move_left_append_singleton
+      pref (none : Option Bool) right
 
 theorem entryTape_moveRight
     (skipped count : Word Bool) (tail : List (Option Bool)) :

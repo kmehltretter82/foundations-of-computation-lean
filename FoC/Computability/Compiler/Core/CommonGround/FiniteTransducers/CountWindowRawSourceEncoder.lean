@@ -1,4 +1,5 @@
 import FoC.Computability.ListLemmas
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.CellPass
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
@@ -630,7 +631,7 @@ theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_cons
     (rest : List (Option Bool)) :
     Tape.move Direction.right (tapeAtCells leftRev (cell :: rest)) =
       tapeAtCells (cell :: leftRev) rest := by
-  cases rest <;> rfl
+  exact tapeAtCells_move_right_cons leftRev cell rest
 
 theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
     (pref right : List (Option Bool)) :
@@ -638,8 +639,9 @@ theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
         (Tape.move Direction.left
           (tapeAtCells (List.append pref [none]) right)) =
       tapeAtCells (List.append pref [none]) right := by
-  cases pref <;> cases right <;>
-    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    tapeAtCells_move_right_move_left_append_singleton
+      pref (none : Option Bool) right
 
 theorem rightEdgeScanTargetTapeFromLeft_moveRight_four_fixedBlanks
     (bits : Word Bool) (padding : List (Option Bool)) :

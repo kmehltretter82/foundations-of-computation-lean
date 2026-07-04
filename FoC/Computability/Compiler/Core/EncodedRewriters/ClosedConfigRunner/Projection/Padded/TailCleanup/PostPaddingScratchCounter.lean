@@ -1,4 +1,5 @@
 import FoC.Computability.ListLemmas
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingRejectRoute
 
 set_option doc.verso true
@@ -68,7 +69,9 @@ theorem tapeAtCells_moveRight_cons
     (rest : List (Option Bool)) :
     Tape.moveRight (tapeAtCells leftRev (cell :: rest)) =
       tapeAtCells (cell :: leftRev) rest := by
-  cases rest <;> rfl
+  exact
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_moveRight_cons
+      leftRev cell rest
 
 /--
 Preserve raw source cells while appending one temporary {lit}`false` marker

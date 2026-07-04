@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore
 
 set_option doc.verso true
@@ -963,7 +964,9 @@ theorem tapeAtCells_move_left_move_right_cons_cons
         (Tape.move Direction.right
           (tapeAtCells left (head :: next :: right))) =
       tapeAtCells left (head :: next :: right) := by
-  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_left_move_right_cons_cons
+      left head next right
 
 theorem sourceRestFieldBits_cons_cons
     (L : DovetailLayout) :
