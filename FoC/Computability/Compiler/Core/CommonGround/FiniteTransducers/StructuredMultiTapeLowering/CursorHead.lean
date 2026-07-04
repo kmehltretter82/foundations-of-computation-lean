@@ -902,6 +902,63 @@ private theorem logicalTapesHaveGuardCells_of_drop_eq_cons
     rw [hdrop]
     simp)
 
+private theorem logicalTapeAtHasGuardCells_of_drop_eq_cons
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {T : Tape Bool} {rest : List (Tape Bool)}
+    (hguards : LogicalTapeAtHasGuardCells logical tapeIndex)
+    (hdrop : logical.drop tapeIndex = T :: rest) :
+    LogicalTapeHasGuardCells T := by
+  rcases hguards with ⟨T', rest', hdrop', hguard⟩
+  rw [hdrop] at hdrop'
+  cases hdrop'
+  exact hguard
+
+theorem atTapeHeadCellCode_to_leftNeighbor_of_guardCells
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hguards : LogicalTapeAtHasGuardCells logical tapeIndex)
+    (h : AtTapeHeadCellCode logical tapeIndex physical) :
+    AtTapeHeadCellCodeWithLeftNeighbor
+      logical tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  have hguard :
+      LogicalTapeHasGuardCells T :=
+    logicalTapeAtHasGuardCells_of_drop_eq_cons hguards hdrop
+  cases T with
+  | mk left head right =>
+      cases left with
+      | nil =>
+          have hleft : ([] : List (Option Bool)) ≠ [] := by
+            simpa [LogicalTapeHasLeftGuard] using hguard.left
+          exact False.elim (hleft rfl)
+      | cons previous leftRest =>
+          exact
+            ⟨previous, leftRest, head, right, rest, hdrop,
+              by simpa using hphysical⟩
+
+theorem atTapeHeadCellCode_to_rightNeighbor_of_guardCells
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hguards : LogicalTapeAtHasGuardCells logical tapeIndex)
+    (h : AtTapeHeadCellCode logical tapeIndex physical) :
+    AtTapeHeadCellCodeWithRightNeighbor
+      logical tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  have hguard :
+      LogicalTapeHasGuardCells T :=
+    logicalTapeAtHasGuardCells_of_drop_eq_cons hguards hdrop
+  cases T with
+  | mk left head right =>
+      cases right with
+      | nil =>
+          have hright : ([] : List (Option Bool)) ≠ [] := by
+            simpa [LogicalTapeHasRightGuard] using hguard.right
+          exact False.elim (hright rfl)
+      | cons next rightRest =>
+          exact
+            ⟨head, next, left, rightRest, rest, hdrop,
+              by simpa using hphysical⟩
+
 theorem guardedAtTapeHeadCellCode_to_leftNeighbor
     {logical : List (Tape Bool)} {tapeIndex : Nat}
     {physical : Tape Bool}

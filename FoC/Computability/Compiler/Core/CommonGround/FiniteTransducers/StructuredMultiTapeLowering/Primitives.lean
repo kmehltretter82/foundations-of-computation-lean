@@ -22,51 +22,6 @@ namespace MultiTapeLowering
 -/
 
 /--
-Replace the logical tape at an index, leaving out-of-range indices unchanged.
-
-The primitive contracts below use this pure operation to state the logical
-effect that a physical one-tape routine must realize on the encoded layout.
--/
-def replaceTapeAt
-    (index : Nat) (replacement : Tape Bool) :
-    List (Tape Bool) -> List (Tape Bool)
-  | [] => []
-  | T :: rest =>
-      match index with
-      | 0 => replacement :: rest
-      | index + 1 => T :: replaceTapeAt index replacement rest
-
-@[simp] theorem replaceTapeAt_nil
-    (index : Nat) (replacement : Tape Bool) :
-    replaceTapeAt index replacement [] = [] := by
-  cases index <;> rfl
-
-@[simp] theorem replaceTapeAt_zero_cons
-    (replacement T : Tape Bool) (rest : List (Tape Bool)) :
-    replaceTapeAt 0 replacement (T :: rest) = replacement :: rest := by
-  rfl
-
-@[simp] theorem replaceTapeAt_succ_cons
-    (index : Nat) (replacement T : Tape Bool)
-    (rest : List (Tape Bool)) :
-    replaceTapeAt (index + 1) replacement (T :: rest) =
-      T :: replaceTapeAt index replacement rest := by
-  rfl
-
-@[simp] theorem replaceTapeAt_length
-    (index : Nat) (replacement : Tape Bool)
-    (logical : List (Tape Bool)) :
-    (replaceTapeAt index replacement logical).length = logical.length := by
-  induction index generalizing logical with
-  | zero =>
-      cases logical <;> rfl
-  | succ index ih =>
-      cases logical with
-      | nil => rfl
-      | cons T rest =>
-          simp [replaceTapeAt, ih]
-
-/--
 One logical primitive that a physical one-tape routine can implement.
 
 The constructors are intentionally layout-level operations, not ordinary
@@ -164,6 +119,52 @@ def enabled :
     enabled returnToBlockStart logical := by
   trivial
 
+theorem headMove_apply_equiv
+    (move : HeadMove) {T U : Tape Bool}
+    (h : Tape.Equiv T U) :
+    Tape.Equiv (move.apply T) (move.apply U) := by
+  cases move with
+  | stay =>
+      exact h
+  | left =>
+      exact Tape.Equiv.move h Direction.left
+  | right =>
+      exact Tape.Equiv.move h Direction.right
+
+theorem apply_preserves_logicalTapeListEquiv
+    (primitive : PhysicalPrimitive)
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected) :
+    LogicalTapeListEquiv
+      (primitive.apply actual)
+      (primitive.apply expected) := by
+  cases primitive with
+  | seekTape index =>
+      exact h
+  | readHeadCell index expectedRead =>
+      exact h
+  | writeHeadCell index cell =>
+      exact
+        logicalTapeListEquiv_replaceTapeAt h index
+          (Tape.Equiv.write
+            (logicalTapeListEquiv_tapeAt h index) cell)
+  | moveHead index move =>
+      exact
+        logicalTapeListEquiv_replaceTapeAt h index
+          (headMove_apply_equiv move
+            (logicalTapeListEquiv_tapeAt h index))
+  | returnToBlockStart =>
+      exact h
+
+theorem apply_guardLogicalTapes_equiv
+    (primitive : PhysicalPrimitive)
+    (logical : List (Tape Bool)) :
+    LogicalTapeListEquiv
+      (primitive.apply (guardLogicalTapes logical))
+      (primitive.apply logical) :=
+  apply_preserves_logicalTapeListEquiv primitive
+    (guardLogicalTapes_equiv logical)
+
 end PhysicalPrimitive
 
 /-- Apply a sequence of physical primitive endpoint effects. -/
@@ -200,6 +201,15 @@ def physicalPrimitiveSequenceEnabled :
     physicalPrimitiveSequenceEnabled [] logical := by
   trivial
 
+@[simp] theorem physicalPrimitiveSequenceEnabled_cons
+    (primitive : PhysicalPrimitive) (rest : List PhysicalPrimitive)
+    (logical : List (Tape Bool)) :
+    physicalPrimitiveSequenceEnabled (primitive :: rest) logical ↔
+      primitive.enabled logical ∧
+        physicalPrimitiveSequenceEnabled rest
+          (primitive.apply logical) := by
+  rfl
+
 theorem applyPhysicalPrimitiveSequence_append
     (first second : List PhysicalPrimitive)
     (logical : List (Tape Bool)) :
@@ -211,6 +221,32 @@ theorem applyPhysicalPrimitiveSequence_append
       rfl
   | cons primitive rest ih =>
       simp [applyPhysicalPrimitiveSequence, ih]
+
+theorem applyPhysicalPrimitiveSequence_preserves_logicalTapeListEquiv
+    (primitives : List PhysicalPrimitive)
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected) :
+    LogicalTapeListEquiv
+      (applyPhysicalPrimitiveSequence primitives actual)
+      (applyPhysicalPrimitiveSequence primitives expected) := by
+  induction primitives generalizing actual expected with
+  | nil =>
+      exact h
+  | cons primitive rest ih =>
+      exact
+        ih
+          (PhysicalPrimitive.apply_preserves_logicalTapeListEquiv
+            primitive h)
+
+theorem applyPhysicalPrimitiveSequence_guardLogicalTapes_equiv
+    (primitives : List PhysicalPrimitive)
+    (logical : List (Tape Bool)) :
+    LogicalTapeListEquiv
+      (applyPhysicalPrimitiveSequence primitives
+        (guardLogicalTapes logical))
+      (applyPhysicalPrimitiveSequence primitives logical) :=
+  applyPhysicalPrimitiveSequence_preserves_logicalTapeListEquiv
+    primitives (guardLogicalTapes_equiv logical)
 
 /--
 Contract for one concrete physical primitive machine.
@@ -295,6 +331,91 @@ def PhysicalPrimitiveContractWithStay.toCompiledEquiv
     exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
       h.subroutineReady (h.realizes logical hlogical)
 
+/-- Exact primitive contract over the guarded encoded layout. -/
+structure PhysicalPrimitiveGuardedContract
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        machine.HaltsFromTape
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes (primitive.apply logical))
+
+/--
+Equivalence primitive contract over the guarded encoded layout.
+
+This is the intended endpoint for routines that consume a guard blank and then
+compare against the re-guarded logical target.
+-/
+structure PhysicalPrimitiveGuardedContractEquiv
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        machine.HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes (primitive.apply logical))
+
+def PhysicalPrimitiveGuardedContract.toEquiv
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveGuardedContract primitive machine) :
+    PhysicalPrimitiveGuardedContractEquiv primitive machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes logical hlogical)
+
+/--
+Primitive contract whose output is an encoded logical tape list equivalent to
+the represented target.
+
+This is for local guarded head moves before a guard-refresh normalizer restores
+the canonical guarded endpoint.  It is deliberately weaker than
+{name}`PhysicalPrimitiveGuardedContractEquiv`: the physical encoded tapes need
+not be equivalent as one raw tape, because encoded logical guard cells are not
+physical trailing blanks.
+-/
+structure PhysicalPrimitiveGuardedLogicalEquivContract
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        exists actual : List (Tape Bool),
+          LogicalTapeListEquiv actual (primitive.apply logical) ∧
+            machine.HaltsFromTape
+              (encodedGuardedStructuredTapes logical)
+              (encodedStructuredTapes actual)
+
+/-- Stay-machine primitive contract over the guarded encoded layout. -/
+structure PhysicalPrimitiveGuardedContractWithStay
+    (primitive : PhysicalPrimitive)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      primitive.enabled logical ->
+        machine.HaltsFromTape
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes (primitive.apply logical))
+
+def PhysicalPrimitiveGuardedContractWithStay.toCompiledEquiv
+    {primitive : PhysicalPrimitive} {machine : MachineDescriptionWithStay}
+    (h : PhysicalPrimitiveGuardedContractWithStay primitive machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    PhysicalPrimitiveGuardedContractEquiv primitive machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro logical hlogical
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes logical hlogical)
+
 /-- Contract for a compiled sequence of physical primitives. -/
 structure PhysicalPrimitiveSequenceContract
     (primitives : List PhysicalPrimitive)
@@ -362,6 +483,180 @@ def PhysicalPrimitiveSequenceContractWithStay.toCompiledEquiv
     intro logical hlogical
     exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
       h.subroutineReady (h.realizes logical hlogical)
+
+/-- Exact primitive-sequence contract over the guarded encoded layout. -/
+structure PhysicalPrimitiveSequenceGuardedContract
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTape
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives logical))
+
+/-- Equivalence primitive-sequence contract over the guarded encoded layout. -/
+structure PhysicalPrimitiveSequenceGuardedContractEquiv
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives logical))
+
+/--
+Guarded sequence contract whose output physically encodes a logical tape list
+equivalent to the represented target.
+
+This is the sequence-level version of
+{name}`PhysicalPrimitiveGuardedLogicalEquivContract`; it is intended for rows
+ending in local head moves before a canonical guard-refresh endpoint exists.
+-/
+structure PhysicalPrimitiveSequenceGuardedLogicalEquivContract
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        exists actual : List (Tape Bool),
+          LogicalTapeListEquiv actual
+            (applyPhysicalPrimitiveSequence primitives logical) ∧
+            machine.HaltsFromTape
+              (encodedGuardedStructuredTapes logical)
+              (encodedStructuredTapes actual)
+
+/--
+Guarded sequence contract whose output is observed through both layers of
+equivalence: pointwise logical-tape equivalence and raw tape equivalence for
+the physical machine endpoint.
+
+This is the boundary used after composing through canonical right/left
+subroutine handoffs, where exact physical endpoint equality is no longer the
+right contract.
+-/
+structure PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        exists actual : List (Tape Bool),
+          LogicalTapeListEquiv actual
+            (applyPhysicalPrimitiveSequence primitives logical) ∧
+            machine.HaltsFromTapeEquiv
+              (encodedGuardedStructuredTapes logical)
+              (encodedStructuredTapes actual)
+
+def PhysicalPrimitiveSequenceGuardedContract.toEquiv
+    {primitives : List PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveSequenceGuardedContract primitives machine) :
+    PhysicalPrimitiveSequenceGuardedContractEquiv primitives machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes logical hlogical)
+
+/-- Stay-machine primitive-sequence contract over the guarded layout. -/
+structure PhysicalPrimitiveSequenceGuardedContractWithStay
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTape
+          (encodedGuardedStructuredTapes logical)
+          (encodedGuardedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives logical))
+
+def PhysicalPrimitiveSequenceGuardedContractWithStay.toCompiledEquiv
+    {primitives : List PhysicalPrimitive}
+    {machine : MachineDescriptionWithStay}
+    (h : PhysicalPrimitiveSequenceGuardedContractWithStay primitives machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    PhysicalPrimitiveSequenceGuardedContractEquiv primitives machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro logical hlogical
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes logical hlogical)
+
+def PhysicalPrimitiveGuardedContract.toSequence
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveGuardedContract primitive machine) :
+    PhysicalPrimitiveSequenceGuardedContract [primitive] machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact h.realizes logical hlogical.left
+
+def PhysicalPrimitiveGuardedContractEquiv.toSequence
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveGuardedContractEquiv primitive machine) :
+    PhysicalPrimitiveSequenceGuardedContractEquiv [primitive] machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact h.realizes logical hlogical.left
+
+def PhysicalPrimitiveGuardedContract.toSequenceEquiv
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveGuardedContract primitive machine) :
+    PhysicalPrimitiveSequenceGuardedContractEquiv [primitive] machine :=
+  h.toEquiv.toSequence
+
+def PhysicalPrimitiveGuardedLogicalEquivContract.toSequence
+    {primitive : PhysicalPrimitive} {machine : MachineDescription}
+    (h : PhysicalPrimitiveGuardedLogicalEquivContract primitive machine) :
+    PhysicalPrimitiveSequenceGuardedLogicalEquivContract [primitive]
+      machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact h.realizes logical hlogical.left
+
+def PhysicalPrimitiveSequenceGuardedLogicalEquivContract.toEquiv
+    {primitives : List PhysicalPrimitive} {machine : MachineDescription}
+    (h :
+      PhysicalPrimitiveSequenceGuardedLogicalEquivContract
+        primitives machine) :
+    PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+      primitives machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    rcases h.realizes logical hlogical with
+      ⟨actual, hactual, hhalts⟩
+    exact ⟨actual, hactual,
+      MachineDescription.HaltsFromTape.toEquiv hhalts⟩
+
+def PhysicalPrimitiveSequenceGuardedContractEquiv.toLogicalEquiv
+    {primitives : List PhysicalPrimitive} {machine : MachineDescription}
+    (h :
+      PhysicalPrimitiveSequenceGuardedContractEquiv
+        primitives machine) :
+    PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+      primitives machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    refine
+      ⟨guardLogicalTapes
+          (applyPhysicalPrimitiveSequence primitives logical),
+        guardLogicalTapes_equiv
+          (applyPhysicalPrimitiveSequence primitives logical),
+        ?_⟩
+    simpa [encodedGuardedStructuredTapes] using
+      h.realizes logical hlogical
 
 def readCheckPrimitivesAt
     (index : Nat) (expected : Option Bool) :
@@ -443,6 +738,28 @@ def transitionPrimitiveSequence3
           actionPrimitivesAt 1 action1 ++
             actionPrimitivesAt 2 action2
 
+def transitionPrimitiveSequence3Action1Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction) :
+    List PhysicalPrimitive :=
+  readCheckPrimitivesAt 0 read0 ++
+    readCheckPrimitivesAt 1 read1 ++
+      readCheckPrimitivesAt 2 read2 ++
+        actionPrimitivesAt 0 action0 ++
+          actionPrimitivesAt 2 action2 ++
+            actionPrimitivesAt 1 action1
+
+def transitionPrimitiveSequence3Action0Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction) :
+    List PhysicalPrimitive :=
+  readCheckPrimitivesAt 0 read0 ++
+    readCheckPrimitivesAt 1 read1 ++
+      readCheckPrimitivesAt 2 read2 ++
+        actionPrimitivesAt 1 action1 ++
+          actionPrimitivesAt 2 action2 ++
+            actionPrimitivesAt 0 action0
+
 theorem applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3
     (read0 read1 read2 : Option Bool)
     (action0 action1 action2 : TapeAction)
@@ -483,6 +800,129 @@ theorem applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
       exact
         applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3
           read0 read1 read2 action0 action1 action2 T U V
+
+theorem applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3Action1Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool) :
+    applyPhysicalPrimitiveSequence
+        (transitionPrimitiveSequence3Action1Last read0 read1 read2
+          action0 action1 action2) [T, U, V] =
+      [action0.apply T, action1.apply U, action2.apply V] := by
+  simp [transitionPrimitiveSequence3Action1Last,
+    applyPhysicalPrimitiveSequence_append,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_three,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_one_three,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_two_three]
+
+theorem applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3Action0Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool) :
+    applyPhysicalPrimitiveSequence
+        (transitionPrimitiveSequence3Action0Last read0 read1 read2
+          action0 action1 action2) [T, U, V] =
+      [action0.apply T, action1.apply U, action2.apply V] := by
+  simp [transitionPrimitiveSequence3Action0Last,
+    applyPhysicalPrimitiveSequence_append,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_three,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_one_three,
+    applyPhysicalPrimitiveSequence_actionPrimitivesAt_two_three]
+
+theorem physicalPrimitiveSequenceEnabled_transitionPrimitiveSequence3
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hread0 : Tape.read T = read0)
+    (hread1 : Tape.read U = read1)
+    (hread2 : Tape.read V = read2) :
+    physicalPrimitiveSequenceEnabled
+        (transitionPrimitiveSequence3 read0 read1 read2
+          action0 action1 action2) [T, U, V] := by
+  cases action0 with
+  | mk write0 move0 =>
+      cases write0 <;>
+        cases action1 with
+        | mk write1 move1 =>
+            cases write1 <;>
+              cases action2 with
+              | mk write2 move2 =>
+                  cases write2 <;>
+                    simp [transitionPrimitiveSequence3,
+                      readCheckPrimitivesAt, actionPrimitivesAt,
+                      writePrimitivesForAction, hread0, hread1,
+                      hread2, Description.tapeAt, PhysicalPrimitive.apply]
+
+theorem physicalPrimitiveSequenceEnabled_transitionPrimitiveSequence3Action1Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hread0 : Tape.read T = read0)
+    (hread1 : Tape.read U = read1)
+    (hread2 : Tape.read V = read2) :
+    physicalPrimitiveSequenceEnabled
+        (transitionPrimitiveSequence3Action1Last read0 read1 read2
+          action0 action1 action2) [T, U, V] := by
+  cases action0 with
+  | mk write0 move0 =>
+      cases write0 <;>
+        cases action1 with
+        | mk write1 move1 =>
+            cases write1 <;>
+              cases action2 with
+              | mk write2 move2 =>
+                  cases write2 <;>
+                    simp [transitionPrimitiveSequence3Action1Last,
+                      readCheckPrimitivesAt, actionPrimitivesAt,
+                      writePrimitivesForAction, hread0, hread1,
+                      hread2, Description.tapeAt, PhysicalPrimitive.apply]
+
+theorem physicalPrimitiveSequenceEnabled_transitionPrimitiveSequence3Action0Last
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hread0 : Tape.read T = read0)
+    (hread1 : Tape.read U = read1)
+    (hread2 : Tape.read V = read2) :
+    physicalPrimitiveSequenceEnabled
+        (transitionPrimitiveSequence3Action0Last read0 read1 read2
+          action0 action1 action2) [T, U, V] := by
+  cases action0 with
+  | mk write0 move0 =>
+      cases write0 <;>
+        cases action1 with
+        | mk write1 move1 =>
+            cases write1 <;>
+              cases action2 with
+              | mk write2 move2 =>
+                  cases write2 <;>
+                    simp [transitionPrimitiveSequence3Action0Last,
+                      readCheckPrimitivesAt, actionPrimitivesAt,
+                      writePrimitivesForAction, hread0, hread1,
+                      hread2, Description.tapeAt, PhysicalPrimitive.apply]
+
+private theorem list_eq_three_of_length_eq_three
+    {α : Type u} {xs : List α}
+    (h : xs.length = 3) :
+    exists a : α, exists b : α, exists c : α,
+      xs = [a, b, c] := by
+  cases xs with
+  | nil =>
+      simp at h
+  | cons a rest =>
+      cases rest with
+      | nil =>
+          simp at h
+      | cons b rest =>
+          cases rest with
+          | nil =>
+              simp at h
+          | cons c rest =>
+              cases rest with
+              | nil =>
+                  exact ⟨a, b, c, rfl⟩
+              | cons _d _rest =>
+                  simp at h
 
 /-!
 ## One-transition lowering contract
@@ -579,6 +1019,358 @@ def LowersTransitionWithStay.toCompiledEquiv
     exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
       h.subroutineReady (h.realizes c hc hsource hreads)
 
+/-!
+## Guarded one-transition lowering contracts
+-/
+
+/--
+Exact row-lowering contract over the guarded encoded layout.
+
+This is the preferred exact contract once the row lowerer uses guard cells to
+avoid boundary insertion in the tight layout.
+-/
+structure LowersGuardedTransition
+    (D : Description) (t : Transition)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          machine.HaltsFromTape
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes
+              (D.applyActions t.actions c.tapes))
+
+/--
+Equivalence row-lowering contract over the guarded encoded layout.
+
+Use this when a physical routine consumes a guard blank and halts on a tape
+equivalent to the canonical re-guarded endpoint.
+-/
+structure LowersGuardedTransitionEquiv
+    (D : Description) (t : Transition)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          machine.HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes
+              (D.applyActions t.actions c.tapes))
+
+/--
+Guarded row-lowering contract with a logical-equivalence output invariant.
+
+The machine starts from the canonical guarded input.  Its output may be any
+physical tape that encodes logical tapes pointwise equivalent to the structured
+target, and the physical endpoint itself is compared with
+{name}`MachineDescription.HaltsFromTapeEquiv`.  This is the row boundary for
+local head moves that consume guard slack before a later normalizer restores a
+canonical guarded layout.
+-/
+structure LowersGuardedTransitionLogicalEquiv
+    (D : Description) (t : Transition)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          exists physical : Tape Bool,
+            StructuredLogicalEquivEncodedTapes
+              (D.applyActions t.actions c.tapes) physical ∧
+              machine.HaltsFromTapeEquiv
+                (encodedGuardedStructuredTapes c.tapes)
+                physical
+
+def LowersGuardedTransition.toEquiv
+    {D : Description} {t : Transition} {machine : MachineDescription}
+    (h : LowersGuardedTransition D t machine) :
+    LowersGuardedTransitionEquiv D t machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes c hc hsource hreads)
+
+def LowersGuardedTransition.toLogicalEquiv
+    {D : Description} {t : Transition} {machine : MachineDescription}
+    (h : LowersGuardedTransition D t machine) :
+    LowersGuardedTransitionLogicalEquiv D t machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    refine
+      ⟨encodedGuardedStructuredTapes
+          (D.applyActions t.actions c.tapes),
+        structuredLogicalEquivEncodedTapes_guarded_self
+          (D.applyActions t.actions c.tapes),
+        ?_⟩
+    exact MachineDescription.HaltsFromTape.toEquiv
+      (h.realizes c hc hsource hreads)
+
+def LowersGuardedTransitionEquiv.toLogicalEquiv
+    {D : Description} {t : Transition} {machine : MachineDescription}
+    (h : LowersGuardedTransitionEquiv D t machine) :
+    LowersGuardedTransitionLogicalEquiv D t machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    exact
+      ⟨encodedGuardedStructuredTapes
+          (D.applyActions t.actions c.tapes),
+        structuredLogicalEquivEncodedTapes_guarded_self
+          (D.applyActions t.actions c.tapes),
+        h.realizes c hc hsource hreads⟩
+
+/-- Stay-machine row-lowering contract over the guarded encoded layout. -/
+structure LowersGuardedTransitionWithStay
+    (D : Description) (t : Transition)
+    (machine : MachineDescriptionWithStay) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          machine.HaltsFromTape
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes
+              (D.applyActions t.actions c.tapes))
+
+def LowersGuardedTransitionWithStay.toCompiledEquiv
+    {D : Description} {t : Transition}
+    {machine : MachineDescriptionWithStay}
+    (h : LowersGuardedTransitionWithStay D t machine)
+    (hcompiled : machine.compile.SubroutineReady) :
+    LowersGuardedTransitionEquiv D t machine.compile where
+  subroutineReady := hcompiled
+  realizes := by
+    intro c hc hsource hreads
+    exact MachineDescriptionWithStay.compile_haltsFromTapeEquiv
+      h.subroutineReady (h.realizes c hc hsource hreads)
+
+theorem guardedPrimitiveSequence3_lowersGuardedTransitionEquiv
+    {D : Description} {t : Transition}
+    {machine : MachineDescription}
+    (hsequence :
+      PhysicalPrimitiveSequenceGuardedContractEquiv
+        (transitionPrimitiveSequenceOfRow3 t) machine)
+    (hD : D.tapeCount = 3)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2]) :
+    LowersGuardedTransitionEquiv D t machine where
+  subroutineReady := hsequence.subroutineReady
+  realizes := by
+    intro c hc _hsource hcurrentReads
+    have hlen : c.tapes.length = 3 := by
+      simpa [hD] using hc
+    rcases list_eq_three_of_length_eq_three hlen with
+      ⟨T, U, V, htapes⟩
+    cases c with
+    | mk state tapes =>
+        simp at htapes
+        cases htapes
+        have hreadsEq :
+            [read0, read1, read2] =
+              [Tape.read T, Tape.read U, Tape.read V] := by
+          simpa [hreads, hD] using hcurrentReads
+        have hreadsComponents :
+            read0 = Tape.read T ∧
+              read1 = Tape.read U ∧
+                read2 = Tape.read V := by
+          simpa using hreadsEq
+        rcases hreadsComponents with ⟨hread0', hread1', hread2'⟩
+        have hread0 : Tape.read T = read0 := by
+          exact hread0'.symm
+        have hread1 : Tape.read U = read1 := by
+          exact hread1'.symm
+        have hread2 : Tape.read V = read2 := by
+          exact hread2'.symm
+        have henabled :
+            physicalPrimitiveSequenceEnabled
+              (transitionPrimitiveSequenceOfRow3 t) [T, U, V] := by
+          rw [show transitionPrimitiveSequenceOfRow3 t =
+              transitionPrimitiveSequence3 read0 read1 read2
+                action0 action1 action2 by
+            cases t with
+            | mk source reads actions target =>
+                simp [transitionPrimitiveSequenceOfRow3] at hreads hactions ⊢
+                cases hreads
+                cases hactions
+                rfl]
+          exact
+            physicalPrimitiveSequenceEnabled_transitionPrimitiveSequence3
+              read0 read1 read2 action0 action1 action2 T U V
+              hread0 hread1 hread2
+        have hhalt := hsequence.realizes [T, U, V] henabled
+        have hseqApply :
+            applyPhysicalPrimitiveSequence
+                (transitionPrimitiveSequenceOfRow3 t) [T, U, V] =
+              D.applyActions t.actions [T, U, V] := by
+          rw [applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+            t read0 read1 read2 action0 action1 action2 T U V
+            hreads hactions]
+          rw [hactions]
+          exact (Description.applyActions_three D hD
+            action0 action1 action2 T U V).symm
+        rcases hhalt with ⟨Tactual, hrun, hequiv⟩
+        exact ⟨Tactual, hrun, by
+          simpa [hseqApply] using hequiv⟩
+
+theorem guardedPrimitiveSequence3_lowersGuardedTransitionLogicalEquiv
+    {D : Description} {t : Transition}
+    {machine : MachineDescription}
+    (hsequence :
+      PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+        (transitionPrimitiveSequenceOfRow3 t) machine)
+    (hD : D.tapeCount = 3)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2]) :
+    LowersGuardedTransitionLogicalEquiv D t machine where
+  subroutineReady := hsequence.subroutineReady
+  realizes := by
+    intro c hc _hsource hcurrentReads
+    have hlen : c.tapes.length = 3 := by
+      simpa [hD] using hc
+    rcases list_eq_three_of_length_eq_three hlen with
+      ⟨T, U, V, htapes⟩
+    cases c with
+    | mk state tapes =>
+        simp at htapes
+        cases htapes
+        have hreadsEq :
+            [read0, read1, read2] =
+              [Tape.read T, Tape.read U, Tape.read V] := by
+          simpa [hreads, hD] using hcurrentReads
+        have hreadsComponents :
+            read0 = Tape.read T ∧
+              read1 = Tape.read U ∧
+                read2 = Tape.read V := by
+          simpa using hreadsEq
+        rcases hreadsComponents with ⟨hread0', hread1', hread2'⟩
+        have hread0 : Tape.read T = read0 := by
+          exact hread0'.symm
+        have hread1 : Tape.read U = read1 := by
+          exact hread1'.symm
+        have hread2 : Tape.read V = read2 := by
+          exact hread2'.symm
+        have henabled :
+            physicalPrimitiveSequenceEnabled
+              (transitionPrimitiveSequenceOfRow3 t) [T, U, V] := by
+          rw [show transitionPrimitiveSequenceOfRow3 t =
+              transitionPrimitiveSequence3 read0 read1 read2
+                action0 action1 action2 by
+            cases t with
+            | mk source reads actions target =>
+                simp [transitionPrimitiveSequenceOfRow3] at hreads hactions ⊢
+                cases hreads
+                cases hactions
+                rfl]
+          exact
+            physicalPrimitiveSequenceEnabled_transitionPrimitiveSequence3
+              read0 read1 read2 action0 action1 action2 T U V
+              hread0 hread1 hread2
+        have hhalt := hsequence.realizes [T, U, V] henabled
+        have hseqApply :
+            applyPhysicalPrimitiveSequence
+                (transitionPrimitiveSequenceOfRow3 t) [T, U, V] =
+              D.applyActions t.actions [T, U, V] := by
+          rw [applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+            t read0 read1 read2 action0 action1 action2 T U V
+            hreads hactions]
+          rw [hactions]
+          exact (Description.applyActions_three D hD
+            action0 action1 action2 T U V).symm
+        rcases hhalt with ⟨actual, hactual, hrun⟩
+        refine
+          ⟨encodedStructuredTapes actual,
+            ⟨actual, ?_, rfl⟩, hrun⟩
+        simpa [hseqApply] using hactual
+
+/--
+Lower a three-tape row through any primitive sequence with the same pure
+endpoint as the row.
+
+This is used for reordered physical implementations: independent per-tape
+actions may be scheduled so the only guard-consuming move is last, while the
+logical endpoint still matches the structured row.
+-/
+theorem primitiveSequence3_lowersGuardedTransitionLogicalEquiv
+    {D : Description} {t : Transition}
+    {primitives : List PhysicalPrimitive}
+    {machine : MachineDescription}
+    (hsequence :
+      PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+        primitives machine)
+    (hD : D.tapeCount = 3)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2])
+    (henabled :
+      forall T U V : Tape Bool,
+        Tape.read T = read0 ->
+          Tape.read U = read1 ->
+            Tape.read V = read2 ->
+              physicalPrimitiveSequenceEnabled primitives [T, U, V])
+    (happly :
+      forall T U V : Tape Bool,
+        applyPhysicalPrimitiveSequence primitives [T, U, V] =
+          [action0.apply T, action1.apply U, action2.apply V]) :
+    LowersGuardedTransitionLogicalEquiv D t machine where
+  subroutineReady := hsequence.subroutineReady
+  realizes := by
+    intro c hc _hsource hcurrentReads
+    have hlen : c.tapes.length = 3 := by
+      simpa [hD] using hc
+    rcases list_eq_three_of_length_eq_three hlen with
+      ⟨T, U, V, htapes⟩
+    cases c with
+    | mk state tapes =>
+        simp at htapes
+        cases htapes
+        have hreadsEq :
+            [read0, read1, read2] =
+              [Tape.read T, Tape.read U, Tape.read V] := by
+          simpa [hreads, hD] using hcurrentReads
+        have hreadsComponents :
+            read0 = Tape.read T ∧
+              read1 = Tape.read U ∧
+                read2 = Tape.read V := by
+          simpa using hreadsEq
+        rcases hreadsComponents with ⟨hread0', hread1', hread2'⟩
+        have hread0 : Tape.read T = read0 := by
+          exact hread0'.symm
+        have hread1 : Tape.read U = read1 := by
+          exact hread1'.symm
+        have hread2 : Tape.read V = read2 := by
+          exact hread2'.symm
+        have hhalt := hsequence.realizes [T, U, V]
+          (henabled T U V hread0 hread1 hread2)
+        have hseqApply :
+            applyPhysicalPrimitiveSequence primitives [T, U, V] =
+              D.applyActions t.actions [T, U, V] := by
+          rw [happly T U V]
+          rw [hactions]
+          exact (Description.applyActions_three D hD
+            action0 action1 action2 T U V).symm
+        rcases hhalt with ⟨actual, hactual, hrun⟩
+        refine
+          ⟨encodedStructuredTapes actual,
+            ⟨actual, ?_, rfl⟩, hrun⟩
+        simpa [hseqApply] using hactual
+
 def structuredTransitionTarget
     (D : Description) (t : Transition)
     (c : Configuration) : Configuration where
@@ -617,6 +1409,47 @@ theorem lowersTransitionEquiv_realizes_lookup
   have hmatch := Description.lookupTransition_match hlookup
   exact h.realizes c hc hmatch.left hmatch.right
 
+theorem lowersGuardedTransition_realizes_lookup
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c : Configuration}
+    (h : LowersGuardedTransition D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t) :
+    machine.HaltsFromTape
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes
+        (D.applyActions t.actions c.tapes)) := by
+  have hmatch := Description.lookupTransition_match hlookup
+  exact h.realizes c hc hmatch.left hmatch.right
+
+theorem lowersGuardedTransitionEquiv_realizes_lookup
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c : Configuration}
+    (h : LowersGuardedTransitionEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t) :
+    machine.HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes
+        (D.applyActions t.actions c.tapes)) := by
+  have hmatch := Description.lookupTransition_match hlookup
+  exact h.realizes c hc hmatch.left hmatch.right
+
+theorem lowersGuardedTransitionLogicalEquiv_realizes_lookup
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c : Configuration}
+    (h : LowersGuardedTransitionLogicalEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t) :
+    exists physical : Tape Bool,
+      StructuredLogicalEquivEncodedTapes
+        (D.applyActions t.actions c.tapes) physical ∧
+        machine.HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes c.tapes)
+          physical := by
+  have hmatch := Description.lookupTransition_match hlookup
+  exact h.realizes c hc hmatch.left hmatch.right
+
 theorem lowersTransition_realizes_structured_step
     {D : Description} {t : Transition}
     {machine : MachineDescription} {c next : Configuration}
@@ -650,6 +1483,59 @@ theorem lowersTransitionEquiv_realizes_structured_step
     exact stepConfig_eq_some_of_lookupTransition hlookup
   · rw [hnext]
     exact lowersTransitionEquiv_realizes_lookup h hc hlookup
+
+theorem lowersGuardedTransition_realizes_structured_step
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c next : Configuration}
+    (h : LowersGuardedTransition D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      machine.HaltsFromTape
+        (encodedGuardedStructuredTapes c.tapes)
+        (encodedGuardedStructuredTapes next.tapes) := by
+  constructor
+  · rw [hnext]
+    exact stepConfig_eq_some_of_lookupTransition hlookup
+  · rw [hnext]
+    exact lowersGuardedTransition_realizes_lookup h hc hlookup
+
+theorem lowersGuardedTransitionEquiv_realizes_structured_step
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c next : Configuration}
+    (h : LowersGuardedTransitionEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      machine.HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes c.tapes)
+        (encodedGuardedStructuredTapes next.tapes) := by
+  constructor
+  · rw [hnext]
+    exact stepConfig_eq_some_of_lookupTransition hlookup
+  · rw [hnext]
+    exact lowersGuardedTransitionEquiv_realizes_lookup h hc hlookup
+
+theorem lowersGuardedTransitionLogicalEquiv_realizes_structured_step
+    {D : Description} {t : Transition}
+    {machine : MachineDescription} {c next : Configuration}
+    (h : LowersGuardedTransitionLogicalEquiv D t machine)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      exists physical : Tape Bool,
+        StructuredLogicalEquivEncodedTapes next.tapes physical ∧
+          machine.HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            physical := by
+  constructor
+  · rw [hnext]
+    exact stepConfig_eq_some_of_lookupTransition hlookup
+  · rw [hnext]
+    exact lowersGuardedTransitionLogicalEquiv_realizes_lookup h hc hlookup
 
 
 end MultiTapeLowering

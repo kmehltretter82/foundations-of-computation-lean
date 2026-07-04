@@ -1155,6 +1155,51 @@ theorem seekTape2Description_contract_three :
       simp [Tout, tapeAtEncodedSplit, encodedPrefixBeforeTape,
         encodedSuffixFromTape, List.append_assoc]
 
+theorem seekTape2Description_contract :
+    CursorRoutineContract
+      (fun logical physical =>
+        exists T : Tape Bool, exists U : Tape Bool,
+        exists rest : List (Tape Bool),
+          logical = T :: U :: rest ∧ AtEncodedBlockStart logical physical)
+      (fun logical physical =>
+        AtTapeSeparator logical 2 physical)
+      seekTape2Description where
+  subroutineReady := seekTape2Description_subroutineReady
+  realizes := by
+    intro logical Tin hsource
+    rcases hsource with ⟨T, U, rest, hlogical, hstart⟩
+    subst hlogical
+    rcases logicalTapeBits_exists_cons T with
+      ⟨firstBit, firstRest, hfirstBits⟩
+    rcases logicalTapeBits_exists_cons U with
+      ⟨secondBit, secondRest, hsecondBits⟩
+    rcases encodedStructuredTapeCells_startsWith_separator rest with
+      ⟨suffix, hsuffix⟩
+    let Tout :=
+      tapeAtEncodedSplit
+        (List.append
+          (List.append
+            (List.append tapeSeparatorCells (logicalTapeCode T))
+            tapeSeparatorCells)
+          (logicalTapeCode U))
+        (encodedStructuredTapeCells rest)
+    exists Tout
+    constructor
+    · rcases hstart with ⟨_hle, hTin⟩
+      rw [hTin]
+      have hrun :=
+        seekTape2Description_haltsFromTape
+          firstBit firstRest secondBit secondRest [] suffix
+      simpa [Tout, tapeAtEncodedSplit, encodedPrefixBeforeTape,
+        encodedSuffixFromTape, logicalTapeCode_eq_map_some T,
+        logicalTapeCode_eq_map_some U, hfirstBits, hsecondBits,
+        hsuffix, tapeSeparatorCells, List.reverse_append,
+        List.map_reverse, List.append_assoc] using hrun
+    · refine ⟨?_, ?_⟩
+      · simp
+      simp [Tout, tapeAtEncodedSplit, encodedPrefixBeforeTape,
+        encodedSuffixFromTape, List.append_assoc]
+
 /--
 Moving right once from an existing tape separator enters that tape segment.
 This is the first concrete cursor-to-cursor routine used by later seek

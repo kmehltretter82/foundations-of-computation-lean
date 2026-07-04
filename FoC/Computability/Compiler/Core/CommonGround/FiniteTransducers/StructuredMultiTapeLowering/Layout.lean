@@ -534,6 +534,20 @@ def LogicalTapesHaveGuardCells (logical : List (Tape Bool)) : Prop :=
   forall T : Tape Bool, T ∈ logical -> LogicalTapeHasGuardCells T
 
 /--
+Selected-tape guard condition.
+
+This is weaker than {name}`LogicalTapesHaveGuardCells`: after one local head
+move, the moved tape may have consumed one guard cell, but later tapes can
+still be processed as long as the currently selected tape has a represented
+left and right neighbor.
+-/
+def LogicalTapeAtHasGuardCells
+    (logical : List (Tape Bool)) (tapeIndex : Nat) : Prop :=
+  exists T : Tape Bool, exists rest : List (Tape Bool),
+    logical.drop tapeIndex = T :: rest ∧
+      LogicalTapeHasGuardCells T
+
+/--
 Add one far-edge blank on both sides of a logical tape.
 
 The added cells are representation guards: they are ignored by
@@ -549,6 +563,68 @@ def guardLogicalTape (T : Tape Bool) : Tape Bool :=
 def guardLogicalTapes (logical : List (Tape Bool)) : List (Tape Bool) :=
   logical.map guardLogicalTape
 
+/--
+Replace the logical tape at an index, leaving out-of-range indices unchanged.
+
+This sits in the layout layer because both primitive endpoint semantics and
+representation-equivalence lemmas need the same list update operation.
+-/
+def replaceTapeAt
+    (index : Nat) (replacement : Tape Bool) :
+    List (Tape Bool) -> List (Tape Bool)
+  | [] => []
+  | T :: rest =>
+      match index with
+      | 0 => replacement :: rest
+      | index + 1 => T :: replaceTapeAt index replacement rest
+
+@[simp] theorem replaceTapeAt_nil
+    (index : Nat) (replacement : Tape Bool) :
+    replaceTapeAt index replacement [] = [] := by
+  cases index <;> rfl
+
+@[simp] theorem replaceTapeAt_zero_cons
+    (replacement T : Tape Bool) (rest : List (Tape Bool)) :
+    replaceTapeAt 0 replacement (T :: rest) = replacement :: rest := by
+  rfl
+
+@[simp] theorem replaceTapeAt_succ_cons
+    (index : Nat) (replacement T : Tape Bool)
+    (rest : List (Tape Bool)) :
+    replaceTapeAt (index + 1) replacement (T :: rest) =
+      T :: replaceTapeAt index replacement rest := by
+  rfl
+
+@[simp] theorem replaceTapeAt_length
+    (index : Nat) (replacement : Tape Bool)
+    (logical : List (Tape Bool)) :
+    (replaceTapeAt index replacement logical).length = logical.length := by
+  induction index generalizing logical with
+  | zero =>
+      cases logical <;> rfl
+  | succ index ih =>
+      cases logical with
+      | nil => rfl
+      | cons T rest =>
+          simp [replaceTapeAt, ih]
+
+/--
+Pointwise equivalence for structured logical tape lists.
+
+The physical lowerer sometimes carries extra represented blank cells as guard
+slack.  Those cells are meaningful physical data, so ordinary
+{name}`Tape.Equiv` on the whole encoded physical tape is too weak to identify
+the layouts.  This relation records the intended semantic comparison before
+the logical tapes are encoded.
+-/
+def LogicalTapeListEquiv :
+    List (Tape Bool) -> List (Tape Bool) -> Prop
+  | [], [] => True
+  | actual :: actualRest, expected :: expectedRest =>
+      Tape.Equiv actual expected ∧
+        LogicalTapeListEquiv actualRest expectedRest
+  | _, _ => False
+
 def encodedGuardedStructuredTapes
     (logical : List (Tape Bool)) : Tape Bool :=
   encodedStructuredTapes (guardLogicalTapes logical)
@@ -556,6 +632,147 @@ def encodedGuardedStructuredTapes
 def StructuredGuardedEncodedTapes
     (logical : List (Tape Bool)) (physical : Tape Bool) : Prop :=
   physical = encodedGuardedStructuredTapes logical
+
+/--
+Representation invariant for physical tapes that encode a logical tape list
+equivalent to the represented structured tapes.
+
+This is the honest endpoint for local guarded head moves before a guard-refresh
+normalizer has restored the canonical guarded encoding.
+-/
+def StructuredLogicalEquivEncodedTapes
+    (logical : List (Tape Bool)) (physical : Tape Bool) : Prop :=
+  exists actual : List (Tape Bool),
+    LogicalTapeListEquiv actual logical ∧
+      physical = encodedStructuredTapes actual
+
+theorem logicalTapeListEquiv_refl
+    (logical : List (Tape Bool)) :
+    LogicalTapeListEquiv logical logical := by
+  induction logical with
+  | nil =>
+      trivial
+  | cons T rest ih =>
+      exact ⟨Tape.Equiv.refl T, ih⟩
+
+theorem logicalTapeListEquiv_length
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected) :
+    actual.length = expected.length := by
+  induction actual generalizing expected with
+  | nil =>
+      cases expected with
+      | nil => rfl
+      | cons _ _ => cases h
+  | cons actual actualRest ih =>
+      cases expected with
+      | nil => cases h
+      | cons expected expectedRest =>
+          exact congrArg Nat.succ (ih h.right)
+
+theorem logicalTapeListEquiv_symm
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected) :
+    LogicalTapeListEquiv expected actual := by
+  induction actual generalizing expected with
+  | nil =>
+      cases expected with
+      | nil => trivial
+      | cons _ _ => cases h
+  | cons actualHead actualRest ih =>
+      cases expected with
+      | nil => cases h
+      | cons expectedHead expectedRest =>
+          exact ⟨Tape.Equiv.symm h.left, ih h.right⟩
+
+theorem logicalTapeListEquiv_trans
+    {first second third : List (Tape Bool)}
+    (hfirst : LogicalTapeListEquiv first second)
+    (hsecond : LogicalTapeListEquiv second third) :
+    LogicalTapeListEquiv first third := by
+  induction first generalizing second third with
+  | nil =>
+      cases second with
+      | nil =>
+          cases third with
+          | nil => trivial
+          | cons _ _ => cases hsecond
+      | cons _ _ => cases hfirst
+  | cons firstHead firstRest ih =>
+      cases second with
+      | nil => cases hfirst
+      | cons secondHead secondRest =>
+          cases third with
+          | nil => cases hsecond
+          | cons thirdHead thirdRest =>
+              exact
+                ⟨Tape.Equiv.trans hfirst.left hsecond.left,
+                  ih hfirst.right hsecond.right⟩
+
+theorem logicalTapeListEquiv_tapeAt
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected)
+    (index : Nat) :
+    Tape.Equiv
+      (Description.tapeAt actual index)
+      (Description.tapeAt expected index) := by
+  induction index generalizing actual expected with
+  | zero =>
+      cases actual with
+      | nil =>
+          cases expected with
+          | nil => exact Tape.Equiv.refl _
+          | cons _ _ => cases h
+      | cons actualHead actualRest =>
+          cases expected with
+          | nil => cases h
+          | cons expectedHead expectedRest =>
+              exact h.left
+  | succ index ih =>
+      cases actual with
+      | nil =>
+          cases expected with
+          | nil => exact Tape.Equiv.refl _
+          | cons _ _ => cases h
+      | cons actualHead actualRest =>
+          cases expected with
+          | nil => cases h
+          | cons expectedHead expectedRest =>
+              exact ih h.right
+
+theorem logicalTapeListEquiv_replaceTapeAt
+    {actual expected : List (Tape Bool)}
+    (h : LogicalTapeListEquiv actual expected)
+    (index : Nat)
+    {actualReplacement expectedReplacement : Tape Bool}
+    (hreplacement :
+      Tape.Equiv actualReplacement expectedReplacement) :
+    LogicalTapeListEquiv
+      (replaceTapeAt index actualReplacement actual)
+      (replaceTapeAt index expectedReplacement expected) := by
+  induction index generalizing actual expected with
+  | zero =>
+      cases actual with
+      | nil =>
+          cases expected with
+          | nil => trivial
+          | cons _ _ => cases h
+      | cons actualHead actualRest =>
+          cases expected with
+          | nil => cases h
+          | cons expectedHead expectedRest =>
+              exact ⟨hreplacement, h.right⟩
+  | succ index ih =>
+      cases actual with
+      | nil =>
+          cases expected with
+          | nil => trivial
+          | cons _ _ => cases h
+      | cons actualHead actualRest =>
+          cases expected with
+          | nil => cases h
+          | cons expectedHead expectedRest =>
+              exact ⟨h.left, ih h.right⟩
 
 theorem guardLogicalTape_hasLeftGuard
     (T : Tape Bool) :
@@ -583,6 +800,41 @@ theorem guardLogicalTapes_haveGuardCells
   cases hU
   exact guardLogicalTape_hasGuardCells U
 
+theorem logicalTapesHaveGuardCells_at
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    (hguards : LogicalTapesHaveGuardCells logical)
+    (hindex : tapeIndex < logical.length) :
+    LogicalTapeAtHasGuardCells logical tapeIndex := by
+  induction tapeIndex generalizing logical with
+  | zero =>
+      cases logical with
+      | nil =>
+          simp at hindex
+      | cons T rest =>
+          exact ⟨T, rest, rfl, hguards T (by simp)⟩
+  | succ tapeIndex ih =>
+      cases logical with
+      | nil =>
+          simp at hindex
+      | cons T rest =>
+          exact
+            ih
+              (fun U hU => hguards U (by simp [hU]))
+              (by simpa using hindex)
+
+theorem guardLogicalTapes_atHasGuardCells
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    (hindex : tapeIndex < logical.length) :
+    LogicalTapeAtHasGuardCells
+      (guardLogicalTapes logical) tapeIndex := by
+  have hguardedIndex :
+      tapeIndex < (guardLogicalTapes logical).length := by
+    simpa [guardLogicalTapes] using hindex
+  exact
+    logicalTapesHaveGuardCells_at
+      (guardLogicalTapes_haveGuardCells logical)
+      hguardedIndex
+
 @[simp] theorem guardLogicalTapes_length
     (logical : List (Tape Bool)) :
     (guardLogicalTapes logical).length = logical.length := by
@@ -604,10 +856,79 @@ theorem guardLogicalTape_equiv
   simp [Tape.Equiv, guardLogicalTape,
     dropTrailingNone_append_none]
 
+theorem guardLogicalTapes_equiv
+    (logical : List (Tape Bool)) :
+    LogicalTapeListEquiv (guardLogicalTapes logical) logical := by
+  induction logical with
+  | nil =>
+      trivial
+  | cons T rest ih =>
+      exact ⟨guardLogicalTape_equiv T, ih⟩
+
+theorem structuredLogicalEquivEncodedTapes_guarded_self
+    (logical : List (Tape Bool)) :
+    StructuredLogicalEquivEncodedTapes logical
+      (encodedGuardedStructuredTapes logical) := by
+  exact ⟨guardLogicalTapes logical,
+    guardLogicalTapes_equiv logical, rfl⟩
+
+theorem structuredLogicalEquivEncodedTapes_self
+    (logical : List (Tape Bool)) :
+    StructuredLogicalEquivEncodedTapes logical
+      (encodedStructuredTapes logical) := by
+  exact ⟨logical, logicalTapeListEquiv_refl logical, rfl⟩
+
+theorem structuredLogicalEquivEncodedTapes_retarget
+    {logical represented : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hphysical :
+      StructuredLogicalEquivEncodedTapes logical physical)
+    (hlogical : LogicalTapeListEquiv logical represented) :
+    StructuredLogicalEquivEncodedTapes represented physical := by
+  rcases hphysical with ⟨actual, hactual, hphysical⟩
+  exact
+    ⟨actual,
+      logicalTapeListEquiv_trans hactual hlogical,
+      hphysical⟩
+
+theorem structuredLogicalEquivEncodedTapes_symm_retarget
+    {logical represented : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hphysical :
+      StructuredLogicalEquivEncodedTapes logical physical)
+    (hlogical : LogicalTapeListEquiv represented logical) :
+    StructuredLogicalEquivEncodedTapes represented physical :=
+  structuredLogicalEquivEncodedTapes_retarget hphysical
+    (logicalTapeListEquiv_symm hlogical)
+
 theorem guardLogicalTape_read
     (T : Tape Bool) :
     Tape.read (guardLogicalTape T) = Tape.read T := by
   rfl
+
+theorem tapeAt_guardLogicalTapes_read
+    (logical : List (Tape Bool)) (index : Nat) :
+    Tape.read
+        (Description.tapeAt (guardLogicalTapes logical) index) =
+      Tape.read (Description.tapeAt logical index) := by
+  unfold Description.tapeAt guardLogicalTapes
+  induction index generalizing logical with
+  | zero =>
+      cases logical <;> rfl
+  | succ index ih =>
+      cases logical with
+      | nil => rfl
+      | cons T rest =>
+          exact ih rest
+
+theorem currentReads_guardLogicalTapes
+    (D : Description) (state : Nat)
+    (logical : List (Tape Bool)) :
+    D.currentReads
+        { state := state, tapes := guardLogicalTapes logical } =
+      D.currentReads { state := state, tapes := logical } := by
+  unfold Description.currentReads
+  simp [tapeAt_guardLogicalTapes_read]
 
 theorem guardLogicalTape_write
     (cell : Option Bool) (T : Tape Bool) :
@@ -874,6 +1195,13 @@ def StructuredGuardedEncodedConfig
     c.tapes.length = D.tapeCount ∧
     StructuredGuardedEncodedTapes c.tapes physical
 
+def StructuredLogicalEquivEncodedConfig
+    (D : Description) (c : Configuration)
+    (physical : Tape Bool) : Prop :=
+  c.state < D.stateCount ∧
+    c.tapes.length = D.tapeCount ∧
+    StructuredLogicalEquivEncodedTapes c.tapes physical
+
 /--
 Representation invariant for an ordinary one-tape machine configuration whose
 finite-control state is supplied by a caller-provided state map.
@@ -891,6 +1219,13 @@ def StructuredGuardedEncodedPhysicalConfig
     (physical : MachineDescription.Configuration) : Prop :=
   physical.state = stateMap c.state ∧
     StructuredGuardedEncodedConfig D c physical.tape
+
+def StructuredLogicalEquivEncodedPhysicalConfig
+    (stateMap : Nat -> Nat) (D : Description)
+    (c : Configuration)
+    (physical : MachineDescription.Configuration) : Prop :=
+  physical.state = stateMap c.state ∧
+    StructuredLogicalEquivEncodedConfig D c physical.tape
 
 theorem structuredEncodedTapes_self
     (logical : List (Tape Bool)) :
@@ -921,6 +1256,26 @@ theorem structuredGuardedEncodedConfig_self
   exact
     ⟨hstate, htapes, structuredGuardedEncodedTapes_self c.tapes⟩
 
+theorem structuredLogicalEquivEncodedConfig_self
+    (D : Description) (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredLogicalEquivEncodedConfig D c
+      (encodedStructuredTapes c.tapes) := by
+  exact
+    ⟨hstate, htapes,
+      structuredLogicalEquivEncodedTapes_self c.tapes⟩
+
+theorem structuredLogicalEquivEncodedConfig_guarded_self
+    (D : Description) (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredLogicalEquivEncodedConfig D c
+      (encodedGuardedStructuredTapes c.tapes) := by
+  exact
+    ⟨hstate, htapes,
+      structuredLogicalEquivEncodedTapes_guarded_self c.tapes⟩
+
 theorem structuredEncodedConfig_tape_eq
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredEncodedConfig D c physical) :
@@ -931,6 +1286,12 @@ theorem structuredGuardedEncodedConfig_tape_eq
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredGuardedEncodedConfig D c physical) :
     physical = encodedGuardedStructuredTapes c.tapes :=
+  h.right.right
+
+theorem structuredLogicalEquivEncodedConfig_tapes
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredLogicalEquivEncodedConfig D c physical) :
+    StructuredLogicalEquivEncodedTapes c.tapes physical :=
   h.right.right
 
 theorem structuredEncodedConfig_tapes_length
@@ -945,6 +1306,12 @@ theorem structuredGuardedEncodedConfig_tapes_length
     c.tapes.length = D.tapeCount :=
   h.right.left
 
+theorem structuredLogicalEquivEncodedConfig_tapes_length
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredLogicalEquivEncodedConfig D c physical) :
+    c.tapes.length = D.tapeCount :=
+  h.right.left
+
 theorem structuredEncodedConfig_state_lt
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredEncodedConfig D c physical) :
@@ -954,6 +1321,12 @@ theorem structuredEncodedConfig_state_lt
 theorem structuredGuardedEncodedConfig_state_lt
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredGuardedEncodedConfig D c physical) :
+    c.state < D.stateCount :=
+  h.left
+
+theorem structuredLogicalEquivEncodedConfig_state_lt
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredLogicalEquivEncodedConfig D c physical) :
     c.state < D.stateCount :=
   h.left
 
@@ -979,6 +1352,30 @@ theorem structuredGuardedEncodedPhysicalConfig_self
   exact
     ⟨rfl, structuredGuardedEncodedConfig_self D c hstate htapes⟩
 
+theorem structuredLogicalEquivEncodedPhysicalConfig_self
+    (stateMap : Nat -> Nat) (D : Description)
+    (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredLogicalEquivEncodedPhysicalConfig stateMap D c
+      { state := stateMap c.state
+        tape := encodedStructuredTapes c.tapes } := by
+  exact
+    ⟨rfl, structuredLogicalEquivEncodedConfig_self D c hstate htapes⟩
+
+theorem structuredLogicalEquivEncodedPhysicalConfig_guarded_self
+    (stateMap : Nat -> Nat) (D : Description)
+    (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredLogicalEquivEncodedPhysicalConfig stateMap D c
+      { state := stateMap c.state
+        tape := encodedGuardedStructuredTapes c.tapes } := by
+  exact
+    ⟨rfl,
+      structuredLogicalEquivEncodedConfig_guarded_self
+        D c hstate htapes⟩
+
 theorem structuredEncodedPhysicalConfig_state_eq
     {stateMap : Nat -> Nat} {D : Description}
     {c : Configuration}
@@ -992,6 +1389,14 @@ theorem structuredGuardedEncodedPhysicalConfig_state_eq
     {c : Configuration}
     {physical : MachineDescription.Configuration}
     (h : StructuredGuardedEncodedPhysicalConfig stateMap D c physical) :
+    physical.state = stateMap c.state :=
+  h.left
+
+theorem structuredLogicalEquivEncodedPhysicalConfig_state_eq
+    {stateMap : Nat -> Nat} {D : Description}
+    {c : Configuration}
+    {physical : MachineDescription.Configuration}
+    (h : StructuredLogicalEquivEncodedPhysicalConfig stateMap D c physical) :
     physical.state = stateMap c.state :=
   h.left
 
@@ -1010,6 +1415,14 @@ theorem structuredGuardedEncodedPhysicalConfig_tape_eq
     (h : StructuredGuardedEncodedPhysicalConfig stateMap D c physical) :
     physical.tape = encodedGuardedStructuredTapes c.tapes :=
   structuredGuardedEncodedConfig_tape_eq h.right
+
+theorem structuredLogicalEquivEncodedPhysicalConfig_tapes
+    {stateMap : Nat -> Nat} {D : Description}
+    {c : Configuration}
+    {physical : MachineDescription.Configuration}
+    (h : StructuredLogicalEquivEncodedPhysicalConfig stateMap D c physical) :
+    StructuredLogicalEquivEncodedTapes c.tapes physical.tape :=
+  structuredLogicalEquivEncodedConfig_tapes h.right
 
 /-!
 ## Three-tape wrapper

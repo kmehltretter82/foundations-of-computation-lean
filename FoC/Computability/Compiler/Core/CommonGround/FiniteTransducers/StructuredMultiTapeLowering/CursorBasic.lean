@@ -327,6 +327,16 @@ theorem seekTape0Description_physicalPrimitiveContract :
     exact cursorNoopDescription_haltsFromTape
       (encodedStructuredTapes logical)
 
+/-- Guarded-layout version of the fixed tape-0 seek no-op. -/
+theorem seekTape0Description_physicalPrimitiveGuardedContract :
+    PhysicalPrimitiveGuardedContract (PhysicalPrimitive.seekTape 0)
+      seekTape0Description where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro logical _henabled
+    exact cursorNoopDescription_haltsFromTape
+      (encodedGuardedStructuredTapes logical)
+
 /-- Return-to-block-start is also a no-op once the caller is already there. -/
 def returnBlockStartNoopDescription : MachineDescription :=
   cursorNoopDescription
@@ -339,6 +349,16 @@ theorem returnBlockStartNoopDescription_physicalPrimitiveContract :
     intro logical _henabled
     exact cursorNoopDescription_haltsFromTape
       (encodedStructuredTapes logical)
+
+/-- Guarded-layout version of the block-start no-op. -/
+theorem returnBlockStartNoopDescription_physicalPrimitiveGuardedContract :
+    PhysicalPrimitiveGuardedContract PhysicalPrimitive.returnToBlockStart
+      returnBlockStartNoopDescription where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro logical _henabled
+    exact cursorNoopDescription_haltsFromTape
+      (encodedGuardedStructuredTapes logical)
 
 
 end MultiTapeLowering
