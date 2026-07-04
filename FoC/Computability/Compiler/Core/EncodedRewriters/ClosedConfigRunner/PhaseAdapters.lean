@@ -258,7 +258,7 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv
     (Tape.Equiv.symm hbridge)
     ⟨nB, by simpa [HaltsWithTapeIn, HaltsFromTapeIn] using hnB⟩
   rcases hB_equiv with ⟨Tactual, hB_actual_halt, hB_actual_equiv⟩
-  
+
   have hseq_actual := seqSubroutine_haltsFromTape_of_haltsFromTape
     (A := seqSubroutine A identity Direction.right)
     (B := B) (handoffMove := Direction.left)
@@ -464,7 +464,7 @@ theorem SeqViaCanonical_closed_equiv
   have hA_eq := hA_closed Tmid hA_run
   have hA_eq_moved := Tape.Equiv.move (Tape.Equiv.move hA_eq Direction.right) Direction.left
   rw [hmid_bridge] at hA_eq_moved
-  
+
   have hB_equiv := HaltsFromTapeEquiv_of_input_equiv (D := B)
     (Tin := Tape.move Direction.left (Tape.move Direction.right Tmid))
     (Tin' := Tape.input midInput)

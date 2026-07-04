@@ -148,8 +148,7 @@ def MixedParserStackDefaultedInternalMarkerFinisherAssemblySourceRestSpec
           sourceRestBits
           (preservingCellPassCellBits sourceRestBits))
 
-def
-    MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest :
+def MixedParserStackDefaultedInternalMarkerFinisherConstructionForAssemblySourceRest :
     Prop :=
   exists finish : MachineDescription,
     MixedParserStackDefaultedInternalMarkerFinisherAssemblySourceRestSpec finish

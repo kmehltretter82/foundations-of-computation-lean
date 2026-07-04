@@ -106,8 +106,7 @@ def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
         (MixedParserStackWholeSourcePrefixQuotedSeparatedTape
           w sourceRestBits stage)
 
-def
-    MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest :
+def MixedParserStackPrefixQuotedSeparatedFinisherConstructionForAssemblySourceRest :
     Prop :=
   exists finish : MachineDescription,
     MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec finish

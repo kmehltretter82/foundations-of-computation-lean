@@ -131,8 +131,7 @@ def MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec
             w sourceRestBits stage)
           (assemblySourceRestFinishRawTailBits sourceRestBits stage))
 
-def
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :
+def MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :
     Prop :=
   exists finish : MachineDescription,
     MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec finish
