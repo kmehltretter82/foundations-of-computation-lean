@@ -517,6 +517,241 @@ theorem rejectPostFieldHandoffAfterFirstGapTape_move_left_move_right
                   false L).map some)
                 [none, none]))
 
+theorem selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase_eq_prefixBits_reverse
+    (L : DovetailLayout) :
+    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+        L =
+      List.append
+        ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map some)
+        [none] := by
+  unfold selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
+  change postPaddingOutputPrefixAfterStageBase (ParsedLayoutBits L)
+      L.stage [none] =
+    List.append
+      ((selectedProjectionPaddedTailCleanupPrefixBits L).reverse.map some)
+      [none]
+  exact postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse L
+
+theorem leadingBlankLeftShiftTargetTapeWithPadding_leftTwice_eq_rightEdgeRewindSourceWithPrefix
+    (baseBits bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.left
+          (leadingBlankLeftShiftTargetTapeWithPadding
+            (List.append (baseBits.reverse.map some) [none])
+            bits padding)) =
+      rightEdgeRewindSourceTapeWithBase
+        ([] : List (Option Bool))
+        (List.append baseBits bits)
+        (none :: leadingBlankLeftShiftTargetVisiblePadding padding) := by
+  cases bits <;> cases baseBits <;> cases padding <;>
+    simp [leadingBlankLeftShiftTargetTapeWithPadding,
+      rightEdgeRewindSourceTapeWithBase,
+      leadingBlankLeftShiftTargetVisiblePadding, tapeAtCells,
+      Tape.move, Tape.moveLeft, List.reverse_append,
+      List.map_reverse, List.append_assoc]
+
+def rejectPostFieldHandoffRightPadding
+    (L : DovetailLayout) : List (Option Bool) :=
+  List.append (List.replicate 3 (none : Option Bool))
+    (List.append
+      ((selectedProjectionPaddedTailCleanupSelectedHitBits
+        false L).map some)
+      [none, none])
+
+def rejectPostFieldHandoffPostGapPadding
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    List (Option Bool) :=
+  postFieldHandoffAfterSentinelGapPadding deletedTail
+    (rejectPostFieldHandoffRightPadding L)
+
+def rejectPostFieldHandoffRewindBits
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool) :
+    Word Bool :=
+  List.append
+    (selectedProjectionPaddedTailCleanupPrefixBits L)
+    (List.append pref [leftBit])
+
+def rejectPostFieldHandoffRewindPadding
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    List (Option Bool) :=
+  none ::
+    leadingBlankLeftShiftTargetVisiblePadding
+      (rejectPostFieldHandoffPostGapPadding L deletedTail)
+
+-- The compacted reject handoff still carries the decoded-prefix scaffold in
+-- the after-stage left base.  Two left moves expose that scaffold as the
+-- prefix part of the right-edge rewind word; the restoration leaf below must
+-- rebuild the exact decoded-prefix source tape from this rewound boundary.
+def rejectPostFieldHandoffRewoundTape
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) : Tape Bool :=
+  rightEdgeRewindTargetTapeWithBase
+    ([] : List (Option Bool))
+    (rejectPostFieldHandoffRewindBits L pref leftBit)
+    (rejectPostFieldHandoffRewindPadding L deletedTail)
+
+def rejectPostFieldDecodedPrefixRestorerSourceTape
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) : Tape Bool :=
+  rejectPostFieldHandoffRewoundTape L pref leftBit deletedTail
+
+def RejectPostFieldHandoffRightEdgeRewinderSpec
+    (rewinder : MachineDescription) : Prop :=
+  rewinder.SubroutineReady ∧
+    forall (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+      (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] =
+          false :: deletedTail ->
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
+          L =
+        List.append pref [leftBit] ->
+      rewinder.HaltsFromTape
+        (rejectPostFieldHandoffAfterFirstGapTape
+          L pref leftBit deletedTail)
+        (rejectPostFieldHandoffRewoundTape
+          L pref leftBit deletedTail)
+
+def RejectPostFieldHandoffRightEdgeRewinderConstruction : Prop :=
+  exists rewinder : MachineDescription,
+    RejectPostFieldHandoffRightEdgeRewinderSpec rewinder
+
+def RejectPostFieldDecodedPrefixRestorerSpec
+    (normalizer : MachineDescription) : Prop :=
+  normalizer.SubroutineReady ∧
+    forall (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+      (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] =
+          false :: deletedTail ->
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
+          L =
+        List.append pref [leftBit] ->
+      normalizer.HaltsFromTapeEquiv
+        (rejectPostFieldDecodedPrefixRestorerSourceTape
+          L pref leftBit deletedTail)
+        (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
+          false L 0)
+
+def RejectPostFieldDecodedPrefixRestorerConstruction : Prop :=
+  exists normalizer : MachineDescription,
+    RejectPostFieldDecodedPrefixRestorerSpec normalizer
+
+def rejectPostFieldHandoffRightEdgeRewindDescription :
+    MachineDescription :=
+  canonicalSeqDescription leftMoveTwiceDescription
+    rightEdgeRewindDescription
+
+theorem rejectPostFieldHandoffRightEdgeRewindDescription_subroutineReady :
+    rejectPostFieldHandoffRightEdgeRewindDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    leftMoveTwiceDescription_subroutineReady
+    rightEdgeRewindDescription_subroutineReady
+
+theorem rejectPostFieldHandoffAfterFirstGapTape_leftTwice_eq_rightEdgeRewindSource
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.left
+          (rejectPostFieldHandoffAfterFirstGapTape
+            L pref leftBit deletedTail)) =
+      rightEdgeRewindSourceTapeWithBase
+        ([] : List (Option Bool))
+        (rejectPostFieldHandoffRewindBits L pref leftBit)
+        (rejectPostFieldHandoffRewindPadding L deletedTail) := by
+  rw [rejectPostFieldHandoffAfterFirstGapTape,
+    selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase_eq_prefixBits_reverse]
+  simpa [rejectPostFieldHandoffRewindBits,
+    rejectPostFieldHandoffRewindPadding,
+    rejectPostFieldHandoffPostGapPadding,
+    rejectPostFieldHandoffRightPadding] using
+    leadingBlankLeftShiftTargetTapeWithPadding_leftTwice_eq_rightEdgeRewindSourceWithPrefix
+      (selectedProjectionPaddedTailCleanupPrefixBits L)
+      (List.append pref [leftBit])
+      (postFieldHandoffAfterSentinelGapPadding deletedTail
+        (List.append (List.replicate 3 (none : Option Bool))
+          (List.append
+            ((selectedProjectionPaddedTailCleanupSelectedHitBits
+              false L).map some)
+            [none, none])))
+
+theorem rejectPostFieldHandoff_rightEdgeRewind_haltsFrom
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    rejectPostFieldHandoffRightEdgeRewindDescription.HaltsFromTape
+      (rejectPostFieldHandoffAfterFirstGapTape
+        L pref leftBit deletedTail)
+      (rejectPostFieldHandoffRewoundTape
+        L pref leftBit deletedTail) := by
+  have hsource :=
+    rejectPostFieldHandoffAfterFirstGapTape_leftTwice_eq_rightEdgeRewindSource
+      L pref leftBit deletedTail
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      leftMoveTwiceDescription_subroutineReady
+      rightEdgeRewindDescription_subroutineReady
+      (leftMoveTwiceDescription_haltsFromTape
+        (rejectPostFieldHandoffAfterFirstGapTape
+          L pref leftBit deletedTail))
+      (by
+        rw [hsource, rejectPostFieldHandoffRewindPadding])
+      (by
+        simpa [rejectPostFieldHandoffRewoundTape] using
+          rightEdgeRewindDescription_haltsFromTapeWithBase
+            ([] : List (Option Bool))
+            (rejectPostFieldHandoffRewindBits L pref leftBit)
+            (rejectPostFieldHandoffRewindPadding L deletedTail))
+
+theorem rejectPostFieldHandoffRightEdgeRewinderConstruction_core :
+    RejectPostFieldHandoffRightEdgeRewinderConstruction := by
+  exact
+    ⟨rejectPostFieldHandoffRightEdgeRewindDescription,
+      rejectPostFieldHandoffRightEdgeRewindDescription_subroutineReady,
+      fun L pref leftBit deletedTail _hdeleted _hpayload =>
+        rejectPostFieldHandoff_rightEdgeRewind_haltsFrom
+          L pref leftBit deletedTail⟩
+
+theorem rightEdgeRewindTargetTapeWithBase_move_left_move_right_append_last
+    (baseLeft : List (Option Bool)) (pref : Word Bool)
+    (last : Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeRewindTargetTapeWithBase
+            baseLeft (List.append pref [last]) padding)) =
+      rightEdgeRewindTargetTapeWithBase
+        baseLeft (List.append pref [last]) padding := by
+  cases pref with
+  | nil =>
+      simpa using
+        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
+          baseLeft last [] padding
+  | cons first rest =>
+      simpa using
+        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
+          baseLeft first (List.append rest [last]) padding
+
+theorem rejectPostFieldHandoffRewoundTape_move_left_move_right
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rejectPostFieldHandoffRewoundTape
+            L pref leftBit deletedTail)) =
+      rejectPostFieldHandoffRewoundTape
+        L pref leftBit deletedTail := by
+  simpa [rejectPostFieldHandoffRewoundTape,
+    rejectPostFieldHandoffRewindBits, List.append_assoc] using
+    rightEdgeRewindTargetTapeWithBase_move_left_move_right_append_last
+      ([] : List (Option Bool))
+      (List.append (selectedProjectionPaddedTailCleanupPrefixBits L) pref)
+      leftBit
+      (rejectPostFieldHandoffRewindPadding L deletedTail)
+
+-- This is the remaining finite-machine leaf: it must use the decoded scaffold
+-- exposed by the rewound reject handoff to reconstruct the exact
+-- `selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape`.
+theorem rejectPostFieldDecodedPrefixRestorerConstruction_core :
+    RejectPostFieldDecodedPrefixRestorerConstruction := by
+  sorry
+
 def RejectPostFieldRemainingGapsSpec
     (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
@@ -537,9 +772,36 @@ def RejectPostFieldRemainingGapsConstruction : Prop :=
   exists normalizer : MachineDescription,
     RejectPostFieldRemainingGapsSpec normalizer
 
-theorem rejectPostFieldHandoff_remainingGapsConstruction_core :
+theorem rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
+    (hrewinder : RejectPostFieldHandoffRightEdgeRewinderConstruction)
+    (hrestorer : RejectPostFieldDecodedPrefixRestorerConstruction) :
     RejectPostFieldRemainingGapsConstruction := by
-  sorry
+  rcases hrewinder with ⟨rewinder, hrewinderSpec⟩
+  rcases hrestorer with ⟨restorer, hrestorerSpec⟩
+  exact
+    ⟨canonicalSeqDescription rewinder restorer,
+      by
+        constructor
+        · exact
+            canonicalSeqDescription_subroutineReady
+              hrewinderSpec.left hrestorerSpec.left
+        · intro L pref leftBit deletedTail hdeleted hpayload
+          exact
+            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+              hrewinderSpec.left
+              hrestorerSpec.left
+              (hrewinderSpec.right
+                L pref leftBit deletedTail hdeleted hpayload)
+              (rejectPostFieldHandoffRewoundTape_move_left_move_right
+                L pref leftBit deletedTail)
+              (hrestorerSpec.right
+                L pref leftBit deletedTail hdeleted hpayload)⟩
+
+theorem rejectPostFieldHandoff_remainingGapsConstruction_core :
+    RejectPostFieldRemainingGapsConstruction :=
+  rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
+    rejectPostFieldHandoffRightEdgeRewinderConstruction_core
+    rejectPostFieldDecodedPrefixRestorerConstruction_core
 
 theorem rejectPostFieldHandoff_remainingGaps_haltsFrom_of_config_and_payload_append_last
     {normalizer : MachineDescription}
