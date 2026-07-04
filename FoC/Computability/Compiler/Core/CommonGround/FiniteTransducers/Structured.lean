@@ -267,6 +267,15 @@ def applyActions
   cases h
   rfl
 
+@[simp] theorem currentReads_three
+    (D : Description) (h : D.tapeCount = 3)
+    (state : Nat) (T U V : Tape Bool) :
+    D.currentReads { state := state, tapes := [T, U, V] } =
+      [Tape.read T, Tape.read U, Tape.read V] := by
+  cases D
+  cases h
+  rfl
+
 @[simp] theorem applyActions_one
     (D : Description) (h : D.tapeCount = 1)
     (action : TapeAction) (T : Tape Bool) :
@@ -293,6 +302,15 @@ def applyActions
     (first second : TapeAction) (T U : Tape Bool) :
     D.applyActions [first, second] [T, U] =
       [first.apply T, second.apply U] := by
+  cases D
+  cases h
+  rfl
+
+@[simp] theorem applyActions_three
+    (D : Description) (h : D.tapeCount = 3)
+    (first second third : TapeAction) (T U V : Tape Bool) :
+    D.applyActions [first, second, third] [T, U, V] =
+      [first.apply T, second.apply U, third.apply V] := by
   cases D
   cases h
   rfl
