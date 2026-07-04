@@ -708,13 +708,6 @@ theorem rejectPostFieldHandoffRewoundTape_move_left_move_right
       leftBit
       (rejectPostFieldHandoffRewindPadding L deletedTail)
 
--- This is the remaining finite-machine leaf: it must use the decoded scaffold
--- exposed by the rewound reject handoff to reconstruct the exact
--- `selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape`.
-theorem rejectPostFieldDecodedPrefixRestorerConstruction_core :
-    RejectPostFieldDecodedPrefixRestorerConstruction := by
-  sorry
-
 def RejectPostFieldRemainingGapsSpec
     (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
@@ -759,12 +752,6 @@ theorem rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
                 L pref leftBit deletedTail)
               (hrestorerSpec.right
                 L pref leftBit deletedTail hdeleted hpayload)⟩
-
-theorem rejectPostFieldHandoff_remainingGapsConstruction_core :
-    RejectPostFieldRemainingGapsConstruction :=
-  rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
-    rejectPostFieldHandoffRightEdgeRewinderConstruction_core
-    rejectPostFieldDecodedPrefixRestorerConstruction_core
 
 theorem rejectPostFieldHandoff_remainingGaps_haltsFrom_of_config_and_payload_append_last
     {normalizer : MachineDescription}
@@ -1103,26 +1090,190 @@ def AcceptPostFieldRewoundToDecodedPrefixConstruction : Prop :=
   exists normalizer : MachineDescription,
     AcceptPostFieldRewoundToDecodedPrefixSpec normalizer
 
-def acceptPostFieldDecodedPrefixScanPadding
+/--
+Branch-independent padding for the decoded-prefix scan source.  The first
+blank is the scan stop cell; the replicated blanks cover the counted scratch
+window before the branch-specific post-count tail.
+-/
+def postFieldDecodedPrefixScanPadding
+    (useAccept : Bool)
     (L : DovetailLayout) : List (Option Bool) :=
   none ::
     List.append
       (List.replicate
         (selectedProjectionPaddedTailCleanupScratchCountBits
-          true L).length
+          useAccept L).length
         (none : Option Bool))
       (selectedProjectionPaddedTailCleanupPostCountTailCells
-        true L 0)
+        useAccept L 0)
 
--- Once the accept-side post-field payload has been rebuilt, the final
--- positioning step is just a right-edge scan across the restored
--- `ParsedLayoutBits`, followed by one right move onto the decoded-prefix gap.
-def acceptPostFieldDecodedPrefixScanSourceTape
+/--
+Common scan-source tape after post-field restoration.  Both accept and reject
+branches should eventually reach this shape, then reuse
+{name}`rightEdgeScanThenRightMoveDescription`.
+-/
+def postFieldDecodedPrefixScanSourceTape
+    (useAccept : Bool)
     (L : DovetailLayout) : Tape Bool :=
   rightEdgeScanSourceTapeFromLeft [none]
     (ParsedLayoutBits L)
-    (acceptPostFieldDecodedPrefixScanPadding L)
+    (postFieldDecodedPrefixScanPadding useAccept L)
 
+/--
+Expose the skipped/count split inside {name}`ParsedLayoutBits` for the shared
+post-field materializer.  This is the cheap shape fact used before the hard
+finite-machine restoration leaf.
+-/
+theorem postFieldDecodedPrefixScanSourceTape_eq_split
+    (useAccept : Bool) (L : DovetailLayout) :
+    postFieldDecodedPrefixScanSourceTape useAccept L =
+      rightEdgeScanSourceTapeFromLeft [none]
+        (List.append
+          (selectedProjectionPaddedTailCleanupScratchSkippedBits
+            useAccept L)
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L))
+        (postFieldDecodedPrefixScanPadding useAccept L) := by
+  rw [postFieldDecodedPrefixScanSourceTape,
+    selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count]
+
+def acceptPostFieldDecodedPrefixScanPadding
+    (L : DovetailLayout) : List (Option Bool) :=
+  postFieldDecodedPrefixScanPadding true L
+
+/--
+Accept-specialized view of {name}`postFieldDecodedPrefixScanSourceTape`,
+retained for the older accept-side construction names.
+-/
+def acceptPostFieldDecodedPrefixScanSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  postFieldDecodedPrefixScanSourceTape true L
+
+/--
+Select the branch-specific payload that survived the first-field eraser.
+The shared materializer proves against this selector, while the old accept and
+reject wrappers specialize it to their existing payload names.
+-/
+def countWindowPostFieldDecodedPrefixMaterializerPayload
+    (useAccept : Bool) (L : DovetailLayout) : Word Bool :=
+  if useAccept then
+    selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload L
+  else
+    selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload L
+
+/--
+Branch-specific source tape for the shared post-field materializer.  Accept
+starts from the right-edge-rewound handoff tape; reject starts from the rewound
+handoff exposed by the reject restorer path.
+-/
+def countWindowPostFieldDecodedPrefixMaterializerSourceTape
+    (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
+    (leftBit : Bool) (deletedTail : Word Bool) : Tape Bool :=
+  if useAccept then
+    acceptPostFieldHandoffAfterRightEdgeRewindTape
+      L pref leftBit deletedTail
+  else
+    rejectPostFieldDecodedPrefixRestorerSourceTape
+      L pref leftBit deletedTail
+
+theorem countWindowPostFieldDecodedPrefixMaterializerPayload_true
+    (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixMaterializerPayload true L =
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload
+        L := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixMaterializerPayload_false
+    (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixMaterializerPayload false L =
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
+        L := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_true
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    countWindowPostFieldDecodedPrefixMaterializerSourceTape
+        true L pref leftBit deletedTail =
+      acceptPostFieldHandoffAfterRightEdgeRewindTape
+        L pref leftBit deletedTail := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_false
+    (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+    (deletedTail : Word Bool) :
+    countWindowPostFieldDecodedPrefixMaterializerSourceTape
+        false L pref leftBit deletedTail =
+      rejectPostFieldDecodedPrefixRestorerSourceTape
+        L pref leftBit deletedTail := by
+  rfl
+
+/--
+Finite-machine contract for the shared post-field materializer.  It rebuilds
+the full decoded {name}`ParsedLayoutBits` scan source from either branch's
+post-field right-edge tape.
+-/
+def CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
+    (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
+      (leftBit : Bool) (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] =
+          false :: deletedTail ->
+      countWindowPostFieldDecodedPrefixMaterializerPayload
+          useAccept L =
+        List.append pref [leftBit] ->
+      materializer.HaltsFromTape
+        (countWindowPostFieldDecodedPrefixMaterializerSourceTape
+          useAccept L pref leftBit deletedTail)
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+
+/-- Existence wrapper for {name}`CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec`. -/
+def CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :
+    Prop :=
+  exists materializer : MachineDescription,
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
+      materializer
+
+/--
+Shared hard construction leaf for both post-field branches.  The remaining
+finite-machine work is here: reconstruct the decoded-prefix scan source from
+the branch-specific right-edge handoff tape.
+-/
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
+  sorry
+
+/--
+Reject-specialized wrapper contract for the shared post-field materializer.
+It keeps the older reject construction boundary while routing through
+{name}`postFieldDecodedPrefixScanSourceTape`.
+-/
+def RejectPostFieldDecodedPrefixScanSourceSpec
+    (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+      (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] =
+          false :: deletedTail ->
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
+          L =
+        List.append pref [leftBit] ->
+      materializer.HaltsFromTape
+        (rejectPostFieldDecodedPrefixRestorerSourceTape
+          L pref leftBit deletedTail)
+        (postFieldDecodedPrefixScanSourceTape false L)
+
+/-- Existence wrapper for {name}`RejectPostFieldDecodedPrefixScanSourceSpec`. -/
+def RejectPostFieldDecodedPrefixScanSourceConstruction : Prop :=
+  exists materializer : MachineDescription,
+    RejectPostFieldDecodedPrefixScanSourceSpec materializer
+
+/--
+Accept-specialized wrapper contract for the shared post-field materializer.
+This preserves the older accept construction boundary while the implementation
+is supplied by the branch-independent materializer.
+-/
 def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
     (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -1138,10 +1289,50 @@ def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
           L pref leftBit deletedTail)
         (acceptPostFieldDecodedPrefixScanSourceTape L)
 
+/-- Existence wrapper for {name}`AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec`. -/
 def AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction :
     Prop :=
   exists materializer : MachineDescription,
     AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec materializer
+
+/--
+Project the reject branch out of the shared count-window post-field
+materializer.
+-/
+theorem rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+    (hmaterializer :
+      CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
+    RejectPostFieldDecodedPrefixScanSourceConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  exact
+    ⟨materializer,
+      hmaterializerSpec.left,
+      fun L pref leftBit deletedTail hdeleted hpayload => by
+        simpa [
+          countWindowPostFieldDecodedPrefixMaterializerPayload_false,
+          countWindowPostFieldDecodedPrefixMaterializerSourceTape_false] using
+          hmaterializerSpec.right
+            false L pref leftBit deletedTail hdeleted hpayload⟩
+
+/--
+Project the accept branch out of the shared count-window post-field
+materializer.
+-/
+theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+    (hmaterializer :
+      CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
+    AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  exact
+    ⟨materializer,
+      hmaterializerSpec.left,
+      fun L pref leftBit deletedTail hdeleted hpayload => by
+        simpa [
+          acceptPostFieldDecodedPrefixScanSourceTape,
+          countWindowPostFieldDecodedPrefixMaterializerPayload_true,
+          countWindowPostFieldDecodedPrefixMaterializerSourceTape_true] using
+          hmaterializerSpec.right
+            true L pref leftBit deletedTail hdeleted hpayload⟩
 
 def AcceptPostFieldDecodedPrefixScanToRewindSpec
     (scanner : MachineDescription) : Prop :=
@@ -1157,13 +1348,59 @@ def AcceptPostFieldDecodedPrefixScanToRewindConstruction :
   exists scanner : MachineDescription,
     AcceptPostFieldDecodedPrefixScanToRewindSpec scanner
 
-def acceptPostFieldDecodedPrefixScanToRewindDescription :
+def postFieldDecodedPrefixScanToRewindDescription :
     MachineDescription :=
   rightEdgeScanThenRightMoveDescription
 
+theorem postFieldDecodedPrefixScanToRewindDescription_subroutineReady :
+    postFieldDecodedPrefixScanToRewindDescription.SubroutineReady :=
+  rightEdgeScanThenRightMoveDescription_subroutineReady
+
+theorem postFieldDecodedPrefixScanSourceTape_move_left_move_right
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (postFieldDecodedPrefixScanSourceTape useAccept L)) =
+      postFieldDecodedPrefixScanSourceTape useAccept L := by
+  simpa [postFieldDecodedPrefixScanSourceTape,
+    postFieldDecodedPrefixScanPadding] using
+    rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
+      [none] (ParsedLayoutBits L) (none : Option Bool)
+      (List.append
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).length
+          (none : Option Bool))
+        (selectedProjectionPaddedTailCleanupPostCountTailCells
+          useAccept L 0))
+
+theorem postFieldDecodedPrefixScanToRewind_haltsFrom
+    (useAccept : Bool) (L : DovetailLayout) :
+    postFieldDecodedPrefixScanToRewindDescription.HaltsFromTapeEquiv
+      (postFieldDecodedPrefixScanSourceTape useAccept L)
+      (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
+        useAccept L 0) := by
+  simpa [postFieldDecodedPrefixScanToRewindDescription,
+    postFieldDecodedPrefixScanSourceTape,
+    postFieldDecodedPrefixScanPadding,
+    selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape] using
+    rightEdgeScanThenRightMoveDescription_haltsFromTapeEquiv
+      (ParsedLayoutBits L)
+      (List.append
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            useAccept L).length
+          (none : Option Bool))
+        (selectedProjectionPaddedTailCleanupPostCountTailCells
+          useAccept L 0))
+
+def acceptPostFieldDecodedPrefixScanToRewindDescription :
+    MachineDescription :=
+  postFieldDecodedPrefixScanToRewindDescription
+
 theorem acceptPostFieldDecodedPrefixScanToRewindDescription_subroutineReady :
     acceptPostFieldDecodedPrefixScanToRewindDescription.SubroutineReady :=
-  rightEdgeScanThenRightMoveDescription_subroutineReady
+  postFieldDecodedPrefixScanToRewindDescription_subroutineReady
 
 theorem acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
     (L : DovetailLayout) :
@@ -1171,17 +1408,8 @@ theorem acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
         (Tape.move Direction.right
           (acceptPostFieldDecodedPrefixScanSourceTape L)) =
       acceptPostFieldDecodedPrefixScanSourceTape L := by
-  simpa [acceptPostFieldDecodedPrefixScanSourceTape,
-    acceptPostFieldDecodedPrefixScanPadding] using
-    rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
-      [none] (ParsedLayoutBits L) (none : Option Bool)
-      (List.append
-        (List.replicate
-          (selectedProjectionPaddedTailCleanupScratchCountBits
-            true L).length
-          (none : Option Bool))
-        (selectedProjectionPaddedTailCleanupPostCountTailCells
-          true L 0))
+  simpa [acceptPostFieldDecodedPrefixScanSourceTape] using
+    postFieldDecodedPrefixScanSourceTape_move_left_move_right true L
 
 theorem acceptPostFieldDecodedPrefixScanToRewind_haltsFrom
     (L : DovetailLayout) :
@@ -1190,18 +1418,8 @@ theorem acceptPostFieldDecodedPrefixScanToRewind_haltsFrom
       (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
         true L 0) := by
   simpa [acceptPostFieldDecodedPrefixScanToRewindDescription,
-    acceptPostFieldDecodedPrefixScanSourceTape,
-    acceptPostFieldDecodedPrefixScanPadding,
-    selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape] using
-    rightEdgeScanThenRightMoveDescription_haltsFromTapeEquiv
-      (ParsedLayoutBits L)
-      (List.append
-        (List.replicate
-          (selectedProjectionPaddedTailCleanupScratchCountBits
-            true L).length
-          (none : Option Bool))
-        (selectedProjectionPaddedTailCleanupPostCountTailCells
-          true L 0))
+    acceptPostFieldDecodedPrefixScanSourceTape] using
+    postFieldDecodedPrefixScanToRewind_haltsFrom true L
 
 theorem acceptPostFieldDecodedPrefixScanToRewindConstruction_core :
     AcceptPostFieldDecodedPrefixScanToRewindConstruction := by
@@ -1210,6 +1428,43 @@ theorem acceptPostFieldDecodedPrefixScanToRewindConstruction_core :
       acceptPostFieldDecodedPrefixScanToRewindDescription_subroutineReady,
       fun L =>
         acceptPostFieldDecodedPrefixScanToRewind_haltsFrom L⟩
+
+theorem rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
+    (hmaterializer : RejectPostFieldDecodedPrefixScanSourceConstruction) :
+    RejectPostFieldDecodedPrefixRestorerConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  exact
+    ⟨canonicalSeqDescription materializer
+        postFieldDecodedPrefixScanToRewindDescription,
+      by
+        constructor
+        · exact
+            canonicalSeqDescription_subroutineReady
+              hmaterializerSpec.left
+              postFieldDecodedPrefixScanToRewindDescription_subroutineReady
+        · intro L pref leftBit deletedTail hdeleted hpayload
+          exact
+            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+              hmaterializerSpec.left
+              postFieldDecodedPrefixScanToRewindDescription_subroutineReady
+              (hmaterializerSpec.right
+                L pref leftBit deletedTail hdeleted hpayload)
+              (postFieldDecodedPrefixScanSourceTape_move_left_move_right
+                false L)
+              (postFieldDecodedPrefixScanToRewind_haltsFrom
+                false L)⟩
+
+theorem rejectPostFieldDecodedPrefixRestorerConstruction_core :
+    RejectPostFieldDecodedPrefixRestorerConstruction :=
+  rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
+    (rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+      countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core)
+
+theorem rejectPostFieldHandoff_remainingGapsConstruction_core :
+    RejectPostFieldRemainingGapsConstruction :=
+  rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
+    rejectPostFieldHandoffRightEdgeRewinderConstruction_core
+    rejectPostFieldDecodedPrefixRestorerConstruction_core
 
 theorem acceptPostFieldHandoff_rightEdgeRewind_haltsFrom
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
@@ -1314,12 +1569,10 @@ theorem acceptPostFieldBoundaryToDecodedPrefixConstruction_of_reposition
               (hnormalizer.right
                 L pref leftBit deletedTail hdeleted hpayload)⟩
 
--- This is the accept-side finite-machine leaf that still needs a concrete
--- implementation: it rebuilds the full parsed-layout scan source from the
--- post-field right-edge boundary.
 theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_core :
-    AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction := by
-  sorry
+    AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction :=
+  acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core
 
 theorem acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
     (hmaterializer :
