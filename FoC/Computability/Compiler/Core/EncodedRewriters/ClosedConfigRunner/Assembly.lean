@@ -25,10 +25,8 @@ namespace BoundedLayoutRunner
 
 /-!
 Selected projection enters phase assembly through the finite-description
-padded/equivalence route.  Exact/right-shifted selected-projection adapters live
-in
-{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.RightShiftedPrimitives`;
-this assembly module does not import that compatibility path.
+padded/equivalence route.  The old exact/right-shifted selected-projection
+adapter path has been removed rather than kept as a compatibility import.
 
 The exact/right-shifted selected-merge primitive scaffold chain is false: the
 merge phase intentionally preserves simulator-layout scratch structure that is

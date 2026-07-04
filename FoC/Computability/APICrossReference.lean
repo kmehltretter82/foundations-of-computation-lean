@@ -459,15 +459,12 @@ The current construction surface is intentionally split by role.
 * Compatibility wrappers:
   {module}`FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted`,
   the exact code-word emitter helpers in
-  {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`, and
-  the explicit
-  {lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.RightShiftedPrimitives`
-  module. Import the last module only for legacy adapter consumers.
-* Obsolete exact/right-shifted selected primitive route: there is no active
-  scaffold exported for {lit}`SelectedProjectionPrimitiveExactConstruction` or
-  {lit}`SelectedProjectionPrimitiveRightShiftedConstruction`, and the selected
-  merge exact/right-shifted scaffold chain is not an active target. The live
-  route is the padded/equivalence finite-description route.
+  {module}`FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters`.
+* Removed exact/right-shifted selected primitive route: there is no active
+  scaffold exported for selected-projection exact/right-shifted primitive
+  packaging, and the selected-merge exact/right-shifted scaffold chain is not
+  an active target. The live route is the padded/equivalence finite-description
+  route.
 * Broad finite-machine construction leaves: the twenty real build
   warnings are the four generated code-prefix search leaves, the decoded
   bounded simulator normalized-machine leaf, three CommonGround finite
@@ -603,13 +600,9 @@ than by file order.
    weakening them to a semantic search theorem would not discharge the finite
    controller construction.
 
-The legacy selected-projection exact/right-shifted adapter predicates remain
-quarantined in
-{lit}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.RightShiftedPrimitives`.
-There is intentionally no exported scaffold for
-{lit}`SelectedProjectionPrimitiveExactConstruction` or
-{lit}`SelectedProjectionPrimitiveRightShiftedConstruction`: the live route is
-the selected-projection padded/equivalence finite-description construction.
+The legacy selected-projection exact/right-shifted adapter predicates have been
+removed rather than kept as importable aliases. The live route is the
+selected-projection padded/equivalence finite-description construction.
 
 ## Construction Boundaries
 

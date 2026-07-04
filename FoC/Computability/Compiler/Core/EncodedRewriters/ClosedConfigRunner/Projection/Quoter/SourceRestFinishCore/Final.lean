@@ -1,12 +1,13 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTailAdapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterConstruction
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerConstruction
 
 set_option doc.verso true
 
 /-!
 This module closes the source-rest finisher construction used by the input
-quoter. It combines the live-tail adapters with the reusable and raw-bool
-source-start routes and exposes the final finite-leaf construction the quoter
-assembly imports.
+quoter. It combines the live-tail emitter and joiner construction routes with
+the reusable and raw-bool source-start routes, then exposes the final
+finite-leaf construction the quoter assembly imports.
 -/
 
 namespace FoC
