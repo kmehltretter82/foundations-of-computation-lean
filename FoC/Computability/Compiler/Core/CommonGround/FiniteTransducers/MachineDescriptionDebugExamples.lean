@@ -33,6 +33,10 @@ private def debugTestSourceConfig : Configuration where
   state := DebugTestMachine.start
   tape := debugTestSourceTape
 
+private def debugTestStuckConfig : Configuration where
+  state := DebugTestMachine.start
+  tape := tapeAtCells [none] [none]
+
 private def debugTestTargetTape : Tape Bool :=
   tapeAtCells
     ([some true, some false, some true, some false, none] :
@@ -214,9 +218,7 @@ private theorem compareTapeEquiv_keeps_real_content_mismatch :
   decide
 
 private theorem debugTrace_stuck_row :
-    DebugTestMachine.debugTrace 10
-        { state := DebugTestMachine.start
-          tape := tapeAtCells [none] [none] } =
+    DebugTestMachine.debugTrace 10 debugTestStuckConfig =
       [ { step := 0
           before :=
             { state := 0
@@ -232,6 +234,74 @@ private theorem debugTrace_stuck_row :
                 { left := [none]
                   head := none
                   right := [] } } } ] := by
+  decide
+
+private theorem debugTraceRange_selects_middle_steps :
+    (DebugTestMachine.debugTraceRange 10 debugTestSourceConfig 1 3).map
+        (fun row => row.step) =
+      [1, 2] := by
+  decide
+
+private theorem debugTraceFrom_selects_suffix_steps :
+    (DebugTestMachine.debugTraceFrom 10 debugTestSourceConfig 2).map
+        (fun row => row.step) =
+      [2, 3] := by
+  decide
+
+private theorem debugFirstBreakpoint_state :
+    (DebugTestMachine.debugFirstBreakpoint 10 debugTestSourceConfig
+        (breakOnState 2)).map
+        (fun hit => (hit.step, hit.config.state)) =
+      some (2, 2) := by
+  decide
+
+private theorem debugTraceUntilBreakpoint_state :
+    (DebugTestMachine.debugTraceUntilBreakpoint 10 debugTestSourceConfig
+        (breakOnState 2)).map
+        (fun row => row.step) =
+      [0, 1, 2] := by
+  decide
+
+private theorem debugTraceAroundBreakpoint_state :
+    (DebugTestMachine.debugTraceAroundBreakpoint 10 debugTestSourceConfig
+        (breakOnState 2) 1).map
+        (fun row => row.step) =
+      [1, 2, 3] := by
+  decide
+
+private theorem debugFirstBreakpoint_read :
+    (DebugTestMachine.debugFirstBreakpoint 10 debugTestSourceConfig
+        (breakOnRead (some false))).map
+        (fun hit => (hit.step, hit.config.state)) =
+      some (0, 0) := by
+  decide
+
+private theorem debugFirstBreakpoint_transition_key :
+    (DebugTestMachine.debugFirstBreakpoint 10 debugTestSourceConfig
+        (breakOnTransitionKey 1 (some true))).map
+        (fun hit => (hit.step, hit.config.state)) =
+      some (1, 1) := by
+  decide
+
+private theorem debugFirstBreakpoint_halt :
+    (DebugTestMachine.debugFirstBreakpoint 10 debugTestSourceConfig
+        (breakOnHalt DebugTestMachine)).map
+        (fun hit => (hit.step, hit.config.state)) =
+      some (4, DebugTestMachine.halt) := by
+  decide
+
+private theorem debugTraceUntilBreakpoint_halt_stops_at_last_row :
+    (DebugTestMachine.debugTraceUntilBreakpoint 10 debugTestSourceConfig
+        (breakOnHalt DebugTestMachine)).map
+        (fun row => row.step) =
+      [0, 1, 2, 3] := by
+  decide
+
+private theorem debugFirstBreakpoint_stuck :
+    (DebugTestMachine.debugFirstBreakpoint 10 debugTestStuckConfig
+        (breakOnStuck DebugTestMachine)).map
+        (fun hit => (hit.step, hit.config.state)) =
+      some (0, DebugTestMachine.start) := by
   decide
 
 private theorem debugFirstExpectationFailure_accepts_target_step :
@@ -266,6 +336,63 @@ private theorem debugFirstExpectationFailure_reports_first_bad_step :
               { left := [some true, some false, none]
                 head := some false
                 right := [some true, none] } }) := by
+  decide
+
+private theorem debugTraceAroundFirstExpectationFailure_bad_state :
+    (DebugTestMachine.debugTraceAroundFirstExpectationFailure 4
+        debugTestSourceConfig
+        [ { step := 2
+            expectedState? := some 99
+            expectedTape? := none } ]
+        1).map
+        (fun row => row.step) =
+      [1, 2, 3] := by
+  decide
+
+private theorem debugWatchpointHits_state_changed :
+    (DebugTestMachine.debugWatchpointHits 10 debugTestSourceConfig
+        watchStateChanged).map
+        (fun hit => hit.step) =
+      [0, 1, 2, 3] := by
+  decide
+
+private theorem debugWatchpointHits_head_changed :
+    (DebugTestMachine.debugWatchpointHits 10 debugTestSourceConfig
+        watchHeadChanged).map
+        (fun hit => hit.step) =
+      [0, 1, 2, 3] := by
+  decide
+
+private theorem debugWatchpointHits_left_nonblank_changed :
+    (DebugTestMachine.debugWatchpointHits 10 debugTestSourceConfig
+        watchLeftNonblankChanged).map
+        (fun hit => hit.step) =
+      [0, 1, 2, 3] := by
+  decide
+
+private theorem debugWatchpointHits_right_nonblank_changed :
+    (DebugTestMachine.debugWatchpointHits 10 debugTestSourceConfig
+        watchRightNonblankChanged).map
+        (fun hit => hit.step) =
+      [0, 1, 2] := by
+  decide
+
+private theorem debugWatchpointHits_normalized_output_unchanged :
+    (DebugTestMachine.debugWatchpointHits 10 debugTestSourceConfig
+        watchNormalizedOutputChanged).map
+        (fun hit => hit.step) =
+      [] := by
+  decide
+
+private theorem tapeSummary_debugTestSourceTape :
+    tapeSummary 2 debugTestSourceTape =
+      { leftLength := 1
+        leftPrefix := [none]
+        head := some false
+        rightPrefix := [some true, some false]
+        rightLength := 4
+        outputPrefix := [false, true]
+        outputLength := 4 } := by
   decide
 
 end FiniteTransducers
