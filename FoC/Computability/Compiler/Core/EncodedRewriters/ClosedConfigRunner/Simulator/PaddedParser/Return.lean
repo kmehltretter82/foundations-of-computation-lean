@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedParser.Scanners
 
 set_option doc.verso true
@@ -212,7 +213,7 @@ theorem fixedDescriptionBoundedSimulator_tapeAtCells_left_blank_append_none_equi
       · rfl
       · simp [DovetailInitialLayoutInitializer.tapeAtCells,
           Tape.input,
-          fixedDescriptionBoundedSimulator_dropTrailingNone_append_none]
+          FoC.Computability.dropTrailingNone_append_none]
 
 namespace FixedDescriptionBoundedSimulator
 

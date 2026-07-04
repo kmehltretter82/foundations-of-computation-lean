@@ -1,4 +1,4 @@
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
@@ -161,24 +161,15 @@ theorem entryDescription_haltsFrom_sourceTape
   constructor <;>
     rw [entryDescription_run_sourceTape]
 
-theorem tapeAtCells_moveRight_moveLeft_append_none
-    (pref right : List (Option Bool)) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (List.append pref [none]) right)) =
-      tapeAtCells (List.append pref [none]) right := by
-  exact
-    tapeAtCells_move_right_move_left_append_singleton
-      pref (none : Option Bool) right
-
 theorem entryTape_moveRight
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     Tape.move Direction.right (entryTape skipped count tail) =
       sourceTape skipped count tail := by
   rw [entryTape, sourceTape]
   exact
-    tapeAtCells_moveRight_moveLeft_append_none
+    tapeAtCells_move_right_move_left_append_singleton
       ((List.append skipped count).reverse.map some)
+      (none : Option Bool)
       (none ::
         none ::
         none ::

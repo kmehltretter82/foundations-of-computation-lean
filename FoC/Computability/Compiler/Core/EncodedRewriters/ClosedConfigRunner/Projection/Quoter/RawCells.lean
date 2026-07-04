@@ -1,4 +1,4 @@
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore
 
 set_option doc.verso true
@@ -957,17 +957,6 @@ def SelectedProjectionInputQuoterPostBoundaryConstruction : Prop :=
   exists post : MachineDescription,
     SelectedProjectionInputQuoterPostBoundarySpec post
 
-theorem tapeAtCells_move_left_move_right_cons_cons
-    (left : List (Option Bool)) (head next : Option Bool)
-    (right : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (tapeAtCells left (head :: next :: right))) =
-      tapeAtCells left (head :: next :: right) := by
-  exact
-    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_left_move_right_cons_cons
-      left head next right
-
 theorem sourceRestFieldBits_cons_cons
     (L : DovetailLayout) :
     exists head : Bool,
@@ -1004,7 +993,7 @@ theorem selectedProjectionInputQuoterPostBoundarySourceTape_eq_prefixBoundaryTap
     selectedProjectionInputQuoterPrefixBoundaryTape, hsource]
   simp [List.map_cons]
   exact
-    tapeAtCells_move_left_move_right_cons_cons
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_left_move_right_cons_cons
       (assemblySourceRestBoundaryLeftRev L.input L.stage)
       (some head) (some next)
       (List.append (right.map some) [none])

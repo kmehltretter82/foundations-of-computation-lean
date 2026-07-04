@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.ControllerResultContinue.StageInputContinue
 
 set_option doc.verso true
@@ -374,31 +375,6 @@ theorem stageInputContinueBoundaryRewriterDescription_haltsFromTape_prefixBits
         simpa [inputBits, outputBits] using
           congrArg Configuration.tape hrun)
 
-theorem dropTrailingNone_replicate_none_bool
-    (n : Nat) :
-    Tape.dropTrailingNone
-        (List.replicate n (none : Option Bool)) = [] := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simp [List.replicate_succ, Tape.dropTrailingNone, ih]
-
-theorem dropTrailingNone_append_replicate_none_bool
-    (xs : List (Option Bool)) (n : Nat) :
-    Tape.dropTrailingNone
-        (List.append xs (List.replicate n none)) =
-      Tape.dropTrailingNone xs := by
-  induction xs with
-  | nil =>
-      exact dropTrailingNone_replicate_none_bool n
-  | cons cell rest ih =>
-      change
-        Tape.dropTrailingNone
-            (cell :: List.append rest (List.replicate n none)) =
-          Tape.dropTrailingNone (cell :: rest)
-      rw [Tape.dropTrailingNone_cons, Tape.dropTrailingNone_cons, ih]
-
 theorem none_cons_replicate_none_append_none
     (n : Nat) :
     none ::
@@ -424,7 +400,9 @@ theorem dropTrailingNone_append_boundary_blanks
             List.append (List.replicate n none) [none])) =
       Tape.dropTrailingNone xs := by
   rw [none_cons_replicate_none_append_none]
-  exact dropTrailingNone_append_replicate_none_bool xs (n + 2)
+  exact
+    FoC.Computability.dropTrailingNone_append_replicate_none
+      xs (n + 2)
 
 theorem stageInputContinueBoundaryPaddedTape_equiv
     (prefixBits : Word Bool) (trail : Nat) :
@@ -462,7 +440,9 @@ theorem stageInputContinueBoundaryPaddedTape_equiv
           Tape.dropTrailingNone (List.append base [none]) =
             Tape.dropTrailingNone base := by
         rw [show [none] = List.replicate 1 (none : Option Bool) by rfl]
-        exact dropTrailingNone_append_replicate_none_bool base 1
+        exact
+          FoC.Computability.dropTrailingNone_append_replicate_none
+            base 1
       exact
         (by
           simpa [base, List.append_assoc] using

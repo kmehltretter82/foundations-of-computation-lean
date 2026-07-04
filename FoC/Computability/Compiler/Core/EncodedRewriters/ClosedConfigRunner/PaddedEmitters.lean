@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Spec
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
@@ -120,37 +121,6 @@ theorem inputWithTrailingBlankPadding_cons_move_right_eq_tapeAtCells
         DovetailInitialLayoutInitializer.tapeAtCells,
         Tape.move, Tape.moveRight]
 
-theorem dropTrailingNone_replicate_none
-    (padding : Nat) :
-    Tape.dropTrailingNone
-        (List.replicate padding (none : Option Bool)) = [] := by
-  induction padding with
-  | zero =>
-      rfl
-  | succ padding ih =>
-      simp [List.replicate, Tape.dropTrailingNone, ih]
-
-theorem dropTrailingNone_append_replicate_none
-    (xs : List (Option Bool)) (padding : Nat) :
-    Tape.dropTrailingNone
-        (xs ++ List.replicate padding (none : Option Bool)) =
-      Tape.dropTrailingNone xs := by
-  induction padding generalizing xs with
-  | zero =>
-      simp
-  | succ padding ih =>
-      calc
-        Tape.dropTrailingNone
-            (xs ++ List.replicate (padding + 1) (none : Option Bool)) =
-          Tape.dropTrailingNone
-            ((xs ++ [none]) ++
-              List.replicate padding (none : Option Bool)) := by
-            simp [List.replicate_succ, List.append_assoc]
-        _ = Tape.dropTrailingNone (xs ++ [none]) :=
-          ih (xs ++ [none])
-        _ = Tape.dropTrailingNone xs :=
-          dropTrailingNone_append_none xs
-
 theorem inputWithTrailingBlankPadding_equiv_input
     (w : Word Bool) (padding : Nat) :
     Tape.Equiv (inputWithTrailingBlankPadding w padding)
@@ -161,13 +131,16 @@ theorem inputWithTrailingBlankPadding_equiv_input
       · rfl
       · constructor
         · rfl
-        · exact dropTrailingNone_replicate_none padding
+        · exact
+            FoC.Computability.dropTrailingNone_replicate_none
+              (symbol := Bool) padding
   | cons bit rest =>
       constructor
       · rfl
       · constructor
         · rfl
-        · exact dropTrailingNone_append_replicate_none
+        · exact
+            FoC.Computability.dropTrailingNone_append_replicate_none
             (rest.map some) padding
 
 theorem inputWithTrailingBlankPadding_normalizedOutput

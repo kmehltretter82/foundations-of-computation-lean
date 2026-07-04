@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.BoundedTrace
 
 set_option doc.verso true
@@ -36,48 +37,6 @@ def FixedDescriptionBoundedSimulatorPaddedTape
         head := some bit
         right := rest.map some ++ List.replicate padding none }
 
-theorem fixedDescriptionBoundedSimulator_dropTrailingNone_append_none
-    {symbol : Type u} (xs : List (Option symbol)) :
-    Tape.dropTrailingNone (xs ++ [none]) =
-      Tape.dropTrailingNone xs := by
-  induction xs with
-  | nil =>
-      rfl
-  | cons x xs ih =>
-      rw [List.cons_append, Tape.dropTrailingNone_cons,
-        Tape.dropTrailingNone_cons, ih]
-
-theorem fixedDescriptionBoundedSimulator_dropTrailingNone_replicate_none
-    (padding : Nat) :
-    Tape.dropTrailingNone
-        (List.replicate padding (none : Option Bool)) = [] := by
-  induction padding with
-  | zero =>
-      rfl
-  | succ padding ih =>
-      simp [List.replicate, Tape.dropTrailingNone, ih]
-
-theorem fixedDescriptionBoundedSimulator_dropTrailingNone_append_replicate_none
-    (xs : List (Option Bool)) (padding : Nat) :
-    Tape.dropTrailingNone
-        (xs ++ List.replicate padding (none : Option Bool)) =
-      Tape.dropTrailingNone xs := by
-  induction padding generalizing xs with
-  | zero =>
-      simp
-  | succ padding ih =>
-      calc
-        Tape.dropTrailingNone
-            (xs ++ List.replicate (padding + 1) (none : Option Bool)) =
-          Tape.dropTrailingNone
-            ((xs ++ [none]) ++
-              List.replicate padding (none : Option Bool)) := by
-            simp [List.replicate_succ, List.append_assoc]
-        _ = Tape.dropTrailingNone (xs ++ [none]) :=
-          ih (xs ++ [none])
-        _ = Tape.dropTrailingNone xs :=
-          fixedDescriptionBoundedSimulator_dropTrailingNone_append_none xs
-
 theorem FixedDescriptionBoundedSimulatorPaddedTape_equiv_input
     (w : Word Bool) (padding : Nat) :
     Tape.Equiv (FixedDescriptionBoundedSimulatorPaddedTape w padding)
@@ -89,7 +48,8 @@ theorem FixedDescriptionBoundedSimulatorPaddedTape_equiv_input
       · constructor
         · rfl
         · exact
-            fixedDescriptionBoundedSimulator_dropTrailingNone_replicate_none
+            FoC.Computability.dropTrailingNone_replicate_none
+              (symbol := Bool)
               padding
   | cons bit rest =>
       constructor
@@ -97,7 +57,7 @@ theorem FixedDescriptionBoundedSimulatorPaddedTape_equiv_input
       · constructor
         · rfl
         · exact
-            fixedDescriptionBoundedSimulator_dropTrailingNone_append_replicate_none
+            FoC.Computability.dropTrailingNone_append_replicate_none
               (rest.map some) padding
 
 theorem FixedDescriptionBoundedSimulatorPaddedTape_normalizedOutput

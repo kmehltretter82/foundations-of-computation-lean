@@ -272,13 +272,8 @@ theorem SelectedMergePaddedEmitterAfterTransitionPaddedTape_move_left_move_right
       SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
     ⟨tail, htail⟩
   rw [SelectedMergePaddedEmitterAfterTransitionPaddedTape, htail]
-  simpa [List.map_append, List.append_assoc] using
-    tapeAtCells_move_left_move_right_cons_cons
-      (List.append
-        ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
-        [none])
-      (some false) (some false)
-      (List.append (tail.map some) [none, none])
+  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
 
 def SelectedMergePaddedEmitterAfterInputPaddedTape
     (p : SelectedMergeEmitterPayload) : Tape Bool :=

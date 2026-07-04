@@ -1,4 +1,4 @@
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.ClosedBasic
 
@@ -174,17 +174,6 @@ theorem natBits_eq_encodeNatAppend
   rw [encodeNatAppend]
   rw [encodeCodeWordAsInput_append]
   rfl
-
-theorem tapeAtCells_move_right_move_left_cons
-    (cell : Option Bool) (left : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool)) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (cell :: left) (head :: right))) =
-      tapeAtCells (cell :: left) (head :: right) := by
-  exact
-    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
-      cell left head right
 
 theorem runConfig_eq_of_transitions_eq
     (D E : MachineDescription)
@@ -578,7 +567,7 @@ theorem nonemptyNatSuffixHandoffConfigWithBase_move_right
   unfold nonemptyNatSuffixHandoffConfigWithBase
   rw [htail]
   simpa [List.append_assoc] using
-    tapeAtCells_move_right_move_left_cons (some true)
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
 
 theorem nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
@@ -596,7 +585,7 @@ theorem nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
   unfold nonemptyNatSuffixHandoffConfigWithBaseAndRight
   rw [htail]
   simpa [List.append_assoc] using
-    tapeAtCells_move_right_move_left_cons (some true)
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b)
       (List.append (suffixTail.map some) rightPadding)
 
@@ -1190,7 +1179,7 @@ theorem natSuffixHandoffConfigWithBase_move_right
   unfold natSuffixHandoffConfigWithBase
   rw [htail]
   simpa [List.append_assoc] using
-    tapeAtCells_move_right_move_left_cons (some true)
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
 
 theorem natSuffixHandoffConfigWithBaseAndRight_move_right
@@ -1208,7 +1197,7 @@ theorem natSuffixHandoffConfigWithBaseAndRight_move_right
   unfold natSuffixHandoffConfigWithBaseAndRight
   rw [htail]
   simpa [List.append_assoc] using
-    tapeAtCells_move_right_move_left_cons (some true)
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b)
       (List.append (suffixTail.map some) rightPadding)
 

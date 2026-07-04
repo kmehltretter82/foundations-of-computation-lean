@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
 
 set_option doc.verso true
@@ -656,7 +657,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
       simpa [cellCodeBits, encodeCell,
         encodeCodeWordAsInput,
         encodeCodeSymbolAsInput, List.append_assoc] using
-        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
           (some b) (suffixTail.map some)
@@ -666,7 +667,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
@@ -674,7 +675,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some false)
               (some true :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
@@ -709,7 +710,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
       simpa [cellCodeBits, encodeCell,
         encodeCodeWordAsInput,
         encodeCodeSymbolAsInput, List.append_assoc] using
-        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
           (some b)
@@ -720,7 +721,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
               (some b)
@@ -729,7 +730,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
           using
-            DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+            FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some false)
               (some true :: some true :: some false :: baseLeft)
               (some b)
@@ -870,14 +871,14 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
@@ -898,14 +899,14 @@ theorem boolOnlySuffixHandoffConfigWithBaseAndRight_move_right
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (List.append (suffixTail.map some) rightPadding)
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput, List.append_assoc] using
-      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
         (some b) (List.append (suffixTail.map some) rightPadding)
@@ -1136,7 +1137,7 @@ theorem transitionPrefixHandoffConfigWithBase_move_right
   unfold transitionPrefixHandoffConfigWithBase transitionPrefixBits
   simpa [encodeCodeSymbolAsInput, List.append_assoc]
     using
-      DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some false :: some false :: baseLeft)
         (some b) (suffixTail.map some)
@@ -2569,7 +2570,7 @@ theorem cellListCanonicalHandoffConfigWithBase_move_right
         hleft
   | cons cell left =>
       simpa [hleft] using
-        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           cell left (some b) (suffixTail.map some)
 
 theorem cellListCanonicalHandoffConfigWithBaseAndRight_move_right
@@ -2591,7 +2592,7 @@ theorem cellListCanonicalHandoffConfigWithBaseAndRight_move_right
         hleft
   | cons cell left =>
       simpa [hleft, List.append_assoc] using
-        DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+        FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           cell left (some b)
           (List.append (suffixTail.map some) rightPadding)
 

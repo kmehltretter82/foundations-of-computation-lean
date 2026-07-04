@@ -413,18 +413,6 @@ theorem sourceRightEndDescription_haltsFrom_rewindTarget_sourceBits
       (sourceRightEndTape (sourceBits L)) :=
   sourceRightEndDescription_haltsFromTape (sourceBits L)
 
-theorem tapeAtCells_move_left_move_right_cons_cons
-    (left : List (Option Bool)) (head next : Option Bool)
-    (right : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (DovetailInitialLayoutInitializer.tapeAtCells left
-            (head :: next :: right))) =
-      DovetailInitialLayoutInitializer.tapeAtCells left
-        (head :: next :: right) := by
-  simp [DovetailInitialLayoutInitializer.tapeAtCells, Tape.move,
-    Tape.moveLeft, Tape.moveRight]
-
 theorem rewindTargetTape_sourceBits_move_left_move_right
     (L : DovetailLayout) :
     Tape.move Direction.left

@@ -1409,17 +1409,6 @@ theorem SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false
       simp [
         FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ]
 
-theorem tapeAtCells_move_left_move_right_cons_cons
-    (left : List (Option Bool)) (cell next : Option Bool)
-    (rest : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (DovetailInitialLayoutInitializer.tapeAtCells left
-            (cell :: next :: rest))) =
-      DovetailInitialLayoutInitializer.tapeAtCells left
-        (cell :: next :: rest) := by
-  rfl
-
 theorem selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right
     (p : SelectedMergeEmitterPayload) :
     Tape.move Direction.left
@@ -1430,10 +1419,7 @@ theorem selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right
       SelectedMergePaddedEmitterOuterTailBits_cons_cons_false_false p with
     ⟨tail, htail⟩
   rw [SelectedMergePaddedEmitterAfterHeaderTape, htail]
-  simpa using
-    tapeAtCells_move_left_move_right_cons_cons
-      ((encodeCodeSymbolAsInput MachineCodeSymbol.transition).map some).reverse
-      (some false) (some false) (tail.map some)
+  rfl
 
 
 end BoundedLayoutRunner

@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.SourceShapeCore
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter.TerminalCore
@@ -186,7 +187,7 @@ theorem sourceRightEndLeftTape_move_right_equiv_terminal_configRunner
   rw [sourceRightEndLeftTape_move_right_eq_terminal_with_blank_configRunner]
   constructor
   · exact
-      fixedDescriptionBoundedSimulator_dropTrailingNone_append_none
+      FoC.Computability.dropTrailingNone_append_none
         (bits.reverse.map some)
   constructor <;>
     rfl

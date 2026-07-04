@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
 
 set_option doc.verso true
@@ -155,13 +156,6 @@ def LayoutParserConstruction : Prop :=
   exists parser : MachineDescription,
     LayoutParserSpec parser
 
-theorem dropTrailingNone_append_none {symbol} (xs : List (Option symbol)) :
-    Tape.dropTrailingNone (xs ++ [none]) = Tape.dropTrailingNone xs := by
-  induction xs with
-  | nil => rfl
-  | cons x xs ih =>
-    rw [List.cons_append, Tape.dropTrailingNone_cons, Tape.dropTrailingNone_cons, ih]
-
 theorem checkedInputTape_equiv_input (bits : Languages.Word Bool) :
     Tape.Equiv (checkedInputTape bits) (Tape.input bits) := by
   cases bits with
@@ -177,7 +171,7 @@ theorem checkedInputTape_equiv_input (bits : Languages.Word Bool) :
     · constructor
       · rfl
       · simp [checkedInputTape, Tape.input]
-        rw [dropTrailingNone_append_none]
+        rw [FoC.Computability.dropTrailingNone_append_none]
 
 end BoundedLayoutRunner
 end EncodedRewriters

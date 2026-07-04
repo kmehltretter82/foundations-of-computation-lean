@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppend
 
 set_option doc.verso true
@@ -249,47 +250,6 @@ theorem rightEdgeRewindTargetTape_normalizedOutput
   rw [Tape.normalizedOutput, rightEdgeRewindTargetTape_cells]
   simp [Function.comp_def, List.filterMap_append]
 
-theorem dropTrailingNone_replicate_none
-    (padding : Nat) :
-    Tape.dropTrailingNone
-        (List.replicate padding (none : Option Bool)) = [] := by
-  induction padding with
-  | zero =>
-      rfl
-  | succ padding ih =>
-      simp [List.replicate, Tape.dropTrailingNone, ih]
-
-theorem dropTrailingNone_append_none
-    (xs : List (Option Bool)) :
-    Tape.dropTrailingNone (xs ++ [none]) =
-      Tape.dropTrailingNone xs := by
-  induction xs with
-  | nil => rfl
-  | cons cell rest ih =>
-      rw [List.cons_append, Tape.dropTrailingNone_cons,
-        Tape.dropTrailingNone_cons, ih]
-
-theorem dropTrailingNone_append_replicate_none
-    (xs : List (Option Bool)) (padding : Nat) :
-    Tape.dropTrailingNone
-        (xs ++ List.replicate padding (none : Option Bool)) =
-      Tape.dropTrailingNone xs := by
-  induction padding generalizing xs with
-  | zero =>
-      simp
-  | succ padding ih =>
-      calc
-        Tape.dropTrailingNone
-            (xs ++ List.replicate (padding + 1) (none : Option Bool)) =
-          Tape.dropTrailingNone
-            ((xs ++ [none]) ++
-              List.replicate padding (none : Option Bool)) := by
-            simp [List.replicate_succ, List.append_assoc]
-        _ = Tape.dropTrailingNone (xs ++ [none]) :=
-          ih (xs ++ [none])
-        _ = Tape.dropTrailingNone xs :=
-          dropTrailingNone_append_none xs
-
 theorem rightEdgeRewindTargetTape_equiv_paddedInput
     (bits : Word Bool) (padding : Nat) :
     Tape.Equiv
@@ -300,7 +260,7 @@ theorem rightEdgeRewindTargetTape_equiv_paddedInput
   | nil =>
       simp [rightEdgeRewindTargetTape, inputWithTrailingBlankPadding,
         tapeAtCells, Tape.Equiv, Tape.dropTrailingNone,
-        dropTrailingNone_replicate_none]
+        FoC.Computability.dropTrailingNone_replicate_none]
   | cons bit rest =>
       constructor
       · simp [rightEdgeRewindTargetTape, inputWithTrailingBlankPadding,

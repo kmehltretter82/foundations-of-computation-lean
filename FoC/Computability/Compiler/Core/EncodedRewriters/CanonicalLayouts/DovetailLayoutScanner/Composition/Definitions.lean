@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
@@ -243,7 +244,7 @@ theorem transitionRemainderHandoffConfigWithBase_move_right
         ((b :: suffixTail).map some) := by
   unfold transitionRemainderHandoffConfigWithBase transitionRemainderBits
   simpa [List.append_assoc] using
-    FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
       (some true)
       (some false :: some false :: baseLeft)
       (some b) (suffixTail.map some)
@@ -260,7 +261,7 @@ theorem transitionRemainderHandoffConfigWithBaseAndRight_move_right
         (List.append ((b :: suffixTail).map some) rightPadding) := by
   unfold transitionRemainderHandoffConfigWithBaseAndRight transitionRemainderBits
   simpa [List.append_assoc] using
-    FoC.Computability.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix.tapeAtCells_move_right_move_left_cons
+    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
       (some true)
       (some false :: some false :: baseLeft)
       (some b) (List.append (suffixTail.map some) rightPadding)

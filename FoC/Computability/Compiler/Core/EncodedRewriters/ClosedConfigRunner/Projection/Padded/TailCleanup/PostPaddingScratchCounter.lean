@@ -1,5 +1,5 @@
 import FoC.Computability.ListLemmas
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingRejectRoute
 
 set_option doc.verso true
@@ -63,15 +63,6 @@ theorem scratchCounter_replicate_none_append_cons
   exact
     list_replicate_append_self
       (none : Option Bool) markers tail
-
-theorem tapeAtCells_moveRight_cons
-    (leftRev : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) :
-    Tape.moveRight (tapeAtCells leftRev (cell :: rest)) =
-      tapeAtCells (cell :: leftRev) rest := by
-  exact
-    FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_moveRight_cons
-      leftRev cell rest
 
 /--
 Preserve raw source cells while appending one temporary {lit}`false` marker

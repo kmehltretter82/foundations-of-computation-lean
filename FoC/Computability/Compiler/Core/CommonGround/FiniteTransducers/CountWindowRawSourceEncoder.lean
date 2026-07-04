@@ -1,5 +1,5 @@
 import FoC.Computability.ListLemmas
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.CellPass
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
@@ -226,38 +226,6 @@ theorem countWindowRawSourceEncoderTargetTape_eq_outputCells
   rw [countWindowRawSourceEncoderCellFieldCells_map_append]
   simp [List.append_assoc]
 
-theorem countWindowRawSourceEncoder_dropTrailingNone_append_none
-    (xs : List (Option Bool)) :
-    Tape.dropTrailingNone (xs ++ [none]) = Tape.dropTrailingNone xs := by
-  induction xs with
-  | nil =>
-      rfl
-  | cons cell xs ih =>
-      cases cell <;>
-        simp [Tape.dropTrailingNone, ih]
-
-theorem countWindowRawSourceEncoder_dropTrailingNone_append_replicate_none
-    (xs : List (Option Bool)) (padding : Nat) :
-    Tape.dropTrailingNone
-        (xs ++ List.replicate padding (none : Option Bool)) =
-      Tape.dropTrailingNone xs := by
-  induction padding generalizing xs with
-  | zero =>
-      simp
-  | succ padding ih =>
-      calc
-        Tape.dropTrailingNone
-            (xs ++ List.replicate (padding + 1)
-              (none : Option Bool)) =
-          Tape.dropTrailingNone
-            ((xs ++ [none]) ++
-              List.replicate padding (none : Option Bool)) := by
-            simp [List.replicate_succ, List.append_assoc]
-        _ = Tape.dropTrailingNone (xs ++ [none]) :=
-          ih (xs ++ [none])
-        _ = Tape.dropTrailingNone xs :=
-          countWindowRawSourceEncoder_dropTrailingNone_append_none xs
-
 def countWindowRawSourceEncoderTargetTapeNoCountPadding
     (skipped count : Word Bool) (tail : List (Option Bool)) :
     Tape Bool :=
@@ -301,7 +269,7 @@ theorem countWindowRawSourceEncoderTargetTape_equiv_noCountPadding
   simp [countWindowRawSourceEncoderHeaderCells, encodeCodeSymbolAsInput,
     Tape.Equiv, tapeAtCells]
   simpa [List.append_assoc] using
-    countWindowRawSourceEncoder_dropTrailingNone_append_replicate_none
+    FoC.Computability.dropTrailingNone_append_replicate_none
       (some false :: some false :: some false ::
         (List.append
           (countWindowRawSourceEncoderLayoutLengthCells
@@ -503,7 +471,7 @@ theorem
           (List.replicate padding (none : Option Bool)) =
         [] := by
     simpa using
-      (countWindowRawSourceEncoder_dropTrailingNone_append_replicate_none
+      (FoC.Computability.dropTrailingNone_append_replicate_none
         ([] : List (Option Bool)) padding)
   have hone :
       Tape.dropTrailingNone ([none] : List (Option Bool)) = [] :=
@@ -626,23 +594,6 @@ theorem countWindowRawSourceEncoderRightEdgeScan_haltsFromTape
       (List.append skipped count)
       (countWindowRawSourceEncoderScanPadding count tail)
 
-theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_cons
-    (leftRev : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) :
-    Tape.move Direction.right (tapeAtCells leftRev (cell :: rest)) =
-      tapeAtCells (cell :: leftRev) rest := by
-  exact tapeAtCells_move_right_cons leftRev cell rest
-
-theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
-    (pref right : List (Option Bool)) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (List.append pref [none]) right)) =
-      tapeAtCells (List.append pref [none]) right := by
-  exact
-    tapeAtCells_move_right_move_left_append_singleton
-      pref (none : Option Bool) right
-
 theorem rightEdgeScanTargetTapeFromLeft_moveRight_four_fixedBlanks
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.move Direction.right
@@ -659,10 +610,10 @@ theorem rightEdgeScanTargetTapeFromLeft_moveRight_four_fixedBlanks
         padding := by
   rw [rightEdgeScanTargetTapeFromLeft]
   rw [
-    countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none]
-  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
-  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
-  rw [countWindowRawSourceEncoder_tapeAtCells_moveRight_cons]
+    tapeAtCells_move_right_move_left_append_singleton]
+  rw [tapeAtCells_move_right_cons]
+  rw [tapeAtCells_move_right_cons]
+  rw [tapeAtCells_move_right_cons]
 
 theorem rightEdgeScanTargetTapeFromLeft_moveRight_threeBlankSource
     (bits : Word Bool) (padding : List (Option Bool)) :
@@ -674,8 +625,9 @@ theorem rightEdgeScanTargetTapeFromLeft_moveRight_threeBlankSource
         (none :: none :: none :: padding) := by
   rw [rightEdgeScanTargetTapeFromLeft]
   exact
-    countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_none
-      (bits.reverse.map some) (none :: none :: none :: padding)
+    tapeAtCells_move_right_move_left_append_singleton
+      (bits.reverse.map some) (none : Option Bool)
+      (none :: none :: none :: padding)
 
 theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_four
     (skipped count : Word Bool) (tail : List (Option Bool)) :
@@ -1095,7 +1047,7 @@ theorem countWindowRawSourceEncoderBeforeCountWindowTape_moveRight
   rw [countWindowRawSourceEncoderBeforeCountWindowTape,
     countWindowRawSourceEncoderCountWindowStartTape]
   exact
-    countWindowRawSourceEncoder_tapeAtCells_moveRight_cons
+    tapeAtCells_move_right_cons
       (none ::
         none ::
         List.append

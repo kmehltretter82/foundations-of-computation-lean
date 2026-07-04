@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
+import FoC.Computability.Tape
 
 set_option doc.verso true
 
@@ -10,74 +10,48 @@ Small dependency-light tape lemmas used by concrete machine proofs.
 
 namespace FoC
 namespace Computability
-namespace CommonGround
-namespace FiniteTransducers
 
-theorem tapeAtCells_moveRight_cons
-    (leftRev : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) :
-    Tape.moveRight (tapeAtCells leftRev (cell :: rest)) =
-      tapeAtCells (cell :: leftRev) rest := by
-  cases rest <;> rfl
+theorem dropTrailingNone_append_none
+    {symbol : Type u} (xs : List (Option symbol)) :
+    Tape.dropTrailingNone (xs ++ [none]) =
+      Tape.dropTrailingNone xs := by
+  induction xs with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      rw [List.cons_append, Tape.dropTrailingNone_cons,
+        Tape.dropTrailingNone_cons, ih]
 
-theorem tapeAtCells_move_right_cons
-    (leftRev : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) :
-    Tape.move Direction.right (tapeAtCells leftRev (cell :: rest)) =
-      tapeAtCells (cell :: leftRev) rest := by
-  exact tapeAtCells_moveRight_cons leftRev cell rest
+theorem dropTrailingNone_replicate_none
+    {symbol : Type u} (padding : Nat) :
+    Tape.dropTrailingNone
+        (List.replicate padding (none : Option symbol)) = [] := by
+  induction padding with
+  | zero =>
+      rfl
+  | succ padding ih =>
+      simp [List.replicate_succ, Tape.dropTrailingNone, ih]
 
-theorem tapeAtCells_move_right_move_left_append_cons
-    (pref tail right : List (Option Bool)) (cell : Option Bool) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (List.append pref (cell :: tail)) right)) =
-      tapeAtCells (List.append pref (cell :: tail)) right := by
-  cases pref <;> cases right <;>
-    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+theorem dropTrailingNone_append_replicate_none
+    {symbol : Type u} (xs : List (Option symbol)) (padding : Nat) :
+    Tape.dropTrailingNone
+        (xs ++ List.replicate padding (none : Option symbol)) =
+      Tape.dropTrailingNone xs := by
+  induction padding generalizing xs with
+  | zero =>
+      simp
+  | succ padding ih =>
+      calc
+        Tape.dropTrailingNone
+            (xs ++ List.replicate (padding + 1) (none : Option symbol)) =
+          Tape.dropTrailingNone
+            ((xs ++ [none]) ++
+              List.replicate padding (none : Option symbol)) := by
+            simp [List.replicate_succ, List.append_assoc]
+        _ = Tape.dropTrailingNone (xs ++ [none]) :=
+          ih (xs ++ [none])
+        _ = Tape.dropTrailingNone xs :=
+          dropTrailingNone_append_none xs
 
-theorem tapeAtCells_move_right_move_left_append_singleton
-    (pref : List (Option Bool)) (cell : Option Bool)
-    (right : List (Option Bool)) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (List.append pref [cell]) right)) =
-      tapeAtCells (List.append pref [cell]) right := by
-  exact tapeAtCells_move_right_move_left_append_cons pref [] right cell
-
-theorem tapeAtCells_move_right_move_left_cons
-    (cell : Option Bool) (left : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool)) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (tapeAtCells (cell :: left) (head :: right))) =
-      tapeAtCells (cell :: left) (head :: right) := by
-  exact
-    tapeAtCells_move_right_move_left_append_cons []
-      left (head :: right) cell
-
-theorem tapeAtCells_move_left_move_right_cons_cons
-    (left : List (Option Bool)) (head next : Option Bool)
-    (right : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (tapeAtCells left (head :: next :: right))) =
-      tapeAtCells left (head :: next :: right) := by
-  simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
-
-theorem tapeAtCells_move_left_cells_append_cons_right_cons
-    (pref tail right : List (Option Bool)) (cell head : Option Bool) :
-    Tape.cells
-        (Tape.move Direction.left
-          (tapeAtCells (List.append pref (cell :: tail))
-            (head :: right))) =
-      List.append tail.reverse
-        (cell :: List.append pref.reverse (head :: right)) := by
-  cases pref <;>
-    simp [tapeAtCells, Tape.cells, Tape.move, Tape.moveLeft,
-      List.reverse_append, List.append_assoc]
-
-end FiniteTransducers
-end CommonGround
 end Computability
 end FoC

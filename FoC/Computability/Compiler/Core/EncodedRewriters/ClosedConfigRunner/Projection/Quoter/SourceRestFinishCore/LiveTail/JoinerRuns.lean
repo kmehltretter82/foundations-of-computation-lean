@@ -1,4 +1,4 @@
-import FoC.Computability.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterRuns
 
 set_option doc.verso true
@@ -65,30 +65,6 @@ theorem
     rightBlankGapPayloadScanDescription_haltsFrom_prefixQuotedSeparatedTape
       w sourceRestBits stage head rawTailRest hraw
 
-theorem commonGround_tapeAtCells_move_right_move_left_append_cons
-    (pref tail right : List (Option Bool)) (cell : Option Bool) :
-    Tape.move Direction.right
-        (Tape.move Direction.left
-          (CommonGround.FiniteTransducers.tapeAtCells
-            (List.append pref (cell :: tail)) right)) =
-      CommonGround.FiniteTransducers.tapeAtCells
-        (List.append pref (cell :: tail)) right := by
-  exact
-    CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_append_cons
-      pref tail right cell
-
-theorem commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
-    (pref tail right : List (Option Bool)) (cell head : Option Bool) :
-    Tape.cells
-        (Tape.move Direction.left
-          (CommonGround.FiniteTransducers.tapeAtCells
-            (List.append pref (cell :: tail)) (head :: right))) =
-      List.append tail.reverse
-        (cell :: List.append pref.reverse (head :: right)) := by
-  exact
-    CommonGround.FiniteTransducers.tapeAtCells_move_left_cells_append_cons_right_cons
-      pref tail right cell head
-
 theorem
     rightBlankGapPayloadScanTargetTape_move_left_move_right
     (baseLeft : List (Option Bool)) (gap : Nat)
@@ -109,7 +85,7 @@ theorem
             List.append (List.replicate gap (none : Option Bool))
               baseLeft) by
     simp [List.reverse_cons, List.map_append, List.append_assoc]]
-  rw [commonGround_tapeAtCells_move_right_move_left_append_cons
+  rw [CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_append_cons
     (payloadRest.reverse.map some)
     (List.append (List.replicate gap (none : Option Bool)) baseLeft)
     (none :: padding)
@@ -137,7 +113,7 @@ theorem rightBlankGapPayloadScanTargetTape_defaultedCells
             List.append (List.replicate gap (none : Option Bool))
               baseLeft) by
     simp [List.reverse_cons, List.map_append, List.append_assoc]]
-  rw [commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
+  rw [CommonGround.FiniteTransducers.tapeAtCells_move_left_cells_append_cons_right_cons
     (payloadRest.reverse.map some)
     (List.append (List.replicate gap (none : Option Bool)) baseLeft)
     padding (some current) none]
@@ -164,7 +140,7 @@ theorem rightBlankGapPayloadScanTargetTape_cells
             List.append (List.replicate gap (none : Option Bool))
               baseLeft) by
     simp [List.reverse_cons, List.map_append, List.append_assoc]]
-  rw [commonGround_tapeAtCells_move_left_cells_append_cons_right_cons
+  rw [CommonGround.FiniteTransducers.tapeAtCells_move_left_cells_append_cons_right_cons
     (payloadRest.reverse.map some)
     (List.append (List.replicate gap (none : Option Bool)) baseLeft)
     padding (some current) none]
@@ -228,7 +204,7 @@ theorem
     simp [List.reverse_append, List.map_reverse, List.append_assoc]]
   simpa [List.reverse_cons, List.map_append, List.map_reverse,
     List.append_assoc] using
-    commonGround_tapeAtCells_move_right_move_left_append_cons
+    CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_append_cons
       (rawTailRest.reverse.map some)
       ((List.append
         (MixedParserStackRewriterLengthHeader

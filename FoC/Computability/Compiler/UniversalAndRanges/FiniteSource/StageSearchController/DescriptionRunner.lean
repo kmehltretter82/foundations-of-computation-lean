@@ -1,3 +1,4 @@
+import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.BoundedSimulatorLoop
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
 
@@ -163,15 +164,6 @@ theorem budgetCheckerDescriptionRunnerMachine_step_run
   exact TuringMachine.Step.mk (by
     simp [budgetCheckerDescriptionRunnerMachine, haction])
 
-theorem dropTrailingNone_replicate_none
-    (n : Nat) :
-    Tape.dropTrailingNone
-        (List.replicate n (none : Option MachineCodeSymbol)) = [] := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-      simp [List.replicate, Tape.dropTrailingNone, ih]
-
 theorem budgetCheckerDescriptionRunnerTape_equiv_input
     (blankPrefix : Nat) (encoded : Word MachineCodeSymbol) :
     Tape.Equiv
@@ -180,11 +172,15 @@ theorem budgetCheckerDescriptionRunnerTape_equiv_input
   cases encoded with
   | nil =>
       constructor
-      · exact dropTrailingNone_replicate_none blankPrefix
+      · exact
+          FoC.Computability.dropTrailingNone_replicate_none
+            (symbol := MachineCodeSymbol) blankPrefix
       · constructor <;> rfl
   | cons symbol suffix =>
       constructor
-      · exact dropTrailingNone_replicate_none blankPrefix
+      · exact
+          FoC.Computability.dropTrailingNone_replicate_none
+            (symbol := MachineCodeSymbol) blankPrefix
       · constructor <;> rfl
 
 theorem budgetCheckerDescriptionRunnerMachine_computes_run
