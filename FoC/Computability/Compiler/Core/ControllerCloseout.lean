@@ -11,7 +11,7 @@ namespace Computability
 
 open Languages
 
-private theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
+theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=

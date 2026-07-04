@@ -395,19 +395,8 @@ def PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :
       PairedRecognizerDovetailStageAttemptSearchDriverRealizes
         accept reject attempt decider
 
-def PairedRecognizerDovetailTotalStageAttemptSearchDriverRealizes
-    (accept reject attempt decider : MachineDescription) : Prop :=
-  decider.WellFormed ∧
-    forall w : Word Bool, forall b : Bool,
-      decider.HaltsWithOutput w [b] <->
-        exists limit : Nat,
-          attempt.HaltsWithOutput
-            (encodeCodeWordAsInput
-              (PairedRecognizerDovetailStageInputCode w limit))
-            (encodeCodeWordAsInput
-              (encodeBoolWord [b])) ∧
-          boundedDovetailOutput
-            accept reject w limit = some [b]
+def PairedRecognizerDovetailTotalStageAttemptSearchDriverRealizes :=
+  PairedRecognizerDovetailStageAttemptSearchDriverRealizes
 
 def PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :
     Prop :=
@@ -551,57 +540,6 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
           (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
             attempt w limit fuel))))
 
--- The generated exact-fuel parser halts one cell right of the simulator-layout
--- code, but its visible output is still the canonical encoded layout.
-theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape_normalizedOutput
-    (attempt : MachineDescription)
-    (w : Word Bool) (limit fuel : Nat) :
-    Tape.normalizedOutput
-        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
-          attempt w limit fuel) =
-      encodeCodeWordAsInput
-        (SimulatorLayout.encode
-          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-            attempt w limit fuel)) := by
-  exact
-    EncodedRewriters.tape_normalizedOutput_move_right_input
-      (encodeCodeWordAsInput
-        (SimulatorLayout.encode
-          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-            attempt w limit fuel)))
-
--- Exact cells for the right-shifted generated simulator-layout target.
-theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape_cells
-    (attempt : MachineDescription)
-    (w : Word Bool) (limit fuel : Nat) :
-    Tape.cells
-        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
-          attempt w limit fuel) =
-      match
-        encodeCodeWordAsInput
-          (SimulatorLayout.encode
-            (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-              attempt w limit fuel))
-      with
-      | [] => [none, none]
-      | bit :: [] => [some bit, none]
-      | first :: second :: rest =>
-          some first :: some second :: rest.map some := by
-  unfold PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
-  cases hbits :
-      encodeCodeWordAsInput
-        (SimulatorLayout.encode
-          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-            attempt w limit fuel)) with
-  | nil =>
-      simp [Tape.cells_move_right_input]
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [Tape.cells_move_right_input]
-      | cons second tail =>
-          simp [Tape.cells_move_right_input]
-
 def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
     (attempt runner : MachineDescription) : Prop :=
   runner.SubroutineReady ∧
@@ -741,110 +679,6 @@ def PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
   CommonGround.CodeWordEmitters.ExactOutputTape
     PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
 
--- The halted simulator-output extractor uses the exact output-tape shape for
--- the decoded boolean-word code.
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputTape_normalizedOutput
-    {attempt : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
-        attempt) :
-    Tape.normalizedOutput
-        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i) =
-      encodeCodeWordAsInput
-        (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-          i) := by
-  exact
-    CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
-
--- Exact cells for the extractor target, kept separate from normalized output
--- so finite-table leaves can reason about the head position directly.
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputTape_cells
-    {attempt : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
-        attempt) :
-    Tape.cells
-        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i) =
-      match
-        encodeCodeWordAsInput
-          (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-            i)
-      with
-      | [] => [none]
-      | bit :: rest => some bit :: rest.map some := by
-  simpa using
-    CommonGround.CodeWordEmitters.exactOutputTape_cells
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
-
-def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec
-    (attempt extractor : MachineDescription) : Prop :=
-  extractor.SubroutineReady ∧
-    (forall i :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
-        attempt,
-        extractor.HaltsWithOutput
-          (encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
-              i))
-          (encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-              i))) ∧
-      forall code out : Word MachineCodeSymbol,
-        extractor.HaltsWithOutput
-          (encodeCodeWordAsInput code)
-          (encodeCodeWordAsInput out) ->
-          exists i :
-            PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
-              attempt,
-            code =
-              PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
-                i ∧
-            out =
-              PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-                i
-
-def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction :
-    Prop :=
-  forall attempt : MachineDescription,
-    exists extractor : MachineDescription,
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec
-        attempt extractor
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_outputSpec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
-  intro attempt
-  rcases h attempt with ⟨extractor, hextractor⟩
-  refine ⟨extractor, ?_⟩
-  constructor
-  · constructor
-    · exact hextractor.left.left
-    · intro code out
-      constructor
-      · intro hhalt
-        rcases hextractor.right.right code out hhalt with
-          ⟨i, hcode, hout⟩
-        exact
-          (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
-            attempt code out).mpr
-            ⟨i.1.1, hcode, i.2.left, by
-              rw [hout]
-              exact i.2.right⟩
-      · intro htransform
-        rcases
-            (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
-              attempt code out).mp htransform with
-          ⟨L, hcode, hstate, houtput⟩
-        let i :
-            PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
-              attempt :=
-          ⟨(L, out), ⟨hstate, houtput⟩⟩
-        simpa [i, hcode] using
-          hextractor.right.left i
-  · exact hextractor.left.right
-
 def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
     (attempt extractor : MachineDescription) : Prop :=
   extractor.SubroutineReady ∧
@@ -875,77 +709,50 @@ def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecCo
       PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
         attempt extractor
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec_of_spec
-    {attempt extractor : MachineDescription}
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
-        attempt extractor) :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec
-      attempt extractor := by
-  constructor
-  · exact h.left
-  constructor
-  · intro i
-    have hhalt := haltsWithOutput_of_haltsWithTape (h.right.left i)
-    have hnormalized :
-        Tape.normalizedOutput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
-              i) =
-          encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-              i) := by
-      exact
-        CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-          PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
-    simpa [hnormalized] using hhalt
-  · intro code out hhalt
-    rcases hhalt with ⟨n, hn⟩
-    let T : Tape Bool :=
-      (extractor.runConfig n
-        (extractor.initial (encodeCodeWordAsInput code))).tape
-    have hTape :
-        extractor.HaltsWithTape (encodeCodeWordAsInput code) T := by
-      exact ⟨n, ⟨hn.left, rfl⟩⟩
-    rcases h.right.right code T hTape with ⟨i, hcode, hT⟩
-    have hactual :
-        Tape.normalizedOutput T =
-          encodeCodeWordAsInput out := by
-      simpa [T] using hn.right
-    have hexpected :
-        Tape.normalizedOutput T =
-          encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-              i) := by
-      rw [hT]
-      exact
-        CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-          PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i
-    have houtBits :
-        encodeCodeWordAsInput out =
-          encodeCodeWordAsInput
-            (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
-              i) :=
-      hactual.symm.trans hexpected
-    exact ⟨i, hcode, encodeCodeWordAsInput_injective houtBits⟩
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_of_spec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction := by
-  intro attempt
-  rcases h attempt with ⟨extractor, hextractor⟩
-  exact
-    ⟨extractor,
-      pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpec_of_spec
-        hextractor⟩
-
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_spec
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_outputSpec
-    (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineOutputSpecConstruction_of_spec
-      h)
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
+  intro attempt
+  rcases h attempt with ⟨extractor, hextractor⟩
+  refine ⟨extractor, ?_⟩
+  exact
+    CommonGround.CodeWordEmitters.outputCompiled_of_indexed_tape_spec
+      (P :=
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
+          attempt)
+      (runner := extractor)
+      hextractor.left.left
+      hextractor.left.right
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+      (fun i =>
+        CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+          PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i)
+      hextractor.right.left
+      hextractor.right.right
+      (by
+        intro code out
+        constructor
+        · intro htransform
+          rcases
+              (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+                attempt code out).mp htransform with
+            ⟨L, hcode, hstate, houtput⟩
+          let i :
+              PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+                attempt :=
+            ⟨(L, out), ⟨hstate, houtput⟩⟩
+          exact ⟨i, hcode, rfl⟩
+        · intro hindexed
+          rcases hindexed with ⟨i, hcode, hout⟩
+          exact
+            (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+              attempt code out).mpr
+              ⟨i.1.1, hcode, i.2.left, by
+                rw [hout]
+                exact i.2.right⟩)
 
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :
     Prop :=
@@ -1156,14 +963,6 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
             (encodeCodeWordAsInput
               (encodeBoolWord result))
 
-def PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction :
-    Prop :=
-  forall runner : MachineDescription,
-    runner.SubroutineReady ->
-      exists enumerator : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
-          runner enumerator
-
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
     (runner enumerator : MachineDescription) : Prop :=
   enumerator.SubroutineReady ∧
@@ -1180,14 +979,6 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorReali
                   w limit fuel))
               (encodeCodeWordAsInput
                 (encodeBoolWord result))
-
-def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction :
-    Prop :=
-  forall runner : MachineDescription,
-    runner.SubroutineReady ->
-      exists enumerator : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
-          runner enumerator
 
 structure PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
     (runner : MachineDescription) where
@@ -1212,55 +1003,6 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutpu
         runner) :
     Word MachineCodeSymbol :=
   encodeBoolWord i.result
-
-def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-    {runner : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner) :
-    Tape Bool :=
-  CommonGround.CodeWordEmitters.ExactOutputTape
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-    i
-
--- The non-right-shifted bounded enumerator target is the exact boolean-word
--- output tape for the successful `(limit, fuel)` witness.
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape_normalizedOutput
-    {runner : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner) :
-    Tape.normalizedOutput
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-          i) =
-      encodeCodeWordAsInput
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-          i) := by
-  exact
-    CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-      i
-
--- Exact cells for the non-right-shifted enumerator target.
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape_cells
-    {runner : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner) :
-    Tape.cells
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-          i) =
-      match
-        encodeCodeWordAsInput
-          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-            i)
-      with
-      | [] => [none]
-      | bit :: rest => some bit :: rest.map some := by
-  simpa using
-    CommonGround.CodeWordEmitters.exactOutputTape_cells
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-      i
 
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
     {runner : MachineDescription}
@@ -1291,68 +1033,6 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
         (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
           i))
 
--- Exact cells for the right-shifted bounded enumerator handoff target.
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape_cells
-    {runner : MachineDescription}
-    (i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner) :
-    Tape.cells
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-          i) =
-      match
-        encodeCodeWordAsInput
-          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-            i)
-      with
-      | [] => [none, none]
-      | bit :: [] => [some bit, none]
-      | first :: second :: rest =>
-          some first :: some second :: rest.map some := by
-  unfold
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-  cases hbits :
-      encodeCodeWordAsInput
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-          i) with
-  | nil =>
-      simp [Tape.cells_move_right_input]
-  | cons first rest =>
-      cases rest with
-      | nil =>
-          simp [Tape.cells_move_right_input]
-      | cons second tail =>
-          simp [Tape.cells_move_right_input]
-
-def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpec
-    (runner enumerator : MachineDescription) : Prop :=
-  enumerator.SubroutineReady ∧
-    (forall i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner,
-        enumerator.HaltsWithTape
-          i.input
-          (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-            i)) ∧
-      forall w : Word Bool,
-      forall T : Tape Bool,
-        enumerator.HaltsWithTape w T ->
-          exists i :
-            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-              runner,
-            w = i.input ∧
-            T =
-              PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-                i
-
-def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction :
-    Prop :=
-  forall runner : MachineDescription,
-    runner.SubroutineReady ->
-      exists enumerator : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpec
-          runner enumerator
-
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
     (runner enumerator : MachineDescription) : Prop :=
   enumerator.SubroutineReady ∧
@@ -1382,83 +1062,13 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRight
         PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
           runner enumerator
 
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_of_spec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction := by
-  intro runner hrunner
-  rcases h runner hrunner with ⟨enumerator, henumerator⟩
-  refine ⟨enumerator, ?_⟩
-  constructor
-  · exact henumerator.left
-  · intro w result
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨n, hn⟩
-      let T : Tape Bool :=
-        (enumerator.runConfig n (enumerator.initial w)).tape
-      have hTape : enumerator.HaltsWithTape w T := by
-        exact ⟨n, ⟨hn.left, rfl⟩⟩
-      rcases henumerator.right.right w T hTape with
-        ⟨i, hinput, hT⟩
-      have hactual :
-          Tape.normalizedOutput T =
-            encodeCodeWordAsInput (encodeBoolWord result) := by
-        simpa [T] using hn.right
-      have hexpected :
-          Tape.normalizedOutput T =
-            encodeCodeWordAsInput (encodeBoolWord i.result) := by
-        rw [hT]
-        exact
-          CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-            i
-      have hencoded :
-          encodeBoolWord result = encodeBoolWord i.result := by
-        exact
-          encodeCodeWordAsInput_injective
-            (hactual.symm.trans hexpected)
-      have hresult : result = i.result :=
-        encodeBoolWord_injective hencoded
-      refine
-        ⟨i.searchLimit, i.limit, i.fuel,
-          i.limit_le_searchLimit, i.fuel_le_searchLimit, ?_⟩
-      simpa [hinput, hresult] using i.runner_halts
-    · intro hbounded
-      rcases hbounded with
-        ⟨searchLimit, limit, fuel, hlimit, hfuel, hrun⟩
-      let i :
-          PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-            runner :=
-        { input := w
-          searchLimit := searchLimit
-          limit := limit
-          fuel := fuel
-          result := result
-          limit_le_searchLimit := hlimit
-          fuel_le_searchLimit := hfuel
-          runner_halts := hrun }
-      have houtput :=
-        haltsWithOutput_of_haltsWithTape
-          (henumerator.right.left i)
-      have hnormalized :
-          Tape.normalizedOutput
-              (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputTape
-                i) =
-            encodeCodeWordAsInput (encodeBoolWord result) := by
-        exact
-          CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
-            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
-            i
-      simpa [hnormalized] using houtput
-
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction_of_rightShiftedSpec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction := by
-  intro runner hrunner
-  rcases h runner hrunner with ⟨enumerator, henumerator⟩
-  refine ⟨enumerator, ?_⟩
+theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes_of_rightShiftedSpec
+    {runner enumerator : MachineDescription}
+    (henumerator :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
+        runner enumerator) :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
+      runner enumerator := by
   constructor
   · exact henumerator.left
   · intro w result
@@ -1520,13 +1130,13 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorC
             i
       simpa [hnormalized] using houtput
 
-theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction_of_bounded
-    (hbounded :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction := by
-  intro runner hrunner
-  rcases hbounded runner hrunner with ⟨enumerator, henumerator⟩
-  refine ⟨enumerator, ?_⟩
+theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes_of_bounded
+    {runner enumerator : MachineDescription}
+    (henumerator :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes
+        runner enumerator) :
+    PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
+      runner enumerator := by
   constructor
   · exact henumerator.left
   · intro w result
@@ -1541,24 +1151,6 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruc
               (encodeCodeWordAsInput
                 (encodeBoolWord result))))
 
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
-    (enumerator classifier : MachineDescription) : Prop :=
-  classifier.WellFormed ∧
-    forall w : Word Bool, forall b : Bool,
-      classifier.HaltsWithOutput w [b] <->
-        exists result : Word Bool,
-          enumerator.HaltsWithOutput w
-              (encodeCodeWordAsInput (encodeBoolWord result)) ∧
-            PairedRecognizerDovetailControllerRawOutput result = some [b]
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction :
-    Prop :=
-  forall enumerator : MachineDescription,
-    enumerator.SubroutineReady ->
-      exists classifier : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierRealizes
-          enumerator classifier
-
 def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
     Prop :=
   forall runner : MachineDescription,
@@ -1566,35 +1158,6 @@ def PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :
       exists decider : MachineDescription,
         PairedRecognizerDovetailControllerStageAttemptFuelPairSearchRealizes
           runner decider
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_enumerator_classifier
-    (henumerator :
-      PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorConstruction)
-    (hclassifier :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction := by
-  intro runner hrunner
-  rcases henumerator runner hrunner with ⟨enumerator, henumeratorSpec⟩
-  rcases hclassifier enumerator henumeratorSpec.left with
-    ⟨classifier, hclassifierSpec⟩
-  refine ⟨classifier, ?_⟩
-  constructor
-  · exact hclassifierSpec.left
-  · intro w b
-    exact Iff.trans (hclassifierSpec.right w b) <| by
-      constructor
-      · intro h
-        rcases h with ⟨result, henum, hraw⟩
-        rcases (henumeratorSpec.right w result).mp henum with
-          ⟨limit, fuel, hrun⟩
-        exact ⟨limit, fuel, result, hrun, hraw⟩
-      · intro h
-        rcases h with ⟨limit, fuel, result, hrun, hraw⟩
-        exact
-          ⟨result,
-            (henumeratorSpec.right w result).mpr
-              ⟨limit, fuel, hrun⟩,
-            hraw⟩
 
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
@@ -1961,27 +1524,6 @@ theorem pairedRecognizerDovetailControllerBoolWordRightShiftedEnumeratorSpec_of_
     · rw [hT]
       rfl
 
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRealizes
-    (enumerator emitter classifier : MachineDescription) : Prop :=
-  classifier.WellFormed ∧
-    forall w : Word Bool, forall b : Bool,
-      classifier.HaltsWithOutput w [b] <->
-        exists result : Word Bool,
-          enumerator.HaltsWithOutput w
-              (encodeCodeWordAsInput (encodeBoolWord result)) ∧
-            emitter.HaltsWithOutput
-              (encodeCodeWordAsInput (encodeBoolWord result)) [b]
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction :
-    Prop :=
-  forall enumerator emitter : MachineDescription,
-    enumerator.SubroutineReady ->
-    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
-      emitter ->
-      exists classifier : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRealizes
-          enumerator emitter classifier
-
 def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpec
     (enumerator emitter classifier : MachineDescription) : Prop :=
   classifier.SubroutineReady ∧
@@ -2001,16 +1543,6 @@ def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOu
                 (encodeCodeWordAsInput (encodeBoolWord result)) ∧
               emitter.HaltsWithOutput
                 (encodeCodeWordAsInput (encodeBoolWord result)) [b]
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpecConstruction :
-    Prop :=
-  forall enumerator emitter : MachineDescription,
-    enumerator.SubroutineReady ->
-    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
-      emitter ->
-      exists classifier : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpec
-          enumerator emitter classifier
 
 def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerRightShiftedEnumeratorConstruction :
     Prop :=
@@ -2110,118 +1642,6 @@ theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequenc
           _ = [b] := hout
     exact ⟨result, henumerates, hemits⟩
 
-theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_of_outputSpec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction := by
-  intro enumerator emitter henumerator hemitter
-  rcases h enumerator emitter henumerator hemitter with
-    ⟨classifier, hclassifier⟩
-  refine ⟨classifier, ?_⟩
-  constructor
-  · exact hclassifier.left.left
-  · intro w b
-    constructor
-    · exact hclassifier.right.right w b
-    · intro hresult
-      rcases hresult with ⟨result, henumerates, hemits⟩
-      exact hclassifier.right.left w result b henumerates hemits
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputTape
-    (b : Bool) : Tape Bool :=
-  Tape.output [b]
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpec
-    (enumerator emitter classifier : MachineDescription) : Prop :=
-  classifier.SubroutineReady ∧
-    (forall w : Word Bool,
-      forall result : Word Bool,
-      forall b : Bool,
-        enumerator.HaltsWithOutput w
-            (encodeCodeWordAsInput (encodeBoolWord result)) ->
-        emitter.HaltsWithOutput
-            (encodeCodeWordAsInput (encodeBoolWord result)) [b] ->
-          classifier.HaltsWithTape w
-            (PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputTape
-              b)) ∧
-      forall w : Word Bool,
-      forall b : Bool,
-        classifier.HaltsWithOutput w [b] ->
-          exists result : Word Bool,
-            enumerator.HaltsWithOutput w
-                (encodeCodeWordAsInput (encodeBoolWord result)) ∧
-              emitter.HaltsWithOutput
-                (encodeCodeWordAsInput (encodeBoolWord result)) [b]
-
-def PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction :
-    Prop :=
-  forall enumerator emitter : MachineDescription,
-    enumerator.SubroutineReady ->
-    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterRealizes
-      emitter ->
-      exists classifier : MachineDescription,
-        PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpec
-          enumerator emitter classifier
-
-theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpec_of_spec
-    {enumerator emitter classifier : MachineDescription}
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpec
-        enumerator emitter classifier) :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpec
-      enumerator emitter classifier := by
-  constructor
-  · exact h.left
-  constructor
-  · intro w result b henumerates hemits
-    exact
-      haltsWithOutput_of_haltsWithTape
-        (h.right.left w result b henumerates hemits)
-  · exact h.right.right
-
-theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpecConstruction_of_spec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpecConstruction := by
-  intro enumerator emitter henumerator hemitter
-  rcases h enumerator emitter henumerator hemitter with
-    ⟨classifier, hclassifier⟩
-  exact
-    ⟨classifier,
-      pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpec_of_spec
-        hclassifier⟩
-
-theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_of_spec
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction_of_outputSpec
-    (pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerOutputSpecConstruction_of_spec
-      h)
-
-theorem pairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction_of_sequencer_emitter
-    (hsequencer :
-      PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierSequencerConstruction)
-    (hemitter :
-      PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptRawOutputClassifierConstruction := by
-  intro enumerator henumerator
-  rcases hemitter with ⟨emitter, hemits⟩
-  rcases hsequencer enumerator emitter henumerator hemits with
-    ⟨classifier, hclassifier⟩
-  refine ⟨classifier, ?_⟩
-  constructor
-  · exact hclassifier.left
-  · intro w b
-    exact Iff.trans (hclassifier.right w b) <| by
-      constructor
-      · intro h
-        rcases h with ⟨result, henum, hemit⟩
-        exact ⟨result, henum, (hemits.right result b).mp hemit⟩
-      · intro h
-        rcases h with ⟨result, henum, hraw⟩
-        exact ⟨result, henum, (hemits.right result b).mpr hraw⟩
-
 theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_of_boundedRightShiftedEnumerator_emitter
     (henumerator :
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction)
@@ -2242,62 +1662,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
   have henumeratorFuel :
       PairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes
         runner enumerator := by
-    constructor
-    · exact henumeratorBounded.left
-    · intro w result
-      constructor
-      · intro henum
-        have henumTape :
-            enumerator.HaltsWithTape w
-              (PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape result) :=
-          henumeratorRightShifted.right.left w result henum
-        rcases henumeratorBounded.right.right w
-            (PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape result)
-            henumTape with
-          ⟨i, hinput, hT⟩
-        have hactual :
-            Tape.normalizedOutput
-                (PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape result) =
-              encodeCodeWordAsInput (encodeBoolWord result) :=
-          pairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape_normalizedOutput result
-        have hexpected :
-            Tape.normalizedOutput
-                (PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape result) =
-              encodeCodeWordAsInput (encodeBoolWord i.result) := by
-          rw [hT]
-          exact
-            pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape_normalizedOutput
-              i
-        have hencoded :
-            encodeBoolWord result = encodeBoolWord i.result :=
-          encodeCodeWordAsInput_injective (hactual.symm.trans hexpected)
-        have hresult : result = i.result := encodeBoolWord_injective hencoded
-        exact ⟨i.limit, i.fuel, by
-          simpa [hinput, hresult] using i.runner_halts⟩
-      · intro hrun
-        rcases hrun with ⟨limit, fuel, hrun⟩
-        let searchLimit := Nat.max limit fuel
-        let i :
-            PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-              runner :=
-          { input := w
-            searchLimit := searchLimit
-            limit := limit
-            fuel := fuel
-            result := result
-            limit_le_searchLimit := Nat.le_max_left limit fuel
-            fuel_le_searchLimit := Nat.le_max_right limit fuel
-            runner_halts := hrun }
-        have houtput := haltsWithOutput_of_haltsWithTape
-          (henumeratorBounded.right.left i)
-        have hnormalized :
-            Tape.normalizedOutput
-                (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-                  i) =
-              encodeCodeWordAsInput (encodeBoolWord result) :=
-          pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape_normalizedOutput
-            i
-        simpa [hnormalized] using houtput
+    exact
+      pairedRecognizerDovetailControllerStageAttemptFuelPairEnumeratorRealizes_of_bounded
+        (pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRealizes_of_rightShiftedSpec
+          henumeratorBounded)
   refine ⟨classifier, ?_⟩
   constructor
   · exact hclassifier.left.left

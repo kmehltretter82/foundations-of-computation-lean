@@ -726,7 +726,7 @@ theorem run_stage_nat
       rw [projectionStageTickCellsRev_succ]
       simp [projectionConfig, projectionTapeAtCells, List.append_assoc]
 
-private theorem run_stage_nat_bool_word_suffix
+theorem run_stage_nat_bool_word_suffix
     (stage : Nat) (leftRev : List (Option Bool)) (result : Word Bool)
     (suffix : Word MachineCodeSymbol) :
     Description.runConfig
