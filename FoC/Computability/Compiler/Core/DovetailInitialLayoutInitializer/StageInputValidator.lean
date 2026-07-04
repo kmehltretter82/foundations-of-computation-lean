@@ -208,7 +208,7 @@ theorem
         encodeNat,
         tapeAtCells, Tape.move, Tape.moveRight, Tape.moveLeft]
 
-theorem
+private theorem
     stageInputSecondBitMarkedCheckedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
@@ -264,7 +264,7 @@ def RestoreStageInputSecondBitDescription :
 
 private abbrev RSIB := RestoreStageInputSecondBitDescription
 
-theorem restoreStageInputSecondBitDescription_wellFormed :
+private theorem restoreStageInputSecondBitDescription_wellFormed :
     RSIB.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -276,19 +276,19 @@ theorem restoreStageInputSecondBitDescription_wellFormed :
       (l := RSIB.transitions)
       (by decide)
 
-theorem restoreStageInputSecondBitDescription_haltTransitionFree :
+private theorem restoreStageInputSecondBitDescription_haltTransitionFree :
     RSIB.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := RSIB.transitions)
     (state := RSIB.halt)
     (by decide)
 
-theorem restoreStageInputSecondBitDescription_subroutineReady :
+private theorem restoreStageInputSecondBitDescription_subroutineReady :
     RSIB.SubroutineReady :=
   ⟨restoreStageInputSecondBitDescription_wellFormed,
     restoreStageInputSecondBitDescription_haltTransitionFree⟩
 
-theorem restoreStageInputSecondBitDescription_run
+private theorem restoreStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
     RSIB.runConfig 1
         { state := RSIB.start
@@ -305,7 +305,7 @@ theorem restoreStageInputSecondBitDescription_run
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
   simp [Tape.input]
 
-theorem restoreStageInputSecondBitDescription_run_checked
+private theorem restoreStageInputSecondBitDescription_run_checked
     (w : Word Bool) (stage : Nat) :
     RSIB.runConfig 1
         { state := RSIB.start
@@ -337,7 +337,7 @@ theorem restoreStageInputSecondBitDescription_run_succ
       restoreStageInputSecondBitDescription_haltTransitionFree
       (Tape.input (stageInputBits w stage)) n
 
-theorem restoreStageInputSecondBitDescription_run_checked_succ
+private theorem restoreStageInputSecondBitDescription_run_checked_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
     RSIB.runConfig (n + 1)
         { state := RSIB.start
@@ -368,7 +368,7 @@ def MarkStageInputSecondBitDescription :
 
 private abbrev MSIB := MarkStageInputSecondBitDescription
 
-theorem markStageInputSecondBitDescription_wellFormed :
+private theorem markStageInputSecondBitDescription_wellFormed :
     MSIB.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -380,19 +380,19 @@ theorem markStageInputSecondBitDescription_wellFormed :
       (l := MSIB.transitions)
       (by decide)
 
-theorem markStageInputSecondBitDescription_haltTransitionFree :
+private theorem markStageInputSecondBitDescription_haltTransitionFree :
     MSIB.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := MSIB.transitions)
     (state := MSIB.halt)
     (by decide)
 
-theorem markStageInputSecondBitDescription_subroutineReady :
+private theorem markStageInputSecondBitDescription_subroutineReady :
     MSIB.SubroutineReady :=
   ⟨markStageInputSecondBitDescription_wellFormed,
     markStageInputSecondBitDescription_haltTransitionFree⟩
 
-theorem markStageInputSecondBitDescription_run
+private theorem markStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
     MSIB.runConfig 3
         (MSIB.initial
@@ -409,7 +409,7 @@ theorem markStageInputSecondBitDescription_run
     transition, Tape.input, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem markStageInputSecondBitDescription_run_bits
+private theorem markStageInputSecondBitDescription_run_bits
     (tail : Word Bool) :
     MSIB.runConfig 3
         (MSIB.initial
@@ -719,7 +719,7 @@ def StageInputMarkedCoreDescription
 
 private abbrev SIMC := StageInputMarkedCoreDescription
 
-theorem stageInputMarkedCoreDescription_subroutineReady
+private theorem stageInputMarkedCoreDescription_subroutineReady
     {scanner : MachineDescription}
     (hscanner : StageInputMarkedScannerSpec scanner) :
     (SIMC scanner).SubroutineReady :=
@@ -791,7 +791,7 @@ def StageInputRecognizerDescription
 
 private abbrev SIR := StageInputRecognizerDescription
 
-theorem stageInputRecognizerDescription_subroutineReady
+private theorem stageInputRecognizerDescription_subroutineReady
     {markedCore : MachineDescription}
     (hmarkedCore : StageInputMarkedCoreSpec markedCore) :
     (SIR markedCore).SubroutineReady :=
@@ -918,7 +918,7 @@ def StageInputIdentityDescription
 
 private abbrev SIID := StageInputIdentityDescription
 
-theorem stageInputIdentityDescription_subroutineReady
+private theorem stageInputIdentityDescription_subroutineReady
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     (SIID recognizer).SubroutineReady :=
@@ -927,7 +927,7 @@ theorem stageInputIdentityDescription_subroutineReady
     ⟨exactIdentityDescription_wellFormed,
       exactIdentityDescription_haltTransitionFree⟩
 
-theorem stageInputIdentityDescription_spec_of_recognizer
+private theorem stageInputIdentityDescription_spec_of_recognizer
     {recognizer : MachineDescription}
     (hrecognizer : StageInputRecognizerSpec recognizer) :
     StageInputValidatorSpec

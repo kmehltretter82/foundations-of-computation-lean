@@ -100,7 +100,7 @@ def rightEdgeScanTargetTapeFromLeft
       (List.append (bits.reverse.map some) left)
       (none :: padding))
 
-theorem rightEdgeScanDescription_wellFormed :
+private theorem rightEdgeScanDescription_wellFormed :
     rightEdgeScanDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -111,7 +111,7 @@ theorem rightEdgeScanDescription_wellFormed :
       (l := rightEdgeScanDescription.transitions)
       (by decide)
 
-theorem rightEdgeScanDescription_haltTransitionFree :
+private theorem rightEdgeScanDescription_haltTransitionFree :
     rightEdgeScanDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := rightEdgeScanDescription.transitions)
@@ -123,7 +123,7 @@ theorem rightEdgeScanDescription_subroutineReady :
   ⟨rightEdgeScanDescription_wellFormed,
     rightEdgeScanDescription_haltTransitionFree⟩
 
-theorem rightEdgeScanDescription_step_bit
+private theorem rightEdgeScanDescription_step_bit
     (left right : List (Option Bool)) (bit : Bool) :
     rightEdgeScanDescription.runConfig 1
         { state := rightEdgeScanDescription.start
@@ -135,7 +135,7 @@ theorem rightEdgeScanDescription_step_bit
       stepConfig, lookupTransition, Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveRight]
 
-theorem rightEdgeScanDescription_step_finish
+private theorem rightEdgeScanDescription_step_finish
     (left padding : List (Option Bool)) :
     rightEdgeScanDescription.runConfig 1
         { state := rightEdgeScanDescription.start
@@ -149,7 +149,7 @@ theorem rightEdgeScanDescription_step_finish
       stepConfig, lookupTransition, Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem rightEdgeScanDescription_run_scan
+private theorem rightEdgeScanDescription_run_scan
     (bits : Word Bool) (left padding : List (Option Bool)) :
     rightEdgeScanDescription.runConfig bits.length
         { state := rightEdgeScanDescription.start
@@ -188,7 +188,7 @@ theorem rightEdgeScanDescription_run_scan
       simpa [List.reverse_cons, List.map_append,
         List.append_assoc] using ih (some bit :: left)
 
-theorem rightEdgeScanDescription_run_to_target
+private theorem rightEdgeScanDescription_run_to_target
     (left : List (Option Bool)) (bits : Word Bool)
     (padding : List (Option Bool)) :
     rightEdgeScanDescription.runConfig (bits.length + 1)
@@ -250,7 +250,7 @@ theorem rightEdgeRewindTargetTape_normalizedOutput
   rw [Tape.normalizedOutput, rightEdgeRewindTargetTape_cells]
   simp [Function.comp_def, List.filterMap_append]
 
-theorem rightEdgeRewindTargetTape_equiv_paddedInput
+private theorem rightEdgeRewindTargetTape_equiv_paddedInput
     (bits : Word Bool) (padding : Nat) :
     Tape.Equiv
       (rightEdgeRewindTargetTape bits
@@ -288,7 +288,7 @@ theorem rightEdgeRewindTargetTape_moveRight_equiv_FSTTargetTape
       (rightEdgeRewindTargetTape_equiv_paddedInput bits padding)
       Direction.right
 
-theorem rightEdgeRewindDescription_wellFormed :
+private theorem rightEdgeRewindDescription_wellFormed :
     rightEdgeRewindDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -299,7 +299,7 @@ theorem rightEdgeRewindDescription_wellFormed :
       (l := rightEdgeRewindDescription.transitions)
       (by decide)
 
-theorem rightEdgeRewindDescription_haltTransitionFree :
+private theorem rightEdgeRewindDescription_haltTransitionFree :
     rightEdgeRewindDescription.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := rightEdgeRewindDescription.transitions)
@@ -311,7 +311,7 @@ theorem rightEdgeRewindDescription_subroutineReady :
   ⟨rightEdgeRewindDescription_wellFormed,
     rightEdgeRewindDescription_haltTransitionFree⟩
 
-theorem rightEdgeRewindDescription_run_scan
+private theorem rightEdgeRewindDescription_run_scan
     (leftBits : Word Bool) (current : Bool)
     (rightCells : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftBits.length + 1)
@@ -358,7 +358,7 @@ theorem rightEdgeRewindDescription_run_scan
       simpa [List.append_assoc] using
         ih next (some current :: rightCells)
 
-theorem rightEdgeRewindDescription_run_scan_withBoundary
+private theorem rightEdgeRewindDescription_run_scan_withBoundary
     (leftBits : Word Bool) (current : Bool)
     (rightCells : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftBits.length + 1)
@@ -405,7 +405,7 @@ theorem rightEdgeRewindDescription_run_scan_withBoundary
       simpa [List.append_assoc] using
         ih next (some current :: rightCells)
 
-theorem rightEdgeRewindDescription_step_finish
+private theorem rightEdgeRewindDescription_step_finish
     (bits : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig 1
         { state := 1
@@ -428,7 +428,7 @@ theorem rightEdgeRewindDescription_step_finish
           Matches, transition, Tape.read, Tape.move, Tape.moveRight,
           Tape.write]
 
-theorem rightEdgeRewindDescription_step_finish_noDelimiter
+private theorem rightEdgeRewindDescription_step_finish_noDelimiter
     (baseLeft : List (Option Bool))
     (bits : Word Bool) (right : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig 1
@@ -445,7 +445,7 @@ theorem rightEdgeRewindDescription_step_finish_noDelimiter
       stepConfig, lookupTransition, Matches, transition, Tape.read,
       Tape.move, Tape.moveRight, Tape.write]
 
-theorem rightEdgeRewindDescription_run_scan_withBoundaryBase_core
+private theorem rightEdgeRewindDescription_run_scan_withBoundaryBase_core
     (baseLeft : List (Option Bool))
     (leftBits : Word Bool) (current : Bool)
     (rightCells : List (Option Bool)) :
@@ -495,7 +495,7 @@ theorem rightEdgeRewindDescription_run_scan_withBoundaryBase_core
       simpa [List.append_assoc] using
         ih next (some current :: rightCells)
 
-theorem rightEdgeRewindDescription_run_from_leftStack
+private theorem rightEdgeRewindDescription_run_from_leftStack
     (leftStack : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftStack.length + 2)
         { state := rightEdgeRewindDescription.start
@@ -542,7 +542,7 @@ theorem rightEdgeRewindDescription_run_from_leftStack
         rightEdgeRewindDescription_step_finish
           (List.append rest.reverse [current]) padding
 
-theorem rightEdgeRewindDescription_run_from_leftStack_noDelimiter
+private theorem rightEdgeRewindDescription_run_from_leftStack_noDelimiter
     (leftStack : Word Bool) (rightHead : Bool)
     (rightTail : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftStack.length + 2)
@@ -592,7 +592,7 @@ theorem rightEdgeRewindDescription_run_from_leftStack_noDelimiter
           (List.append rest.reverse [current])
           (some rightHead :: rightTail)
 
-theorem rightEdgeRewindDescription_haltsFrom_leftStack_noDelimiter
+private theorem rightEdgeRewindDescription_haltsFrom_leftStack_noDelimiter
     (leftStack : Word Bool) (rightHead : Bool)
     (rightTail : List (Option Bool)) :
     rightEdgeRewindDescription.HaltsFromTape
@@ -618,7 +618,7 @@ theorem rightEdgeRewindDescription_haltsFrom_rightEdge_noDelimiter
     rightEdgeRewindDescription_haltsFrom_leftStack_noDelimiter
       bits.reverse rightHead rightTail
 
-theorem rightEdgeRewindDescription_run_from_lastBitStack
+private theorem rightEdgeRewindDescription_run_from_lastBitStack
     (leftStack : Word Bool) (current : Bool)
     (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftStack.length + 2)
@@ -670,7 +670,7 @@ theorem rightEdgeRewindDescription_run_from_lastBitStack
           (List.append (List.append rest.reverse [next]) [current])
           padding
 
-theorem rightEdgeRewindDescription_run_from_lastBitBoundary
+private theorem rightEdgeRewindDescription_run_from_lastBitBoundary
     (leftStack : Word Bool) (current : Bool)
     (padding : List (Option Bool)) :
     rightEdgeRewindDescription.runConfig (leftStack.length + 2)
@@ -723,7 +723,7 @@ theorem rightEdgeRewindDescription_run_from_lastBitBoundary
           (List.append (List.append rest.reverse [next]) [current])
           padding
 
-theorem rightEdgeRewindDescription_run_from_lastBitBoundaryBase_noDelimiter
+private theorem rightEdgeRewindDescription_run_from_lastBitBoundaryBase_noDelimiter
     (baseLeft : List (Option Bool))
     (leftStack : Word Bool) (current : Bool)
     (right : List (Option Bool)) :

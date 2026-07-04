@@ -96,7 +96,7 @@ def AppendInputTapeHeadRouterDescription :
 
 private abbrev AIHR := AppendInputTapeHeadRouterDescription
 
-theorem appendInputTapeHeadRouterDescription_wellFormed :
+private theorem appendInputTapeHeadRouterDescription_wellFormed :
     AIHR.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -108,19 +108,19 @@ theorem appendInputTapeHeadRouterDescription_wellFormed :
       (l := AIHR.transitions)
       (by decide)
 
-theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
+private theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
     AIHR.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := AIHR.transitions)
     (state := AIHR.halt)
     (by decide)
 
-theorem appendInputTapeHeadRouterDescription_subroutineReady :
+private theorem appendInputTapeHeadRouterDescription_subroutineReady :
     AIHR.SubroutineReady :=
   ⟨appendInputTapeHeadRouterDescription_wellFormed,
     appendInputTapeHeadRouterDescription_haltTransitionFree⟩
 
-theorem appendInputTapeHeadRouterDescription_run_return20
+private theorem appendInputTapeHeadRouterDescription_run_return20
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     AIHR.runConfig
@@ -160,7 +160,7 @@ theorem appendInputTapeHeadRouterDescription_run_return20
           transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
-theorem appendInputTapeHeadRouterDescription_run_return21
+private theorem appendInputTapeHeadRouterDescription_run_return21
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     AIHR.runConfig
@@ -200,7 +200,7 @@ theorem appendInputTapeHeadRouterDescription_run_return21
           transition, Tape.read, Tape.write, Tape.move,
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
-theorem appendInputTapeHeadRouterDescription_run_return22
+private theorem appendInputTapeHeadRouterDescription_run_return22
     (beforeRevBits : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     AIHR.runConfig
@@ -241,7 +241,7 @@ theorem appendInputTapeHeadRouterDescription_run_return22
           Tape.moveLeft, List.append_assoc] using
           ih bit (some true :: right)
 
-theorem appendInputTapeHeadRouterDescription_run_state8_false
+private theorem appendInputTapeHeadRouterDescription_run_state8_false
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AIHR.runConfig
         (beforeRevBits.length + 8 * n + 15)
@@ -324,7 +324,7 @@ theorem appendInputTapeHeadRouterDescription_run_state8_false
         Nat.mul_succ] using
         ih nextBefore
 
-theorem appendInputTapeHeadRouterDescription_run_state8_true
+private theorem appendInputTapeHeadRouterDescription_run_state8_true
     (n : Nat) (beforeRevBits tailBits : Word Bool) :
     AIHR.runConfig
         (beforeRevBits.length + 8 * n + 15)

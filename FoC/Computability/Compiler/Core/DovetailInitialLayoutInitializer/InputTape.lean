@@ -163,7 +163,7 @@ theorem appendTwoCodeWordsReturnDescription_subroutineReady
     (transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
       second hsecond)
 
-theorem appendTwoCodeWordsReturnDescription_run
+private theorem appendTwoCodeWordsReturnDescription_run
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ [])
     (b : Bool) (rest : Word Bool) :
@@ -443,7 +443,7 @@ def emptyInputTapeCode :
   encodeTapeAppend
     (Tape.input ([] : Word Bool)) []
 
-theorem emptyInputTapeCode_ne_nil :
+private theorem emptyInputTapeCode_ne_nil :
     emptyInputTapeCode ≠ [] := by
   simp [emptyInputTapeCode, encodeTapeAppend_input_nil,
     encodeCellListAppend,
@@ -606,7 +606,7 @@ def AppendInputTapeHeadPrefixReturnDescription
 
 private abbrev AIHPR := AppendInputTapeHeadPrefixReturnDescription
 
-theorem
+private theorem
     appendInputTapeHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
     (AIHPR b).SubroutineReady :=
@@ -614,7 +614,7 @@ theorem
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
 
-theorem appendInputTapeHeadPrefixReturnDescription_run
+private theorem appendInputTapeHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,
       (AIHPR b).runConfig steps
@@ -798,14 +798,14 @@ private theorem inputTapeRightCellsCode_nil_ne_nil :
     encodeNatAppend,
     encodeNat]
 
-theorem
+private theorem
     appendEmptyRightCellsReturnDescription_subroutineReady :
     AERCR.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     (inputTapeRightCellsCode ([] : Word Bool))
     inputTapeRightCellsCode_nil_ne_nil
 
-theorem appendEmptyRightCellsReturnDescription_run
+private theorem appendEmptyRightCellsReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
       AERCR.runConfig steps
@@ -1006,7 +1006,7 @@ def AppendInputTapeSecondBitHeadPrefixReturnDescription
 
 private abbrev AISBHPR := AppendInputTapeSecondBitHeadPrefixReturnDescription
 
-theorem
+private theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_subroutineReady
     (b : Bool) :
     (AISBHPR b).SubroutineReady :=
@@ -1014,7 +1014,7 @@ theorem
     (inputTapeHeadPrefixCode b)
     (inputTapeHeadPrefixCode_ne_nil b)
 
-theorem
+private theorem
     appendInputTapeSecondBitHeadPrefixReturnDescription_run
     (b : Bool) (payload suffixBits : Word Bool) :
     exists steps : Nat,

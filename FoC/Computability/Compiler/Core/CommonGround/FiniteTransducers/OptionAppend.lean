@@ -50,7 +50,7 @@ theorem optionAppendFinalTransducer_wellFormed
     (optionAppendFinalTransducer emit final).WellFormed := by
   exact bitwiseOutputTransducer_wellFormed (optionEmitWord emit) final
 
-theorem optionAppendFinalTransducer_run
+private theorem optionAppendFinalTransducer_run
     (emit : Bool -> Option Bool) (final input : Word Bool) :
     (optionAppendFinalTransducer emit final).runFromStart
         (input.length + 1) input =
@@ -171,7 +171,7 @@ theorem FSTOptionAppendFinalWordTargetTape_normalizedOutput
       simp [Function.comp_def, List.filterMap_append,
         List.reverse_append, List.map_append]
 
-theorem generatedOptionAppendWordDescription_step_bit
+private theorem generatedOptionAppendWordDescription_step_bit
     (emit : Bool -> Option Bool) (final : Word Bool) (bit : Bool)
     (left right : List (Option Bool)) :
     (generatedOptionAppendWordDescription emit final).runConfig 1
@@ -203,7 +203,7 @@ theorem generatedOptionAppendWordDescription_step_bit
           Matches, Tape.read, Tape.write,
           Tape.move, Tape.moveRight]
 
-theorem generatedOptionAppendWordDescription_step_blank
+private theorem generatedOptionAppendWordDescription_step_blank
     (emit : Bool -> Option Bool) (bit : Bool) (rest : Word Bool)
     (left : List (Option Bool)) :
     (generatedOptionAppendWordDescription emit (bit :: rest)).runConfig 1
@@ -226,7 +226,7 @@ theorem generatedOptionAppendWordDescription_step_blank
       runConfig, stepConfig, lookupTransition, Matches, tapeAtCells,
       Tape.read, Tape.write, Tape.move, Tape.moveRight]
 
-theorem generatedOptionAppendWordDescription_run_scan
+private theorem generatedOptionAppendWordDescription_run_scan
     (emit : Bool -> Option Bool) (final input : Word Bool)
     (left : List (Option Bool)) :
     (generatedOptionAppendWordDescription emit final).runConfig input.length
@@ -263,7 +263,7 @@ theorem generatedOptionAppendWordDescription_run_scan
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (emit bit :: left)
 
-theorem generatedOptionAppendWordDescription_run_to_write_boundary
+private theorem generatedOptionAppendWordDescription_run_to_write_boundary
     (emit : Bool -> Option Bool) (final input : Word Bool)
     (leftScratch : Nat) :
     (generatedOptionAppendWordDescription emit final).runConfig
@@ -280,7 +280,7 @@ theorem generatedOptionAppendWordDescription_run_to_write_boundary
     generatedOptionAppendWordDescription_run_scan emit final input
       (List.replicate leftScratch (none : Option Bool))
 
-theorem generatedOptionAppendWordDescription_writerRuns
+private theorem generatedOptionAppendWordDescription_writerRuns
     (emit : Bool -> Option Bool) (final : Word Bool) :
     AppendFinalWordWriterRuns
       (generatedOptionAppendWordDescription emit final) final := by
@@ -349,7 +349,7 @@ theorem generatedOptionAppendWordDescription_writerRuns
             List.append_assoc, Nat.add_assoc, Nat.add_comm,
             Nat.add_left_comm] using htail
 
-theorem generatedOptionAppendWordDescription_wellFormed
+private theorem generatedOptionAppendWordDescription_wellFormed
     (emit : Bool -> Option Bool) (final : Word Bool) :
     (generatedOptionAppendWordDescription emit final).WellFormed := by
   cases final with
@@ -520,7 +520,7 @@ theorem generatedOptionAppendWordDescription_wellFormed
                 FiniteTransducer.copyAppendWordWriteTransitionsFrom_deterministic
                   1 (next :: more) t u ht' hu' hkey
 
-theorem generatedOptionAppendWordDescription_haltTransitionFree
+private theorem generatedOptionAppendWordDescription_haltTransitionFree
     (emit : Bool -> Option Bool) (final : Word Bool) :
     (generatedOptionAppendWordDescription emit final).HaltTransitionFree := by
   cases final with
