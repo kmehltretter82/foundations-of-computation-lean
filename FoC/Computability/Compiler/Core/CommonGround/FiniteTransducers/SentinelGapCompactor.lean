@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 
 set_option doc.verso true
 
@@ -27,9 +28,8 @@ namespace CommonGround
 namespace FiniteTransducers
 
 /--
-Finite machine for repeatedly closing a right-side blank gap.
-
-State layout:
+Structured source for {lit}`sentinelGapCompactorDescription`.  The states are
+the same as the lowered backend machine:
 
 * {lit}`0`: scan left over right scratch blanks until the right payload is found.
 * {lit}`1`: scan left over the right payload until the current gap blank is found.
@@ -38,34 +38,52 @@ State layout:
 * {lit}`8..12`: shift the payload one cell left and then halt.
 * {lit}`13`: halt.
 -/
-def sentinelGapCompactorDescription : MachineDescription where
+def structuredSentinelGapCompactorDescription :
+    Structured.Description where
+  tapeCount := 1
   stateCount := 14
   start := 0
   halt := 13
   transitions :=
-    [ transition 0 none none Direction.left 0
-    , transition 0 (some false) (some false) Direction.left 1
-    , transition 0 (some true) (some true) Direction.left 1
-    , transition 1 (some false) (some false) Direction.left 1
-    , transition 1 (some true) (some true) Direction.left 1
-    , transition 1 none none Direction.left 2
-    , transition 2 none none Direction.right 3
-    , transition 2 (some false) (some false) Direction.right 8
-    , transition 2 (some true) (some true) Direction.right 8
-    , transition 3 none none Direction.right 4
-    , transition 4 none none Direction.right 0
-    , transition 4 (some false) none Direction.left 5
-    , transition 4 (some true) none Direction.left 6
-    , transition 5 none (some false) Direction.right 7
-    , transition 6 none (some true) Direction.right 7
-    , transition 7 none none Direction.right 4
-    , transition 8 none none Direction.right 9
-    , transition 9 none none Direction.right 13
-    , transition 9 (some false) none Direction.left 10
-    , transition 9 (some true) none Direction.left 11
-    , transition 10 none (some false) Direction.right 12
-    , transition 11 none (some true) Direction.right 12
-    , transition 12 none none Direction.right 9 ]
+    [ Structured.OneTape.preserve 0 none Structured.HeadMove.left 0
+    , Structured.OneTape.preserve 0 (some false)
+        Structured.HeadMove.left 1
+    , Structured.OneTape.preserve 0 (some true)
+        Structured.HeadMove.left 1
+    , Structured.OneTape.preserve 1 (some false)
+        Structured.HeadMove.left 1
+    , Structured.OneTape.preserve 1 (some true)
+        Structured.HeadMove.left 1
+    , Structured.OneTape.preserve 1 none Structured.HeadMove.left 2
+    , Structured.OneTape.preserve 2 none Structured.HeadMove.right 3
+    , Structured.OneTape.preserve 2 (some false)
+        Structured.HeadMove.right 8
+    , Structured.OneTape.preserve 2 (some true)
+        Structured.HeadMove.right 8
+    , Structured.OneTape.preserve 3 none Structured.HeadMove.right 4
+    , Structured.OneTape.preserve 4 none Structured.HeadMove.right 0
+    , Structured.OneTape.erase 4 (some false) Structured.HeadMove.left 5
+    , Structured.OneTape.erase 4 (some true) Structured.HeadMove.left 6
+    , Structured.OneTape.write 5 none (some false)
+        Structured.HeadMove.right 7
+    , Structured.OneTape.write 6 none (some true)
+        Structured.HeadMove.right 7
+    , Structured.OneTape.preserve 7 none Structured.HeadMove.right 4
+    , Structured.OneTape.preserve 8 none Structured.HeadMove.right 9
+    , Structured.OneTape.preserve 9 none Structured.HeadMove.right 13
+    , Structured.OneTape.erase 9 (some false)
+        Structured.HeadMove.left 10
+    , Structured.OneTape.erase 9 (some true)
+        Structured.HeadMove.left 11
+    , Structured.OneTape.write 10 none (some false)
+        Structured.HeadMove.right 12
+    , Structured.OneTape.write 11 none (some true)
+        Structured.HeadMove.right 12
+    , Structured.OneTape.preserve 12 none Structured.HeadMove.right 9 ]
+
+def sentinelGapCompactorDescription : MachineDescription :=
+  Structured.Lowering.toMachineDescription
+    structuredSentinelGapCompactorDescription
 
 theorem sentinelGapCompactorDescription_wellFormed :
     sentinelGapCompactorDescription.WellFormed := by
@@ -103,6 +121,146 @@ def sentinelGapPayloadScanTape
         (List.append (rest.map some) (none :: baseLeft))
         (some bit :: List.append (processed.map some) (none :: padding))
 
+private def structuredSentinelGapShiftEntryState : Bool -> Nat
+  | false => 3
+  | true => 8
+
+private def structuredSentinelGapShiftLoopState : Bool -> Nat
+  | false => 4
+  | true => 9
+
+private def structuredSentinelGapShiftTargetState : Bool -> Nat
+  | false => 0
+  | true => structuredSentinelGapCompactorDescription.halt
+
+private theorem structuredSentinelGapCompactorDescription_run_shift_start
+    (finalPass : Bool) (baseLeft : List (Option Bool))
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    structuredSentinelGapCompactorDescription.runConfig 1
+        { state := structuredSentinelGapShiftEntryState finalPass
+          tapes :=
+            [leadingBlankLeftShiftSourceTapeWithPadding
+              baseLeft bits padding] } =
+      { state := structuredSentinelGapShiftLoopState finalPass
+        tapes :=
+          [leadingBlankLeftShiftLoopTapeWithPadding
+            baseLeft [] bits padding] } := by
+  cases finalPass <;> cases bits <;>
+    simp [structuredSentinelGapShiftEntryState,
+      structuredSentinelGapShiftLoopState,
+      structuredSentinelGapCompactorDescription,
+      leadingBlankLeftShiftSourceTapeWithPadding,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.apply,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
+
+private theorem structuredSentinelGapCompactorDescription_run_shift_bit
+    (finalPass : Bool) (baseLeft : List (Option Bool))
+    (processed rest : Word Bool) (bit : Bool)
+    (padding : List (Option Bool)) :
+    structuredSentinelGapCompactorDescription.runConfig 3
+        { state := structuredSentinelGapShiftLoopState finalPass
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed (bit :: rest) padding] } =
+      { state := structuredSentinelGapShiftLoopState finalPass
+        tapes :=
+          [leadingBlankLeftShiftLoopTapeWithPadding
+            baseLeft (List.append processed [bit]) rest padding] } := by
+  cases finalPass <;> cases bit <;> cases rest <;>
+    simp [structuredSentinelGapShiftLoopState,
+      structuredSentinelGapCompactorDescription,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.apply,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+      Tape.moveRight, tapeAtCells, List.reverse_append]
+
+private theorem structuredSentinelGapCompactorDescription_run_shift_finish
+    (finalPass : Bool) (baseLeft : List (Option Bool))
+    (processed : Word Bool) (padding : List (Option Bool)) :
+    structuredSentinelGapCompactorDescription.runConfig 1
+        { state := structuredSentinelGapShiftLoopState finalPass
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed [] padding] } =
+      { state := structuredSentinelGapShiftTargetState finalPass
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft processed padding] } := by
+  cases finalPass <;> cases padding <;>
+    simp [structuredSentinelGapShiftLoopState,
+      structuredSentinelGapShiftTargetState,
+      structuredSentinelGapCompactorDescription,
+      leadingBlankLeftShiftLoopTapeWithPadding,
+      leadingBlankLeftShiftTargetTapeWithPadding,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.apply,
+      Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
+
+private theorem structuredSentinelGapCompactorDescription_run_shift_loop
+    (finalPass : Bool) (baseLeft : List (Option Bool))
+    (processed remaining : Word Bool)
+    (padding : List (Option Bool)) :
+    structuredSentinelGapCompactorDescription.runConfig
+        (3 * remaining.length + 1)
+        { state := structuredSentinelGapShiftLoopState finalPass
+          tapes :=
+            [leadingBlankLeftShiftLoopTapeWithPadding
+              baseLeft processed remaining padding] } =
+      { state := structuredSentinelGapShiftTargetState finalPass
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft (List.append processed remaining) padding] } := by
+  induction remaining generalizing processed with
+  | nil =>
+      simpa using
+        structuredSentinelGapCompactorDescription_run_shift_finish
+          finalPass baseLeft processed padding
+  | cons bit rest ih =>
+      rw [show 3 * (bit :: rest).length + 1 =
+          3 + (3 * rest.length + 1) by
+        simp
+        lia]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredSentinelGapCompactorDescription_run_shift_bit]
+      simpa [List.append_assoc] using
+        ih (List.append processed [bit])
+
+private theorem structuredSentinelGapCompactorDescription_run_shift_to_target
+    (finalPass : Bool) (baseLeft : List (Option Bool))
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    structuredSentinelGapCompactorDescription.runConfig
+        (3 * bits.length + 2)
+        { state := structuredSentinelGapShiftEntryState finalPass
+          tapes :=
+            [leadingBlankLeftShiftSourceTapeWithPadding
+              baseLeft bits padding] } =
+      { state := structuredSentinelGapShiftTargetState finalPass
+        tapes :=
+          [leadingBlankLeftShiftTargetTapeWithPadding
+            baseLeft bits padding] } := by
+  rw [show 3 * bits.length + 2 =
+      1 + (3 * bits.length + 1) by lia]
+  rw [Structured.Description.runConfig_add]
+  rw [structuredSentinelGapCompactorDescription_run_shift_start]
+  simpa using
+    structuredSentinelGapCompactorDescription_run_shift_loop
+      finalPass baseLeft [] bits padding
+
 theorem sentinelGapCompactorDescription_run_scan_right_scratch
     (baseLeft : List (Option Bool)) (current : Bool)
     (leftRest : Word Bool) (paddingScratch : Nat)
@@ -124,10 +282,10 @@ theorem sentinelGapCompactorDescription_run_scan_right_scratch
   | zero =>
       cases current <;>
         simp [sentinelGapCompactorDescription,
+          structuredSentinelGapCompactorDescription,
           rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
           runConfig, stepConfig, lookupTransition, Matches,
-          transition, Tape.read, Tape.write, Tape.move,
-          Tape.moveLeft, tapeAtCells]
+          Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
   | succ paddingScratch ih =>
       rw [show paddingScratch + 1 + 1 =
           1 + (paddingScratch + 1) by lia]
@@ -146,9 +304,10 @@ theorem sentinelGapCompactorDescription_run_scan_right_scratch
                   (none :: rightPadding) } := by
         cases rightPadding <;>
           simp [sentinelGapCompactorDescription,
+            structuredSentinelGapCompactorDescription,
             rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
             runConfig, stepConfig, lookupTransition, Matches,
-            transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
             List.replicate_succ, tapeAtCells]
       rw [hstep]
       simpa [List.replicate_succ', List.append_assoc] using
@@ -174,10 +333,10 @@ theorem sentinelGapCompactorDescription_run_scan_payload
       cases baseLeft <;> cases padding <;> cases processed <;>
         simp [sentinelGapPayloadScanTape,
           sentinelGapCompactorDescription,
+          structuredSentinelGapCompactorDescription,
           leadingBlankLeftShiftSourceTapeWithPadding,
           runConfig, stepConfig, lookupTransition, Matches,
-          transition, Tape.read, Tape.write, Tape.move,
-          Tape.moveLeft, tapeAtCells]
+          Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 =
           1 + (rest.length + 1) by
@@ -197,9 +356,10 @@ theorem sentinelGapCompactorDescription_run_scan_payload
         cases bit <;> cases rest <;> cases processed <;>
           cases padding <;>
           simp [sentinelGapPayloadScanTape,
-            sentinelGapCompactorDescription, tapeAtCells, runConfig,
-            stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+            sentinelGapCompactorDescription,
+            structuredSentinelGapCompactorDescription, tapeAtCells, runConfig,
+            stepConfig, lookupTransition, Matches, Tape.read, Tape.write,
+            Tape.move, Tape.moveLeft]
       rw [hstep]
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (bit :: processed)
@@ -219,9 +379,10 @@ theorem sentinelGapCompactorDescription_run_enter_payload_scan
             baseLeft leftRest [current] padding } := by
   cases current <;> cases leftRest <;> cases padding <;>
     simp [sentinelGapPayloadScanTape,
-      sentinelGapCompactorDescription, tapeAtCells, runConfig,
-      stepConfig, lookupTransition, Matches, transition, Tape.read,
-      Tape.write, Tape.move, Tape.moveLeft]
+      sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription, tapeAtCells, runConfig,
+      stepConfig, lookupTransition, Matches, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft]
 
 theorem sentinelGapCompactorDescription_run_scan_to_gap_predecessor
     (baseLeft : List (Option Bool)) (current : Bool)
@@ -271,10 +432,10 @@ theorem sentinelGapCompactorDescription_run_branch_continue
             (none :: baseTail) bits padding } := by
   cases baseTail <;> cases bits <;> cases padding <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftSourceTapeWithPadding, tapeAtCells,
       runConfig, stepConfig, lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, Tape.moveRight]
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem sentinelGapCompactorDescription_run_branch_final
     (baseTail : List (Option Bool)) (leftBit : Bool)
@@ -291,10 +452,10 @@ theorem sentinelGapCompactorDescription_run_branch_final
             (some leftBit :: baseTail) bits padding } := by
   cases leftBit <;> cases baseTail <;> cases bits <;> cases padding <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftSourceTapeWithPadding, tapeAtCells,
       runConfig, stepConfig, lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, Tape.moveRight]
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
 
 theorem sentinelGapCompactorDescription_run_continue_shift_start
     (baseLeft : List (Option Bool)) (bits : Word Bool)
@@ -310,10 +471,11 @@ theorem sentinelGapCompactorDescription_run_continue_shift_start
             baseLeft [] bits padding } := by
   cases bits <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftSourceTapeWithPadding,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
-      Tape.move, Tape.moveRight, tapeAtCells]
+      lookupTransition, Matches, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight, tapeAtCells]
 
 theorem sentinelGapCompactorDescription_run_continue_shift_bit
     (baseLeft : List (Option Bool))
@@ -330,9 +492,10 @@ theorem sentinelGapCompactorDescription_run_continue_shift_bit
             baseLeft (List.append processed [bit]) rest padding } := by
   cases bit <;> cases rest <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
-      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
+      lookupTransition, Matches, Tape.read, Tape.write, Tape.move,
+      Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.reverse_append]
 
 theorem sentinelGapCompactorDescription_run_continue_shift_finish
@@ -349,10 +512,11 @@ theorem sentinelGapCompactorDescription_run_continue_shift_finish
             baseLeft processed padding } := by
   cases padding <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftLoopTapeWithPadding,
       leadingBlankLeftShiftTargetTapeWithPadding,
-      runConfig, stepConfig, lookupTransition, Matches, transition,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
+      runConfig, stepConfig, lookupTransition, Matches, Tape.read,
+      Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem sentinelGapCompactorDescription_run_continue_shift_loop
     (baseLeft : List (Option Bool))
@@ -418,10 +582,11 @@ theorem sentinelGapCompactorDescription_run_final_shift_start
             baseLeft [] bits padding } := by
   cases bits <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftSourceTapeWithPadding,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
-      Tape.move, Tape.moveRight, tapeAtCells]
+      lookupTransition, Matches, Tape.read, Tape.write, Tape.move,
+      Tape.moveRight, tapeAtCells]
 
 theorem sentinelGapCompactorDescription_run_final_shift_bit
     (baseLeft : List (Option Bool))
@@ -438,9 +603,10 @@ theorem sentinelGapCompactorDescription_run_final_shift_bit
             baseLeft (List.append processed [bit]) rest padding } := by
   cases bit <;> cases rest <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
-      lookupTransition, Matches, transition, Tape.read, Tape.write,
-      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
+      lookupTransition, Matches, Tape.read, Tape.write, Tape.move,
+      Tape.moveLeft, Tape.moveRight, tapeAtCells,
       List.reverse_append]
 
 theorem sentinelGapCompactorDescription_run_final_shift_finish
@@ -457,10 +623,11 @@ theorem sentinelGapCompactorDescription_run_final_shift_finish
             baseLeft processed padding } := by
   cases padding <;>
     simp [sentinelGapCompactorDescription,
+      structuredSentinelGapCompactorDescription,
       leadingBlankLeftShiftLoopTapeWithPadding,
       leadingBlankLeftShiftTargetTapeWithPadding,
-      runConfig, stepConfig, lookupTransition, Matches, transition,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
+      runConfig, stepConfig, lookupTransition, Matches, Tape.read,
+      Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
 
 theorem sentinelGapCompactorDescription_run_final_shift_loop
     (baseLeft : List (Option Bool))
