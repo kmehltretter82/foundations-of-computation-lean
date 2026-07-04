@@ -145,6 +145,9 @@ It provides a finite structured logical-tape semantics, bounded runner, basic
 halt/run facts, and debugger/comparison helpers. The existing one-tape
 `MachineDescription` layer remains the backend contract until a particular
 structured machine has a proved lowering.
+For reusable move/write/scan/copy/append building blocks over that semantics,
+import
+`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives`.
 
 This formalization was developed with assistance from OpenAI Codex and Google Gemini.
 

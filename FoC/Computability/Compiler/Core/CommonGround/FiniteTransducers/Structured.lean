@@ -152,7 +152,7 @@ def HaltTransitionFree (D : Description) : Prop :=
 def SubroutineReady (D : Description) : Prop :=
   D.WellFormed ∧ D.HaltTransitionFree
 
-private def tapeAt (tapes : List (Tape Bool)) (index : Nat) : Tape Bool :=
+def tapeAt (tapes : List (Tape Bool)) (index : Nat) : Tape Bool :=
   tapes.getD index Tape.blank
 
 def currentReads (D : Description) (c : Configuration) :
@@ -167,6 +167,40 @@ def applyActions
     (fun index =>
       (actions.getD index TapeAction.stay).apply
         (tapeAt tapes index))
+
+@[simp] theorem currentReads_one
+    (D : Description) (h : D.tapeCount = 1)
+    (state : Nat) (T : Tape Bool) :
+    D.currentReads { state := state, tapes := [T] } = [Tape.read T] := by
+  cases D
+  cases h
+  rfl
+
+@[simp] theorem currentReads_two
+    (D : Description) (h : D.tapeCount = 2)
+    (state : Nat) (T U : Tape Bool) :
+    D.currentReads { state := state, tapes := [T, U] } =
+      [Tape.read T, Tape.read U] := by
+  cases D
+  cases h
+  rfl
+
+@[simp] theorem applyActions_one
+    (D : Description) (h : D.tapeCount = 1)
+    (action : TapeAction) (T : Tape Bool) :
+    D.applyActions [action] [T] = [action.apply T] := by
+  cases D
+  cases h
+  rfl
+
+@[simp] theorem applyActions_two
+    (D : Description) (h : D.tapeCount = 2)
+    (first second : TapeAction) (T U : Tape Bool) :
+    D.applyActions [first, second] [T, U] =
+      [first.apply T, second.apply U] := by
+  cases D
+  cases h
+  rfl
 
 def Matches (state : Nat)
     (reads : List (Option Bool)) (t : Transition) : Bool :=
