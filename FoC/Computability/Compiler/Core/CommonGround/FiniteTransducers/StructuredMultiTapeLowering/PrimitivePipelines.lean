@@ -52,6 +52,34 @@ private theorem atExistingTapeSeparator_zero_of_atHasGuardCells
   · exact atTapeSeparator_zero_self logical
   · exact ⟨T, rest, hdrop⟩
 
+private theorem atExistingTapeSeparator_zero_of_atHasGuardCells_one
+    {logical : List (Tape Bool)}
+    (hguards : LogicalTapeAtHasGuardCells logical 1) :
+    AtExistingTapeSeparator logical 0
+      (encodedStructuredTapes logical) := by
+  rcases hguards with ⟨U, rest, hdrop, _hguard⟩
+  cases logical with
+  | nil =>
+      simp at hdrop
+  | cons T tail =>
+      exact
+        ⟨atTapeSeparator_zero_self (T :: tail),
+          ⟨T, tail, rfl⟩⟩
+
+private theorem atExistingTapeSeparator_zero_of_atHasGuardCells_two
+    {logical : List (Tape Bool)}
+    (hguards : LogicalTapeAtHasGuardCells logical 2) :
+    AtExistingTapeSeparator logical 0
+      (encodedStructuredTapes logical) := by
+  rcases hguards with ⟨V, rest, hdrop, _hguard⟩
+  cases logical with
+  | nil =>
+      simp at hdrop
+  | cons T tail =>
+      exact
+        ⟨atTapeSeparator_zero_self (T :: tail),
+          ⟨T, tail, rfl⟩⟩
+
 private theorem guardedDropOne_exists_of_one_lt
     {logical : List (Tape Bool)}
     (hlogical : 1 < logical.length) :
@@ -443,6 +471,27 @@ theorem moveHead1LeftLocalDescription_physicalPrimitiveGuardedLogicalEquivContra
       simpa [moveHead1LeftLocalDescription, actual, hTout]
         using hhalts
 
+theorem moveHead1LeftLocalDescription_haltsFromEncodedStructuredTapes_of_guardCells
+    (logical : List (Tape Bool))
+    (hguards : LogicalTapeAtHasGuardCells logical 1) :
+    moveHead1LeftLocalDescription.HaltsFromTape
+      (encodedStructuredTapes logical)
+      (encodedStructuredTapes
+        ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply logical)) := by
+  rcases
+      cursorTape1MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_withGuardCells
+        |>.realizes logical (encodedStructuredTapes logical)
+          ⟨hguards,
+            atExistingTapeSeparator_zero_of_atHasGuardCells_one
+              hguards⟩
+    with ⟨Tout, hhalts, hseparator⟩
+  have hTout :
+      Tout =
+        encodedStructuredTapes
+          ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply logical) :=
+    atTapeSeparator_zero_eq hseparator
+  simpa [moveHead1LeftLocalDescription, hTout] using hhalts
+
 /--
 Guarded local right-move primitive for tape 1.
 -/
@@ -484,6 +533,27 @@ theorem moveHead1RightLocalDescription_physicalPrimitiveGuardedLogicalEquivContr
         atTapeSeparator_zero_eq hseparator
       simpa [moveHead1RightLocalDescription, actual, hTout]
         using hhalts
+
+theorem moveHead1RightLocalDescription_haltsFromEncodedStructuredTapes_of_guardCells
+    (logical : List (Tape Bool))
+    (hguards : LogicalTapeAtHasGuardCells logical 1) :
+    moveHead1RightLocalDescription.HaltsFromTape
+      (encodedStructuredTapes logical)
+      (encodedStructuredTapes
+        ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply logical)) := by
+  rcases
+      cursorTape1MoveHeadRightLocalAndReturnToBlockStartDescription_contract_withGuardCells
+        |>.realizes logical (encodedStructuredTapes logical)
+          ⟨hguards,
+            atExistingTapeSeparator_zero_of_atHasGuardCells_one
+              hguards⟩
+    with ⟨Tout, hhalts, hseparator⟩
+  have hTout :
+      Tout =
+        encodedStructuredTapes
+          ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply logical) :=
+    atTapeSeparator_zero_eq hseparator
+  simpa [moveHead1RightLocalDescription, hTout] using hhalts
 
 /--
 Guarded local left-move primitive for tape 2.
@@ -529,6 +599,27 @@ theorem moveHead2LeftLocalDescription_physicalPrimitiveGuardedLogicalEquivContra
       simpa [moveHead2LeftLocalDescription, actual, hTout]
         using hhalts
 
+theorem moveHead2LeftLocalDescription_haltsFromEncodedStructuredTapes_of_guardCells
+    (logical : List (Tape Bool))
+    (hguards : LogicalTapeAtHasGuardCells logical 2) :
+    moveHead2LeftLocalDescription.HaltsFromTape
+      (encodedStructuredTapes logical)
+      (encodedStructuredTapes
+        ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)) := by
+  rcases
+      cursorTape2MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_withGuardCells
+        |>.realizes logical (encodedStructuredTapes logical)
+          ⟨hguards,
+            atExistingTapeSeparator_zero_of_atHasGuardCells_two
+              hguards⟩
+    with ⟨Tout, hhalts, hseparator⟩
+  have hTout :
+      Tout =
+        encodedStructuredTapes
+          ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical) :=
+    atTapeSeparator_zero_eq hseparator
+  simpa [moveHead2LeftLocalDescription, hTout] using hhalts
+
 /--
 Guarded local right-move primitive for tape 2.
 -/
@@ -569,6 +660,27 @@ theorem moveHead2RightLocalDescription_physicalPrimitiveGuardedLogicalEquivContr
         atTapeSeparator_zero_eq hseparator
       simpa [moveHead2RightLocalDescription, actual, hTout]
         using hhalts
+
+theorem moveHead2RightLocalDescription_haltsFromEncodedStructuredTapes_of_guardCells
+    (logical : List (Tape Bool))
+    (hguards : LogicalTapeAtHasGuardCells logical 2) :
+    moveHead2RightLocalDescription.HaltsFromTape
+      (encodedStructuredTapes logical)
+      (encodedStructuredTapes
+        ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)) := by
+  rcases
+      cursorTape2MoveHeadRightLocalAndReturnToBlockStartDescription_contract_withGuardCells
+        |>.realizes logical (encodedStructuredTapes logical)
+          ⟨hguards,
+            atExistingTapeSeparator_zero_of_atHasGuardCells_two
+              hguards⟩
+    with ⟨Tout, hhalts, hseparator⟩
+  have hTout :
+      Tout =
+        encodedStructuredTapes
+          ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical) :=
+    atTapeSeparator_zero_eq hseparator
+  simpa [moveHead2RightLocalDescription, hTout] using hhalts
 
 private theorem actionPrimitivesAt_zero_enabled
     {logical : List (Tape Bool)}
