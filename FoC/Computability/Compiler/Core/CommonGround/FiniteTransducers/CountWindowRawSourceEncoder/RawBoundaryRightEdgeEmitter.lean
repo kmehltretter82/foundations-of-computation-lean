@@ -1,3 +1,5 @@
+import FoC.Computability.Compiler.Core.CommonGround.Identity
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly.Prefix
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.CellPass
@@ -103,6 +105,85 @@ theorem sourceTape_defaultedCells
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
+def entryTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape Bool :=
+  Tape.move Direction.left (sourceTape skipped count tail)
+
+def entryDescription : MachineDescription where
+  stateCount := 2
+  start := 0
+  halt := 1
+  transitions :=
+    [ transition 0 none none Direction.left 1 ]
+
+theorem entryDescription_wellFormed :
+    entryDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := entryDescription.transitions)
+      (stateCount := entryDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := entryDescription.transitions)
+      (by decide)
+
+theorem entryDescription_haltTransitionFree :
+    entryDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := entryDescription.transitions)
+    (state := entryDescription.halt)
+    (by decide)
+
+theorem entryDescription_subroutineReady :
+    entryDescription.SubroutineReady :=
+  ⟨entryDescription_wellFormed,
+    entryDescription_haltTransitionFree⟩
+
+theorem entryDescription_run_sourceTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    entryDescription.runConfig 1
+        { state := entryDescription.start
+          tape := sourceTape skipped count tail } =
+      { state := entryDescription.halt
+        tape := entryTape skipped count tail } := by
+  simp [entryDescription, entryTape, sourceTape, tapeAtCells, runConfig,
+    stepConfig, lookupTransition, Matches, transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft]
+
+theorem entryDescription_haltsFrom_sourceTape
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    entryDescription.HaltsFromTape
+      (sourceTape skipped count tail)
+      (entryTape skipped count tail) := by
+  refine ⟨1, ?_⟩
+  constructor <;>
+    rw [entryDescription_run_sourceTape]
+
+theorem tapeAtCells_moveRight_moveLeft_append_none
+    (pref right : List (Option Bool)) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (tapeAtCells (List.append pref [none]) right)) =
+      tapeAtCells (List.append pref [none]) right := by
+  cases pref <;> cases right <;>
+    simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem entryTape_moveRight
+    (skipped count : Word Bool) (tail : List (Option Bool)) :
+    Tape.move Direction.right (entryTape skipped count tail) =
+      sourceTape skipped count tail := by
+  rw [entryTape, sourceTape]
+  exact
+    tapeAtCells_moveRight_moveLeft_append_none
+      ((List.append skipped count).reverse.map some)
+      (none ::
+        none ::
+        none ::
+        List.append
+          (List.replicate count.length (none : Option Bool))
+          tail)
+
 theorem rightEdgeTape_cells
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
@@ -179,6 +260,44 @@ theorem encodedLayoutBits_eq_header_length_cells
           (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
             layout)) :=
   encodedLayoutBits_eq_headerQuoteBits layout
+
+def rightToLeftEncodedLayoutBits (layout : Word Bool) : Word Bool :=
+  List.append
+    (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
+      layout).reverse
+    (List.append
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        layout.length).reverse
+      (encodeCodeSymbolAsInput MachineCodeSymbol.header).reverse)
+
+theorem rightToLeftEncodedLayoutBits_eq_reverse
+    (layout : Word Bool) :
+    rightToLeftEncodedLayoutBits layout =
+      (encodedLayoutBits layout).reverse := by
+  rw [encodedLayoutBits_eq_header_length_cells]
+  simp [rightToLeftEncodedLayoutBits, List.reverse_append,
+    List.append_assoc]
+
+theorem rightEdgeTape_eq_rightToLeftEncodedLayoutBits
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    rightEdgeTape skipped count tailFirst tail =
+      tapeAtCells
+        ((rightToLeftEncodedLayoutBits
+          (List.append skipped count)).map some)
+        (some tailFirst :: tail) := by
+  rw [rightEdgeTape, rightToLeftEncodedLayoutBits_eq_reverse]
+
+theorem preRewindTape_eq_rightToLeftEncodedLayoutBits
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    preRewindTape skipped count tailFirst tail =
+      Tape.move Direction.left
+        (tapeAtCells
+          ((rightToLeftEncodedLayoutBits
+            (List.append skipped count)).map some)
+          (some tailFirst :: tail)) := by
+  rw [preRewindTape, rightEdgeTape_eq_rightToLeftEncodedLayoutBits]
 
 theorem tapeAtCells_moveRight_moveLeft_append_headerBits
     (pref right : List (Option Bool)) :
@@ -301,6 +420,57 @@ theorem rightEdgeTape_rewind_target_defaultedCells
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
     FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
+def rawBoundaryRightEdgeEmitterCoreDescription :
+    MachineDescription :=
+  entryDescription
+
+theorem rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady :
+    rawBoundaryRightEdgeEmitterCoreDescription.SubroutineReady := by
+  rw [rawBoundaryRightEdgeEmitterCoreDescription]
+  exact entryDescription_subroutineReady
+
+def rawBoundaryRightEdgeEmitterDescription :
+    MachineDescription :=
+  seqSubroutine rawBoundaryRightEdgeEmitterCoreDescription
+    ExactIdentityDescription Direction.left
+
+theorem rawBoundaryRightEdgeEmitterDescription_subroutineReady :
+    rawBoundaryRightEdgeEmitterDescription.SubroutineReady := by
+  rw [rawBoundaryRightEdgeEmitterDescription]
+  exact
+    seqSubroutine_subroutineReady
+      rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
+      CommonGround.Identity.exactIdentityDescription_subroutineReady
+
+-- If this core run theorem cannot be proved for the chosen core table, the
+-- core machine itself needs to be reconsidered rather than hidden behind the
+-- public construction wrapper.
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+      (sourceTape skipped count (some tailFirst :: tail))
+      (rightEdgeTape skipped count tailFirst tail) := by
+  sorry
+
+theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
+      (sourceTape skipped count (some tailFirst :: tail))
+      (preRewindTape skipped count tailFirst tail) := by
+  rw [rawBoundaryRightEdgeEmitterDescription, preRewindTape]
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
+      CommonGround.Identity.exactIdentityDescription_subroutineReady
+      (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
+        skipped count tailFirst tail)
+      rfl
+      (CommonGround.Identity.exactIdentityDescription_haltsFromTape
+        (Tape.move Direction.left
+          (rightEdgeTape skipped count tailFirst tail)))
+
 def Spec (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall (skipped count : Word Bool)
@@ -313,7 +483,13 @@ def Construction : Prop :=
   exists emitter : MachineDescription, Spec emitter
 
 theorem construction_core : Construction := by
-  sorry
+  refine ⟨rawBoundaryRightEdgeEmitterDescription, ?_⟩
+  constructor
+  · exact rawBoundaryRightEdgeEmitterDescription_subroutineReady
+  · intro skipped count tailFirst tail
+    exact
+      rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
+        skipped count tailFirst tail
 
 end RawBoundaryRightEdgeEmitter
 end CountWindowRawSourceEncoder
