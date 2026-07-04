@@ -46,7 +46,7 @@ finite set witnesses from sublists of the original finite state list.
 def FSetOfList (xs : List state) : Foundation.FSet state :=
   fun x => x ∈ xs
 
-theorem filter_mem_sublists (xs : List state) (p : state -> Prop)
+private theorem filter_mem_sublists (xs : List state) (p : state -> Prop)
     [DecidablePred p] :
     xs.filter (fun x => decide (p x)) ∈ Foundation.ListCard.Sublists xs := by
   induction xs with
@@ -171,7 +171,7 @@ theorem allSymbolsIn_concatWords {alphabet : List alpha}
       | tail _ htail =>
           exact ih (allSymbolsIn_concat_right h) htail
 
-theorem pathVia_prepend (M : DFA alpha state) (allowed : List state)
+private theorem pathVia_prepend (M : DFA alpha state) (allowed : List state)
     {q mid r : state} {a : alpha} {tail : Word alpha}
     (hmid : mid ∈ allowed)
     (hstep : M.step q a = mid)
@@ -185,7 +185,7 @@ theorem pathVia_prepend (M : DFA alpha state) (allowed : List state)
   | cons b rest =>
       exact PathVia.cons (by intro h; cases h) hmid hstep hpath
 
-theorem pathVia_allStates (M : DFA alpha state) (q : state) (w : Word alpha) :
+private theorem pathVia_allStates (M : DFA alpha state) (q : state) (w : Word alpha) :
     PathVia M M.statesFinite.elems q w (DFA.RunFrom M q w) := by
   induction w generalizing q with
   | nil =>
@@ -199,7 +199,7 @@ theorem pathVia_allStates (M : DFA alpha state) (q : state) (w : Word alpha) :
             (M.statesFinite.complete (M.step q a)) rfl
             (ih (M.step q a))
 
-theorem pathVia_cons_decomp (M : DFA alpha state)
+private theorem pathVia_cons_decomp (M : DFA alpha state)
     (s : state) (rest : List state) {q r : state} {w : Word alpha}
     (h : PathVia M (s :: rest) q w r) :
     PathVia M rest q w r ∨
@@ -282,7 +282,7 @@ theorem pathVia_cons_decomp (M : DFA alpha state)
                           · exact hz.right.right.left
                           · exact hz.right.right.right
 
-theorem stepRegex_denote [DecidableEq state]
+private theorem stepRegex_denote [DecidableEq state]
     (alphabet : List alpha) (M : DFA alpha state)
     (q r : state) (w : Word alpha) :
     w ∈ RegExp.Denote (StepRegex alphabet M q r) <->
@@ -308,7 +308,7 @@ theorem stepRegex_denote [DecidableEq state]
             (And.intro ha.left (by simp [ha.right.left]))
         · exact ha.right.right
 
-theorem pathRegex_complete [DecidableEq state]
+private theorem pathRegex_complete [DecidableEq state]
     (alphabet : List alpha) (M : DFA alpha state)
     (states : List state) {q r : state} {w : Word alpha}
     (hall : AllSymbolsIn alphabet w)
@@ -390,7 +390,7 @@ theorem pathRegex_complete [DecidableEq state]
                               (Word.Concat x (Language.ConcatWords loops)) z := by
                                 rw [← Word.concat_assoc]
 
-theorem pathRegex_sound [DecidableEq state]
+private theorem pathRegex_sound [DecidableEq state]
     (alphabet : List alpha) (M : DFA alpha state)
     (states : List state) {q r : state} {w : Word alpha}
     (hw : w ∈ RegExp.Denote (PathRegex alphabet M states q r)) :

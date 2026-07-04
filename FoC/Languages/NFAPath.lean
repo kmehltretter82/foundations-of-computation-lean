@@ -63,7 +63,7 @@ theorem path_epsilonReach_prefix {M : NFA alpha state} {q r s : state}
   | refl _ => exact hpath
   | step hstep _ ih => exact Path.eps hstep (ih hpath)
 
-theorem epsilonReach_of_path_empty_aux {M : NFA alpha state} {q r : state}
+private theorem epsilonReach_of_path_empty_aux {M : NFA alpha state} {q r : state}
     {v : Word alpha} (hpath : Path M q v r) :
     v = Word.Empty -> EpsilonReach M q r := by
   induction hpath with
@@ -140,7 +140,7 @@ theorem path_from_next {M : NFA alpha state} {S : FSet state}
                   · exact hqS
                   · exact Path.sym hstep (path_epsilonReach_prefix heps hpath)
 
-theorem path_cons_from_closed_aux {M : NFA alpha state} {S : FSet state}
+private theorem path_cons_from_closed_aux {M : NFA alpha state} {S : FSet state}
     (hclosed : EpsilonClosed M S) {q r : state} {v : Word alpha}
     (hq : q ∈ S) (hpath : Path M q v r) :
     forall {a : alpha} {w : Word alpha}, v = a :: w ->

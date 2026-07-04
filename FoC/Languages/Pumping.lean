@@ -56,14 +56,14 @@ def PrefixStatesFrom (M : DFA alpha state) : state -> Word alpha -> List state
   | q, [] => [q]
   | q, a :: w => q :: PrefixStatesFrom M (M.step q a) w
 
-theorem prefixStatesFrom_length (M : DFA alpha state) (q : state) (w : Word alpha) :
+private theorem prefixStatesFrom_length (M : DFA alpha state) (q : state) (w : Word alpha) :
     (PrefixStatesFrom M q w).length = Word.Length w + 1 := by
   induction w generalizing q with
   | nil => rfl
   | cons a rest ih =>
       simp [PrefixStatesFrom, Word.Length, ih]
 
-theorem prefixStatesFrom_all_mem (M : DFA alpha state)
+private theorem prefixStatesFrom_all_mem (M : DFA alpha state)
     (q : state) (w : Word alpha) {r : state}
     (hr : r ∈ PrefixStatesFrom M q w) : r ∈ M.statesFinite.elems := by
   induction w generalizing q with
@@ -80,7 +80,7 @@ theorem prefixStatesFrom_all_mem (M : DFA alpha state)
       | inr htail =>
           exact ih (M.step q a) htail
 
-theorem prefixStatesFrom_get?_runFrom (M : DFA alpha state)
+private theorem prefixStatesFrom_get?_runFrom (M : DFA alpha state)
     (q : state) (w : Word alpha) {i : Nat}
     (hi : i <= Word.Length w) :
     (PrefixStatesFrom M q w)[i]? = some (DFA.RunFrom M q (List.take i w)) := by
@@ -97,7 +97,7 @@ theorem prefixStatesFrom_get?_runFrom (M : DFA alpha state)
             simpa [Word.Length] using hi
           simpa [PrefixStatesFrom, DFA.RunFrom] using ih (M.step q a) hiRest
 
-theorem duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
+private theorem duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
     {xs elems : List α}
     (hlen : elems.length < xs.length)
     (hall : forall a, a ∈ xs -> a ∈ elems) :
@@ -111,7 +111,7 @@ Repeated prefix states determine the pumping split. These lemmas reconstruct
 the word around the repeated segment and prove the repeated segment is nonempty.
 -/
 
-theorem word_split_reconstruct (w : Word alpha) {i j : Nat}
+private theorem word_split_reconstruct (w : Word alpha) {i j : Nat}
     (hij : i <= j) :
     w = Word.Concat (List.take i w)
       (Word.Concat (List.take (j - i) (List.drop i w)) (List.drop j w)) := by
@@ -132,7 +132,7 @@ theorem word_split_reconstruct (w : Word alpha) {i j : Nat}
         (Word.Concat (List.take (j - i) (List.drop i w)) (List.drop j w)) := by
       exact congrArg (Word.Concat (List.take i w)) hdrop
 
-theorem word_split_middle_length (w : Word alpha) {i j : Nat}
+private theorem word_split_middle_length (w : Word alpha) {i j : Nat}
     (hj : j <= Word.Length w) :
     Word.Length (List.take (j - i) (List.drop i w)) = j - i := by
   have hj' : j <= List.length w := by simpa [Word.Length] using hj
@@ -141,7 +141,7 @@ theorem word_split_middle_length (w : Word alpha) {i j : Nat}
   have hle : j - i <= List.length w - i := by lia
   exact Nat.min_eq_left hle
 
-theorem word_split_prefix_length (w : Word alpha) {i j : Nat}
+private theorem word_split_prefix_length (w : Word alpha) {i j : Nat}
     (hij : i <= j) (hj : j <= Word.Length w) :
     Word.Length (Word.Concat (List.take i w) (List.take (j - i) (List.drop i w))) = j := by
   have hj' : j <= List.length w := by simpa [Word.Length] using hj
@@ -152,7 +152,7 @@ theorem word_split_prefix_length (w : Word alpha) {i j : Nat}
   rw [Nat.min_eq_left hi]
   lia
 
-theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
+private theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
     (hij : i <= j) (hj : j <= Word.Length w) :
     List.take j w =
       Word.Concat (List.take i w) (List.take (j - i) (List.drop i w)) := by
@@ -174,7 +174,7 @@ theorem word_split_prefix_eq_take (w : Word alpha) {i j : Nat}
       rw [hminji]
       rfl
 
-theorem runFrom_repeatWord_loop (M : DFA alpha state) (q : state)
+private theorem runFrom_repeatWord_loop (M : DFA alpha state) (q : state)
     (y : Word alpha) (hloop : DFA.RunFrom M q y = q) (k : Nat) :
     DFA.RunFrom M q (Word.RepeatWord y k) = q := by
   induction k with

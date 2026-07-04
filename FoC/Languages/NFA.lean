@@ -106,7 +106,7 @@ theorem subsetDFA_runFrom (M : NFA alpha state)
   | cons a rest ih =>
       exact ih (Next M S a)
 
-theorem subsetDFA_accepts (M : NFA alpha state)
+private theorem subsetDFA_accepts (M : NFA alpha state)
     (subsetsFinite : FiniteType (FSet state)) (w : Word alpha) :
     DFA.Accepts (SubsetDFA M subsetsFinite) w <-> Accepts M w := by
   unfold DFA.Accepts DFA.Run Accepts Reach
@@ -138,7 +138,7 @@ def FromDFA (M : DFA alpha state) : NFA alpha state where
   accept := M.accept
   statesFinite := M.statesFinite
 
-theorem reachFromSet_of_equal {M : NFA alpha state} {S T : FSet state}
+private theorem reachFromSet_of_equal {M : NFA alpha state} {S T : FSet state}
     (hST : FSet.Equal S T) (w : Word alpha) :
     FSet.Equal (ReachFromSet M S w) (ReachFromSet M T w) := by
   induction w generalizing S T with
@@ -173,13 +173,13 @@ theorem reachFromSet_of_equal {M : NFA alpha state} {S T : FSet state}
                       exact And.intro ((hST q).mpr hq.left) hq.right
                     · exact hreach
 
-theorem fromDFA_epsilonReach_eq (M : DFA alpha state)
+private theorem fromDFA_epsilonReach_eq (M : DFA alpha state)
     {q r : state} (h : EpsilonReach (FromDFA M) q r) : r = q := by
   cases h with
   | refl _ => rfl
   | step hstep _ => cases hstep
 
-theorem fromDFA_epsilonClosure_singleton (M : DFA alpha state) (q : state) :
+private theorem fromDFA_epsilonClosure_singleton (M : DFA alpha state) (q : state) :
     FSet.Equal (EpsilonClosure (FromDFA M) (FSet.Singleton q)) (FSet.Singleton q) := by
   intro r
   constructor
@@ -193,11 +193,11 @@ theorem fromDFA_epsilonClosure_singleton (M : DFA alpha state) (q : state) :
   · intro hr
     exact epsilonClosure_contains hr
 
-theorem fromDFA_startSet (M : DFA alpha state) :
+private theorem fromDFA_startSet (M : DFA alpha state) :
     FSet.Equal (StartSet (FromDFA M)) (FSet.Singleton M.start) :=
   fromDFA_epsilonClosure_singleton M M.start
 
-theorem fromDFA_symbolMove_singleton (M : DFA alpha state) (q : state) (a : alpha) :
+private theorem fromDFA_symbolMove_singleton (M : DFA alpha state) (q : state) (a : alpha) :
     FSet.Equal
       (SymbolMove (FromDFA M) (FSet.Singleton q) a)
       (FSet.Singleton (M.step q a)) := by
@@ -213,7 +213,7 @@ theorem fromDFA_symbolMove_singleton (M : DFA alpha state) (q : state) (a : alph
   · intro hr
     exact Exists.intro q (And.intro rfl hr)
 
-theorem fromDFA_next_singleton (M : DFA alpha state) (q : state) (a : alpha) :
+private theorem fromDFA_next_singleton (M : DFA alpha state) (q : state) (a : alpha) :
     FSet.Equal
       (Next (FromDFA M) (FSet.Singleton q) a)
       (FSet.Singleton (M.step q a)) := by
@@ -231,7 +231,7 @@ theorem fromDFA_next_singleton (M : DFA alpha state) (q : state) (a : alpha) :
   · intro hr
     exact epsilonClosure_contains ((fromDFA_symbolMove_singleton M q a r).mpr hr)
 
-theorem fromDFA_reachFromSet_singleton (M : DFA alpha state)
+private theorem fromDFA_reachFromSet_singleton (M : DFA alpha state)
     (q : state) (w : Word alpha) :
     FSet.Equal
       (ReachFromSet (FromDFA M) (FSet.Singleton q) w)

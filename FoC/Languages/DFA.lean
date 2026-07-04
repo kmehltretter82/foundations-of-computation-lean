@@ -40,7 +40,7 @@ def PairElems : List state₁ -> List state₂ -> List (state₁ × state₂)
   | [], _ => []
   | x :: xs, ys => (ys.map fun y => (x, y)) ++ PairElems xs ys
 
-theorem pair_mem {xs : List state₁} {ys : List state₂}
+private theorem pair_mem {xs : List state₁} {ys : List state₂}
     {x : state₁} {y : state₂} (hx : x ∈ xs) (hy : y ∈ ys) :
     (x, y) ∈ PairElems xs ys := by
   induction xs with

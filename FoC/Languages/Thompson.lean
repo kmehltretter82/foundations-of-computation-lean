@@ -58,7 +58,7 @@ def SymbolNFA (a : alpha) : NFA alpha Bool where
   accept := fun q => q = true
   statesFinite := BoolFinite
 
-theorem empty_path_no_accept {w : Word alpha} {q : Bool}
+private theorem empty_path_no_accept {w : Word alpha} {q : Bool}
     (hpath : NFA.Path (EmptyNFA alpha) false w q) :
     q ≠ true := by
   intro hq
@@ -82,7 +82,7 @@ theorem emptyNFA_language :
   · intro hw
     cases hw
 
-theorem epsilon_path_word_empty {w : Word alpha} {q : Bool}
+private theorem epsilon_path_word_empty {w : Word alpha} {q : Bool}
     (hpath : NFA.Path (EpsilonNFA alpha) true w q) : w = Word.Empty ∧ q = true := by
   cases hpath with
   | nil _ =>
@@ -118,7 +118,7 @@ theorem epsilonNFA_language :
     · exact NFA.Path.eps (And.intro rfl (And.intro rfl rfl)) (NFA.Path.nil true)
     · rfl
 
-theorem symbol_path_from_true_empty {a : alpha} {w : Word alpha} {q : Bool}
+private theorem symbol_path_from_true_empty {a : alpha} {w : Word alpha} {q : Bool}
     (hpath : NFA.Path (SymbolNFA a) true w q) : w = Word.Empty ∧ q = true := by
   cases hpath with
   | nil _ =>
@@ -207,7 +207,7 @@ def UnionNFA (M : NFA alpha leftState) (N : NFA alpha rightState) :
     | UnionState.right q => N.accept q
   statesFinite := UnionState.finite M.statesFinite N.statesFinite
 
-theorem union_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem union_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
     {q r : leftState} {w : Word alpha}
     (hpath : NFA.Path M q w r) :
     NFA.Path (UnionNFA M N) (UnionState.left q) w (UnionState.left r) := by
@@ -219,7 +219,7 @@ theorem union_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
   | sym hstep _ ih =>
       exact NFA.Path.sym (Exists.intro _ (And.intro hstep rfl)) ih
 
-theorem union_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem union_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
     {q r : rightState} {w : Word alpha}
     (hpath : NFA.Path N q w r) :
     NFA.Path (UnionNFA M N) (UnionState.right q) w (UnionState.right r) := by
@@ -231,7 +231,7 @@ theorem union_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
   | sym hstep _ ih =>
       exact NFA.Path.sym (Exists.intro _ (And.intro hstep rfl)) ih
 
-theorem union_left_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem union_left_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
     {startState s : UnionState leftState rightState} {w : Word alpha}
     (hpath : NFA.Path (UnionNFA M N) startState w s) :
     forall q : leftState, startState = UnionState.left q ->
@@ -273,7 +273,7 @@ theorem union_left_path_inv {M : NFA alpha leftState} {N : NFA alpha rightState}
     exists r, s = UnionState.left r ∧ NFA.Path M q w r :=
   union_left_path_inv_aux hpath q rfl
 
-theorem union_right_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem union_right_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
     {startState s : UnionState leftState rightState} {w : Word alpha}
     (hpath : NFA.Path (UnionNFA M N) startState w s) :
     forall q : rightState, startState = UnionState.right q ->
@@ -414,7 +414,7 @@ def ConcatNFA (M : NFA alpha leftState) (N : NFA alpha rightState) :
     | Sum.inr q => N.accept q
   statesFinite := SumFinite M.statesFinite N.statesFinite
 
-theorem concat_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem concat_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
     {q r : leftState} {w : Word alpha}
     (hpath : NFA.Path M q w r) :
     NFA.Path (ConcatNFA M N) (Sum.inl q) w (Sum.inl r) := by
@@ -426,7 +426,7 @@ theorem concat_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
   | sym hstep _ ih =>
       exact NFA.Path.sym (Or.inl (Exists.intro _ (And.intro hstep rfl))) ih
 
-theorem concat_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem concat_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
     {q r : rightState} {w : Word alpha}
     (hpath : NFA.Path N q w r) :
     NFA.Path (ConcatNFA M N) (Sum.inr q) w (Sum.inr r) := by
@@ -438,7 +438,7 @@ theorem concat_right_path {M : NFA alpha leftState} {N : NFA alpha rightState}
   | sym hstep _ ih =>
       exact NFA.Path.sym (Exists.intro _ (And.intro hstep rfl)) ih
 
-theorem concat_right_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem concat_right_path_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
     {startState s : Sum leftState rightState} {w : Word alpha}
     (hpath : NFA.Path (ConcatNFA M N) startState w s) :
     forall q : rightState, startState = Sum.inr q ->
@@ -480,7 +480,7 @@ theorem concat_right_path_inv {M : NFA alpha leftState} {N : NFA alpha rightStat
     exists r, s = Sum.inr r ∧ NFA.Path N q w r :=
   concat_right_path_inv_aux hpath q rfl
 
-theorem concat_left_to_right_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
+private theorem concat_left_to_right_inv_aux {M : NFA alpha leftState} {N : NFA alpha rightState}
     {startState s : Sum leftState rightState} {w : Word alpha}
     (hpath : NFA.Path (ConcatNFA M N) startState w s) :
     forall (q : leftState) (r : rightState),
@@ -667,7 +667,7 @@ def StarNFA (M : NFA alpha state) : NFA alpha (Option state) where
   accept := fun q => q = none
   statesFinite := OptionFinite M.statesFinite
 
-theorem star_inner_path {M : NFA alpha state} {q r : state} {w : Word alpha}
+private theorem star_inner_path {M : NFA alpha state} {q r : state} {w : Word alpha}
     (hpath : NFA.Path M q w r) :
     NFA.Path (StarNFA M) (some q) w (some r) := by
   induction hpath with
@@ -678,7 +678,7 @@ theorem star_inner_path {M : NFA alpha state} {q r : state} {w : Word alpha}
   | sym hstep _ ih =>
       exact NFA.Path.sym (Or.inl (Exists.intro _ (And.intro hstep rfl))) ih
 
-theorem star_sound_aux {M : NFA alpha state}
+private theorem star_sound_aux {M : NFA alpha state}
     {startState endState : Option state} {w : Word alpha}
     (hpath : NFA.Path (StarNFA M) startState w endState) :
     (startState = none -> endState = none ->
@@ -793,7 +793,7 @@ theorem star_sound_aux {M : NFA alpha state}
         | inr hreturn =>
             cases hreturn.left
 
-theorem star_path_of_pieces {M : NFA alpha state}
+private theorem star_path_of_pieces {M : NFA alpha state}
     (pieces : List (Word alpha))
     (hall : forall p, p ∈ pieces -> p ∈ NFA.AcceptedLanguage M) :
     NFA.Path (StarNFA M) none (Language.ConcatWords pieces) none := by
@@ -849,7 +849,7 @@ theorem starNFA_language (M : NFA alpha state) :
     exact (NFA.pathAccepts_iff_accepts (StarNFA M) w).mp
       ((starNFA_pathAccepts (M := M) w).mpr hw)
 
-theorem union_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
+private theorem union_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
     (hL : Language.Equal L₁ L₂) (hM : Language.Equal M₁ M₂) :
     Language.Equal (Language.Union L₁ M₁) (Language.Union L₂ M₂) := by
   intro w
@@ -863,7 +863,7 @@ theorem union_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
     | inl h => exact Or.inl ((hL w).mpr h)
     | inr h => exact Or.inr ((hM w).mpr h)
 
-theorem concat_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
+private theorem concat_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
     (hL : Language.Equal L₁ L₂) (hM : Language.Equal M₁ M₂) :
     Language.Equal (Language.Concat L₁ M₁) (Language.Concat L₂ M₂) := by
   intro w
@@ -893,7 +893,7 @@ theorem concat_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
                     exists y
                     exact And.intro ((hL x).mpr hxL) (And.intro ((hM y).mpr hyM) hwEq)
 
-theorem star_equal_of_equal {L M : Language alpha}
+private theorem star_equal_of_equal {L M : Language alpha}
     (h : Language.Equal L M) :
     Language.Equal (Language.Star L) (Language.Star M) := by
   intro w
