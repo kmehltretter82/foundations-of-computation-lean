@@ -442,30 +442,6 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithT
           Tape.input (encodeCodeWordAsInput out) :=
   h.right code T hhalt
 
-/-!
-Short closed-handoff aliases.  The full theorem names above remain the stable
-descriptive API, while these aliases make proof scripts that repeatedly peel a
-closed handoff contract easier to read.
--/
-
-theorem closedHandoffCompiled_haltsWithTape_inv
-    {P : TapeCodePrimitive}
-    {D : MachineDescription} {handoffMove : Direction}
-    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      P D handoffMove)
-    {code : Word MachineCodeSymbol} {T : Tape Bool}
-    (hhalt :
-      D.HaltsWithTape
-        (encodeCodeWordAsInput code) T) :
-    exists out : Word MachineCodeSymbol,
-      P.transform code = some out ∧
-        Tape.normalizedOutput T =
-          encodeCodeWordAsInput out ∧
-        Tape.move handoffMove T =
-          Tape.input (encodeCodeWordAsInput out) :=
-  tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output
-    h hhalt
-
 theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
     {P : TapeCodePrimitive}
     {D : MachineDescription} {handoffMove : Direction}
@@ -506,35 +482,6 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRea
   tapeCodePrimitiveHandoffSubroutineRealizedByDescription_of_handoffCompiled
     (tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
       h)
-
-theorem closedHandoffCompiled_outputCompiled
-    {P : TapeCodePrimitive}
-    {D : MachineDescription} {handoffMove : Direction}
-    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      P D handoffMove) :
-    TapeCodePrimitiveOutputCompiledSubroutineByDescription P D :=
-  tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_outputCompiled
-    h
-
-theorem closedHandoffCompiled_handoffCompiled
-    {P : TapeCodePrimitive}
-    {D : MachineDescription} {handoffMove : Direction}
-    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      P D handoffMove) :
-    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
-      P D handoffMove :=
-  tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffCompiled
-    h
-
-theorem closedHandoffCompiled_handoffRealized
-    {P : TapeCodePrimitive}
-    {D : MachineDescription} {handoffMove : Direction}
-    (h : TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      P D handoffMove) :
-    TapeCodePrimitiveHandoffSubroutineRealizedByDescription
-      P D handoffMove :=
-  tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_handoffRealized
-    h
 
 theorem haltsWithEncodedCodeOutput_functional_of_haltTransitionFree
     {D : MachineDescription}

@@ -117,10 +117,10 @@ subroutine readiness, handoff shape, and closed handoff inversion.
   turns that exact tape shape into the closed handoff contract when outputs
   are known to be nonempty.
 
-For proof work, use the short accessors
-{name (full := FoC.Computability.EncodedRewriters.rightShifted_haltsWithTape_inv)}`EncodedRewriters.rightShifted_haltsWithTape_inv`
+For proof work, use the closed-form inversion lemmas
+{name (full := FoC.Computability.EncodedRewriters.rightShiftedOutputCompiledSubroutineByDescription_haltsWithTape_inv)}`EncodedRewriters.rightShiftedOutputCompiledSubroutineByDescription_haltsWithTape_inv`
 and
-{name (full := FoC.Computability.closedHandoffCompiled_haltsWithTape_inv)}`closedHandoffCompiled_haltsWithTape_inv`
+{name (full := FoC.Computability.tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output)}`tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output`
 when moving from a halting tape back to the primitive transform and exact tape
 equations.
 
@@ -490,11 +490,11 @@ Before opening a remaining proof hole, classify the goal by contract strength.
 * A right-shifted goal must end with an exact
   {name (full := FoC.Computability.MachineDescription.HaltsWithTape)}`MachineDescription.HaltsWithTape`
   equation whose head is one cell to the right of the canonical output word.
-  Use the short right-shifted accessors before expanding the record.
+  Use the right-shifted inversion lemmas before expanding the record.
 * A closed-handoff goal must prove the inverse direction from every halting
   tape on canonical input back to the primitive transform. Use
-  {name (full := FoC.Computability.closedHandoffCompiled_haltsWithTape_inv)}`closedHandoffCompiled_haltsWithTape_inv`
-  and related accessors rather than reproving the record projections locally.
+  {name (full := FoC.Computability.tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output)}`tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output`
+  rather than reproving the record projection locally.
 * A parser or scanner inversion that compares encoded prefixes should first
   try the decoder-backed cancellation helpers in
   {module}`FoC.Computability.Compiler.Core.EncodingLemmas` and the scanner

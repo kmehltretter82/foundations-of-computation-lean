@@ -155,7 +155,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
       ⟨Tparser, TsimExtractor, hparserHalt,
         hsimExtractorHalt, hTsimExtractorOutput⟩
     rcases
-        closedHandoffCompiled_haltsWithTape_inv hparser
+        tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_haltsWithTape_output hparser
           hparserHalt with
       ⟨mid, hparserTransform, _hparserOutput, hparserMove⟩
     have hmid :

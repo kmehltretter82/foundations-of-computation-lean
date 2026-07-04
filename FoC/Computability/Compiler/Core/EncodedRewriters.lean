@@ -97,14 +97,6 @@ def EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction
 
-/--
-Obsolete compatibility alias for the bounded runner.  The active encoded route
-is {name}`EncodedDovetailLayoutBoundedRunnerRewriterConstruction`.
--/
-def EncodedDovetailLayoutBoundedRunnerHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailBoundedLayoutRunnerHandoffCompiledSubroutineConstruction
-
 def EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction
@@ -112,14 +104,6 @@ def EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :
 def EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction :
     Prop :=
   PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction
-
-/--
-Obsolete compatibility alias for the bounded runner.  The output-compiled
-padded/equivalence route deliberately has no closed-handoff scaffold.
--/
-def EncodedDovetailLayoutBoundedRunnerClosedHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailBoundedLayoutRunnerClosedHandoffCompiledSubroutineConstruction
 
 def EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction :
     Prop :=
