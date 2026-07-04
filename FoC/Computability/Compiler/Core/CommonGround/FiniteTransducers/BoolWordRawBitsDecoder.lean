@@ -297,6 +297,92 @@ theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_subroutin
   ⟨boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_wellFormed,
     boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltTransitionFree⟩
 
+private abbrev boolWordRawBitsDecoderMaterializerTestMachine :
+    MachineDescription :=
+  boolWordCanonicalHandoffToRawScanSourceMaterializerDescription
+
+private theorem boolWordRawBitsDecoderMaterializerRun_decodesFalseCell
+    (right : List (Option Bool)) :
+    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := tapeAtCells
+            [some false, some true, some false]
+            (some true :: right) } =
+      { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+        tape := tapeAtCells []
+          (none :: some false :: none :: none :: none :: right) } := by
+  cases right <;>
+    simp [boolWordRawBitsDecoderMaterializerTestMachine,
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
+      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem boolWordRawBitsDecoderMaterializerRun_decodesTrueCell
+    (right : List (Option Bool)) :
+    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := tapeAtCells
+            [some true, some true, some false]
+            (some false :: right) } =
+      { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+        tape := tapeAtCells []
+          (none :: some true :: none :: none :: none :: right) } := by
+  cases right <;>
+    simp [boolWordRawBitsDecoderMaterializerTestMachine,
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
+      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem boolWordRawBitsDecoderMaterializerRun_reachesCleanup
+    (right : List (Option Bool)) :
+    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := tapeAtCells
+            [some true, some false, some false]
+            (some true :: right) } =
+      { state := 40
+        tape := tapeAtCells []
+          (none :: none :: none :: none :: none :: right) } := by
+  cases right <;>
+    simp [boolWordRawBitsDecoderMaterializerTestMachine,
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
+      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
+      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+-- Exact handoff-to-target probes for these examples currently fail: the
+-- cleanup phase reaches halt but leaves too many erased scaffold blanks.
+private theorem boolWordRawBitsDecoderMaterializerRun_emptyWord_halts :
+    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 50
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := boolWordRawBitsDecoderPrefixHandoffTape
+            ([] : Word Bool) ([] : Word Bool) [] }).state =
+      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
+  decide
+
+private theorem boolWordRawBitsDecoderMaterializerRun_falseWord_halts :
+    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 80
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := boolWordRawBitsDecoderPrefixHandoffTape
+            ([false] : Word Bool) ([] : Word Bool) [] }).state =
+      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
+  decide
+
+private theorem boolWordRawBitsDecoderMaterializerRun_trueWord_halts :
+    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 80
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := boolWordRawBitsDecoderPrefixHandoffTape
+            ([true] : Word Bool) ([] : Word Bool) [] }).state =
+      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
+  decide
+
+private theorem boolWordRawBitsDecoderMaterializerRun_twoBitsWithSuffix_halts :
+    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 120
+        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
+          tape := boolWordRawBitsDecoderPrefixHandoffTape
+            ([false, true] : Word Bool) ([true] : Word Bool) [none] }).state =
+      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
+  decide
+
 theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltsFromTape
     (bits suffixTail : Word Bool)
     (rightPadding : List (Option Bool)) :
