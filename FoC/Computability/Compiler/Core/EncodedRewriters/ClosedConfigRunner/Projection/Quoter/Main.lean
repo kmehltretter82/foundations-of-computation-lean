@@ -4,9 +4,8 @@ set_option doc.verso true
 
 /-!
 This module packages the selected-projection input quoter construction. It
-states the exact-shape specification, proves that the finite-leaf assembly
-satisfies the public quoter contract, and exposes the scaffold construction
-used by padded projection.
+states the exact-shape specification and exposes the scaffold construction used
+by padded projection.
 -/
 
 namespace FoC
@@ -25,10 +24,6 @@ def SelectedProjectionInputQuoterExactShapeSpec
         (SelectedProjectionInputQuoterExactSourceTape L)
         (SelectedProjectionInputQuoterExactTargetTape L)
 
-def SelectedProjectionInputQuoterExactShapeConstruction : Prop :=
-  exists quoter : MachineDescription,
-    SelectedProjectionInputQuoterExactShapeSpec quoter
-
 theorem selectedProjectionInputQuoterSpec_of_exactShape
     {quoter : MachineDescription}
     (hquoter : SelectedProjectionInputQuoterExactShapeSpec quoter) :
@@ -41,29 +36,22 @@ theorem selectedProjectionInputQuoterSpec_of_exactShape
     rw [sourceTape_outputPrefix_eq_inputQuoterExactTargetTape L]
     exact hrun
 
-theorem selectedProjectionInputQuoterConstruction_of_exactShape
-    (h : SelectedProjectionInputQuoterExactShapeConstruction) :
-    SelectedProjectionInputQuoterConstruction := by
-  rcases h with ⟨quoter, hquoter⟩
-  exact
-    ⟨quoter,
-      selectedProjectionInputQuoterSpec_of_exactShape hquoter⟩
-
 /--
 Finite-machine leaf for selected projection under the equivalence-based phase
 contract.  The checked parser supplies the canonical checked parsed-layout
 input.  This first phase quotes the input field and positions the remaining
 layout fields for the selected padded tail emitter.
 -/
-theorem selectedProjectionInputQuoterExactShapeConstruction_scaffold :
-    SelectedProjectionInputQuoterExactShapeConstruction := by
+theorem selectedProjectionInputQuoterConstruction_scaffold :
+    SelectedProjectionInputQuoterConstruction := by
   rcases
       SelectedProjectionInputQuoterFiniteLeaf.selectedProjectionInputQuoterPostBoundaryConstruction with
     ⟨post, hpost⟩
   refine
     ⟨SeqViaCanonical
-      SelectedProjectionInputQuoterFiniteLeaf.AssemblyPrefixDescription
-      post, ?_⟩
+        SelectedProjectionInputQuoterFiniteLeaf.AssemblyPrefixDescription
+        post,
+      selectedProjectionInputQuoterSpec_of_exactShape ?_⟩
   constructor
   · exact
       SeqViaCanonical_subroutineReady
@@ -78,11 +66,6 @@ theorem selectedProjectionInputQuoterExactShapeConstruction_scaffold :
           L)
         (by rfl)
         (hpost.right L)
-
-theorem selectedProjectionInputQuoterConstruction_scaffold :
-    SelectedProjectionInputQuoterConstruction :=
-  selectedProjectionInputQuoterConstruction_of_exactShape
-    selectedProjectionInputQuoterExactShapeConstruction_scaffold
 
 end BoundedLayoutRunner
 end EncodedRewriters

@@ -42,28 +42,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_s
         hemitsD⟩
 
 /--
-Concrete finite-machine leaf for the padded fixed-description simulator
-emitter.  On an already validated simulator layout tape, it must run the fixed
-description for the encoded stage bound, emit the updated simulator-layout code
-at the left edge, and leave the old simulator-layout window as trailing blank
-padding.
--/
-theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_of_terminal_configRunner
-    FixedDescriptionBoundedSimulator.PaddedEmitter.Terminal.construction
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_scratch_configRunner
-    fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_scaffold_configRunner
-
-theorem fixedDescriptionBoundedSimulatorPaddedParserEquivEmitterConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedParserEquivEmitterConstruction_configRunner :=
-  ⟨fixedDescriptionBoundedSimulatorPaddedParserEquivConstruction_scaffold_configRunner,
-    fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_scaffold_configRunner⟩
-
-/--
 Finite-machine leaf for the config-runner fixed-description simulators.
 
 The exact right-handoff skeleton target has a context-length shrink obstruction;
@@ -75,17 +53,10 @@ window to avoid a forced shrink.
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorEquivConstruction :=
   fixedDescriptionBoundedSimulatorEquivConstruction_of_parserEquivEmitter_configRunner
-    fixedDescriptionBoundedSimulatorPaddedParserEquivEmitterConstruction_scaffold_configRunner
-
-theorem fixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction :=
-  fixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction_of_equiv
-    fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
-
-theorem fixedDescriptionBoundedSimulatorTableCompilerConstruction_scaffold_configRunner :
-    FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
-  fixedDescriptionBoundedSimulatorTableCompiler_of_equivConstruction
-    fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
+    ⟨fixedDescriptionBoundedSimulatorPaddedParserEquivConstruction_scaffold_configRunner,
+      fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_scratch_configRunner
+        (fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_of_terminal_configRunner
+          FixedDescriptionBoundedSimulator.PaddedEmitter.Terminal.construction)⟩
 
 end BoundedLayoutRunner
 end EncodedRewriters

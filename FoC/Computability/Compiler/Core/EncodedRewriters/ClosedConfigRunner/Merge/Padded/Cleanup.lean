@@ -99,54 +99,35 @@ theorem selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
           rfl)
         (hafterHit.right p)
 
-/--
-Finite-machine leaf for selected merge under the equivalence-based phase
-contract.  It emits the merged dovetail-layout code at the left edge and leaves
-blank padding in the old simulator-layout window, so the exact tape is
-equivalent to the unshifted merged dovetail-layout tape without requiring a
-context-length decrease.
--/
-theorem selectedMergePaddedEmitterExactShapeConstruction_scaffold :
-    SelectedMergePaddedEmitterExactShapeConstruction := by
-  intro useAccept
-  rcases
-      selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction
-        useAccept with
-    ⟨postHeader, hpostHeader⟩
-  refine
-    ⟨seqSubroutine
-      SelectedMergePaddedEmitterHeaderRewriterDescription
-      postHeader Direction.right, ?_⟩
-  constructor
-  · exact
-      seqSubroutine_subroutineReady
-        selectedMergePaddedEmitterHeaderRewriter_subroutineReady
-        hpostHeader.left
-  · intro p
-    exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
-        selectedMergePaddedEmitterHeaderRewriter_subroutineReady
-        hpostHeader.left
-        (selectedMergePaddedEmitterHeaderRewriter_haltsFromPayload p)
-        (by
-          rfl)
-        (hpostHeader.right p)
-
-theorem selectedMergeEquivPaddedEmitterConstruction_scaffold :
-    SelectedMergeEquivPaddedEmitterConstruction :=
-  selectedMergeEquivPaddedEmitterConstruction_of_exactShape
-    selectedMergePaddedEmitterExactShapeConstruction_scaffold
-
-theorem selectedMergeEquivEmitterConstruction_scaffold :
-    SelectedMergeEquivEmitterConstruction :=
-  selectedMergeEquivEmitterConstruction_of_padded
-    selectedMergeEquivPaddedEmitterConstruction_scaffold
-
 theorem selectedMergeEquivConstruction_scaffold :
     SelectedMergeEquivConstruction :=
   selectedMergeEquivConstruction_of_forwardParser_paddedEmitter
     selectedMergeForwardParserConstruction_scaffold
-    selectedMergeEquivPaddedEmitterConstruction_scaffold
+    (selectedMergeEquivPaddedEmitterConstruction_of_exactShape
+      (by
+        intro useAccept
+        rcases
+            selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction
+              useAccept with
+          ⟨postHeader, hpostHeader⟩
+        refine
+          ⟨seqSubroutine
+            SelectedMergePaddedEmitterHeaderRewriterDescription
+            postHeader Direction.right, ?_⟩
+        constructor
+        · exact
+            seqSubroutine_subroutineReady
+              selectedMergePaddedEmitterHeaderRewriter_subroutineReady
+              hpostHeader.left
+        · intro p
+          exact
+            CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+              selectedMergePaddedEmitterHeaderRewriter_subroutineReady
+              hpostHeader.left
+              (selectedMergePaddedEmitterHeaderRewriter_haltsFromPayload p)
+              (by
+                rfl)
+              (hpostHeader.right p)))
 
 
 end BoundedLayoutRunner

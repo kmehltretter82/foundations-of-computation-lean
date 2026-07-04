@@ -79,26 +79,11 @@ continue-result code-word subroutine remain as concrete leaves.
 
 section EncodedControllerLeaves
 
-/-- Controller input initializer data, already stated in the public contract. -/
-def EncodedControllerInputInitializerConstructionData :
-    Prop :=
-  exists initializer : MachineDescription,
-    PairedRecognizerDovetailControllerInputInitializerRealizes initializer
-
-theorem encodedControllerInputInitializerRewriterConstruction_of_data
-    (h : EncodedControllerInputInitializerConstructionData) :
-    EncodedControllerInputInitializerRewriterConstruction := by
-  rcases h with ⟨initializer, hinitializer⟩
-  exact ⟨initializer, hinitializer.left, hinitializer.right⟩
-
-theorem encodedControllerInputInitializerConstructionData_scaffold :
-    EncodedControllerInputInitializerConstructionData := by
-  exact controllerInputInitializerConstruction_scaffold
-
 theorem encodedControllerInputInitializerRewriterConstruction_scaffold :
-    EncodedControllerInputInitializerRewriterConstruction :=
-  encodedControllerInputInitializerRewriterConstruction_of_data
-    encodedControllerInputInitializerConstructionData_scaffold
+    EncodedControllerInputInitializerRewriterConstruction := by
+  rcases controllerInputInitializerConstruction_scaffold with
+    ⟨initializer, hinitializer⟩
+  exact ⟨initializer, hinitializer.left, hinitializer.right⟩
 
 theorem encodedControllerStageInputProjectionRewriterConstruction_scaffold :
     EncodedControllerStageInputProjectionRewriterConstruction :=
@@ -115,35 +100,10 @@ theorem pairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction_s
     dovetailControllerResultEmitterDescription_subroutineReady,
     dovetailControllerResultEmitterDescription_haltsWithOutput_encodeBoolWord_iff⟩
 
-/--
-Controller-result continuation data in the generic forward/closed primitive
-format used by the code-word subroutine adapter.
--/
-def EncodedControllerResultContinueConstructionData :
-    Prop :=
-  exists continuer : MachineDescription,
-    continuer.SubroutineReady ∧
-      TapeCodePrimitiveOutputCompiledForwardSpec
-        PairedRecognizerDovetailControllerResultContinueCode
-        continuer ∧
-      TapeCodePrimitiveOutputCompiledClosedSpec
-        PairedRecognizerDovetailControllerResultContinueCode
-        continuer
-
-theorem encodedControllerResultContinueCodeWordSubroutineConstruction_of_data
-    (h : EncodedControllerResultContinueConstructionData) :
-    EncodedControllerResultContinueCodeWordSubroutineConstruction :=
-  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed
-    h
-
-theorem encodedControllerResultContinueConstructionData_scaffold :
-    EncodedControllerResultContinueConstructionData := by
-  exact controllerResultContinueConstruction_scaffold
-
 theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
     EncodedControllerResultContinueCodeWordSubroutineConstruction :=
-  encodedControllerResultContinueCodeWordSubroutineConstruction_of_data
-    encodedControllerResultContinueConstructionData_scaffold
+  encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed
+    controllerResultContinueConstruction_scaffold
 
 theorem encodedControllerContinueRewriterConstruction_scaffold :
     EncodedControllerContinueRewriterConstruction :=

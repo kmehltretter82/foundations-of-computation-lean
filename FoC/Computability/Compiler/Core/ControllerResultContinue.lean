@@ -47,31 +47,14 @@ theorem controllerResultContinueSpec_of_components
       controllerResultContinueForwardSpec_of_canonical hforward,
       controllerResultContinueClosedSpec_of_layout hclosed⟩
 
-theorem controllerResultContinueConstructionData_of_spec
-    {continuer : MachineDescription}
-    (h : ControllerResultContinueSpec continuer) :
-    ControllerResultContinueConstructionData := by
-  rcases h with ⟨hready, hforward, hclosed⟩
-  exact ⟨continuer, hready, hforward, hclosed⟩
-
-theorem controllerResultContinueConstructionData_of_components
-    (h : ControllerResultContinueComponentConstruction) :
-    ControllerResultContinueConstructionData := by
-  rcases h with ⟨continuer, hcomponents⟩
-  exact
-    controllerResultContinueConstructionData_of_spec
-      (controllerResultContinueSpec_of_components hcomponents)
-
-theorem controllerResultContinueComponentConstruction_scaffold :
-    ControllerResultContinueComponentConstruction := by
-  exact
-    ControllerResultContinueConstruction.controllerResultContinueComponentConstruction
-
 theorem controllerResultContinueConstruction_scaffold :
     ControllerResultContinueConstructionData := by
-  exact
-    controllerResultContinueConstructionData_of_components
-      controllerResultContinueComponentConstruction_scaffold
+  rcases
+      ControllerResultContinueConstruction.controllerResultContinueComponentConstruction with
+    ⟨continuer, hcomponents⟩
+  rcases controllerResultContinueSpec_of_components hcomponents with
+    ⟨hready, hforward, hclosed⟩
+  exact ⟨continuer, hready, hforward, hclosed⟩
 
 end Computability
 end FoC
