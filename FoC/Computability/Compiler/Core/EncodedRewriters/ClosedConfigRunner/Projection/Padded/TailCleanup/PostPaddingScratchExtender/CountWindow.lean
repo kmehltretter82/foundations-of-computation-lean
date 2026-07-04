@@ -297,7 +297,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec
     (useAccept : Bool) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
     forall L : DovetailLayout,
-      materializer.HaltsFromTape
+      materializer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
@@ -321,7 +321,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec_if
         useAccept materializer ↔
       materializer.SubroutineReady ∧
         forall L : DovetailLayout,
-          materializer.HaltsFromTape
+          materializer.HaltsFromTapeEquiv
             (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
               useAccept L 0)
             (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
@@ -444,7 +444,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecoderSpec
     (useAccept : Bool) (decoder : MachineDescription) : Prop :=
   decoder.SubroutineReady ∧
     forall L : DovetailLayout,
-      decoder.HaltsFromTape
+      decoder.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
@@ -471,7 +471,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestorerSp
     (useAccept : Bool) (restorer : MachineDescription) : Prop :=
   restorer.SubroutineReady ∧
     forall L : DovetailLayout,
-      restorer.HaltsFromTape
+      restorer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSourceTape
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail
@@ -495,7 +495,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormalizer
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall L : DovetailLayout,
-      normalizer.HaltsFromTape
+      normalizer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSourceTape
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -538,7 +538,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormal
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall L : DovetailLayout,
-      normalizer.HaltsFromTape
+      normalizer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -635,7 +635,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldN
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall L : DovetailLayout,
-      normalizer.HaltsFromTape
+      normalizer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -674,7 +674,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldH
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall L : DovetailLayout,
-      normalizer.HaltsFromTape
+      normalizer.HaltsFromTapeEquiv
         (selectedProjectionPaddedTailCleanupScratchCountPostFieldHandoffTape
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -1672,7 +1672,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNo
         heraser.left hnormalizer.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         heraser.left
         hnormalizer.left
         (heraser.right L)
@@ -1721,7 +1721,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFi
         h.left
   · intro L
     exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
         CommonGround.Identity.exactIdentityDescription_subroutineReady
         h.left
         (CommonGround.Identity.exactIdentityDescription_haltsFromTape
@@ -1764,7 +1764,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecoderSpec_of_pref
   · exact seqSubroutine_subroutineReady hscanner.left hrestorer.left
   · intro L
     exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
         hscanner.left
         hrestorer.left
         (hscanner.right L)
@@ -1801,7 +1801,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormal
         hscanner.left hnormalizer.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         hscanner.left
         hnormalizer.left
         (hscanner.right L)
@@ -1852,7 +1852,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestor
         hnormalizer.left hrewinder.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
         hnormalizer.left
         hrewinder.left
         (hnormalizer.right L)
@@ -2251,7 +2251,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerSpec_of
         hdecoder.left hpositioner.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
         hdecoder.left
         hpositioner.left
         (hdecoder.right L)
@@ -2379,12 +2379,12 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec_o
         hrestorer.left
   · intro L
     exact
-      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
         (canonicalSeqDescription_subroutineReady
           hmaterializer.left
           scratchCounterAppendBlanksDescription_subroutineReady)
         hrestorer.left
-        (canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        (canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
           hmaterializer.left
           scratchCounterAppendBlanksDescription_subroutineReady
           (hmaterializer.right L)
