@@ -1140,6 +1140,186 @@ def AcceptPostFieldRewoundToDecodedPrefixConstruction : Prop :=
   exists normalizer : MachineDescription,
     AcceptPostFieldRewoundToDecodedPrefixSpec normalizer
 
+def acceptPostFieldDecodedPrefixScanPadding
+    (L : DovetailLayout) : List (Option Bool) :=
+  none ::
+    List.append
+      (List.replicate
+        (selectedProjectionPaddedTailCleanupScratchCountBits
+          true L).length
+        (none : Option Bool))
+      (selectedProjectionPaddedTailCleanupPostCountTailCells
+        true L 0)
+
+-- Once the accept-side post-field payload has been rebuilt, the final
+-- positioning step is just a right-edge scan across the restored
+-- `ParsedLayoutBits`, followed by one right move onto the decoded-prefix gap.
+def acceptPostFieldDecodedPrefixScanSourceTape
+    (L : DovetailLayout) : Tape Bool :=
+  rightEdgeScanSourceTapeFromLeft [none]
+    (ParsedLayoutBits L)
+    (acceptPostFieldDecodedPrefixScanPadding L)
+
+def acceptPostFieldDecodedPrefixScanTargetTape
+    (L : DovetailLayout) : Tape Bool :=
+  rightEdgeScanTargetTapeFromLeft [none]
+    (ParsedLayoutBits L)
+    (acceptPostFieldDecodedPrefixScanPadding L)
+
+def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
+    (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
+      (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] =
+          false :: deletedTail ->
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload
+          L =
+        List.append pref [leftBit] ->
+      materializer.HaltsFromTape
+        (acceptPostFieldHandoffAfterRightEdgeRewindTape
+          L pref leftBit deletedTail)
+        (acceptPostFieldDecodedPrefixScanSourceTape L)
+
+def AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction :
+    Prop :=
+  exists materializer : MachineDescription,
+    AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec materializer
+
+def AcceptPostFieldDecodedPrefixScanToRewindSpec
+    (scanner : MachineDescription) : Prop :=
+  scanner.SubroutineReady ∧
+    forall L : DovetailLayout,
+      scanner.HaltsFromTapeEquiv
+        (acceptPostFieldDecodedPrefixScanSourceTape L)
+        (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
+          true L 0)
+
+def AcceptPostFieldDecodedPrefixScanToRewindConstruction :
+    Prop :=
+  exists scanner : MachineDescription,
+    AcceptPostFieldDecodedPrefixScanToRewindSpec scanner
+
+def acceptPostFieldDecodedPrefixScanToRewindDescription :
+    MachineDescription :=
+  canonicalSeqDescription rightEdgeScanDescription
+    rightMoveOnceDescription
+
+theorem acceptPostFieldDecodedPrefixScanToRewindDescription_subroutineReady :
+    acceptPostFieldDecodedPrefixScanToRewindDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    rightEdgeScanDescription_subroutineReady
+    rightMoveOnceDescription_subroutineReady
+
+theorem rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
+    (left : List (Option Bool)) (bits : Word Bool)
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeScanSourceTapeFromLeft left bits (pad :: padding))) =
+      rightEdgeScanSourceTapeFromLeft left bits (pad :: padding) := by
+  cases bits with
+  | nil =>
+      cases left <;> cases pad <;> cases padding <;>
+        simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons current rest =>
+      exact
+        rightEdgeScanSourceTapeFromLeft_move_left_move_right_cons
+          left (pad :: padding) current rest
+
+theorem acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
+    (L : DovetailLayout) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (acceptPostFieldDecodedPrefixScanSourceTape L)) =
+      acceptPostFieldDecodedPrefixScanSourceTape L := by
+  simpa [acceptPostFieldDecodedPrefixScanSourceTape,
+    acceptPostFieldDecodedPrefixScanPadding] using
+    rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
+      [none] (ParsedLayoutBits L) (none : Option Bool)
+      (List.append
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            true L).length
+          (none : Option Bool))
+        (selectedProjectionPaddedTailCleanupPostCountTailCells
+          true L 0))
+
+theorem acceptPostFieldDecodedPrefixScanRightMove_equiv_rewindSource
+    (L : DovetailLayout) :
+    Tape.Equiv
+      (Tape.move Direction.right
+        (acceptPostFieldDecodedPrefixScanTargetTape L))
+      (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
+        true L 0) := by
+  rw [acceptPostFieldDecodedPrefixScanTargetTape]
+  have hshape :
+      Tape.move Direction.right
+          (rightEdgeScanTargetTapeFromLeft [none]
+            (ParsedLayoutBits L)
+            (acceptPostFieldDecodedPrefixScanPadding L)) =
+        tapeAtCells
+          (List.append ((ParsedLayoutBits L).reverse.map some) [none])
+          (none :: acceptPostFieldDecodedPrefixScanPadding L) := by
+    unfold rightEdgeScanTargetTapeFromLeft
+    cases hstack :
+        List.append ((ParsedLayoutBits L).reverse.map some)
+          ([none] : List (Option Bool)) with
+    | nil =>
+        have hlen := congrArg List.length hstack
+        simp at hlen
+    | cons cell stack =>
+        cases acceptPostFieldDecodedPrefixScanPadding L <;>
+          simp [tapeAtCells, Tape.move, Tape.moveLeft,
+            Tape.moveRight]
+  rw [hshape]
+  simp [
+    selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape,
+    acceptPostFieldDecodedPrefixScanPadding, tapeAtCells, Tape.Equiv,
+    FoC.Computability.dropTrailingNone_append_none]
+
+theorem acceptPostFieldDecodedPrefixScanToRewind_haltsFrom
+    (L : DovetailLayout) :
+    acceptPostFieldDecodedPrefixScanToRewindDescription.HaltsFromTapeEquiv
+      (acceptPostFieldDecodedPrefixScanSourceTape L)
+      (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
+        true L 0) := by
+  exact
+    canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+      rightEdgeScanDescription_subroutineReady
+      rightMoveOnceDescription_subroutineReady
+      (by
+        simpa [acceptPostFieldDecodedPrefixScanSourceTape,
+          acceptPostFieldDecodedPrefixScanTargetTape] using
+          rightEdgeScanDescription_haltsFromTape
+            [none] (ParsedLayoutBits L)
+            (acceptPostFieldDecodedPrefixScanPadding L))
+      (by
+        simpa [acceptPostFieldDecodedPrefixScanTargetTape] using
+          rightEdgeScanTargetTapeFromLeft_move_left_move_right
+            [none] (ParsedLayoutBits L)
+            (acceptPostFieldDecodedPrefixScanPadding L))
+      (by
+        refine
+          ⟨Tape.move Direction.right
+              (acceptPostFieldDecodedPrefixScanTargetTape L),
+            ?_, ?_⟩
+        · exact
+            rightMoveOnceDescription_haltsFromTape
+              (acceptPostFieldDecodedPrefixScanTargetTape L)
+        · exact
+            acceptPostFieldDecodedPrefixScanRightMove_equiv_rewindSource
+              L)
+
+theorem acceptPostFieldDecodedPrefixScanToRewindConstruction_core :
+    AcceptPostFieldDecodedPrefixScanToRewindConstruction := by
+  exact
+    ⟨acceptPostFieldDecodedPrefixScanToRewindDescription,
+      acceptPostFieldDecodedPrefixScanToRewindDescription_subroutineReady,
+      fun L =>
+        acceptPostFieldDecodedPrefixScanToRewind_haltsFrom L⟩
+
 theorem acceptPostFieldHandoff_rightEdgeRewind_haltsFrom
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
     (deletedTail : Word Bool) :
@@ -1243,9 +1423,43 @@ theorem acceptPostFieldBoundaryToDecodedPrefixConstruction_of_reposition
               (hnormalizer.right
                 L pref leftBit deletedTail hdeleted hpayload)⟩
 
-theorem acceptPostFieldRewoundToDecodedPrefixConstruction_core :
-    AcceptPostFieldRewoundToDecodedPrefixConstruction := by
+-- This is the accept-side finite-machine leaf that still needs a concrete
+-- implementation: it rebuilds the full parsed-layout scan source from the
+-- post-field right-edge boundary.
+theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_core :
+    AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction := by
   sorry
+
+theorem acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
+    (hmaterializer :
+      AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction)
+    (hscanner : AcceptPostFieldDecodedPrefixScanToRewindConstruction) :
+    AcceptPostFieldRewoundToDecodedPrefixConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  rcases hscanner with ⟨scanner, hscannerSpec⟩
+  exact
+    ⟨canonicalSeqDescription materializer scanner,
+      by
+        constructor
+        · exact
+            canonicalSeqDescription_subroutineReady
+              hmaterializerSpec.left hscannerSpec.left
+        · intro L pref leftBit deletedTail hdeleted hpayload
+          exact
+            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+              hmaterializerSpec.left
+              hscannerSpec.left
+              (hmaterializerSpec.right
+                L pref leftBit deletedTail hdeleted hpayload)
+              (acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
+                L)
+              (hscannerSpec.right L)⟩
+
+theorem acceptPostFieldRewoundToDecodedPrefixConstruction_core :
+    AcceptPostFieldRewoundToDecodedPrefixConstruction :=
+  acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
+    acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_core
+    acceptPostFieldDecodedPrefixScanToRewindConstruction_core
 
 theorem acceptPostFieldRepositionToDecodedPrefixConstruction_core :
     AcceptPostFieldRepositionToDecodedPrefixConstruction :=
