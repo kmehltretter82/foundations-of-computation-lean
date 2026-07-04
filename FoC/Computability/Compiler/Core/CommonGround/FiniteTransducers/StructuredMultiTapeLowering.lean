@@ -1176,6 +1176,7 @@ structure LowersTransition
   subroutineReady : machine.SubroutineReady
   realizes :
     forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
       t.source = c.state ->
         t.reads = D.currentReads c ->
           machine.HaltsFromTape
@@ -1199,18 +1200,20 @@ theorem lowersTransition_realizes_lookup
     {D : Description} {t : Transition}
     {machine : MachineDescription} {c : Configuration}
     (h : LowersTransition D t machine)
+    (hc : c.tapes.length = D.tapeCount)
     (hlookup : D.lookupTransition c = some t) :
     machine.HaltsFromTape
       (encodedStructuredTapes c.tapes)
       (encodedStructuredTapes
         (D.applyActions t.actions c.tapes)) := by
   have hmatch := Description.lookupTransition_match hlookup
-  exact h.realizes c hmatch.left hmatch.right
+  exact h.realizes c hc hmatch.left hmatch.right
 
 theorem lowersTransition_realizes_structured_step
     {D : Description} {t : Transition}
     {machine : MachineDescription} {c next : Configuration}
     (h : LowersTransition D t machine)
+    (hc : c.tapes.length = D.tapeCount)
     (hlookup : D.lookupTransition c = some t)
     (hnext : next = structuredTransitionTarget D t c) :
     D.stepConfig c = some next ∧
@@ -1221,7 +1224,7 @@ theorem lowersTransition_realizes_structured_step
   · rw [hnext]
     exact stepConfig_eq_some_of_lookupTransition hlookup
   · rw [hnext]
-    exact lowersTransition_realizes_lookup h hlookup
+    exact lowersTransition_realizes_lookup h hc hlookup
 
 /-!
 ## Cursor-level physical routines
@@ -1362,6 +1365,82 @@ theorem returnBlockStartNoopDescription_physicalPrimitiveContract :
     intro logical _henabled
     exact cursorNoopDescription_haltsFromTape
       (encodedStructuredTapes logical)
+
+/-!
+## Concrete row machines
+-/
+
+/--
+Concrete row machine for a three-tape row whose actions are all
+{name}`TapeAction.stay`.
+
+The row read tuple is handled by the {name}`LowersTransition` precondition:
+this machine is only used after structured lookup has already established that
+the row is the active row.  Therefore the physical implementation is the
+zero-step no-op machine.
+-/
+def stayRow3Description (_t : Transition) : MachineDescription :=
+  cursorNoopDescription
+
+private theorem list_eq_three_of_length_eq_three
+    {α : Type u} {xs : List α}
+    (h : xs.length = 3) :
+    exists a : α, exists b : α, exists c : α,
+      xs = [a, b, c] := by
+  cases xs with
+  | nil =>
+      simp at h
+  | cons a rest =>
+      cases rest with
+      | nil =>
+          simp at h
+      | cons b rest =>
+          cases rest with
+          | nil =>
+              simp at h
+          | cons c rest =>
+              cases rest with
+              | nil =>
+                  exact ⟨a, b, c, rfl⟩
+              | cons _d _rest =>
+                  simp at h
+
+theorem applyActions_three_stay
+    (D : Description) (hD : D.tapeCount = 3)
+    (T U V : Tape Bool) :
+    D.applyActions
+        [TapeAction.stay, TapeAction.stay, TapeAction.stay]
+        [T, U, V] =
+      [T, U, V] := by
+  rw [Description.applyActions_three D hD]
+  simp [TapeAction.stay, TapeAction.apply, HeadMove.apply]
+
+theorem stayRow3Description_lowersTransition
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hactions :
+      t.actions =
+        [TapeAction.stay, TapeAction.stay, TapeAction.stay]) :
+    LowersTransition D t (stayRow3Description t) where
+  subroutineReady := cursorNoopDescription_subroutineReady
+  realizes := by
+    intro c hc _hsource _hreads
+    have hlen : c.tapes.length = 3 := by
+      simpa [hD] using hc
+    rcases list_eq_three_of_length_eq_three hlen with
+      ⟨T, U, V, htapes⟩
+    cases c with
+    | mk state tapes =>
+        simp at htapes
+        cases htapes
+        change
+          cursorNoopDescription.HaltsFromTape
+            (encodedStructuredTapes [T, U, V])
+            (encodedStructuredTapes
+              (D.applyActions t.actions [T, U, V]))
+        rw [hactions, applyActions_three_stay D hD T U V]
+        exact cursorNoopDescription_haltsFromTape
+          (encodedStructuredTapes [T, U, V])
 
 /-- Preserve the current physical cell and move once. -/
 def cursorMoveOnceDescription (move : Direction) :
