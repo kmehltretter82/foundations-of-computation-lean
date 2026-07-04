@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Base
 
 set_option doc.verso true
@@ -344,21 +345,15 @@ theorem codePrefixParserNormalizer_replicate_tick_append_tick
         (some MachineCodeSymbol.tick :: tail) =
       List.append (List.replicate (n + 1) (some MachineCodeSymbol.tick))
         tail := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simpa [List.replicate] using ih
+  exact
+    list_replicate_append_self
+      (some MachineCodeSymbol.tick : Option MachineCodeSymbol) n tail
 
 theorem codePrefixParserNormalizer_replicate_append_self
     {α : Type} (cell : α) (n : Nat) (tail : List α) :
     List.append (List.replicate n cell) (cell :: tail) =
       List.append (List.replicate (n + 1) cell) tail := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simpa [List.replicate] using ih
+  exact list_replicate_append_self cell n tail
 
 theorem codePrefixParserNormalizerMachine_computes_findCount_done_restoreForward
     (blanks : Nat)
