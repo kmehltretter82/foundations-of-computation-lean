@@ -247,10 +247,5 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
-theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
-  pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
-    pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
-
 end Computability
 end FoC

@@ -275,32 +275,12 @@ def SelectedProjectionInputQuoterConstruction : Prop :=
   exists quoter : MachineDescription,
     SelectedProjectionInputQuoterSpec quoter
 
-def AcceptProjectionCheckedEmitterConstruction : Prop :=
-  exists emitter : MachineDescription,
-    SelectedProjectionCheckedEmitterSpec true emitter
-
-def RejectProjectionCheckedEmitterConstruction : Prop :=
-  exists emitter : MachineDescription,
-    SelectedProjectionCheckedEmitterSpec false emitter
-
-def SelectedProjectionCheckedEmitterSideConstruction : Prop :=
-  AcceptProjectionCheckedEmitterConstruction ∧
-    RejectProjectionCheckedEmitterConstruction
-
 /-!
 The equivalence contracts below are used when a component is allowed to produce
 the same normalized output with a larger tape context. These adapters are the
 reason padded projection can be assembled from small finite leaves without
 forcing every intermediate tape to have the final exact context length.
 -/
-
-theorem selectedProjectionCheckedEmitterConstruction_of_sides
-    (h : SelectedProjectionCheckedEmitterSideConstruction) :
-    SelectedProjectionCheckedEmitterConstruction := by
-  intro useAccept
-  cases useAccept
-  · exact h.right
-  · exact h.left
 
 def SelectedProjectionEquivEmitterSpec
     (useAccept : Bool)

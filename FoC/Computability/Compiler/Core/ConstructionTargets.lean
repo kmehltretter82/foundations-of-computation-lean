@@ -243,26 +243,11 @@ def PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstructi
       emitter
 
 /-
-The handoff and closed-handoff targets in this block are exported compatibility
-surfaces. New bounded-runner work should start from the output-compiled
-padded/equivalence contracts unless a theorem is adapting an existing
-non-runner legacy consumer.
+The stage-input initializer still exposes a closed-handoff target because the
+initial layout route has an exact handoff contract.  The bounded runner and
+total-output emitter use output-compiled/output-realizer contracts instead of
+legacy handoff surfaces.
 -/
-
-def PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :
-    Prop :=
-  forall accept reject : MachineDescription,
-    exists initializer : MachineDescription,
-      TapeCodePrimitiveHandoffCompiledSubroutineByDescription
-        (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer tapeCodePrimitiveCodeWordHandoffMove
-
-def PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    TapeCodePrimitiveHandoffCompiledSubroutineByDescription
-      PairedRecognizerDovetailTotalOutputCode
-      emitter tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :
     Prop :=
@@ -271,13 +256,6 @@ def PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutine
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer tapeCodePrimitiveCodeWordHandoffMove
-
-def PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
-      PairedRecognizerDovetailTotalOutputCode
-      emitter tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailTotalStageAttemptSubroutineSequencingConstruction :
     Prop :=
@@ -326,14 +304,6 @@ def PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencing
     exists attempt : MachineDescription,
       TapeCodePrimitiveHandoffSubroutineRealizedByDescription
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
-        attempt tapeCodePrimitiveCodeWordHandoffMove
-
-def PairedRecognizerDovetailTotalStageAttemptCodeHandoffSubroutineRealizerConstruction :
-    Prop :=
-  forall accept reject : MachineDescription,
-    exists attempt : MachineDescription,
-      TapeCodePrimitiveHandoffSubroutineRealizedByDescription
-        (PairedRecognizerDovetailTotalStageAttemptCode accept reject)
         attempt tapeCodePrimitiveCodeWordHandoffMove
 
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=

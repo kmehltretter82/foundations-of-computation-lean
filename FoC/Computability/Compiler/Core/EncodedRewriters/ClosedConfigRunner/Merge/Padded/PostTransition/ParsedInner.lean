@@ -17,42 +17,19 @@ namespace BoundedLayoutRunner
 
 This module contains the branch-parametric finite-machine leaf that rewrites a
 parsed nested layout plus the restored outer source fields into the decoded
-merge field order for either padded branch.  The accepting and rejecting modules
-are compatibility wrappers over this shared obligation.
+merge field order for either padded branch.
 -/
 
 /--
-Finite-machine leaf that transports the restored source fields after the parsed
-inner prefix gap has been closed.
--/
-theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportRejectConstruction :
-    exists transport : MachineDescription,
-      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
-        false transport := by
-  sorry
-
-/--
-Accepting branch of the parsed-inner post-prefix transport leaf.
--/
-theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportAcceptConstruction :
-    exists transport : MachineDescription,
-      SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
-        true transport := by
-  sorry
-
-/--
-Branch-parametric glue over the accepting and rejecting transport leaves.
+Branch-parametric finite-machine leaf that transports the restored source
+fields after the parsed inner prefix gap has been closed.
 -/
 theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
     (useAccept : Bool) :
     exists transport : MachineDescription,
       SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
         useAccept transport := by
-  cases useAccept
-  · exact
-      selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportRejectConstruction
-  · exact
-      selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportAcceptConstruction
+  sorry
 
 /--
 Finite-machine leaf that rewrites the parsed nested layout plus outer source
