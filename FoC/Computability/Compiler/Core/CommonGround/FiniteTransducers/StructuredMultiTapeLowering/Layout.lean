@@ -530,6 +530,142 @@ def LogicalTapeHasRightGuard (T : Tape Bool) : Prop :=
 def LogicalTapeHasGuardCells (T : Tape Bool) : Prop :=
   LogicalTapeHasLeftGuard T ∧ LogicalTapeHasRightGuard T
 
+def LogicalTapesHaveGuardCells (logical : List (Tape Bool)) : Prop :=
+  forall T : Tape Bool, T ∈ logical -> LogicalTapeHasGuardCells T
+
+/--
+Add one far-edge blank on both sides of a logical tape.
+
+The added cells are representation guards: they are ignored by
+{name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`, but they give the
+physical marker-swap routines an explicit neighboring encoded cell at segment
+boundaries.
+-/
+def guardLogicalTape (T : Tape Bool) : Tape Bool :=
+  { left := List.append T.left [none]
+    head := T.head
+    right := List.append T.right [none] }
+
+def guardLogicalTapes (logical : List (Tape Bool)) : List (Tape Bool) :=
+  logical.map guardLogicalTape
+
+def encodedGuardedStructuredTapes
+    (logical : List (Tape Bool)) : Tape Bool :=
+  encodedStructuredTapes (guardLogicalTapes logical)
+
+def StructuredGuardedEncodedTapes
+    (logical : List (Tape Bool)) (physical : Tape Bool) : Prop :=
+  physical = encodedGuardedStructuredTapes logical
+
+theorem guardLogicalTape_hasLeftGuard
+    (T : Tape Bool) :
+    LogicalTapeHasLeftGuard (guardLogicalTape T) := by
+  simp [LogicalTapeHasLeftGuard, guardLogicalTape]
+
+theorem guardLogicalTape_hasRightGuard
+    (T : Tape Bool) :
+    LogicalTapeHasRightGuard (guardLogicalTape T) := by
+  simp [LogicalTapeHasRightGuard, guardLogicalTape]
+
+theorem guardLogicalTape_hasGuardCells
+    (T : Tape Bool) :
+    LogicalTapeHasGuardCells (guardLogicalTape T) :=
+  ⟨guardLogicalTape_hasLeftGuard T,
+    guardLogicalTape_hasRightGuard T⟩
+
+theorem guardLogicalTapes_haveGuardCells
+    (logical : List (Tape Bool)) :
+    LogicalTapesHaveGuardCells (guardLogicalTapes logical) := by
+  intro T hT
+  rcases List.mem_map.mp (by
+      simpa [guardLogicalTapes] using hT) with
+    ⟨U, _hU, hU⟩
+  cases hU
+  exact guardLogicalTape_hasGuardCells U
+
+@[simp] theorem guardLogicalTapes_length
+    (logical : List (Tape Bool)) :
+    (guardLogicalTapes logical).length = logical.length := by
+  simp [guardLogicalTapes]
+
+theorem dropTrailingNone_append_none
+    {symbol : Type u} (xs : List (Option symbol)) :
+    Tape.dropTrailingNone (xs ++ [none]) =
+      Tape.dropTrailingNone xs := by
+  induction xs with
+  | nil =>
+      rfl
+  | cons x xs ih =>
+      cases x <;> simp [Tape.dropTrailingNone, ih]
+
+theorem guardLogicalTape_equiv
+    (T : Tape Bool) :
+    Tape.Equiv (guardLogicalTape T) T := by
+  simp [Tape.Equiv, guardLogicalTape,
+    dropTrailingNone_append_none]
+
+theorem guardLogicalTape_read
+    (T : Tape Bool) :
+    Tape.read (guardLogicalTape T) = Tape.read T := by
+  rfl
+
+theorem guardLogicalTape_write
+    (cell : Option Bool) (T : Tape Bool) :
+    guardLogicalTape (Tape.write cell T) =
+      Tape.write cell (guardLogicalTape T) := by
+  rfl
+
+theorem guardLogicalTape_move_equiv
+    (move : Direction) (T : Tape Bool) :
+    Tape.Equiv
+      (Tape.move move (guardLogicalTape T))
+      (guardLogicalTape (Tape.move move T)) :=
+  Tape.Equiv.trans
+    (Tape.Equiv.move (guardLogicalTape_equiv T) move)
+    (Tape.Equiv.symm
+      (guardLogicalTape_equiv (Tape.move move T)))
+
+theorem guardLogicalTape_headMove_equiv
+    (move : HeadMove) (T : Tape Bool) :
+    Tape.Equiv
+      (move.apply (guardLogicalTape T))
+      (guardLogicalTape (move.apply T)) := by
+  cases move with
+  | stay =>
+      exact Tape.Equiv.refl _
+  | left =>
+      exact guardLogicalTape_move_equiv Direction.left T
+  | right =>
+      exact guardLogicalTape_move_equiv Direction.right T
+
+theorem guardLogicalTape_action_equiv
+    (action : TapeAction) (T : Tape Bool) :
+    Tape.Equiv
+      (action.apply (guardLogicalTape T))
+      (guardLogicalTape (action.apply T)) := by
+  cases action with
+  | mk write? move =>
+      cases write? with
+      | none =>
+          exact guardLogicalTape_headMove_equiv move T
+      | some cell =>
+          cases move with
+          | stay =>
+              simpa [TapeAction.apply, HeadMove.apply,
+                guardLogicalTape_write] using
+                Tape.Equiv.refl
+                  (Tape.write cell (guardLogicalTape T))
+          | left =>
+              simpa [TapeAction.apply, HeadMove.apply,
+                guardLogicalTape_write] using
+                guardLogicalTape_move_equiv Direction.left
+                  (Tape.write cell T)
+          | right =>
+              simpa [TapeAction.apply, HeadMove.apply,
+                guardLogicalTape_write] using
+                guardLogicalTape_move_equiv Direction.right
+                  (Tape.write cell T)
+
 theorem tapeAction_apply_preserves_left_guard_of_stay
     (action : TapeAction) (T : Tape Bool)
     (hmove : action.move = HeadMove.stay)
@@ -731,6 +867,13 @@ def StructuredEncodedConfig
     c.tapes.length = D.tapeCount ∧
     StructuredEncodedTapes c.tapes physical
 
+def StructuredGuardedEncodedConfig
+    (D : Description) (c : Configuration)
+    (physical : Tape Bool) : Prop :=
+  c.state < D.stateCount ∧
+    c.tapes.length = D.tapeCount ∧
+    StructuredGuardedEncodedTapes c.tapes physical
+
 /--
 Representation invariant for an ordinary one-tape machine configuration whose
 finite-control state is supplied by a caller-provided state map.
@@ -742,10 +885,23 @@ def StructuredEncodedPhysicalConfig
   physical.state = stateMap c.state ∧
     StructuredEncodedConfig D c physical.tape
 
+def StructuredGuardedEncodedPhysicalConfig
+    (stateMap : Nat -> Nat) (D : Description)
+    (c : Configuration)
+    (physical : MachineDescription.Configuration) : Prop :=
+  physical.state = stateMap c.state ∧
+    StructuredGuardedEncodedConfig D c physical.tape
+
 theorem structuredEncodedTapes_self
     (logical : List (Tape Bool)) :
     StructuredEncodedTapes logical
       (encodedStructuredTapes logical) := by
+  rfl
+
+theorem structuredGuardedEncodedTapes_self
+    (logical : List (Tape Bool)) :
+    StructuredGuardedEncodedTapes logical
+      (encodedGuardedStructuredTapes logical) := by
   rfl
 
 theorem structuredEncodedConfig_self
@@ -756,10 +912,25 @@ theorem structuredEncodedConfig_self
       (encodedStructuredTapes c.tapes) := by
   exact ⟨hstate, htapes, structuredEncodedTapes_self c.tapes⟩
 
+theorem structuredGuardedEncodedConfig_self
+    (D : Description) (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredGuardedEncodedConfig D c
+      (encodedGuardedStructuredTapes c.tapes) := by
+  exact
+    ⟨hstate, htapes, structuredGuardedEncodedTapes_self c.tapes⟩
+
 theorem structuredEncodedConfig_tape_eq
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredEncodedConfig D c physical) :
     physical = encodedStructuredTapes c.tapes :=
+  h.right.right
+
+theorem structuredGuardedEncodedConfig_tape_eq
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredGuardedEncodedConfig D c physical) :
+    physical = encodedGuardedStructuredTapes c.tapes :=
   h.right.right
 
 theorem structuredEncodedConfig_tapes_length
@@ -768,9 +939,21 @@ theorem structuredEncodedConfig_tapes_length
     c.tapes.length = D.tapeCount :=
   h.right.left
 
+theorem structuredGuardedEncodedConfig_tapes_length
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredGuardedEncodedConfig D c physical) :
+    c.tapes.length = D.tapeCount :=
+  h.right.left
+
 theorem structuredEncodedConfig_state_lt
     {D : Description} {c : Configuration} {physical : Tape Bool}
     (h : StructuredEncodedConfig D c physical) :
+    c.state < D.stateCount :=
+  h.left
+
+theorem structuredGuardedEncodedConfig_state_lt
+    {D : Description} {c : Configuration} {physical : Tape Bool}
+    (h : StructuredGuardedEncodedConfig D c physical) :
     c.state < D.stateCount :=
   h.left
 
@@ -785,11 +968,30 @@ theorem structuredEncodedPhysicalConfig_self
   exact
     ⟨rfl, structuredEncodedConfig_self D c hstate htapes⟩
 
+theorem structuredGuardedEncodedPhysicalConfig_self
+    (stateMap : Nat -> Nat) (D : Description)
+    (c : Configuration)
+    (hstate : c.state < D.stateCount)
+    (htapes : c.tapes.length = D.tapeCount) :
+    StructuredGuardedEncodedPhysicalConfig stateMap D c
+      { state := stateMap c.state
+        tape := encodedGuardedStructuredTapes c.tapes } := by
+  exact
+    ⟨rfl, structuredGuardedEncodedConfig_self D c hstate htapes⟩
+
 theorem structuredEncodedPhysicalConfig_state_eq
     {stateMap : Nat -> Nat} {D : Description}
     {c : Configuration}
     {physical : MachineDescription.Configuration}
     (h : StructuredEncodedPhysicalConfig stateMap D c physical) :
+    physical.state = stateMap c.state :=
+  h.left
+
+theorem structuredGuardedEncodedPhysicalConfig_state_eq
+    {stateMap : Nat -> Nat} {D : Description}
+    {c : Configuration}
+    {physical : MachineDescription.Configuration}
+    (h : StructuredGuardedEncodedPhysicalConfig stateMap D c physical) :
     physical.state = stateMap c.state :=
   h.left
 
@@ -800,6 +1002,14 @@ theorem structuredEncodedPhysicalConfig_tape_eq
     (h : StructuredEncodedPhysicalConfig stateMap D c physical) :
     physical.tape = encodedStructuredTapes c.tapes :=
   structuredEncodedConfig_tape_eq h.right
+
+theorem structuredGuardedEncodedPhysicalConfig_tape_eq
+    {stateMap : Nat -> Nat} {D : Description}
+    {c : Configuration}
+    {physical : MachineDescription.Configuration}
+    (h : StructuredGuardedEncodedPhysicalConfig stateMap D c physical) :
+    physical.tape = encodedGuardedStructuredTapes c.tapes :=
+  structuredGuardedEncodedConfig_tape_eq h.right
 
 /-!
 ## Three-tape wrapper
@@ -814,9 +1024,17 @@ def encodedStructured3Tapes
     (T U V : Tape Bool) : Tape Bool :=
   encodedStructuredTapes [T, U, V]
 
+def encodedGuardedStructured3Tapes
+    (T U V : Tape Bool) : Tape Bool :=
+  encodedGuardedStructuredTapes [T, U, V]
+
 def StructuredEncoded3Tapes
     (T U V : Tape Bool) (physical : Tape Bool) : Prop :=
   StructuredEncodedTapes [T, U, V] physical
+
+def StructuredGuardedEncoded3Tapes
+    (T U V : Tape Bool) (physical : Tape Bool) : Prop :=
+  StructuredGuardedEncodedTapes [T, U, V] physical
 
 def StructuredEncoded3Config
     (D : Description) (state : Nat)
@@ -824,11 +1042,24 @@ def StructuredEncoded3Config
   StructuredEncodedConfig D (structured3Config state T U V)
     physical
 
+def StructuredGuardedEncoded3Config
+    (D : Description) (state : Nat)
+    (T U V : Tape Bool) (physical : Tape Bool) : Prop :=
+  StructuredGuardedEncodedConfig D (structured3Config state T U V)
+    physical
+
 def StructuredEncoded3PhysicalConfig
     (stateMap : Nat -> Nat) (D : Description) (state : Nat)
     (T U V : Tape Bool)
     (physical : MachineDescription.Configuration) : Prop :=
   StructuredEncodedPhysicalConfig stateMap D
+    (structured3Config state T U V) physical
+
+def StructuredGuardedEncoded3PhysicalConfig
+    (stateMap : Nat -> Nat) (D : Description) (state : Nat)
+    (T U V : Tape Bool)
+    (physical : MachineDescription.Configuration) : Prop :=
+  StructuredGuardedEncodedPhysicalConfig stateMap D
     (structured3Config state T U V) physical
 
 @[simp] theorem structured3Config_state

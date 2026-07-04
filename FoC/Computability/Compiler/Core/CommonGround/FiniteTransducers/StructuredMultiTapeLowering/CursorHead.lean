@@ -891,6 +891,65 @@ theorem atTapeHeadCellCode_right_cases
           exact ⟨head, next, left, rightRest, rest, hdrop,
             by simpa using hphysical⟩
 
+private theorem logicalTapesHaveGuardCells_of_drop_eq_cons
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {T : Tape Bool} {rest : List (Tape Bool)}
+    (hguards : LogicalTapesHaveGuardCells logical)
+    (hdrop : logical.drop tapeIndex = T :: rest) :
+    LogicalTapeHasGuardCells T := by
+  apply hguards
+  exact List.mem_of_mem_drop (by
+    rw [hdrop]
+    simp)
+
+theorem guardedAtTapeHeadCellCode_to_leftNeighbor
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (h : AtTapeHeadCellCode
+        (guardLogicalTapes logical) tapeIndex physical) :
+    AtTapeHeadCellCodeWithLeftNeighbor
+      (guardLogicalTapes logical) tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  have hguard :
+      LogicalTapeHasGuardCells T :=
+    logicalTapesHaveGuardCells_of_drop_eq_cons
+      (guardLogicalTapes_haveGuardCells logical) hdrop
+  cases T with
+  | mk left head right =>
+      cases left with
+      | nil =>
+          have hleft : ([] : List (Option Bool)) ≠ [] := by
+            simpa [LogicalTapeHasLeftGuard] using hguard.left
+          exact False.elim (hleft rfl)
+      | cons previous leftRest =>
+          exact
+            ⟨previous, leftRest, head, right, rest, hdrop,
+              by simpa using hphysical⟩
+
+theorem guardedAtTapeHeadCellCode_to_rightNeighbor
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (h : AtTapeHeadCellCode
+        (guardLogicalTapes logical) tapeIndex physical) :
+    AtTapeHeadCellCodeWithRightNeighbor
+      (guardLogicalTapes logical) tapeIndex physical := by
+  rcases h with ⟨T, rest, hdrop, hphysical⟩
+  have hguard :
+      LogicalTapeHasGuardCells T :=
+    logicalTapesHaveGuardCells_of_drop_eq_cons
+      (guardLogicalTapes_haveGuardCells logical) hdrop
+  cases T with
+  | mk left head right =>
+      cases right with
+      | nil =>
+          have hright : ([] : List (Option Bool)) ≠ [] := by
+            simpa [LogicalTapeHasRightGuard] using hguard.right
+          exact False.elim (hright rfl)
+      | cons next rightRest =>
+          exact
+            ⟨head, next, left, rightRest, rest, hdrop,
+              by simpa using hphysical⟩
+
 /--
 Move a head marker one logical cell to the left by swapping the marker with the
 two-cell code immediately before it.
