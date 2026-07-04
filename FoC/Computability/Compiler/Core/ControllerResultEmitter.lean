@@ -334,7 +334,7 @@ def DovetailControllerResultEmitterDescription :
   halt := controllerResultEmitterHalt
   transitions := controllerResultEmitterTransitionChunks.flatten
 
-theorem dovetailControllerResultEmitterDescription_wellFormed :
+private theorem dovetailControllerResultEmitterDescription_wellFormed :
     DovetailControllerResultEmitterDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_chunk_all
@@ -345,7 +345,7 @@ theorem dovetailControllerResultEmitterDescription_wellFormed :
       (chunks := controllerResultEmitterTransitionChunks)
       (by decide)
 
-theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
+private theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
     DovetailControllerResultEmitterDescription.HaltTransitionFree :=
   transition_notFrom_of_chunk_all
     (chunks := controllerResultEmitterTransitionChunks)
@@ -910,7 +910,7 @@ private theorem controllerResultEmitterScanBoundary_encodeBoolWord_output_iff
     controllerResultEmitterScanBoundaryFrom_encodeBoolWord_output_iff
       ControllerResultEmitterBoundary.other result b
 
-theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff
+private theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff
     (C : DovetailControllerLayout) (b : Bool) :
     DovetailControllerResultEmitterDescription.HaltsWithOutput
         (encodeCodeWordAsInput
