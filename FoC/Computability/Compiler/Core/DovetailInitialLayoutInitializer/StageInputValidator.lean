@@ -174,7 +174,7 @@ def StageInputRecognizerConstruction : Prop :=
   exists recognizer : MachineDescription,
     StageInputRecognizerSpec recognizer
 
-theorem stageInputSecondBitMarkedHandoffTape_move_left
+private theorem stageInputSecondBitMarkedHandoffTape_move_left
     (w : Word Bool) (stage : Nat) :
     Tape.move Direction.left
         (stageInputSecondBitMarkedHandoffTape w stage) =
@@ -320,7 +320,7 @@ private theorem restoreStageInputSecondBitDescription_run_checked
     Matches, transition,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
-theorem restoreStageInputSecondBitDescription_run_succ
+private theorem restoreStageInputSecondBitDescription_run_succ
     (n : Nat) (w : Word Bool) (stage : Nat) :
     RSIB.runConfig (n + 1)
         { state := RSIB.start

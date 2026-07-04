@@ -141,7 +141,7 @@ def ControllerInitialRawBoolWordHeaderEmitterDescription :
 
 private abbrev CIH := ControllerInitialRawBoolWordHeaderEmitterDescription
 
-theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
+private theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
     CIH.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -153,7 +153,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
       (l := CIH.transitions)
       (by decide)
 
-theorem controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
+private theorem controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
     CIH.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := CIH.transitions)

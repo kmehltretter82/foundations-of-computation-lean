@@ -1515,7 +1515,7 @@ private theorem controllerInitialRawBoolWordHeaderEmitterOutput_bits_eq
     encodeCodeWordAsInput,
     encodeCodeSymbolAsInput]
 
-theorem controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain
+private theorem controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain
     (w : Word Bool) :
     exists steps : Nat,
       CIH.runConfig steps
@@ -1614,7 +1614,7 @@ theorem controllerInitialRawBoolWordHeaderEmitterDescription_run_phaseChain
           [])
       (controllerInitialRawBoolWordHeaderEmitter_twoBlankPadding w.length)
 
-theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
+private theorem controllerInitialRawBoolWordHeaderEmitterDescription_run
     (w : Word Bool) :
     exists steps : Nat,
       CIH.runConfig steps

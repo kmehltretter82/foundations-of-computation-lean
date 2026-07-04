@@ -177,7 +177,7 @@ theorem checkedNonemptyBoolWordQuoteDirectSourceBits_encodeNatAppend
   rw [encodeCodeWordAsInput_append]
   simp [List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
+private theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePass
     (b : Bool) (pre0 tickBits sourceTailAfterDone : Word Bool) :
     exists steps : Nat,
       ITCD.runConfig steps
@@ -215,7 +215,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_donePa
           sourceTailAfterDone tickBits false true false true
     · contradiction
 
-theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseChain
+private theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseChain
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     exists steps : Nat,
@@ -372,7 +372,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative_phaseC
     inputTapeRightCellsDirectCopierNatBits,
     List.map_append, List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
+private theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNative
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffix : Word MachineCodeSymbol) :
     exists steps : Nat,
