@@ -7,6 +7,12 @@ set_option doc.verso true
 
 This module contains reusable execution facts for sequencing finite
 machine-description fragments and subroutines.
+
+The internal fragment lemmas prove the concrete control-flow split: run the
+left fragment until its exit, take one handoff transition, then run the right
+fragment with states offset by the left state count.  The public
+{lit}`seqSubroutine_*` lemmas below repackage those facts for whole
+{lit}`MachineDescription` subroutines.
 -/
 
 namespace FoC
@@ -17,7 +23,9 @@ open Languages
 namespace MachineDescription
 namespace Fragment
 
-theorem lookup_seq_left
+/-! ## Fragment-level execution through a sequence -/
+
+private theorem lookup_seq_left
     {A B : Fragment} {handoffMove : Direction}
     (hB : B.WellFormed)
     {state : Nat} {cell : Option Bool}
@@ -76,7 +84,7 @@ theorem lookup_seq_left
         lia
       simpa [hfindA, hfindH, List.find?_eq_none] using hfindB
 
-theorem stepConfig_seq_left
+private theorem stepConfig_seq_left
     {A B : Fragment} {handoffMove : Direction}
     (hB : B.WellFormed)
     {c : MachineDescription.Configuration}
@@ -87,7 +95,7 @@ theorem stepConfig_seq_left
   simp [MachineDescription.stepConfig,
     lookup_seq_left hB hstate hnotExit]
 
-theorem runConfig_seq_left_of_no_exit
+private theorem runConfig_seq_left_of_no_exit
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed) (hB : B.WellFormed)
     {n : Nat} {c : MachineDescription.Configuration}
@@ -129,7 +137,7 @@ theorem runConfig_seq_left_of_no_exit
           simp [MachineDescription.runConfig, hstepSeq, hstepA,
             ih hnextState hnextNoExit]
 
-theorem stepConfig_seq_handoff
+private theorem stepConfig_seq_handoff
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed)
     (T : Tape Bool) :
@@ -198,7 +206,7 @@ def offsetConfiguration
     MachineDescription.Configuration :=
   { state := offset + c.state, tape := c.tape }
 
-theorem lookup_seq_right
+private theorem lookup_seq_right
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed)
     {state : Nat} {cell : Option Bool} :
@@ -289,7 +297,7 @@ theorem lookup_seq_right
   simp [Fragment.seq, Fragment.toDescription, List.find?_append,
     hfindA, hfindH, List.find?_map, hpredicate]
 
-theorem stepConfig_seq_right
+private theorem stepConfig_seq_right
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed)
     (c : MachineDescription.Configuration) :
@@ -309,7 +317,7 @@ theorem stepConfig_seq_right
       | some t =>
           simp [TransitionDescription.offsetStates, offsetConfiguration]
 
-theorem runConfig_seq_right
+private theorem runConfig_seq_right
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed)
     (n : Nat) (c : MachineDescription.Configuration) :
@@ -330,7 +338,7 @@ theorem runConfig_seq_right
       | some next =>
           simp [ih next]
 
-theorem seq_runConfig_reaches
+private theorem seq_runConfig_reaches
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed) (hB : B.WellFormed)
     {nA nB : Nat} {Tin Tmid Tout : Tape Bool}
@@ -809,6 +817,8 @@ theorem seq_reaches_inv
 
 end Fragment
 
+/-! ## Subroutine-level sequencing API -/
+
 theorem seqSubroutine_reaches
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -1065,17 +1075,8 @@ theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
           { state := B.halt, tape := Tout }) :
     (seqSubroutine A B handoffMove).HaltsWithOutput input
       (Tape.normalizedOutput Tout) := by
-  rcases hAhalt with ⟨nA, hAhalt⟩
-  have hArun :
-      A.runConfig nA { state := A.start, tape := Tape.input input } =
-        { state := A.halt, tape := Tmid } := by
-    cases hfinal : A.runConfig nA (A.initial input) with
-    | mk state tape =>
-        rcases hAhalt with ⟨hstate, htape⟩
-        simp [hfinal] at hstate htape
-        change A.runConfig nA (A.initial input) =
-          { state := A.halt, tape := Tmid }
-        rw [hfinal, hstate, htape]
+  rcases runConfig_eq_halt_of_haltsWithTape hAhalt with
+    ⟨nA, hArun⟩
   rcases seqSubroutine_reaches_of_runConfig_eq
       (A := A) (B := B) (handoffMove := handoffMove)
       hA hB hArun hBReach with
