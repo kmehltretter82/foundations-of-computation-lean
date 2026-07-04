@@ -63,12 +63,12 @@ def stay : TapeAction where
   move := HeadMove.stay
 
 /-- Preserve the current cell, then move the logical head. -/
-def preserveMove (move : HeadMove) : TapeAction where
+@[simp] def preserveMove (move : HeadMove) : TapeAction where
   write? := none
   move := move
 
 /-- Write one cell, then move the logical head. -/
-def writeMove (cell : Option Bool) (move : HeadMove) : TapeAction where
+@[simp] def writeMove (cell : Option Bool) (move : HeadMove) : TapeAction where
   write? := some cell
   move := move
 
@@ -79,6 +79,17 @@ def apply (action : TapeAction) (T : Tape Bool) : Tape Bool :=
     | none => T
     | some cell => Tape.write cell T
   action.move.apply written
+
+@[simp] theorem preserveMove_apply
+    (move : HeadMove) (T : Tape Bool) :
+    (preserveMove move).apply T = move.apply T := by
+  rfl
+
+@[simp] theorem writeMove_apply
+    (cell : Option Bool) (move : HeadMove) (T : Tape Bool) :
+    (writeMove cell move).apply T =
+      move.apply (Tape.write cell T) := by
+  rfl
 
 def debugString (action : TapeAction) : String :=
   "write=" ++ reprStr action.write? ++ " move=" ++ action.move.toString
@@ -99,7 +110,7 @@ deriving Repr, DecidableEq
 namespace Transition
 
 /-- Build a single-logical-tape transition row. -/
-def oneTape
+@[simp] def oneTape
     (source : Nat) (read : Option Bool)
     (action : TapeAction) (target : Nat) : Transition where
   source := source
@@ -121,6 +132,40 @@ def SameAction (t u : Transition) : Prop :=
 
 end Transition
 
+/-!
+## One-tape table helpers
+-/
+
+namespace OneTape
+
+/-- Build one row of a single-logical-tape structured machine. -/
+@[simp] def row
+    (source : Nat) (read : Option Bool)
+    (write? : Option (Option Bool)) (move : HeadMove)
+    (target : Nat) : Transition :=
+  Transition.oneTape source read
+    { write? := write?, move := move } target
+
+/-- Preserve the current cell, then move. -/
+@[simp] def preserve
+    (source : Nat) (read : Option Bool)
+    (move : HeadMove) (target : Nat) : Transition :=
+  row source read none move target
+
+/-- Write a cell, then move. -/
+@[simp] def write
+    (source : Nat) (read cell : Option Bool)
+    (move : HeadMove) (target : Nat) : Transition :=
+  row source read (some cell) move target
+
+/-- Erase the current cell, then move. -/
+@[simp] def erase
+    (source : Nat) (read : Option Bool)
+    (move : HeadMove) (target : Nat) : Transition :=
+  write source read none move target
+
+end OneTape
+
 /--
 A finite structured machine over {lit}`tapeCount` logical tapes and {name}`Nat`
 control states.  The transition table is concrete data, matching the style of
@@ -141,6 +186,24 @@ structure Configuration where
 deriving DecidableEq
 
 namespace Configuration
+
+/-- A configuration with exactly one logical tape. -/
+def oneTape (state : Nat) (T : Tape Bool) : Configuration where
+  state := state
+  tapes := [T]
+
+@[simp] theorem oneTape_eq
+    (state : Nat) (T : Tape Bool) :
+    oneTape state T = { state := state, tapes := [T] } := by
+  rfl
+
+@[simp] theorem oneTape_state (state : Nat) (T : Tape Bool) :
+    (oneTape state T).state = state := by
+  rfl
+
+@[simp] theorem oneTape_tapes (state : Nat) (T : Tape Bool) :
+    (oneTape state T).tapes = [T] := by
+  rfl
 
 def WellFormed (D : Description) (c : Configuration) : Prop :=
   c.state < D.stateCount ∧ c.tapes.length = D.tapeCount
@@ -211,6 +274,19 @@ def applyActions
   cases D
   cases h
   rfl
+
+@[simp] theorem currentReads_oneTape
+    (D : Description) (h : D.tapeCount = 1)
+    (state : Nat) (T : Tape Bool) :
+    D.currentReads (Configuration.oneTape state T) = [Tape.read T] := by
+  exact currentReads_one D h state T
+
+@[simp] theorem applyActions_oneTape
+    (D : Description) (h : D.tapeCount = 1)
+    (action : TapeAction) (state : Nat) (T : Tape Bool) :
+    D.applyActions [action] (Configuration.oneTape state T).tapes =
+      [action.apply T] := by
+  exact applyActions_one D h action T
 
 @[simp] theorem applyActions_two
     (D : Description) (h : D.tapeCount = 2)

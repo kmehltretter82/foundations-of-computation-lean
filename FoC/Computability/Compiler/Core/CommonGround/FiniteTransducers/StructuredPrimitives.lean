@@ -27,9 +27,8 @@ namespace Primitives
 -/
 
 /-- One logical tape at a given structured-machine state. -/
-def oneTapeConfig (state : Nat) (T : Tape Bool) : Configuration where
-  state := state
-  tapes := [T]
+def oneTapeConfig (state : Nat) (T : Tape Bool) : Configuration :=
+  Configuration.oneTape state T
 
 /-- Two logical tapes at a given structured-machine state. -/
 def twoTapeConfig (state : Nat) (T U : Tape Bool) : Configuration where

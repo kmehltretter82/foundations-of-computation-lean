@@ -90,24 +90,12 @@ def structuredRightEdgeScanDescription : Structured.Description where
   start := 0
   halt := 1
   transitions :=
-    [ { source := 0
-        reads := [some false]
-        actions :=
-          [ { write? := none
-              move := Structured.HeadMove.right } ]
-        target := 0 }
-    , { source := 0
-        reads := [some true]
-        actions :=
-          [ { write? := none
-              move := Structured.HeadMove.right } ]
-        target := 0 }
-    , { source := 0
-        reads := [none]
-        actions :=
-          [ { write? := none
-              move := Structured.HeadMove.left } ]
-        target := 1 } ]
+    [ Structured.OneTape.preserve 0 (some false)
+        Structured.HeadMove.right 0
+    , Structured.OneTape.preserve 0 (some true)
+        Structured.HeadMove.right 0
+    , Structured.OneTape.preserve 0 none
+        Structured.HeadMove.left 1 ]
 
 def rightEdgeScanDescription : MachineDescription :=
   Structured.Lowering.toMachineDescription
@@ -307,10 +295,6 @@ private theorem rightEdgeScanDescription_step_bit
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
     simp [rightEdgeScanDescription, structuredRightEdgeScanDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
       tapeAtCells, runConfig,
       stepConfig, lookupTransition, Matches, Tape.read,
       Tape.write, Tape.move, Tape.moveRight]
@@ -326,10 +310,6 @@ private theorem rightEdgeScanDescription_step_finish
             (tapeAtCells left (none :: padding)) } := by
   cases left <;> cases padding <;>
     simp [rightEdgeScanDescription, structuredRightEdgeScanDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
       tapeAtCells, runConfig,
       stepConfig, lookupTransition, Matches, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]

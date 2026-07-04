@@ -34,22 +34,15 @@ def structuredLeadingBlankLeftShiftDescription :
   start := 0
   halt := 5
   transitions :=
-    [ Structured.Transition.oneTape 0 none
-        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 1
-    , Structured.Transition.oneTape 1 none
-        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 5
-    , Structured.Transition.oneTape 1 (some false)
-        (Structured.TapeAction.writeMove none Structured.HeadMove.left) 2
-    , Structured.Transition.oneTape 1 (some true)
-        (Structured.TapeAction.writeMove none Structured.HeadMove.left) 3
-    , Structured.Transition.oneTape 2 none
-        (Structured.TapeAction.writeMove (some false)
-          Structured.HeadMove.right) 4
-    , Structured.Transition.oneTape 3 none
-        (Structured.TapeAction.writeMove (some true)
-          Structured.HeadMove.right) 4
-    , Structured.Transition.oneTape 4 none
-        (Structured.TapeAction.preserveMove Structured.HeadMove.right) 1 ]
+    [ Structured.OneTape.preserve 0 none Structured.HeadMove.right 1
+    , Structured.OneTape.preserve 1 none Structured.HeadMove.right 5
+    , Structured.OneTape.erase 1 (some false) Structured.HeadMove.left 2
+    , Structured.OneTape.erase 1 (some true) Structured.HeadMove.left 3
+    , Structured.OneTape.write 2 none (some false)
+        Structured.HeadMove.right 4
+    , Structured.OneTape.write 3 none (some true)
+        Structured.HeadMove.right 4
+    , Structured.OneTape.preserve 4 none Structured.HeadMove.right 1 ]
 
 def leadingBlankLeftShiftDescription : MachineDescription :=
   Structured.Lowering.toMachineDescription
@@ -175,10 +168,7 @@ private theorem structuredLeadingBlankLeftShiftDescription_run_start_withPadding
       Structured.Description.stepConfig,
       Structured.Description.lookupTransition,
       Structured.Description.Matches,
-      Structured.Transition.oneTape,
       Structured.TapeAction.apply,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       Structured.HeadMove.apply,
       Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
 
@@ -202,10 +192,7 @@ private theorem structuredLeadingBlankLeftShiftDescription_run_bit_withPadding
       Structured.Description.stepConfig,
       Structured.Description.lookupTransition,
       Structured.Description.Matches,
-      Structured.Transition.oneTape,
       Structured.TapeAction.apply,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       Structured.HeadMove.apply,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       Tape.moveRight, tapeAtCells, List.reverse_append]
@@ -230,10 +217,7 @@ private theorem structuredLeadingBlankLeftShiftDescription_run_finish_withPaddin
       Structured.Description.stepConfig,
       Structured.Description.lookupTransition,
       Structured.Description.Matches,
-      Structured.Transition.oneTape,
       Structured.TapeAction.apply,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       Structured.HeadMove.apply,
       Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
 
@@ -320,13 +304,6 @@ theorem leadingBlankLeftShiftDescription_run_start
   cases bits <;>
     simp [leadingBlankLeftShiftDescription,
       structuredLeadingBlankLeftShiftDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
-      Structured.Transition.oneTape,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftSourceTape,
       leadingBlankLeftShiftLoopTape, runConfig, stepConfig,
       lookupTransition, Matches, Tape.read, Tape.write,
@@ -347,13 +324,6 @@ theorem leadingBlankLeftShiftDescription_run_bit
   cases bit <;> cases rest <;>
     simp [leadingBlankLeftShiftDescription,
       structuredLeadingBlankLeftShiftDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
-      Structured.Transition.oneTape,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTape, runConfig, stepConfig,
       lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
@@ -368,13 +338,6 @@ theorem leadingBlankLeftShiftDescription_run_finish
         tape := leadingBlankLeftShiftTargetTape baseLeft processed } := by
   simp [leadingBlankLeftShiftDescription,
     structuredLeadingBlankLeftShiftDescription,
-    Structured.Lowering.toMachineDescription,
-    Structured.Lowering.lowerTransition?,
-    Structured.Lowering.lowerHeadMove?,
-    Structured.Lowering.lowerWrite,
-    Structured.Transition.oneTape,
-    Structured.TapeAction.preserveMove,
-    Structured.TapeAction.writeMove,
     leadingBlankLeftShiftLoopTape, leadingBlankLeftShiftTargetTape,
     runConfig, stepConfig, lookupTransition, Matches,
     Tape.read, Tape.write, Tape.move, Tape.moveRight, tapeAtCells]
@@ -445,13 +408,6 @@ theorem leadingBlankLeftShiftDescription_run_start_withPadding
   cases bits <;>
     simp [leadingBlankLeftShiftDescription,
       structuredLeadingBlankLeftShiftDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
-      Structured.Transition.oneTape,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftSourceTapeWithPadding,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
       lookupTransition, Matches, Tape.read, Tape.write,
@@ -473,13 +429,6 @@ theorem leadingBlankLeftShiftDescription_run_bit_withPadding
   cases bit <;> cases rest <;>
     simp [leadingBlankLeftShiftDescription,
       structuredLeadingBlankLeftShiftDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
-      Structured.Transition.oneTape,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTapeWithPadding, runConfig, stepConfig,
       lookupTransition, Matches, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells,
@@ -500,13 +449,6 @@ theorem leadingBlankLeftShiftDescription_run_finish_withPadding
   cases padding <;>
     simp [leadingBlankLeftShiftDescription,
       structuredLeadingBlankLeftShiftDescription,
-      Structured.Lowering.toMachineDescription,
-      Structured.Lowering.lowerTransition?,
-      Structured.Lowering.lowerHeadMove?,
-      Structured.Lowering.lowerWrite,
-      Structured.Transition.oneTape,
-      Structured.TapeAction.preserveMove,
-      Structured.TapeAction.writeMove,
       leadingBlankLeftShiftLoopTapeWithPadding,
       leadingBlankLeftShiftTargetTapeWithPadding,
       runConfig, stepConfig, lookupTransition, Matches,
