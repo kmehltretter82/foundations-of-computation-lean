@@ -138,6 +138,14 @@ compact summaries; final comparison reports; exact and `Tape.Equiv` comparers;
 and step-expectation checks for finding the first bad tape boundary. These
 helpers are opt-in diagnostics, not replacements for general run proofs.
 
+For compiler construction leaves that are easier to state as multi-tape
+algorithms, use
+`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured`.
+It provides a finite structured logical-tape semantics, bounded runner, basic
+halt/run facts, and debugger/comparison helpers. The existing one-tape
+`MachineDescription` layer remains the backend contract until a particular
+structured machine has a proved lowering.
+
 This formalization was developed with assistance from OpenAI Codex and Google Gemini.
 
 ## License
