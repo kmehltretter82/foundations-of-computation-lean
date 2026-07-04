@@ -214,14 +214,111 @@ def BoolWordCanonicalHandoffToRawScanSourceConstruction : Prop :=
     BoolWordCanonicalHandoffToRawScanSourceSpec materializer
 
 /--
-The remaining finite-machine leaf.  The prefix scanner leaves the decoded
-Boolean word as a restored canonical encoded field on the left of the boundary;
-this machine must materialize those cells as raw Boolean bits on the right,
-preserving the boundary/suffix and right padding exactly.
+Concrete table for the remaining materializer.
+
+The first phase reads the restored Boolean-cell code on the left stack in the
+reverse physical order produced by the canonical suffix scanner:
+
+* {lit}`false,true,true,false` decodes a raw {lit}`true`;
+* {lit}`true,false,true,false` decodes a raw {lit}`false`;
+* {lit}`true,true,false,false` is the restored {name}`MachineCodeSymbol.done`
+  marker and enters cleanup.
+
+The cleanup phase erases the restored metadata/header scaffold and the final
+phase is the local gap-closing pass intended to compact the decoded raw cells
+toward the preserved boundary/suffix.  The run theorem below is the remaining
+proof that this table realizes the exact tape contract for all canonical
+inputs.
+-/
+def boolWordCanonicalHandoffToRawScanSourceMaterializerDescription :
+    MachineDescription where
+  stateCount := 80
+  start := 0
+  halt := 79
+  transitions :=
+    [ transition 0 (some false) none Direction.left 10
+    , transition 0 (some true) none Direction.left 20
+    , transition 0 none none Direction.right 40
+
+    , transition 10 (some true) none Direction.left 11
+    , transition 11 (some true) none Direction.left 12
+    , transition 12 (some false) (some true) Direction.left 0
+
+    , transition 20 (some false) none Direction.left 21
+    , transition 21 (some true) none Direction.left 22
+    , transition 22 (some false) (some false) Direction.left 0
+
+    , transition 20 (some true) none Direction.left 30
+    , transition 30 (some false) none Direction.left 31
+    , transition 31 (some false) none Direction.left 40
+
+    , transition 40 (some false) none Direction.left 40
+    , transition 40 (some true) none Direction.left 40
+    , transition 40 none none Direction.right 50
+
+    , transition 50 none none Direction.right 50
+    , transition 50 (some false) (some false) Direction.left 60
+    , transition 50 (some true) (some true) Direction.left 60
+
+    , transition 60 none none Direction.right 61
+    , transition 61 (some false) none Direction.left 62
+    , transition 61 (some true) none Direction.left 63
+    , transition 61 none none Direction.left 79
+    , transition 62 none (some false) Direction.right 64
+    , transition 63 none (some true) Direction.right 64
+    , transition 64 none none Direction.right 61
+    ]
+
+theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_wellFormed :
+    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l :=
+        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
+      (stateCount :=
+        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l :=
+        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
+      (by decide)
+
+theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltTransitionFree :
+    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l :=
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
+    (state :=
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.halt)
+    (by decide)
+
+theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_subroutineReady :
+    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.SubroutineReady :=
+  ⟨boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_wellFormed,
+    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltTransitionFree⟩
+
+theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltsFromTape
+    (bits suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.HaltsFromTape
+      (boolWordRawBitsDecoderPrefixHandoffTape
+        bits suffixTail rightPadding)
+      (boolWordRawBitsDecoderTargetTape
+        bits suffixTail rightPadding) := by
+  sorry
+
+/--
+The concrete remaining finite-machine leaf.  The only unresolved proof is the
+run theorem for
+{name}`boolWordCanonicalHandoffToRawScanSourceMaterializerDescription`; the
+existential no longer hides which table is intended.
 -/
 theorem boolWordCanonicalHandoffToRawScanSourceConstruction_core :
     BoolWordCanonicalHandoffToRawScanSourceConstruction := by
-  sorry
+  exact
+    ⟨boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_subroutineReady,
+      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltsFromTape⟩
 
 private theorem dovetailTapeAtCells_move_left_move_right_move_left_append_cons
     (pref tail right : List (Option Bool)) (cell : Option Bool) :
