@@ -43,7 +43,7 @@ theorem suffixesWithNil_self_mem (pop : Word stack) :
   | nil => simp [suffixesWithNil]
   | cons A rest => simp [suffixesWithNil]
 
-theorem suffixesWithNil_tail_mem {A : stack} {rest pop : Word stack}
+private theorem suffixesWithNil_tail_mem {A : stack} {rest pop : Word stack}
     (h : A :: rest ∈ suffixesWithNil pop) :
     rest ∈ suffixesWithNil pop := by
   induction pop with
@@ -287,7 +287,7 @@ theorem popNormalizedStartSplitTransitionRulesForRule_popsAtMostOne
     rw [h]
     exact Or.inr ⟨A, rfl⟩
 
-theorem popNormalizedHelperTransitionRule_popsAtMostOne
+private theorem popNormalizedHelperTransitionRule_popsAtMostOne
     {M : PDA input stack state} {presentation : FinitePresentation M}
     (helper : { helper : TransitionRule input stack state × Word stack //
       helper ∈ popNormalizeHelperPairs presentation }) :

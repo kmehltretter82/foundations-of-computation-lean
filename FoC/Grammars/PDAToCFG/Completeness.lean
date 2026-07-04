@@ -19,7 +19,7 @@ the intermediate pushed stack can be hidden inside an empty-summary witness. The
 read and epsilon variants below package that first-step pattern.
 -/
 
-theorem emptySummaryComputesIn_read_of_stackThenEmptySummary
+private theorem emptySummaryComputesIn_read_of_stackThenEmptySummary
     {M : PDA input stack state}
     {n : Nat} {p r q : state} {a : input}
     {push : Word stack}
@@ -35,7 +35,7 @@ theorem emptySummaryComputesIn_read_of_stackThenEmptySummary
   simpa [hlen, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
     EmptySummaryComputesIn.read htransition hstack hempty
 
-theorem emptySummaryComputesIn_epsilon_of_stackThenEmptySummary
+private theorem emptySummaryComputesIn_epsilon_of_stackThenEmptySummary
     {M : PDA input stack state}
     {n : Nat} {p r q : state}
     {push : Word stack}
@@ -516,7 +516,7 @@ summaries become chain derivations, empty summaries become derivations from
 start symbol.
 -/
 
-theorem toCFG_betweenDerives_of_singleton_chainDerives
+private theorem toCFG_betweenDerives_of_singleton_chainDerives
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {p q : state} {A : stack} {w : Word input}
     (h : ToCFGChainDerives M presentation p [A] q w) :

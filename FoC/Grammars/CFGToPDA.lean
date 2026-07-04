@@ -262,7 +262,7 @@ Parse trees and generated words produce accepting PDA computations by expanding
 grammar symbols on the stack and matching terminals.
 -/
 
-theorem toPDA_start_step (G : CFG terminal nonterminal)
+private theorem toPDA_start_step (G : CFG terminal nonterminal)
     (w : Word terminal) :
     PDA.Step (ToPDA G)
       { state := ToPDAState.start, unread := w, stack := [] }
@@ -273,7 +273,7 @@ theorem toPDA_start_step (G : CFG terminal nonterminal)
       (restStack := ([] : Word (Symbol terminal nonterminal)))
       ToPDATransition.start
 
-theorem toPDA_expand_step {G : CFG terminal nonterminal}
+private theorem toPDA_expand_step {G : CFG terminal nonterminal}
     {A : nonterminal} {rhs : SententialForm terminal nonterminal}
     (hprod : G.produces A rhs)
     (unread : Word terminal)
@@ -287,7 +287,7 @@ theorem toPDA_expand_step {G : CFG terminal nonterminal}
     PDA.Step.epsilon (M := ToPDA G) (unread := unread)
       (restStack := tail) (ToPDATransition.expand hprod)
 
-theorem toPDA_match_step (G : CFG terminal nonterminal)
+private theorem toPDA_match_step (G : CFG terminal nonterminal)
     (a : terminal) (unread : Word terminal)
     (tail : Word (Symbol terminal nonterminal)) :
     PDA.Step (ToPDA G)
@@ -360,7 +360,7 @@ theorem ParseForest.toPDA_computes
 
 end
 
-theorem toPDA_accepts_of_parseTree
+private theorem toPDA_accepts_of_parseTree
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
     {w : Word terminal}
     (tree : ParseTree G (Symbol.nonterminal G.start))

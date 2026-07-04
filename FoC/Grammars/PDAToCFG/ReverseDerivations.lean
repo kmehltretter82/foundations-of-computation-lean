@@ -19,7 +19,7 @@ production-level evidence into derivations of concrete terminal words, which is
 the shape needed by the later PDA-step simulations.
 -/
 
-theorem toCFG_derives_of_production_word
+private theorem toCFG_derives_of_production_word
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {A : ToCFGNonterminal stack state}
     {rhs : SententialForm input (ToCFGNonterminal stack state)}

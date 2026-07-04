@@ -25,7 +25,7 @@ def popNormalizeConfiguration {M : PDA input stack state}
   unread := c.unread
   stack := c.stack
 
-theorem popNormalize_direct_transition_nil
+private theorem popNormalize_direct_transition_nil
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {rule : TransitionRule input stack state}
     (hrule : rule ∈ presentation.transitionRules)
@@ -49,7 +49,7 @@ theorem popNormalize_direct_transition_nil
     simp
   · simp [TransitionRule.Applies]
 
-theorem popNormalize_direct_transition_single
+private theorem popNormalize_direct_transition_single
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {rule : TransitionRule input stack state} {A : stack}
     (hrule : rule ∈ presentation.transitionRules)
@@ -73,7 +73,7 @@ theorem popNormalize_direct_transition_single
     simp
   · simp [TransitionRule.Applies]
 
-theorem popNormalize_start_split_transition_exists
+private theorem popNormalize_start_split_transition_exists
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {rule : TransitionRule input stack state} {A B : stack}
     {rest : Word stack}
@@ -122,7 +122,7 @@ theorem popNormalize_start_split_transition_exists
         simp
   · simp [TransitionRule.Applies]
 
-theorem popNormalize_helper_transition_nil
+private theorem popNormalize_helper_transition_nil
     {M : PDA input stack state} {presentation : FinitePresentation M}
     (helper : { helper : TransitionRule input stack state × Word stack //
       helper ∈ popNormalizeHelperPairs presentation })
@@ -146,7 +146,7 @@ theorem popNormalize_helper_transition_nil
           · simp [popNormalizedHelperTransitionRule,
               TransitionRule.Applies]
 
-theorem popNormalize_helper_transition_cons
+private theorem popNormalize_helper_transition_cons
     {M : PDA input stack state} {presentation : FinitePresentation M}
     (helper : { helper : TransitionRule input stack state × Word stack //
       helper ∈ popNormalizeHelperPairs presentation })
@@ -189,7 +189,7 @@ starting with exactly the remembered suffix on top of the stack, the helper
 states remove it one symbol at a time and then install the original push word.
 -/
 
-theorem popNormalize_helper_computes_aux
+private theorem popNormalize_helper_computes_aux
     {M : PDA input stack state} (presentation : FinitePresentation M)
     (rule : TransitionRule input stack state)
     (remaining : Word stack)
@@ -396,7 +396,7 @@ point where the normalization construction changes from bookkeeping lemmas into
 an actual simulation theorem.
 -/
 
-theorem popNormalize_simulates_step
+private theorem popNormalize_simulates_step
     {M : PDA input stack state} (presentation : FinitePresentation M)
     {c d : Configuration input stack state}
     (hstep : Step M c d) :

@@ -496,7 +496,7 @@ theorem stackThenEmptySummaryComputesIn_computesIn
   simpa [Word.Concat, Word.Empty] using
     stackThenEmptySummaryComputesIn_computesIn_tail h ([] : Word stack)
 
-theorem stackThenEmptySummaryComputesIn_computes_tail
+private theorem stackThenEmptySummaryComputesIn_computes_tail
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
     {sourceInput targetInput : Word input}
@@ -535,7 +535,7 @@ theorem stackThenEmptySummaryComputesIn_of_stack_and_empty
       q targetInput :=
   ⟨m, n, r, midInput, rfl, hstack, hempty⟩
 
-theorem stackThenEmptySummaryComputesIn_of_stack
+private theorem stackThenEmptySummaryComputesIn_of_stack
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
     {sourceInput targetInput : Word input}
@@ -627,7 +627,7 @@ theorem emptySummaryComputes_trans
   rcases hright with ⟨n, hn⟩
   exact ⟨m + n, emptySummaryComputesIn_trans hm hn⟩
 
-theorem stackSummaryComputesIn_of_emptySummary_prefix_single
+private theorem stackSummaryComputesIn_of_emptySummary_prefix_single
     {M : PDA input stack state}
     {m n : Nat} {p r q : state} {A : stack}
     {sourceInput midInput targetInput : Word input}
@@ -659,7 +659,7 @@ theorem stackSummaryComputes_of_emptySummary_prefix_single
   rcases htop with ⟨n, hn⟩
   exact ⟨m + n, stackSummaryComputesIn_of_emptySummary_prefix_single hm hn⟩
 
-theorem stackSummaryComputesIn_cons_prefix
+private theorem stackSummaryComputesIn_cons_prefix
     {M : PDA input stack state}
     {m n : Nat} {p r q : state} {A : stack}
     {rest : Word stack}
@@ -694,7 +694,7 @@ for pushed stack words. The equality-indexed version performs the induction; the
 plain append version below specializes it to an explicit prefix and suffix.
 -/
 
-theorem stackSummaryComputesIn_split_append_of_eq
+private theorem stackSummaryComputesIn_split_append_of_eq
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord left right : Word stack}
     {sourceInput targetInput : Word input}
@@ -881,7 +881,7 @@ explicit equality parameter from the induction lemma and exposes the midpoint
 input where the prefix summary ends and the suffix summary begins.
 -/
 
-theorem stackSummaryComputesIn_split_append
+private theorem stackSummaryComputesIn_split_append
     {M : PDA input stack state}
     {n : Nat} {p q : state} {left right : Word stack}
     {sourceInput targetInput : Word input}
@@ -919,7 +919,7 @@ the empty-stack continuation attached to the suffix part, so prefix processing
 can be peeled off without losing the final empty-stack goal.
 -/
 
-theorem stackThenEmptySummaryComputesIn_split_stack_prefix
+private theorem stackThenEmptySummaryComputesIn_split_stack_prefix
     {M : PDA input stack state}
     {n : Nat} {p q : state} {pref suff : Word stack}
     {sourceInput targetInput : Word input}
@@ -966,7 +966,7 @@ symbol. This is the composition step used when a PDA transition pushes several
 symbols and the CFG chain has to account for them one at a time.
 -/
 
-theorem stackThenEmptySummaryComputesIn_cons_of_stack_and_stackThenEmpty
+private theorem stackThenEmptySummaryComputesIn_cons_of_stack_and_stackThenEmpty
     {M : PDA input stack state}
     {m n : Nat} {p r q : state} {A : stack} {rest : Word stack}
     {sourceInput midInput targetInput : Word input}
@@ -1012,7 +1012,7 @@ attach the summary for the pushed stack word to the summary for the remaining
 empty-stack computation.
 -/
 
-theorem stackThenEmptySummaryComputesIn_of_step_of_stackThenEmpty_topPop
+private theorem stackThenEmptySummaryComputesIn_of_step_of_stackThenEmpty_topPop
     {M : PDA input stack state}
     {n : Nat} {p q : state} {stackWord : Word stack}
     {sourceInput targetInput : Word input}

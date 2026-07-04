@@ -257,7 +257,7 @@ The basic proof API mirrors the context-free grammar layer: every single yield
 is a derivation, and derivations compose transitively.
 -/
 
-theorem productionListYields_iff_yields_of_produces
+private theorem productionListYields_iff_yields_of_produces
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (Production terminal nonterminal)}
     (hrules : forall lhs rhs,

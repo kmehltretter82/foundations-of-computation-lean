@@ -10,7 +10,7 @@ open Languages
 
 namespace PDA
 
-theorem popNormalize_original_transition_cases
+private theorem popNormalize_original_transition_cases
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {q : state} {a? : Option input} {pop : Word stack}
     {target : PopNormalizedState (M := M) presentation}
@@ -109,7 +109,7 @@ theorem popNormalize_original_transition_cases
     unfold popNormalizedHelperTransitionRule at hsource
     split at hsource <;> cases hsource
 
-theorem popNormalize_helper_transition_cases
+private theorem popNormalize_helper_transition_cases
     {M : PDA input stack state} {presentation : FinitePresentation M}
     (helper : { helper : TransitionRule input stack state × Word stack //
       helper ∈ popNormalizeHelperPairs presentation })
@@ -207,7 +207,7 @@ induction consume an arbitrary normalized path without losing the context that a
 helper state encodes.
 -/
 
-theorem popNormalize_compresses_original_and_helper_computesIn
+private theorem popNormalize_compresses_original_and_helper_computesIn
     {M : PDA input stack state} (presentation : FinitePresentation M)
     (n : Nat) :
     (forall (p q : state) (sourceInput targetInput : Word input)

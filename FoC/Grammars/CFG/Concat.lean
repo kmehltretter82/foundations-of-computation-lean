@@ -136,7 +136,7 @@ symbol is tagged as left can only have come from a left-tagged region, up to the
 surrounding context. This prevents left and right derivations from being mixed.
 -/
 
-theorem inLeftForm_context_of_eq
+private theorem inLeftForm_context_of_eq
     {x : SententialForm terminal left} {y : SententialForm terminal right}
     {u v : SententialForm terminal (SumStart left right)} {A : left}
     (h : inLeftForm x ++ inRightForm y =
@@ -225,7 +225,7 @@ after the left grammar has already produced terminals. These lemmas isolate the
 right component while preserving the terminal prefix around it.
 -/
 
-theorem inRightForm_context_only_of_eq
+private theorem inRightForm_context_only_of_eq
     {y : SententialForm terminal right}
     {u v : SententialForm terminal (SumStart left right)} {A : right}
     (h : inRightForm (left := left) y =
@@ -294,7 +294,7 @@ theorem inRightForm_context_only_of_eq
                         rfl
                       · exact hvy.right.right
 
-theorem inRightForm_context_of_eq
+private theorem inRightForm_context_of_eq
     {x : SententialForm terminal left} {y : SententialForm terminal right}
     {u v : SententialForm terminal (SumStart left right)} {A : right}
     (h : inLeftForm x ++ inRightForm y =
@@ -369,7 +369,7 @@ rewrites inside the left zone or inside the right zone; it cannot cross the
 boundary or reintroduce the start symbol.
 -/
 
-theorem concat_zone_yields_inv (G : CFG terminal left) (H : CFG terminal right)
+private theorem concat_zone_yields_inv (G : CFG terminal left) (H : CFG terminal right)
     {x : SententialForm terminal left} {y : SententialForm terminal right}
     {z : SententialForm terminal (SumStart left right)}
     (h : Yields (ConcatGrammar G H) (inLeftForm x ++ inRightForm y) z) :
@@ -443,7 +443,7 @@ theorem concat_zone_yields_inv (G : CFG terminal left) (H : CFG terminal right)
                                           exists rhsr
                                           exact And.intro hH (And.intro hvy.left rfl)
 
-theorem concat_zone_derives_inv_aux
+private theorem concat_zone_derives_inv_aux
     (G : CFG terminal left) (H : CFG terminal right)
     {s z : SententialForm terminal (SumStart left right)}
     {x : SententialForm terminal left} {y : SententialForm terminal right}
@@ -499,7 +499,7 @@ theorem concat_zone_derives_inv
       Derives G x x' ∧ Derives H y y' :=
   concat_zone_derives_inv_aux G H rfl h
 
-theorem concat_start_yields_inv (G : CFG terminal left) (H : CFG terminal right)
+private theorem concat_start_yields_inv (G : CFG terminal left) (H : CFG terminal right)
     {z : SententialForm terminal (SumStart left right)}
     (h : Yields (ConcatGrammar G H) [Symbol.nonterminal SumStart.start] z) :
     z = [Symbol.nonterminal (SumStart.inLeft G.start),
@@ -522,7 +522,7 @@ theorem concat_start_yields_inv (G : CFG terminal left) (H : CFG terminal right)
                           rw [hx.right]
                           cases hprod <;> rfl
 
-theorem concat_terminal_split_of_forms
+private theorem concat_terminal_split_of_forms
     {x : SententialForm terminal left} {y : SententialForm terminal right}
     {w : Word terminal}
     (h : inLeftForm x ++ inRightForm y =
@@ -619,7 +619,7 @@ theorem concat_generates (G : CFG terminal left) (H : CFG terminal right)
   rw [SententialForm.terminalWord_append]
   exact hAll
 
-theorem concat_generates_inv_aux (G : CFG terminal left) (H : CFG terminal right)
+private theorem concat_generates_inv_aux (G : CFG terminal left) (H : CFG terminal right)
     {s yform : SententialForm terminal (SumStart left right)} {w : Word terminal}
     (hs : s = [Symbol.nonterminal (SumStart.start : SumStart left right)])
     (hyform : yform = SententialForm.terminalWord (nt := SumStart left right) w)
