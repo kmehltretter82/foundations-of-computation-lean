@@ -74,51 +74,17 @@ def AssemblyPrefixDescription : MachineDescription where
 private abbrev ASM := AssemblySkeletonDescription
 private abbrev AP := AssemblyPrefixDescription
 
-theorem assemblySkeletonDescription_wellFormed :
-    ASM.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ASM.transitions)
-      (stateCount := ASM.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := ASM.transitions)
-      (by decide)
-
-theorem assemblySkeletonDescription_haltTransitionFree :
-    ASM.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ASM.transitions)
-    (state := ASM.halt)
-    (by decide)
-
 theorem assemblySkeletonDescription_subroutineReady :
     ASM.SubroutineReady :=
-  ⟨assemblySkeletonDescription_wellFormed,
-    assemblySkeletonDescription_haltTransitionFree⟩
-
-theorem assemblyPrefixDescription_wellFormed :
-    AP.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := AP.transitions)
-      (stateCount := AP.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := AP.transitions)
-      (by decide)
-
-theorem assemblyPrefixDescription_haltTransitionFree :
-    AP.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := AP.transitions)
-    (state := AP.halt)
-    (by decide)
+  machineDescription_subroutineReady_of_transition_checks
+    ASM (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem assemblyPrefixDescription_subroutineReady :
     AP.SubroutineReady :=
-  ⟨assemblyPrefixDescription_wellFormed,
-    assemblyPrefixDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    AP (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem runConfig_eq_of_transitions
     {D E : MachineDescription}

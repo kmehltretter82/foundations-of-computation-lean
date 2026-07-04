@@ -1,4 +1,4 @@
-import FoC.Computability.Encoding
+import FoC.Computability.MachineBuilder.StateTables
 
 set_option doc.verso true
 
@@ -135,6 +135,56 @@ theorem transition_notFrom_of_chunk_all
       t ∈ chunks.flatten -> t.source ≠ state :=
   transition_notFrom_of_all
     (list_all_flatten_of_chunk_all h)
+
+theorem machineDescription_wellFormed_of_transition_checks
+    (D : MachineDescription)
+    (hstate : 0 < D.stateCount)
+    (hstart : D.start < D.stateCount)
+    (hhalt : D.halt < D.stateCount)
+    (hwell :
+      D.transitions.all (transitionWellFormedBool D.stateCount) = true)
+    (hdet :
+      D.transitions.all (fun t =>
+        D.transitions.all (fun u =>
+          transitionDeterministicPairBool t u)) = true) :
+    D.WellFormed := by
+  refine ⟨hstate, hstart, hhalt, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := D.transitions)
+      (stateCount := D.stateCount)
+      hwell
+  · exact transition_deterministic_of_all
+      (l := D.transitions)
+      hdet
+
+theorem machineDescription_haltTransitionFree_of_transition_checks
+    (D : MachineDescription)
+    (hnot :
+      D.transitions.all (transitionNotFromBool D.halt) = true) :
+    D.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := D.transitions)
+    (state := D.halt)
+    hnot
+
+theorem machineDescription_subroutineReady_of_transition_checks
+    (D : MachineDescription)
+    (hstate : 0 < D.stateCount)
+    (hstart : D.start < D.stateCount)
+    (hhalt : D.halt < D.stateCount)
+    (hwell :
+      D.transitions.all (transitionWellFormedBool D.stateCount) = true)
+    (hdet :
+      D.transitions.all (fun t =>
+        D.transitions.all (fun u =>
+          transitionDeterministicPairBool t u)) = true)
+    (hnot :
+      D.transitions.all (transitionNotFromBool D.halt) = true) :
+    D.SubroutineReady :=
+  ⟨machineDescription_wellFormed_of_transition_checks
+      D hstate hstart hhalt hwell hdet,
+    machineDescription_haltTransitionFree_of_transition_checks
+      D hnot⟩
 
 end Computability
 end FoC

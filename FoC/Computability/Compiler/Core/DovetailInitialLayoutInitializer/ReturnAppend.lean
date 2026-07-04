@@ -30,29 +30,11 @@ def MarkTransitionSecondBitDescription :
 
 private abbrev MTSB := MarkTransitionSecondBitDescription
 
-theorem markTransitionSecondBitDescription_wellFormed :
-    MTSB.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := MTSB.transitions)
-      (stateCount :=
-        MTSB.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := MTSB.transitions)
-      (by decide)
-
-theorem markTransitionSecondBitDescription_haltTransitionFree :
-    MTSB.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := MTSB.transitions)
-    (state := MTSB.halt)
-    (by decide)
-
 theorem markTransitionSecondBitDescription_subroutineReady :
     MTSB.SubroutineReady :=
-  ⟨markTransitionSecondBitDescription_wellFormed,
-    markTransitionSecondBitDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    MTSB (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem markTransitionSecondBitDescription_run
     (payload : Word Bool) :
@@ -176,29 +158,11 @@ def ReturnToCurrentMarkerDescription :
 
 private abbrev RTCM := ReturnToCurrentMarkerDescription
 
-theorem returnToCurrentMarkerDescription_wellFormed :
-    RTCM.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := RTCM.transitions)
-      (stateCount :=
-        RTCM.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := RTCM.transitions)
-      (by decide)
-
-theorem returnToCurrentMarkerDescription_haltTransitionFree :
-    RTCM.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := RTCM.transitions)
-    (state := RTCM.halt)
-    (by decide)
-
 theorem returnToCurrentMarkerDescription_subroutineReady :
     RTCM.SubroutineReady :=
-  ⟨returnToCurrentMarkerDescription_wellFormed,
-    returnToCurrentMarkerDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    RTCM (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem returnToCurrentMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
@@ -476,29 +440,12 @@ def RightCellsCopierStartDescription :
         7 (some false) (some false) Direction.right 8
     ]
 
-theorem rightCellsCopierStartDescription_wellFormed :
-    RightCellsCopierStartDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := RightCellsCopierStartDescription.transitions)
-      (stateCount :=
-        RightCellsCopierStartDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := RightCellsCopierStartDescription.transitions)
-      (by decide)
-
-theorem rightCellsCopierStartDescription_haltTransitionFree :
-    RightCellsCopierStartDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := RightCellsCopierStartDescription.transitions)
-    (state := RightCellsCopierStartDescription.halt)
-    (by decide)
-
 theorem rightCellsCopierStartDescription_subroutineReady :
     RightCellsCopierStartDescription.SubroutineReady :=
-  ⟨rightCellsCopierStartDescription_wellFormed,
-    rightCellsCopierStartDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    RightCellsCopierStartDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem rightCellsCopierStartDescription_run
     (tail : List (Option Bool)) :
@@ -749,29 +696,11 @@ def InputTapeRightCellsDirectCopierDescription :
 
 private abbrev ITCD := InputTapeRightCellsDirectCopierDescription
 
-theorem inputTapeRightCellsDirectCopierDescription_wellFormed :
-    ITCD.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ITCD.transitions)
-      (stateCount :=
-        ITCD.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := ITCD.transitions)
-      (by decide)
-
-theorem inputTapeRightCellsDirectCopierDescription_haltTransitionFree :
-    ITCD.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ITCD.transitions)
-    (state := ITCD.halt)
-    (by decide)
-
 theorem inputTapeRightCellsDirectCopierDescription_subroutineReady :
     ITCD.SubroutineReady :=
-  ⟨inputTapeRightCellsDirectCopierDescription_wellFormed,
-    inputTapeRightCellsDirectCopierDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    ITCD (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem
     inputTapeRightCellsDirectCopierDescription_step_scan20
@@ -1041,29 +970,11 @@ def ReturnToTransitionMarkerDescription :
 
 private abbrev RTTM := ReturnToTransitionMarkerDescription
 
-theorem returnToTransitionMarkerDescription_wellFormed :
-    RTTM.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := RTTM.transitions)
-      (stateCount :=
-        RTTM.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := RTTM.transitions)
-      (by decide)
-
-theorem returnToTransitionMarkerDescription_haltTransitionFree :
-    RTTM.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := RTTM.transitions)
-    (state := RTTM.halt)
-    (by decide)
-
 theorem returnToTransitionMarkerDescription_subroutineReady :
     RTTM.SubroutineReady :=
-  ⟨returnToTransitionMarkerDescription_wellFormed,
-    returnToTransitionMarkerDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    RTTM (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 theorem returnToTransitionMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :

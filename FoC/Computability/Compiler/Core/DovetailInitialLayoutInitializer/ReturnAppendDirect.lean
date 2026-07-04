@@ -42,29 +42,11 @@ def RightCellsCopierStartHandoffDescription :
 
 private abbrev RCSH := RightCellsCopierStartHandoffDescription
 
-theorem rightCellsCopierStartHandoffDescription_wellFormed :
-    RCSH.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := RCSH.transitions)
-      (stateCount :=
-        RCSH.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := RCSH.transitions)
-      (by decide)
-
-theorem rightCellsCopierStartHandoffDescription_haltTransitionFree :
-    RCSH.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := RCSH.transitions)
-    (state := RCSH.halt)
-    (by decide)
-
 theorem rightCellsCopierStartHandoffDescription_subroutineReady :
     RCSH.SubroutineReady :=
-  ⟨rightCellsCopierStartHandoffDescription_wellFormed,
-    rightCellsCopierStartHandoffDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    RCSH (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem rightCellsCopierStartHandoffDescription_run
     (tail : List (Option Bool)) :
