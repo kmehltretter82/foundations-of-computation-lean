@@ -13,8 +13,7 @@ This wrapper re-exports the Chapter 5 compiler layer. The implementation is
 split into semantic execution of machine descriptions, tape-code and
 subroutine contracts, encoded rewriter construction targets, finite scaffolds,
 universal/range closeouts, and the fixed simulator skeletons used by the
-dovetail pipeline.
-
-For a grouped map of the public contracts and the remaining construction
-leaves, see {lit}`FoC.Computability.APICrossReference`.
+dovetail pipeline.  Contract-route notes live in the modules that own those
+routes; broad API inventories should be generated from Lean documentation
+rather than maintained by hand.
 -/

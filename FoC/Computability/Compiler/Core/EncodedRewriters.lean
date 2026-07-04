@@ -87,28 +87,6 @@ def EncodedDovetailLayoutBoundedRunnerRewriterConstruction :
             (PairedRecognizerDovetailLayoutCode
               accept reject).transform code = some out
 
-def EncodedDovetailTotalOutputEmitterRewriterConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    TapeCodePrimitiveOutputSubroutineRealizedByDescription
-      PairedRecognizerDovetailTotalOutputCode emitter
-
-def EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction
-
-def EncodedDovetailTotalOutputEmitterHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailTotalOutputEmitterHandoffCompiledSubroutineConstruction
-
-def EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction
-
-def EncodedDovetailTotalOutputEmitterClosedHandoffRewriterConstruction :
-    Prop :=
-  PairedRecognizerDovetailTotalOutputEmitterClosedHandoffCompiledSubroutineConstruction
-
 /-!
 **Encoded rewriter handoff.**  Several controller components are ordinary
 code-word transducers: they consume a canonical encoded
@@ -240,8 +218,8 @@ so an exact closed-handoff target would over-constrain the implementation.  The
 total-output emitter is also a normalized output component.
 -/
 
-theorem encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold :
-    EncodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction := by
+theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction := by
   intro accept reject
   exact
     EncodedRewriters.InitialLayout.closedHandoffCompiledSubroutine
@@ -251,7 +229,7 @@ theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     EncodedDovetailStageInputToInitialLayoutRewriterConstruction := by
   intro accept reject
   rcases
-      encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+      pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
         accept reject with
     ⟨initializer, hinitializer⟩
   exact
@@ -269,14 +247,10 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
 
-theorem encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold :
-    EncodedDovetailTotalOutputEmitterRewriterConstruction := by
-  exact EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
-
-theorem encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold :
-    EncodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction :=
+theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :
+    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
   pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_of_closedHandoff
-    encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+    pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
 
 end Computability
 end FoC

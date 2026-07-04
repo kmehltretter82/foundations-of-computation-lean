@@ -200,12 +200,6 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
       EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutineByDescription_of_spec
         hrunner⟩
 
-theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_of_encodedRewriter
-    (h :
-      EncodedDovetailTotalOutputEmitterRewriterConstruction) :
-    PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
-  h
-
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
     (h : EncodedControllerInputInitializerRewriterConstruction) :
     PairedRecognizerDovetailControllerInputInitializerConstruction :=
@@ -241,7 +235,7 @@ tape-code primitives.
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction :=
   pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
-    encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+    pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
@@ -254,16 +248,7 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
 
 theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold :
     PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
-  pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_of_encodedRewriter
-    encodedDovetailTotalOutputEmitterRewriterConstruction_scaffold
-
-theorem pairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailStageInputInitializerHandoffCompiledSubroutineConstruction :=
-  encodedDovetailStageInputToInitialLayoutHandoffRewriterConstruction_scaffold
-
-theorem pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold :
-    PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction :=
-  encodedDovetailStageInputToInitialLayoutClosedHandoffRewriterConstruction_scaffold
+  EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
     PairedRecognizerDovetailControllerInputInitializerConstruction :=
