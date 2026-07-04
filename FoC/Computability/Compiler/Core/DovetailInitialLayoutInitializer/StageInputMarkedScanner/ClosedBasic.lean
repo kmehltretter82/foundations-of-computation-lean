@@ -692,7 +692,7 @@ theorem run_state130_blank_cell_ne_halt
         change (139 : Nat) ≠ 999
         lia)
 
-def markingTailConfig
+private def markingTailConfig
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol) :
     Configuration :=
@@ -701,14 +701,14 @@ def markingTailConfig
       (List.append ((markedCellsBits marked).map some)
         ((encodeCodeWordAsInput tokens).map some)))
 
-def markingTailPayloadLeftRev
+private def markingTailPayloadLeftRev
     (marked : Word Bool) (remainingLengthTail : Nat) :
     List (Option Bool) :=
   List.append ((markedCellsBits marked).reverse.map some)
     (List.append ((stageNatBits remainingLengthTail).reverse.map some)
       (activeLengthPrefixRev marked.length))
 
-def markingTailReturnScanRev
+private def markingTailReturnScanRev
     (marked : Word Bool) (remainingLengthTail : Nat) :
     Word Bool :=
   List.append [true, true]

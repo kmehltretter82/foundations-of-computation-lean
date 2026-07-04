@@ -20,13 +20,13 @@ namespace StageInputMarkedScanner
 
 private abbrev SIMS := StageInputMarkedScannerDescription
 
-def finishStartConfigWithTailBits
+private def finishStartConfigWithTailBits
     (w tailBits : Word Bool) : Configuration :=
   config 150 (finishStartLeft w)
     (List.append ((markedCellsBits w).map some)
       (tailBits.map some))
 
-def markingState120WithTailBits
+private def markingState120WithTailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     Configuration :=
   config 120 (activeLengthPrefixRev processed.length)
@@ -36,7 +36,7 @@ def markingState120WithTailBits
           (List.append ((cellsBits rest).map some)
             (tailBits.map some)))))
 
-def state100AfterMarkedWithTailBits
+private def state100AfterMarkedWithTailBits
     (processed : Word Bool) (b : Bool) (rest tailBits : Word Bool) :
     Configuration :=
   config 100 (finishLengthPrefixRev processed.length)
@@ -157,14 +157,14 @@ private theorem run_state120_bool_tail_to_finish
   simpa [markingState120WithTailBits, activeLengthPrefixRev_zero]
     using hsteps
 
-def state160AfterRestoreWithTailBits
+private def state160AfterRestoreWithTailBits
     (w tailBits : Word Bool) : Configuration :=
   config 160
     (List.append ((cellsBits w).reverse.map some)
       (finishStartLeft w))
     (some false :: none :: tailBits.map some)
 
-def appendBlankStartConfigWithTailBits
+private def appendBlankStartConfigWithTailBits
     (w tailBits : Word Bool) : Configuration :=
   config 180 [none, some false]
     (List.append ((stageInputSecondBitTailPrefix w).map some)
