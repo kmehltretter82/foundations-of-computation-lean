@@ -391,7 +391,7 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction :
       SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec
         useAccept restorer
 
-private def rawGapTape
+private def gapTape
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     List (Option Bool) -> Tape Bool
   | gap =>
@@ -709,10 +709,10 @@ theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSour
       selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape_move_right
         useAccept L extraScratch
 
-private theorem rawGapTape_eq_skipped_count
+private theorem gapTape_eq
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat)
     (gap : List (Option Bool)) :
-    rawGapTape useAccept L extraScratch gap =
+    gapTape useAccept L extraScratch gap =
       tapeAtCells [none]
         (List.append
           ((selectedProjectionPaddedTailCleanupScratchSkippedBits
@@ -728,7 +728,7 @@ private theorem rawGapTape_eq_skipped_count
                   (none : Option Bool))
                 (selectedProjectionPaddedTailCleanupPostCountTailCells
                   useAccept L extraScratch))))) := by
-  rw [rawGapTape]
+  rw [gapTape]
   rw [
     selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
       useAccept L]
@@ -757,7 +757,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail,
     List.append_assoc] using
-    rawGapTape_eq_skipped_count
+    gapTape_eq
       useAccept L extraScratch [none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_eq_skipped_count
@@ -784,7 +784,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank,
     List.append_assoc] using
-    rawGapTape_eq_skipped_count
+    gapTape_eq
       useAccept L extraScratch [none, none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape_move_left_move_right
@@ -836,7 +836,7 @@ theorem sourceRewindDescription_run_from_leftStack_withRight
         simp
         lia]
       rw [runConfig_add]
-      have hstart :
+      rw [show
           sourceRewindDescription.runConfig 1
               { state := sourceRewindDescription.start
                 tape :=
@@ -845,12 +845,11 @@ theorem sourceRewindDescription_run_from_leftStack_withRight
             { state := 1
               tape :=
                 tapeAtCells (rest.map some)
-                  (some current :: none :: rightCells) } := by
+                  (some current :: none :: rightCells) } by
         cases current <;>
           simp [sourceRewindDescription, tapeAtCells, runConfig,
             stepConfig, lookupTransition, Matches, transition, Tape.read,
-            Tape.move, Tape.moveLeft, Tape.write]
-      rw [hstart]
+            Tape.move, Tape.moveLeft, Tape.write]]
       rw [show (rest.length + 1) + 1 = (rest.length + 1) + 1 by rfl]
       rw [runConfig_add]
       rw [show
@@ -1223,15 +1222,15 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstru
       SelectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderSpec
         useAccept encoder
 
-private theorem rawGapTape_move_left_move_right
+private theorem gapTape_move_left_move_right
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat)
     (gap : List (Option Bool)) :
     Tape.move Direction.left
         (Tape.move Direction.right
-          (rawGapTape useAccept L extraScratch gap)) =
-      rawGapTape useAccept L extraScratch gap := by
+          (gapTape useAccept L extraScratch gap)) =
+      gapTape useAccept L extraScratch gap := by
   rcases parsedLayoutBits_eq_false_false_tail L with ⟨tail, htail⟩
-  rw [rawGapTape]
+  rw [gapTape]
   rw [htail]
   simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
@@ -1246,7 +1245,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
     using
-      rawGapTape_move_left_move_right
+      gapTape_move_left_move_right
         useAccept L extraScratch [none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_move_left_move_right
@@ -1260,7 +1259,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
     using
-      rawGapTape_move_left_move_right
+      gapTape_move_left_move_right
         useAccept L extraScratch [none, none, none]
 
 theorem selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape_move_left_move_right
@@ -1353,12 +1352,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixStageScanner
       ← htail]
     simp [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells]
     rfl
-  have hright :
-      rightMoveOnceDescription.HaltsFromTape mid
-        (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape
-          useAccept L extraScratch) := by
-    rw [← hmove]
-    exact rightMoveOnceDescription_haltsFromTape mid
   exact
     canonicalSeqDescription_haltsFromTape_of_haltsFromTape
       CanonicalLayouts.DovetailStagePrefix.nonemptyNatSuffixScannerDescription_subroutineReady
@@ -1366,7 +1359,9 @@ theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixStageScanner
       hstage
       (postPaddingOutputPrefixStageScannerTargetTapeWithRight_move_left_move_right
         (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding)
-      hright
+      (by
+        rw [← hmove]
+        exact rightMoveOnceDescription_haltsFromTape mid)
 
 theorem rightBlankGapPayloadScanTargetTape_move_left_move_right
     (baseLeft : List (Option Bool)) (gap : Nat)
@@ -1395,7 +1390,7 @@ theorem rightBlankGapPayloadScanTargetTape_move_left_move_right
         (none :: padding)
         (some current))
 
-private theorem eq_cons_tail {α : Type} {xs : List α} {x : α}
+private theorem consTail {α : Type} {xs : List α} {x : α}
     {tail : List α} (h : xs = x :: tail) :
     xs = x :: xs.tail := by
   simp [h]
@@ -1412,7 +1407,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_c
         (selectedProjectionPaddedTailCleanupSelectedHitBits true L) with
     ⟨payloadRest, hpayloadRest⟩
   rw [selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest]
-  refine eq_cons_tail (tail := payloadRest) ?_
+  refine consTail (tail := payloadRest) ?_
   rw [selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload]
   rw [selectedProjectionPaddedTailCleanupUnselectedConfigBits]
   exact
@@ -1430,7 +1425,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_c
   rcases configurationFieldBits_cons_false L.rejectConfig [] with
     ⟨payloadRest, hpayloadRest⟩
   rw [selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest]
-  refine eq_cons_tail (tail := payloadRest) ?_
+  refine consTail (tail := payloadRest) ?_
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
     selectedProjectionPaddedTailCleanupSelectedConfigBits]
@@ -1479,6 +1474,54 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_a
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
       selectedProjectionPaddedTailCleanupSelectedConfigBits] using hcfg⟩
 
+private theorem rejectField
+    (L : DovetailLayout) :
+    configurationFieldBits L.acceptConfig
+        (false :: (configurationFieldBits L.rejectConfig []).tail) =
+      List.append (configurationFieldBits L.acceptConfig [])
+        (configurationFieldBits L.rejectConfig []) := by
+  rw [show
+      false ::
+          (configurationFieldBits L.rejectConfig []).tail =
+        configurationFieldBits L.rejectConfig [] by
+    simpa [
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupSelectedConfigBits]
+      using
+        (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
+          L).symm]
+  exact
+    (configurationFieldBits_append_nil L.acceptConfig
+      (configurationFieldBits L.rejectConfig [])).symm
+
+private theorem acceptField
+    (L : DovetailLayout) :
+    configurationFieldBits L.acceptConfig
+        (false ::
+          (List.append (configurationFieldBits L.rejectConfig [])
+            (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail) =
+      List.append (configurationFieldBits L.acceptConfig [])
+        (List.append (configurationFieldBits L.rejectConfig [])
+          (selectedProjectionPaddedTailCleanupSelectedHitBits true L)) := by
+  rw [show
+      false ::
+          (List.append (configurationFieldBits L.rejectConfig [])
+            (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail =
+        List.append (configurationFieldBits L.rejectConfig [])
+          (selectedProjectionPaddedTailCleanupSelectedHitBits true L) by
+    simpa [
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
+      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits]
+      using
+        (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
+          L).symm]
+  exact
+    (configurationFieldBits_append_nil L.acceptConfig
+      (List.append (configurationFieldBits L.rejectConfig [])
+        (selectedProjectionPaddedTailCleanupSelectedHitBits true L))).symm
+
 theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFrom
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
     leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription.HaltsFromTape
@@ -1491,10 +1534,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFro
         L.stage with
     ⟨stageTail, hstageTail⟩
   cases useAccept
-  · have hpayload :=
-      selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
-        L
-    have h :=
+  · have h :=
       leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
         true L.acceptConfig
         (List.append stageTail
@@ -1509,35 +1549,18 @@ theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFro
               false L).map some)
             (none :: none ::
               List.replicate extraScratch (none : Option Bool))))
-    have hfield :
-        configurationFieldBits L.acceptConfig
-            (false :: (configurationFieldBits L.rejectConfig []).tail) =
-          List.append (configurationFieldBits L.acceptConfig [])
-            (configurationFieldBits L.rejectConfig []) := by
-      rw [show
-          false ::
-              (configurationFieldBits L.rejectConfig []).tail =
-            configurationFieldBits L.rejectConfig [] by
-        simpa [
-          selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
-          selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
-          selectedProjectionPaddedTailCleanupSelectedConfigBits]
-          using hpayload.symm]
-      exact
-        (configurationFieldBits_append_nil L.acceptConfig
-          (configurationFieldBits L.rejectConfig [])).symm
     simp only [
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
-      selectedProjectionPaddedTailCleanupSelectedConfigBits] at h
-    simp only [Bool.false_eq_true, if_false] at h
-    rw [hfield] at h
+      selectedProjectionPaddedTailCleanupSelectedConfigBits,
+      Bool.false_eq_true, if_false] at h
+    rw [rejectField L] at h
     simpa [
       selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
       selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape,
       selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape,
       selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
-      hstageTail, hpayload,
+      hstageTail,
       selectedProjectionPaddedTailCleanupRejectAfterStageTailCells,
       selectedProjectionPaddedTailCleanupAfterStageTailCells,
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
@@ -1545,10 +1568,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFro
       selectedProjectionPaddedTailCleanupSelectedConfigBits,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits,
       List.map_append, List.append_assoc] using h
-  · have hpayload :=
-      selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
-        L
-    have h :=
+  · have h :=
       leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFromTape
         true L.acceptConfig
         (List.append stageTail
@@ -1559,41 +1579,17 @@ theorem selectedProjectionPaddedTailCleanupScratchCountFirstFieldEraser_haltsFro
           L)
         (List.append (List.replicate 5 (none : Option Bool))
           (List.replicate extraScratch (none : Option Bool)))
-    have hfield :
-        configurationFieldBits L.acceptConfig
-            (false ::
-              (List.append (configurationFieldBits L.rejectConfig [])
-                (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail) =
-          List.append (configurationFieldBits L.acceptConfig [])
-            (List.append (configurationFieldBits L.rejectConfig [])
-              (selectedProjectionPaddedTailCleanupSelectedHitBits true L)) := by
-      rw [show
-          false ::
-              (List.append (configurationFieldBits L.rejectConfig [])
-                (selectedProjectionPaddedTailCleanupSelectedHitBits true L)).tail =
-            List.append (configurationFieldBits L.rejectConfig [])
-              (selectedProjectionPaddedTailCleanupSelectedHitBits true L) by
-        simpa [
-          selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
-          selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
-          selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-          using hpayload.symm]
-      exact
-        (configurationFieldBits_append_nil L.acceptConfig
-          (List.append (configurationFieldBits L.rejectConfig [])
-            (selectedProjectionPaddedTailCleanupSelectedHitBits true L))).symm
     simp only [
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
-      selectedProjectionPaddedTailCleanupUnselectedConfigBits] at h
-    simp only [if_true] at h
-    rw [hfield] at h
+      selectedProjectionPaddedTailCleanupUnselectedConfigBits, if_true] at h
+    rw [acceptField L] at h
     simpa [
       selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerSourceTape,
       selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape,
       selectedProjectionPaddedTailCleanupScratchCountAcceptAfterFirstFieldEraseTape,
       selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase,
-      hstageTail, hpayload,
+      hstageTail,
       selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells,
       selectedProjectionPaddedTailCleanupAfterStageTailCells,
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
@@ -2001,7 +1997,11 @@ theorem rightBlankLocalGapCompactorDescription_haltsFrom_scratchCountSuffixResto
   | cons current leftRest =>
       have hsuffix : suffix = (current :: leftRest).reverse := by
         rw [← List.reverse_reverse suffix, hrev]
-      have hrun :=
+      simpa [
+        scratchCountSuffixRestorerRightEdgeTape,
+        scratchCountSuffixRestorerCompactedRightEdgeTape,
+        rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+        hsuffix, List.replicate_succ, List.append_assoc] using
         rightBlankLocalGapCompactorDescription_haltsFromTapeWithBase_leftStack_rightPadding
           (baseLeft := pref.reverse.map some)
           (current := current)
@@ -2012,11 +2012,6 @@ theorem rightBlankLocalGapCompactorDescription_haltsFrom_scratchCountSuffixResto
             List.append
               (List.replicate (suffix.length - 1) (none : Option Bool))
               rightTail)
-      simpa [
-        scratchCountSuffixRestorerRightEdgeTape,
-        scratchCountSuffixRestorerCompactedRightEdgeTape,
-        rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
-        hsuffix, List.replicate_succ, List.append_assoc] using hrun
 
 theorem scratchCountSuffixRightEdgeRestorerSpec_of_localCompactorAndCompactedRestorer
     {compactor restorer : MachineDescription}
@@ -2061,20 +2056,18 @@ theorem sentinelRewindDescription_haltsFrom_scratchCountCompactedRightEdgeTape
   | nil =>
       simp at hpos
   | cons bit rest =>
-      have hrun :=
-        selectedProjectionPaddedTailCleanupSentinelRewindDescription_haltsFrom
-          (List.append pref (bit :: rest))
-          (none ::
-            List.append
-              (List.replicate rest.length (none : Option Bool))
-              rightTail)
       simpa [
         scratchCountSuffixRestorerCompactedRightEdgeTape,
         scratchCountSuffixRestorerExtraBlankRewindTape,
         leadingBlankLeftShiftTargetTapeWithPadding,
         rightEdgeRewindTargetTape,
         List.reverse_append, List.map_append, List.append_assoc] using
-        hrun
+        selectedProjectionPaddedTailCleanupSentinelRewindDescription_haltsFrom
+          (List.append pref (bit :: rest))
+          (none ::
+            List.append
+              (List.replicate rest.length (none : Option Bool))
+              rightTail)
 
 theorem scratchCountSuffixRestorerExtraBlankRewindTape_move_left_move_right
     (pref suffix : Word Bool) (rightTail : List (Option Bool))
@@ -2191,12 +2184,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorer_halt
           useAccept L
       simp [hcount] at hpos
   | cons bit rest =>
-      have hrun :=
-        hrestorer.right
-          (selectedProjectionPaddedTailCleanupScratchSkippedBits useAccept L)
-          (bit :: rest)
-          (selectedProjectionPaddedTailCleanupPostCountTailCells useAccept L 0)
-          (by simp)
       rw [
         selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank_eq_skipped_count]
       simpa [
@@ -2204,7 +2191,12 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorer_halt
         scratchCountSuffixRestorerExtraBlankRewindTape,
         rightEdgeRewindTargetTape,
         selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail,
-        hcount, List.replicate_succ, List.append_assoc] using hrun
+        hcount, List.replicate_succ, List.append_assoc] using
+        hrestorer.right
+          (selectedProjectionPaddedTailCleanupScratchSkippedBits useAccept L)
+          (bit :: rest)
+          (selectedProjectionPaddedTailCleanupPostCountTailCells useAccept L 0)
+          (by simp)
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerSpec_of_suffixRestorerAndRawSourceEncoder
     {useAccept : Bool} {suffixRestorer encoder : MachineDescription}
@@ -2332,13 +2324,13 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRawToCounterHandoff
         postCountTail
         (selectedProjectionPaddedTailCleanupScratchCountBits_length_pos
           useAccept L)
-    rw [← hpostCountTail] at hrun
     simpa [
       selectedProjectionPaddedTailCleanupScratchCountRawToCounterHandoffTape,
       selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail_eq_skipped_count,
       selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail,
       scratchCountSuffixPositionerSourceTape,
       scratchCountSuffixRestorerSourceTape,
+      hpostCountTail,
       List.replicate_succ,
       List.append_assoc] using hrun
 
@@ -2386,29 +2378,20 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec_o
           scratchCounterAppendBlanksDescription_subroutineReady)
         hrestorer.left
   · intro L
-    have hcounterSeq :
-        (canonicalSeqDescription materializer
-          scratchCounterAppendBlanksDescription).HaltsFromTape
-          (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch
-            useAccept L 0)
-          (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
-            useAccept L 0) := by
-      exact
-        canonicalSeqDescription_haltsFromTape_of_haltsFromTape
-          hmaterializer.left
-          scratchCounterAppendBlanksDescription_subroutineReady
-          (hmaterializer.right L)
-          (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail_move_left_move_right
-            useAccept L 0)
-          (scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPostCountTail
-            useAccept L 0)
     exact
       canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         (canonicalSeqDescription_subroutineReady
           hmaterializer.left
           scratchCounterAppendBlanksDescription_subroutineReady)
         hrestorer.left
-        hcounterSeq
+        (canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+          hmaterializer.left
+          scratchCounterAppendBlanksDescription_subroutineReady
+          (hmaterializer.right L)
+          (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail_move_left_move_right
+            useAccept L 0)
+          (scratchCounterAppendBlanksDescription_haltsFrom_scratchCountWindowWithPostCountTail
+            useAccept L 0))
         (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail_move_left_move_right
           useAccept L 0)
         (hrestorer.right L)
