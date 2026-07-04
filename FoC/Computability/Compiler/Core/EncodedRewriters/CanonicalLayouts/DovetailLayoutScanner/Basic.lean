@@ -34,6 +34,11 @@ field.  It accepts arbitrary cell payloads
 ({lit}`blank`, {lit}`zero`, and {lit}`one`) and halts one cell to the left of the first bit of
 the nonempty suffix.  Downstream sequencing uses a right handoff move to place
 the next scanner on that suffix bit.
+
+The table has five proof-relevant phases: {lit}`100` marks the next length
+tick, {lit}`120` scans the remaining length field, {lit}`130` marks one payload
+cell, {lit}`140` returns left to the latest length marker, and {lit}`150`
+restores marked payload cells before the final handoff.
 -/
 
 def CellListSuffixScannerDescription : MachineDescription where
@@ -547,11 +552,6 @@ def cellSuffixHandoffConfigWithBaseAndRight
           (List.append ((cellCodeBits cell).reverse.map some) baseLeft)
           (List.append (suffixBits.map some) rightPadding)) }
 
-def boolSuffixHandoffConfigWithBase
-    (b : Bool) (baseLeft : List (Option Bool))
-    (suffixBits : Word Bool) : Configuration :=
-  cellSuffixHandoffConfigWithBase (some b) baseLeft suffixBits
-
 theorem run_cellSuffix_raw_to_handoff_withBase
     (cell : Option Bool) (baseLeft : List (Option Bool))
     (b : Bool) (suffixTail : Word Bool) :
@@ -588,20 +588,6 @@ theorem run_cellSuffix_raw_to_handoff_withBase
           encodeCodeSymbolAsInput,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
           Tape.moveRight]
-
-private theorem run_boolSuffix_raw_to_handoff_withBase
-    (cellBit : Bool) (baseLeft : List (Option Bool))
-    (b : Bool) (suffixTail : Word Bool) :
-    exists steps : Nat,
-      CSS.runConfig steps
-          (config 10 baseLeft
-            (List.append ((cellCodeBits (some cellBit)).map some)
-              (some b :: suffixTail.map some))) =
-        boolSuffixHandoffConfigWithBase cellBit baseLeft
-          (b :: suffixTail) := by
-  simpa [boolSuffixHandoffConfigWithBase] using
-    run_cellSuffix_raw_to_handoff_withBase
-      (some cellBit) baseLeft b suffixTail
 
 theorem run_cellSuffix_raw_to_handoff_withBaseAndRight
     (cell : Option Bool) (baseLeft : List (Option Bool))
@@ -679,20 +665,6 @@ theorem cellSuffixHandoffConfigWithBase_move_right
               (some false)
               (some true :: some true :: some false :: baseLeft)
               (some b) (suffixTail.map some)
-
-private theorem boolSuffixHandoffConfigWithBase_move_right
-    (cellBit : Bool) (baseLeft : List (Option Bool))
-    (b : Bool) (suffixTail : Word Bool) :
-    Tape.move Direction.right
-        (boolSuffixHandoffConfigWithBase cellBit baseLeft
-          (b :: suffixTail)).tape =
-      tapeAtCells
-        (List.append ((cellCodeBits (some cellBit)).reverse.map some)
-          baseLeft)
-        ((b :: suffixTail).map some) := by
-  simpa [boolSuffixHandoffConfigWithBase] using
-    cellSuffixHandoffConfigWithBase_move_right
-      (some cellBit) baseLeft b suffixTail
 
 theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
     (cell : Option Bool) (baseLeft : List (Option Bool))
@@ -1029,118 +1001,15 @@ theorem boolFinalHandoffConfigWithBase_move_right
       encodeCodeWordAsInput,
       encodeCodeSymbolAsInput]
 
-private theorem boolFinalHandoffConfigWithBaseAndRight_move_right
-    (flag : Bool) (baseLeft rightPadding : List (Option Bool)) :
-    Tape.move Direction.right
-        (boolFinalHandoffConfigWithBaseAndRight
-          flag baseLeft rightPadding).tape =
-      tapeAtCells
-        (List.append ((cellCodeBits (some flag)).reverse.map some)
-          baseLeft)
-        rightPadding := by
-  cases flag <;> cases rightPadding <;>
-    simp [boolFinalHandoffConfigWithBaseAndRight, cellCodeBits,
-      tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
-      encodeCell,
-      encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput]
-
 /-!
-## Leading transition marker scanner
+## Leading transition marker bits
 
 Complete dovetail layouts begin with the code symbol
 {name (full := FoC.Computability.MachineCodeSymbol.transition)}`MachineCodeSymbol.transition`.
-This fixed-prefix scanner validates that marker and hands off to the first
-layout field.
+The shared {name}`transitionPrefixBits` value above is the canonical encoded
+prefix; the old dedicated finite scanner for it was unused by the composed
+scanners.
 -/
-
-def TransitionPrefixScannerDescription : MachineDescription where
-  stateCount := 100
-  start := 30
-  halt := 99
-  transitions :=
-    [ keepMove 30 (some false) Direction.right 31
-    , keepMove 31 (some false) Direction.right 32
-    , keepMove 32 (some false) Direction.right 33
-    , keepMove 33 (some true) Direction.right 40
-    , keepMove 40 (some false) Direction.left 99
-    , keepMove 40 (some true) Direction.left 99
-    ]
-
-private abbrev TPS := TransitionPrefixScannerDescription
-
-theorem transitionPrefixScannerDescription_wellFormed :
-    TPS.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := TPS.transitions)
-      (stateCount := TPS.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := TPS.transitions)
-      (by decide)
-
-theorem transitionPrefixScannerDescription_haltTransitionFree :
-    TPS.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := TPS.transitions)
-    (state := TPS.halt)
-    (by decide)
-
-theorem transitionPrefixScannerDescription_subroutineReady :
-    TPS.SubroutineReady :=
-  ⟨transitionPrefixScannerDescription_wellFormed,
-    transitionPrefixScannerDescription_haltTransitionFree⟩
-
-def transitionPrefixHandoffConfigWithBase
-    (baseLeft : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  { state := TPS.halt
-    tape :=
-      Tape.move Direction.left
-        (tapeAtCells
-          (List.append (transitionPrefixBits.reverse.map some)
-            baseLeft)
-          (suffixBits.map some)) }
-
-private theorem run_transitionPrefix_raw_to_handoff_withBase
-    (baseLeft : List (Option Bool)) (b : Bool)
-    (suffixTail : Word Bool) :
-    exists steps : Nat,
-      TPS.runConfig steps
-          (config 30 baseLeft
-            (List.append (transitionPrefixBits.map some)
-              (some b :: suffixTail.map some))) =
-        transitionPrefixHandoffConfigWithBase baseLeft
-          (b :: suffixTail) := by
-  refine ⟨5, ?_⟩
-  cases b <;>
-    simp [TransitionPrefixScannerDescription,
-      transitionPrefixHandoffConfigWithBase, transitionPrefixBits,
-      config, tapeAtCells, keepMove,
-      runConfig, stepConfig,
-      lookupTransition, Matches,
-      transition,
-      encodeCodeSymbolAsInput,
-      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      Tape.moveRight]
-
-private theorem transitionPrefixHandoffConfigWithBase_move_right
-    (baseLeft : List (Option Bool)) (b : Bool)
-    (suffixTail : Word Bool) :
-    Tape.move Direction.right
-        (transitionPrefixHandoffConfigWithBase baseLeft
-          (b :: suffixTail)).tape =
-      tapeAtCells
-        (List.append (transitionPrefixBits.reverse.map some) baseLeft)
-        ((b :: suffixTail).map some) := by
-  unfold transitionPrefixHandoffConfigWithBase transitionPrefixBits
-  simpa [encodeCodeSymbolAsInput, List.append_assoc]
-    using
-      FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
-        (some true)
-        (some false :: some false :: some false :: baseLeft)
-        (some b) (suffixTail.map some)
 
 theorem run_cellList_state130_currentCell
     (cell : Option Bool) (left right : List (Option Bool)) :
@@ -1453,110 +1322,11 @@ theorem run_cellList_state150_markedCells
       simp [cellsCodeBits, List.reverse_append, List.map_append,
         List.append_assoc]
 
-def cellListFinishStartLeft : List (Option Bool) -> List (Option Bool)
-  | [] => doneBits.reverse.map some
-  | _ :: rest =>
-      List.append (doneBits.reverse.map some)
-        (finishLengthPrefixRev rest.length)
-
-def cellListFinishStartConfig
-    (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 150 (cellListFinishStartLeft cells)
-    (List.append ((markedCellsCodeBits cells).map some)
-      (suffixBits.map some))
-
-def cellListRestoredLeft
-    (cells : List (Option Bool)) : List (Option Bool) :=
-  List.append ((cellsCodeBits cells).reverse.map some)
-    (cellListFinishStartLeft cells)
-
-def cellListHandoffConfig
-    (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  { state := CLSS.halt
-    tape :=
-      Tape.move Direction.left
-        (tapeAtCells (cellListRestoredLeft cells)
-          (suffixBits.map some)) }
-
-def cellListMarkingState120
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 120 (activeLengthPrefixRev processed.length)
-    (List.append ((stageNatBits rest.length).map some)
-      (List.append ((markedCellsCodeBits processed).map some)
-        (List.append ((cellCodeBits cell).map some)
-          (List.append ((cellsCodeBits rest).map some)
-            (suffixBits.map some)))))
-
-def cellListState100AfterMarked
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 100 (finishLengthPrefixRev processed.length)
-    (List.append ((stageNatBits rest.length).map some)
-      (List.append ((markedCellsCodeBits processed).map some)
-        (List.append ((markedCellCodeBits cell).map some)
-          (List.append ((cellsCodeBits rest).map some)
-            (suffixBits.map some)))))
-
 def cellListCanonicalLengthPrefixRev : Nat -> List (Option Bool)
   | 0 => []
   | n + 1 =>
       List.append (tickBits.reverse.map some)
         (cellListCanonicalLengthPrefixRev n)
-
-def cellListRawMarkingState120
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 120
-    (List.append markedTickRev
-      (cellListCanonicalLengthPrefixRev processed.length))
-    (List.append ((stageNatBits rest.length).map some)
-      (List.append ((markedCellsCodeBits processed).map some)
-        (List.append ((cellCodeBits cell).map some)
-          (List.append ((cellsCodeBits rest).map some)
-            (suffixBits.map some)))))
-
-def cellListRawState100AfterMarked
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 100 (cellListCanonicalLengthPrefixRev (processed.length + 1))
-    (List.append ((stageNatBits rest.length).map some)
-      (List.append ((markedCellsCodeBits processed).map some)
-        (List.append ((markedCellCodeBits cell).map some)
-          (List.append ((cellsCodeBits rest).map some)
-            (suffixBits.map some)))))
-
-def cellListCanonicalFinishStartLeft
-    (cells : List (Option Bool)) : List (Option Bool) :=
-  List.append (doneBits.reverse.map some)
-    (cellListCanonicalLengthPrefixRev cells.length)
-
-def cellListCanonicalFinishStartConfig
-    (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  config 150 (cellListCanonicalFinishStartLeft cells)
-    (List.append ((markedCellsCodeBits cells).map some)
-      (suffixBits.map some))
-
-def cellListCanonicalRestoredLeft
-    (cells : List (Option Bool)) : List (Option Bool) :=
-  List.append ((cellsCodeBits cells).reverse.map some)
-    (cellListCanonicalFinishStartLeft cells)
-
-def cellListCanonicalHandoffConfig
-    (cells : List (Option Bool)) (suffixBits : Word Bool) :
-    Configuration :=
-  { state := CLSS.halt
-    tape :=
-      Tape.move Direction.left
-        (tapeAtCells (cellListCanonicalRestoredLeft cells)
-          (suffixBits.map some)) }
 
 def cellListRawMarkingState120WithBase
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
@@ -1677,19 +1447,33 @@ def cellListMarkingReturnScanRev
     (List.append (markedCellsCodeBits processed).reverse
       (stageNatBits rest.length).reverse)
 
-private theorem run_cellList_raw_mark_current_to_state100
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
+private theorem run_cellList_raw_mark_current_to_state100_withBaseRightCells
+    (baseLeft processed : List (Option Bool)) (cell : Option Bool)
+    (rest right : List (Option Bool)) :
     exists steps : Nat,
       CLSS.runConfig steps
-          (cellListRawMarkingState120 processed cell rest suffixBits) =
-        cellListRawState100AfterMarked processed cell rest suffixBits := by
+          (config 120
+            (List.append markedTickRev
+              (List.append
+                (cellListCanonicalLengthPrefixRev processed.length)
+                baseLeft))
+            (List.append ((stageNatBits rest.length).map some)
+              (List.append ((markedCellsCodeBits processed).map some)
+                (List.append ((cellCodeBits cell).map some)
+                  (List.append ((cellsCodeBits rest).map some) right))))) =
+        config 100
+          (List.append
+            (cellListCanonicalLengthPrefixRev (processed.length + 1))
+            baseLeft)
+          (List.append ((stageNatBits rest.length).map some)
+            (List.append ((markedCellsCodeBits processed).map some)
+              (List.append ((markedCellCodeBits cell).map some)
+                (List.append ((cellsCodeBits rest).map some) right)))) := by
   let scanRev := cellListMarkingReturnScanRev processed rest
   refine
     ⟨(4 * rest.length + 4) +
         (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
   rw [runConfig_add]
-  unfold cellListRawMarkingState120
   rw [run_cellList_state120_stageNat]
   rw [runConfig_add]
   rw [run_cellList_state130_markedCells]
@@ -1700,11 +1484,12 @@ private theorem run_cellList_raw_mark_current_to_state100
       have hreturn :=
         run_cellList_state140_returnToLengthMarker scanRev false
           (some false :: some false ::
-            cellListCanonicalLengthPrefixRev processed.length)
+            List.append
+              (cellListCanonicalLengthPrefixRev processed.length)
+              baseLeft)
           (some false ::
-            List.append ((cellsCodeBits rest).map some)
-              (suffixBits.map some))
-      simpa [cellListRawState100AfterMarked, scanRev,
+            List.append ((cellsCodeBits rest).map some) right)
+      simpa [scanRev,
         cellListMarkingReturnScanRev, markedCellCodeBits,
         cellCodeTailCells, cellListCanonicalLengthPrefixRev,
         List.map_append, List.reverse_append, List.append_assoc] using hreturn
@@ -1713,11 +1498,12 @@ private theorem run_cellList_raw_mark_current_to_state100
       · have hreturn :=
           run_cellList_state140_returnToLengthMarker scanRev false
             (some false :: some false ::
-              cellListCanonicalLengthPrefixRev processed.length)
+              List.append
+                (cellListCanonicalLengthPrefixRev processed.length)
+                baseLeft)
             (some true ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListRawState100AfterMarked, scanRev,
+              List.append ((cellsCodeBits rest).map some) right)
+        simpa [scanRev,
           cellListMarkingReturnScanRev, markedCellCodeBits,
           cellCodeTailCells, cellListCanonicalLengthPrefixRev,
           List.map_append, List.reverse_append, List.append_assoc] using
@@ -1725,11 +1511,12 @@ private theorem run_cellList_raw_mark_current_to_state100
       · have hreturn :=
           run_cellList_state140_returnToLengthMarker scanRev true
             (some false :: some false ::
-              cellListCanonicalLengthPrefixRev processed.length)
+              List.append
+                (cellListCanonicalLengthPrefixRev processed.length)
+                baseLeft)
             (some false ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListRawState100AfterMarked, scanRev,
+              List.append ((cellsCodeBits rest).map some) right)
+        simpa [scanRev,
           cellListMarkingReturnScanRev, markedCellCodeBits,
           cellCodeTailCells, cellListCanonicalLengthPrefixRev,
           List.map_append, List.reverse_append, List.append_assoc] using
@@ -1744,62 +1531,12 @@ private theorem run_cellList_raw_mark_current_to_state100_withBase
             suffixBits) =
         cellListRawState100AfterMarkedWithBase baseLeft processed cell rest
           suffixBits := by
-  let scanRev := cellListMarkingReturnScanRev processed rest
-  refine
-    ⟨(4 * rest.length + 4) +
-        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [runConfig_add]
-  unfold cellListRawMarkingState120WithBase
-  rw [run_cellList_state120_stageNat]
-  rw [runConfig_add]
-  rw [run_cellList_state130_markedCells]
-  rw [runConfig_add]
-  rw [run_cellList_state130_currentCell]
-  cases cell with
-  | none =>
-      have hreturn :=
-        run_cellList_state140_returnToLengthMarker scanRev false
-          (some false :: some false ::
-            List.append
-              (cellListCanonicalLengthPrefixRev processed.length)
-              baseLeft)
-          (some false ::
-            List.append ((cellsCodeBits rest).map some)
-              (suffixBits.map some))
-      simpa [cellListRawState100AfterMarkedWithBase, scanRev,
-        cellListMarkingReturnScanRev, markedCellCodeBits,
-        cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-        List.map_append, List.reverse_append, List.append_assoc] using hreturn
-  | some b =>
-      cases b
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev false
-            (some false :: some false ::
-              List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-            (some true ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListRawState100AfterMarkedWithBase, scanRev,
-          cellListMarkingReturnScanRev, markedCellCodeBits,
-          cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
-            hreturn
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev true
-            (some false :: some false ::
-              List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-            (some false ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListRawState100AfterMarkedWithBase, scanRev,
-          cellListMarkingReturnScanRev, markedCellCodeBits,
-          cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
-            hreturn
+  rcases run_cellList_raw_mark_current_to_state100_withBaseRightCells
+      baseLeft processed cell rest (suffixBits.map some) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListRawMarkingState120WithBase,
+    cellListRawState100AfterMarkedWithBase] using hsteps
 
 private theorem run_cellList_raw_mark_current_to_state100_withBaseAndRight
     (baseLeft processed : List (Option Bool)) (cell : Option Bool)
@@ -1811,75 +1548,32 @@ private theorem run_cellList_raw_mark_current_to_state100_withBaseAndRight
             baseLeft processed cell rest suffixBits rightPadding) =
         cellListRawState100AfterMarkedWithBaseAndRight
           baseLeft processed cell rest suffixBits rightPadding := by
-  let scanRev := cellListMarkingReturnScanRev processed rest
-  refine
-    ⟨(4 * rest.length + 4) +
-        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [runConfig_add]
-  unfold cellListRawMarkingState120WithBaseAndRight
-  rw [run_cellList_state120_stageNat]
-  rw [runConfig_add]
-  rw [run_cellList_state130_markedCells]
-  rw [runConfig_add]
-  rw [run_cellList_state130_currentCell]
-  cases cell with
-  | none =>
-      have hreturn :=
-        run_cellList_state140_returnToLengthMarker scanRev false
-          (some false :: some false ::
-            List.append
-              (cellListCanonicalLengthPrefixRev processed.length)
-              baseLeft)
-          (some false ::
-            List.append ((cellsCodeBits rest).map some)
-              (List.append (suffixBits.map some) rightPadding))
-      simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
-        cellListMarkingReturnScanRev, markedCellCodeBits,
-        cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-        List.map_append, List.reverse_append, List.append_assoc] using hreturn
-  | some b =>
-      cases b
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev false
-            (some false :: some false ::
-              List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-            (some true ::
-              List.append ((cellsCodeBits rest).map some)
-                (List.append (suffixBits.map some) rightPadding))
-        simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
-          cellListMarkingReturnScanRev, markedCellCodeBits,
-          cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
-            hreturn
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev true
-            (some false :: some false ::
-              List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-            (some false ::
-              List.append ((cellsCodeBits rest).map some)
-                (List.append (suffixBits.map some) rightPadding))
-        simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
-          cellListMarkingReturnScanRev, markedCellCodeBits,
-          cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
-            hreturn
+  rcases run_cellList_raw_mark_current_to_state100_withBaseRightCells
+      baseLeft processed cell rest
+      (List.append (suffixBits.map some) rightPadding) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListRawMarkingState120WithBaseAndRight,
+    cellListRawState100AfterMarkedWithBaseAndRight] using hsteps
 
-private theorem run_cellList_raw_marking_loop_from_state100
-    (processed cells : List (Option Bool)) (suffixBits : Word Bool) :
+private theorem run_cellList_raw_marking_loop_from_state100_withBaseRightCells
+    (baseLeft processed cells right : List (Option Bool)) :
     exists steps : Nat,
       CLSS.runConfig steps
           (config 100
-            (cellListCanonicalLengthPrefixRev processed.length)
+            (List.append
+              (cellListCanonicalLengthPrefixRev processed.length)
+              baseLeft)
             (List.append ((stageNatBits cells.length).map some)
               (List.append ((markedCellsCodeBits processed).map some)
                 (List.append ((cellsCodeBits cells).map some)
-                  (suffixBits.map some))))) =
-        cellListCanonicalFinishStartConfig
-          (List.append processed cells) suffixBits := by
+                  right)))) =
+        config 150
+          (cellListCanonicalFinishStartLeftWithBase
+            (List.append processed cells) baseLeft)
+          (List.append
+            ((markedCellsCodeBits (List.append processed cells)).map some)
+            right) := by
   induction cells generalizing processed with
   | nil =>
       refine ⟨4, ?_⟩
@@ -1890,18 +1584,22 @@ private theorem run_cellList_raw_marking_loop_from_state100
       change
         CLSS.runConfig 4
             (config 100
-              (cellListCanonicalLengthPrefixRev processed.length)
+              (List.append
+                (cellListCanonicalLengthPrefixRev processed.length)
+                baseLeft)
               (List.append (doneBits.map some)
-                (List.append ((markedCellsCodeBits processed).map some)
-                  (suffixBits.map some)))) =
-          cellListCanonicalFinishStartConfig
-            (List.append processed []) suffixBits
+                (List.append ((markedCellsCodeBits processed).map some) right))) =
+          config 150
+            (cellListCanonicalFinishStartLeftWithBase
+              (List.append processed []) baseLeft)
+            (List.append
+              ((markedCellsCodeBits (List.append processed [])).map some)
+              right)
       rw [run_cellList_state100_done]
-      simp [cellListCanonicalFinishStartConfig,
-        cellListCanonicalFinishStartLeft]
+      simp [cellListCanonicalFinishStartLeftWithBase]
   | cons cell rest ih =>
-      rcases run_cellList_raw_mark_current_to_state100
-          processed cell rest suffixBits with
+      rcases run_cellList_raw_mark_current_to_state100_withBaseRightCells
+          baseLeft processed cell rest right with
         ⟨markSteps, hmark⟩
       rcases ih (List.append processed [cell]) with
         ⟨recSteps, hrec⟩
@@ -1921,43 +1619,62 @@ private theorem run_cellList_raw_marking_loop_from_state100
                 ((stageNatBits rest.length).map some))
               (List.append ((markedCellsCodeBits processed).map some)
                 (List.append ((cellsCodeBits (cell :: rest)).map some)
-                  (suffixBits.map some))) =
+                  right)) =
             List.append (tickBits.map some)
               (List.append ((stageNatBits rest.length).map some)
                 (List.append
                   ((markedCellsCodeBits processed).map some)
                   (List.append ((cellCodeBits cell).map some)
-                    (List.append ((cellsCodeBits rest).map some)
-                      (suffixBits.map some))))) by
+                    (List.append ((cellsCodeBits rest).map some) right)))) by
         simp [cellsCodeBits, List.map_append, List.append_assoc]]
       change
         CLSS.runConfig (markSteps + recSteps)
             (CLSS.runConfig 4
               (config 100
-                (cellListCanonicalLengthPrefixRev processed.length)
+                (List.append
+                  (cellListCanonicalLengthPrefixRev processed.length)
+                  baseLeft)
                 (List.append (tickBits.map some)
                   (List.append ((stageNatBits rest.length).map some)
                     (List.append
                       ((markedCellsCodeBits processed).map some)
                       (List.append ((cellCodeBits cell).map some)
                         (List.append ((cellsCodeBits rest).map some)
-                          (suffixBits.map some)))))))) =
-          cellListCanonicalFinishStartConfig
-            (List.append processed (cell :: rest)) suffixBits
+                          right))))))) =
+          config 150
+            (cellListCanonicalFinishStartLeftWithBase
+              (List.append processed (cell :: rest)) baseLeft)
+            (List.append
+              ((markedCellsCodeBits
+                (List.append processed (cell :: rest))).map some)
+              right)
       rw [run_cellList_state100_tick]
       rw [runConfig_add]
       change
         CLSS.runConfig recSteps
             (CLSS.runConfig markSteps
-              (cellListRawMarkingState120 processed cell rest
-                suffixBits)) =
-          cellListCanonicalFinishStartConfig
-            (List.append processed (cell :: rest)) suffixBits
+              (config 120
+                (List.append markedTickRev
+                  (List.append
+                    (cellListCanonicalLengthPrefixRev processed.length)
+                    baseLeft))
+                (List.append ((stageNatBits rest.length).map some)
+                  (List.append
+                    ((markedCellsCodeBits processed).map some)
+                    (List.append ((cellCodeBits cell).map some)
+                      (List.append ((cellsCodeBits rest).map some)
+                        right)))))) =
+          config 150
+            (cellListCanonicalFinishStartLeftWithBase
+              (List.append processed (cell :: rest)) baseLeft)
+            (List.append
+              ((markedCellsCodeBits
+                (List.append processed (cell :: rest))).map some)
+              right)
       rw [hmark]
       rw [map_markedCellsCodeBits_append_single processed cell] at hrec
-      simpa [cellListRawState100AfterMarked, markedCellsCodeBits,
-        markedCellsCodeBits_append, cellsCodeBits, List.length_append,
-        List.map_append, List.append_assoc] using hrec
+      simpa [markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
+        List.length_append, List.map_append, List.append_assoc] using hrec
 
 theorem run_cellList_raw_marking_loop_from_state100_withBase
     (baseLeft processed cells : List (Option Bool))
@@ -1974,88 +1691,11 @@ theorem run_cellList_raw_marking_loop_from_state100_withBase
                   (suffixBits.map some))))) =
         cellListCanonicalFinishStartConfigWithBase
           (List.append processed cells) baseLeft suffixBits := by
-  induction cells generalizing processed with
-  | nil =>
-      refine ⟨4, ?_⟩
-      rw [show (stageNatBits ([] : List (Option Bool)).length).map some =
-          doneBits.map some by
-        simp [stageNatBits_zero, doneBits,
-          encodeCodeSymbolAsInput]]
-      change
-        CLSS.runConfig 4
-            (config 100
-              (List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-              (List.append (doneBits.map some)
-                (List.append ((markedCellsCodeBits processed).map some)
-                  (suffixBits.map some)))) =
-          cellListCanonicalFinishStartConfigWithBase
-            (List.append processed []) baseLeft suffixBits
-      rw [run_cellList_state100_done]
-      simp [cellListCanonicalFinishStartConfigWithBase,
-        cellListCanonicalFinishStartLeftWithBase]
-  | cons cell rest ih =>
-      rcases run_cellList_raw_mark_current_to_state100_withBase
-          baseLeft processed cell rest suffixBits with
-        ⟨markSteps, hmark⟩
-      rcases ih (List.append processed [cell]) with
-        ⟨recSteps, hrec⟩
-      refine ⟨4 + markSteps + recSteps, ?_⟩
-      rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by lia]
-      rw [runConfig_add]
-      rw [show
-          (stageNatBits (cell :: rest).length).map some =
-            List.append (tickBits.map some)
-              ((stageNatBits rest.length).map some) by
-        simp [stageNatBits_succ, tickBits,
-          encodeCodeSymbolAsInput]]
-      rw [show
-          List.append
-              (List.append (tickBits.map some)
-                ((stageNatBits rest.length).map some))
-              (List.append ((markedCellsCodeBits processed).map some)
-                (List.append ((cellsCodeBits (cell :: rest)).map some)
-                  (suffixBits.map some))) =
-            List.append (tickBits.map some)
-              (List.append ((stageNatBits rest.length).map some)
-                (List.append
-                  ((markedCellsCodeBits processed).map some)
-                  (List.append ((cellCodeBits cell).map some)
-                    (List.append ((cellsCodeBits rest).map some)
-                      (suffixBits.map some))))) by
-        simp [cellsCodeBits, List.map_append, List.append_assoc]]
-      change
-        CLSS.runConfig (markSteps + recSteps)
-            (CLSS.runConfig 4
-              (config 100
-                (List.append
-                  (cellListCanonicalLengthPrefixRev processed.length)
-                  baseLeft)
-                (List.append (tickBits.map some)
-                  (List.append ((stageNatBits rest.length).map some)
-                    (List.append
-                      ((markedCellsCodeBits processed).map some)
-                      (List.append ((cellCodeBits cell).map some)
-                        (List.append ((cellsCodeBits rest).map some)
-                          (suffixBits.map some)))))))) =
-          cellListCanonicalFinishStartConfigWithBase
-            (List.append processed (cell :: rest)) baseLeft suffixBits
-      rw [run_cellList_state100_tick]
-      rw [runConfig_add]
-      change
-        CLSS.runConfig recSteps
-            (CLSS.runConfig markSteps
-              (cellListRawMarkingState120WithBase baseLeft processed cell
-                rest suffixBits)) =
-          cellListCanonicalFinishStartConfigWithBase
-            (List.append processed (cell :: rest)) baseLeft suffixBits
-      rw [hmark]
-      rw [map_markedCellsCodeBits_append_single processed cell] at hrec
-      simpa [cellListRawState100AfterMarkedWithBase,
-        markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
-        List.length_append, List.map_append, List.append_assoc] using hrec
+  rcases run_cellList_raw_marking_loop_from_state100_withBaseRightCells
+      baseLeft processed cells (suffixBits.map some) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListCanonicalFinishStartConfigWithBase] using hsteps
 
 private theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
     (baseLeft processed cells : List (Option Bool))
@@ -2073,224 +1713,12 @@ private theorem run_cellList_raw_marking_loop_from_state100_withBaseAndRight
         cellListCanonicalFinishStartConfigWithBaseAndRight
           (List.append processed cells) baseLeft suffixBits
           rightPadding := by
-  induction cells generalizing processed with
-  | nil =>
-      refine ⟨4, ?_⟩
-      rw [show (stageNatBits ([] : List (Option Bool)).length).map some =
-          doneBits.map some by
-        simp [stageNatBits_zero, doneBits,
-          encodeCodeSymbolAsInput]]
-      change
-        CLSS.runConfig 4
-            (config 100
-              (List.append
-                (cellListCanonicalLengthPrefixRev processed.length)
-                baseLeft)
-              (List.append (doneBits.map some)
-                (List.append ((markedCellsCodeBits processed).map some)
-                  (List.append (suffixBits.map some) rightPadding)))) =
-          cellListCanonicalFinishStartConfigWithBaseAndRight
-            (List.append processed []) baseLeft suffixBits rightPadding
-      rw [run_cellList_state100_done]
-      simp [cellListCanonicalFinishStartConfigWithBaseAndRight,
-        cellListCanonicalFinishStartLeftWithBase]
-  | cons cell rest ih =>
-      rcases run_cellList_raw_mark_current_to_state100_withBaseAndRight
-          baseLeft processed cell rest suffixBits rightPadding with
-        ⟨markSteps, hmark⟩
-      rcases ih (List.append processed [cell]) with
-        ⟨recSteps, hrec⟩
-      refine ⟨4 + markSteps + recSteps, ?_⟩
-      rw [show 4 + markSteps + recSteps =
-          4 + (markSteps + recSteps) by lia]
-      rw [runConfig_add]
-      rw [show
-          (stageNatBits (cell :: rest).length).map some =
-            List.append (tickBits.map some)
-              ((stageNatBits rest.length).map some) by
-        simp [stageNatBits_succ, tickBits,
-          encodeCodeSymbolAsInput]]
-      rw [show
-          List.append
-              (List.append (tickBits.map some)
-                ((stageNatBits rest.length).map some))
-              (List.append ((markedCellsCodeBits processed).map some)
-                (List.append ((cellsCodeBits (cell :: rest)).map some)
-                  (List.append (suffixBits.map some) rightPadding))) =
-            List.append (tickBits.map some)
-              (List.append ((stageNatBits rest.length).map some)
-                (List.append
-                  ((markedCellsCodeBits processed).map some)
-                  (List.append ((cellCodeBits cell).map some)
-                    (List.append ((cellsCodeBits rest).map some)
-                      (List.append (suffixBits.map some)
-                        rightPadding))))) by
-        simp [cellsCodeBits, List.map_append, List.append_assoc]]
-      change
-        CLSS.runConfig (markSteps + recSteps)
-            (CLSS.runConfig 4
-              (config 100
-                (List.append
-                  (cellListCanonicalLengthPrefixRev processed.length)
-                  baseLeft)
-                (List.append (tickBits.map some)
-                  (List.append ((stageNatBits rest.length).map some)
-                    (List.append
-                      ((markedCellsCodeBits processed).map some)
-                      (List.append ((cellCodeBits cell).map some)
-                        (List.append ((cellsCodeBits rest).map some)
-                          (List.append (suffixBits.map some)
-                            rightPadding)))))))) =
-          cellListCanonicalFinishStartConfigWithBaseAndRight
-            (List.append processed (cell :: rest)) baseLeft suffixBits
-            rightPadding
-      rw [run_cellList_state100_tick]
-      rw [runConfig_add]
-      change
-        CLSS.runConfig recSteps
-            (CLSS.runConfig markSteps
-              (cellListRawMarkingState120WithBaseAndRight baseLeft
-                processed cell rest suffixBits rightPadding)) =
-          cellListCanonicalFinishStartConfigWithBaseAndRight
-            (List.append processed (cell :: rest)) baseLeft suffixBits
-            rightPadding
-      rw [hmark]
-      rw [map_markedCellsCodeBits_append_single processed cell] at hrec
-      simpa [cellListRawState100AfterMarkedWithBaseAndRight,
-        markedCellsCodeBits, markedCellsCodeBits_append, cellsCodeBits,
-        List.length_append, List.map_append, List.append_assoc] using hrec
-
-private theorem run_cellList_mark_current_to_state100
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (cellListMarkingState120 processed cell rest suffixBits) =
-        cellListState100AfterMarked processed cell rest suffixBits := by
-  let scanRev := cellListMarkingReturnScanRev processed rest
-  refine
-    ⟨(4 * rest.length + 4) +
-        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
-  rw [runConfig_add]
-  unfold cellListMarkingState120
-  rw [run_cellList_state120_stageNat]
-  rw [runConfig_add]
-  rw [run_cellList_state130_markedCells]
-  rw [runConfig_add]
-  rw [run_cellList_state130_currentCell]
-  cases cell with
-  | none =>
-      have hreturn :=
-        run_cellList_state140_returnToLengthMarker scanRev false
-          (activeLengthPrefixTail processed.length)
-          (some false ::
-            List.append ((cellsCodeBits rest).map some)
-              (suffixBits.map some))
-      simpa [cellListState100AfterMarked, scanRev,
-        cellListMarkingReturnScanRev, activeLengthPrefixRev,
-        activeLengthPrefixRestored, markedCellCodeBits,
-        cellCodeTailCells, List.map_append, List.reverse_append,
-        List.append_assoc] using hreturn
-  | some b =>
-      cases b
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev false
-            (activeLengthPrefixTail processed.length)
-            (some true ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListState100AfterMarked, scanRev,
-          cellListMarkingReturnScanRev, activeLengthPrefixRev,
-          activeLengthPrefixRestored, markedCellCodeBits,
-          cellCodeTailCells, List.map_append, List.reverse_append,
-          List.append_assoc] using hreturn
-      · have hreturn :=
-          run_cellList_state140_returnToLengthMarker scanRev true
-            (activeLengthPrefixTail processed.length)
-            (some false ::
-              List.append ((cellsCodeBits rest).map some)
-                (suffixBits.map some))
-        simpa [cellListState100AfterMarked, scanRev,
-          cellListMarkingReturnScanRev, activeLengthPrefixRev,
-          activeLengthPrefixRestored, markedCellCodeBits,
-          cellCodeTailCells, List.map_append, List.reverse_append,
-          List.append_assoc] using hreturn
-
-private theorem run_cellList_marking_loop_from_state120
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixBits : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (cellListMarkingState120 processed cell rest suffixBits) =
-        cellListFinishStartConfig
-          (List.append processed (cell :: rest)) suffixBits := by
-  induction rest generalizing processed cell with
-  | nil =>
-      rcases run_cellList_mark_current_to_state100
-          processed cell [] suffixBits with
-        ⟨markSteps, hmark⟩
-      refine ⟨markSteps + 4, ?_⟩
-      rw [runConfig_add]
-      rw [hmark]
-      unfold cellListState100AfterMarked
-      change
-        CLSS.runConfig 4
-            (config 100 (finishLengthPrefixRev processed.length)
-              (List.append (doneBits.map some)
-                (List.append ((markedCellsCodeBits processed).map some)
-                  (List.append ((markedCellCodeBits cell).map some)
-                    (suffixBits.map some))))) =
-          cellListFinishStartConfig (List.append processed [cell])
-            suffixBits
-      rw [run_cellList_state100_done]
-      unfold cellListFinishStartConfig cellListFinishStartLeft
-      cases processed with
-      | nil =>
-          simp [markedCellsCodeBits]
-      | cons first processedTail =>
-          rw [map_markedCellsCodeBits_append_single
-            (first :: processedTail) cell]
-          simp [markedCellsCodeBits, List.length_append,
-            List.map_append, List.append_assoc]
-  | cons next rest ih =>
-      rcases run_cellList_mark_current_to_state100 processed cell
-          (next :: rest) suffixBits with
-        ⟨markSteps, hmark⟩
-      rcases ih (List.append processed [cell]) next with
-        ⟨recSteps, hrec⟩
-      refine ⟨markSteps + 4 + recSteps, ?_⟩
-      rw [show markSteps + 4 + recSteps =
-          markSteps + (4 + recSteps) by lia]
-      rw [runConfig_add]
-      rw [hmark]
-      rw [runConfig_add]
-      unfold cellListState100AfterMarked
-      rw [show
-          (stageNatBits (next :: rest).length).map some =
-            List.append (tickBits.map some)
-              ((stageNatBits rest.length).map some) by
-        simp [stageNatBits_succ, tickBits,
-          encodeCodeSymbolAsInput]]
-      change
-        CLSS.runConfig recSteps
-            (CLSS.runConfig 4
-              (config 100 (finishLengthPrefixRev processed.length)
-                (List.append (tickBits.map some)
-                  (List.append ((stageNatBits rest.length).map some)
-                    (List.append ((markedCellsCodeBits processed).map some)
-                      (List.append ((markedCellCodeBits cell).map some)
-                        (List.append
-                          ((cellsCodeBits (next :: rest)).map some)
-                          (suffixBits.map some)))))))) =
-          cellListFinishStartConfig
-            (List.append processed (cell :: next :: rest)) suffixBits
-      rw [run_cellList_state100_tick]
-      unfold cellListMarkingState120 at hrec
-      rw [map_markedCellsCodeBits_append_single processed cell] at hrec
-      simpa [activeLengthPrefixRev_succ, markedCellsCodeBits,
-        markedCellsCodeBits_append,
-        cellsCodeBits, List.length_append, List.map_append,
-        List.append_assoc] using hrec
+  rcases run_cellList_raw_marking_loop_from_state100_withBaseRightCells
+      baseLeft processed cells
+      (List.append (suffixBits.map some) rightPadding) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListCanonicalFinishStartConfigWithBaseAndRight] using hsteps
 
 private theorem run_cellList_state150_handoff_false
     (cell : Option Bool) (left right : List (Option Bool)) :
@@ -2305,83 +1733,34 @@ private theorem run_cellList_state150_handoff_false
       transition,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
-private theorem run_cellList_finish_to_handoff
-    (cells : List (Option Bool)) (suffixTail : Word Bool) :
+private theorem run_cellList_canonical_finish_to_handoff_withBaseRightTail
+    (cells baseLeft rightTail : List (Option Bool)) :
     exists steps : Nat,
       CLSS.runConfig steps
-          (cellListFinishStartConfig cells (false :: suffixTail)) =
-        cellListHandoffConfig cells (false :: suffixTail) := by
+          (config 150
+            (cellListCanonicalFinishStartLeftWithBase cells baseLeft)
+            (List.append ((markedCellsCodeBits cells).map some)
+              (some false :: rightTail))) =
+        { state := CLSS.halt
+          tape :=
+            Tape.move Direction.left
+              (tapeAtCells
+                (cellListCanonicalRestoredLeftWithBase cells baseLeft)
+                (some false :: rightTail)) } := by
   refine ⟨4 * cells.length + 1, ?_⟩
   rw [runConfig_add]
-  unfold cellListFinishStartConfig
-  rw [run_cellList_state150_markedCells]
-  change
-    CLSS.runConfig 1
-      (config 150 (cellListRestoredLeft cells)
-        (some false :: suffixTail.map some)) =
-      cellListHandoffConfig cells (false :: suffixTail)
-  unfold cellListHandoffConfig
-  cases hleft : cellListRestoredLeft cells with
-  | nil =>
-      simp [config, tapeAtCells,
-        cellListSuffix_lookup_150_false, keepMove,
-        runConfig, stepConfig,
-        transition, Tape.read, Tape.write,
-        Tape.move, Tape.moveLeft]
-  | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
-        run_cellList_state150_handoff_false cell left
-          (suffixTail.map some)
-
-private theorem run_cellList_canonical_finish_to_handoff
-    (cells : List (Option Bool)) (suffixTail : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (cellListCanonicalFinishStartConfig cells
-            (false :: suffixTail)) =
-        cellListCanonicalHandoffConfig cells (false :: suffixTail) := by
-  refine ⟨4 * cells.length + 1, ?_⟩
-  rw [runConfig_add]
-  unfold cellListCanonicalFinishStartConfig
-  rw [run_cellList_state150_markedCells]
-  change
-    CLSS.runConfig 1
-      (config 150 (cellListCanonicalRestoredLeft cells)
-        (some false :: suffixTail.map some)) =
-      cellListCanonicalHandoffConfig cells (false :: suffixTail)
-  unfold cellListCanonicalHandoffConfig
-  cases hleft : cellListCanonicalRestoredLeft cells with
-  | nil =>
-      simp [config, tapeAtCells,
-        cellListSuffix_lookup_150_false, keepMove,
-        runConfig, stepConfig,
-        transition, Tape.read, Tape.write,
-        Tape.move, Tape.moveLeft]
-  | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
-        run_cellList_state150_handoff_false cell left
-          (suffixTail.map some)
-
-private theorem run_cellList_canonical_finish_to_handoff_withBase
-    (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (cellListCanonicalFinishStartConfigWithBase cells baseLeft
-            (false :: suffixTail)) =
-        cellListCanonicalHandoffConfigWithBase cells baseLeft
-          (false :: suffixTail) := by
-  refine ⟨4 * cells.length + 1, ?_⟩
-  rw [runConfig_add]
-  unfold cellListCanonicalFinishStartConfigWithBase
   rw [run_cellList_state150_markedCells]
   change
     CLSS.runConfig 1
       (config 150
         (cellListCanonicalRestoredLeftWithBase cells baseLeft)
-        (some false :: suffixTail.map some)) =
-      cellListCanonicalHandoffConfigWithBase cells baseLeft
-        (false :: suffixTail)
-  unfold cellListCanonicalHandoffConfigWithBase
+        (some false :: rightTail)) =
+      { state := CLSS.halt
+        tape :=
+          Tape.move Direction.left
+            (tapeAtCells
+              (cellListCanonicalRestoredLeftWithBase cells baseLeft)
+              (some false :: rightTail)) }
   cases hleft : cellListCanonicalRestoredLeftWithBase cells baseLeft with
   | nil =>
       simp [config, tapeAtCells,
@@ -2392,7 +1771,22 @@ private theorem run_cellList_canonical_finish_to_handoff_withBase
   | cons cell left =>
       simpa [config, tapeAtCells, hleft] using
         run_cellList_state150_handoff_false cell left
-          (suffixTail.map some)
+          rightTail
+
+private theorem run_cellList_canonical_finish_to_handoff_withBase
+    (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
+    exists steps : Nat,
+      CLSS.runConfig steps
+          (cellListCanonicalFinishStartConfigWithBase cells baseLeft
+            (false :: suffixTail)) =
+        cellListCanonicalHandoffConfigWithBase cells baseLeft
+          (false :: suffixTail) := by
+  rcases run_cellList_canonical_finish_to_handoff_withBaseRightTail
+      cells baseLeft (suffixTail.map some) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListCanonicalFinishStartConfigWithBase,
+    cellListCanonicalHandoffConfigWithBase] using hsteps
 
 private theorem run_cellList_canonical_finish_to_handoff_withBaseAndRight
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool)
@@ -2403,67 +1797,12 @@ private theorem run_cellList_canonical_finish_to_handoff_withBaseAndRight
             cells baseLeft (false :: suffixTail) rightPadding) =
         cellListCanonicalHandoffConfigWithBaseAndRight cells baseLeft
           (false :: suffixTail) rightPadding := by
-  refine ⟨4 * cells.length + 1, ?_⟩
-  rw [runConfig_add]
-  unfold cellListCanonicalFinishStartConfigWithBaseAndRight
-  rw [run_cellList_state150_markedCells]
-  change
-    CLSS.runConfig 1
-      (config 150
-        (cellListCanonicalRestoredLeftWithBase cells baseLeft)
-        (some false ::
-          List.append (suffixTail.map some) rightPadding)) =
-      cellListCanonicalHandoffConfigWithBaseAndRight cells baseLeft
-        (false :: suffixTail) rightPadding
-  unfold cellListCanonicalHandoffConfigWithBaseAndRight
-  cases hleft : cellListCanonicalRestoredLeftWithBase cells baseLeft with
-  | nil =>
-      simp [config, tapeAtCells,
-        cellListSuffix_lookup_150_false, keepMove,
-        runConfig, stepConfig,
-        transition, Tape.read, Tape.write,
-        Tape.move, Tape.moveLeft]
-  | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
-        run_cellList_state150_handoff_false cell left
-          (List.append (suffixTail.map some) rightPadding)
-
-private theorem run_cellList_raw_to_canonical_handoff
-    (cells : List (Option Bool)) (suffixTail : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (CLSS.initial
-            (List.append (stageNatBits cells.length)
-              (List.append (cellsCodeBits cells)
-                (false :: suffixTail)))) =
-        cellListCanonicalHandoffConfig cells (false :: suffixTail) := by
-  rcases run_cellList_raw_marking_loop_from_state100
-      ([] : List (Option Bool)) cells (false :: suffixTail) with
-    ⟨markSteps, hmark⟩
-  have hmark' :
-      CLSS.runConfig markSteps
-          (config 100 []
-            (List.append ((stageNatBits cells.length).map some)
-              (List.append ((cellsCodeBits cells).map some)
-                (some false :: suffixTail.map some)))) =
-        cellListCanonicalFinishStartConfig cells
-          (false :: suffixTail) := by
-    simpa using hmark
-  rcases run_cellList_canonical_finish_to_handoff cells suffixTail with
-    ⟨finishSteps, hfinish⟩
-  refine ⟨markSteps + finishSteps, ?_⟩
-  rw [runConfig_add]
-  rw [cellListSuffixScannerDescription_initial_eq_config]
-  rw [show
-      (List.append (stageNatBits cells.length)
-        (List.append (cellsCodeBits cells)
-          (false :: suffixTail))).map some =
-        List.append ((stageNatBits cells.length).map some)
-          (List.append ((cellsCodeBits cells).map some)
-            (some false :: suffixTail.map some)) by
-    simp [List.map_append]]
-  rw [hmark']
-  exact hfinish
+  rcases run_cellList_canonical_finish_to_handoff_withBaseRightTail
+      cells baseLeft (List.append (suffixTail.map some) rightPadding) with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [cellListCanonicalFinishStartConfigWithBaseAndRight,
+    cellListCanonicalHandoffConfigWithBaseAndRight] using hsteps
 
 theorem run_cellList_raw_to_canonical_handoff_withBase
     (cells baseLeft : List (Option Bool)) (suffixTail : Word Bool) :
@@ -2610,26 +1949,6 @@ theorem run_boolWord_raw_to_canonical_handoff_withBase
   simpa [boolWordCanonicalHandoffConfigWithBase] using
     run_cellList_raw_to_canonical_handoff_withBase
       (w.map some) baseLeft suffixTail
-
-private theorem run_cellList_marking_loop_to_handoff
-    (processed : List (Option Bool)) (cell : Option Bool)
-    (rest : List (Option Bool)) (suffixTail : Word Bool) :
-    exists steps : Nat,
-      CLSS.runConfig steps
-          (cellListMarkingState120 processed cell rest
-            (false :: suffixTail)) =
-        cellListHandoffConfig (List.append processed (cell :: rest))
-          (false :: suffixTail) := by
-  rcases run_cellList_marking_loop_from_state120 processed cell rest
-      (false :: suffixTail) with
-    ⟨markSteps, hmark⟩
-  rcases run_cellList_finish_to_handoff
-      (List.append processed (cell :: rest)) suffixTail with
-    ⟨finishSteps, hfinish⟩
-  refine ⟨markSteps + finishSteps, ?_⟩
-  rw [runConfig_add]
-  rw [hmark]
-  exact hfinish
 
 end DovetailLayoutScanner
 end CanonicalLayouts
