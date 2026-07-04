@@ -289,7 +289,7 @@ theorem encodeNat_eq_replicate_tick_done
   | succ n ih =>
       simp [encodeNat, ih, List.replicate_succ]
 
-private theorem encodeCodeWordAsInput_encodeNat
+theorem encodeCodeWordAsInput_encodeNat
     (n : Nat) :
     encodeCodeWordAsInput
         (encodeNat n) =
@@ -300,7 +300,7 @@ private theorem encodeCodeWordAsInput_encodeNat
   rw [encodeNat_eq_replicate_tick_done,
     encodeCodeWordAsInput_append]
 
-private theorem projectionDoneCodeCells_filterMap :
+theorem projectionDoneCodeCells_filterMap :
     projectionDoneCodeCells.filterMap (fun cell => cell) =
       encodeCodeWordAsInput [MachineCodeSymbol.done] := by
   simpa [projectionDoneCodeCells] using
