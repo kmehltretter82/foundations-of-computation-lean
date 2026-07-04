@@ -527,7 +527,7 @@ def RejectPostFieldRemainingGapsSpec
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
           L =
         List.append pref [leftBit] ->
-      normalizer.HaltsFromTape
+      normalizer.HaltsFromTapeEquiv
         (rejectPostFieldHandoffAfterFirstGapTape
           L pref leftBit deletedTail)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -553,7 +553,7 @@ theorem rejectPostFieldHandoff_remainingGaps_haltsFrom_of_config_and_payload_app
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
           L =
         List.append pref [leftBit]) :
-    normalizer.HaltsFromTape
+    normalizer.HaltsFromTapeEquiv
       (Tape.move Direction.left
         (Tape.move Direction.right
           (rejectPostFieldHandoffAfterFirstGapTape
@@ -580,7 +580,7 @@ theorem rejectPostFieldHandoff_localGap_haltsFrom_of_config_and_payload_append_l
         List.append pref [leftBit]) :
     (SeqViaCanonical
       sentinelGapCompactorDescription
-      normalizer).HaltsFromTape
+      normalizer).HaltsFromTapeEquiv
       (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
         (rightBlankLocalGapBaseLeft deletedTail.length
           (selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftBase
@@ -595,12 +595,12 @@ theorem rejectPostFieldHandoff_localGap_haltsFrom_of_config_and_payload_append_l
       (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
         false L 0) := by
   exact
-    SeqViaCanonical_haltsFromTape_of_haltsFromTape
+    SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
       sentinelGapCompactorDescription_subroutineReady
       hnormalizer.left
       (rejectPostFieldHandoff_firstGap_haltsFrom_of_config_and_payload_append_last
-        L pref leftBit deletedTail hdeleted hpayload)
-      rfl
+        L pref leftBit deletedTail hdeleted hpayload).toEquiv
+      (Tape.Equiv.refl _)
       (rejectPostFieldHandoff_remainingGaps_haltsFrom_of_config_and_payload_append_last
         hnormalizer L pref leftBit deletedTail hdeleted hpayload)
 
@@ -614,7 +614,7 @@ theorem rejectPostFieldHandoff_rightMove_haltsFrom_of_payload_append_last
         List.append pref [leftBit]) :
     (SeqViaCanonical
       sentinelGapCompactorDescription
-      normalizer).HaltsFromTape
+      normalizer).HaltsFromTapeEquiv
       (Tape.move Direction.right
         (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
           L 0))
@@ -635,7 +635,7 @@ theorem rejectPostFieldHandoff_rightMove_haltsFrom
     (L : DovetailLayout) :
     (SeqViaCanonical
       sentinelGapCompactorDescription
-      normalizer).HaltsFromTape
+      normalizer).HaltsFromTapeEquiv
       (Tape.move Direction.right
         (selectedProjectionPaddedTailCleanupScratchCountRejectAfterFirstFieldEraseTape
           L 0))
@@ -655,7 +655,7 @@ theorem rejectPostFieldHandoff_haltsFrom
     (L : DovetailLayout) :
     (SeqViaCanonical
       sentinelGapCompactorDescription
-      normalizer).HaltsFromTape
+      normalizer).HaltsFromTapeEquiv
       (selectedProjectionPaddedTailCleanupScratchCountRejectPostFieldHandoffTape
         L 0)
       (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
@@ -1065,7 +1065,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefix
       SeqViaCanonical_subroutineReady
         sentinelGapCompactorDescription_subroutineReady
         hnormalizer.left,
-      fun L => (rejectPostFieldHandoff_haltsFrom hnormalizer L).toEquiv⟩
+      fun L => rejectPostFieldHandoff_haltsFrom hnormalizer L⟩
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction :=
