@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingRejectRoute
 
 set_option doc.verso true
@@ -46,33 +47,9 @@ theorem scratchCounter_replicate_false_append_cons
       List.append
         (List.replicate (markers + 1) (some false : Option Bool))
         tail := by
-  induction markers with
-  | zero =>
-      rfl
-  | succ markers ih =>
-      calc
-        List.append
-            (List.replicate (markers + 1)
-              (some false : Option Bool))
-            (some false :: tail) =
-          some false ::
-            List.append
-              (List.replicate markers (some false : Option Bool))
-              (some false :: tail) := by
-              simp [List.replicate_succ]
-        _ =
-          some false ::
-            List.append
-              (List.replicate (markers + 1)
-                (some false : Option Bool))
-              tail := by
-              rw [ih]
-        _ =
-          List.append
-            (List.replicate (markers + 1 + 1)
-              (some false : Option Bool))
-            tail := by
-              simp [List.replicate_succ]
+  exact
+    list_replicate_append_self
+      (some false : Option Bool) markers tail
 
 theorem scratchCounter_replicate_none_append_cons
     (markers : Nat) (tail : List (Option Bool)) :
@@ -82,30 +59,9 @@ theorem scratchCounter_replicate_none_append_cons
       List.append
         (List.replicate (markers + 1) (none : Option Bool))
         tail := by
-  induction markers with
-  | zero =>
-      rfl
-  | succ markers ih =>
-      calc
-        List.append
-            (List.replicate (markers + 1) (none : Option Bool))
-            (none :: tail) =
-          none ::
-            List.append
-              (List.replicate markers (none : Option Bool))
-              (none :: tail) := by
-              simp [List.replicate_succ]
-        _ =
-          none ::
-            List.append
-              (List.replicate (markers + 1) (none : Option Bool))
-              tail := by
-              rw [ih]
-        _ =
-          List.append
-            (List.replicate (markers + 1 + 1) (none : Option Bool))
-            tail := by
-              simp [List.replicate_succ]
+  exact
+    list_replicate_append_self
+      (none : Option Bool) markers tail
 
 theorem tapeAtCells_moveRight_cons
     (leftRev : List (Option Bool)) (cell : Option Bool)
