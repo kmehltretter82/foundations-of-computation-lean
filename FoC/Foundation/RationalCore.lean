@@ -46,7 +46,7 @@ def Reduced (q : PositiveRatRep) : Prop :=
 def SquareRootOfNat (q : PositiveRatRep) (c : Nat) : Prop :=
   q.num * q.num = (c : Int) * (q.den : Int) * (q.den : Int)
 
-theorem squareRootOfNat_natAbs {q : PositiveRatRep} {c : Nat}
+private theorem squareRootOfNat_natAbs {q : PositiveRatRep} {c : Nat}
     (h : SquareRootOfNat q c) :
     q.num.natAbs * q.num.natAbs = c * q.den * q.den := by
   have habs := congrArg Int.natAbs h
@@ -96,7 +96,7 @@ theorem three_dvd_of_three_dvd_square {n : Nat} (h : 3 ∣ n * n) : 3 ∣ n := b
           rw [h2] at h
           contradiction
 
-theorem no_coprime_square_root_two {m n : Nat}
+private theorem no_coprime_square_root_two {m n : Nat}
     (hcop : Nat.Coprime m n) (h : m * m = 2 * (n * n)) : False := by
   have hm2div : 2 ∣ m * m := by
     rw [h]
@@ -118,7 +118,7 @@ theorem no_coprime_square_root_two {m n : Nat}
       exact Nat.not_coprime_of_dvd_of_dvd
         (by decide : 1 < 2) (Exists.intro k hm) hndiv hcop
 
-theorem no_coprime_square_root_three {m n : Nat}
+private theorem no_coprime_square_root_three {m n : Nat}
     (hcop : Nat.Coprime m n) (h : m * m = 3 * (n * n)) : False := by
   have hm2div : 3 ∣ m * m := by
     rw [h]

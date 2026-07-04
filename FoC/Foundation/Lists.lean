@@ -120,7 +120,7 @@ lemmas turn non-duplication failures or length bounds into explicit repeated
 entries.
 -/
 
-theorem list_not_nodup_exists_duplicate_split {α : Type u} [DecidableEq α]
+private theorem list_not_nodup_exists_duplicate_split {α : Type u} [DecidableEq α]
     {xs : List α} (h : ¬ xs.Nodup) :
     exists pre a mid post, xs = pre ++ [a] ++ mid ++ [a] ++ post := by
   induction xs with
@@ -156,7 +156,7 @@ theorem list_not_nodup_exists_duplicate_split {α : Type u} [DecidableEq α]
                         rw [hpost]
                         rfl
 
-theorem list_duplicate_indices_of_split {α : Type u}
+private theorem list_duplicate_indices_of_split {α : Type u}
     {xs pre mid post : List α} {a : α}
     (h : xs = pre ++ [a] ++ mid ++ [a] ++ post) :
     exists i j, i < j ∧ j < xs.length ∧ xs[i]? = some a ∧ xs[j]? = some a := by

@@ -238,7 +238,7 @@ length theorem is the list-level core of the book's finite function-space
 cardinality law.
 -/
 
-def ExtendTuples {alpha : Type u} (choices : List alpha) : List (List alpha) -> List (List alpha)
+private def ExtendTuples {alpha : Type u} (choices : List alpha) : List (List alpha) -> List (List alpha)
   | [] => []
   | tail :: tails => (choices.map fun x => x :: tail) ++ ExtendTuples choices tails
 
@@ -246,7 +246,7 @@ def Tuples {alpha : Type u} (choices : List alpha) : Nat -> List (List alpha)
   | 0 => [[]]
   | n + 1 => ExtendTuples choices (Tuples choices n)
 
-theorem length_extendTuples {alpha : Type u} (choices : List alpha) (tails : List (List alpha)) :
+private theorem length_extendTuples {alpha : Type u} (choices : List alpha) (tails : List (List alpha)) :
     (ExtendTuples choices tails).length = tails.length * choices.length := by
   induction tails with
   | nil => simp [ExtendTuples]

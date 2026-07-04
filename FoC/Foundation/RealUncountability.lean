@@ -31,26 +31,26 @@ Each Boolean digit becomes either {lit}`0` or {lit}`2`. Partial sums and probe
 rationals then separate streams at the first coordinate where they differ.
 -/
 
-def cantorDigit (b : Bool) : Nat :=
+private def cantorDigit (b : Bool) : Nat :=
   if b then 2 else 0
 
-theorem cantorDigit_lt_four (b : Bool) : cantorDigit b < 4 := by
+private theorem cantorDigit_lt_four (b : Bool) : cantorDigit b < 4 := by
   cases b <;> decide
 
-def cantorNumerator (s : DigitStream) : Nat -> Nat
+private def cantorNumerator (s : DigitStream) : Nat -> Nat
   | 0 => 0
   | n + 1 => 4 * cantorNumerator s n + cantorDigit (s n)
 
-theorem pow_four_pos (n : Nat) : 0 < 4 ^ n :=
+private theorem pow_four_pos (n : Nat) : 0 < 4 ^ n :=
   Nat.pow_pos (by decide : 0 < 4)
 
-def streamPartial (s : DigitStream) (n : Nat) : QRat :=
+private def streamPartial (s : DigitStream) (n : Nat) : QRat :=
   QRat.natFrac (cantorNumerator s n) (4 ^ n) (pow_four_pos n)
 
-def streamProbe (pref m : Nat) : QRat :=
+private def streamProbe (pref m : Nat) : QRat :=
   QRat.natFrac (4 * pref + 1) (4 ^ (m + 1)) (pow_four_pos (m + 1))
 
-theorem cantorNumerator_lt_pow_four (s : DigitStream) (n : Nat) :
+private theorem cantorNumerator_lt_pow_four (s : DigitStream) (n : Nat) :
     cantorNumerator s n < 4 ^ n := by
   induction n with
   | zero => simp [cantorNumerator]
@@ -59,18 +59,18 @@ theorem cantorNumerator_lt_pow_four (s : DigitStream) (n : Nat) :
       have hd := cantorDigit_lt_four (s n)
       lia
 
-theorem streamPartial_lt_one (s : DigitStream) (n : Nat) :
+private theorem streamPartial_lt_one (s : DigitStream) (n : Nat) :
     streamPartial s n < (1 : QRat) := by
   exact QRat.one_gt_natFrac (pow_four_pos n) (cantorNumerator_lt_pow_four s n)
 
-theorem neg_one_lt_streamPartial_zero (s : DigitStream) :
+private theorem neg_one_lt_streamPartial_zero (s : DigitStream) :
     QRat.ofInt (-1) < streamPartial s 0 := by
   unfold streamPartial QRat.natFrac QRat.ofInt
   apply QRat.lt_mk_of_rawLt
   unfold RatPair.RawLt RatPair.ofInt
   simp [cantorNumerator]
 
-theorem cantorNumerator_suffix_lt (s : DigitStream) (m k : Nat) :
+private theorem cantorNumerator_suffix_lt (s : DigitStream) (m k : Nat) :
     cantorNumerator s (m + k) < cantorNumerator s m * 4 ^ k + 4 ^ k := by
   induction k with
   | zero => simp
@@ -87,7 +87,7 @@ theorem cantorNumerator_suffix_lt (s : DigitStream) (m k : Nat) :
         _ = cantorNumerator s m * 4 ^ (k + 1) + 4 ^ (k + 1) := by
               simp [Nat.pow_succ, Nat.mul_add, Nat.mul_assoc, Nat.mul_comm]
 
-theorem cantorNumerator_prefix_scaled_le (s : DigitStream) (m k : Nat) :
+private theorem cantorNumerator_prefix_scaled_le (s : DigitStream) (m k : Nat) :
     cantorNumerator s m * 4 ^ k ≤ cantorNumerator s (m + k) := by
   induction k with
   | zero => simp
@@ -103,17 +103,17 @@ theorem cantorNumerator_prefix_scaled_le (s : DigitStream) (m k : Nat) :
         _ ≤ 4 * cantorNumerator s (m + k) + cantorDigit (s (m + k)) := by
               exact Nat.le_add_right _ _
 
-theorem cantorNumerator_succ_false {s : DigitStream} {m : Nat}
+private theorem cantorNumerator_succ_false {s : DigitStream} {m : Nat}
     (h : s m = false) :
     cantorNumerator s (m + 1) = 4 * cantorNumerator s m := by
   simp [cantorNumerator, cantorDigit, h]
 
-theorem cantorNumerator_succ_true {s : DigitStream} {m : Nat}
+private theorem cantorNumerator_succ_true {s : DigitStream} {m : Nat}
     (h : s m = true) :
     cantorNumerator s (m + 1) = 4 * cantorNumerator s m + 2 := by
   simp [cantorNumerator, cantorDigit, h]
 
-theorem cross_lt_probe_of_prefix_scaled_le {N P n k : Nat}
+private theorem cross_lt_probe_of_prefix_scaled_le {N P n k : Nat}
     (h : N * 4 ^ k ≤ P) :
     N * 4 ^ (n + k + 1) < (4 * P + 1) * 4 ^ n := by
   have hscale : 4 * (N * 4 ^ k) ≤ 4 * P := by
@@ -128,7 +128,7 @@ theorem cross_lt_probe_of_prefix_scaled_le {N P n k : Nat}
           simp [Nat.pow_add, Nat.pow_succ, Nat.mul_comm, Nat.mul_left_comm]
     _ < (4 * P + 1) * 4 ^ n := hmul
 
-theorem cross_lt_probe_of_suffix_lt {N P m k : Nat}
+private theorem cross_lt_probe_of_suffix_lt {N P m k : Nat}
     (h : N < (4 * P + 1) * 4 ^ k) :
     N * 4 ^ (m + 1) < (4 * P + 1) * 4 ^ (m + 1 + k) := by
   have hpos : 0 < 4 ^ (m + 1) := Nat.pow_pos (by decide : 0 < 4)
@@ -139,7 +139,7 @@ theorem cross_lt_probe_of_suffix_lt {N P m k : Nat}
     _ = (4 * P + 1) * 4 ^ (m + 1 + k) := by
           simp [Nat.pow_add, Nat.mul_assoc, Nat.mul_comm, Nat.mul_left_comm]
 
-theorem streamProbe_lt_partial_of_true {s : DigitStream} {m : Nat}
+private theorem streamProbe_lt_partial_of_true {s : DigitStream} {m : Nat}
     (htrue : s m = true) :
     streamProbe (cantorNumerator s m) m < streamPartial s (m + 1) := by
   have hnum : cantorNumerator s (m + 1) = 4 * cantorNumerator s m + 2 :=
@@ -148,7 +148,7 @@ theorem streamProbe_lt_partial_of_true {s : DigitStream} {m : Nat}
   rw [hnum]
   exact QRat.natFrac_lt_natFrac (pow_four_pos (m + 1)) (by lia)
 
-theorem streamPartial_lt_probe_of_false {s : DigitStream} {m : Nat}
+private theorem streamPartial_lt_probe_of_false {s : DigitStream} {m : Nat}
     (hfalse : s m = false) (n : Nat) :
     streamPartial s n < streamProbe (cantorNumerator s m) m := by
   by_cases hnm : n ≤ m
@@ -221,7 +221,7 @@ def streamToReal (s : DigitStream) : Real where
             exists r
             exact And.intro hr.left (Exists.intro n hr.right)
 
-theorem not_streamToReal_lower_probe_of_false {s : DigitStream} {m : Nat}
+private theorem not_streamToReal_lower_probe_of_false {s : DigitStream} {m : Nat}
     (hfalse : s m = false) :
     ¬ (streamToReal s).lower (streamProbe (cantorNumerator s m) m) := by
   intro h
@@ -229,7 +229,7 @@ theorem not_streamToReal_lower_probe_of_false {s : DigitStream} {m : Nat}
   | intro n hn =>
       exact QRat.lt_asymm (streamPartial_lt_probe_of_false hfalse n) hn
 
-theorem streamToReal_bit_eq_of_prefix_eq {s t : DigitStream}
+private theorem streamToReal_bit_eq_of_prefix_eq {s t : DigitStream}
     (hreal : streamToReal s = streamToReal t) {m : Nat}
     (hpref : cantorNumerator s m = cantorNumerator t m) :
     s m = t m := by
@@ -282,7 +282,7 @@ def rationalSet : FSet Real :=
 def irrationalSet : FSet Real :=
   fun x => Irrational x
 
-theorem rationalSet_subset_univ : FSet.Subset rationalSet (FSet.Univ : FSet Real) := by
+private theorem rationalSet_subset_univ : FSet.Subset rationalSet (FSet.Univ : FSet Real) := by
   intro x _
   exact True.intro
 
@@ -353,7 +353,7 @@ theorem uncountable_univ : FSet.Uncountable (FSet.Univ : FSet Real) :=
   uncountable_univ_of_digitStream_injective
     DigitStream.streamToReal DigitStream.streamToReal_injective
 
-theorem irrationalSet_equal_univ_diff_rationalSet :
+private theorem irrationalSet_equal_univ_diff_rationalSet :
     FSet.Equal irrationalSet (FSet.Diff (FSet.Univ : FSet Real) rationalSet) := by
   intro x
   constructor

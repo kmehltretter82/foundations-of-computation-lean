@@ -52,7 +52,7 @@ def Uncountable (A : FSet alpha) : Prop :=
 def EvenNaturals : FSet Nat :=
   fun n => exists k, n = 2 * k
 
-def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha :=
+private def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha :=
   if n % 2 = 0 then f (n / 2) else g (n / 2)
 
 /-!
@@ -61,11 +61,11 @@ def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Option alpha 
 The first examples enumerate all natural numbers and the even natural numbers.
 -/
 
-theorem interleave_even (f g : Nat -> Option alpha) (n : Nat) :
+private theorem interleave_even (f g : Nat -> Option alpha) (n : Nat) :
     InterleaveEnumerations f g (2 * n) = f n := by
   simp [InterleaveEnumerations]
 
-theorem interleave_odd (f g : Nat -> Option alpha) (n : Nat) :
+private theorem interleave_odd (f g : Nat -> Option alpha) (n : Nat) :
     InterleaveEnumerations f g (2 * n + 1) = g n := by
   have hdiv : (2 * n + 1) / 2 = n := by
     rw [Nat.mul_add_div (by decide : 2 > 0)]
@@ -447,7 +447,7 @@ def DiagonalList : Nat -> List (Nat × Nat)
   | 0 => [(0, 0)]
   | n + 1 => (0, n + 1) :: (DiagonalList n).map (fun p => (p.1 + 1, p.2))
 
-theorem zero_mem_diagonalList (b : Nat) : (0, b) ∈ DiagonalList b := by
+private theorem zero_mem_diagonalList (b : Nat) : (0, b) ∈ DiagonalList b := by
   cases b with
   | zero => simp [DiagonalList]
   | succ b => simp [DiagonalList]
