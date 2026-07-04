@@ -253,6 +253,27 @@ def structuredBoolWordRawBitsDecoderOutputRightBlankTape
   tapeAtCells
     (List.append (bits.reverse.map some) [none]) []
 
+def structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+    (bitCount : Nat) (padding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      (List.replicate (bitCount + 1) (none : Option Bool))
+      padding)
+
+def structuredBoolWordRawBitsDecoderOutputBufferTape
+    (processed : Word Bool) (remainingCount : Nat)
+    (padding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append (processed.reverse.map some) [none])
+    (List.append
+      (List.replicate (remainingCount + 1) (none : Option Bool))
+      padding)
+
+def structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  structuredBoolWordRawBitsDecoderOutputBufferTape bits 0 padding
+
 def structuredBoolWordRawBitsDecoderSourceTargetTape
     (bits suffixTail : Word Bool)
     (rightPadding : List (Option Bool)) : Tape Bool :=
@@ -411,6 +432,94 @@ private theorem structuredBoolWordRawBitsDecoder_run_prefix
         ih (markers + 1)
           (List.append (tickBits.reverse.map some) sourceLeft)
 
+private theorem structuredBoolWordRawBitsDecoder_run_prefix_withOutput
+    (n markers : Nat)
+    (sourceLeft tail : List (Option Bool)) (output : Tape Bool)
+    (houtput : Tape.read output = none) :
+    structuredBoolWordRawBitsDecoderDescription.runConfig
+        (4 * n + 4)
+        { state := 0
+          tapes :=
+            [ tapeAtCells sourceLeft
+                (List.append ((stageNatBits n).map some) tail)
+            , structuredBoolWordRawBitsDecoderCounterWriteTape markers
+            , output ] } =
+      { state := 10
+        tapes :=
+          [ tapeAtCells
+              (List.append ((stageNatBits n).reverse.map some)
+                sourceLeft)
+              tail
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape
+              (markers + n) 1
+          , output ] } := by
+  change output.head = none at houtput
+  induction n generalizing markers sourceLeft with
+  | zero =>
+      cases markers <;>
+        simp [structuredBoolWordRawBitsDecoderDescription,
+          structuredBoolWordRawBitsDecoderRow,
+          structuredBoolWordRawBitsDecoderMoveRight,
+          structuredBoolWordRawBitsDecoderMoveLeft,
+          structuredBoolWordRawBitsDecoderStay,
+          structuredBoolWordRawBitsDecoderCounterWriteTape,
+          structuredBoolWordRawBitsDecoderCounterDecodeTape,
+          stageNatBits_zero,
+          tapeAtCells, Structured.Description.runConfig,
+          Structured.Description.stepConfig,
+          Structured.Description.lookupTransition,
+          Structured.Description.Matches,
+          Structured.TapeAction.apply,
+          Structured.HeadMove.apply,
+          Tape.read, houtput, Tape.move, Tape.moveLeft, Tape.moveRight]
+      all_goals
+        cases tail <;> simp [List.replicate_succ]
+  | succ n ih =>
+      rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by lia]
+      rw [Structured.Description.runConfig_add]
+      have htick :
+          structuredBoolWordRawBitsDecoderDescription.runConfig 4
+            { state := 0
+              tapes :=
+                [ tapeAtCells sourceLeft
+                    (List.append
+                      ((stageNatBits (n + 1)).map some) tail)
+                , structuredBoolWordRawBitsDecoderCounterWriteTape
+                    markers
+                , output ] } =
+          { state := 0
+            tapes :=
+              [ tapeAtCells
+                  (List.append (tickBits.reverse.map some) sourceLeft)
+                  (List.append ((stageNatBits n).map some) tail)
+              , structuredBoolWordRawBitsDecoderCounterWriteTape
+                  (markers + 1)
+              , output ] } := by
+        simp [structuredBoolWordRawBitsDecoderDescription,
+          structuredBoolWordRawBitsDecoderRow,
+          structuredBoolWordRawBitsDecoderMoveRight,
+          structuredBoolWordRawBitsDecoderWriteRight,
+          structuredBoolWordRawBitsDecoderStay,
+          structuredBoolWordRawBitsDecoderCounterWriteTape,
+          stageNatBits_succ, tickBits, encodeCodeSymbolAsInput,
+          tapeAtCells, Structured.Description.runConfig,
+          Structured.Description.stepConfig,
+          Structured.Description.lookupTransition,
+          Structured.Description.Matches,
+          Structured.TapeAction.apply,
+          Structured.HeadMove.apply,
+          Tape.read, houtput, Tape.write, Tape.move, Tape.moveRight,
+          List.replicate_succ]
+        cases htail :
+            List.map some (stageNatBits n) ++ tail <;>
+          rfl
+      rw [htick]
+      simpa [stageNatBits_succ, tickBits, encodeCodeSymbolAsInput,
+        List.map_append, List.reverse_append, List.append_assoc,
+        Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
+        ih (markers + 1)
+          (List.append (tickBits.reverse.map some) sourceLeft)
+
 private theorem structuredBoolWordRawBitsDecoder_run_decode_loop
     (remaining processed : Word Bool)
     (sourceLeft : List (Option Bool))
@@ -511,6 +620,125 @@ private theorem structuredBoolWordRawBitsDecoder_run_decode_loop
             Structured.HeadMove.apply,
             Tape.read, Tape.write, Tape.move, Tape.moveLeft,
             Tape.moveRight, List.reverse_append]
+        all_goals
+          constructor
+          · cases htail :
+              List.map some (cellsCodeBits (List.map some rest)) ++
+                some false ::
+                  (List.map some suffixTail ++ none :: rightPadding) <;>
+              rfl
+          · cases rest <;> simp [List.replicate_succ]
+      rw [hcell]
+      simpa [cellsCodeBits, List.map_append, List.reverse_append,
+        List.append_assoc, Nat.add_assoc, Nat.add_comm,
+        Nat.add_left_comm] using
+        ih (List.append processed [bit])
+          (List.append ((cellCodeBits (some bit)).reverse.map some)
+            sourceLeft)
+
+private theorem structuredBoolWordRawBitsDecoder_run_decode_loop_withPadding
+    (remaining processed : Word Bool)
+    (sourceLeft : List (Option Bool))
+    (suffixTail : Word Bool)
+    (rightPadding outputPadding : List (Option Bool)) :
+    structuredBoolWordRawBitsDecoderDescription.runConfig
+        (4 * remaining.length + 1)
+        { state := 10
+          tapes :=
+            [ tapeAtCells sourceLeft
+                (List.append
+                  ((cellsCodeBits (remaining.map some)).map some)
+                  (some false ::
+                    List.append (suffixTail.map some)
+                      (none :: rightPadding)))
+            , structuredBoolWordRawBitsDecoderCounterDecodeTape
+                remaining.length (processed.length + 1)
+            , structuredBoolWordRawBitsDecoderOutputBufferTape
+                processed remaining.length outputPadding ] } =
+      { state := 49
+        tapes :=
+          [ tapeAtCells
+              (List.append
+                ((cellsCodeBits (remaining.map some)).reverse.map some)
+                sourceLeft)
+              (some false ::
+                List.append (suffixTail.map some)
+                  (none :: rightPadding))
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              (processed.length + remaining.length + 1)
+          , structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding
+              (List.append processed remaining) outputPadding ] } := by
+  induction remaining generalizing processed sourceLeft with
+  | nil =>
+      simp [structuredBoolWordRawBitsDecoderDescription,
+        structuredBoolWordRawBitsDecoderRow,
+        structuredBoolWordRawBitsDecoderStay,
+        structuredBoolWordRawBitsDecoderCounterDecodeTape,
+        structuredBoolWordRawBitsDecoderOutputBufferTape,
+        structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
+        cellsCodeBits, tapeAtCells,
+        Structured.Description.runConfig,
+        Structured.Description.stepConfig,
+        Structured.Description.lookupTransition,
+        Structured.Description.Matches,
+        Structured.TapeAction.apply,
+        Structured.HeadMove.apply,
+        Tape.read]
+  | cons bit rest ih =>
+      rw [show 4 * (bit :: rest).length + 1 =
+          4 + (4 * rest.length + 1) by
+        simp
+        lia]
+      rw [Structured.Description.runConfig_add]
+      have hcell :
+          structuredBoolWordRawBitsDecoderDescription.runConfig 4
+            { state := 10
+              tapes :=
+                [ tapeAtCells sourceLeft
+                    (List.append
+                      ((cellsCodeBits ((bit :: rest).map some)).map some)
+                      (some false ::
+                        List.append (suffixTail.map some)
+                          (none :: rightPadding)))
+                , structuredBoolWordRawBitsDecoderCounterDecodeTape
+                    (bit :: rest).length (processed.length + 1)
+                , structuredBoolWordRawBitsDecoderOutputBufferTape
+                    processed (bit :: rest).length outputPadding ] } =
+          { state := 10
+            tapes :=
+              [ tapeAtCells
+                  (List.append ((cellCodeBits (some bit)).reverse.map some)
+                    sourceLeft)
+                  (List.append
+                    ((cellsCodeBits (rest.map some)).map some)
+                    (some false ::
+                      List.append (suffixTail.map some)
+                        (none :: rightPadding)))
+              , structuredBoolWordRawBitsDecoderCounterDecodeTape
+                  rest.length (processed.length + 2)
+              , structuredBoolWordRawBitsDecoderOutputBufferTape
+                  (List.append processed [bit]) rest.length
+                  outputPadding ] } := by
+        cases bit <;>
+          simp [structuredBoolWordRawBitsDecoderDescription,
+            structuredBoolWordRawBitsDecoderRow,
+            structuredBoolWordRawBitsDecoderMoveRight,
+            structuredBoolWordRawBitsDecoderStay,
+            structuredBoolWordRawBitsDecoderEraseLeft,
+            structuredBoolWordRawBitsDecoderWriteRight,
+            structuredBoolWordRawBitsDecoderCounterDecodeTape,
+            structuredBoolWordRawBitsDecoderOutputBufferTape,
+            cellsCodeBits, cellCodeBits, encodeCell,
+            encodeCodeWordAsInput, encodeCodeSymbolAsInput,
+            tapeAtCells, Structured.Description.runConfig,
+            Structured.Description.stepConfig,
+            Structured.Description.lookupTransition,
+            Structured.Description.Matches,
+            Structured.TapeAction.apply,
+            Structured.HeadMove.apply,
+            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+            Tape.moveRight, List.reverse_append,
+            List.replicate_succ]
         all_goals
           constructor
           · cases htail :
@@ -678,6 +906,85 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind
     structuredBoolWordRawBitsDecoder_run_output_rewind_loop
       bits.reverse [none] sourceLeft sourceRight counterBlanks
 
+private theorem structuredBoolWordRawBitsDecoder_run_output_rewind_withPadding
+    (bits : Word Bool) (sourceLeft sourceRight : List (Option Bool))
+    (counterBlanks : Nat) (outputPadding : List (Option Bool)) :
+    structuredBoolWordRawBitsDecoderDescription.runConfig
+        (bits.length + 2)
+        { state := 49
+          tapes :=
+            [ tapeAtCells sourceLeft (some false :: sourceRight)
+            , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                counterBlanks
+            , structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding
+                bits outputPadding ] } =
+      { state := structuredBoolWordRawBitsDecoderDescription.halt
+        tapes :=
+          [ tapeAtCells sourceLeft (some false :: sourceRight)
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              counterBlanks
+          , rightEdgeScanSourceTapeFromLeft [none] bits
+              outputPadding ] } := by
+  rw [show bits.length + 2 = 1 + (bits.reverse.length + 1) by
+    simp
+    lia]
+  rw [Structured.Description.runConfig_add]
+  have hstep :
+      structuredBoolWordRawBitsDecoderDescription.runConfig 1
+        { state := 49
+          tapes :=
+            [ tapeAtCells sourceLeft (some false :: sourceRight)
+            , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                counterBlanks
+            , structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding
+                bits outputPadding ] } =
+      { state := 50
+        tapes :=
+          [ tapeAtCells sourceLeft (some false :: sourceRight)
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              counterBlanks
+          , structuredBoolWordRawBitsDecoderOutputRewindTape
+              bits.reverse (none :: outputPadding) ] } := by
+    cases hrev : bits.reverse with
+    | nil =>
+        simp [structuredBoolWordRawBitsDecoderDescription,
+          structuredBoolWordRawBitsDecoderRow,
+          structuredBoolWordRawBitsDecoderMoveLeft,
+          structuredBoolWordRawBitsDecoderStay,
+          structuredBoolWordRawBitsDecoderCounterDecodeTape,
+          structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
+          structuredBoolWordRawBitsDecoderOutputBufferTape,
+          structuredBoolWordRawBitsDecoderOutputRewindTape,
+          tapeAtCells, Structured.Description.runConfig,
+          Structured.Description.stepConfig,
+          Structured.Description.lookupTransition,
+          Structured.Description.Matches,
+          Structured.TapeAction.apply,
+          Structured.HeadMove.apply,
+          Tape.read, Tape.move, Tape.moveLeft, hrev]
+    | cons bit rest =>
+        cases bit <;>
+          simp [structuredBoolWordRawBitsDecoderDescription,
+            structuredBoolWordRawBitsDecoderRow,
+            structuredBoolWordRawBitsDecoderMoveLeft,
+            structuredBoolWordRawBitsDecoderStay,
+            structuredBoolWordRawBitsDecoderCounterDecodeTape,
+            structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
+            structuredBoolWordRawBitsDecoderOutputBufferTape,
+            structuredBoolWordRawBitsDecoderOutputRewindTape,
+            tapeAtCells, Structured.Description.runConfig,
+            Structured.Description.stepConfig,
+            Structured.Description.lookupTransition,
+            Structured.Description.Matches,
+            Structured.TapeAction.apply,
+            Structured.HeadMove.apply,
+            Tape.read, Tape.move, Tape.moveLeft, hrev]
+  rw [hstep]
+  simpa [rightEdgeScanSourceTapeFromLeft] using
+    structuredBoolWordRawBitsDecoder_run_output_rewind_loop
+      bits.reverse (none :: outputPadding) sourceLeft sourceRight
+      counterBlanks
+
 theorem structuredBoolWordRawBitsDecoderDescription_run
     (bits suffixTail : Word Bool)
     (rightPadding : List (Option Bool)) :
@@ -786,6 +1093,207 @@ theorem structuredBoolWordRawBitsDecoderDescription_run
             [none])))
       (List.append (suffixTail.map some) (none :: rightPadding))
       (bits.length + 1)
+
+theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
+    (bits suffixTail : Word Bool)
+    (rightPadding outputPadding : List (Option Bool)) :
+    structuredBoolWordRawBitsDecoderDescription.runConfig
+        (9 * bits.length + 11)
+        { state := structuredBoolWordRawBitsDecoderDescription.start
+          tapes :=
+            [ boolWordRawBitsDecoderSourceTape
+                bits suffixTail rightPadding
+            , Tape.blank
+            , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                bits.length outputPadding ] } =
+      { state := structuredBoolWordRawBitsDecoderDescription.halt
+        tapes :=
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              bits suffixTail rightPadding
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              (bits.length + 1)
+          , rightEdgeScanSourceTapeFromLeft [none] bits outputPadding ] } := by
+  rw [show 9 * bits.length + 11 =
+      4 + ((4 * bits.length + 4) +
+        ((4 * bits.length + 1) + (bits.length + 2))) by
+    lia]
+  rw [Structured.Description.runConfig_add]
+  have hheader :
+      structuredBoolWordRawBitsDecoderDescription.runConfig 4
+        { state := structuredBoolWordRawBitsDecoderDescription.start
+          tapes :=
+            [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+            , Tape.blank
+            , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                bits.length outputPadding ] } =
+        { state := 0
+          tapes :=
+            [ structuredBoolWordRawBitsDecoderAfterHeaderTape
+                bits suffixTail rightPadding
+            , Tape.blank
+            , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                bits.length outputPadding ] } := by
+    simp [structuredBoolWordRawBitsDecoderDescription,
+      structuredBoolWordRawBitsDecoderRow,
+      structuredBoolWordRawBitsDecoderMoveRight,
+      structuredBoolWordRawBitsDecoderStay,
+      boolWordRawBitsDecoderSourceTape,
+      structuredBoolWordRawBitsDecoderAfterHeaderTape,
+      boolWordRawBitsDecoderHeaderBits, rightEdgeRewindTargetTape,
+      structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding,
+      encodeCodeSymbolAsInput, tapeAtCells,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Tape.blank, Tape.read,
+      List.map_append, List.append_assoc]
+    cases htail :
+        List.map some (boolWordRawBitsDecoderEncodedFieldBits bits) ++
+          some false ::
+            (List.map some suffixTail ++ none :: rightPadding) <;>
+      rfl
+  rw [hheader]
+  rw [Structured.Description.runConfig_add]
+  have hafter :
+      structuredBoolWordRawBitsDecoderAfterHeaderTape
+          bits suffixTail rightPadding =
+        tapeAtCells
+          (List.append
+            (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none])
+          (List.append ((stageNatBits bits.length).map some)
+            (List.append ((cellsCodeBits (bits.map some)).map some)
+              (some false ::
+                List.append (suffixTail.map some)
+                  (none :: rightPadding)))) := by
+    simp [structuredBoolWordRawBitsDecoderAfterHeaderTape,
+      boolWordRawBitsDecoderEncodedFieldBits, List.map_append,
+      List.append_assoc]
+  rw [hafter]
+  rw [show Tape.blank =
+      structuredBoolWordRawBitsDecoderCounterWriteTape 0 by rfl]
+  have houtputHead :
+      Tape.read
+          (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+            bits.length outputPadding) = none := by
+    simp [structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding,
+      tapeAtCells, Tape.read, List.replicate_succ]
+  have hprefix :
+      structuredBoolWordRawBitsDecoderDescription.runConfig
+          (4 * bits.length + 4)
+          { state := 0
+            tapes :=
+              [ tapeAtCells
+                  (List.append
+                    (boolWordRawBitsDecoderHeaderBits.reverse.map some)
+                    [none])
+                  (List.append ((stageNatBits bits.length).map some)
+                    (List.append
+                      ((cellsCodeBits (bits.map some)).map some)
+                      (some false ::
+                        List.append (suffixTail.map some)
+                          (none :: rightPadding))))
+              , structuredBoolWordRawBitsDecoderCounterWriteTape 0
+              , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                  bits.length outputPadding ] } =
+        { state := 10
+          tapes :=
+            [ tapeAtCells
+                (List.append ((stageNatBits bits.length).reverse.map some)
+                  (List.append
+                    (boolWordRawBitsDecoderHeaderBits.reverse.map some)
+                    [none]))
+                (List.append
+                  ((cellsCodeBits (bits.map some)).map some)
+                  (some false ::
+                    List.append (suffixTail.map some)
+                      (none :: rightPadding)))
+            , structuredBoolWordRawBitsDecoderCounterDecodeTape
+                bits.length 1
+            , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                bits.length outputPadding ] } := by
+    simpa [List.append_assoc] using
+      structuredBoolWordRawBitsDecoder_run_prefix_withOutput
+        bits.length 0
+        (List.append
+          (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none])
+        (List.append
+          ((cellsCodeBits (bits.map some)).map some)
+          (some false ::
+            List.append (suffixTail.map some)
+              (none :: rightPadding)))
+        (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+          bits.length outputPadding)
+        houtputHead
+  rw [hprefix]
+  rw [Structured.Description.runConfig_add]
+  have houtput :
+      structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+          bits.length outputPadding =
+        structuredBoolWordRawBitsDecoderOutputBufferTape
+          ([] : Word Bool) bits.length outputPadding := by
+    simp [structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding,
+      structuredBoolWordRawBitsDecoderOutputBufferTape]
+  rw [houtput]
+  have hdecode :
+      structuredBoolWordRawBitsDecoderDescription.runConfig
+          (4 * bits.length + 1)
+          { state := 10
+            tapes :=
+              [ tapeAtCells
+                  (List.append ((stageNatBits bits.length).reverse.map some)
+                    (List.append
+                      (boolWordRawBitsDecoderHeaderBits.reverse.map some)
+                      [none]))
+                  (List.append
+                    ((cellsCodeBits (bits.map some)).map some)
+                    (some false ::
+                      List.append (suffixTail.map some)
+                        (none :: rightPadding)))
+              , structuredBoolWordRawBitsDecoderCounterDecodeTape
+                  bits.length 1
+              , structuredBoolWordRawBitsDecoderOutputBufferTape
+                  ([] : Word Bool) bits.length outputPadding ] } =
+        { state := 49
+          tapes :=
+            [ tapeAtCells
+                (List.append
+                  ((cellsCodeBits (bits.map some)).reverse.map some)
+                  (List.append
+                    ((stageNatBits bits.length).reverse.map some)
+                    (List.append
+                      (boolWordRawBitsDecoderHeaderBits.reverse.map some)
+                      [none])))
+                (some false ::
+                  List.append (suffixTail.map some)
+                    (none :: rightPadding))
+            , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                (bits.length + 1)
+            , structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding
+                bits outputPadding ] } := by
+    simpa [List.append_assoc] using
+      structuredBoolWordRawBitsDecoder_run_decode_loop_withPadding
+        bits ([] : Word Bool)
+        (List.append ((stageNatBits bits.length).reverse.map some)
+          (List.append
+            (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none]))
+        suffixTail rightPadding outputPadding
+  rw [hdecode]
+  simpa [structuredBoolWordRawBitsDecoderAfterHeaderTape,
+    structuredBoolWordRawBitsDecoderSourceTargetTape,
+    boolWordRawBitsDecoderEncodedFieldBits, List.map_append,
+    List.reverse_append, List.append_assoc] using
+    structuredBoolWordRawBitsDecoder_run_output_rewind_withPadding
+      bits
+      (List.append
+        ((cellsCodeBits (bits.map some)).reverse.map some)
+        (List.append
+          ((stageNatBits bits.length).reverse.map some)
+          (List.append
+            (boolWordRawBitsDecoderHeaderBits.reverse.map some)
+            [none])))
+      (List.append (suffixTail.map some) (none :: rightPadding))
+      (bits.length + 1)
+      outputPadding
 
 def boolWordRawBitsDecoderHeaderBase : List (Option Bool) :=
   List.append (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none]

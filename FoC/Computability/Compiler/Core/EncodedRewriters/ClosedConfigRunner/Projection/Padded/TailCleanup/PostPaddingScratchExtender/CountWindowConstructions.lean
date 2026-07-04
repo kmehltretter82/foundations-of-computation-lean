@@ -1,5 +1,4 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawSourceEncoder
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowRawSourceEncoderBridge
@@ -1223,21 +1222,6 @@ theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_false
       rejectPostFieldDecodedPrefixRestorerSourceTape
         L pref leftBit deletedTail := by
   rfl
-
-theorem selectedProjectionPaddedTailCleanupPrefixBits_eq_rawBitsDecoderPrefix
-    (L : DovetailLayout) :
-    selectedProjectionPaddedTailCleanupPrefixBits L =
-      List.append
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (List.append
-          (boolWordRawBitsDecoderEncodedFieldBits (ParsedLayoutBits L))
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            L.stage)) := by
-  rw [selectedProjectionPaddedTailCleanupPrefixBits,
-    SelectedProjectionTailProjector.outputPrefixBits]
-  rw [boolWordBits_eq_encodeBoolWordAppend]
-  simp [boolWordRawBitsDecoderEncodedFieldBits, encodeCodeWordAsInput,
-    List.append_assoc]
 
 /--
 Finite-machine contract for one branch of the shared post-field materializer.
