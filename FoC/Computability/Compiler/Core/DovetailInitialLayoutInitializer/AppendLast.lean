@@ -38,7 +38,7 @@ def WriteTransitionPrefixDescription :
 
 private abbrev WTP := WriteTransitionPrefixDescription
 
-theorem writeTransitionPrefixDescription_wellFormed :
+private theorem writeTransitionPrefixDescription_wellFormed :
     WTP.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -50,19 +50,19 @@ theorem writeTransitionPrefixDescription_wellFormed :
       (l := WTP.transitions)
       (by decide)
 
-theorem writeTransitionPrefixDescription_haltTransitionFree :
+private theorem writeTransitionPrefixDescription_haltTransitionFree :
     WTP.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WTP.transitions)
     (state := WTP.halt)
     (by decide)
 
-theorem writeTransitionPrefixDescription_subroutineReady :
+private theorem writeTransitionPrefixDescription_subroutineReady :
     WTP.SubroutineReady :=
   ⟨writeTransitionPrefixDescription_wellFormed,
     writeTransitionPrefixDescription_haltTransitionFree⟩
 
-theorem writeTransitionPrefixDescription_run
+private theorem writeTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
     WTP.runConfig 5
         (config 0 [] (some b :: rest)) =
@@ -99,7 +99,7 @@ def WriteMarkedTransitionPrefixDescription :
 
 private abbrev WMTP := WriteMarkedTransitionPrefixDescription
 
-theorem writeMarkedTransitionPrefixDescription_wellFormed :
+private theorem writeMarkedTransitionPrefixDescription_wellFormed :
     WMTP.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩
   · exact transition_wellFormed_of_all
@@ -111,7 +111,7 @@ theorem writeMarkedTransitionPrefixDescription_wellFormed :
       (l := WMTP.transitions)
       (by decide)
 
-theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
+private theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
     WMTP.HaltTransitionFree :=
   transition_notFrom_of_all
     (l := WMTP.transitions)
@@ -168,7 +168,7 @@ def AppendFixedFourBitsLastDescription
         4 (some true) (some true) Direction.right 5
     ]
 
-theorem appendFixedFourBitsLastDescription_wellFormed
+private theorem appendFixedFourBitsLastDescription_wellFormed
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).WellFormed := by
   refine ⟨?_, ?_, ?_, ?_, ?_⟩
@@ -196,7 +196,7 @@ theorem appendFixedFourBitsLastDescription_wellFormed
         cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
           decide)
 
-theorem appendFixedFourBitsLastDescription_haltTransitionFree
+private theorem appendFixedFourBitsLastDescription_haltTransitionFree
     (b0 b1 b2 b3 : Bool) :
     (AppendFixedFourBitsLastDescription
       b0 b1 b2 b3).HaltTransitionFree :=
@@ -211,7 +211,7 @@ theorem appendFixedFourBitsLastDescription_haltTransitionFree
       cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
         decide)
 
-theorem appendFixedFourBitsLastDescription_step_scan_nonempty
+private theorem appendFixedFourBitsLastDescription_step_scan_nonempty
     (b0 b1 b2 b3 : Bool)
     (leftRev : Word Bool) (b : Bool) (rest : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).stepConfig
@@ -265,7 +265,7 @@ theorem appendFixedFourBitsLastDescription_run_write
       appendRightScanTape, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem appendFixedFourBitsLastDescription_run_halt
+private theorem appendFixedFourBitsLastDescription_run_halt
     (b0 b1 b2 b3 : Bool) (w : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
         (w.length + 5)
@@ -327,7 +327,7 @@ private theorem appendRightLastTapeAtCells_of_bits
   simp [appendRightLastTapeAtCells,
     appendRightLastTape]
 
-theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
+private theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).stepConfig
@@ -346,7 +346,7 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCells
         transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
+private theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (b : Bool) (rest : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).stepConfig
@@ -365,7 +365,7 @@ theorem appendFixedFourBitsLastDescription_step_scan_nonempty_atCellsChecked
         transition, Tape.read, Tape.write,
         Tape.move, Tape.moveRight]
 
-theorem appendFixedFourBitsLastDescription_run_scan_atCells
+private theorem appendFixedFourBitsLastDescription_run_scan_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
@@ -384,7 +384,7 @@ theorem appendFixedFourBitsLastDescription_run_scan_atCells
         appendFixedFourBitsLastDescription_step_scan_nonempty_atCells,
         ih, List.append_assoc]
 
-theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
+private theorem appendFixedFourBitsLastDescription_run_scan_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
@@ -422,7 +422,7 @@ theorem appendFixedFourBitsLastDescription_run_write_atCells
       transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
+private theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
@@ -439,7 +439,7 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCells
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
 
-theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
+private theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
     (b0 b1 b2 b3 : Bool)
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     (AppendFixedFourBitsLastDescription b0 b1 b2 b3).runConfig
@@ -456,7 +456,7 @@ theorem appendFixedFourBitsLastDescription_run_from_scan_atCellsChecked
   exact appendFixedFourBitsLastDescription_run_write_atCells
     b0 b1 b2 b3 _
 
-theorem writeMarkedTransitionPrefixDescription_handoff_to_append
+private theorem writeMarkedTransitionPrefixDescription_handoff_to_append
     (b : Bool) (rest : Word Bool) :
     Tape.move Direction.right
         (tapeAtCells [some false]
@@ -469,7 +469,7 @@ theorem writeMarkedTransitionPrefixDescription_handoff_to_append
       simp [tapeAtCells, appendScanTapeAtCells,
         Tape.move, Tape.moveRight]
 
-theorem writeMarkedTransitionPrefixDescription_handoff_to_append_checked
+private theorem writeMarkedTransitionPrefixDescription_handoff_to_append_checked
     (b : Bool) (rest : Word Bool) :
     Tape.move Direction.right
         (tapeAtCells [some false]
@@ -506,13 +506,13 @@ theorem appendCodeSymbolLastDescription_halt
     (AppendCodeSymbolLastDescription symbol).halt = 5 := by
   cases symbol <;> rfl
 
-theorem appendCodeSymbolLastDescription_wellFormed
+private theorem appendCodeSymbolLastDescription_wellFormed
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription symbol).WellFormed := by
   cases symbol <;>
     exact appendFixedFourBitsLastDescription_wellFormed _ _ _ _
 
-theorem appendCodeSymbolLastDescription_haltTransitionFree
+private theorem appendCodeSymbolLastDescription_haltTransitionFree
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolLastDescription
       symbol).HaltTransitionFree := by
@@ -568,7 +568,7 @@ private theorem appendCodeSymbolLastTape_move_right
       encodeCodeSymbolAsInput,
       appendRightScanTape, Tape.move, Tape.moveRight]
 
-theorem appendCodeSymbolLastDescription_haltsWithTape
+private theorem appendCodeSymbolLastDescription_haltsWithTape
     (symbol : MachineCodeSymbol) (w : Word Bool) :
     (AppendCodeSymbolLastDescription symbol).HaltsWithTape
         w (appendCodeSymbolLastTape w.reverse symbol) := by
@@ -697,7 +697,7 @@ theorem appendCodeWordLastDescription_run_from_scan :
       simpa [AppendCodeWordLastDescription,
         appendCodeWordLastTape, A, B, Tmid, leftAfterSymbol] using hn
 
-theorem appendCodeWordLastDescription_run_halt
+private theorem appendCodeWordLastDescription_run_halt
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) :
     exists n : Nat,
@@ -713,7 +713,7 @@ theorem appendCodeWordLastDescription_run_halt
   simpa [initial,
     appendRightScanTape_nil_eq_input] using hn
 
-theorem appendCodeWordLastDescription_haltsWithTape
+private theorem appendCodeWordLastDescription_haltsWithTape
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) :
     (AppendCodeWordLastDescription code).HaltsWithTape
@@ -932,7 +932,7 @@ theorem appendCodeWordLastDescription_run_from_scan_atCells :
         appendCodeWordLastTapeAtCells, A, B, Tmid,
         leftAfterSymbol] using hn
 
-theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
+private theorem appendCodeWordLastDescription_run_from_scan_atCellsChecked :
     forall code : Word MachineCodeSymbol,
       code ≠ [] ->
         forall leftRev : List (Option Bool),
@@ -1170,14 +1170,14 @@ def appendNatLastTape
   appendCodeWordLastTape leftRev
     (encodeNat n)
 
-theorem appendNatLastDescription_subroutineReady
+private theorem appendNatLastDescription_subroutineReady
     (n : Nat) :
     (AppendNatLastDescription n).SubroutineReady :=
   appendCodeWordLastDescription_subroutineReady
     (encodeNat n)
     (encodeNat_ne_nil n)
 
-theorem appendNatLastDescription_run_from_scan
+private theorem appendNatLastDescription_run_from_scan
     (n : Nat) (leftRev remaining : Word Bool) :
     exists steps : Nat,
       (AppendNatLastDescription n).runConfig steps
@@ -1194,7 +1194,7 @@ theorem appendNatLastDescription_run_from_scan
       (encodeNat_ne_nil n)
       leftRev remaining
 
-theorem appendNatLastDescription_haltsWithTape
+private theorem appendNatLastDescription_haltsWithTape
     (n : Nat) (w : Word Bool) :
     (AppendNatLastDescription n).HaltsWithTape
       w (appendNatLastTape w.reverse n) := by
@@ -1210,7 +1210,7 @@ def MarkedPrefixThenAppendNatLastDescription
   MPACW
     (encodeNat n)
 
-theorem markedPrefixThenAppendNatLastDescription_subroutineReady
+private theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (n : Nat) :
     (MarkedPrefixThenAppendNatLastDescription
       n).SubroutineReady :=
@@ -1218,7 +1218,7 @@ theorem markedPrefixThenAppendNatLastDescription_subroutineReady
     (encodeNat n)
     (encodeNat_ne_nil n)
 
-theorem markedPrefixThenAppendNatLastDescription_run
+private theorem markedPrefixThenAppendNatLastDescription_run
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
       (MarkedPrefixThenAppendNatLastDescription n).runConfig steps

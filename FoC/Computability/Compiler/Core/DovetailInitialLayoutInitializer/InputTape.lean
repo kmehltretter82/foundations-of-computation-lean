@@ -149,7 +149,7 @@ def AppendTwoCodeWordsReturnDescription
 
 private abbrev ATCWR := AppendTwoCodeWordsReturnDescription
 
-theorem appendTwoCodeWordsReturnDescription_subroutineReady
+private theorem appendTwoCodeWordsReturnDescription_subroutineReady
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ []) :
     (ATCWR first second).SubroutineReady :=
@@ -229,7 +229,7 @@ private theorem appendTwoCodeWordsReturnDescription_run
   simpa [AppendTwoCodeWordsReturnDescription,
     initial, A, B, firstBits, secondBits] using hn
 
-theorem appendTwoCodeWordsReturnDescription_run_stageInput
+private theorem appendTwoCodeWordsReturnDescription_run_stageInput
     (first second : Word MachineCodeSymbol)
     (hfirst : first ≠ []) (hsecond : second ≠ [])
     (w : Word Bool) (stage : Nat) :
@@ -452,7 +452,7 @@ def AppendEmptyInputTapeReturnDescription :
 
 private abbrev AEITR := AppendEmptyInputTapeReturnDescription
 
-theorem appendEmptyInputTapeReturnDescription_subroutineReady :
+private theorem appendEmptyInputTapeReturnDescription_subroutineReady :
     AEITR.SubroutineReady :=
   transitionPrefixedFirstBitAppendCodeWordReturnDescription_subroutineReady
     emptyInputTapeCode
@@ -464,7 +464,7 @@ private theorem inputTapeBits_nil :
         emptyInputTapeCode := by
   rfl
 
-theorem appendEmptyInputTapeReturnDescription_run
+private theorem appendEmptyInputTapeReturnDescription_run
     (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
       AEITR.runConfig steps
@@ -677,7 +677,7 @@ def AppendKnownHeadInputTapeReturnDescription
 
 private abbrev AKHITR := AppendKnownHeadInputTapeReturnDescription
 
-theorem appendKnownHeadInputTapeReturnDescription_subroutineReady
+private theorem appendKnownHeadInputTapeReturnDescription_subroutineReady
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
     (b : Bool) :
@@ -686,7 +686,7 @@ theorem appendKnownHeadInputTapeReturnDescription_subroutineReady
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     hright.left
 
-theorem appendKnownHeadInputTapeReturnDescription_run
+private theorem appendKnownHeadInputTapeReturnDescription_run
     {rightCopier : MachineDescription}
     (hright : AppendInputTapeRightCellsReturnSpec rightCopier)
     (b : Bool) (rest : Word Bool) (stage : Nat)
@@ -841,14 +841,14 @@ def AppendSingletonInputTapeReturnDescription
 
 private abbrev ASITR := AppendSingletonInputTapeReturnDescription
 
-theorem appendSingletonInputTapeReturnDescription_subroutineReady
+private theorem appendSingletonInputTapeReturnDescription_subroutineReady
     (b : Bool) :
     (ASITR b).SubroutineReady :=
   seqSubroutine_subroutineReady
     (appendInputTapeHeadPrefixReturnDescription_subroutineReady b)
     appendEmptyRightCellsReturnDescription_subroutineReady
 
-theorem appendSingletonInputTapeReturnDescription_run
+private theorem appendSingletonInputTapeReturnDescription_run
     (b : Bool) (stage : Nat) (suffixBits : Word Bool) :
     exists steps : Nat,
       (ASITR b).runConfig steps

@@ -48,7 +48,7 @@ theorem rightCellsCopierStartHandoffDescription_subroutineReady :
     RCSH (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem rightCellsCopierStartHandoffDescription_run
+private theorem rightCellsCopierStartHandoffDescription_run
     (tail : List (Option Bool)) :
     RCSH.runConfig 7
         (config 0 []
@@ -191,7 +191,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_copy_ticks
           List.append_assoc]
       exact hrest.trans hstart
 
-theorem inputTapeRightCellsDirectCopierDescription_step_scan30
+private theorem inputTapeRightCellsDirectCopierDescription_step_scan30
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     ITCD.stepConfig
         (config 30 leftRev (some bit :: rest.map some)) =
@@ -205,7 +205,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_scan30
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_scan30
+private theorem inputTapeRightCellsDirectCopierDescription_run_scan30
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     ITCD.runConfig
         remaining.length
@@ -221,7 +221,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_scan30
         inputTapeRightCellsDirectCopierDescription_step_scan30,
         ih, List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_write_done
+private theorem inputTapeRightCellsDirectCopierDescription_run_write_done
     (leftRev : List (Option Bool)) :
     ITCD.runConfig 4
         (config 30 leftRev []) =
@@ -235,7 +235,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_write_done
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_return34
+private theorem inputTapeRightCellsDirectCopierDescription_step_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -253,7 +253,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_return34
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_return34
+private theorem inputTapeRightCellsDirectCopierDescription_run_return34
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
     ITCD.runConfig
@@ -281,7 +281,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_return34
       rw [inputTapeRightCellsDirectCopierDescription_step_return34]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance35
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance35
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -294,7 +294,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance35
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance36
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance36
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -307,7 +307,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance36
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance37
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance37
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -320,7 +320,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance37
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance38
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance38
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -333,7 +333,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance38
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance39
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance39
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -346,7 +346,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance39
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance40
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance40
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -359,7 +359,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance40
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_advance41
+private theorem inputTapeRightCellsDirectCopierDescription_step_advance41
     (leftRev : List (Option Bool)) (bit : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -372,7 +372,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_advance41
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_advance35_to10
+private theorem inputTapeRightCellsDirectCopierDescription_run_advance35_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 b4 b5 b6 b7 : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig 7
@@ -510,7 +510,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
     encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_scan60
+private theorem inputTapeRightCellsDirectCopierDescription_step_scan60
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     ITCD.stepConfig
         (config 60 leftRev (some bit :: rest.map some)) =
@@ -524,7 +524,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_scan60
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_scan60
+private theorem inputTapeRightCellsDirectCopierDescription_run_scan60
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     ITCD.runConfig
         remaining.length
@@ -540,7 +540,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_scan60
         inputTapeRightCellsDirectCopierDescription_step_scan60,
         ih, List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_write_zero
+private theorem inputTapeRightCellsDirectCopierDescription_run_write_zero
     (leftRev : List (Option Bool)) :
     ITCD.runConfig 4
         (config 60 leftRev []) =
@@ -554,7 +554,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_write_zero
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_return64
+private theorem inputTapeRightCellsDirectCopierDescription_step_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -572,7 +572,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_return64
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_return64
+private theorem inputTapeRightCellsDirectCopierDescription_run_return64
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
     ITCD.runConfig
@@ -600,7 +600,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_return64
       rw [inputTapeRightCellsDirectCopierDescription_step_return64]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
-theorem inputTapeRightCellsDirectCopierDescription_run_advance65_to10
+private theorem inputTapeRightCellsDirectCopierDescription_run_advance65_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig 3
@@ -616,7 +616,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_advance65_to10
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell
+private theorem inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
     exists steps : Nat,
@@ -720,7 +720,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_copy_zero_cell
     encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_scan70
+private theorem inputTapeRightCellsDirectCopierDescription_step_scan70
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     ITCD.stepConfig
         (config 70 leftRev (some bit :: rest.map some)) =
@@ -734,7 +734,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_scan70
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_scan70
+private theorem inputTapeRightCellsDirectCopierDescription_run_scan70
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     ITCD.runConfig
         remaining.length
@@ -750,7 +750,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_scan70
         inputTapeRightCellsDirectCopierDescription_step_scan70,
         ih, List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_write_one
+private theorem inputTapeRightCellsDirectCopierDescription_run_write_one
     (leftRev : List (Option Bool)) :
     ITCD.runConfig 4
         (config 70 leftRev []) =
@@ -764,7 +764,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_write_one
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_return74
+private theorem inputTapeRightCellsDirectCopierDescription_step_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -782,7 +782,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_return74
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_return74
+private theorem inputTapeRightCellsDirectCopierDescription_run_return74
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
     ITCD.runConfig
@@ -810,7 +810,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_return74
       rw [inputTapeRightCellsDirectCopierDescription_step_return74]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
-theorem inputTapeRightCellsDirectCopierDescription_run_advance75_to10
+private theorem inputTapeRightCellsDirectCopierDescription_run_advance75_to10
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig 3
@@ -826,7 +826,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_advance75_to10
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_copy_one_cell
+private theorem inputTapeRightCellsDirectCopierDescription_run_copy_one_cell
     (leftOfMarker : List (Option Bool))
     (pre sourceTail output : Word Bool) :
     exists steps : Nat,
@@ -930,7 +930,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_copy_one_cell
     encodeCodeSymbolAsInput, List.map_append,
     List.reverse_append]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_return80
+private theorem inputTapeRightCellsDirectCopierDescription_step_return80
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -948,7 +948,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_return80
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_return80_to99
+private theorem inputTapeRightCellsDirectCopierDescription_run_return80_to99
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig
@@ -1318,7 +1318,7 @@ def inputTapeRightCellsDirectCopierCoreOutputBits
                   (List.append inputTapeRightCellsDirectCopierDoneBits
                     (inputTapeRightCellsDirectCopierCellBits rest)))))))))
 
-theorem inputTapeRightCellsDirectCopierDescription_run_core
+private theorem inputTapeRightCellsDirectCopierDescription_run_core
     (b : Bool) (rest : Word Bool) (stage : Nat)
     (suffixBits : Word Bool) :
     exists steps : Nat,

@@ -36,7 +36,7 @@ theorem markTransitionSecondBitDescription_subroutineReady :
     MTSB (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem markTransitionSecondBitDescription_run
+private theorem markTransitionSecondBitDescription_run
     (payload : Word Bool) :
     MTSB.runConfig 2
         (config 0 [some false]
@@ -70,7 +70,7 @@ theorem transitionPrefixedThenAppendCodeWordLastDescription_subroutineReady
     markTransitionSecondBitDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
 
-theorem transitionPrefixedThenAppendCodeWordLastDescription_run
+private theorem transitionPrefixedThenAppendCodeWordLastDescription_run
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (payload : Word Bool) :
     exists steps : Nat,
@@ -162,7 +162,7 @@ theorem returnToCurrentMarkerDescription_subroutineReady :
     RTCM (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem returnToCurrentMarkerDescription_step_scan
+private theorem returnToCurrentMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (leftOfMarker right : List (Option Bool)) :
     RTCM.stepConfig
@@ -184,7 +184,7 @@ theorem returnToCurrentMarkerDescription_step_scan
       lookupTransition, Matches,
       transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
-theorem returnToCurrentMarkerDescription_run
+private theorem returnToCurrentMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (leftOfMarker right : List (Option Bool)) :
     RTCM.runConfig
@@ -212,7 +212,7 @@ theorem returnToCurrentMarkerDescription_run
       rw [returnToCurrentMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
-theorem returnToCurrentMarkerDescription_run_after_append_four_atCells
+private theorem returnToCurrentMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (leftOfMarker : List (Option Bool))
     (b0 b1 b2 b3 : Bool) :
     RTCM.runConfig
@@ -301,7 +301,7 @@ def AppendCodeWordReturnToCurrentMarkerDescription
     RTCM
     Direction.left
 
-theorem appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
+private theorem appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     (code : Word MachineCodeSymbol) (hcode : code ≠ []) :
     (AppendCodeWordReturnToCurrentMarkerDescription
       code).SubroutineReady :=
@@ -309,7 +309,7 @@ theorem appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     (appendCodeWordLastDescription_subroutineReady code hcode)
     returnToCurrentMarkerDescription_subroutineReady
 
-theorem appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
+private theorem appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (pre remaining : Word Bool)
     (leftOfMarker : List (Option Bool)) :
@@ -434,14 +434,14 @@ def RightCellsCopierStartDescription :
         7 (some false) (some false) Direction.right 8
     ]
 
-theorem rightCellsCopierStartDescription_subroutineReady :
+private theorem rightCellsCopierStartDescription_subroutineReady :
     RightCellsCopierStartDescription.SubroutineReady :=
   machineDescription_subroutineReady_of_transition_checks
     RightCellsCopierStartDescription
     (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem rightCellsCopierStartDescription_run
+private theorem rightCellsCopierStartDescription_run
     (tail : List (Option Bool)) :
     RightCellsCopierStartDescription.runConfig 8
         (config 0 []
@@ -696,7 +696,7 @@ theorem inputTapeRightCellsDirectCopierDescription_subroutineReady :
     ITCD (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
 
-theorem inputTapeRightCellsDirectCopierDescription_step_scan20
+private theorem inputTapeRightCellsDirectCopierDescription_step_scan20
     (leftRev : List (Option Bool)) (bit : Bool) (rest : Word Bool) :
     ITCD.stepConfig
         (config 20 leftRev (some bit :: rest.map some)) =
@@ -710,7 +710,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_scan20
       transition, Tape.read, Tape.write, Tape.move,
       Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_scan20
+private theorem inputTapeRightCellsDirectCopierDescription_run_scan20
     (leftRev : List (Option Bool)) (remaining : Word Bool) :
     ITCD.runConfig
         remaining.length
@@ -726,7 +726,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_scan20
         inputTapeRightCellsDirectCopierDescription_step_scan20,
         ih, List.append_assoc]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_write_tick
+private theorem inputTapeRightCellsDirectCopierDescription_run_write_tick
     (leftRev : List (Option Bool)) :
     ITCD.runConfig 4
         (config 20 leftRev []) =
@@ -740,7 +740,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_write_tick
     transition, Tape.read, Tape.write, Tape.move,
     Tape.moveLeft, Tape.moveRight]
 
-theorem inputTapeRightCellsDirectCopierDescription_step_return24
+private theorem inputTapeRightCellsDirectCopierDescription_step_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (leftBit current : Bool) (right : List (Option Bool)) :
     ITCD.stepConfig
@@ -758,7 +758,7 @@ theorem inputTapeRightCellsDirectCopierDescription_step_return24
       Matches, transition, Tape.read,
       Tape.write, Tape.move, Tape.moveLeft]
 
-theorem inputTapeRightCellsDirectCopierDescription_run_return24
+private theorem inputTapeRightCellsDirectCopierDescription_run_return24
     (preRev : Word Bool) (leftOfMarker : List (Option Bool))
     (current : Bool) (right : List (Option Bool)) :
     ITCD.runConfig
@@ -786,7 +786,7 @@ theorem inputTapeRightCellsDirectCopierDescription_run_return24
       rw [inputTapeRightCellsDirectCopierDescription_step_return24]
       simpa [List.append_assoc] using ih bit (some current :: right)
 
-theorem inputTapeRightCellsDirectCopierDescription_run_advance25_to0
+private theorem inputTapeRightCellsDirectCopierDescription_run_advance25_to0
     (leftRev : List (Option Bool)) (b1 b2 b3 : Bool)
     (right : List (Option Bool)) :
     ITCD.runConfig 3
@@ -897,14 +897,14 @@ def AppendCodeSymbolReturnToCurrentMarkerDescription
     (symbol : MachineCodeSymbol) : MachineDescription :=
   AppendCodeWordReturnToCurrentMarkerDescription [symbol]
 
-theorem appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
+private theorem appendCodeSymbolReturnToCurrentMarkerDescription_subroutineReady
     (symbol : MachineCodeSymbol) :
     (AppendCodeSymbolReturnToCurrentMarkerDescription
       symbol).SubroutineReady :=
   appendCodeWordReturnToCurrentMarkerDescription_subroutineReady
     [symbol] (by intro h; cases h)
 
-theorem appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
+private theorem appendCodeSymbolReturnToCurrentMarkerDescription_run_from_scan
     (symbol : MachineCodeSymbol)
     (pre remaining : Word Bool)
     (leftOfMarker : List (Option Bool)) :
@@ -960,7 +960,7 @@ theorem returnToTransitionMarkerDescription_subroutineReady :
   machineDescription_subroutineReady_of_transition_checks
     RTTM (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide)
-theorem returnToTransitionMarkerDescription_step_scan
+private theorem returnToTransitionMarkerDescription_step_scan
     (preRev : Word Bool) (leftBit current : Bool)
     (right : List (Option Bool)) :
     RTTM.stepConfig
@@ -979,7 +979,7 @@ theorem returnToTransitionMarkerDescription_step_scan
       lookupTransition, Matches,
       transition, Tape.read, Tape.write,
       Tape.move, Tape.moveLeft]
-theorem returnToTransitionMarkerDescription_run
+private theorem returnToTransitionMarkerDescription_run
     (preRev : Word Bool) (current : Bool)
     (right : List (Option Bool)) :
     RTTM.runConfig
@@ -1007,7 +1007,7 @@ theorem returnToTransitionMarkerDescription_run
       rw [returnToTransitionMarkerDescription_step_scan]
       simpa [List.append_assoc] using ih b (some current :: right)
 
-theorem returnToTransitionMarkerDescription_run_after_append_four_atCells
+private theorem returnToTransitionMarkerDescription_run_after_append_four_atCells
     (pre : Word Bool) (b0 b1 b2 b3 : Bool) :
     RTTM.runConfig
         (pre.length + 5)
@@ -1250,7 +1250,7 @@ theorem markedPrefixAppendNatReturnDescription_subroutineReady
   markedPrefixAppendCodeWordReturnDescription_subroutineReady
     (encodeNat n)
     (encodeNat_ne_nil n)
-theorem markedPrefixAppendNatReturnDescription_run
+private theorem markedPrefixAppendNatReturnDescription_run
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
       (MarkedPrefixAppendNatReturnDescription n).runConfig steps
@@ -1269,7 +1269,7 @@ theorem markedPrefixAppendNatReturnDescription_run
       (encodeNat n)
       (encodeNat_ne_nil n)
       b rest
-theorem markedPrefixAppendNatReturnDescription_run_checked
+private theorem markedPrefixAppendNatReturnDescription_run_checked
     (n : Nat) (b : Bool) (rest : Word Bool) :
     exists steps : Nat,
       (MarkedPrefixAppendNatReturnDescription n).runConfig steps
@@ -1319,7 +1319,7 @@ theorem stageInputBits_exists_cons
   | cons b rest =>
       exact ⟨b, rest, rfl⟩
 
-theorem markedPrefixAppendCodeWordReturnDescription_run_stageInput
+private theorem markedPrefixAppendCodeWordReturnDescription_run_stageInput
     (code : Word MachineCodeSymbol) (hcode : code ≠ [])
     (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
@@ -1500,14 +1500,14 @@ def TransitionPrefixedAppendNatReturnDescription
   TransitionPrefixedAppendCodeWordReturnDescription
     (encodeNat n)
 
-theorem transitionPrefixedAppendNatReturnDescription_subroutineReady
+private theorem transitionPrefixedAppendNatReturnDescription_subroutineReady
     (n : Nat) :
     (TransitionPrefixedAppendNatReturnDescription
       n).SubroutineReady :=
   transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
     (encodeNat n)
     (encodeNat_ne_nil n)
-theorem transitionPrefixedAppendNatReturnDescription_run
+private theorem transitionPrefixedAppendNatReturnDescription_run
     (n : Nat) (payload : Word Bool) :
     exists steps : Nat,
       (TransitionPrefixedAppendNatReturnDescription

@@ -125,7 +125,7 @@ theorem descriptionWithCopier_subroutineReady
     (appendFirstInputTapeThenRejectDescription_subroutineReady
       hcopier)
 
-theorem appendSecondInputTapeAndFlagsDescription_run
+private theorem appendSecondInputTapeAndFlagsDescription_run
     {copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
@@ -208,7 +208,7 @@ theorem appendSecondInputTapeAndFlagsDescription_run
   simpa [AppendSecondInputTapeAndFlagsDescription,
     A, B] using hn
 
-theorem appendRejectThenInputTapeAndFlagsDescription_run
+private theorem appendRejectThenInputTapeAndFlagsDescription_run
     {reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) (suffixBits : Word Bool) :
@@ -388,7 +388,7 @@ theorem appendFirstInputTapeThenRejectDescription_run
   simpa [AppendFirstInputTapeThenRejectDescription,
     A, B] using hn
 
-theorem descriptionWithCopier_run_bits
+private theorem descriptionWithCopier_run_bits
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
     (w : Word Bool) (stage : Nat) :
@@ -842,7 +842,7 @@ private theorem natCodeCells_eq_bits
   rw [← codeCells_encodeNat n]
   rfl
 
-theorem inputTapeCodeCells_eq_bits
+private theorem inputTapeCodeCells_eq_bits
     (w : Word Bool) :
     inputTapeCodeCells w =
       (inputTapeBits w).map some := by
@@ -1053,7 +1053,7 @@ private theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     encodeCodeSymbolAsInput,
     List.append_assoc]
 
-theorem descriptionWithCopier_forward
+private theorem descriptionWithCopier_forward
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier) :
     ForwardSpec
@@ -1074,7 +1074,7 @@ theorem descriptionWithCopier_forward
       (outputTape_eq_bits
         accept reject w stage).symm
 
-theorem appendInputTapeRightCellsReturnSpec_realizer :
+private theorem appendInputTapeRightCellsReturnSpec_realizer :
     AppendInputTapeRightCellsReturnConstruction := by
   refine ⟨InputTapeRightCellsDirectReturnDescription, ?_⟩
   constructor
