@@ -128,6 +128,89 @@ theorem canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFr
   canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
     hA hB hAhalts hbridge hBhalts.toEquiv
 
+/--
+Scan right across a Boolean block, stop on its trailing blank, and then move
+right once.  This is the reusable boundary normalizer used when a caller only
+needs the final tape up to {name}`Tape.Equiv`.
+-/
+def rightEdgeScanThenRightMoveDescription : MachineDescription :=
+  canonicalSeqDescription rightEdgeScanDescription
+    rightMoveOnceDescription
+
+theorem rightEdgeScanThenRightMoveDescription_subroutineReady :
+    rightEdgeScanThenRightMoveDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    rightEdgeScanDescription_subroutineReady
+    rightMoveOnceDescription_subroutineReady
+
+/--
+After the scan and one final right move, the boundary blank that was stored on
+the left stack is equivalent to a leading visible blank on the right tape.
+-/
+theorem rightEdgeScanTargetTapeFromLeft_move_right_equiv_tapeAtCells_boundary
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.Equiv
+      (Tape.move Direction.right
+        (rightEdgeScanTargetTapeFromLeft [none] bits
+          (none :: padding)))
+      (tapeAtCells (bits.reverse.map some)
+        (none :: none :: padding)) := by
+  have hshape :
+      Tape.move Direction.right
+          (rightEdgeScanTargetTapeFromLeft [none] bits
+            (none :: padding)) =
+        tapeAtCells
+          (List.append (bits.reverse.map some) [none])
+          (none :: none :: padding) := by
+    unfold rightEdgeScanTargetTapeFromLeft
+    cases hstack :
+        List.append (bits.reverse.map some)
+          ([none] : List (Option Bool)) with
+    | nil =>
+        have hlen := congrArg List.length hstack
+        simp at hlen
+    | cons cell stack =>
+        cases padding <;>
+          simp [tapeAtCells, Tape.move, Tape.moveLeft,
+            Tape.moveRight]
+  rw [hshape]
+  simp [Tape.Equiv, tapeAtCells,
+    FoC.Computability.dropTrailingNone_append_none]
+
+/--
+Generic scan lemma: {name}`rightEdgeScanDescription` followed by one right move
+takes {name}`rightEdgeScanSourceTapeFromLeft` with a left boundary blank and one
+visible padding blank to the decoded boundary tape, up to {name}`Tape.Equiv`.
+-/
+theorem rightEdgeScanThenRightMoveDescription_haltsFromTapeEquiv
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    rightEdgeScanThenRightMoveDescription.HaltsFromTapeEquiv
+      (rightEdgeScanSourceTapeFromLeft [none] bits
+        (none :: padding))
+      (tapeAtCells (bits.reverse.map some)
+        (none :: none :: padding)) := by
+  exact
+    canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+      rightEdgeScanDescription_subroutineReady
+      rightMoveOnceDescription_subroutineReady
+      (rightEdgeScanDescription_haltsFromTape
+        [none] bits (none :: padding))
+      (rightEdgeScanTargetTapeFromLeft_move_left_move_right
+        [none] bits (none :: padding))
+      (by
+        refine
+          ⟨Tape.move Direction.right
+              (rightEdgeScanTargetTapeFromLeft [none] bits
+                (none :: padding)),
+            ?_, ?_⟩
+        · exact
+            rightMoveOnceDescription_haltsFromTape
+              (rightEdgeScanTargetTapeFromLeft [none] bits
+                (none :: padding))
+        · exact
+            rightEdgeScanTargetTapeFromLeft_move_right_equiv_tapeAtCells_boundary
+              bits padding)
+
 def oneGapRightEndCompactorDescription : MachineDescription :=
   canonicalSeqDescription
     (canonicalSeqDescription
@@ -226,6 +309,29 @@ def rightEdgeRewindTargetTapeWithBase
     (padding : List (Option Bool)) : Tape Bool :=
   tapeAtCells (none :: baseLeft)
     (List.append (bits.map some) (none :: padding))
+
+/--
+Two left moves from the visible output of
+{name}`leadingBlankLeftShiftTargetTapeWithPadding` expose the same boundary
+shape consumed by {name}`rightEdgeRewindDescription` with an explicit prefix.
+-/
+theorem leadingBlankLeftShiftTargetTapeWithPadding_leftTwice_eq_rightEdgeRewindSourceWithPrefix
+    (baseBits bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.left
+          (leadingBlankLeftShiftTargetTapeWithPadding
+            (List.append (baseBits.reverse.map some) [none])
+            bits padding)) =
+      rightEdgeRewindSourceTapeWithBase
+        ([] : List (Option Bool))
+        (List.append baseBits bits)
+        (none :: leadingBlankLeftShiftTargetVisiblePadding padding) := by
+  cases bits <;> cases baseBits <;> cases padding <;>
+    simp [leadingBlankLeftShiftTargetTapeWithPadding,
+      rightEdgeRewindSourceTapeWithBase,
+      leadingBlankLeftShiftTargetVisiblePadding, tapeAtCells,
+      Tape.move, Tape.moveLeft, List.reverse_append,
+      List.map_reverse, List.append_assoc]
 
 theorem rightEdgeRewindDescription_run_scan_withBoundaryBase
     (baseLeft : List (Option Bool))
@@ -392,8 +498,31 @@ theorem rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
         baseLeft (first :: rest) padding := by
   cases first <;> cases rest <;> cases baseLeft <;>
     cases padding <;>
-      simp [rightEdgeRewindTargetTapeWithBase, tapeAtCells,
-        Tape.move, Tape.moveLeft, Tape.moveRight]
+    simp [rightEdgeRewindTargetTapeWithBase, tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+
+/--
+Appending a final bit preserves the bridge-stability fact for the target of
+{name}`rightEdgeRewindDescription` with a base stack.
+-/
+theorem rightEdgeRewindTargetTapeWithBase_move_left_move_right_append_last
+    (baseLeft : List (Option Bool)) (pref : Word Bool)
+    (last : Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeRewindTargetTapeWithBase
+            baseLeft (List.append pref [last]) padding)) =
+      rightEdgeRewindTargetTapeWithBase
+        baseLeft (List.append pref [last]) padding := by
+  cases pref with
+  | nil =>
+      simpa using
+        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
+          baseLeft last [] padding
+  | cons first rest =>
+      simpa using
+        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
+          baseLeft first (List.append rest [last]) padding
 
 theorem leadingBlankLeftShiftSourceTapeWithPadding_move_left_move_right_base
     (baseLeft : List (Option Bool)) (bits : Word Bool)

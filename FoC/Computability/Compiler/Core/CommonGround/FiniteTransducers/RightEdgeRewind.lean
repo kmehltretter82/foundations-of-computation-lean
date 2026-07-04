@@ -100,6 +100,64 @@ def rightEdgeScanTargetTapeFromLeft
       (List.append (bits.reverse.map some) left)
       (none :: padding))
 
+/--
+For a nonempty scanned word, the source shape of
+{name}`rightEdgeScanDescription` is stable under the right-then-left bridge
+used by sequential machine composition.
+-/
+theorem rightEdgeScanSourceTapeFromLeft_move_left_move_right_cons
+    (left padding : List (Option Bool)) (current : Bool)
+    (rest : Word Bool) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeScanSourceTapeFromLeft left (current :: rest)
+            padding)) =
+      rightEdgeScanSourceTapeFromLeft left (current :: rest) padding := by
+  cases current <;> cases rest <;> cases padding <;>
+    simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight]
+
+/--
+The source shape of {name}`rightEdgeScanDescription` is stable under the
+right-then-left bridge whenever the visible padding has a first cell.
+-/
+theorem rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
+    (left : List (Option Bool)) (bits : Word Bool)
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeScanSourceTapeFromLeft left bits (pad :: padding))) =
+      rightEdgeScanSourceTapeFromLeft left bits (pad :: padding) := by
+  cases bits with
+  | nil =>
+      cases left <;> cases pad <;> cases padding <;>
+        simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells,
+          Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons current rest =>
+      exact
+        rightEdgeScanSourceTapeFromLeft_move_left_move_right_cons
+          left (pad :: padding) current rest
+
+/--
+The target shape of {name}`rightEdgeScanDescription` is stable under the
+right-then-left bridge inserted before a following subroutine.
+-/
+theorem rightEdgeScanTargetTapeFromLeft_move_left_move_right
+    (left : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeScanTargetTapeFromLeft left bits padding)) =
+      rightEdgeScanTargetTapeFromLeft left bits padding := by
+  unfold rightEdgeScanTargetTapeFromLeft
+  cases hleft : List.append (bits.reverse.map some) left with
+  | nil =>
+      cases padding <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons cell rest =>
+      cases padding <;>
+        simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 private theorem rightEdgeScanDescription_wellFormed :
     rightEdgeScanDescription.WellFormed := by
   refine ⟨by decide, by decide, by decide, ?_, ?_⟩

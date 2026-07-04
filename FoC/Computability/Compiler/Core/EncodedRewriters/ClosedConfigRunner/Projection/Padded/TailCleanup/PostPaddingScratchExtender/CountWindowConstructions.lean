@@ -532,24 +532,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountAfterStageNormalizerLeftB
       [none]
   exact postPaddingOutputPrefixAfterStageBase_eq_prefixBits_reverse L
 
-theorem leadingBlankLeftShiftTargetTapeWithPadding_leftTwice_eq_rightEdgeRewindSourceWithPrefix
-    (baseBits bits : Word Bool) (padding : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.left
-          (leadingBlankLeftShiftTargetTapeWithPadding
-            (List.append (baseBits.reverse.map some) [none])
-            bits padding)) =
-      rightEdgeRewindSourceTapeWithBase
-        ([] : List (Option Bool))
-        (List.append baseBits bits)
-        (none :: leadingBlankLeftShiftTargetVisiblePadding padding) := by
-  cases bits <;> cases baseBits <;> cases padding <;>
-    simp [leadingBlankLeftShiftTargetTapeWithPadding,
-      rightEdgeRewindSourceTapeWithBase,
-      leadingBlankLeftShiftTargetVisiblePadding, tapeAtCells,
-      Tape.move, Tape.moveLeft, List.reverse_append,
-      List.map_reverse, List.append_assoc]
-
 def rejectPostFieldHandoffRightPadding
     (L : DovetailLayout) : List (Option Bool) :=
   List.append (List.replicate 3 (none : Option Bool))
@@ -708,25 +690,6 @@ theorem rejectPostFieldHandoffRightEdgeRewinderConstruction_core :
       fun L pref leftBit deletedTail _hdeleted _hpayload =>
         rejectPostFieldHandoff_rightEdgeRewind_haltsFrom
           L pref leftBit deletedTail⟩
-
-theorem rightEdgeRewindTargetTapeWithBase_move_left_move_right_append_last
-    (baseLeft : List (Option Bool)) (pref : Word Bool)
-    (last : Bool) (padding : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (rightEdgeRewindTargetTapeWithBase
-            baseLeft (List.append pref [last]) padding)) =
-      rightEdgeRewindTargetTapeWithBase
-        baseLeft (List.append pref [last]) padding := by
-  cases pref with
-  | nil =>
-      simpa using
-        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
-          baseLeft last [] padding
-  | cons first rest =>
-      simpa using
-        rightEdgeRewindTargetTapeWithBase_move_left_move_right_cons
-          baseLeft first (List.append rest [last]) padding
 
 theorem rejectPostFieldHandoffRewoundTape_move_left_move_right
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
@@ -1160,12 +1123,6 @@ def acceptPostFieldDecodedPrefixScanSourceTape
     (ParsedLayoutBits L)
     (acceptPostFieldDecodedPrefixScanPadding L)
 
-def acceptPostFieldDecodedPrefixScanTargetTape
-    (L : DovetailLayout) : Tape Bool :=
-  rightEdgeScanTargetTapeFromLeft [none]
-    (ParsedLayoutBits L)
-    (acceptPostFieldDecodedPrefixScanPadding L)
-
 def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
     (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
@@ -1202,31 +1159,11 @@ def AcceptPostFieldDecodedPrefixScanToRewindConstruction :
 
 def acceptPostFieldDecodedPrefixScanToRewindDescription :
     MachineDescription :=
-  canonicalSeqDescription rightEdgeScanDescription
-    rightMoveOnceDescription
+  rightEdgeScanThenRightMoveDescription
 
 theorem acceptPostFieldDecodedPrefixScanToRewindDescription_subroutineReady :
     acceptPostFieldDecodedPrefixScanToRewindDescription.SubroutineReady :=
-  canonicalSeqDescription_subroutineReady
-    rightEdgeScanDescription_subroutineReady
-    rightMoveOnceDescription_subroutineReady
-
-theorem rightEdgeScanSourceTapeFromLeft_move_left_move_right_padding_cons
-    (left : List (Option Bool)) (bits : Word Bool)
-    (pad : Option Bool) (padding : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (rightEdgeScanSourceTapeFromLeft left bits (pad :: padding))) =
-      rightEdgeScanSourceTapeFromLeft left bits (pad :: padding) := by
-  cases bits with
-  | nil =>
-      cases left <;> cases pad <;> cases padding <;>
-        simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells,
-          Tape.move, Tape.moveLeft, Tape.moveRight]
-  | cons current rest =>
-      exact
-        rightEdgeScanSourceTapeFromLeft_move_left_move_right_cons
-          left (pad :: padding) current rest
+  rightEdgeScanThenRightMoveDescription_subroutineReady
 
 theorem acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
     (L : DovetailLayout) :
@@ -1246,71 +1183,25 @@ theorem acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
         (selectedProjectionPaddedTailCleanupPostCountTailCells
           true L 0))
 
-theorem acceptPostFieldDecodedPrefixScanRightMove_equiv_rewindSource
-    (L : DovetailLayout) :
-    Tape.Equiv
-      (Tape.move Direction.right
-        (acceptPostFieldDecodedPrefixScanTargetTape L))
-      (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
-        true L 0) := by
-  rw [acceptPostFieldDecodedPrefixScanTargetTape]
-  have hshape :
-      Tape.move Direction.right
-          (rightEdgeScanTargetTapeFromLeft [none]
-            (ParsedLayoutBits L)
-            (acceptPostFieldDecodedPrefixScanPadding L)) =
-        tapeAtCells
-          (List.append ((ParsedLayoutBits L).reverse.map some) [none])
-          (none :: acceptPostFieldDecodedPrefixScanPadding L) := by
-    unfold rightEdgeScanTargetTapeFromLeft
-    cases hstack :
-        List.append ((ParsedLayoutBits L).reverse.map some)
-          ([none] : List (Option Bool)) with
-    | nil =>
-        have hlen := congrArg List.length hstack
-        simp at hlen
-    | cons cell stack =>
-        cases acceptPostFieldDecodedPrefixScanPadding L <;>
-          simp [tapeAtCells, Tape.move, Tape.moveLeft,
-            Tape.moveRight]
-  rw [hshape]
-  simp [
-    selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape,
-    acceptPostFieldDecodedPrefixScanPadding, tapeAtCells, Tape.Equiv,
-    FoC.Computability.dropTrailingNone_append_none]
-
 theorem acceptPostFieldDecodedPrefixScanToRewind_haltsFrom
     (L : DovetailLayout) :
     acceptPostFieldDecodedPrefixScanToRewindDescription.HaltsFromTapeEquiv
       (acceptPostFieldDecodedPrefixScanSourceTape L)
       (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
         true L 0) := by
-  exact
-    canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
-      rightEdgeScanDescription_subroutineReady
-      rightMoveOnceDescription_subroutineReady
-      (by
-        simpa [acceptPostFieldDecodedPrefixScanSourceTape,
-          acceptPostFieldDecodedPrefixScanTargetTape] using
-          rightEdgeScanDescription_haltsFromTape
-            [none] (ParsedLayoutBits L)
-            (acceptPostFieldDecodedPrefixScanPadding L))
-      (by
-        simpa [acceptPostFieldDecodedPrefixScanTargetTape] using
-          rightEdgeScanTargetTapeFromLeft_move_left_move_right
-            [none] (ParsedLayoutBits L)
-            (acceptPostFieldDecodedPrefixScanPadding L))
-      (by
-        refine
-          ⟨Tape.move Direction.right
-              (acceptPostFieldDecodedPrefixScanTargetTape L),
-            ?_, ?_⟩
-        · exact
-            rightMoveOnceDescription_haltsFromTape
-              (acceptPostFieldDecodedPrefixScanTargetTape L)
-        · exact
-            acceptPostFieldDecodedPrefixScanRightMove_equiv_rewindSource
-              L)
+  simpa [acceptPostFieldDecodedPrefixScanToRewindDescription,
+    acceptPostFieldDecodedPrefixScanSourceTape,
+    acceptPostFieldDecodedPrefixScanPadding,
+    selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape] using
+    rightEdgeScanThenRightMoveDescription_haltsFromTapeEquiv
+      (ParsedLayoutBits L)
+      (List.append
+        (List.replicate
+          (selectedProjectionPaddedTailCleanupScratchCountBits
+            true L).length
+          (none : Option Bool))
+        (selectedProjectionPaddedTailCleanupPostCountTailCells
+          true L 0))
 
 theorem acceptPostFieldDecodedPrefixScanToRewindConstruction_core :
     AcceptPostFieldDecodedPrefixScanToRewindConstruction := by
