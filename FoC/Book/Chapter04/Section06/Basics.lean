@@ -211,7 +211,7 @@ theorem general_yields_sound_for_symbol_language
   exact general_formLanguage_replace_sound symbolLanguage
     (hprod lhs rhs hprodRule) hw
 
-theorem general_derives_sound_for_symbol_language_aux
+private theorem general_derives_sound_for_symbol_language_aux
     {G : GeneralGrammar terminal nonterminal}
     (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
     (hterminal : forall a,

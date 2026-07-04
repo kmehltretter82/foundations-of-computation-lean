@@ -1129,7 +1129,7 @@ theorem terminalWord_injective {x y : Word AB}
   cases hopt
   rfl
 
-theorem anbn_terminal_derives_eq_aux
+private theorem anbn_terminal_derives_eq_aux
     {xform yform : SententialForm AB AnBnNT} {x y : Word AB}
     (hxform : xform = SententialForm.terminalWord (nt := AnBnNT) x)
     (hyform : yform = SententialForm.terminalWord (nt := AnBnNT) y)
@@ -1165,7 +1165,7 @@ The result extracts the number of wraps and therefore the matching word
 {lit}`a^n b^n`.
 -/
 
-theorem anbn_open_derives_terminal_exact_aux
+private theorem anbn_open_derives_terminal_exact_aux
     {xform yform : SententialForm AB AnBnNT} {w : Word AB}
     (hopen : exists n, xform = AnBnOpenForm n)
     (hyform : yform = SententialForm.terminalWord (nt := AnBnNT) w)

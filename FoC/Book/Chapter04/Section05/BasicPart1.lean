@@ -1130,7 +1130,7 @@ theorem cfg_yields_sound_for_symbol_language
                           exact CFG.formLanguage_replace_sound symbolLanguage
                             (hprod A rhs hprodA) hw
 
-theorem cfg_derives_sound_for_symbol_language_aux
+private theorem cfg_derives_sound_for_symbol_language_aux
     {G : CFG terminal nonterminal}
     (symbolLanguage : Symbol terminal nonterminal -> Language terminal)
     (hterminal : forall a,

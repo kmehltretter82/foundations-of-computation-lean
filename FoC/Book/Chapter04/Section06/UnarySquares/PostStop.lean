@@ -43,7 +43,7 @@ theorem squarePostStopState_of_local
     SquarePostStopState n (squarePostStopForm emitted middle) := by
   exact ⟨emitted, middle, rfl, hlocal.left, hlocal.right⟩
 
-theorem squarePostStopLocal_initial (n : Nat) :
+private theorem squarePostStopLocal_initial (n : Nat) :
     SquarePostStopLocalState n 0
       (squareBForm n ++ squareMarkerAForm n) := by
   constructor
@@ -75,7 +75,7 @@ theorem squareGrowForm_stop_post_state
   rw [hocc.left, hocc.right]
   simpa [List.append_assoc] using squarePostStop_initial n
 
-theorem squareMiddleClean_moveBA
+private theorem squareMiddleClean_moveBA
     (left right : SententialForm SquareTerminal SquareNT)
     (hleft : SquareMiddleClean left)
     (hright : SquareMiddleClean right) :
@@ -94,7 +94,7 @@ theorem squareMiddleClean_moveBA
   simpa [List.append_assoc] using
     squareMiddleClean_append hleft hlocal
 
-theorem squareMiddleClean_moveBa
+private theorem squareMiddleClean_moveBa
     (left right : SententialForm SquareTerminal SquareNT)
     (hleft : SquareMiddleClean left)
     (hright : SquareMiddleClean right) :
@@ -110,7 +110,7 @@ theorem squareMiddleClean_moveBa
   simpa [List.append_assoc] using
     squareMiddleClean_append hleft hlocal
 
-theorem squareMiddleClean_trailing_b_iff
+private theorem squareMiddleClean_trailing_b_iff
     (middle : SententialForm SquareTerminal SquareNT) :
     SquareMiddleClean (middle ++ [squareN SquareNT.b]) <->
       SquareMiddleClean middle := by
@@ -132,7 +132,7 @@ theorem squareMiddleClean_trailing_b_iff
   · intro h
     exact squareMiddleClean_append h squareMiddleClean_single_b
 
-theorem squareMiddle_pair_split_before_E_markA
+private theorem squareMiddle_pair_split_before_E_markA
     {middle u v : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle)
     (h : middle ++ [squareN SquareNT.e] =
@@ -185,7 +185,7 @@ theorem squareMiddle_pair_split_before_E_markA
           · simp [hu]
           · exact hv
 
-theorem squareMiddle_pair_split_before_E_terminal_a
+private theorem squareMiddle_pair_split_before_E_terminal_a
     {middle u v : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle)
     (h : middle ++ [squareN SquareNT.e] =
@@ -347,7 +347,7 @@ theorem sentential_single_after_nonterminal_delimiter
           · simp [hu]
           · exact htailEq
 
-theorem squareMiddle_trailing_b_split_before_E
+private theorem squareMiddle_trailing_b_split_before_E
     {middle u v : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle)
     (h : middle ++ [squareN SquareNT.e] =
@@ -459,7 +459,7 @@ theorem squareSeparatedTail_no_B_pair
           subst head
           exact ih (by simpa [List.append_assoc] using h.right)
 
-theorem squarePostStop_moveBA
+private theorem squarePostStop_moveBA
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
     (hleft : SquareMiddleClean left)
@@ -537,7 +537,7 @@ theorem squarePostStopState_step_moveBA
   rw [hu, hafterEq, hv]
   simpa [squarePostStopForm, List.append_assoc] using hstate
 
-theorem squarePostStopLocal_moveBA
+private theorem squarePostStopLocal_moveBA
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
     (hlocal : SquarePostStopLocalState n emitted
@@ -563,7 +563,7 @@ theorem squarePostStopLocal_moveBA
   · rw [← squareMiddlePotential_moveBA]
     exact hlocal.right
 
-theorem squarePostStop_moveBa
+private theorem squarePostStop_moveBa
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
     (hleft : SquareMiddleClean left)
@@ -638,7 +638,7 @@ theorem squarePostStopState_step_moveBa
   rw [hu, hafterEq, hv]
   simpa [squarePostStopForm, List.append_assoc] using hstate
 
-theorem squarePostStopLocal_moveBa
+private theorem squarePostStopLocal_moveBa
     {n emitted : Nat}
     {left right : SententialForm SquareTerminal SquareNT}
     (hlocal : SquarePostStopLocalState n emitted
@@ -663,7 +663,7 @@ theorem squarePostStopLocal_moveBa
   · rw [← squareMiddlePotential_moveBa]
     exact hlocal.right
 
-theorem squarePostStop_removeBE
+private theorem squarePostStop_removeBE
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean (middle ++ [squareN SquareNT.b]))
@@ -712,7 +712,7 @@ theorem squarePostStopState_step_removeBE
   rw [hu, hafterEq, hv]
   simpa [squarePostStopForm, List.append_assoc] using hstate
 
-theorem squarePostStopLocal_removeBE
+private theorem squarePostStopLocal_removeBE
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hlocal : SquarePostStopLocalState n emitted
@@ -724,7 +724,7 @@ theorem squarePostStopLocal_removeBE
     rw [squareMiddlePotential_trailing_b] at hbalance
     exact hbalance
 
-theorem squarePostStop_removeDA
+private theorem squarePostStop_removeDA
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean ([squareN SquareNT.markA] ++ middle))
@@ -777,7 +777,7 @@ theorem squarePostStopState_step_removeDA
   rw [hu, hv]
   simpa [squarePostStopForm, List.append_assoc] using hstate
 
-theorem squarePostStopLocal_removeDA
+private theorem squarePostStopLocal_removeDA
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hlocal : SquarePostStopLocalState n emitted
@@ -789,7 +789,7 @@ theorem squarePostStopLocal_removeDA
     rw [squareMiddlePotential_leading_markA] at hbalance
     exact hbalance
 
-theorem squarePostStop_moveDa
+private theorem squarePostStop_moveDa
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean ([squareT SquareTerminal.a] ++ middle))
@@ -806,7 +806,7 @@ theorem squarePostStop_moveDa
   · rw [squareMiddlePotential_leading_terminal_a] at hbalance
     lia
 
-theorem squareTerminalAForm_succ_eq_append (n : Nat) :
+private theorem squareTerminalAForm_succ_eq_append (n : Nat) :
     squareTerminalAForm (n + 1) =
       squareTerminalAForm n ++ [squareT SquareTerminal.a] := by
   induction n with
@@ -856,7 +856,7 @@ theorem squarePostStopState_step_moveDa
   simpa [squarePostStopForm, squareTerminalAForm_succ_eq_append,
     List.append_assoc] using hstate
 
-theorem squarePostStopLocal_moveDa
+private theorem squarePostStopLocal_moveDa
     {n emitted : Nat}
     {middle : SententialForm SquareTerminal SquareNT}
     (hlocal : SquarePostStopLocalState n emitted
@@ -868,7 +868,7 @@ theorem squarePostStopLocal_moveDa
     rw [squareMiddlePotential_leading_terminal_a] at hbalance
     lia
 
-theorem squarePostStop_finish_word
+private theorem squarePostStop_finish_word
     {n emitted : Nat}
     (hbalance : emitted + squareMiddlePotential [] = n * n) :
     Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage := by
@@ -912,7 +912,7 @@ theorem squarePostStopState_step_finish_square
     simp [squareTerminalAForm, SententialForm.terminalWord]
   · exact squarePostStop_finish_word hbalance'
 
-theorem squarePostStopLocal_finish_word
+private theorem squarePostStopLocal_finish_word
     {n emitted : Nat}
     (hlocal : SquarePostStopLocalState n emitted []) :
     Word.RepeatSymbol SquareTerminal.a emitted ∈ squareLanguage :=
