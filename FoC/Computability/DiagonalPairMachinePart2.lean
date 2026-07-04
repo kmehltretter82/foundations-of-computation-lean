@@ -186,13 +186,13 @@ def FaithfulConcreteDiagonalPairMapMachine :
   halt := FaithfulDiagonalPairMapMachineState.halt
   transition := faithfulDiagonalPairMapTransition
   statesFinite := FaithfulDiagonalPairMapMachineState.finite
-theorem faithfulDiagonalPairMapScanTapeCells_append
+private theorem faithfulDiagonalPairMapScanTapeCells_append
     (x y : List FaithfulDiagonalPairMapScanCell) :
     faithfulDiagonalPairMapScanTapeCells (x ++ y) =
       faithfulDiagonalPairMapScanTapeCells x ++
         faithfulDiagonalPairMapScanTapeCells y := by
   simp [faithfulDiagonalPairMapScanTapeCells]
-theorem faithfulDiagonalPairMapLeftContext_append_single
+private theorem faithfulDiagonalPairMapLeftContext_append_single
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol) :
     faithfulDiagonalPairMapLeftContext (List.append processed [code]) =
@@ -201,7 +201,7 @@ theorem faithfulDiagonalPairMapLeftContext_append_single
         faithfulDiagonalPairMapLeftContext processed := by
   simp [faithfulDiagonalPairMapLeftContext,
     faithfulDiagonalPairMapLeftCells, List.map_append]
-theorem faithfulDiagonalPairMapScanCells_append_processed
+private theorem faithfulDiagonalPairMapScanCells_append_processed
     (remaining processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol) :
     faithfulDiagonalPairMapScanCells remaining (List.append processed [code]) =
@@ -209,7 +209,7 @@ theorem faithfulDiagonalPairMapScanCells_append_processed
         [FaithfulDiagonalPairMapScanCell.right code] := by
   simp [faithfulDiagonalPairMapScanCells, List.map_append,
     List.append_assoc]
-theorem faithfulDiagonalPairMap_filterMap_some_map
+private theorem faithfulDiagonalPairMap_filterMap_some_map
     {alpha beta : Type} (f : alpha -> beta) (w : List alpha) :
     List.filterMap (fun a => some (f a)) w = w.map f := by
   induction w with
@@ -217,7 +217,7 @@ theorem faithfulDiagonalPairMap_filterMap_some_map
       rfl
   | cons a rest ih =>
       simp [ih]
-theorem faithfulDiagonalPairMap_output_left_map
+private theorem faithfulDiagonalPairMap_output_left_map
     (w : Word ConcreteMachineCodeSymbol) :
     List.map
         (fun code =>
@@ -243,7 +243,7 @@ theorem faithfulDiagonalPairMap_output_left_map
             (fun pair => FaithfulDiagonalPairMapMachineSymbol.out pair)
             (List.map PairCodeSymbol.left rest)
       rw [ih]
-theorem faithfulDiagonalPairMap_output_right_map
+private theorem faithfulDiagonalPairMap_output_right_map
     (w : Word ConcreteMachineCodeSymbol) :
     List.map
         (fun code =>
@@ -269,7 +269,7 @@ theorem faithfulDiagonalPairMap_output_right_map
             (fun pair => FaithfulDiagonalPairMapMachineSymbol.out pair)
             (List.map PairCodeSymbol.right rest)
       rw [ih]
-theorem faithfulDiagonalPairMap_initScan_computes
+private theorem faithfulDiagonalPairMap_initScan_computes
     (seenRev rest : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
       (faithfulDiagonalPairMapConfig
@@ -332,7 +332,7 @@ theorem faithfulDiagonalPairMap_initScan_computes
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveRight,
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (code :: seenRev)
-theorem faithfulDiagonalPairMap_rewind_computes
+private theorem faithfulDiagonalPairMap_rewind_computes
     (leftRev crossed : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
       (faithfulDiagonalPairMapConfig
@@ -433,7 +433,7 @@ theorem faithfulDiagonalPairMap_rewind_computes
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveLeft,
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (code :: crossed)
-theorem faithfulDiagonalPairMap_appendScan_computes
+private theorem faithfulDiagonalPairMap_appendScan_computes
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol)
     (scannedRev remaining : List FaithfulDiagonalPairMapScanCell) :
@@ -507,7 +507,7 @@ theorem faithfulDiagonalPairMap_appendScan_computes
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveRight,
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (cell :: scannedRev)
-theorem faithfulDiagonalPairMap_seek_computes
+private theorem faithfulDiagonalPairMap_seek_computes
     (processed : Word ConcreteMachineCodeSymbol)
     (code : ConcreteMachineCodeSymbol)
     (leftRev crossed : List FaithfulDiagonalPairMapScanCell) :
@@ -604,7 +604,7 @@ theorem faithfulDiagonalPairMap_seek_computes
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveLeft,
               Tape.write, List.reverse_cons, List.append_assoc]
               using ih (cell :: crossed)
-theorem faithfulDiagonalPairMap_process_computes
+private theorem faithfulDiagonalPairMap_process_computes
     (processed remaining : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes FaithfulConcreteDiagonalPairMapMachine
       (faithfulDiagonalPairMapConfig
@@ -703,7 +703,7 @@ theorem faithfulDiagonalPairMap_process_computes
           faithfulDiagonalPairMapScanCells, List.map_append,
           List.append_assoc]
           using ih (List.append processed [code])
-theorem faithfulDiagonalPairMap_haltTape_normalized
+private theorem faithfulDiagonalPairMap_haltTape_normalized
     (w : Word ConcreteMachineCodeSymbol) :
     Tape.normalizedOutput (faithfulDiagonalPairMapHaltTape w) =
       EncodeWord faithfulDiagonalPairMapOutputEncode
@@ -817,7 +817,7 @@ theorem faithfulDiagonalPairMap_haltTape_normalized
             PairCodeSymbol.separator ::
               PairCodeSymbol.right code ::
                 List.map PairCodeSymbol.right rest)).symm
-theorem faithfulDiagonalPairMap_startRaw_moveRight
+private theorem faithfulDiagonalPairMap_startRaw_moveRight
     (code : ConcreteMachineCodeSymbol)
     (rest : Word ConcreteMachineCodeSymbol) :
     Tape.move Direction.right

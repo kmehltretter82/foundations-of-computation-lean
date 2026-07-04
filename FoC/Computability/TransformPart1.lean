@@ -104,7 +104,7 @@ end NormalizedDeciderToAcceptorState
 
 namespace TuringMachine
 
-theorem tape_read_mem_cells {T : Tape symbol} {a : symbol}
+private theorem tape_read_mem_cells {T : Tape symbol} {a : symbol}
     (hread : Tape.read T = some a) :
     some a ∈ Tape.cells T := by
   cases T with
@@ -112,7 +112,7 @@ theorem tape_read_mem_cells {T : Tape symbol} {a : symbol}
       simp [Tape.read, Tape.cells] at hread ⊢
       exact Or.inr (Or.inl hread.symm)
 
-theorem tape_mem_cells_move_of_mem
+private theorem tape_mem_cells_move_of_mem
     (dir : Direction) {T : Tape symbol} {a : symbol}
     (hmem : some a ∈ Tape.cells T) :
     some a ∈ Tape.cells (Tape.move dir T) := by
@@ -139,7 +139,7 @@ theorem tape_mem_cells_move_of_mem
                 List.append_assoc] at hmem ⊢
               exact hmem
 
-theorem tape_mem_cells_of_move_mem
+private theorem tape_mem_cells_of_move_mem
     (dir : Direction) {T : Tape symbol} {a : symbol}
     (hmem : some a ∈ Tape.cells (Tape.move dir T)) :
     some a ∈ Tape.cells T := by
@@ -166,7 +166,7 @@ theorem tape_mem_cells_of_move_mem
                 List.append_assoc] at hmem ⊢
               exact hmem
 
-theorem tape_mem_cells_of_write_marker_move_mem
+private theorem tape_mem_cells_of_write_marker_move_mem
     {zero one : symbol} (hzeroOne : zero ≠ one)
     (dir : Direction) {T : Tape symbol}
     (hmem :
@@ -184,12 +184,12 @@ theorem tape_mem_cells_of_write_marker_move_mem
       · exact False.elim (hzeroOne (by simpa using hhead.symm))
       · exact Or.inr (Or.inr hright)
 
-theorem tape_write_read_eq (T : Tape symbol) :
+private theorem tape_write_read_eq (T : Tape symbol) :
     Tape.write (Tape.read T) T = T := by
   cases T
   rfl
 
-theorem not_mem_some_of_filterMap_singleton_ne
+private theorem not_mem_some_of_filterMap_singleton_ne
     {cells : List (Option symbol)} {zero one : symbol}
     (hzeroOne : zero ≠ one)
     (h : cells.filterMap (fun cell => cell) = [zero]) :
@@ -214,7 +214,7 @@ theorem not_mem_some_of_filterMap_singleton_ne
               have hnone := h.right (some one) htail
               cases hnone
 
-theorem tape_no_one_of_normalized_zero
+private theorem tape_no_one_of_normalized_zero
     {T : Tape symbol} {zero one : symbol}
     (hzeroOne : zero ≠ one)
     (hout : Tape.normalizedOutput T = [zero]) :
@@ -285,7 +285,7 @@ noncomputable def normalizedDeciderToAcceptor
       normalizedRunConfig (M.initial w) :=
   rfl
 
-theorem normalizedDeciderToAcceptor_step_run
+private theorem normalizedDeciderToAcceptor_step_run
     {M : TuringMachine symbol state} {zero one : symbol}
     {c d : Configuration symbol state}
     (hnot : c.state ≠ M.halt)
@@ -298,7 +298,7 @@ theorem normalizedDeciderToAcceptor_step_run
         simp [normalizedRunConfig, normalizedDeciderToAcceptor,
           normalizedDeciderToAcceptorTransition, hnot, haction])
 
-theorem normalizedDeciderToAcceptor_step_run_of_stopped
+private theorem normalizedDeciderToAcceptor_step_run_of_stopped
     {M : TuringMachine symbol state} {zero one : symbol}
     (hstop : HaltingTransitionsDisabled M)
     {c d : Configuration symbol state}
@@ -349,7 +349,7 @@ def NormalizedDeciderToAcceptorInvariant
           Halted M halted ∧
           some one ∈ Tape.cells halted.tape
 
-theorem normalizedDeciderToAcceptor_invariant_step
+private theorem normalizedDeciderToAcceptor_invariant_step
     {M : TuringMachine symbol state} {zero one : symbol} {input : Word symbol}
     (hzeroOne : zero ≠ one)
     {c d : Configuration symbol (NormalizedDeciderToAcceptorState state)}
@@ -526,7 +526,7 @@ theorem normalizedDeciderToAcceptor_invariant_step
           simp [normalizedDeciderToAcceptor,
             normalizedDeciderToAcceptorTransition, hcstate] at haction
 
-theorem normalizedDeciderToAcceptor_invariant_of_computesIn
+private theorem normalizedDeciderToAcceptor_invariant_of_computesIn
     {M : TuringMachine symbol state} {zero one : symbol} {input : Word symbol}
     (hzeroOne : zero ≠ one)
     {n : Nat}
@@ -541,7 +541,7 @@ theorem normalizedDeciderToAcceptor_invariant_of_computesIn
       exact ih (normalizedDeciderToAcceptor_invariant_step
         hzeroOne hinv hstep)
 
-theorem normalizedDeciderToAcceptor_initial_invariant
+private theorem normalizedDeciderToAcceptor_initial_invariant
     (M : TuringMachine symbol state) (zero one : symbol) (input : Word symbol) :
     NormalizedDeciderToAcceptorInvariant M one input
       ((normalizedDeciderToAcceptor M zero one).initial input) := by

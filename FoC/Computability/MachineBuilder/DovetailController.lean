@@ -298,7 +298,7 @@ theorem rawOutput_none_iff
     · rfl
     · rfl
 
-theorem rawOutputCode_encodeBoolWord
+private theorem rawOutputCode_encodeBoolWord
     (result : Word Bool) :
     rawOutputCode (encodeBoolWord result) =
       Option.map encodeBoolWord (rawOutput? result) := by
@@ -455,17 +455,17 @@ theorem continue_emitResult_branch_encode
             rw [emitResultCode_encode, hraw]
             rfl⟩⟩
 
-theorem rawOutputCode_encodeBoolWord_nil :
+private theorem rawOutputCode_encodeBoolWord_nil :
     rawOutputCode (encodeBoolWord []) = none := by
   simp [rawOutputCode_encodeBoolWord, rawOutput_nil]
 
-theorem rawOutputCode_encodeBoolWord_singleton (b : Bool) :
+private theorem rawOutputCode_encodeBoolWord_singleton (b : Bool) :
     rawOutputCode (encodeBoolWord [b]) =
       some (encodeBoolWord [b]) := by
   rw [rawOutputCode_encodeBoolWord, rawOutput_singleton]
   rfl
 
-theorem rawOutputCode_encodeBoolWord_outputWordFromHits
+private theorem rawOutputCode_encodeBoolWord_outputWordFromHits
     (L : DovetailLayout) :
     rawOutputCode (encodeBoolWord (DovetailLayout.outputWordFromHits L)) =
       Option.map encodeBoolWord (DovetailLayout.outputFromHits L) := by
@@ -511,21 +511,21 @@ theorem rawOutputCode_eq_some_encodeBoolWord_singleton_iff
     exact rawOutputCode_eq_some_iff.mpr
       ⟨[b], [b], h, rawOutput_singleton b, rfl⟩
 
-theorem cellBranchTarget_output_nil
+private theorem cellBranchTarget_output_nil
     (blankTarget falseTarget trueTarget : Nat) :
     cellBranchTarget (Tape.read (Tape.output ([] : Word Bool)))
       blankTarget falseTarget trueTarget =
         blankTarget :=
   rfl
 
-theorem cellBranchTarget_output_singleton
+private theorem cellBranchTarget_output_singleton
     (b : Bool) (blankTarget falseTarget trueTarget : Nat) :
     cellBranchTarget (Tape.read (Tape.output [b]))
       blankTarget falseTarget trueTarget =
         if b then trueTarget else falseTarget := by
   cases b <;> rfl
 
-theorem cellBranchTarget_output_of_rawOutput_eq_some
+private theorem cellBranchTarget_output_of_rawOutput_eq_some
     {result : Word Bool} {b : Bool}
     (blankTarget falseTarget trueTarget : Nat)
     (hraw : rawOutput? result = some [b]) :
@@ -583,7 +583,7 @@ theorem rawOutput_outputWordFromOption_boundedDovetailOutput
     · simp [boundedDovetailOutput, haccept, hreject,
         DovetailLayout.outputWordFromOption, rawOutput?]
 
-theorem rawOutput_totalAttemptResult
+private theorem rawOutput_totalAttemptResult
     (accept reject : MachineDescription)
     (C : DovetailControllerLayout) :
     rawOutput? (totalAttemptResult accept reject C) =

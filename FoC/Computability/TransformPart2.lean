@@ -7,7 +7,7 @@ open Foundation
 open Languages
 open Classical
 
-theorem normalizedDeciderToAcceptor_sweepRight_target_zero_halts
+private theorem normalizedDeciderToAcceptor_sweepRight_target_zero_halts
     (M : TuringMachine symbol state) (zero one : symbol)
     (markedLeft blanksLeft : Nat) (tail : List (Option symbol)) :
     HaltsFrom (normalizedDeciderToAcceptor M zero one)
@@ -29,7 +29,7 @@ theorem normalizedDeciderToAcceptor_sweepRight_target_zero_halts
   exact ⟨acceptConfig,
     Computes.step hstep (Computes.refl acceptConfig), rfl⟩
 
-theorem normalizedDeciderToAcceptor_sweepLeft_target_zero_halts
+private theorem normalizedDeciderToAcceptor_sweepLeft_target_zero_halts
     (M : TuringMachine symbol state) (zero one : symbol)
     (markedRight blanksRight : Nat) (tail : List (Option symbol)) :
     HaltsFrom (normalizedDeciderToAcceptor M zero one)
@@ -51,7 +51,7 @@ theorem normalizedDeciderToAcceptor_sweepLeft_target_zero_halts
   exact ⟨acceptConfig,
     Computes.step hstep (Computes.refl acceptConfig), rfl⟩
 
-theorem normalizedDeciderToAcceptor_sweepRight_target_halts
+private theorem normalizedDeciderToAcceptor_sweepRight_target_halts
     (M : TuringMachine symbol state) {zero one : symbol}
     (hzeroOne : zero ≠ one)
     (blanksRight markedLeft blanksLeft : Nat)
@@ -70,7 +70,7 @@ theorem normalizedDeciderToAcceptor_sweepRight_target_halts
           M hzeroOne markedLeft blanksLeft blanksRight tail)
         (ih (markedLeft + 2) blanksLeft.pred)
 
-theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
+private theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
     (M : TuringMachine symbol state) {zero one : symbol}
     (hzeroOne : zero ≠ one)
     (blanksLeft markedRight blanksRight : Nat)
@@ -98,7 +98,7 @@ following list lemmas split such a tape into the head, right-side, and left-side
 scanner-start cases used by {lit}`normalizedOutputScannerComplete`.
 -/
 
-theorem filterMap_singleton_decompose
+private theorem filterMap_singleton_decompose
     {cells : List (Option symbol)} {one : symbol}
     (h : cells.filterMap (fun cell => cell) = [one]) :
     exists blanks : Nat, exists tail : List (Option symbol),
@@ -120,7 +120,7 @@ theorem filterMap_singleton_decompose
           exists rest
           simp [scannerBlankBlock, h.left]
 
-theorem filterMap_nil_eq_blankBlock
+private theorem filterMap_nil_eq_blankBlock
     {cells : List (Option symbol)}
     (h : cells.filterMap (fun cell => cell) = ([] : List symbol)) :
     cells = scannerBlankBlock cells.length := by
@@ -138,13 +138,13 @@ theorem filterMap_nil_eq_blankBlock
       | some a =>
           simp at h
 
-theorem filterMap_nil_decompose
+private theorem filterMap_nil_decompose
     {cells : List (Option symbol)}
     (h : cells.filterMap (fun cell => cell) = ([] : List symbol)) :
     exists blanks : Nat, cells = scannerBlankBlock blanks := by
   exact ⟨cells.length, filterMap_nil_eq_blankBlock h⟩
 
-theorem filterMap_of_reverse_nil
+private theorem filterMap_of_reverse_nil
     {cells : List (Option symbol)}
     (h : cells.reverse.filterMap (fun cell => cell) = ([] : List symbol)) :
     cells.filterMap (fun cell => cell) = ([] : List symbol) := by
@@ -153,7 +153,7 @@ theorem filterMap_of_reverse_nil
     simpa [List.filterMap_reverse] using h
   simpa using congrArg List.reverse hrev
 
-theorem filterMap_of_reverse_singleton
+private theorem filterMap_of_reverse_singleton
     {cells : List (Option symbol)} {one : symbol}
     (h : cells.reverse.filterMap (fun cell => cell) = [one]) :
     cells.filterMap (fun cell => cell) = [one] := by
@@ -446,7 +446,7 @@ theorem normalizedOutputScannerComplete
             simp at haMem
             exact False.elim (ha haMem)
 
-theorem normalizedDeciderToAcceptor_halts_of_mem
+private theorem normalizedDeciderToAcceptor_halts_of_mem
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
@@ -538,7 +538,7 @@ noncomputable def deciderToAcceptor
       runConfig (M.initial w) :=
   rfl
 
-theorem deciderToAcceptor_step_run
+private theorem deciderToAcceptor_step_run
     {M : TuringMachine symbol state} {one : symbol}
     {c d : Configuration symbol state}
     (hnot : c.state ≠ M.halt)
@@ -550,7 +550,7 @@ theorem deciderToAcceptor_step_run
         simp [runConfig, deciderToAcceptor, deciderToAcceptorTransition,
           hnot, haction])
 
-theorem deciderToAcceptor_step_run_of_stopped
+private theorem deciderToAcceptor_step_run_of_stopped
     {M : TuringMachine symbol state} {one : symbol}
     (hstop : HaltingTransitionsDisabled M)
     {c d : Configuration symbol state}
@@ -561,7 +561,7 @@ theorem deciderToAcceptor_step_run_of_stopped
     exact False.elim (no_step_from_halted hstop hhalt hstep)
   exact deciderToAcceptor_step_run hnot hstep
 
-theorem deciderToAcceptor_simulates_computes
+private theorem deciderToAcceptor_simulates_computes
     {M : TuringMachine symbol state} {one : symbol}
     (hstop : HaltingTransitionsDisabled M)
     {c d : Configuration symbol state}
@@ -585,7 +585,7 @@ def DeciderToAcceptorInvariant
           Halted M halted ∧ Tape.read halted.tape = some one
   | DeciderToAcceptorState.loop => True
 
-theorem deciderToAcceptor_invariant_step
+private theorem deciderToAcceptor_invariant_step
     {M : TuringMachine symbol state} {one : symbol} {input : Word symbol}
     {c d : Configuration symbol (DeciderToAcceptorState state)}
     (hinv : DeciderToAcceptorInvariant M one input c)
@@ -638,7 +638,7 @@ theorem deciderToAcceptor_invariant_step
           cases hnext
           simp [DeciderToAcceptorInvariant]
 
-theorem deciderToAcceptor_invariant_of_computesIn
+private theorem deciderToAcceptor_invariant_of_computesIn
     {M : TuringMachine symbol state} {one : symbol} {input : Word symbol}
     {n : Nat}
     {c d : Configuration symbol (DeciderToAcceptorState state)}
@@ -651,14 +651,14 @@ theorem deciderToAcceptor_invariant_of_computesIn
   | succ hstep _ ih =>
       exact ih (deciderToAcceptor_invariant_step hinv hstep)
 
-theorem deciderToAcceptor_initial_invariant
+private theorem deciderToAcceptor_initial_invariant
     (M : TuringMachine symbol state) (one : symbol) (input : Word symbol) :
     DeciderToAcceptorInvariant M one input
       ((deciderToAcceptor M one).initial input) := by
   simp [deciderToAcceptor_initial, DeciderToAcceptorInvariant, runConfig]
   exact Computes.refl (M.initial input)
 
-theorem deciderToAcceptor_halts_of_mem
+private theorem deciderToAcceptor_halts_of_mem
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}
@@ -684,7 +684,7 @@ theorem deciderToAcceptor_halts_of_mem
     computes_trans hsim (Computes.step hstep (Computes.refl acceptConfig)),
     rfl⟩
 
-theorem deciderToAcceptor_halts_sound_of_stopped_decider
+private theorem deciderToAcceptor_halts_sound_of_stopped_decider
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
     {L : Language input}

@@ -263,14 +263,14 @@ def advance (accept reject : MachineDescription)
     acceptHit := L.acceptHit || (acceptConfig.state == accept.halt)
     rejectHit := L.rejectHit || (rejectConfig.state == reject.halt) }
 
-theorem advance_acceptConfig
+private theorem advance_acceptConfig
     (accept reject : MachineDescription)
     (L : DovetailLayout) (steps : Nat) :
     (advance accept reject L steps).acceptConfig =
       accept.runConfig steps L.acceptConfig := by
   simp [advance]
 
-theorem advance_rejectConfig
+private theorem advance_rejectConfig
     (accept reject : MachineDescription)
     (L : DovetailLayout) (steps : Nat) :
     (advance accept reject L steps).rejectConfig =
@@ -293,14 +293,14 @@ def run (accept reject : MachineDescription)
         SimulatorLayout.hitsFromConfigByBool
           reject L.rejectConfig steps }
 
-theorem run_acceptConfig
+private theorem run_acceptConfig
     (accept reject : MachineDescription)
     (L : DovetailLayout) (steps : Nat) :
     (run accept reject steps L).acceptConfig =
       accept.runConfig steps L.acceptConfig := by
   simp [run]
 
-theorem run_rejectConfig
+private theorem run_rejectConfig
     (accept reject : MachineDescription)
     (L : DovetailLayout) (steps : Nat) :
     (run accept reject steps L).rejectConfig =
@@ -601,7 +601,7 @@ def boundedDovetailOutput
 
 namespace DovetailLayout
 
-theorem simulator_hitsFromInitial_eq_hitsByBool
+private theorem simulator_hitsFromInitial_eq_hitsByBool
     (D : MachineDescription) (w : Word Bool) (limit : Nat) :
     SimulatorLayout.hitsFromConfigByBool D (D.initial w) limit =
       hitsByBool D w limit := by
@@ -613,7 +613,7 @@ theorem simulator_hitsFromInitial_eq_hitsByBool
       simp [SimulatorLayout.hitsFromConfigByBool, hitsByBool,
         SimulatorLayout.haltedFromConfigInBool, haltsInBool, ih]
 
-theorem run_initial_acceptHit
+private theorem run_initial_acceptHit
     (accept reject : MachineDescription)
     (w : Word Bool) (limit : Nat) :
     (run accept reject limit
@@ -621,7 +621,7 @@ theorem run_initial_acceptHit
       hitsByBool accept w limit := by
   simp [run, initial, simulator_hitsFromInitial_eq_hitsByBool]
 
-theorem run_initial_rejectHit
+private theorem run_initial_rejectHit
     (accept reject : MachineDescription)
     (w : Word Bool) (limit : Nat) :
     (run accept reject limit

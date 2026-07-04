@@ -219,7 +219,7 @@ def nextConfig (D : MachineDescription)
   | none => c
   | some next => next
 
-theorem nextConfig_eq_runConfig_one
+private theorem nextConfig_eq_runConfig_one
     (D : MachineDescription) (c : Configuration) :
     nextConfig D c = D.runConfig 1 c := by
   cases hstep : D.stepConfig c <;>
@@ -229,7 +229,7 @@ def haltedConfigBool (D : MachineDescription)
     (c : Configuration) : Bool :=
   c.state == D.halt
 
-theorem haltedConfigBool_eq_true_iff
+private theorem haltedConfigBool_eq_true_iff
     (D : MachineDescription) (c : Configuration) :
     haltedConfigBool D c = true <-> c.state = D.halt := by
   simp [haltedConfigBool]
@@ -241,22 +241,22 @@ def step (D : MachineDescription)
     config := next
     hit := L.hit || haltedConfigBool D next }
 
-theorem step_config
+private theorem step_config
     (D : MachineDescription) (L : SimulatorLayout) :
     (step D L).config = D.runConfig 1 L.config := by
   simp [step, nextConfig_eq_runConfig_one]
 
-theorem step_input
+private theorem step_input
     (D : MachineDescription) (L : SimulatorLayout) :
     (step D L).input = L.input :=
   rfl
 
-theorem step_stage
+private theorem step_stage
     (D : MachineDescription) (L : SimulatorLayout) :
     (step D L).stage = L.stage :=
   rfl
 
-theorem step_hit_eq_true_iff
+private theorem step_hit_eq_true_iff
     (D : MachineDescription) (L : SimulatorLayout) :
     (step D L).hit = true <->
       L.hit = true ∨ (D.runConfig 1 L.config).state = D.halt := by
@@ -266,7 +266,7 @@ def haltedFromConfigInBool (D : MachineDescription)
     (c : Configuration) (n : Nat) : Bool :=
   (D.runConfig n c).state == D.halt
 
-theorem haltedFromConfigInBool_eq_true_iff
+private theorem haltedFromConfigInBool_eq_true_iff
     (D : MachineDescription) (c : Configuration) (n : Nat) :
     haltedFromConfigInBool D c n = true <->
       (D.runConfig n c).state = D.halt := by
@@ -279,7 +279,7 @@ def hitsFromConfigByBool (D : MachineDescription)
       hitsFromConfigByBool D c limit ||
         haltedFromConfigInBool D c (limit + 1)
 
-theorem hitsFromConfigByBool_eq_true_iff
+private theorem hitsFromConfigByBool_eq_true_iff
     (D : MachineDescription) (c : Configuration) (limit : Nat) :
     hitsFromConfigByBool D c limit = true <->
       exists n : Nat, n ≤ limit ∧
@@ -330,17 +330,17 @@ def run (D : MachineDescription)
     config := D.runConfig steps L.config
     hit := L.hit || hitsFromConfigByBool D L.config steps }
 
-theorem run_config
+private theorem run_config
     (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
     (run D steps L).config = D.runConfig steps L.config :=
   rfl
 
-theorem run_input
+private theorem run_input
     (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
     (run D steps L).input = L.input :=
   rfl
 
-theorem run_stage
+private theorem run_stage
     (D : MachineDescription) (steps : Nat) (L : SimulatorLayout) :
     (run D steps L).stage = L.stage :=
   rfl
@@ -353,7 +353,7 @@ theorem run_hit_eq_true_iff
           (D.runConfig n L.config).state = D.halt := by
   simp [run, hitsFromConfigByBool_eq_true_iff]
 
-theorem run_initial_hit_eq_true_iff
+private theorem run_initial_hit_eq_true_iff
     (D : MachineDescription) (w : Word Bool) (steps : Nat) :
     (run D steps (initial D w steps)).hit = true <->
       exists n : Nat, n ≤ steps ∧ D.HaltsIn n w := by
@@ -387,7 +387,7 @@ def afterRun (D : MachineDescription)
     hit := L.hit ||
       ((D.runConfig steps L.config).state == D.halt) }
 
-theorem afterRun_config
+private theorem afterRun_config
     (D : MachineDescription) (L : SimulatorLayout) (steps : Nat) :
     (afterRun D L steps).config = D.runConfig steps L.config :=
   rfl

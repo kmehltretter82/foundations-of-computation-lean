@@ -259,7 +259,7 @@ def concreteDiagonalPairMapConfig
       ConcreteDiagonalPairMapMachineState :=
   { state := state, tape := tape }
 
-theorem concreteDiagonalPairMap_initScan_computes
+private theorem concreteDiagonalPairMap_initScan_computes
     (seenRev rest : Word ConcreteMachineCodeSymbol) :
     TuringMachine.Computes ConcreteDiagonalPairMapMachine
       (concreteDiagonalPairMapConfig
@@ -323,7 +323,7 @@ theorem concreteDiagonalPairMap_initScan_computes
               List.append_assoc]
               using ih (code :: seenRev)
 
-theorem concreteDiagonalPairMap_returnMarker_computes
+private theorem concreteDiagonalPairMap_returnMarker_computes
     (leftRaw : Word ConcreteMachineCodeSymbol)
     (markersLeft markersRight : Nat) :
     TuringMachine.Computes ConcreteDiagonalPairMapMachine
@@ -401,7 +401,7 @@ theorem concreteDiagonalPairMap_returnMarker_computes
           Nat.add_comm, Nat.add_left_comm]
           using ih (markersRight + 1)
 
-theorem concreteDiagonalPairMap_markerCells_append_marker_raw
+private theorem concreteDiagonalPairMap_markerCells_append_marker_raw
     (n : Nat) (leftRaw : Word ConcreteMachineCodeSymbol) :
     concreteDiagonalPairMapMarkerCells n ++
         some ConcreteDiagonalPairMapMachineSymbol.marker ::
@@ -424,7 +424,7 @@ theorem concreteDiagonalPairMap_markerCells_append_marker_raw
                 concreteDiagonalPairMapRawCells leftRaw))
       rw [ih]
 
-theorem concreteDiagonalPairMap_markerCells_succ (n : Nat) :
+private theorem concreteDiagonalPairMap_markerCells_succ (n : Nat) :
     concreteDiagonalPairMapMarkerCells (n + 1) =
       some ConcreteDiagonalPairMapMachineSymbol.marker ::
         concreteDiagonalPairMapMarkerCells n := by
@@ -440,7 +440,7 @@ theorem concreteDiagonalPairMap_markerCells_succ (n : Nat) :
               concreteDiagonalPairMapMarkerCells n
       rw [ih]
 
-theorem concreteDiagonalPairMap_appendBlank_moveLeft
+private theorem concreteDiagonalPairMap_appendBlank_moveLeft
     (leftRaw : Word ConcreteMachineCodeSymbol)
     (markersSeen : Nat) :
     Tape.move Direction.left
@@ -454,7 +454,7 @@ theorem concreteDiagonalPairMap_appendBlank_moveLeft
     concreteDiagonalPairMapMarkerCells,
     Tape.move, Tape.moveLeft, Tape.write]
 
-theorem concreteDiagonalPairMap_appendMarker_moveRight
+private theorem concreteDiagonalPairMap_appendMarker_moveRight
     (leftRaw : Word ConcreteMachineCodeSymbol)
     (markersSeen markersRemaining : Nat) :
     Tape.move Direction.right
@@ -482,7 +482,7 @@ theorem concreteDiagonalPairMap_appendMarker_moveRight
         (a := some ConcreteDiagonalPairMapMachineSymbol.marker)]
       simp
 
-theorem concreteDiagonalPairMap_appendScan_computes
+private theorem concreteDiagonalPairMap_appendScan_computes
     (leftRaw : Word ConcreteMachineCodeSymbol)
     (markersSeen markersRemaining : Nat) :
     TuringMachine.Computes ConcreteDiagonalPairMapMachine
@@ -558,7 +558,7 @@ theorem concreteDiagonalPairMap_appendScan_computes
               Tape.write, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
               using ih (markersSeen + 1)
 
-theorem concreteDiagonalPairMap_returnBlank_moveRight (markers : Nat) :
+private theorem concreteDiagonalPairMap_returnBlank_moveRight (markers : Nat) :
     Tape.move Direction.right
       (Tape.write none
         (concreteDiagonalPairMapReturnTape
@@ -570,7 +570,7 @@ theorem concreteDiagonalPairMap_returnBlank_moveRight (markers : Nat) :
   | succ markers =>
       rfl
 
-theorem concreteDiagonalPairMap_returnRaw_moveRight
+private theorem concreteDiagonalPairMap_returnRaw_moveRight
     (code : ConcreteMachineCodeSymbol)
     (rest : Word ConcreteMachineCodeSymbol)
     (markers : Nat) :
@@ -585,7 +585,7 @@ theorem concreteDiagonalPairMap_returnRaw_moveRight
   | succ markers =>
       rfl
 
-theorem concreteDiagonalPairMap_return_computes
+private theorem concreteDiagonalPairMap_return_computes
     (unprocessedRev : Word ConcreteMachineCodeSymbol) (markers : Nat) :
     TuringMachine.Computes ConcreteDiagonalPairMapMachine
       (concreteDiagonalPairMapConfig
@@ -653,7 +653,7 @@ theorem concreteDiagonalPairMap_return_computes
                 Nat.mul_add, Nat.left_distrib, Nat.right_distrib]
                 using ih (markers + 2))
 
-theorem concreteDiagonalPairMap_haltTape_normalized (markers : Nat) :
+private theorem concreteDiagonalPairMap_haltTape_normalized (markers : Nat) :
     Tape.normalizedOutput
         (concreteDiagonalPairMapHaltTape markers) =
       List.replicate markers
@@ -667,7 +667,7 @@ theorem concreteDiagonalPairMap_haltTape_normalized (markers : Nat) :
         Tape.normalizedOutput, Tape.cells]
       rw [List.replicate_succ]
 
-theorem concreteDiagonalPairMap_outputEncode_const
+private theorem concreteDiagonalPairMap_outputEncode_const
     (w : Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol)) :
     EncodeWord concreteDiagonalPairMapOutputEncode w =
       List.replicate w.length
@@ -683,7 +683,7 @@ theorem concreteDiagonalPairMap_outputEncode_const
             ConcreteDiagonalPairMapMachineSymbol.marker
       rw [ih, List.replicate_succ]
 
-theorem concreteDiagonalPairMap_length
+private theorem concreteDiagonalPairMap_length
     (w : Word ConcreteMachineCodeSymbol) :
     (ConcreteDiagonalPairMap w).length =
       w.length + 1 + w.length := by
@@ -698,7 +698,7 @@ theorem concreteDiagonalPairMap_length
   simp [List.length_append]
   lia
 
-theorem concreteDiagonalPairMap_outputEncode_eq_replicate
+private theorem concreteDiagonalPairMap_outputEncode_eq_replicate
     (w : Word ConcreteMachineCodeSymbol) :
     EncodeWord concreteDiagonalPairMapOutputEncode
         (ConcreteDiagonalPairMap w) =
@@ -707,7 +707,7 @@ theorem concreteDiagonalPairMap_outputEncode_eq_replicate
   rw [concreteDiagonalPairMap_outputEncode_const,
     concreteDiagonalPairMap_length]
 
-theorem concreteDiagonalPairMap_startRaw_moveRight
+private theorem concreteDiagonalPairMap_startRaw_moveRight
     (code : ConcreteMachineCodeSymbol)
     (rest : Word ConcreteMachineCodeSymbol) :
     Tape.move Direction.right
