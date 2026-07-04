@@ -800,28 +800,20 @@ theorem scratchCountSuffixMarkedBoundaryPostGapTape_after_one_right_stable
 theorem scratchCountSuffixMarkedBoundaryPostGapTape_move_left_move_right
     (pref suffix : Word Bool) (first : Bool)
     (rightTail : List (Option Bool))
-    (hpos : 0 < suffix.length) :
+    (_hpos : 0 < suffix.length) :
     Tape.move Direction.left
         (Tape.move Direction.right
           (scratchCountSuffixMarkedBoundaryPostGapTape
             pref suffix first rightTail)) =
       scratchCountSuffixMarkedBoundaryPostGapTape
         pref suffix first rightTail := by
-  cases suffix with
-  | nil =>
-      simp at hpos
-  | cons bit rest =>
-      cases hrev : (List.map some rest).reverse with
-      | nil =>
-          simp [scratchCountSuffixMarkedBoundaryPostGapTape,
-            rightEdgeScanTargetTapeFromLeft, tapeAtCells, Tape.move,
-            Tape.moveLeft, Tape.moveRight, hrev, List.reverse_cons,
-            List.map_append]
-      | cons cell tail =>
-          simp [scratchCountSuffixMarkedBoundaryPostGapTape,
-            rightEdgeScanTargetTapeFromLeft, tapeAtCells, Tape.move,
-            Tape.moveLeft, Tape.moveRight, hrev, List.reverse_cons,
-            List.map_append]
+  simpa [scratchCountSuffixMarkedBoundaryPostGapTape] using
+    rightEdgeScanTargetTapeFromLeft_move_left_move_right
+      (none :: pref.reverse.map some) suffix
+      (some true ::
+        List.append
+          (List.replicate suffix.length (none : Option Bool))
+          (some first :: rightTail))
 
 theorem scratchCountSuffixMarkedBoundaryCleanupSourceTape_eq_move_right_right_postGap
     (pref suffix : Word Bool) (first : Bool)
@@ -1278,15 +1270,20 @@ theorem firstSuffixLocalStasher_subroutineReady :
   ⟨firstSuffixLocalStasher_wellFormed,
     firstSuffixLocalStasher_haltTransitionFree⟩
 
-theorem firstSuffixLocalStasher_run_scan_false
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (right : List (Option Bool)) :
+-- The two stash branches share the same scan and finish shape; only the
+-- branch state records the bit that will be restored later.
+private def firstSuffixLocalStasherScanState (suffixFirst : Bool) : Nat :=
+  if suffixFirst then 20 else 10
+
+theorem firstSuffixLocalStasher_run_scan
+    (left : List (Option Bool)) (suffixFirst : Bool)
+    (suffixRest : Word Bool) (right : List (Option Bool)) :
     FirstSuffixLocalStasher.runConfig suffixRest.length
-        { state := 10
+        { state := firstSuffixLocalStasherScanState suffixFirst
           tape :=
             tapeAtCells left
               (List.append (suffixRest.map some) right) } =
-      { state := 10
+      { state := firstSuffixLocalStasherScanState suffixFirst
         tape :=
           tapeAtCells
             (List.append (suffixRest.reverse.map some) left)
@@ -1301,28 +1298,28 @@ theorem firstSuffixLocalStasher_run_scan_false
       rw [runConfig_add]
       change FirstSuffixLocalStasher.runConfig rest.length
           (FirstSuffixLocalStasher.runConfig 1
-            { state := 10
+            { state := firstSuffixLocalStasherScanState suffixFirst
               tape :=
                 tapeAtCells left
                   (some bit :: List.append (rest.map some) right) }) =
-        { state := 10
+        { state := firstSuffixLocalStasherScanState suffixFirst
           tape :=
             tapeAtCells
               (List.append ((bit :: rest).reverse.map some) left)
               right }
       have hstep :
           FirstSuffixLocalStasher.runConfig 1
-              { state := 10
+              { state := firstSuffixLocalStasherScanState suffixFirst
                 tape :=
                   tapeAtCells left
                     (some bit :: List.append (rest.map some) right) } =
-            { state := 10
+            { state := firstSuffixLocalStasherScanState suffixFirst
               tape :=
                 tapeAtCells (some bit :: left)
                   (List.append (rest.map some) right) } := by
-        cases bit <;>
+        cases suffixFirst <;> cases bit <;>
           cases hright : List.append (List.map some rest) right <;>
-            simp [FirstSuffixLocalStasher,
+            simp [firstSuffixLocalStasherScanState, FirstSuffixLocalStasher,
               scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
               runConfig, stepConfig, lookupTransition, Matches,
               transition, Tape.read, Tape.write, Tape.move,
@@ -1331,64 +1328,11 @@ theorem firstSuffixLocalStasher_run_scan_false
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih (some bit :: left)
 
-theorem firstSuffixLocalStasher_run_scan_true
+theorem firstSuffixLocalStasher_finish
     (left : List (Option Bool)) (suffixRest : Word Bool)
-    (right : List (Option Bool)) :
-    FirstSuffixLocalStasher.runConfig suffixRest.length
-        { state := 20
-          tape :=
-            tapeAtCells left
-              (List.append (suffixRest.map some) right) } =
-      { state := 20
-        tape :=
-          tapeAtCells
-            (List.append (suffixRest.reverse.map some) left)
-            right } := by
-  induction suffixRest generalizing left with
-  | nil =>
-      simp [runConfig]
-  | cons bit rest ih =>
-      rw [show (bit :: rest).length = 1 + rest.length by
-        simp
-        lia]
-      rw [runConfig_add]
-      change FirstSuffixLocalStasher.runConfig rest.length
-          (FirstSuffixLocalStasher.runConfig 1
-            { state := 20
-              tape :=
-                tapeAtCells left
-                  (some bit :: List.append (rest.map some) right) }) =
-        { state := 20
-          tape :=
-            tapeAtCells
-              (List.append ((bit :: rest).reverse.map some) left)
-              right }
-      have hstep :
-          FirstSuffixLocalStasher.runConfig 1
-              { state := 20
-                tape :=
-                  tapeAtCells left
-                    (some bit :: List.append (rest.map some) right) } =
-            { state := 20
-              tape :=
-                tapeAtCells (some bit :: left)
-                  (List.append (rest.map some) right) } := by
-        cases bit <;>
-          cases hright : List.append (List.map some rest) right <;>
-            simp [FirstSuffixLocalStasher,
-              scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
-              runConfig, stepConfig, lookupTransition, Matches,
-              transition, Tape.read, Tape.write, Tape.move,
-              Tape.moveRight, tapeAtCells]
-      rw [hstep]
-      simpa [List.reverse_cons, List.map_append, List.append_assoc] using
-        ih (some bit :: left)
-
-theorem firstSuffixLocalStasher_finish_false
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
+    (suffixFirst : Bool) (tail : List (Option Bool)) :
     FirstSuffixLocalStasher.runConfig 4
-        { state := 10
+        { state := firstSuffixLocalStasherScanState suffixFirst
           tape :=
             tapeAtCells
               (List.append (suffixRest.reverse.map some) (none :: left))
@@ -1400,45 +1344,24 @@ theorem firstSuffixLocalStasher_finish_false
                   tail) } =
       { state := FirstSuffixLocalStasher.halt
         tape :=
-          firstSuffixLocalStasherTargetTape left false suffixRest tail } := by
-  simp [FirstSuffixLocalStasher,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
-    firstSuffixLocalStasherTargetTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveRight, Tape.moveLeft, tapeAtCells]
+          firstSuffixLocalStasherTargetTape
+            left suffixFirst suffixRest tail } := by
+  cases suffixFirst <;>
+    simp [firstSuffixLocalStasherScanState, FirstSuffixLocalStasher,
+      scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
+      firstSuffixLocalStasherTargetTape, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight, Tape.moveLeft, tapeAtCells]
 
-theorem firstSuffixLocalStasher_finish_true
+theorem firstSuffixLocalStasher_start
     (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
-    FirstSuffixLocalStasher.runConfig 4
-        { state := 20
-          tape :=
-            tapeAtCells
-              (List.append (suffixRest.reverse.map some) (none :: left))
-              (none ::
-                some true ::
-                none ::
-                List.append
-                  (List.replicate suffixRest.length (none : Option Bool))
-                  tail) } =
-      { state := FirstSuffixLocalStasher.halt
-        tape :=
-          firstSuffixLocalStasherTargetTape left true suffixRest tail } := by
-  simp [FirstSuffixLocalStasher,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
-    firstSuffixLocalStasherTargetTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveRight, Tape.moveLeft, tapeAtCells]
-
-theorem firstSuffixLocalStasher_start_false
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
+    (suffixFirst : Bool) (tail : List (Option Bool)) :
     FirstSuffixLocalStasher.runConfig 1
         { state := FirstSuffixLocalStasher.start
           tape :=
             firstSuffixLocalStasherSourceTape
-              left false suffixRest tail } =
-      { state := 10
+              left suffixFirst suffixRest tail } =
+      { state := firstSuffixLocalStasherScanState suffixFirst
         tape :=
           tapeAtCells (none :: left)
             (List.append (suffixRest.map some)
@@ -1448,87 +1371,19 @@ theorem firstSuffixLocalStasher_start_false
                 List.append
                   (List.replicate suffixRest.length (none : Option Bool))
                   tail)) } := by
-  simp [FirstSuffixLocalStasher,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
-    firstSuffixLocalStasherSourceTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveRight, tapeAtCells]
-  cases List.map some suffixRest ++
-    none ::
-      some true ::
+  cases suffixFirst <;>
+    simp [firstSuffixLocalStasherScanState, FirstSuffixLocalStasher,
+      scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
+      firstSuffixLocalStasherSourceTape, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight, tapeAtCells]
+  all_goals
+    cases List.map some suffixRest ++
       none ::
-      (List.replicate suffixRest.length (none : Option Bool) ++ tail) <;>
-    simp
-
-theorem firstSuffixLocalStasher_start_true
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
-    FirstSuffixLocalStasher.runConfig 1
-        { state := FirstSuffixLocalStasher.start
-          tape :=
-            firstSuffixLocalStasherSourceTape
-              left true suffixRest tail } =
-      { state := 20
-        tape :=
-          tapeAtCells (none :: left)
-            (List.append (suffixRest.map some)
-              (none ::
-                some true ::
-                none ::
-                List.append
-                  (List.replicate suffixRest.length (none : Option Bool))
-                  tail)) } := by
-  simp [FirstSuffixLocalStasher,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixLocalStasherDescription,
-    firstSuffixLocalStasherSourceTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveRight, tapeAtCells]
-  cases List.map some suffixRest ++
-    none ::
-      some true ::
-      none ::
-      (List.replicate suffixRest.length (none : Option Bool) ++ tail) <;>
-    simp
-
-theorem firstSuffixLocalStasher_run_false
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
-    FirstSuffixLocalStasher.runConfig (suffixRest.length + 5)
-        { state := FirstSuffixLocalStasher.start
-          tape :=
-            firstSuffixLocalStasherSourceTape
-              left false suffixRest tail } =
-      { state := FirstSuffixLocalStasher.halt
-        tape :=
-          firstSuffixLocalStasherTargetTape
-            left false suffixRest tail } := by
-  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by lia,
-    runConfig_add]
-  rw [firstSuffixLocalStasher_start_false]
-  rw [show suffixRest.length + 4 = suffixRest.length + 4 by rfl,
-    runConfig_add]
-  rw [firstSuffixLocalStasher_run_scan_false]
-  exact firstSuffixLocalStasher_finish_false left suffixRest tail
-
-theorem firstSuffixLocalStasher_run_true
-    (left : List (Option Bool)) (suffixRest : Word Bool)
-    (tail : List (Option Bool)) :
-    FirstSuffixLocalStasher.runConfig (suffixRest.length + 5)
-        { state := FirstSuffixLocalStasher.start
-          tape :=
-            firstSuffixLocalStasherSourceTape
-              left true suffixRest tail } =
-      { state := FirstSuffixLocalStasher.halt
-        tape :=
-          firstSuffixLocalStasherTargetTape
-            left true suffixRest tail } := by
-  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by lia,
-    runConfig_add]
-  rw [firstSuffixLocalStasher_start_true]
-  rw [show suffixRest.length + 4 = suffixRest.length + 4 by rfl,
-    runConfig_add]
-  rw [firstSuffixLocalStasher_run_scan_true]
-  exact firstSuffixLocalStasher_finish_true left suffixRest tail
+        some true ::
+        none ::
+        (List.replicate suffixRest.length (none : Option Bool) ++ tail) <;>
+      simp
 
 theorem firstSuffixLocalStasher_run
     (left : List (Option Bool)) (suffixFirst : Bool)
@@ -1542,9 +1397,13 @@ theorem firstSuffixLocalStasher_run
         tape :=
           firstSuffixLocalStasherTargetTape
             left suffixFirst suffixRest tail } := by
-  cases suffixFirst <;>
-    simp [firstSuffixLocalStasher_run_false,
-      firstSuffixLocalStasher_run_true]
+  rw [show suffixRest.length + 5 = 1 + (suffixRest.length + 4) by lia,
+    runConfig_add]
+  rw [firstSuffixLocalStasher_start]
+  rw [show suffixRest.length + 4 = suffixRest.length + 4 by rfl,
+    runConfig_add]
+  rw [firstSuffixLocalStasher_run_scan]
+  exact firstSuffixLocalStasher_finish left suffixRest suffixFirst tail
 
 theorem firstSuffixLocalStasher_haltsFromTape
     (left : List (Option Bool)) (suffixFirst : Bool)
@@ -1718,70 +1577,64 @@ def prefixGapRestorerAfterFetchTape
         (List.replicate suffixRest.length (none : Option Bool))
         (some first :: rightTail))
 
-theorem prefixGapRestorer_run_fetch_false
+-- Prefix-gap restoration mirrors the stasher: the carried bit selects the
+-- fetch and scan states, but the tape walk is otherwise identical.
+private def prefixGapRestorerFetchState (suffixFirst : Bool) : Nat :=
+  if suffixFirst then 21 else 11
+
+private def prefixGapRestorerScanState (suffixFirst : Bool) : Nat :=
+  if suffixFirst then 22 else 12
+
+theorem prefixGapRestorer_run_fetch
     (pref suffixRest : Word Bool) (first : Bool)
+    (suffixFirst : Bool)
     (rightTail : List (Option Bool)) :
     PrefixGapRestorer.runConfig 4
         { state := PrefixGapRestorer.start
           tape :=
             scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape
-              pref false suffixRest first rightTail } =
-      { state := 11
+              pref suffixFirst suffixRest first rightTail } =
+      { state := prefixGapRestorerFetchState suffixFirst
         tape := prefixGapRestorerAfterFetchTape
           pref suffixRest first rightTail } := by
-  simp [PrefixGapRestorer,
-    scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape,
-    prefixGapRestorerAfterFetchTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
+  cases suffixFirst <;>
+    simp [prefixGapRestorerFetchState, PrefixGapRestorer,
+      scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
+      scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape,
+      prefixGapRestorerAfterFetchTape, runConfig, stepConfig,
+      lookupTransition, Matches, transition, Tape.read, Tape.write,
+      Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
 
-theorem prefixGapRestorer_run_fetch_true
-    (pref suffixRest : Word Bool) (first : Bool)
-    (rightTail : List (Option Bool)) :
-    PrefixGapRestorer.runConfig 4
-        { state := PrefixGapRestorer.start
-          tape :=
-            scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape
-              pref true suffixRest first rightTail } =
-      { state := 21
-        tape := prefixGapRestorerAfterFetchTape
-          pref suffixRest first rightTail } := by
-  simp [PrefixGapRestorer,
-    scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-    scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape,
-    prefixGapRestorerAfterFetchTape, runConfig, stepConfig,
-    lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveLeft, Tape.moveRight, tapeAtCells]
-
-theorem prefixGapRestorer_run_boundary_false
+theorem prefixGapRestorer_run_boundary
     (baseLeft : List (Option Bool)) (next : Option Bool)
-    (rightCells : List (Option Bool)) :
+    (suffixFirst : Bool) (rightCells : List (Option Bool)) :
     PrefixGapRestorer.runConfig 2
-        { state := 12
+        { state := prefixGapRestorerScanState suffixFirst
           tape := tapeAtCells baseLeft (none :: next :: rightCells) } =
       { state := PrefixGapRestorer.halt
-        tape := tapeAtCells baseLeft (some false :: next :: rightCells) } := by
-  cases next with
+        tape :=
+          tapeAtCells baseLeft
+            (some suffixFirst :: next :: rightCells) } := by
+  cases suffixFirst <;> cases next with
   | none =>
-      simp [PrefixGapRestorer,
+      simp [prefixGapRestorerScanState, PrefixGapRestorer,
         scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
         runConfig, stepConfig, lookupTransition, Matches, transition,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
         tapeAtCells]
   | some bit =>
       cases bit <;>
-        simp [PrefixGapRestorer,
+        simp [prefixGapRestorerScanState, PrefixGapRestorer,
           scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
           runConfig, stepConfig, lookupTransition, Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
           tapeAtCells]
 
-theorem prefixGapRestorer_run_scan_false
+theorem prefixGapRestorer_run_scan
     (baseLeft : List (Option Bool)) (leftStack : Word Bool)
-    (current : Bool) (rightCells : List (Option Bool)) :
+    (suffixFirst current : Bool) (rightCells : List (Option Bool)) :
     PrefixGapRestorer.runConfig (leftStack.length + 3)
-        { state := 12
+        { state := prefixGapRestorerScanState suffixFirst
           tape :=
             tapeAtCells
               (List.append (leftStack.map some) (none :: baseLeft))
@@ -1789,42 +1642,42 @@ theorem prefixGapRestorer_run_scan_false
       { state := PrefixGapRestorer.halt
         tape :=
           tapeAtCells baseLeft
-            (some false ::
+            (some suffixFirst ::
               List.append (leftStack.reverse.map some)
                 (some current :: rightCells)) } := by
   induction leftStack generalizing current rightCells with
   | nil =>
       change PrefixGapRestorer.runConfig (1 + 2)
-          { state := 12
+          { state := prefixGapRestorerScanState suffixFirst
             tape :=
               tapeAtCells (List.append ([] : List (Option Bool))
                 (none :: baseLeft)) (some current :: rightCells) } =
         { state := PrefixGapRestorer.halt
           tape :=
             tapeAtCells baseLeft
-              (some false ::
+              (some suffixFirst ::
                 List.append (([] : Word Bool).reverse.map some)
                   (some current :: rightCells)) }
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
-              { state := 12
+              { state := prefixGapRestorerScanState suffixFirst
                 tape :=
                   tapeAtCells (List.append ([] : List (Option Bool))
                     (none :: baseLeft)) (some current :: rightCells) } =
-            { state := 12
+            { state := prefixGapRestorerScanState suffixFirst
               tape := tapeAtCells baseLeft
                 (none :: some current :: rightCells) } := by
-        cases current <;>
-          simp [PrefixGapRestorer,
+        cases suffixFirst <;> cases current <;>
+          simp [prefixGapRestorerScanState, PrefixGapRestorer,
             scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
             runConfig, stepConfig, lookupTransition, Matches, transition,
             Tape.read, Tape.write, Tape.move, Tape.moveLeft,
             tapeAtCells]
       rw [hstep]
       simpa using
-        prefixGapRestorer_run_boundary_false
-          baseLeft (some current) rightCells
+        prefixGapRestorer_run_boundary
+          baseLeft (some current) suffixFirst rightCells
   | cons next rest ih =>
       rw [show (next :: rest).length + 3 =
         1 + (rest.length + 3) by
@@ -1833,19 +1686,19 @@ theorem prefixGapRestorer_run_scan_false
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
-              { state := 12
+              { state := prefixGapRestorerScanState suffixFirst
                 tape :=
                   tapeAtCells
                     (List.append ((next :: rest).map some)
                       (none :: baseLeft))
                     (some current :: rightCells) } =
-            { state := 12
+            { state := prefixGapRestorerScanState suffixFirst
               tape :=
                 tapeAtCells
                   (List.append (rest.map some) (none :: baseLeft))
                   (some next :: some current :: rightCells) } := by
-        cases current <;> cases next <;>
-          simp [PrefixGapRestorer,
+        cases suffixFirst <;> cases current <;> cases next <;>
+          simp [prefixGapRestorerScanState, PrefixGapRestorer,
             scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
             runConfig, stepConfig, lookupTransition, Matches, transition,
             Tape.read, Tape.write, Tape.move, Tape.moveLeft,
@@ -1854,11 +1707,11 @@ theorem prefixGapRestorer_run_scan_false
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
         ih next (some current :: rightCells)
 
-theorem prefixGapRestorer_run_restore_false_from_leftStack
+theorem prefixGapRestorer_run_restore_from_leftStack
     (baseLeft : List (Option Bool)) (leftStack : Word Bool)
-    (rightCells : List (Option Bool)) :
+    (suffixFirst : Bool) (rightCells : List (Option Bool)) :
     PrefixGapRestorer.runConfig (leftStack.length + 3)
-        { state := 11
+        { state := prefixGapRestorerFetchState suffixFirst
           tape :=
             tapeAtCells
               (List.append (leftStack.map some) (none :: baseLeft))
@@ -1866,39 +1719,41 @@ theorem prefixGapRestorer_run_restore_false_from_leftStack
       { state := PrefixGapRestorer.halt
         tape :=
           tapeAtCells baseLeft
-            (some false ::
+            (some suffixFirst ::
               List.append (leftStack.reverse.map some)
                 (none :: rightCells)) } := by
   cases leftStack with
   | nil =>
       change PrefixGapRestorer.runConfig (1 + 2)
-          { state := 11
+          { state := prefixGapRestorerFetchState suffixFirst
             tape :=
               tapeAtCells (List.append ([] : List (Option Bool))
                 (none :: baseLeft)) (none :: rightCells) } =
         { state := PrefixGapRestorer.halt
           tape :=
             tapeAtCells baseLeft
-              (some false ::
+              (some suffixFirst ::
                 List.append (([] : Word Bool).reverse.map some)
                   (none :: rightCells)) }
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
-              { state := 11
+              { state := prefixGapRestorerFetchState suffixFirst
                 tape :=
                   tapeAtCells (List.append ([] : List (Option Bool))
                     (none :: baseLeft)) (none :: rightCells) } =
-            { state := 12
+            { state := prefixGapRestorerScanState suffixFirst
               tape := tapeAtCells baseLeft (none :: none :: rightCells) } := by
-        simp [PrefixGapRestorer,
-          scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
+        cases suffixFirst <;>
+          simp [prefixGapRestorerFetchState, prefixGapRestorerScanState,
+            PrefixGapRestorer,
+            scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
+            runConfig, stepConfig, lookupTransition, Matches, transition,
+            Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
       rw [hstep]
       simpa using
-        prefixGapRestorer_run_boundary_false
-          baseLeft none rightCells
+        prefixGapRestorer_run_boundary
+          baseLeft none suffixFirst rightCells
   | cons current rest =>
       rw [show (current :: rest).length + 3 =
         1 + (rest.length + 3) by
@@ -1907,51 +1762,53 @@ theorem prefixGapRestorer_run_restore_false_from_leftStack
       rw [runConfig_add]
       have hstep :
           PrefixGapRestorer.runConfig 1
-              { state := 11
+              { state := prefixGapRestorerFetchState suffixFirst
                 tape :=
                   tapeAtCells
                     (List.append ((current :: rest).map some)
                       (none :: baseLeft))
                     (none :: rightCells) } =
-            { state := 12
+            { state := prefixGapRestorerScanState suffixFirst
               tape :=
                 tapeAtCells
                   (List.append (rest.map some) (none :: baseLeft))
                   (some current :: none :: rightCells) } := by
-        cases current <;>
-          simp [PrefixGapRestorer,
+        cases suffixFirst <;> cases current <;>
+          simp [prefixGapRestorerFetchState, prefixGapRestorerScanState,
+            PrefixGapRestorer,
             scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
             runConfig, stepConfig, lookupTransition, Matches, transition,
             Tape.read, Tape.write, Tape.move, Tape.moveLeft,
             tapeAtCells]
       rw [hstep]
       simpa [List.reverse_cons, List.map_append, List.append_assoc] using
-        prefixGapRestorer_run_scan_false
-          baseLeft rest current (none :: rightCells)
+        prefixGapRestorer_run_scan
+          baseLeft rest suffixFirst current (none :: rightCells)
 
-theorem prefixGapRestorer_restoreFromFetched_false
+theorem prefixGapRestorer_restoreFromFetched
     (pref suffixRest : Word Bool) (first : Bool)
-    (rightTail : List (Option Bool)) :
+    (suffixFirst : Bool) (rightTail : List (Option Bool)) :
     exists n : Nat,
       (PrefixGapRestorer.runConfig n
-          { state := 11
+          { state := prefixGapRestorerFetchState suffixFirst
             tape := prefixGapRestorerAfterFetchTape
               pref suffixRest first rightTail }).state =
         PrefixGapRestorer.halt ∧
       (PrefixGapRestorer.runConfig n
-          { state := 11
+          { state := prefixGapRestorerFetchState suffixFirst
             tape := prefixGapRestorerAfterFetchTape
               pref suffixRest first rightTail }).tape =
         scratchCountSuffixMarkedBoundarySeparatorScanSourceTape
-          pref (false :: suffixRest) first rightTail := by
+          pref (suffixFirst :: suffixRest) first rightTail := by
   refine ⟨suffixRest.length + 3, ?_⟩
   constructor
   · rw [prefixGapRestorerAfterFetchTape]
     simpa using
       congrArg MachineDescription.Configuration.state
-        (prefixGapRestorer_run_restore_false_from_leftStack
+        (prefixGapRestorer_run_restore_from_leftStack
           (none :: pref.reverse.map some)
           suffixRest.reverse
+          suffixFirst
           (some true ::
             none ::
             List.append
@@ -1963,272 +1820,15 @@ theorem prefixGapRestorer_restoreFromFetched_false
       rightEdgeScanSourceTapeFromLeft, List.map_reverse,
       List.append_assoc] using
       congrArg MachineDescription.Configuration.tape
-        (prefixGapRestorer_run_restore_false_from_leftStack
+        (prefixGapRestorer_run_restore_from_leftStack
           (none :: pref.reverse.map some)
           suffixRest.reverse
+          suffixFirst
           (some true ::
             none ::
             List.append
               (List.replicate suffixRest.length (none : Option Bool))
               (some first :: rightTail)))
-
-theorem prefixGapRestorer_run_boundary_true
-    (baseLeft : List (Option Bool)) (next : Option Bool)
-    (rightCells : List (Option Bool)) :
-    PrefixGapRestorer.runConfig 2
-        { state := 22
-          tape := tapeAtCells baseLeft (none :: next :: rightCells) } =
-      { state := PrefixGapRestorer.halt
-        tape := tapeAtCells baseLeft (some true :: next :: rightCells) } := by
-  cases next with
-  | none =>
-      simp [PrefixGapRestorer,
-        scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-        runConfig, stepConfig, lookupTransition, Matches, transition,
-        Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
-        tapeAtCells]
-  | some bit =>
-      cases bit <;>
-        simp [PrefixGapRestorer,
-          scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
-          tapeAtCells]
-
-theorem prefixGapRestorer_run_scan_true
-    (baseLeft : List (Option Bool)) (leftStack : Word Bool)
-    (current : Bool) (rightCells : List (Option Bool)) :
-    PrefixGapRestorer.runConfig (leftStack.length + 3)
-        { state := 22
-          tape :=
-            tapeAtCells
-              (List.append (leftStack.map some) (none :: baseLeft))
-              (some current :: rightCells) } =
-      { state := PrefixGapRestorer.halt
-        tape :=
-          tapeAtCells baseLeft
-            (some true ::
-              List.append (leftStack.reverse.map some)
-                (some current :: rightCells)) } := by
-  induction leftStack generalizing current rightCells with
-  | nil =>
-      change PrefixGapRestorer.runConfig (1 + 2)
-          { state := 22
-            tape :=
-              tapeAtCells (List.append ([] : List (Option Bool))
-                (none :: baseLeft)) (some current :: rightCells) } =
-        { state := PrefixGapRestorer.halt
-          tape :=
-            tapeAtCells baseLeft
-              (some true ::
-                List.append (([] : Word Bool).reverse.map some)
-                  (some current :: rightCells)) }
-      rw [runConfig_add]
-      have hstep :
-          PrefixGapRestorer.runConfig 1
-              { state := 22
-                tape :=
-                  tapeAtCells (List.append ([] : List (Option Bool))
-                    (none :: baseLeft)) (some current :: rightCells) } =
-            { state := 22
-              tape := tapeAtCells baseLeft
-                (none :: some current :: rightCells) } := by
-        cases current <;>
-          simp [PrefixGapRestorer,
-            scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-            runConfig, stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-            tapeAtCells]
-      rw [hstep]
-      simpa using
-        prefixGapRestorer_run_boundary_true
-          baseLeft (some current) rightCells
-  | cons next rest ih =>
-      rw [show (next :: rest).length + 3 =
-        1 + (rest.length + 3) by
-        simp
-        lia]
-      rw [runConfig_add]
-      have hstep :
-          PrefixGapRestorer.runConfig 1
-              { state := 22
-                tape :=
-                  tapeAtCells
-                    (List.append ((next :: rest).map some)
-                      (none :: baseLeft))
-                    (some current :: rightCells) } =
-            { state := 22
-              tape :=
-                tapeAtCells
-                  (List.append (rest.map some) (none :: baseLeft))
-                  (some next :: some current :: rightCells) } := by
-        cases current <;> cases next <;>
-          simp [PrefixGapRestorer,
-            scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-            runConfig, stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-            tapeAtCells]
-      rw [hstep]
-      simpa [List.reverse_cons, List.map_append, List.append_assoc] using
-        ih next (some current :: rightCells)
-
-theorem prefixGapRestorer_run_restore_true_from_leftStack
-    (baseLeft : List (Option Bool)) (leftStack : Word Bool)
-    (rightCells : List (Option Bool)) :
-    PrefixGapRestorer.runConfig (leftStack.length + 3)
-        { state := 21
-          tape :=
-            tapeAtCells
-              (List.append (leftStack.map some) (none :: baseLeft))
-              (none :: rightCells) } =
-      { state := PrefixGapRestorer.halt
-        tape :=
-          tapeAtCells baseLeft
-            (some true ::
-              List.append (leftStack.reverse.map some)
-                (none :: rightCells)) } := by
-  cases leftStack with
-  | nil =>
-      change PrefixGapRestorer.runConfig (1 + 2)
-          { state := 21
-            tape :=
-              tapeAtCells (List.append ([] : List (Option Bool))
-                (none :: baseLeft)) (none :: rightCells) } =
-        { state := PrefixGapRestorer.halt
-          tape :=
-            tapeAtCells baseLeft
-              (some true ::
-                List.append (([] : Word Bool).reverse.map some)
-                  (none :: rightCells)) }
-      rw [runConfig_add]
-      have hstep :
-          PrefixGapRestorer.runConfig 1
-              { state := 21
-                tape :=
-                  tapeAtCells (List.append ([] : List (Option Bool))
-                    (none :: baseLeft)) (none :: rightCells) } =
-            { state := 22
-              tape := tapeAtCells baseLeft (none :: none :: rightCells) } := by
-        simp [PrefixGapRestorer,
-          scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          Tape.read, Tape.write, Tape.move, Tape.moveLeft, tapeAtCells]
-      rw [hstep]
-      simpa using
-        prefixGapRestorer_run_boundary_true
-          baseLeft none rightCells
-  | cons current rest =>
-      rw [show (current :: rest).length + 3 =
-        1 + (rest.length + 3) by
-        simp
-        lia]
-      rw [runConfig_add]
-      have hstep :
-          PrefixGapRestorer.runConfig 1
-              { state := 21
-                tape :=
-                  tapeAtCells
-                    (List.append ((current :: rest).map some)
-                      (none :: baseLeft))
-                    (none :: rightCells) } =
-            { state := 22
-              tape :=
-                tapeAtCells
-                  (List.append (rest.map some) (none :: baseLeft))
-                  (some current :: none :: rightCells) } := by
-        cases current <;>
-          simp [PrefixGapRestorer,
-            scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerDescription,
-            runConfig, stepConfig, lookupTransition, Matches, transition,
-            Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-            tapeAtCells]
-      rw [hstep]
-      simpa [List.reverse_cons, List.map_append, List.append_assoc] using
-        prefixGapRestorer_run_scan_true
-          baseLeft rest current (none :: rightCells)
-
-theorem prefixGapRestorer_restoreFromFetched_true
-    (pref suffixRest : Word Bool) (first : Bool)
-    (rightTail : List (Option Bool)) :
-    exists n : Nat,
-      (PrefixGapRestorer.runConfig n
-          { state := 21
-            tape := prefixGapRestorerAfterFetchTape
-              pref suffixRest first rightTail }).state =
-        PrefixGapRestorer.halt ∧
-      (PrefixGapRestorer.runConfig n
-          { state := 21
-            tape := prefixGapRestorerAfterFetchTape
-              pref suffixRest first rightTail }).tape =
-        scratchCountSuffixMarkedBoundarySeparatorScanSourceTape
-          pref (true :: suffixRest) first rightTail := by
-  refine ⟨suffixRest.length + 3, ?_⟩
-  constructor
-  · rw [prefixGapRestorerAfterFetchTape]
-    simpa using
-      congrArg MachineDescription.Configuration.state
-        (prefixGapRestorer_run_restore_true_from_leftStack
-          (none :: pref.reverse.map some)
-          suffixRest.reverse
-          (some true ::
-            none ::
-            List.append
-              (List.replicate suffixRest.length (none : Option Bool))
-              (some first :: rightTail)))
-  · rw [prefixGapRestorerAfterFetchTape]
-    simpa [scratchCountSuffixMarkedBoundarySeparatorScanSourceTape,
-      scratchCountSuffixMarkedBoundarySeparatorPadding,
-      rightEdgeScanSourceTapeFromLeft, List.map_reverse,
-      List.append_assoc] using
-      congrArg MachineDescription.Configuration.tape
-        (prefixGapRestorer_run_restore_true_from_leftStack
-          (none :: pref.reverse.map some)
-          suffixRest.reverse
-          (some true ::
-            none ::
-            List.append
-              (List.replicate suffixRest.length (none : Option Bool))
-              (some first :: rightTail)))
-
-theorem prefixGapRestorer_haltsFrom_firstSuffixErasedTape_false
-    (pref suffixRest : Word Bool) (first : Bool)
-    (rightTail : List (Option Bool)) :
-    PrefixGapRestorer.HaltsFromTape
-      (scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape
-        pref false suffixRest first rightTail)
-      (scratchCountSuffixMarkedBoundarySeparatorScanSourceTape
-        pref (false :: suffixRest) first rightTail) := by
-  rcases prefixGapRestorer_restoreFromFetched_false
-      pref suffixRest first rightTail with
-    ⟨n, hn⟩
-  refine ⟨4 + n, ?_⟩
-  constructor
-  · rw [runConfig_add]
-    rw [prefixGapRestorer_run_fetch_false]
-    exact hn.left
-  · rw [runConfig_add]
-    rw [prefixGapRestorer_run_fetch_false]
-    exact hn.right
-
-theorem prefixGapRestorer_haltsFrom_firstSuffixErasedTape_true
-    (pref suffixRest : Word Bool) (first : Bool)
-    (rightTail : List (Option Bool)) :
-    PrefixGapRestorer.HaltsFromTape
-      (scratchCountSuffixMarkedBoundarySeparatorFirstSuffixErasedTape
-        pref true suffixRest first rightTail)
-      (scratchCountSuffixMarkedBoundarySeparatorScanSourceTape
-        pref (true :: suffixRest) first rightTail) := by
-  rcases prefixGapRestorer_restoreFromFetched_true
-      pref suffixRest first rightTail with
-    ⟨n, hn⟩
-  refine ⟨4 + n, ?_⟩
-  constructor
-  · rw [runConfig_add]
-    rw [prefixGapRestorer_run_fetch_true]
-    exact hn.left
-  · rw [runConfig_add]
-    rw [prefixGapRestorer_run_fetch_true]
-    exact hn.right
 
 theorem prefixGapRestorer_haltsFrom_firstSuffixErasedTape
     (pref suffixRest : Word Bool) (suffixFirst first : Bool)
@@ -2238,13 +1838,17 @@ theorem prefixGapRestorer_haltsFrom_firstSuffixErasedTape
         pref suffixFirst suffixRest first rightTail)
       (scratchCountSuffixMarkedBoundarySeparatorScanSourceTape
         pref (suffixFirst :: suffixRest) first rightTail) := by
-  cases suffixFirst
-  · exact
-      prefixGapRestorer_haltsFrom_firstSuffixErasedTape_false
-        pref suffixRest first rightTail
-  · exact
-      prefixGapRestorer_haltsFrom_firstSuffixErasedTape_true
-        pref suffixRest first rightTail
+  rcases prefixGapRestorer_restoreFromFetched
+      pref suffixRest first suffixFirst rightTail with
+    ⟨n, hn⟩
+  refine ⟨4 + n, ?_⟩
+  constructor
+  · rw [runConfig_add]
+    rw [prefixGapRestorer_run_fetch]
+    exact hn.left
+  · rw [runConfig_add]
+    rw [prefixGapRestorer_run_fetch]
+    exact hn.right
 
 theorem scratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerConstruction_core :
     ScratchCountSuffixMarkedBoundarySeparatorPrefixGapRestorerConstruction := by
