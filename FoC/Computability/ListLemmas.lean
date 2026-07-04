@@ -9,6 +9,19 @@ Small dependency-light list lemmas used by concrete machine proofs.
 namespace FoC
 namespace Computability
 
+theorem list_replicate_append_cons_eq_cons_append
+    (a : α) (n : Nat) (rest : List α) :
+    List.replicate n a ++ a :: rest =
+      a :: (List.replicate n a ++ rest) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        a :: (List.replicate n a ++ a :: rest) =
+          a :: (a :: (List.replicate n a ++ rest))
+      rw [ih]
+
 theorem list_replicate_append_self
     (a : α) (n : Nat) (rest : List α) :
     List.replicate n a ++ a :: rest =

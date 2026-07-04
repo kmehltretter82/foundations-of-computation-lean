@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.LeftShiftCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
@@ -795,12 +796,9 @@ theorem replicate_none_append_none_cons
         (none :: tail) =
       none :: List.append
         (List.replicate n (none : Option Bool)) tail := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      simp [List.replicate_succ]
-      exact ih
+  exact
+    list_replicate_append_cons_eq_cons_append
+      (none : Option Bool) n tail
 
 def rightBlankLocalGapBaseLeft
     (gap : Nat) (baseTail : List (Option Bool)) :

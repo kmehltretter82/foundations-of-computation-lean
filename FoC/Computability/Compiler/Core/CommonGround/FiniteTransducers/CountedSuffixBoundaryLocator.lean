@@ -1,3 +1,4 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true
@@ -499,7 +500,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_false
               List.append
                 (List.replicate blanks (none : Option Bool))
                 left :=
-        replicate_none_append_none_cons blanks left
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) blanks left
       have hih := ih (none :: left)
       rw [htail] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
@@ -583,7 +585,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_scan_count_true
               List.append
                 (List.replicate blanks (none : Option Bool))
                 left :=
-        replicate_none_append_none_cons blanks left
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) blanks left
       have hih := ih (none :: left)
       rw [htail] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
@@ -690,7 +693,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_return_blanks
               List.append
                 (List.replicate (blanks + 1) (none : Option Bool))
                 right :=
-        replicate_none_append_none_cons (blanks + 1) right
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) (blanks + 1) right
       rw [htail] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
 
@@ -773,7 +777,9 @@ theorem tapeAtCells_moveLeft_replicate_none_cons
   | succ n ih =>
       simp [List.replicate_succ, tapeAtCells, Tape.move,
         Tape.moveLeft]
-      exact replicate_none_append_none_cons n leftTail
+      exact
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) n leftTail
 
 theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
     (baseLeft : List (Option Bool)) (processedLeft : Word Bool)
@@ -856,8 +862,10 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_false
           (List.replicate (processedLeft.length + 2)
             (none : Option Bool))
           (some false :: rightTail) := by
-    rw [replicate_none_append_none_cons]
-    simp [List.replicate_succ]
+    simpa [List.replicate_succ] using
+      list_replicate_append_cons_eq_cons_append
+        (none : Option Bool) (processedLeft.length + 1)
+        (some false :: rightTail)
   rw [htail]
   simpa [List.append_assoc] using
     countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
@@ -949,8 +957,10 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_shift_true
           (List.replicate (processedLeft.length + 2)
             (none : Option Bool))
           (some true :: rightTail) := by
-    rw [replicate_none_append_none_cons]
-    simp [List.replicate_succ]
+    simpa [List.replicate_succ] using
+      list_replicate_append_cons_eq_cons_append
+        (none : Option Bool) (processedLeft.length + 1)
+        (some true :: rightTail)
   rw [htail]
   simpa [List.append_assoc] using
     countedSuffixBoundaryLeftAdvanceDescription_run_scan_left_and_swap
@@ -1329,7 +1339,8 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_return_blanks
                 (List.replicate (blanks + 1)
                   (none : Option Bool))
                 right :=
-        replicate_none_append_none_cons (blanks + 1) right
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) (blanks + 1) right
       rw [htail] at hih
       have hrep :
           List.append
@@ -1405,7 +1416,9 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_false
         runConfig, stepConfig, lookupTransition, Matches, transition,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
         tapeAtCells, List.replicate_succ] <;>
-      try exact replicate_none_append_none_cons _ _
+      try exact
+        (list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) _ _)
   rw [hstart]
   rw [runConfig_add]
   rw [
@@ -1479,7 +1492,9 @@ theorem countedSuffixBoundaryLeftAdvanceDescription_run_done_true
         runConfig, stepConfig, lookupTransition, Matches, transition,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
         tapeAtCells, List.replicate_succ] <;>
-      try exact replicate_none_append_none_cons _ _
+      try exact
+        (list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) _ _)
   rw [hstart]
   rw [runConfig_add]
   rw [
@@ -2136,7 +2151,8 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_shift_guard
               List.append
                 (List.replicate blanks (none : Option Bool))
                 left :=
-        replicate_none_append_none_cons blanks left
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) blanks left
       rw [hleft] at hih
       simpa [List.replicate_succ, List.append_assoc] using hih
 
@@ -2233,7 +2249,8 @@ theorem countedSuffixBoundaryRightRestoreDescription_run_return_blanks
                 (List.replicate (blanks + 1)
                   (none : Option Bool))
                 right :=
-        replicate_none_append_none_cons (blanks + 1) right
+        list_replicate_append_cons_eq_cons_append
+          (none : Option Bool) (blanks + 1) right
       rw [htail] at hih
       have hrep :
           List.append
