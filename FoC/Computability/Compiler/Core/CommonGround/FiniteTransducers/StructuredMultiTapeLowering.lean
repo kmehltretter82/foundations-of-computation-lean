@@ -7,6 +7,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.CursorHead
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.CursorPipelines
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.PrimitivePipelines
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ActionSlack
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.Rows
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.RefreshedRows
 
@@ -19,7 +20,7 @@ Compatibility wrapper for the structured multi-tape lowering modules.
 
 The implementation is split into physical layout facts, primitive lowering
 contracts, primitive composition, cursor routines, cursor composition, concrete
-cursor pipelines, primitive pipelines, row machines, refreshed row machines,
-and head-cell routines.
+cursor pipelines, primitive pipelines, chainable action slack, row machines,
+refreshed row machines, and head-cell routines.
 This module preserves the original import path for downstream files.
 -/
