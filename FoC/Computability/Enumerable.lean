@@ -357,13 +357,13 @@ theorem partiallyListedBy_acceptanceTrace
 theorem listedBy_of_equal {stream : Nat -> Word alpha} {L K : Language alpha}
     (h : ListedBy stream L) (hEq : Language.Equal L K) :
     ListedBy stream K :=
-  Language.equal_trans h hEq
+  FoC.Foundation.FSet.equal_trans h hEq
 
 theorem partiallyListedBy_of_equal
     {stream : Nat -> Option (Word alpha)} {L K : Language alpha}
     (h : PartiallyListedBy stream L) (hEq : Language.Equal L K) :
     PartiallyListedBy stream K :=
-  Language.equal_trans h hEq
+  FoC.Foundation.FSet.equal_trans h hEq
 
 theorem listable_of_equal {L K : Language alpha}
     (h : Listable L) (hEq : Language.Equal L K) :
@@ -677,7 +677,7 @@ theorem rangeOfComputableFunction_of_equal {L K : Language output}
           exists f
           constructor
           · exact hf.left
-          · exact Language.equal_trans hf.right hEq
+          · exact FoC.Foundation.FSet.equal_trans hf.right hEq
 
 theorem rangeOfUnaryFunction_of_equal {L K : Language output}
     (h : RangeOfUnaryFunction L) (hEq : Language.Equal L K) :
@@ -685,7 +685,7 @@ theorem rangeOfUnaryFunction_of_equal {L K : Language output}
   cases h with
   | intro f hf =>
       exists f
-      exact Language.equal_trans hf hEq
+      exact FoC.Foundation.FSet.equal_trans hf hEq
 
 theorem partialRangeOfUnaryFunction_of_equal {L K : Language output}
     (h : PartialRangeOfUnaryFunction L) (hEq : Language.Equal L K) :
@@ -693,7 +693,7 @@ theorem partialRangeOfUnaryFunction_of_equal {L K : Language output}
   cases h with
   | intro f hf =>
       exists f
-      exact Language.equal_trans hf hEq
+      exact FoC.Foundation.FSet.equal_trans hf hEq
 
 end Computability
 end FoC

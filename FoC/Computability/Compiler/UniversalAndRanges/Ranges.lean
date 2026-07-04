@@ -90,7 +90,7 @@ theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledRange
     (f : Word Unit -> Option (Word Bool)) :
     CompiledPartialUnaryRange (PartialRangeLanguage f) := by
   rcases hcompile f with ⟨D, hD⟩
-  exact ⟨f, D, hD, Language.equal_refl (PartialRangeLanguage f)⟩
+  exact ⟨f, D, hD, FoC.Foundation.FSet.equal_refl (PartialRangeLanguage f)⟩
 
 theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
     (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)
@@ -99,7 +99,7 @@ theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
       (ProgramRangeLanguage (PartialFunctionProgram f)) := by
   rcases hcompile f with ⟨D, hD⟩
   exact ⟨f, D, hD,
-    Language.equal_refl
+    FoC.Foundation.FSet.equal_refl
       (ProgramRangeLanguage (PartialFunctionProgram f))⟩
 
 theorem compiledPartialUnaryRange_partialRangeOfUnaryFunction
@@ -139,8 +139,8 @@ theorem compiledPartialUnaryFunctionProgramRange_compiledRange
           exists D
           constructor
           · exact hD.left
-          · exact Language.equal_trans
-              (Language.equal_symm (partialFunctionProgram_range f))
+          · exact FoC.Foundation.FSet.equal_trans
+              (FoC.Foundation.FSet.equal_symm (partialFunctionProgram_range f))
               hD.right
 
 theorem compiledPartialUnaryFunctionProgramRange_turingComputableRange
@@ -188,7 +188,7 @@ theorem compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
           exact Exists.intro f
             (Exists.intro D
               (And.intro hD
-                (Language.equal_trans (partialFunctionProgram_range f) hf)))
+                (FoC.Foundation.FSet.equal_trans (partialFunctionProgram_range f) hf)))
 
 theorem compiledPartialUnaryFunctionProgramRange_of_partiallyListable
     (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)

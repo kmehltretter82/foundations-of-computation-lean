@@ -1102,7 +1102,7 @@ theorem turing_decidable_of_complement {L : Language input}
   by
     classical
     exact turing_decidable_of_equal
-      (turing_decidable_complement h) (Language.double_compl L)
+      (turing_decidable_complement h) (FoC.Foundation.FSet.double_compl L)
 
 theorem turing_decidable_complement_iff {L : Language input} :
     TuringDecidable (Language.Compl L) <-> TuringDecidable L := by

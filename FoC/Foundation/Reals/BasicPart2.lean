@@ -1094,10 +1094,6 @@ theorem density {x y : Real} (h : x < y) :
                   exact Exists.intro t
                     (And.intro ht.right (QRat.lt_asymm ht.left))
 
-theorem exists_between {x y : Real} (h : x < y) :
-    exists z : Real, x < z ∧ z < y :=
-  density h
-
 end Real
 
 end Foundation

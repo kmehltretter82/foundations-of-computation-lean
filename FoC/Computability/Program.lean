@@ -493,13 +493,13 @@ theorem partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction
     cases h with
     | intro f hf =>
         exists f
-        exact Language.equal_trans
-          (Language.equal_symm (partialFunctionProgram_range f)) hf
+        exact FoC.Foundation.FSet.equal_trans
+          (FoC.Foundation.FSet.equal_symm (partialFunctionProgram_range f)) hf
   · intro h
     cases h with
     | intro f hf =>
         exists f
-        exact Language.equal_trans (partialFunctionProgram_range f) hf
+        exact FoC.Foundation.FSet.equal_trans (partialFunctionProgram_range f) hf
 
 theorem partiallyListable_iff_partialUnaryFunctionProgramRange
     (L : Language output) :

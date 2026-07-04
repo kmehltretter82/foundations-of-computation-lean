@@ -187,7 +187,7 @@ theorem undecidable_of_equal {L K : Language alpha}
     (h : UndecidableLanguage L) (hEq : Language.Equal L K) :
     UndecidableLanguage K := by
   intro hK
-  exact h (turing_decidable_of_equal hK (Language.equal_symm hEq))
+  exact h (turing_decidable_of_equal hK (FoC.Foundation.FSet.equal_symm hEq))
 
 theorem undecidable_complement {L : Language alpha}
     (h : UndecidableLanguage L) : UndecidableLanguage (Language.Compl L) := by
@@ -228,7 +228,7 @@ theorem decidableReduction_of_equal_right
     (hEq : Language.Equal K K')
     (h : DecidableReduction L K) :
     DecidableReduction L K' :=
-  fun hK' => h (turing_decidable_of_equal hK' (Language.equal_symm hEq))
+  fun hK' => h (turing_decidable_of_equal hK' (FoC.Foundation.FSet.equal_symm hEq))
 
 theorem decidableReduction_complement
     {L : Language alpha} {K : Language beta}
@@ -262,7 +262,7 @@ theorem not_acceptable_of_equal {L K : Language alpha}
     (h : NonAcceptableLanguage L) (hEq : Language.Equal L K) :
     NonAcceptableLanguage K := by
   intro hK
-  exact h (turing_acceptable_of_equal hK (Language.equal_symm hEq))
+  exact h (turing_acceptable_of_equal hK (FoC.Foundation.FSet.equal_symm hEq))
 
 theorem acceptableReduction_refl (L : Language alpha) :
     AcceptableReduction L L :=
@@ -287,7 +287,7 @@ theorem acceptableReduction_of_equal_right
     (hEq : Language.Equal K K')
     (h : AcceptableReduction L K) :
     AcceptableReduction L K' :=
-  fun hK' => h (turing_acceptable_of_equal hK' (Language.equal_symm hEq))
+  fun hK' => h (turing_acceptable_of_equal hK' (FoC.Foundation.FSet.equal_symm hEq))
 
 theorem not_acceptable_of_acceptableReduction
     {L : Language alpha} {K : Language beta}
@@ -386,7 +386,7 @@ theorem selfDiagonal_equal_compl_selfHalting
     (haltsOnCodeInput : Word code -> Word code -> Prop) :
     Language.Equal (SelfDiagonalLanguage haltsOnCodeInput)
       (Language.Compl (SelfHaltingLanguage haltsOnCodeInput)) :=
-  Language.equal_refl (SelfDiagonalLanguage haltsOnCodeInput)
+  FoC.Foundation.FSet.equal_refl (SelfDiagonalLanguage haltsOnCodeInput)
 
 theorem compl_selfHalting_not_acceptable_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
@@ -469,7 +469,7 @@ theorem haltingProblem_equal_pairHaltingProblem_concat
       (PairHaltingProblem
         (fun machine input : Word code => Languages.Word.Concat machine input)
         haltsOnCodeInput) :=
-  Language.equal_refl (HaltingProblem haltsOnCodeInput)
+  FoC.Foundation.FSet.equal_refl (HaltingProblem haltsOnCodeInput)
 
 theorem haltingProblem_contains_encoded_halting_pair
     (haltsOnCodeInput : Word code -> Word code -> Prop)

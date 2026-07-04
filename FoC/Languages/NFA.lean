@@ -275,7 +275,7 @@ theorem dfa_language_nfa_recognizable {L : FoC.Languages.Language alpha}
       | intro M hM =>
           exists state
           exists FromDFA M
-          exact FoC.Languages.Language.equal_trans (fromDFA_language M) hM
+          exact FoC.Foundation.FSet.equal_trans (fromDFA_language M) hM
 
 theorem nfa_language_dfa_recognizable {state : Type} (M : NFA alpha state)
     (subsetsFinite : FiniteType (FSet state)) :

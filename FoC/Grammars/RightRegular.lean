@@ -329,9 +329,9 @@ theorem rightRegularLanguage_regular (alphabet : List terminal)
           cases hReg with
           | intro r hr =>
               exists r
-              exact Language.equal_trans hr
-                (Language.equal_trans
-                  (Language.equal_symm (rightRegularNFA_language_exact G hG.left))
+              exact FoC.Foundation.FSet.equal_trans hr
+                (FoC.Foundation.FSet.equal_trans
+                  (FoC.Foundation.FSet.equal_symm (rightRegularNFA_language_exact G hG.left))
                   hG.right)
 
 theorem leftRegularLanguage_regular (alphabet : List terminal)
@@ -346,7 +346,7 @@ theorem leftRegularLanguage_regular (alphabet : List terminal)
   have hDouble :
       Languages.RegularLanguage.Regular
         (Language.Reverse (Language.Reverse L)) :=
-    Languages.RegularLanguage.reverse_regular hRevReg
+    Languages.RegExp.regular_reverse hRevReg
   cases hDouble with
   | intro r hr =>
       exists r
@@ -602,14 +602,14 @@ theorem regular_rightRegularLanguage {L : Language terminal}
           exists NFARightRegularGrammar M
           constructor
           · exact nfaRightRegularGrammar_rightRegular M
-          · exact Language.equal_trans (nfaRightRegularGrammar_language_exact M) hM
+          · exact FoC.Foundation.FSet.equal_trans (nfaRightRegularGrammar_language_exact M) hM
 
 theorem regular_leftRegularLanguage {L : Language terminal}
     (hL : Languages.RegularLanguage.Regular L) :
     LeftRegularLanguage L :=
   leftRegularLanguage_iff_reverse_rightRegular.mpr
     (regular_rightRegularLanguage
-      (Languages.RegularLanguage.reverse_regular hL))
+      (Languages.RegExp.regular_reverse hL))
 
 theorem regular_iff_rightRegularLanguage (alphabet : List terminal)
     (halphabet : forall a, a ∈ alphabet) {L : Language terminal} :

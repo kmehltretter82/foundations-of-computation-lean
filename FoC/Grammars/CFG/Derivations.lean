@@ -589,7 +589,7 @@ theorem context_free_of_equal {L M : Language terminal}
       | intro G hG =>
           exists nt
           exists G
-          exact Language.equal_trans hG hEq
+          exact FoC.Foundation.FSet.equal_trans hG hEq
 
 end CFG
 

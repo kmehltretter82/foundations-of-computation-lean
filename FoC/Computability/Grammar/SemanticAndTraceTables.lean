@@ -221,7 +221,7 @@ theorem traceSimulationGrammar_generated_of_acceptanceTrace
     Language.Equal
       (GeneralGrammar.GeneratedLanguage
         (TraceSimulationGrammar trace)) L :=
-  Language.equal_trans
+  FoC.Foundation.FSet.equal_trans
     (semanticLanguageGrammar_generates (AcceptanceTraceLanguage trace))
     htrace
 
@@ -263,7 +263,7 @@ theorem machineDescription_accepts_generated_by_traceSimulationGrammar
     Language.Equal
       (GeneralGrammar.GeneratedLanguage
         (MachineHaltingTraceSimulationGrammar D)) L :=
-  Language.equal_trans
+  FoC.Foundation.FSet.equal_trans
     (machineHaltingTraceSimulationGrammar_generated D)
     h.right
 
@@ -376,7 +376,7 @@ theorem finiteProductionGenerated_of_presents
   rcases T.finiteProductionGenerated_language with ⟨nonterminal, G, hG⟩
   exists nonterminal
   exists G
-  exact ⟨hG.left, Language.equal_trans hG.right h⟩
+  exact ⟨hG.left, FoC.Foundation.FSet.equal_trans hG.right h⟩
 
 end FiniteAcceptanceTraceTable
 
@@ -418,7 +418,7 @@ theorem machineFiniteAcceptanceTraceTable_generated
     Language.Equal
       (GeneralGrammar.GeneratedLanguage T.grammar)
       (fun w : Word Bool => D.HaltsOnInput w) :=
-  Language.equal_trans T.generated_language hT
+  FoC.Foundation.FSet.equal_trans T.generated_language hT
 
 theorem machineFiniteAcceptanceTraceTable_finiteProductionGenerated
     {D : MachineDescription}

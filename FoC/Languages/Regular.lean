@@ -485,32 +485,6 @@ theorem dfaRegex_complete [DecidableEq state]
         unfold DFA.Run
         exact pathVia_allStates M M.start w)
 
-/-!
-# Basic regular constructions
-
-These theorems expose the regular-expression closure facts as language-level
-regularity statements.
--/
-
-theorem union_regular {L M : Language alpha}
-    (hL : Regular L) (hM : Regular M) : Regular (Language.Union L M) :=
-  RegExp.regular_union hL hM
-
-theorem concat_regular {L M : Language alpha}
-    (hL : Regular L) (hM : Regular M) : Regular (Language.Concat L M) :=
-  RegExp.regular_concat hL hM
-
-theorem star_regular {L : Language alpha} (hL : Regular L) : Regular (Language.Star L) :=
-  RegExp.regular_star hL
-
-theorem reverse_regular {L : Language alpha} (hL : Regular L) :
-    Regular (Language.Reverse L) :=
-  RegExp.regular_reverse hL
-
-theorem finite_list_regular (ws : List (Word alpha)) :
-    Regular (fun w => w ∈ ws) :=
-  RegExp.finite_language_regular ws
-
 theorem finite_alphabet_universal_regular (alphabet : List alpha)
     (halphabet : forall a, a ∈ alphabet) :
     Regular (Language.Universal : Language alpha) := by
@@ -532,32 +506,17 @@ theorem finite_alphabet_universal_regular (alphabet : List alpha)
           (ih True.intro)
         simpa [Word.Concat] using hconcat
 
-/-!
-# Regular expressions and automata
-
-Thompson construction gives NFAs from regular expressions, and the subset
-construction gives DFAs from NFAs.
--/
-
-theorem dfa_recognizable_is_nfa_recognizable {L : Language alpha}
-    (hL : DFARecognizable L) : NFARecognizable L :=
-  NFA.dfa_language_nfa_recognizable hL
-
-theorem regular_expression_nfa_recognizable (r : RegExp alpha) :
-    NFARecognizable (RegExp.Denote r) :=
-  Thompson.regularExpression_nfa r
-
 theorem regular_is_nfa_recognizable {L : Language alpha}
     (hL : Regular L) : NFARecognizable L := by
   cases hL with
   | intro r hr =>
-      cases regular_expression_nfa_recognizable r with
+      cases Thompson.regularExpression_nfa r with
       | intro state hstate =>
           cases hstate with
           | intro M hM =>
               exists state
               exists M
-              exact Language.equal_trans hM hr
+              exact FoC.Foundation.FSet.equal_trans hM hr
 
 theorem regular_is_dfa_recognizable {L : Language alpha}
     (hL : Regular L) : DFARecognizable L := by
@@ -567,7 +526,7 @@ theorem regular_is_dfa_recognizable {L : Language alpha}
       | intro M hM =>
           exists Foundation.FSet state
           exists NFA.SubsetDFA M (finiteFSetType M.statesFinite)
-          exact Language.equal_trans
+          exact FoC.Foundation.FSet.equal_trans
             (NFA.subsetDFA_language M (finiteFSetType M.statesFinite)) hM
 
 theorem dfa_recognizable_complement {L : Language alpha}
@@ -657,7 +616,7 @@ theorem nfa_recognizable_regular (alphabet : List alpha)
           cases nfa_language_regular alphabet halphabet M with
           | intro r hr =>
               exists r
-              exact Language.equal_trans hr hM
+              exact FoC.Foundation.FSet.equal_trans hr hM
 
 theorem dfa_recognizable_complement_regular (alphabet : List alpha)
     (halphabet : forall a, a ∈ alphabet) {L : Language alpha}

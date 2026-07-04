@@ -445,7 +445,7 @@ theorem pda_intersect_dfa_context_free_of_empty_summary_complete
   exists G
   constructor
   · exact hfinite
-  · exact Language.equal_trans hEq
+  · exact FoC.Foundation.FSet.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
 
 theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
@@ -480,7 +480,7 @@ theorem pda_intersect_dfa_context_free
   exists G
   constructor
   · exact hfinite
-  · exact Language.equal_trans hEq
+  · exact FoC.Foundation.FSet.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
 
 theorem pda_diff_dfa_context_free_of_empty_summary_complete
@@ -810,7 +810,7 @@ theorem finite_production_context_free_pda_recognizable {input : Type}
           exists Symbol input nonterminal
           exists CFG.ToPDAState
           exists CFG.ToPDA G
-          exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
+          exact FoC.Foundation.FSet.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
 theorem finite_production_context_free_finite_presentation_pda_recognizable
     {input : Type}
@@ -824,7 +824,7 @@ theorem finite_production_context_free_finite_presentation_pda_recognizable
   exists CFG.ToPDA G
   exists CFG.toPDA_finitePresentation_of_hasFiniteProductions
     G inputFinite hG.left
-  exact Language.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
+  exact FoC.Foundation.FSet.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
 theorem context_free_language_pda_recognizable {input : Type}
     {L : Language input}
@@ -844,7 +844,7 @@ theorem context_free_language_finite_presentation_pda_recognizable
 theorem finite_list_dfa_recognizable (ws : List (Word input)) :
     DFA.Recognizable (fun w : Word input => w ∈ ws) :=
   RegularLanguage.regular_is_dfa_recognizable
-    (RegularLanguage.finite_list_regular ws)
+    (RegExp.finite_language_regular ws)
 
 theorem finite_language_dfa_recognizable {M : Language input}
     (hM : Language.Finite M) :

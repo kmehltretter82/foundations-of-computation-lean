@@ -945,7 +945,7 @@ def Compile : (r : RegExp alpha) -> RegexNFA r
       let cs := Compile s
       { state := UnionState cr.state cs.state
         machine := UnionNFA cr.machine cs.machine
-        correct := Language.equal_trans
+        correct := FoC.Foundation.FSet.equal_trans
           (unionNFA_language cr.machine cs.machine)
           (union_equal_of_equal cr.correct cs.correct) }
   | RegExp.seq r s =>
@@ -953,14 +953,14 @@ def Compile : (r : RegExp alpha) -> RegexNFA r
       let cs := Compile s
       { state := Sum cr.state cs.state
         machine := ConcatNFA cr.machine cs.machine
-        correct := Language.equal_trans
+        correct := FoC.Foundation.FSet.equal_trans
           (concatNFA_language cr.machine cs.machine)
           (concat_equal_of_equal cr.correct cs.correct) }
   | RegExp.star r =>
       let cr := Compile r
       { state := Option cr.state
         machine := StarNFA cr.machine
-        correct := Language.equal_trans
+        correct := FoC.Foundation.FSet.equal_trans
           (starNFA_language cr.machine)
           (star_equal_of_equal cr.correct) }
 

@@ -598,7 +598,7 @@ theorem concrete_compiled_partial_unary_range_of_equal
           exists f
           exists D
           exact And.intro hD.left
-            (Language.equal_trans hD.right hEq)
+            (FoC.Foundation.FSet.equal_trans hD.right hEq)
 
 theorem concrete_compiled_partial_unary_function_program_range_of_equal
     {L K : Language Bool}
@@ -612,7 +612,7 @@ theorem concrete_compiled_partial_unary_function_program_range_of_equal
           exists f
           exists D
           exact And.intro hD.left
-            (Language.equal_trans hD.right hEq)
+            (FoC.Foundation.FSet.equal_trans hD.right hEq)
 
 theorem partial_unary_string_function_range_has_concrete_compiled_range_of_concrete_compiler
     (hcompile : SemanticPartialUnaryRangeCompilerAssumption)

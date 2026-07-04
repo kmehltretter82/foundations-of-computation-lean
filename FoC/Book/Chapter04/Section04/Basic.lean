@@ -311,7 +311,7 @@ theorem finite_production_context_free_language_finite_presentation_pda_recogniz
   exact ⟨Symbol terminal nonterminal, CFG.ToPDAState, CFGToPDA G,
     cfg_to_pda_finite_presentation_of_has_finite_productions
       G terminalFinite hGfinite,
-    Language.equal_trans (cfg_to_pda_language_exact G) hGexact⟩
+    FoC.Foundation.FSet.equal_trans (cfg_to_pda_language_exact G) hGexact⟩
 
 /-!
 These are the same language-equality theorem split into the two directions used

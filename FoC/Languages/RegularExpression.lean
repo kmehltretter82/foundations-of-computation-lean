@@ -208,7 +208,7 @@ theorem regular_reverse {L : Language alpha}
   cases hL with
   | intro r hr =>
       exists Reverse r
-      exact Language.equal_trans (reverse_denote r)
+      exact FoC.Foundation.FSet.equal_trans (reverse_denote r)
         (by
           intro w
           constructor

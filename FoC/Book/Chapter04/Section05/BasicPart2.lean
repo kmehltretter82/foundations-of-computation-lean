@@ -638,7 +638,7 @@ theorem finite_production_context_free_of_equal {L M : Language terminal}
           exists G
           constructor
           · exact hG.left
-          · exact Language.equal_trans hG.right hEq
+          · exact FoC.Foundation.FSet.equal_trans hG.right hEq
 
 theorem finite_production_context_free_extensional :
     LanguageClassExtensional

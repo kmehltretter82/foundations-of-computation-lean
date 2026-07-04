@@ -739,7 +739,7 @@ theorem compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
     (Exists.intro P.description
       (And.intro
         (outputFunction_compiledByDescription P hD hcomplete)
-        (Language.equal_trans
+        (FoC.Foundation.FSet.equal_trans
           (partialFunctionProgram_range P.outputFunction)
           (partialRange_outputFunction_equal_descriptionOutputRange
             P hfunctional))))

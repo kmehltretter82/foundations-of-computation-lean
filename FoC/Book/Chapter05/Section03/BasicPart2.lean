@@ -71,7 +71,7 @@ theorem diagonal_pair_preimage_recursive_iff_self_halting_recursive
         hinj)
   · intro h
     exact Computability.turing_decidable_of_equal h
-      (Language.equal_symm
+      (FoC.Foundation.FSet.equal_symm
         (diagonal_pair_preimage_pair_halting_equal_self_halting
           (encodePair := encodePair)
           (haltsOnCodeInput := haltsOnCodeInput)
@@ -86,7 +86,7 @@ theorem concrete_machine_diagonal_pair_preimage_recursive_iff_self_halting_recur
       concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting
   · intro h
     exact Computability.turing_decidable_of_equal h
-      (Language.equal_symm
+      (FoC.Foundation.FSet.equal_symm
         concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting)
 
 theorem diagonal_pair_decidable_preimage_construction_of_preimage

@@ -66,7 +66,7 @@ theorem machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineCo
   rcases hconstruct D hD.left with ⟨nonterminal, G, hG⟩
   exists nonterminal
   exists G
-  exact ⟨hG.left, Language.equal_trans hG.right hD.right⟩
+  exact ⟨hG.left, FoC.Foundation.FSet.equal_trans hG.right hD.right⟩
 
 end Computability
 end FoC

@@ -1368,7 +1368,7 @@ theorem accepted_language_mem (M : TuringMachine symbol state) (w : Word symbol)
 
 theorem recognizes_acceptedLanguage (M : TuringMachine symbol state) :
     Recognizes M (AcceptedLanguage M) :=
-  Language.equal_refl (AcceptedLanguage M)
+  FoC.Foundation.FSet.equal_refl (AcceptedLanguage M)
 
 theorem recognizes_accepts_iff {M : TuringMachine symbol state}
     {L : Language symbol} (h : Recognizes M L) (w : Word symbol) :

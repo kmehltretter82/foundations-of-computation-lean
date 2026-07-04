@@ -40,21 +40,21 @@ languages are known.
 theorem regular_languages_closed_under_union {L M : Language alpha}
     (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
     RegularLanguage.Regular (Language.Union L M) :=
-  RegularLanguage.union_regular hL hM
+  RegExp.regular_union hL hM
 
 theorem regular_languages_closed_under_concatenation {L M : Language alpha}
     (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
     RegularLanguage.Regular (Language.Concat L M) :=
-  RegularLanguage.concat_regular hL hM
+  RegExp.regular_concat hL hM
 
 theorem regular_languages_closed_under_kleene_star {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     RegularLanguage.Regular (Language.Star L) :=
-  RegularLanguage.star_regular hL
+  RegExp.regular_star hL
 
 theorem finite_language_regular (ws : List (Word alpha)) :
     RegularLanguage.Regular (fun w => w ∈ ws) :=
-  RegularLanguage.finite_list_regular ws
+  RegExp.finite_language_regular ws
 
 theorem finite_alphabet_universal_language_regular
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet) :
@@ -64,7 +64,7 @@ theorem finite_alphabet_universal_language_regular
 theorem regular_languages_closed_under_reversal {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     RegularLanguage.Regular (Language.Reverse L) :=
-  RegularLanguage.reverse_regular hL
+  RegExp.regular_reverse hL
 
 /-!
 ## From Expressions to Automata
@@ -78,7 +78,7 @@ determinize the NFA when a deterministic machine is needed.
 
 theorem regular_expression_language_is_nfa_recognizable (r : RegExp alpha) :
     RegularLanguage.NFARecognizable (RegExp.Denote r) :=
-  RegularLanguage.regular_expression_nfa_recognizable r
+  Thompson.regularExpression_nfa r
 
 theorem regular_language_is_nfa_recognizable {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
@@ -131,7 +131,7 @@ theorem dfa_recognizable_closed_under_difference {L M : Language alpha}
 theorem dfa_recognizable_is_nfa_recognizable {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
     RegularLanguage.NFARecognizable L :=
-  RegularLanguage.dfa_recognizable_is_nfa_recognizable hL
+  NFA.dfa_language_nfa_recognizable hL
 
 theorem nfa_subset_construction {state : Type} (M : NFA alpha state)
     (subsetsFinite : FiniteType (FSet state)) :

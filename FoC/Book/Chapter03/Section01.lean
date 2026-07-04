@@ -127,19 +127,19 @@ theorem language_concatenation_membership (L M : Language alpha) (w : Word alpha
 
 theorem language_union_idempotent (L : Language alpha) :
     Language.Equal (Language.Union L L) L :=
-  Language.union_idempotent L
+  FoC.Foundation.FSet.union_idempotent L
 
 theorem language_intersection_idempotent (L : Language alpha) :
     Language.Equal (Language.Inter L L) L :=
-  Language.inter_idempotent L
+  FoC.Foundation.FSet.inter_idempotent L
 
 theorem language_union_absorption (L M : Language alpha) :
     Language.Equal (Language.Union L (Language.Inter L M)) L :=
-  Language.union_absorption L M
+  FoC.Foundation.FSet.union_absorption L M
 
 theorem language_intersection_absorption (L M : Language alpha) :
     Language.Equal (Language.Inter L (Language.Union L M)) L :=
-  Language.inter_absorption L M
+  FoC.Foundation.FSet.inter_absorption L M
 
 theorem language_difference_as_intersection_with_complement
     (L M : Language alpha) :
@@ -172,7 +172,7 @@ theorem kleene_star_contains_empty (L : Language alpha) :
 
 theorem singleton_language_finite (w : Word alpha) :
     Language.Finite (Language.Singleton w) :=
-  Language.singleton_finite w
+  FoC.Foundation.FSet.singleton_finite w
 
 /-!
 ## Diagonalization

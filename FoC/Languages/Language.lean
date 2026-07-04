@@ -144,44 +144,12 @@ theorem mem_concat (w : Word alpha) (L M : Language alpha) :
       exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y :=
   Iff.rfl
 
-theorem singleton_finite (w : Word alpha) : Finite (Singleton w) :=
-  FSet.singleton_finite w
-
 /-!
 # Extensional algebra
 
 Language equality is pointwise logical equivalence. These facts provide the
 set-algebra and concatenation laws used throughout the regular-language proofs.
 -/
-
-theorem equal_refl (L : Language alpha) : Equal L L :=
-  FSet.equal_refl L
-
-theorem equal_symm {L M : Language alpha} (h : Equal L M) : Equal M L :=
-  FSet.equal_symm h
-
-theorem equal_trans {L M N : Language alpha} (hLM : Equal L M) (hMN : Equal M N) :
-  Equal L N :=
-  FSet.equal_trans hLM hMN
-
-theorem double_compl (L : Language alpha)
-    [DecidablePred (fun w => w ∈ L)] :
-  Equal (Compl (Compl L)) L :=
-  FSet.double_compl L
-
-theorem union_idempotent (L : Language alpha) : Equal (Union L L) L :=
-  FSet.union_idempotent L
-
-theorem inter_idempotent (L : Language alpha) : Equal (Inter L L) L :=
-  FSet.inter_idempotent L
-
-theorem union_absorption (L M : Language alpha) :
-    Equal (Union L (Inter L M)) L :=
-  FSet.union_absorption L M
-
-theorem inter_absorption (L M : Language alpha) :
-    Equal (Inter L (Union L M)) L :=
-  FSet.inter_absorption L M
 
 theorem diff_as_inter_compl (L M : Language alpha) :
     Equal (Diff L M) (Inter L (Compl M)) :=

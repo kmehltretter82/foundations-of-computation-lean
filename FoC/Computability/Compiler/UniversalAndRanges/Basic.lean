@@ -862,7 +862,7 @@ theorem codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescripti
   cases hcompile L hL with
   | intro D hD =>
       exists MachineDescription.encodeDescription D
-      exact Language.equal_trans
+      exact FoC.Foundation.FSet.equal_trans
         (codeUniversalPrefixMachine_rowLanguage_equal_encodedInputLanguage
           hspec D)
         hD.right

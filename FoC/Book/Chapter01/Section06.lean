@@ -214,7 +214,7 @@ theorem product_of_rational_numbers_is_rational (x y : Rational) :
 
 theorem real_number_between {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y :=
-  Real.exists_between h
+  Real.density h
 
 theorem product_of_concrete_irrational_reals_can_be_rational :
     Real.Irrational Real.sqrtTwoCut ∧
