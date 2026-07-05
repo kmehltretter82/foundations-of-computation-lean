@@ -197,9 +197,39 @@ theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruct
   pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
 
+theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
+  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_selectedProjection
+    hprojection
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
+  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
+    hpostEraseConstruction
+
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
   EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
+    (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_selectedProjection
+      hprojection)
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
+    (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=

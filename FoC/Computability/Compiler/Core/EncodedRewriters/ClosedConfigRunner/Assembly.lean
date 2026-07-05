@@ -35,12 +35,13 @@ therefore uses the equivalence-based merge phase contract from the
 finite-description construction module instead of requiring an exact parsed
 layout tape.
 -/
-theorem configRunnerPhaseEquivConstruction_scaffold :
+theorem configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+    (hprojection : SelectedProjectionFiniteDescriptionConstruction) :
     ConfigRunnerPhaseEquivConstruction := by
   intro accept reject
-  rcases selectedProjectionFiniteDescriptionConstruction_scaffold true with
+  rcases hprojection true with
     ⟨acceptProject, hacceptProject⟩
-  rcases selectedProjectionFiniteDescriptionConstruction_scaffold false with
+  rcases hprojection false with
     ⟨rejectProject, hrejectProject⟩
   rcases fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
       accept with
@@ -65,6 +66,19 @@ theorem configRunnerPhaseEquivConstruction_scaffold :
       RejectProjectionSpec_of_selected hrejectProject,
       hrejectSim,
       rejectMergeEquivSpec_of_selected hrejectMerge⟩
+
+theorem configRunnerPhaseEquivConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    ConfigRunnerPhaseEquivConstruction :=
+  configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
+theorem configRunnerPhaseEquivConstruction_scaffold :
+    ConfigRunnerPhaseEquivConstruction :=
+  configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+    selectedProjectionFiniteDescriptionConstruction_scaffold
 
 def ConfigRunnerFromClosedHandoff
     (closed : MachineDescription) : MachineDescription :=
@@ -116,11 +130,26 @@ theorem configRunnerFromClosedHandoff_spec
           accept reject L
     exact TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv hclosed htransform hhalt
 
-theorem acceptRejectConfigRunnerConstruction_scaffold :
+theorem acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+    (hprojection : SelectedProjectionFiniteDescriptionConstruction) :
     AcceptRejectConfigRunnerConstruction := by
   exact
     acceptRejectConfigRunnerConstruction_of_phaseEquivConstruction
-      configRunnerPhaseEquivConstruction_scaffold
+      (configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+        hprojection)
+
+theorem acceptRejectConfigRunnerConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    AcceptRejectConfigRunnerConstruction :=
+  acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
+theorem acceptRejectConfigRunnerConstruction_scaffold :
+    AcceptRejectConfigRunnerConstruction :=
+  acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+    selectedProjectionFiniteDescriptionConstruction_scaffold
 
 
 end BoundedLayoutRunner

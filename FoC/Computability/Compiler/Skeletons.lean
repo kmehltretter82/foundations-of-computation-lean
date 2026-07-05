@@ -536,6 +536,25 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt, firstCode, totalCode] using hcompiled
 
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
+  PairedRecognizerDovetail.TotalStageAttemptCodeOutputCompiledSubroutineConstruction.of_outputFiniteSourceComponents
+    pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
+    (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_selectedProjection
+      hprojection)
+    pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
+    pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold
+
+theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
+    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   PairedRecognizerDovetail.TotalStageAttemptCodeOutputCompiledSubroutineConstruction.of_outputFiniteSourceComponents
@@ -543,6 +562,24 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold
     pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
     pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold
+
+def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
+  totalStageAttemptSubroutine :=
+    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
+      hprojection
+  finiteStageLoopController :=
+    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
+
+def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    PairedRecognizerDovetailFiniteControllerCompilerCloseout :=
+  pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
+    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout where
@@ -727,6 +764,22 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerC
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     (pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
       hclose)
+
+theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
+    (pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
+      hprojection)
+
+theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
+  finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
+    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=

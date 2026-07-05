@@ -1474,6 +1474,45 @@ theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
       (bits.length + 1)
       outputPadding
 
+theorem loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
+    (bits suffixTail : Word Bool)
+    (rightPadding outputPadding : List (Option Bool)) :
+    loweredStructuredBoolWordRawBitsDecoderDescription.HaltsFromTapeEquiv
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+        , Tape.blank
+        , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+            bits.length outputPadding ])
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        [ structuredBoolWordRawBitsDecoderSourceTargetTape
+            bits suffixTail rightPadding
+        , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+            (bits.length + 1)
+        , rightEdgeScanSourceTapeFromLeft [none] bits outputPadding ]) := by
+  simpa [loweredStructuredBoolWordRawBitsDecoderDescription] using
+    Structured.MultiTapeLowering.lowerStructured3Description_haltsFromConfigWithTapes
+      structuredBoolWordRawBitsDecoderDescription_wellFormed
+      structuredBoolWordRawBitsDecoderDescription_haltTransitionFree
+      structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3
+      (c :=
+        { state := structuredBoolWordRawBitsDecoderDescription.start
+          tapes :=
+            [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+            , Tape.blank
+            , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                bits.length outputPadding ] })
+      (tapes :=
+        [ structuredBoolWordRawBitsDecoderSourceTargetTape
+            bits suffixTail rightPadding
+        , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+            (bits.length + 1)
+        , rightEdgeScanSourceTapeFromLeft [none] bits outputPadding ])
+      rfl
+      (by simp [structuredBoolWordRawBitsDecoderDescription])
+      ⟨9 * bits.length + 11,
+        structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
+          bits suffixTail rightPadding outputPadding⟩
+
 def boolWordRawBitsDecoderHeaderBase : List (Option Bool) :=
   List.append (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none]
 

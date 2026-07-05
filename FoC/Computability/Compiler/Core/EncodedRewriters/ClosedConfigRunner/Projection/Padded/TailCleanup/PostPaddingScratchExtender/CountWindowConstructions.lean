@@ -1269,41 +1269,13 @@ def AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
       true materializer
 
-/--
-Count-window-specific decoded-prefix materializer.  This cannot be supplied by
-the generic Boolean-word raw-bits decoder alone: the target padding rebuilds
-branch-specific post-count cells from the decoded {name}`ParsedLayoutBits`,
-not merely from the preserved source suffix.
+/-
+The exact one-tape materializer contract is kept as a composition boundary, but
+this module no longer exports an unproved concrete construction for it.  The
+proved replacement for the decoded-prefix extractor is the lowered structured
+three-tape construction in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowStructuredMaterializerPilot`.
 -/
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  sorry
-
-/--
-Reject branch projection of the count-window-specific materializer leaf.
--/
-theorem rejectPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
-    RejectPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
-      false
-
-/--
-Accept branch projection of the count-window-specific materializer leaf.
--/
-theorem acceptPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
-    AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
-      true
-
-/--
-Branch-indexed construction wrapper.  The hard finite-machine work is isolated
-in the count-window-specific leaf above; the branch leaves are projections.
--/
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_layoutCore
 
 /--
 Reject-specialized wrapper contract for the shared post-field materializer.
@@ -1515,18 +1487,6 @@ theorem rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
               (postFieldDecodedPrefixScanToRewind_haltsFrom
                 false L)⟩
 
-theorem rejectPostFieldDecodedPrefixRestorerConstruction_core :
-    RejectPostFieldDecodedPrefixRestorerConstruction :=
-  rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
-    (rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
-      countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core)
-
-theorem rejectPostFieldHandoff_remainingGapsConstruction_core :
-    RejectPostFieldRemainingGapsConstruction :=
-  rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
-    rejectPostFieldHandoffRightEdgeRewinderConstruction_core
-    rejectPostFieldDecodedPrefixRestorerConstruction_core
-
 theorem acceptPostFieldHandoff_rightEdgeRewind_haltsFrom
     (L : DovetailLayout) (pref : Word Bool) (leftBit : Bool)
     (deletedTail : Word Bool) :
@@ -1630,11 +1590,6 @@ theorem acceptPostFieldBoundaryToDecodedPrefixConstruction_of_reposition
               (hnormalizer.right
                 L pref leftBit deletedTail hdeleted hpayload)⟩
 
-theorem acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_core :
-    AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction :=
-  acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
-    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_core
-
 theorem acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
     (hmaterializer :
       AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction)
@@ -1659,23 +1614,6 @@ theorem acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
               (acceptPostFieldDecodedPrefixScanSourceTape_move_left_move_right
                 L)
               (hscannerSpec.right L)⟩
-
-theorem acceptPostFieldRewoundToDecodedPrefixConstruction_core :
-    AcceptPostFieldRewoundToDecodedPrefixConstruction :=
-  acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
-    acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_core
-    acceptPostFieldDecodedPrefixScanToRewindConstruction_core
-
-theorem acceptPostFieldRepositionToDecodedPrefixConstruction_core :
-    AcceptPostFieldRepositionToDecodedPrefixConstruction :=
-  acceptPostFieldRepositionToDecodedPrefixConstruction_of_rewinderAndRestorer
-    acceptPostFieldRepositionRightEdgeRewinderConstruction_core
-    acceptPostFieldRewoundToDecodedPrefixConstruction_core
-
-theorem acceptPostFieldBoundaryToDecodedPrefixConstruction_core :
-    AcceptPostFieldBoundaryToDecodedPrefixConstruction :=
-  acceptPostFieldBoundaryToDecodedPrefixConstruction_of_reposition
-    acceptPostFieldRepositionToDecodedPrefixConstruction_core
 
 theorem acceptPostFieldHandoff_haltsFrom_of_boundaryToDecoded
     {normalizer : MachineDescription}
@@ -1723,19 +1661,6 @@ theorem acceptPostFieldHandoff_haltsFrom_of_boundaryToDecoded
           exact Tape.Equiv.refl _)
         (hnormalizer.right L pref leftBit deletedTail hdeleted hpayload)
 
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction := by
-  rcases acceptPostFieldBoundaryToDecodedPrefixConstruction_core with
-    ⟨normalizer, hnormalizer⟩
-  exact
-    ⟨SeqViaCanonical
-        acceptPostFieldHandoffBoundaryCleanupDescription normalizer,
-      SeqViaCanonical_subroutineReady
-        acceptPostFieldHandoffBoundaryCleanupDescription_subroutineReady
-        hnormalizer.left,
-      acceptPostFieldHandoff_haltsFrom_of_boundaryToDecoded
-        hnormalizer⟩
-
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction_of_remainingGaps
     (hremaining : RejectPostFieldRemainingGapsConstruction) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction := by
@@ -1748,45 +1673,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefix
         hnormalizer.left,
       fun L => rejectPostFieldHandoff_haltsFrom hnormalizer L⟩
 
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction_of_remainingGaps
-    rejectPostFieldHandoff_remainingGapsConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerConstruction_of_handoffCore
-    selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction_of_handoffCore
-    selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerConstruction_of_firstFieldAndPostField
-    selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerConstruction_of_firstFieldAndPostField
-    selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerConstruction_of_branches
-    selectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixTailNormalizerConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTailNormalizerConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormalizerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormalizerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormalizerConstruction_of_stageScannerAndTailNormalizer
-    selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixStageScannerConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixTailNormalizerConstruction_core
-
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRewinderConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRewinderConstruction := by
   intro useAccept
@@ -1796,18 +1682,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRewind
       fun L =>
         sourceRewindDescription_haltsFrom_scratchCountDecodedPrefixRewindSourceTape
           useAccept L 0⟩
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestorerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestorerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestorerConstruction_of_normalizerAndRewinder
-    selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixNormalizerConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRewinderConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowDecoderConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowDecoderConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowDecoderConstruction_of_prefixScannerAndDecodedRestorer
-    selectedProjectionPaddedTailCleanupScratchCountWindowPrefixScannerConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixRestorerConstruction_core
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction := by
@@ -1905,16 +1779,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstru
       hleaves)
     (selectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction_of_materializerOpenConstructions
       hleaves)
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions :=
-  ⟨acceptPostFieldBoundaryToDecodedPrefixConstruction_core,
-    rejectPostFieldHandoff_remainingGapsConstruction_core⟩
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_openConstructions
-    selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOpenConstructions_core
 
 theorem scratchCountSuffixRightEdgeScannerConstruction_core :
     ScratchCountSuffixRightEdgeScannerConstruction := by
@@ -2389,32 +2253,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstructio
   selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_of_suffixRestorerAndRawSourceEncoder
     selectedProjectionPaddedTailCleanupScratchCountWindowSuffixRestorerConstruction_core
     selectedProjectionPaddedTailCleanupScratchCountWindowRawSourceEncoderConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_core :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_of_parts
-    selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_core
-    selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
-
-/--
-Finite-machine leaf that exposes the selected branch scratch-count window and
-uses it to append the branch-specific scratch padding.
--/
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction := by
-  exact
-    selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
-      selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_core
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
-    selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
-    selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

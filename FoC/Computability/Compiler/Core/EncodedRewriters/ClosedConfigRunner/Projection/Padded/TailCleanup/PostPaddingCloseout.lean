@@ -677,9 +677,6 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMate
     selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
       hmaterializer
 
-/--
-Combined post-padding finite-machine leaf for selected-projection tail cleanup.
--/
 theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
   exact

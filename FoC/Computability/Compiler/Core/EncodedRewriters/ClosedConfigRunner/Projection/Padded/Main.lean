@@ -152,13 +152,27 @@ theorem selectedProjectionCheckedEquivEmitterConstruction_of_padded
   exact
     ⟨emitter, selectedProjectionCheckedEquivEmitterSpec_of_padded hemits⟩
 
-theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
+    (htail : SelectedProjectionPaddedTailEmitterConstruction) :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_of_checkedEquivEmitter
     (selectedProjectionCheckedEquivEmitterConstruction_of_padded
       (selectedProjectionCheckedEquivPaddedEmitterConstruction_of_components
         ⟨selectedProjectionInputQuoterConstruction_scaffold,
-          selectedProjectionPaddedTailEmitterConstruction_scaffold⟩))
+          htail⟩))
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
+    (selectedProjectionPaddedTailEmitterConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
+    selectedProjectionPaddedTailEmitterConstruction_scaffold
 
 end BoundedLayoutRunner
 end EncodedRewriters

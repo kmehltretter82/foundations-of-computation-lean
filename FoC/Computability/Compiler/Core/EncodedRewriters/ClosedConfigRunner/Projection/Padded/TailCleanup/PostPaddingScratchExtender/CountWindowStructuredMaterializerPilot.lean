@@ -233,6 +233,128 @@ theorem structuredAcceptPostFieldDecodedPrefixExtractor_run
         simpa [countWindowPostFieldDecodedPrefixMaterializerPayload] using
           hpayload)
 
+def LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorSpec
+    (extractor : MachineDescription) : Prop :=
+  extractor.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
+      (leftBit : Bool) (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] = false :: deletedTail ->
+      countWindowPostFieldDecodedPrefixMaterializerPayload useAccept L =
+          List.append pref [leftBit] ->
+      extractor.HaltsFromTapeEquiv
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ countWindowPostFieldDecodedPrefixMaterializerSourceTape
+              useAccept L pref leftBit deletedTail
+          , Tape.blank
+          , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+              (ParsedLayoutBits L).length
+              (postFieldDecodedPrefixScanPadding useAccept L) ])
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              (ParsedLayoutBits L)
+              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                useAccept L)
+              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                useAccept L deletedTail)
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              ((ParsedLayoutBits L).length + 1)
+          , postFieldDecodedPrefixScanSourceTape useAccept L ])
+
+def LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction :
+    Prop :=
+  exists extractor : MachineDescription,
+    LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorSpec extractor
+
+theorem loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core :
+    LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction := by
+  refine
+    ⟨loweredStructuredBoolWordRawBitsDecoderDescription,
+      loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady,
+      ?_⟩
+  intro useAccept L pref leftBit deletedTail _hdeleted hpayload
+  rw [
+    countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
+      useAccept L pref leftBit deletedTail hpayload]
+  simpa [postFieldDecodedPrefixScanSourceTape] using
+    loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
+      (ParsedLayoutBits L)
+      (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
+      (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+        useAccept L deletedTail)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
+    (_hextractor :
+      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
+  sorry
+
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
+    loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction := by
+  let hmaterializer :
+      CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore
+  let hrejectScan :
+      RejectPostFieldDecodedPrefixScanSourceConstruction :=
+    rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+      hmaterializer
+  let hrejectRestorer :
+      RejectPostFieldDecodedPrefixRestorerConstruction :=
+    rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
+      hrejectScan
+  let hrejectRemaining :
+      RejectPostFieldRemainingGapsConstruction :=
+    rejectPostFieldRemainingGapsConstruction_of_rewinderAndRestorer
+      rejectPostFieldHandoffRightEdgeRewinderConstruction_core
+      hrejectRestorer
+  let hacceptScan :
+      AcceptPostFieldRewoundToDecodedPrefixScanSourceConstruction :=
+    acceptPostFieldRewoundToDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
+      hmaterializer
+  let hacceptRewound :
+      AcceptPostFieldRewoundToDecodedPrefixConstruction :=
+    acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
+      hacceptScan
+      acceptPostFieldDecodedPrefixScanToRewindConstruction_core
+  let hacceptReposition :
+      AcceptPostFieldRepositionToDecodedPrefixConstruction :=
+    acceptPostFieldRepositionToDecodedPrefixConstruction_of_rewinderAndRestorer
+      acceptPostFieldRepositionRightEdgeRewinderConstruction_core
+      hacceptRewound
+  let hacceptBoundary :
+      AcceptPostFieldBoundaryToDecodedPrefixConstruction :=
+    acceptPostFieldBoundaryToDecodedPrefixConstruction_of_reposition
+      hacceptReposition
+  exact
+    selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_openConstructions
+      ⟨hacceptBoundary, hrejectRemaining⟩
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_of_parts
+    selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore
+    selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
+    selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
+    selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
+    selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction
+
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
 end EncodedRewriters

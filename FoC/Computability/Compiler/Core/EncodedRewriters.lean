@@ -236,16 +236,40 @@ theorem encodedDovetailStageInputToInitialLayoutRewriterConstruction_scaffold :
     encodedTapeCodePrimitiveRewriterConstruction_of_closedHandoffCompiledSubroutine
       hinitializer
 
-theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription
+    (hfinite :
+      EncodedRewriters.BoundedLayoutRunner.FiniteDescriptionConstruction) :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction := by
   intro accept reject
   rcases
-      EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine
+      EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutine_of_finiteDescriptionConstruction
+        hfinite
         accept reject with
     ⟨runner, hrunner⟩
   exact
     encodedTapeCodePrimitiveRewriterConstruction_of_outputCompiledSubroutine
       ⟨runner, hrunner⟩
+
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_selectedProjection
+    (hprojection :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+    EncodedDovetailLayoutBoundedRunnerRewriterConstruction :=
+  encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription
+    (EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_selectedProjection
+      hprojection)
+
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    EncodedDovetailLayoutBoundedRunnerRewriterConstruction :=
+  encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription
+    (EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
+    EncodedDovetailLayoutBoundedRunnerRewriterConstruction :=
+  encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription
+    EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
 
 end Computability
 end FoC

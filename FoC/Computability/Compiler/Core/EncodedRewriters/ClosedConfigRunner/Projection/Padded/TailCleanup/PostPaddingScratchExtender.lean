@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowConstructions
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowStructuredMaterializerPilot
 
 set_option doc.verso true
 
@@ -16,6 +16,9 @@ implementation is split by responsibility:
   count-sized extension to allocator construction.
 - `PostPaddingScratchExtender.CountWindow` contains the scratch-count counter
   tapes, checked counter run, and shared composition lemmas.
-- `PostPaddingScratchExtender.CountWindowConstructions` contains the executable
+- `PostPaddingScratchExtender.CountWindowConstructions` contains the reusable
   construction leaves for the scratch-count materializer and restorer.
+- `PostPaddingScratchExtender.CountWindowStructuredMaterializerPilot` exposes
+  the lowered structured extractor bridge used by the current scratch-count
+  materializer scaffold.
 -/

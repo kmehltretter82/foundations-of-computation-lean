@@ -160,26 +160,83 @@ theorem phaseAssemblyConstruction_scaffold :
       Tape.Equiv.trans (Tape.Equiv.symm hT_equiv) hTactual
     exact ⟨L, hcode, hT⟩
 
-theorem finiteDescriptionConstruction_scaffold :
+theorem finiteDescriptionConstruction_scaffold_of_configRunner
+    (hconfigRunner : AcceptRejectConfigRunnerConstruction) :
     FiniteDescriptionConstruction := by
   intro accept reject
   exact
     phaseAssemblyConstruction_scaffold
       accept reject
       layoutCheckedParserConstruction_scaffold
-      (acceptRejectConfigRunnerConstruction_scaffold accept reject)
+      (hconfigRunner accept reject)
+
+theorem finiteDescriptionConstruction_scaffold_of_selectedProjection
+    (hprojection : SelectedProjectionFiniteDescriptionConstruction) :
+    FiniteDescriptionConstruction :=
+  finiteDescriptionConstruction_scaffold_of_configRunner
+    (acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+      hprojection)
+
+theorem finiteDescriptionConstruction_scaffold_of_postErase
+    (hpostEraseConstruction :
+      SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+    FiniteDescriptionConstruction :=
+  finiteDescriptionConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+
+theorem finiteDescriptionConstruction_scaffold :
+    FiniteDescriptionConstruction :=
+  finiteDescriptionConstruction_scaffold_of_configRunner
+    acceptRejectConfigRunnerConstruction_scaffold
+
+theorem outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (hfinite : FiniteDescriptionConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner := by
+  rcases hfinite accept reject with
+    ⟨runner, hrunner⟩
+  refine ⟨runner, ?_⟩
+  exact
+    outputCompiledSubroutineByDescription_of_spec hrunner
+
+theorem outputCompiledSubroutine_of_selectedProjection
+    (hprojection : SelectedProjectionFiniteDescriptionConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (finiteDescriptionConstruction_scaffold_of_selectedProjection
+      hprojection)
+    accept reject
+
+theorem outputCompiledSubroutine_of_postErase
+    (hpostEraseConstruction :
+      SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (finiteDescriptionConstruction_scaffold_of_postErase
+      hpostEraseConstruction)
+    accept reject
 
 theorem outputCompiledSubroutine
     (accept reject : MachineDescription) :
     exists runner : MachineDescription,
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailLayoutCode accept reject)
-        runner := by
-  rcases finiteDescriptionConstruction_scaffold accept reject with
-    ⟨runner, hrunner⟩
-  refine ⟨runner, ?_⟩
-  exact
-    outputCompiledSubroutineByDescription_of_spec hrunner
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    finiteDescriptionConstruction_scaffold
+    accept reject
 
 def ClosedHandoffRightShiftedConstruction
     (accept reject : MachineDescription) : Prop :=
@@ -270,11 +327,12 @@ theorem primitivePipeline_transform_eq
         ConfigRunnerAfterReject_afterAccept, BoundedRunLayout]
 
 /-!
-The exact closed-handoff bounded-runner target is intentionally retired.
-The padded/equivalence construction above proves {name}`outputCompiledSubroutine`,
-which is the contract used by the high-level bounded-runner route.  Requiring
-this runner to halt in the exact code-word handoff position is stronger than
-normalized output and is not a valid construction target for shrinking layouts.
+The exact closed-handoff bounded-runner target is intentionally retired.  The
+parameterized padded/equivalence construction above proves the output-compiled
+subroutine contract used by the high-level bounded-runner route once the
+selected-projection tail cleanup leaf is supplied.  Requiring this runner to
+halt in the exact code-word handoff position is stronger than normalized output
+and is not a valid construction target for shrinking layouts.
 -/
 
 end BoundedLayoutRunner
