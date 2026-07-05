@@ -3,6 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayload
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.RawTailInsertion
 
 set_option doc.verso true
 
@@ -1252,6 +1253,33 @@ def structuredMixedOptionCellQuoteLiveTailJoinerScratchTape :
 def structuredMixedOptionCellQuoteLiveTailJoinerWorkTape :
     Tape Bool :=
   Structured.MultiTapeLowering.ThreeTape.outputFromBits []
+
+theorem structuredRawTailInsertionRestoredSource_normalizedOutput_eq_joined
+    (emittedPrefix rawTail quoteRest : Word Bool) :
+    Tape.normalizedOutput
+        (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.restoredSourceTape
+          emittedPrefix rawTail quoteRest) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          emittedPrefix rawTail quoteRest) := by
+  rw [
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.restoredSourceTape_normalizedOutput]
+  cases rawTail with
+  | nil =>
+      simp [mixedOptionCellQuoteLiveTailJoinedTape,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        Tape.normalizedOutput, Tape.cells, List.map_reverse,
+        List.append_assoc, Function.comp_def]
+  | cons head rest =>
+      change
+        List.append emittedPrefix
+            (List.append quoteRest (head :: rest)) =
+          (Tape.cells
+            (mixedOptionCellQuoteLiveTailJoinedTape
+              emittedPrefix (head :: rest) quoteRest)).filterMap
+            (fun cell => cell)
+      rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_cons]
+      simp [List.filterMap_append, Function.comp_def]
 
 def structuredMixedOptionCellQuoteLiveTailJoinerCompactionLeftCells
     (w sourceRestBits : Word Bool) (stage : Nat)
