@@ -14,6 +14,224 @@ namespace MultiTapeLowering
 
 namespace StaticDispatcherReaderAssembly
 
+def tableMachine (stateCount start halt : Nat)
+    (transitions : List TransitionDescription) : MachineDescription where
+  stateCount := stateCount
+  start := start
+  halt := halt
+  transitions := transitions
+
+theorem find?_matches_none_of_sources_below
+    {bound state : Nat} {cell : Option Bool}
+    {transitions : List TransitionDescription}
+    (hbelow : TransitionSourcesBelow bound transitions)
+    (hstate : bound ≤ state) :
+    transitions.find? (MachineDescription.Matches state cell) = none := by
+  rw [List.find?_eq_none]
+  intro t ht hmatch
+  have hmatchPair : t.source = state ∧ t.read = cell := by
+    simpa [MachineDescription.Matches] using hmatch
+  have hsource : t.source = state := by
+    exact hmatchPair.left
+  exact Nat.not_lt_of_ge hstate (by simpa [hsource] using hbelow t ht)
+
+theorem find?_matches_none_of_sources_atLeast
+    {bound state : Nat} {cell : Option Bool}
+    {transitions : List TransitionDescription}
+    (hatLeast : TransitionSourcesAtLeast bound transitions)
+    (hstate : state < bound) :
+    transitions.find? (MachineDescription.Matches state cell) = none := by
+  rw [List.find?_eq_none]
+  intro t ht hmatch
+  have hmatchPair : t.source = state ∧ t.read = cell := by
+    simpa [MachineDescription.Matches] using hmatch
+  have hsource : t.source = state := by
+    exact hmatchPair.left
+  exact Nat.not_le_of_gt hstate (by simpa [hsource] using hatLeast t ht)
+
+theorem find?_append_right_of_left_sources_below
+    {bound state : Nat} {cell : Option Bool}
+    {left right : List TransitionDescription}
+    (hleft : TransitionSourcesBelow bound left)
+    (hstate : bound ≤ state) :
+    (left ++ right).find? (MachineDescription.Matches state cell) =
+      right.find? (MachineDescription.Matches state cell) := by
+  rw [List.find?_append,
+    find?_matches_none_of_sources_below hleft hstate]
+  simp
+
+theorem find?_append_left_of_right_sources_atLeast
+    {bound state : Nat} {cell : Option Bool}
+    {left right : List TransitionDescription}
+    (hright : TransitionSourcesAtLeast bound right)
+    (hstate : state < bound) :
+    (left ++ right).find? (MachineDescription.Matches state cell) =
+      left.find? (MachineDescription.Matches state cell) := by
+  rw [List.find?_append,
+    find?_matches_none_of_sources_atLeast hright hstate]
+  cases left.find? (MachineDescription.Matches state cell) <;> simp
+
+theorem tableMachine_stepConfig_append_right_of_left_sources_below
+    {stateCount start halt bound : Nat}
+    {left right : List TransitionDescription}
+    {c : MachineDescription.Configuration}
+    (hleft : TransitionSourcesBelow bound left)
+    (hstate : bound ≤ c.state) :
+    (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+      (tableMachine stateCount start halt right).stepConfig c := by
+  simp [tableMachine, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition,
+    find?_append_right_of_left_sources_below hleft hstate]
+
+theorem tableMachine_stepConfig_append_left_of_right_sources_atLeast
+    {stateCount start halt bound : Nat}
+    {left right : List TransitionDescription}
+    {c : MachineDescription.Configuration}
+    (hright : TransitionSourcesAtLeast bound right)
+    (hstate : c.state < bound) :
+    (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+      (tableMachine stateCount start halt left).stepConfig c := by
+  simp [tableMachine, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition,
+    find?_append_left_of_right_sources_atLeast hright hstate]
+
+theorem tableMachine_runConfig_append_right_of_left_sources_below
+    {stateCount start halt bound n : Nat}
+    {left right : List TransitionDescription}
+    {c : MachineDescription.Configuration}
+    (hleft : TransitionSourcesBelow bound left)
+    (hstates :
+      forall k : Nat, k < n ->
+        bound ≤
+          ((tableMachine stateCount start halt right).runConfig k c).state) :
+    (tableMachine stateCount start halt (left ++ right)).runConfig n c =
+      (tableMachine stateCount start halt right).runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      have hstate : bound ≤ c.state := by
+        simpa [MachineDescription.runConfig] using hstates 0 (Nat.succ_pos n)
+      have hstep :=
+        tableMachine_stepConfig_append_right_of_left_sources_below
+          (stateCount := stateCount) (start := start) (halt := halt)
+          (bound := bound) (left := left) (right := right)
+          (c := c) hleft hstate
+      cases hrightStep :
+          (tableMachine stateCount start halt right).stepConfig c with
+      | none =>
+          have hwholeStep :
+              (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+                none := by
+            simpa [hstep] using hrightStep
+          simp [MachineDescription.runConfig, hwholeStep, hrightStep]
+      | some next =>
+          have hwholeStep :
+              (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+                some next := by
+            simpa [hstep] using hrightStep
+          simp [MachineDescription.runConfig, hwholeStep, hrightStep]
+          apply ih
+          intro k hk
+          have hk' : k + 1 < Nat.succ n := Nat.succ_lt_succ hk
+          have h := hstates (k + 1) hk'
+          simpa [MachineDescription.runConfig, hrightStep] using h
+
+theorem tableMachine_runConfig_append_left_of_right_sources_atLeast
+    {stateCount start halt bound n : Nat}
+    {left right : List TransitionDescription}
+    {c : MachineDescription.Configuration}
+    (hright : TransitionSourcesAtLeast bound right)
+    (hstates :
+      forall k : Nat, k < n ->
+        ((tableMachine stateCount start halt left).runConfig k c).state <
+          bound) :
+    (tableMachine stateCount start halt (left ++ right)).runConfig n c =
+      (tableMachine stateCount start halt left).runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      have hstate : c.state < bound := by
+        simpa [MachineDescription.runConfig] using hstates 0 (Nat.succ_pos n)
+      have hstep :=
+        tableMachine_stepConfig_append_left_of_right_sources_atLeast
+          (stateCount := stateCount) (start := start) (halt := halt)
+          (bound := bound) (left := left) (right := right)
+          (c := c) hright hstate
+      cases hleftStep :
+          (tableMachine stateCount start halt left).stepConfig c with
+      | none =>
+          have hwholeStep :
+              (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+                none := by
+            simpa [hstep] using hleftStep
+          simp [MachineDescription.runConfig, hwholeStep, hleftStep]
+      | some next =>
+          have hwholeStep :
+              (tableMachine stateCount start halt (left ++ right)).stepConfig c =
+                some next := by
+            simpa [hstep] using hleftStep
+          simp [MachineDescription.runConfig, hwholeStep, hleftStep]
+          apply ih
+          intro k hk
+          have hk' : k + 1 < Nat.succ n := Nat.succ_lt_succ hk
+          have h := hstates (k + 1) hk'
+          simpa [MachineDescription.runConfig, hleftStep] using h
+
+theorem runsFromStateTapeEquiv_tableMachine_append_right_of_left_sources_below_of_run
+    {stateCount start halt bound : Nat}
+    {left right : List TransitionDescription}
+    {sourceState targetState n : Nat}
+    {Tin Tout : Tape Bool}
+    {actual : Tape Bool}
+    (hleft : TransitionSourcesBelow bound left)
+    (hrun :
+      (tableMachine stateCount start halt right).runConfig n
+          { state := sourceState, tape := Tin } =
+        { state := targetState, tape := actual })
+    (hequiv : Tape.Equiv actual Tout)
+    (hstates :
+      forall k : Nat, k < n ->
+        bound ≤
+          ((tableMachine stateCount start halt right).runConfig k
+            { state := sourceState, tape := Tin }).state) :
+    RunsFromStateTapeEquiv
+      (tableMachine stateCount start halt (left ++ right))
+      sourceState targetState Tin Tout := by
+  exact
+    ⟨n, actual, by
+      rw [tableMachine_runConfig_append_right_of_left_sources_below
+        hleft hstates]
+      exact hrun,
+      hequiv⟩
+
+theorem runsFromStateTapeEquiv_tableMachine_append_left_of_right_sources_atLeast_of_run
+    {stateCount start halt bound : Nat}
+    {left right : List TransitionDescription}
+    {sourceState targetState n : Nat}
+    {Tin Tout : Tape Bool}
+    {actual : Tape Bool}
+    (hright : TransitionSourcesAtLeast bound right)
+    (hrun :
+      (tableMachine stateCount start halt left).runConfig n
+          { state := sourceState, tape := Tin } =
+        { state := targetState, tape := actual })
+    (hequiv : Tape.Equiv actual Tout)
+    (hstates :
+      forall k : Nat, k < n ->
+        ((tableMachine stateCount start halt left).runConfig k
+          { state := sourceState, tape := Tin }).state < bound) :
+    RunsFromStateTapeEquiv
+      (tableMachine stateCount start halt (left ++ right))
+      sourceState targetState Tin Tout := by
+  exact
+    ⟨n, actual, by
+      rw [tableMachine_runConfig_append_left_of_right_sources_atLeast
+        hright hstates]
+      exact hrun,
+      hequiv⟩
+
 theorem guardedDropOne_exists_of_length_three
     {logical : List (Tape Bool)} (hlength : logical.length = 3) :
     exists T : Tape Bool, exists rest : List (Tape Bool),
