@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.GeneratedCode
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.SearchAlgebra
 
 set_option doc.verso true
@@ -9,6 +10,7 @@ This wrapper preserves the public {lit}`GeneratedCallSearch` module while the
 implementation is split into focused submodules:
 
 - `GeneratedCallSearch.Basic`
+- `GeneratedCallSearch.GeneratedCode`
 - `GeneratedCallSearch.ExactFuel`
 - `GeneratedCallSearch.PairEnumerator`
 - `GeneratedCallSearch.Product`
