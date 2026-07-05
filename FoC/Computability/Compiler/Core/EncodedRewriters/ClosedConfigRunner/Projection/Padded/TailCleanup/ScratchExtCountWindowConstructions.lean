@@ -1225,8 +1225,8 @@ theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_false
 
 /--
 Finite-machine contract for one branch of the shared post-field materializer.
-It rebuilds the full decoded {name}`ParsedLayoutBits` scan source from the
-branch's post-field right-edge tape.
+It rebuilds a tape equivalent to the full decoded {name}`ParsedLayoutBits` scan
+source from the branch's post-field right-edge tape.
 -/
 def CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
     (useAccept : Bool)
@@ -1239,7 +1239,7 @@ def CountWindowPostFieldDecodedPrefixScanSourceMaterializerSpec
       countWindowPostFieldDecodedPrefixMaterializerPayload
           useAccept L =
         List.append pref [leftBit] ->
-      materializer.HaltsFromTape
+      materializer.HaltsFromTapeEquiv
         (countWindowPostFieldDecodedPrefixMaterializerSourceTape
           useAccept L pref leftBit deletedTail)
         (postFieldDecodedPrefixScanSourceTape useAccept L)
@@ -1270,10 +1270,10 @@ def AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction :
       true materializer
 
 /-
-The exact one-tape materializer contract is kept as a composition boundary, but
-this module no longer exports an unproved concrete construction for it.  The
-proved replacement for the decoded-prefix extractor is the lowered structured
-three-tape construction in
+The one-tape materializer contract is kept as a composition boundary up to tape
+equivalence, but this module no longer exports an unproved concrete
+construction for it.  The proved replacement for the decoded-prefix extractor
+is the lowered structured three-tape construction in
 {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge`.
 -/
 
@@ -1292,7 +1292,7 @@ def RejectPostFieldDecodedPrefixScanSourceSpec
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload
           L =
         List.append pref [leftBit] ->
-      materializer.HaltsFromTape
+      materializer.HaltsFromTapeEquiv
         (rejectPostFieldDecodedPrefixRestorerSourceTape
           L pref leftBit deletedTail)
         (postFieldDecodedPrefixScanSourceTape false L)
@@ -1317,7 +1317,7 @@ def AcceptPostFieldRewoundToDecodedPrefixScanSourceSpec
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload
           L =
         List.append pref [leftBit] ->
-      materializer.HaltsFromTape
+      materializer.HaltsFromTapeEquiv
         (acceptPostFieldHandoffAfterRightEdgeRewindTape
           L pref leftBit deletedTail)
         (acceptPostFieldDecodedPrefixScanSourceTape L)
@@ -1477,7 +1477,7 @@ theorem rejectPostFieldDecodedPrefixRestorerConstruction_of_scanSource
               postFieldDecodedPrefixScanToRewindDescription_subroutineReady
         · intro L pref leftBit deletedTail hdeleted hpayload
           exact
-            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
               hmaterializerSpec.left
               postFieldDecodedPrefixScanToRewindDescription_subroutineReady
               (hmaterializerSpec.right
@@ -1606,7 +1606,7 @@ theorem acceptPostFieldRewoundToDecodedPrefixConstruction_of_scanSource
               hmaterializerSpec.left hscannerSpec.left
         · intro L pref leftBit deletedTail hdeleted hpayload
           exact
-            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+            canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
               hmaterializerSpec.left
               hscannerSpec.left
               (hmaterializerSpec.right
