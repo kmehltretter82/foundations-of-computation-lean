@@ -334,6 +334,13 @@ theorem loweredStructuredBoolWordRawBitsDecoderDescription_wellFormed :
       structuredBoolWordRawBitsDecoderDescription_wellFormed
       structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3
 
+theorem loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady :
+    loweredStructuredBoolWordRawBitsDecoderDescription.SubroutineReady := by
+  simpa [loweredStructuredBoolWordRawBitsDecoderDescription] using
+    Structured.MultiTapeLowering.lowerStructured3Description_subroutineReady
+      structuredBoolWordRawBitsDecoderDescription_wellFormed
+      structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3
+
 def structuredBoolWordRawBitsDecoderInitialOutputTape :
     Tape Bool :=
   tapeAtCells [none] []
@@ -1240,7 +1247,7 @@ theorem loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTape
 
 def LoweredStructuredBoolWordRawBitsDecoderSpec
     (decoder : MachineDescription) : Prop :=
-  decoder.WellFormed ∧
+  decoder.SubroutineReady ∧
     forall (bits suffixTail : Word Bool)
       (rightPadding : List (Option Bool)),
       decoder.HaltsFromTapeEquiv
@@ -1263,7 +1270,7 @@ theorem loweredStructuredBoolWordRawBitsDecoderConstruction_core :
     LoweredStructuredBoolWordRawBitsDecoderConstruction := by
   exact
     ⟨loweredStructuredBoolWordRawBitsDecoderDescription,
-      loweredStructuredBoolWordRawBitsDecoderDescription_wellFormed,
+      loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady,
       loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTape⟩
 
 theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding

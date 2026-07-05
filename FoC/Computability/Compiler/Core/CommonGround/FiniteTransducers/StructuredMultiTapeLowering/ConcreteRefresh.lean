@@ -114,6 +114,15 @@ theorem lowerStructured3Description_wellFormed
     StaticDispatcherReaderAssembly.staticLoweredDescription_wellFormed
       D hDwf hrows concreteStructuredSingletonRefresh3Description_contract
 
+theorem lowerStructured3Description_subroutineReady
+    {D : Description}
+    (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D) :
+    (lowerStructured3Description D).SubroutineReady := by
+  simpa [lowerStructured3Description] using
+    StaticDispatcherReaderAssembly.staticLoweredDescription_subroutineReady
+      D hDwf hrows concreteStructuredSingletonRefresh3Description_contract
+
 def lowerStructured3StaticDescription
     (D : Description)
     (hDwf : D.WellFormed)

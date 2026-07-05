@@ -1572,6 +1572,155 @@ theorem returnedNoRowBranchTransitions_sources_ne_ready
           hreturn.left
       exact (Nat.ne_of_lt hreadyReturn).symm
 
+theorem returnedNoRowAllTransitions_sources_ne_ready
+    (D : Description) (rowBlockSize : Nat) {state : Nat}
+    (hstate : state < D.stateCount) :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready state)
+      (returnedNoRowAllTransitions D rowBlockSize) := by
+  unfold returnedNoRowAllTransitions
+  apply transitionSourcesNe_bind
+  intro item _hitem
+  cases hlookup :
+      lookupTransitionFromReadTuple3 D item.1 item.2 with
+  | some _ =>
+      simp [returnedNoRowItemTransitions, hlookup,
+        TransitionSourcesNe]
+  | none =>
+      intro u hu
+      have hreadyLt :
+          StaticDispatcherState.ready state < D.stateCount := by
+        simpa [StaticDispatcherState.ready] using hstate
+      have hbranch :
+          u ∈ returnedNoRowBranchTransitions
+            D rowBlockSize item.1 item.2 := by
+        simpa [returnedNoRowItemTransitions, hlookup] using hu
+      rcases returnedNoRowBranchTransitions_source_region
+          (D := D) (rowBlockSize := rowBlockSize)
+          (state := item.1) (reads := item.2) hbranch with
+        hafter | hcases
+      · rw [hafter]
+        have hafterGe :
+            D.stateCount ≤ StaticDispatcherState.afterRead D item.1 item.2 := by
+          unfold StaticDispatcherState.afterRead
+          lia
+        exact
+          (Nat.ne_of_lt
+            (Nat.lt_of_lt_of_le hreadyLt hafterGe)).symm
+      · rcases hcases with hscratch | hreturn
+        · rw [hscratch]
+          have hscratchGe :
+              D.stateCount ≤ noRowJumpScratch D item.1 item.2 := by
+            exact
+              Nat.le_trans (structuredStateCount_le_threeHeadReaderStateLimit D)
+                (threeHeadReaderStateLimit_le_noRowJumpScratch
+                  D item.1 item.2)
+          exact
+            (Nat.ne_of_lt
+              (Nat.lt_of_lt_of_le hreadyLt hscratchGe)).symm
+        · have hoffsetGe :
+              D.stateCount ≤ u.source :=
+            Nat.le_trans
+              (Nat.le_trans (stateCount_le_noRowJumpLimit D)
+                (noRowJumpLimit_le_selectedRowBranchLimit
+                  D rowBlockSize))
+              (Nat.le_trans
+                (selectedRowBranchLimit_le_noRowReturnOffset
+                  D rowBlockSize item.1 item.2)
+                hreturn.left)
+          exact
+            (Nat.ne_of_lt
+              (Nat.lt_of_lt_of_le hreadyLt hoffsetGe)).symm
+
+theorem threeHeadReaderReturnedNoRowTransitions_sources_ne_halt
+    (D : Description) (rowBlockSize : Nat)
+    (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (threeHeadReaderReturnedNoRowTransitions D rowBlockSize) := by
+  simpa [threeHeadReaderReturnedNoRowTransitions] using
+    transitionSourcesNe_append
+      (threeHeadReaderTransitions_sources_ne_halt D hhalt)
+      (returnedNoRowAllTransitions_sources_ne_ready
+        D rowBlockSize hhalt)
+
+theorem selectedRowItemTransitions_sources_ne_ready_halt
+    {D : Description}
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (rowBlockSize : Nat) (hhalt : D.halt < D.stateCount)
+    {item : Nat × ReadTuple3} :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready D.halt)
+      (selectedRowItemTransitions D refresh rowBlockSize item) := by
+  intro u hu
+  have hreadyLt :
+      StaticDispatcherState.ready D.halt < D.stateCount := by
+    simpa [StaticDispatcherState.ready] using hhalt
+  rcases
+      selectedRowItemTransitions_source_cases
+        hrows hrefresh rowBlockSize hu with
+    hafter | hcases
+  · rw [hafter]
+    have hafterGe :
+        D.stateCount ≤ StaticDispatcherState.afterRead D item.1 item.2 := by
+      unfold StaticDispatcherState.afterRead
+      lia
+    exact
+      (Nat.ne_of_lt
+        (Nat.lt_of_lt_of_le hreadyLt hafterGe)).symm
+  · rcases hcases with hscratch | hoffset
+    · rw [hscratch]
+      have hscratchGe :
+          D.stateCount ≤ selectedRowBranchScratch D item.1 item.2 :=
+        Nat.le_trans (stateCount_le_noRowJumpLimit D)
+          (noRowJumpLimit_le_selectedRowBranchScratch
+            D item.1 item.2)
+      exact
+        (Nat.ne_of_lt
+          (Nat.lt_of_lt_of_le hreadyLt hscratchGe)).symm
+    · have hoffsetGe :
+          D.stateCount ≤ u.source :=
+        Nat.le_trans
+          (stateCount_le_selectedRowBranchRowOffset
+            D rowBlockSize item.1 item.2)
+          hoffset
+      exact
+        (Nat.ne_of_lt
+          (Nat.lt_of_lt_of_le hreadyLt hoffsetGe)).symm
+
+theorem selectedRowAllTransitions_sources_ne_ready_halt
+    {D : Description}
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (rowBlockSize : Nat) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready D.halt)
+      (selectedRowAllTransitions D refresh rowBlockSize) := by
+  unfold selectedRowAllTransitions
+  apply transitionSourcesNe_bind
+  intro item _hitem
+  exact
+    selectedRowItemTransitions_sources_ne_ready_halt
+      hrows hrefresh rowBlockSize hhalt
+
+theorem threeHeadReaderReturnedNoRowSelectedTransitions_sources_ne_halt
+    {D : Description}
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (rowBlockSize : Nat) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (threeHeadReaderReturnedNoRowSelectedTransitions
+        D refresh rowBlockSize) := by
+  simpa [threeHeadReaderReturnedNoRowSelectedTransitions] using
+    transitionSourcesNe_append
+      (threeHeadReaderReturnedNoRowTransitions_sources_ne_halt
+        D rowBlockSize hhalt)
+      (selectedRowAllTransitions_sources_ne_ready_halt
+        hrows hrefresh rowBlockSize hhalt)
+
 theorem returnedNoRowBranchTransitions_subset_returnedNoRowAllTransitions
     (D : Description) (rowBlockSize : Nat)
     {state : Nat} (hstate : state ∈ activeStateValues D)
@@ -2300,6 +2449,26 @@ theorem staticLoweredDescription_wellFormed
         (by
           intro item hitem t hlookup
           exact selectedRowBlockSize_fits D refresh hitem hlookup)
+
+theorem staticLoweredDescription_haltTransitionFree
+    (D : Description) (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    (staticLoweredDescription D refresh).HaltTransitionFree := by
+  let rowBlockSize := selectedRowBlockSize D refresh
+  simpa [staticLoweredDescription, rowBlockSize] using
+    threeHeadReaderReturnedNoRowSelectedTransitions_sources_ne_halt
+      hrows hrefresh rowBlockSize hDwf.right.right.right.left
+
+theorem staticLoweredDescription_subroutineReady
+    (D : Description) (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    (staticLoweredDescription D refresh).SubroutineReady :=
+  ⟨staticLoweredDescription_wellFormed D hDwf hrows hrefresh,
+    staticLoweredDescription_haltTransitionFree D hDwf hrows hrefresh⟩
 
 theorem staticLoweredDescription_noRow_runs
     (D : Description) (hDwf : D.WellFormed)
