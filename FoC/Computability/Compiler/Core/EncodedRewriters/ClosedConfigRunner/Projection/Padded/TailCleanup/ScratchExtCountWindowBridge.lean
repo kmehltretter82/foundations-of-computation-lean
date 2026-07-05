@@ -404,6 +404,71 @@ def CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerSpec
       normalizer
 
+/--
+Count-window-specific decoder for the selected canonical tape-2 segment.
+
+This is the concrete output-side finite-machine target from the bridge plan:
+starting at the selected segment separator, decode the guarded structured
+encoding of the right-edge scan-source tape back to that plain tape.  The
+encoded prefix to the left is arbitrary because the tape-2 seeker leaves the
+previous structured segments there.
+-/
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderSpec
+    (decoder : MachineDescription) : Prop :=
+  decoder.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout)
+      (encodedPrefix : List (Option Bool)),
+      decoder.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            [guardLogicalTape
+              (postFieldDecodedPrefixScanSourceTape useAccept L)]))
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction :
+    Prop :=
+  exists decoder : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderSpec decoder
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_singletonDecoder
+    (hdecoder :
+      StructuredSelectedSingletonSegmentDecoderConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction := by
+  unfold StructuredSelectedSingletonSegmentDecoderConstruction at hdecoder
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro useAccept L encodedPrefix
+  exact hdecoderRun (postFieldDecodedPrefixScanSourceTape useAccept L)
+    encodedPrefix
+
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_selectedSegmentDecoder
+    (hdecoder :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro useAccept L deletedTail physical hseparator
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simpa [encodedSuffixFromTape, guardLogicalTapes] using
+    hdecoderRun useAccept L
+      (encodedPrefixBeforeTape
+        (guardLogicalTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              (ParsedLayoutBits L)
+              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                useAccept L)
+              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                useAccept L deletedTail)
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              ((ParsedLayoutBits L).length + 1)
+          , postFieldDecodedPrefixScanSourceTape useAccept L ])
+        2)
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
     (hnormalizer :
       CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction) :
@@ -500,9 +565,8 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
   exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
-      (structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtractor
-        structuredSelectedSingletonSegmentExtractorConstruction_core)
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_selectedSegmentDecoder
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
