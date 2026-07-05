@@ -197,6 +197,16 @@ theorem headSuffixGapShiftDescription_run_boundaryStep
   | some bit =>
       exact headSuffixGapShiftDescription_run_boundaryStep_bit bit left right
 
+theorem headSuffixGapShiftDescription_run_boundaryStep_nil
+    (left : List (Option Bool)) :
+    headSuffixGapShiftDescription.runConfig 1
+        { state := 2
+          tape := tapeAtCells left [] } =
+      { state := headSuffixGapShiftPairState none none
+        tape := tapeAtCells (none :: left) [] } := by
+  simpa [tapeAtCells] using
+    headSuffixGapShiftDescription_run_boundaryStep_none left []
+
 theorem headSuffixGapShiftDescription_run_pairStep_none_none_bit
     (bit : Bool)
     (left right : List (Option Bool)) :
@@ -519,6 +529,189 @@ theorem headSuffixGapShiftLoopActive_append
       rw [ih second current]
       simp [and_assoc]
 
+theorem headSuffixGapShiftLoopActive_second_some_mapSome_append_none
+    (first : Option Bool) (second : Bool) (bits : Word Bool) :
+    headSuffixGapShiftLoopActive first (some second)
+      (List.append (bits.map some) [none]) := by
+  induction bits generalizing first second with
+  | nil =>
+      simp [headSuffixGapShiftLoopActive]
+  | cons bit rest ih =>
+      simp [headSuffixGapShiftLoopActive]
+      exact ih (some second) bit
+
+theorem headSuffixGapShiftLoopPair_second_some_mapSome_append_none_second
+    (first : Option Bool) (second : Bool) (bits : Word Bool) :
+    (headSuffixGapShiftLoopPair first (some second)
+      (List.append (bits.map some) [none])).2 = none := by
+  induction bits generalizing first second with
+  | nil =>
+      simp [headSuffixGapShiftLoopPair]
+  | cons bit rest ih =>
+      simpa [headSuffixGapShiftLoopPair] using ih (some second) bit
+
+theorem headSuffixGapShiftLoopPair_second_some_mapSome_append_none_first_ne
+    (first : Option Bool) (second : Bool) (bits : Word Bool) :
+    (headSuffixGapShiftLoopPair first (some second)
+      (List.append (bits.map some) [none])).1 ≠ none := by
+  induction bits generalizing first second with
+  | nil =>
+      simp [headSuffixGapShiftLoopPair]
+  | cons bit rest ih =>
+      simpa [headSuffixGapShiftLoopPair] using ih (some second) bit
+
+theorem headSuffixGapShiftLoopActive_first_none_cons_mapSome_append_none
+    (first : Option Bool) (bit : Bool) (bits : Word Bool) :
+    headSuffixGapShiftLoopActive first none
+      (some bit :: List.append (bits.map some) [none]) := by
+  simp [headSuffixGapShiftLoopActive]
+  exact
+    headSuffixGapShiftLoopActive_second_some_mapSome_append_none
+      none bit bits
+
+theorem headSuffixGapShiftLoopPair_first_none_cons_mapSome_append_none_second
+    (first : Option Bool) (bit : Bool) (bits : Word Bool) :
+    (headSuffixGapShiftLoopPair first none
+      (some bit :: List.append (bits.map some) [none])).2 = none := by
+  simpa [headSuffixGapShiftLoopPair] using
+    headSuffixGapShiftLoopPair_second_some_mapSome_append_none_second
+      none bit bits
+
+theorem headSuffixGapShiftLoopPair_first_none_cons_mapSome_append_none_first_ne
+    (first : Option Bool) (bit : Bool) (bits : Word Bool) :
+    (headSuffixGapShiftLoopPair first none
+      (some bit :: List.append (bits.map some) [none])).1 ≠ none := by
+  simpa [headSuffixGapShiftLoopPair] using
+    headSuffixGapShiftLoopPair_second_some_mapSome_append_none_first_ne
+      none bit bits
+
+def encodedStructuredTapeCellsTail :
+    List (Tape Bool) -> List (Option Bool)
+  | [] => []
+  | T :: rest =>
+      List.append (logicalTapeCode T)
+        (encodedStructuredTapeCells rest)
+
+theorem encodedStructuredTapeCells_eq_cons_tail
+    (logical : List (Tape Bool)) :
+    encodedStructuredTapeCells logical =
+      none :: encodedStructuredTapeCellsTail logical := by
+  cases logical with
+  | nil =>
+      rfl
+  | cons T rest =>
+      rfl
+
+theorem headSuffixGapShiftLoopReady_encodedStructuredTapeCellsTail
+    (logical : List (Tape Bool)) (first : Option Bool)
+    (hfirst : first ≠ none) :
+    headSuffixGapShiftLoopActive first none
+        (encodedStructuredTapeCellsTail logical) ∧
+      (headSuffixGapShiftLoopPair first none
+        (encodedStructuredTapeCellsTail logical)).1 ≠ none ∧
+      (headSuffixGapShiftLoopPair first none
+        (encodedStructuredTapeCellsTail logical)).2 = none := by
+  induction logical generalizing first with
+  | nil =>
+      simp [encodedStructuredTapeCellsTail, headSuffixGapShiftLoopActive,
+        headSuffixGapShiftLoopPair, hfirst]
+  | cons T rest ih =>
+      rcases logicalTapeBits_exists_cons T with ⟨bit, bits, hbits⟩
+      let segment : List (Option Bool) :=
+        some bit :: List.append (bits.map some) [none]
+      have htail :
+          encodedStructuredTapeCellsTail (T :: rest) =
+            List.append segment (encodedStructuredTapeCellsTail rest) := by
+        change
+          List.append (logicalTapeCode T) (encodedStructuredTapeCells rest) =
+            List.append segment (encodedStructuredTapeCellsTail rest)
+        rw [logicalTapeCode_eq_map_some, hbits,
+          encodedStructuredTapeCells_eq_cons_tail rest]
+        simp [segment, List.append_assoc]
+      have hsegActive :
+          headSuffixGapShiftLoopActive first none segment := by
+        simpa [segment] using
+          headSuffixGapShiftLoopActive_first_none_cons_mapSome_append_none
+            first bit bits
+      have hsegFirst :
+          (headSuffixGapShiftLoopPair first none segment).1 ≠ none := by
+        simpa [segment] using
+          headSuffixGapShiftLoopPair_first_none_cons_mapSome_append_none_first_ne
+            first bit bits
+      have hsegSecond :
+          (headSuffixGapShiftLoopPair first none segment).2 = none := by
+        simpa [segment] using
+          headSuffixGapShiftLoopPair_first_none_cons_mapSome_append_none_second
+            first bit bits
+      have hrestReady :=
+        ih (first := (headSuffixGapShiftLoopPair first none segment).1)
+          hsegFirst
+      constructor
+      · rw [htail, headSuffixGapShiftLoopActive_append]
+        refine ⟨hsegActive, ?_⟩
+        simpa [hsegSecond] using hrestReady.1
+      · constructor
+        · rw [htail, headSuffixGapShiftLoopPair_append]
+          simpa [hsegSecond] using hrestReady.2.1
+        · rw [htail, headSuffixGapShiftLoopPair_append]
+          simpa [hsegSecond] using hrestReady.2.2
+
+theorem headSuffixGapShiftLoopReady_encodedStructuredTapeCellsTail_start
+    (T : Tape Bool) (rest : List (Tape Bool)) :
+    exists current : Option Bool, exists cells : List (Option Bool),
+      encodedStructuredTapeCellsTail (T :: rest) = current :: cells ∧
+        headSuffixGapShiftLoopActive none current cells ∧
+          (headSuffixGapShiftLoopPair none current cells).1 ≠ none ∧
+          (headSuffixGapShiftLoopPair none current cells).2 = none := by
+  rcases logicalTapeBits_exists_cons T with ⟨bit, bits, hbits⟩
+  let segmentTail : List (Option Bool) :=
+    List.append (bits.map some) [none]
+  let cells : List (Option Bool) :=
+    List.append segmentTail (encodedStructuredTapeCellsTail rest)
+  refine ⟨some bit, cells, ?_, ?_⟩
+  · change
+      List.append (logicalTapeCode T) (encodedStructuredTapeCells rest) =
+        some bit :: cells
+    rw [logicalTapeCode_eq_map_some, hbits,
+      encodedStructuredTapeCells_eq_cons_tail rest]
+    simp [cells, segmentTail, List.append_assoc]
+  · have hsegActive :
+        headSuffixGapShiftLoopActive none (some bit) segmentTail := by
+      simpa [segmentTail] using
+        headSuffixGapShiftLoopActive_second_some_mapSome_append_none
+          none bit bits
+    have hsegFirst :
+        (headSuffixGapShiftLoopPair none (some bit) segmentTail).1 ≠
+          none := by
+      simpa [segmentTail] using
+        headSuffixGapShiftLoopPair_second_some_mapSome_append_none_first_ne
+          none bit bits
+    have hsegSecond :
+        (headSuffixGapShiftLoopPair none (some bit) segmentTail).2 =
+          none := by
+      simpa [segmentTail] using
+        headSuffixGapShiftLoopPair_second_some_mapSome_append_none_second
+          none bit bits
+    have hrestReady :=
+      headSuffixGapShiftLoopReady_encodedStructuredTapeCellsTail rest
+        (headSuffixGapShiftLoopPair none (some bit) segmentTail).1
+        hsegFirst
+    constructor
+    · rw [show cells =
+          List.append segmentTail (encodedStructuredTapeCellsTail rest) by rfl]
+      rw [headSuffixGapShiftLoopActive_append]
+      refine ⟨hsegActive, ?_⟩
+      simpa [hsegSecond] using hrestReady.1
+    · constructor
+      · rw [show cells =
+            List.append segmentTail (encodedStructuredTapeCellsTail rest) by rfl]
+        rw [headSuffixGapShiftLoopPair_append]
+        simpa [hsegSecond] using hrestReady.2.1
+      · rw [show cells =
+            List.append segmentTail (encodedStructuredTapeCellsTail rest) by rfl]
+        rw [headSuffixGapShiftLoopPair_append]
+        simpa [hsegSecond] using hrestReady.2.2
+
 theorem headSuffixGapShiftDescription_run_pairLoop
     (cells tail left : List (Option Bool))
     (first second : Option Bool)
@@ -722,6 +915,49 @@ theorem headSuffixGapShiftDescription_run_boundaryLoop_then_implicitStep_halt_ni
     headSuffixGapShiftDescription_run_pairLoop_then_implicitStep_halt_nil
       cells (none :: left) none current hactive hfirst hsecond
 
+theorem headSuffixGapShiftDescription_run_boundary_encodedTail_nil
+    (left : List (Option Bool)) :
+    headSuffixGapShiftDescription.runConfig 2
+        { state := 2
+          tape := tapeAtCells left (encodedStructuredTapeCellsTail []) } =
+      { state := headSuffixGapShiftHalt
+        tape :=
+          Tape.move Direction.left
+            (tapeAtCells (none :: left) []) } := by
+  rw [show 2 = 1 + 1 by rfl]
+  rw [MachineDescription.runConfig_add]
+  simp [encodedStructuredTapeCellsTail]
+  rw [headSuffixGapShiftDescription_run_boundaryStep_nil]
+  exact headSuffixGapShiftDescription_run_pairHalt_nil (none :: left)
+
+theorem headSuffixGapShiftDescription_run_boundary_encodedTail_cons
+    (T : Tape Bool) (rest : List (Tape Bool))
+    (left : List (Option Bool)) :
+    exists current : Option Bool, exists cells : List (Option Bool),
+      encodedStructuredTapeCellsTail (T :: rest) = current :: cells ∧
+        headSuffixGapShiftDescription.runConfig (cells.length + 3)
+          { state := 2
+            tape :=
+              tapeAtCells left
+                (encodedStructuredTapeCellsTail (T :: rest)) } =
+          { state := headSuffixGapShiftHalt
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells
+                  ((headSuffixGapShiftLoopPair none current cells).1 ::
+                    List.append
+                      (headSuffixGapShiftLoopWrittenRev none current cells)
+                      (none :: left))
+                  []) } := by
+  rcases headSuffixGapShiftLoopReady_encodedStructuredTapeCellsTail_start
+      T rest with
+    ⟨current, cells, htail, hactive, hfirst, hsecond⟩
+  refine ⟨current, cells, htail, ?_⟩
+  rw [htail]
+  exact
+    headSuffixGapShiftDescription_run_boundaryLoop_then_implicitStep_halt_nil
+      current cells left hactive hfirst hsecond
+
 theorem headSuffixGapShiftDescription_run_opening
     (bits : Word Bool) (suffixTail : List (Option Bool)) :
     headSuffixGapShiftDescription.runConfig 1
@@ -823,6 +1059,66 @@ theorem headSuffixGapShiftDescription_run_to_boundary
       MachineDescription.stepConfig, MachineDescription.lookupTransition,
       MachineDescription.Matches, transition, tapeAtCells, Tape.read, Tape.write,
       Tape.move, Tape.moveRight]
+
+theorem headSuffixGapShiftDescription_run_to_encodedTailBoundary
+    (bits : Word Bool) (rest : List (Tape Bool)) :
+    headSuffixGapShiftDescription.runConfig (bits.length + 2)
+        { state := headSuffixGapShiftDescription.start
+          tape := encodedStructuredHeadPayloadTapes bits rest } =
+      { state := 2
+        tape :=
+          tapeAtCells
+            (none :: List.append (bits.reverse.map some) [none])
+            (encodedStructuredTapeCellsTail rest) } := by
+  rw [encodedStructuredHeadPayloadTapes,
+    encodedStructuredTapeCells_eq_cons_tail rest]
+  simpa [tapeSeparatorCells, List.append_assoc] using
+    headSuffixGapShiftDescription_run_to_boundary bits
+      (encodedStructuredTapeCellsTail rest)
+
+theorem headSuffixGapShiftDescription_run_payload_emptyRest
+    (bits : Word Bool) :
+    headSuffixGapShiftDescription.runConfig (bits.length + 4)
+        { state := headSuffixGapShiftDescription.start
+          tape := encodedStructuredHeadPayloadTapes bits [] } =
+      { state := headSuffixGapShiftHalt
+        tape :=
+          Tape.move Direction.left
+            (tapeAtCells
+              (none :: none :: List.append (bits.reverse.map some) [none])
+              []) } := by
+  rw [show bits.length + 4 = (bits.length + 2) + 2 by lia]
+  rw [MachineDescription.runConfig_add]
+  rw [headSuffixGapShiftDescription_run_to_encodedTailBoundary]
+  exact
+    headSuffixGapShiftDescription_run_boundary_encodedTail_nil
+      (none :: List.append (bits.reverse.map some) [none])
+
+theorem headSuffixGapShiftDescription_run_payload_cons
+    (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool)) :
+    exists current : Option Bool, exists cells : List (Option Bool),
+      encodedStructuredTapeCellsTail (T :: rest) = current :: cells ∧
+        headSuffixGapShiftDescription.runConfig
+          ((bits.length + 2) + (cells.length + 3))
+          { state := headSuffixGapShiftDescription.start
+            tape := encodedStructuredHeadPayloadTapes bits (T :: rest) } =
+          { state := headSuffixGapShiftHalt
+            tape :=
+              Tape.move Direction.left
+                (tapeAtCells
+                  ((headSuffixGapShiftLoopPair none current cells).1 ::
+                    List.append
+                      (headSuffixGapShiftLoopWrittenRev none current cells)
+                      (none :: none ::
+                        List.append (bits.reverse.map some) [none]))
+                  []) } := by
+  rcases headSuffixGapShiftDescription_run_boundary_encodedTail_cons
+      T rest (none :: List.append (bits.reverse.map some) [none]) with
+    ⟨current, cells, htail, hrunTail⟩
+  refine ⟨current, cells, htail, ?_⟩
+  rw [MachineDescription.runConfig_add]
+  rw [headSuffixGapShiftDescription_run_to_encodedTailBoundary]
+  exact hrunTail
 
 end MultiTapeLowering
 end Structured
