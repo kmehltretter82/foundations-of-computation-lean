@@ -456,6 +456,105 @@ theorem seq_reaches
     (A := A) (B := B) (handoffMove := handoffMove)
     hA hB hArun hAnoExit hBrun
 
+/--
+Run through a fragment sequence when the right-hand fragment stops at an
+arbitrary state rather than its distinguished exit.
+
+This is useful for branch fragments whose observable result is carried in
+finite control instead of by reaching a single public halt state.
+-/
+theorem seq_reaches_right_state
+    {A B : Fragment} {handoffMove : Direction}
+    (hA : A.WellFormed) (hB : B.WellFormed)
+    {Tin Tmid Tout : Tape Bool} {targetState : Nat}
+    (hAReach :
+      exists nA : Nat,
+        A.toDescription.runConfig nA
+            { state := A.entry, tape := Tin } =
+          { state := A.exit, tape := Tmid } ∧
+          forall k : Nat,
+            k < nA ->
+              (A.toDescription.runConfig k
+                { state := A.entry, tape := Tin }).state ≠ A.exit)
+    (hBReach :
+      exists nB : Nat,
+        B.toDescription.runConfig nB
+            { state := B.entry,
+              tape := Tape.move handoffMove Tmid } =
+          { state := targetState, tape := Tout }) :
+    exists n : Nat,
+      (seq A B handoffMove).toDescription.runConfig n
+          { state := (seq A B handoffMove).entry, tape := Tin } =
+        { state := A.stateCount + targetState, tape := Tout } := by
+  rcases hAReach with ⟨nA, hArun, hAnoExit⟩
+  rcases hBReach with ⟨nB, hBrun⟩
+  exists nA + (1 + nB)
+  have hseqA :
+      (seq A B handoffMove).toDescription.runConfig nA
+          { state := (seq A B handoffMove).entry, tape := Tin } =
+        { state := A.exit, tape := Tmid } := by
+    calc
+      (seq A B handoffMove).toDescription.runConfig nA
+          { state := (seq A B handoffMove).entry, tape := Tin } =
+        A.toDescription.runConfig nA
+          { state := A.entry, tape := Tin } := by
+          simpa [Fragment.seq] using
+            runConfig_seq_left_of_no_exit
+              (A := A) (B := B) (handoffMove := handoffMove)
+              hA hB (n := nA)
+              (c := { state := A.entry, tape := Tin })
+              hA.right.left hAnoExit
+      _ = { state := A.exit, tape := Tmid } := hArun
+  calc
+    (seq A B handoffMove).toDescription.runConfig
+        (nA + (1 + nB))
+        { state := (seq A B handoffMove).entry, tape := Tin }
+        =
+      (seq A B handoffMove).toDescription.runConfig
+        (1 + nB)
+        ((seq A B handoffMove).toDescription.runConfig nA
+          { state := (seq A B handoffMove).entry, tape := Tin }) := by
+        rw [MachineDescription.runConfig_add]
+    _ =
+      (seq A B handoffMove).toDescription.runConfig
+        (1 + nB)
+        { state := A.exit, tape := Tmid } := by
+        rw [hseqA]
+    _ =
+      (seq A B handoffMove).toDescription.runConfig nB
+        { state := A.stateCount + B.entry,
+          tape := Tape.move handoffMove Tmid } := by
+        rw [Nat.add_comm 1 nB]
+        change
+          (match
+            (seq A B handoffMove).toDescription.stepConfig
+              { state := A.exit, tape := Tmid } with
+          | none => { state := A.exit, tape := Tmid }
+          | some next =>
+              (seq A B handoffMove).toDescription.runConfig nB next) =
+            (seq A B handoffMove).toDescription.runConfig nB
+              { state := A.stateCount + B.entry,
+                tape := Tape.move handoffMove Tmid }
+        rw [stepConfig_seq_handoff
+          (A := A) (B := B) (handoffMove := handoffMove) hA Tmid]
+    _ =
+      offsetConfiguration A.stateCount
+        (B.toDescription.runConfig nB
+          { state := B.entry,
+            tape := Tape.move handoffMove Tmid }) := by
+        exact runConfig_seq_right
+          (A := A) (B := B) (handoffMove := handoffMove)
+          hA nB
+          { state := B.entry,
+            tape := Tape.move handoffMove Tmid }
+    _ =
+      offsetConfiguration A.stateCount
+        { state := targetState, tape := Tout } := by
+        rw [hBrun]
+    _ =
+      { state := A.stateCount + targetState, tape := Tout } := by
+        rfl
+
 theorem seq_firstReaches
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed) (hB : B.WellFormed)
@@ -873,6 +972,56 @@ theorem seqSubroutine_reaches_of_runConfig_eq
     ⟨m, _hmle, hmrun, hmfirst⟩
   exact seqSubroutine_reaches hA hB
     ⟨m, hmrun, hmfirst⟩ hBReach
+
+/--
+Sequence two subroutines when the right-hand subroutine reaches an arbitrary
+state rather than its public halt.
+
+The resulting state is the right-hand state offset into the sequence's state
+block.  This is the finite-control brancher form needed by static dispatchers.
+-/
+theorem seqSubroutine_reaches_right_state_of_runConfig_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {nA : Nat} {Tin Tmid Tout : Tape Bool} {targetState : Nat}
+    (hArun :
+      A.runConfig nA { state := A.start, tape := Tin } =
+        { state := A.halt, tape := Tmid })
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move handoffMove Tmid } =
+          { state := targetState, tape := Tout }) :
+    exists n : Nat,
+      (seqSubroutine A B handoffMove).runConfig n
+          { state := (seqSubroutine A B handoffMove).start,
+            tape := Tin } =
+        { state := A.stateCount + targetState,
+          tape := Tout } := by
+  rcases firstReaches_halt_of_runConfig_eq hA.right hArun with
+    ⟨m, _hmle, hmrun, hmfirst⟩
+  rcases hBReach with ⟨nB, hBRun⟩
+  have hfrag :=
+    Fragment.seq_reaches_right_state
+      (A := A.asFragment) (B := B.asFragment)
+      (handoffMove := handoffMove)
+      (asFragment_wellFormed hA) (asFragment_wellFormed hB)
+      (Tin := Tin) (Tmid := Tmid) (Tout := Tout)
+      (targetState := targetState)
+      ⟨m,
+        by
+          simpa [asFragment_toDescription, asFragment] using hmrun,
+        by
+          intro k hk
+          simpa [asFragment_toDescription, asFragment] using
+            hmfirst k hk⟩
+      ⟨nB,
+        by
+          simpa [asFragment_toDescription, asFragment] using hBRun⟩
+  rcases hfrag with ⟨n, hn⟩
+  exact ⟨n, by
+    simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
 
 theorem seqSubroutine_runConfig_inv
     {A B : MachineDescription} {handoffMove : Direction}

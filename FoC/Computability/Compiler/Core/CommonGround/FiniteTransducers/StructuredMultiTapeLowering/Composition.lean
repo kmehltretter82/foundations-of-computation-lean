@@ -65,6 +65,10 @@ def canonicalPrimitiveSeqDescription
     (seqSubroutine A ExactIdentityDescription Direction.right)
     B Direction.left
 
+def canonicalPrimitiveSeqRightStateOffset
+    (A : MachineDescription) : Nat :=
+  (seqSubroutine A ExactIdentityDescription Direction.right).stateCount
+
 theorem canonicalPrimitiveSeqDescription_subroutineReady
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady) :
@@ -104,9 +108,56 @@ theorem canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
       (CommonGround.Identity.exactIdentityDescription_haltsFromTape
         (Tape.move Direction.right Tmid))
   exact
-    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
       (seqSubroutine_subroutineReady hA hid)
       hB hAid rfl hBhalts
+
+/--
+Run a canonical primitive sequence whose right-hand component reaches an
+arbitrary finite-control state instead of its distinguished halt.
+
+The target state is the right-hand state offset into the nested canonical
+sequence.  Static dispatcher branchers use this form because the observed read
+is represented by the branch target state.
+-/
+theorem canonicalPrimitiveSeqDescription_reaches_right_state
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool} {targetState : Nat}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start,
+              tape := Tape.move Direction.left
+                (Tape.move Direction.right Tmid) } =
+          { state := targetState, tape := Tout }) :
+    exists n : Nat,
+      (canonicalPrimitiveSeqDescription A B).runConfig n
+          { state := (canonicalPrimitiveSeqDescription A B).start,
+            tape := Tin } =
+        { state :=
+            canonicalPrimitiveSeqRightStateOffset A + targetState,
+          tape := Tout } := by
+  have hid : ExactIdentityDescription.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hAid :
+      (seqSubroutine A ExactIdentityDescription Direction.right).HaltsFromTape
+        Tin (Tape.move Direction.right Tmid) :=
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      hA hid hAhalts rfl
+      (CommonGround.Identity.exactIdentityDescription_haltsFromTape
+        (Tape.move Direction.right Tmid))
+  rcases runConfig_eq_halt_of_haltsFromTape hAid with
+    ⟨nAid, hAidRun⟩
+  simpa [canonicalPrimitiveSeqDescription,
+    canonicalPrimitiveSeqRightStateOffset] using
+    seqSubroutine_reaches_right_state_of_runConfig_eq
+      (A := seqSubroutine A ExactIdentityDescription Direction.right)
+      (B := B)
+      (handoffMove := Direction.left)
+      (seqSubroutine_subroutineReady hA hid)
+      hB hAidRun hBReach
 
 theorem canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
     {A B : MachineDescription}

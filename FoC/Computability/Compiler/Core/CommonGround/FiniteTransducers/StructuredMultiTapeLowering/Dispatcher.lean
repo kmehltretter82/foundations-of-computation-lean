@@ -41,6 +41,23 @@ def ofTapes (tapes : List (Tape Bool)) : ReadTuple3 where
 def ofConfig (c : Configuration) : ReadTuple3 :=
   ofTapes c.tapes
 
+theorem ofTapes_guardLogicalTapes
+    (tapes : List (Tape Bool)) :
+    ofTapes (guardLogicalTapes tapes) = ofTapes tapes := by
+  cases tapes with
+  | nil =>
+      rfl
+  | cons T rest =>
+      cases rest with
+      | nil =>
+          rfl
+      | cons U rest =>
+          cases rest with
+          | nil =>
+              rfl
+          | cons V rest =>
+              simp [ofTapes, tapeAt_guardLogicalTapes_read]
+
 @[simp] theorem toList_mk
     (read0 read1 read2 : Option Bool) :
     (ReadTuple3.mk read0 read1 read2).toList =
@@ -488,21 +505,22 @@ theorem branchingReadHeadCellCodeDescription_runs_cell
           branchingReadHeadCellCodeDescription_runs_true
             noneTarget falseTarget trueTarget left suffix
 
-theorem branchingReadHeadCellCodeDescription_runsFromHeadCellCode
+theorem branchingReadHeadCellCodeDescription_runFromHeadCellCode
     (noneTarget falseTarget trueTarget : Nat)
     {logical : List (Tape Bool)} {tapeIndex : Nat}
     {physical : Tape Bool}
     (hcell : AtTapeHeadCellCode logical tapeIndex physical) :
-    RunsFromStateTapeEquiv
-      (branchingReadHeadCellCodeDescription
-        noneTarget falseTarget trueTarget)
-      (branchingReadHeadCellCodeDescription
-        noneTarget falseTarget trueTarget).start
-      (branchingReadHeadCellCodeTarget
-        noneTarget falseTarget trueTarget
-        (Tape.read (Description.tapeAt logical tapeIndex)))
-      physical
-      physical := by
+    (branchingReadHeadCellCodeDescription
+      noneTarget falseTarget trueTarget).runConfig 2
+        { state :=
+            (branchingReadHeadCellCodeDescription
+              noneTarget falseTarget trueTarget).start
+          tape := physical } =
+      { state :=
+          branchingReadHeadCellCodeTarget
+            noneTarget falseTarget trueTarget
+            (Tape.read (Description.tapeAt logical tapeIndex))
+        tape := physical } := by
   rcases hcell with ⟨T, rest, hdrop, hphysical⟩
   have htapeAt : Description.tapeAt logical tapeIndex = T :=
     description_tapeAt_eq_of_drop_eq_cons hdrop
@@ -519,10 +537,939 @@ theorem branchingReadHeadCellCodeDescription_runsFromHeadCellCode
     branchingReadHeadCellCodeDescription_runs_cell
       noneTarget falseTarget trueTarget T.head
       pre.reverse suffix
-  refine ⟨2, physical, ?_, Tape.Equiv.refl physical⟩
   rw [hphysical]
   simpa [pre, suffix, tapeAtEncodedSplit, htapeAt, Tape.read,
     List.append_assoc] using hrun
+
+theorem branchingReadHeadCellCodeDescription_runsFromHeadCellCode
+    (noneTarget falseTarget trueTarget : Nat)
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hcell : AtTapeHeadCellCode logical tapeIndex physical) :
+    RunsFromStateTapeEquiv
+      (branchingReadHeadCellCodeDescription
+        noneTarget falseTarget trueTarget)
+      (branchingReadHeadCellCodeDescription
+        noneTarget falseTarget trueTarget).start
+      (branchingReadHeadCellCodeTarget
+        noneTarget falseTarget trueTarget
+        (Tape.read (Description.tapeAt logical tapeIndex)))
+      physical
+      physical := by
+  refine ⟨2, physical, ?_, Tape.Equiv.refl physical⟩
+  exact
+    branchingReadHeadCellCodeDescription_runFromHeadCellCode
+      noneTarget falseTarget trueTarget hcell
+
+namespace BranchingHeadCellReturn
+
+def noneStart : Nat := 3
+def falseStart : Nat := 6
+def trueStart : Nat := 9
+
+def noneExit : Nat := noneStart + returnToOpeningSeparatorDescription.halt
+def falseExit : Nat := falseStart + returnToOpeningSeparatorDescription.halt
+def trueExit : Nat := trueStart + returnToOpeningSeparatorDescription.halt
+
+def stateCount : Nat := 13
+def halt : Nat := 12
+
+def startForRead : Option Bool -> Nat
+  | none => noneStart
+  | some false => falseStart
+  | some true => trueStart
+
+def targetForRead : Option Bool -> Nat
+  | none => noneExit
+  | some false => falseExit
+  | some true => trueExit
+
+def returnCopyTransitions (offset : Nat) :
+    List TransitionDescription :=
+  returnToOpeningSeparatorDescription.transitions.map
+    (TransitionDescription.offsetStates offset)
+
+end BranchingHeadCellReturn
+
+/--
+Branch on the encoded head-cell code and then return to the selected tape's
+separator, preserving the read value in the final finite-control state.
+
+This table has three disjoint copies of
+{name}`returnToOpeningSeparatorDescription`, one for each logical read value.
+-/
+def branchingReadHeadCellAndReturnToSeparatorDescription :
+    MachineDescription where
+  stateCount := BranchingHeadCellReturn.stateCount
+  start := 0
+  halt := BranchingHeadCellReturn.halt
+  transitions :=
+    (branchingReadHeadCellCodeDescription
+      BranchingHeadCellReturn.noneStart
+      BranchingHeadCellReturn.falseStart
+      BranchingHeadCellReturn.trueStart).transitions ++
+    BranchingHeadCellReturn.returnCopyTransitions
+      BranchingHeadCellReturn.noneStart ++
+    BranchingHeadCellReturn.returnCopyTransitions
+      BranchingHeadCellReturn.falseStart ++
+    BranchingHeadCellReturn.returnCopyTransitions
+      BranchingHeadCellReturn.trueStart
+
+theorem branchingReadHeadCellAndReturnToSeparatorDescription_wellFormed :
+    branchingReadHeadCellAndReturnToSeparatorDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := branchingReadHeadCellAndReturnToSeparatorDescription.transitions)
+      (stateCount :=
+        branchingReadHeadCellAndReturnToSeparatorDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := branchingReadHeadCellAndReturnToSeparatorDescription.transitions)
+      (by decide)
+
+theorem
+    branchingReadHeadCellAndReturnToSeparatorDescription_haltTransitionFree :
+    branchingReadHeadCellAndReturnToSeparatorDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := branchingReadHeadCellAndReturnToSeparatorDescription.transitions)
+    (state := branchingReadHeadCellAndReturnToSeparatorDescription.halt)
+    (by decide)
+
+theorem branchingReadHeadCellAndReturnToSeparatorDescription_subroutineReady :
+    branchingReadHeadCellAndReturnToSeparatorDescription.SubroutineReady :=
+  ⟨branchingReadHeadCellAndReturnToSeparatorDescription_wellFormed,
+    branchingReadHeadCellAndReturnToSeparatorDescription_haltTransitionFree⟩
+
+theorem branchingReadHeadCellAndReturnToSeparatorDescription_run_branch
+    (cell : Option Bool)
+    (left suffix : List (Option Bool)) :
+    branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 2
+        { state :=
+            branchingReadHeadCellAndReturnToSeparatorDescription.start
+          tape :=
+            tapeAtCells left
+              (List.append (logicalCellCode cell) suffix) } =
+      { state := BranchingHeadCellReturn.startForRead cell
+        tape :=
+          tapeAtCells left
+            (List.append (logicalCellCode cell) suffix) } := by
+  cases cell with
+  | none =>
+      cases suffix <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          returnToOpeningSeparatorDescription,
+          logicalCellCode, MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | some bit =>
+      cases bit <;> cases suffix <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          returnToOpeningSeparatorDescription,
+          logicalCellCode, MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+private theorem
+    branchingReadHeadCellAndReturnToSeparatorDescription_return_step_bit
+    (read : Option Bool)
+    (left right : List (Option Bool)) (previous current : Bool) :
+    branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 1
+        { state := BranchingHeadCellReturn.startForRead read
+          tape := tapeAtCells (some previous :: left)
+            (some current :: right) } =
+      { state := BranchingHeadCellReturn.startForRead read
+        tape := tapeAtCells left
+          (some previous :: some current :: right) } := by
+  cases read with
+  | none =>
+      cases previous <;> cases current <;> cases right <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          TransitionDescription.offsetStates,
+          returnToOpeningSeparatorDescription,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft]
+  | some bit =>
+      cases bit <;> cases previous <;> cases current <;>
+        cases right <;>
+          simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+            branchingReadHeadCellCodeDescription,
+            BranchingHeadCellReturn.noneStart,
+            BranchingHeadCellReturn.falseStart,
+            BranchingHeadCellReturn.trueStart,
+            BranchingHeadCellReturn.startForRead,
+            BranchingHeadCellReturn.returnCopyTransitions,
+            TransitionDescription.offsetStates,
+            returnToOpeningSeparatorDescription,
+            MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition,
+            MachineDescription.Matches, tapeAtCells, Tape.read,
+            Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem
+    branchingReadHeadCellAndReturnToSeparatorDescription_return_step_current
+    (read : Option Bool)
+    (left right : List (Option Bool)) (current : Bool) :
+    branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 1
+        { state := BranchingHeadCellReturn.startForRead read
+          tape := tapeAtCells (none :: left) (some current :: right) } =
+      { state := BranchingHeadCellReturn.startForRead read
+        tape := tapeAtCells left (none :: some current :: right) } := by
+  cases read with
+  | none =>
+      cases current <;> cases right <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          TransitionDescription.offsetStates,
+          returnToOpeningSeparatorDescription,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft]
+  | some bit =>
+      cases bit <;> cases current <;> cases right <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          TransitionDescription.offsetStates,
+          returnToOpeningSeparatorDescription,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem
+    branchingReadHeadCellAndReturnToSeparatorDescription_return_finish
+    (read : Option Bool)
+    (left right : List (Option Bool)) (current : Bool) :
+    branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 2
+        { state := BranchingHeadCellReturn.startForRead read
+          tape := tapeAtCells left (none :: some current :: right) } =
+      { state := BranchingHeadCellReturn.targetForRead read
+        tape := tapeAtCells left (none :: some current :: right) } := by
+  cases read with
+  | none =>
+      cases current <;> cases left <;> cases right <;>
+        simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+          branchingReadHeadCellCodeDescription,
+          BranchingHeadCellReturn.noneStart,
+          BranchingHeadCellReturn.falseStart,
+          BranchingHeadCellReturn.trueStart,
+          BranchingHeadCellReturn.startForRead,
+          BranchingHeadCellReturn.targetForRead,
+          BranchingHeadCellReturn.noneExit,
+          BranchingHeadCellReturn.returnCopyTransitions,
+          TransitionDescription.offsetStates,
+          returnToOpeningSeparatorDescription,
+          MachineDescription.runConfig,
+          MachineDescription.stepConfig,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, tapeAtCells, Tape.read,
+          Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | some bit =>
+      cases bit <;> cases current <;> cases left <;>
+        cases right <;>
+          simp [branchingReadHeadCellAndReturnToSeparatorDescription,
+            branchingReadHeadCellCodeDescription,
+            BranchingHeadCellReturn.noneStart,
+            BranchingHeadCellReturn.falseStart,
+            BranchingHeadCellReturn.trueStart,
+            BranchingHeadCellReturn.startForRead,
+            BranchingHeadCellReturn.targetForRead,
+            BranchingHeadCellReturn.falseExit,
+            BranchingHeadCellReturn.trueExit,
+            BranchingHeadCellReturn.returnCopyTransitions,
+            TransitionDescription.offsetStates,
+            returnToOpeningSeparatorDescription,
+            MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            MachineDescription.lookupTransition,
+            MachineDescription.Matches, tapeAtCells, Tape.read,
+            Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem branchingReadHeadCellAndReturnToSeparatorDescription_run_return
+    (read : Option Bool)
+    (scanStack : Word Bool) (current : Bool)
+    (leftBase right : List (Option Bool)) :
+    branchingReadHeadCellAndReturnToSeparatorDescription.runConfig
+        (scanStack.length + 3)
+        { state := BranchingHeadCellReturn.startForRead read
+          tape :=
+            tapeAtCells
+              (List.append (scanStack.map some) (none :: leftBase))
+              (some current :: right) } =
+      { state := BranchingHeadCellReturn.targetForRead read
+        tape :=
+          tapeAtCells leftBase
+            (none ::
+              List.append (scanStack.reverse.map some)
+                (some current :: right)) } := by
+  induction scanStack generalizing current right with
+  | nil =>
+      simp only [List.length_nil, Nat.zero_add, List.map_nil,
+        List.reverse_nil]
+      rw [show 3 = 1 + 2 by rfl]
+      rw [MachineDescription.runConfig_add]
+      change
+        branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 2
+            (branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 1
+              { state := BranchingHeadCellReturn.startForRead read
+                tape := tapeAtCells (none :: leftBase)
+                  (some current :: right) }) =
+          { state := BranchingHeadCellReturn.targetForRead read
+            tape := tapeAtCells leftBase
+              (none :: some current :: right) }
+      rw [branchingReadHeadCellAndReturnToSeparatorDescription_return_step_current]
+      exact
+        branchingReadHeadCellAndReturnToSeparatorDescription_return_finish
+          read leftBase right current
+  | cons bit rest ih =>
+      have hlen :
+          (bit :: rest).length + 3 = 1 + (rest.length + 3) := by
+        simp
+        lia
+      rw [hlen]
+      rw [MachineDescription.runConfig_add]
+      simp only [List.map_cons]
+      change
+        branchingReadHeadCellAndReturnToSeparatorDescription.runConfig
+            (rest.length + 3)
+            (branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 1
+              { state := BranchingHeadCellReturn.startForRead read
+                tape :=
+                  tapeAtCells
+                    (some bit ::
+                      List.append (List.map some rest)
+                        (none :: leftBase))
+                    (some current :: right) }) =
+          { state := BranchingHeadCellReturn.targetForRead read
+            tape :=
+              tapeAtCells leftBase
+                (none ::
+                  List.append (List.map some (bit :: rest).reverse)
+                    (some current :: right)) }
+      rw [branchingReadHeadCellAndReturnToSeparatorDescription_return_step_bit]
+      have htail :=
+        ih bit (some current :: right)
+      simpa [List.reverse_cons, List.map_append, List.append_assoc]
+        using htail
+
+private theorem list_index_le_length_of_drop_eq_cons
+    {α : Type} {xs : List α} {index : Nat}
+    {x : α} {rest : List α}
+    (hdrop : xs.drop index = x :: rest) :
+    index ≤ xs.length := by
+  induction index generalizing xs with
+  | zero =>
+      exact Nat.zero_le xs.length
+  | succ index ih =>
+      cases xs with
+      | nil =>
+          simp at hdrop
+      | cons y ys =>
+          simp at hdrop
+          exact Nat.succ_le_succ (ih hdrop)
+
+theorem
+    branchingReadHeadCellAndReturnToSeparatorDescription_runsFromHeadCellCode
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hcell : AtTapeHeadCellCode logical tapeIndex physical) :
+    exists separatorPhysical : Tape Bool,
+      AtTapeSeparator logical tapeIndex separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingReadHeadCellAndReturnToSeparatorDescription
+          branchingReadHeadCellAndReturnToSeparatorDescription.start
+          (BranchingHeadCellReturn.targetForRead
+            (Tape.read (Description.tapeAt logical tapeIndex)))
+          physical
+          separatorPhysical := by
+  rcases hcell with ⟨T, rest, hdrop, hTin⟩
+  have htapeAt : Description.tapeAt logical tapeIndex = T :=
+    description_tapeAt_eq_of_drop_eq_cons hdrop
+  rcases logicalCellBits_exists_cons T.head with
+    ⟨headBit, headRest, hheadBits⟩
+  let leftBits := logicalCellListBits T.left.reverse
+  let scanStack := List.append [true, true] leftBits.reverse
+  let suffix :=
+    List.append (logicalCellListCode T.right)
+      (encodedStructuredTapeCells rest)
+  let pre :=
+    List.append
+      (encodedPrefixBeforeTape logical tapeIndex)
+      (List.append tapeSeparatorCells
+        (List.append (logicalCellListCode T.left.reverse)
+          headMarkerCells))
+  let Tout :=
+    tapeAtEncodedSplit
+      (encodedPrefixBeforeTape logical tapeIndex)
+      (List.append tapeSeparatorCells
+        (List.append (logicalTapeCode T)
+          (encodedStructuredTapeCells rest)))
+  have hrun :
+      branchingReadHeadCellAndReturnToSeparatorDescription.runConfig
+          (2 + (scanStack.length + 3))
+          { state :=
+              branchingReadHeadCellAndReturnToSeparatorDescription.start
+            tape := physical } =
+        { state := BranchingHeadCellReturn.targetForRead T.head
+          tape := Tout } := by
+    rw [hTin]
+    rw [MachineDescription.runConfig_add]
+    have hbranch :=
+      branchingReadHeadCellAndReturnToSeparatorDescription_run_branch
+        T.head pre.reverse suffix
+    change
+      branchingReadHeadCellAndReturnToSeparatorDescription.runConfig
+          (scanStack.length + 3)
+          (branchingReadHeadCellAndReturnToSeparatorDescription.runConfig 2
+            { state :=
+                branchingReadHeadCellAndReturnToSeparatorDescription.start
+              tape :=
+                tapeAtCells pre.reverse
+                  (List.append (logicalCellCode T.head) suffix) }) =
+        { state := BranchingHeadCellReturn.targetForRead T.head
+          tape := Tout }
+    rw [hbranch]
+    have hreturn :=
+      branchingReadHeadCellAndReturnToSeparatorDescription_run_return
+        T.head scanStack headBit
+        (encodedPrefixBeforeTape logical tapeIndex).reverse
+        (List.append (headRest.map some) suffix)
+    simpa [Tout, pre, scanStack, leftBits, suffix,
+      tapeAtEncodedSplit, logicalTapeCode, hheadBits,
+      headMarkerCells, tapeSeparatorCells, List.reverse_append,
+      List.map_reverse, List.map_append, List.append_assoc] using hreturn
+  refine ⟨Tout, ?_, ?_⟩
+  · constructor
+    · exact list_index_le_length_of_drop_eq_cons hdrop
+    · simp [Tout, tapeAtEncodedSplit, encodedSuffixFromTape, hdrop,
+        tapeSeparatorCells]
+  · refine ⟨2 + (scanStack.length + 3), Tout, ?_, Tape.Equiv.refl Tout⟩
+    simpa [htapeAt, Tape.read] using hrun
+
+def branchingEnterReadHeadCellDescription
+    (noneTarget falseTarget trueTarget : Nat) :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    cursorEnterAndMoveToHeadCellDescription
+    (branchingReadHeadCellCodeDescription
+      noneTarget falseTarget trueTarget)
+
+def branchingEnterReadHeadCellTarget
+    (noneTarget falseTarget trueTarget : Nat) :
+    Option Bool -> Nat :=
+  fun cell =>
+    canonicalPrimitiveSeqRightStateOffset
+        cursorEnterAndMoveToHeadCellDescription +
+      branchingReadHeadCellCodeTarget
+        noneTarget falseTarget trueTarget cell
+
+theorem branchingEnterReadHeadCellDescription_subroutineReady
+    (noneTarget falseTarget trueTarget : Nat) :
+    (branchingEnterReadHeadCellDescription
+      noneTarget falseTarget trueTarget).SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    (cursorEnterAndMoveToHeadCellDescription_contract 0).subroutineReady
+    (branchingReadHeadCellCodeDescription_subroutineReady
+      noneTarget falseTarget trueTarget)
+
+theorem branchingEnterReadHeadCellDescription_runsFromSeparator
+    (noneTarget falseTarget trueTarget : Nat)
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical tapeIndex physical) :
+    exists headPhysical : Tape Bool,
+      AtTapeHeadCellCode logical tapeIndex headPhysical ∧
+        RunsFromStateTapeEquiv
+          (branchingEnterReadHeadCellDescription
+            noneTarget falseTarget trueTarget)
+          (branchingEnterReadHeadCellDescription
+            noneTarget falseTarget trueTarget).start
+          (branchingEnterReadHeadCellTarget
+            noneTarget falseTarget trueTarget
+            (Tape.read (Description.tapeAt logical tapeIndex)))
+          physical
+          headPhysical := by
+  rcases
+      (cursorEnterAndMoveToHeadCellDescription_contract
+        tapeIndex).realizes logical physical hseparator with
+    ⟨headPhysical, henter, hcell⟩
+  have hmove :
+      Tape.move Direction.left
+          (Tape.move Direction.right headPhysical) =
+        headPhysical :=
+    atTapeHeadCellCode_moveLeft_moveRight hcell
+  have hbranch :
+      exists nB : Nat,
+        (branchingReadHeadCellCodeDescription
+          noneTarget falseTarget trueTarget).runConfig nB
+            { state :=
+                (branchingReadHeadCellCodeDescription
+                  noneTarget falseTarget trueTarget).start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right headPhysical) } =
+          { state :=
+              branchingReadHeadCellCodeTarget
+                noneTarget falseTarget trueTarget
+                (Tape.read (Description.tapeAt logical tapeIndex))
+            tape := headPhysical } := by
+    refine ⟨2, ?_⟩
+    rw [hmove]
+    exact
+      branchingReadHeadCellCodeDescription_runFromHeadCellCode
+        noneTarget falseTarget trueTarget hcell
+  rcases
+      canonicalPrimitiveSeqDescription_reaches_right_state
+        (A := cursorEnterAndMoveToHeadCellDescription)
+        (B :=
+          branchingReadHeadCellCodeDescription
+            noneTarget falseTarget trueTarget)
+        (cursorEnterAndMoveToHeadCellDescription_contract
+          tapeIndex).subroutineReady
+        (branchingReadHeadCellCodeDescription_subroutineReady
+          noneTarget falseTarget trueTarget)
+        henter hbranch with
+    ⟨n, hrun⟩
+  exact
+    ⟨headPhysical, hcell,
+      ⟨n, headPhysical, by
+        simpa [branchingEnterReadHeadCellDescription,
+          branchingEnterReadHeadCellTarget] using hrun,
+        Tape.Equiv.refl headPhysical⟩⟩
+
+def branchingSeparatorReadHeadCellDescription :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    cursorEnterAndMoveToHeadCellDescription
+    branchingReadHeadCellAndReturnToSeparatorDescription
+
+def branchingSeparatorReadHeadCellTarget :
+    Option Bool -> Nat :=
+  fun cell =>
+    canonicalPrimitiveSeqRightStateOffset
+        cursorEnterAndMoveToHeadCellDescription +
+      BranchingHeadCellReturn.targetForRead cell
+
+theorem branchingSeparatorReadHeadCellDescription_subroutineReady :
+    branchingSeparatorReadHeadCellDescription.SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    (cursorEnterAndMoveToHeadCellDescription_contract 0).subroutineReady
+    branchingReadHeadCellAndReturnToSeparatorDescription_subroutineReady
+
+theorem branchingSeparatorReadHeadCellDescription_runsFromSeparator
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical tapeIndex physical) :
+    exists separatorPhysical : Tape Bool,
+      AtTapeSeparator logical tapeIndex separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingSeparatorReadHeadCellDescription
+          branchingSeparatorReadHeadCellDescription.start
+          (branchingSeparatorReadHeadCellTarget
+            (Tape.read (Description.tapeAt logical tapeIndex)))
+          physical
+          separatorPhysical := by
+  rcases
+      (cursorEnterAndMoveToHeadCellDescription_contract
+        tapeIndex).realizes logical physical hseparator with
+    ⟨headPhysical, henter, hcell⟩
+  have hmove :
+      Tape.move Direction.left
+          (Tape.move Direction.right headPhysical) =
+        headPhysical :=
+    atTapeHeadCellCode_moveLeft_moveRight hcell
+  rcases
+      branchingReadHeadCellAndReturnToSeparatorDescription_runsFromHeadCellCode
+        hcell with
+    ⟨separatorPhysical, hsep, hbranchReturn⟩
+  rcases hbranchReturn with
+    ⟨nB, actualSeparator, hbranchReturnRun, hactual⟩
+  have hBReach :
+      exists nB : Nat,
+        branchingReadHeadCellAndReturnToSeparatorDescription.runConfig nB
+            { state :=
+                branchingReadHeadCellAndReturnToSeparatorDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right headPhysical) } =
+          { state :=
+              BranchingHeadCellReturn.targetForRead
+                (Tape.read (Description.tapeAt logical tapeIndex))
+            tape := actualSeparator } := by
+    refine ⟨nB, ?_⟩
+    rw [hmove]
+    exact hbranchReturnRun
+  rcases
+      canonicalPrimitiveSeqDescription_reaches_right_state
+        (A := cursorEnterAndMoveToHeadCellDescription)
+        (B := branchingReadHeadCellAndReturnToSeparatorDescription)
+        (cursorEnterAndMoveToHeadCellDescription_contract
+          tapeIndex).subroutineReady
+        branchingReadHeadCellAndReturnToSeparatorDescription_subroutineReady
+        henter hBReach with
+    ⟨n, hrun⟩
+  exact
+    ⟨separatorPhysical, hsep,
+      ⟨n, actualSeparator, by
+        simpa [branchingSeparatorReadHeadCellDescription,
+          branchingSeparatorReadHeadCellTarget] using hrun,
+        hactual⟩⟩
+
+/-!
+## Branching readers from the canonical block start
+
+These wrappers reuse the existing seek routines and the one-head branching
+separator reader above.  They deliberately stop at the selected tape separator:
+the later static dispatcher assembly will add the finite-control copies needed
+to return to the block start while preserving the accumulated read tuple.
+-/
+
+private theorem HasAtLeastThreeTapes_drop_two_exists
+    {logical : List (Tape Bool)}
+    (hshape : HasAtLeastThreeTapes logical) :
+    exists T : Tape Bool, exists rest : List (Tape Bool),
+      logical.drop 2 = T :: rest := by
+  rcases hshape with ⟨T, U, V, rest, hlogical⟩
+  subst hlogical
+  exact ⟨V, rest, rfl⟩
+
+private theorem guardedAtExistingTapeSeparator_zero_of_length_three
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    AtExistingTapeSeparator (guardLogicalTapes logical) 0
+      (encodedGuardedStructuredTapes logical) := by
+  cases logical with
+  | nil =>
+      simp at hlength
+  | cons T rest =>
+      exact
+        ⟨by
+          simpa [encodedGuardedStructuredTapes] using
+            atTapeSeparator_zero_self (guardLogicalTapes (T :: rest)),
+          guardLogicalTape T, guardLogicalTapes rest,
+          by simp [guardLogicalTapes]⟩
+
+private theorem guarded_drop_one_exists_of_length_three
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists T : Tape Bool, exists rest : List (Tape Bool),
+      (guardLogicalTapes logical).drop 1 = T :: rest := by
+  cases logical with
+  | nil =>
+      simp at hlength
+  | cons T rest =>
+      cases rest with
+      | nil =>
+          simp at hlength
+      | cons U rest =>
+          exact
+            ⟨guardLogicalTape U, guardLogicalTapes rest,
+              by simp [guardLogicalTapes]⟩
+
+private theorem guarded_hasAtLeastThreeTapes_of_length_three
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    HasAtLeastThreeTapes (guardLogicalTapes logical) := by
+  cases logical with
+  | nil =>
+      simp at hlength
+  | cons T rest =>
+      cases rest with
+      | nil =>
+          simp at hlength
+      | cons U rest =>
+          cases rest with
+          | nil =>
+              simp at hlength
+          | cons V rest =>
+              exact
+                ⟨guardLogicalTape T, guardLogicalTape U,
+                  guardLogicalTape V, guardLogicalTapes rest,
+                  by simp [guardLogicalTapes]⟩
+
+def branchingTape0ReadHeadCellAndReturnToSeparatorDescription :
+    MachineDescription :=
+  branchingSeparatorReadHeadCellDescription
+
+def branchingTape0ReadHeadCellAndReturnToSeparatorTarget :
+    Option Bool -> Nat :=
+  branchingSeparatorReadHeadCellTarget
+
+theorem
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription_subroutineReady :
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription.SubroutineReady :=
+  branchingSeparatorReadHeadCellDescription_subroutineReady
+
+theorem
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hstart : AtExistingTapeSeparator logical 0 physical) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator logical 0 separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape0ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape0ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape0ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 0)))
+          physical
+          separatorPhysical := by
+  rcases
+      branchingSeparatorReadHeadCellDescription_runsFromSeparator hstart with
+    ⟨separatorPhysical, hsep, hrun⟩
+  exact
+    ⟨separatorPhysical, ⟨hsep, hstart.right⟩, by
+      simpa [branchingTape0ReadHeadCellAndReturnToSeparatorDescription,
+        branchingTape0ReadHeadCellAndReturnToSeparatorTarget] using hrun⟩
+
+theorem
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 0
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape0ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape0ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape0ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 0)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  have hrun :=
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+      (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
+  simpa [tapeAt_guardLogicalTapes_read] using hrun
+
+def branchingTape1ReadHeadCellAndReturnToSeparatorDescription :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    seekTape1Description
+    branchingSeparatorReadHeadCellDescription
+
+def branchingTape1ReadHeadCellAndReturnToSeparatorTarget :
+    Option Bool -> Nat :=
+  fun cell =>
+    canonicalPrimitiveSeqRightStateOffset seekTape1Description +
+      branchingSeparatorReadHeadCellTarget cell
+
+theorem
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription_subroutineReady :
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription.SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    seekTape1Description_contract.subroutineReady
+    branchingSeparatorReadHeadCellDescription_subroutineReady
+
+theorem
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hstart : AtExistingTapeSeparator logical 0 physical)
+    (hexists :
+      exists T : Tape Bool, exists rest : List (Tape Bool),
+        logical.drop 1 = T :: rest) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator logical 1 separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape1ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 1)))
+          physical
+          separatorPhysical := by
+  rcases
+      seekTape1Description_contract.realizes
+        logical physical hstart with
+    ⟨mid, hseek, hseparator⟩
+  let hmid :
+      AtExistingTapeSeparator logical 1 mid :=
+    ⟨hseparator, hexists⟩
+  rcases
+      branchingSeparatorReadHeadCellDescription_runsFromSeparator hmid with
+    ⟨separatorPhysical, hsep, hread⟩
+  rcases hread with ⟨nRead, actual, hreadRun, hactual⟩
+  have hreadReach :
+      exists nRead : Nat,
+        branchingSeparatorReadHeadCellDescription.runConfig nRead
+            { state := branchingSeparatorReadHeadCellDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right mid) } =
+          { state :=
+              branchingSeparatorReadHeadCellTarget
+                (Tape.read (Description.tapeAt logical 1))
+            tape := actual } := by
+    refine ⟨nRead, ?_⟩
+    rw [atExistingTapeSeparator_moveLeft_moveRight hmid]
+    exact hreadRun
+  rcases
+      canonicalPrimitiveSeqDescription_reaches_right_state
+        (A := seekTape1Description)
+        (B := branchingSeparatorReadHeadCellDescription)
+        seekTape1Description_contract.subroutineReady
+        branchingSeparatorReadHeadCellDescription_subroutineReady
+        hseek hreadReach with
+    ⟨n, hrun⟩
+  exact
+    ⟨separatorPhysical, ⟨hsep, hexists⟩,
+      ⟨n, actual, by
+        simpa [branchingTape1ReadHeadCellAndReturnToSeparatorDescription,
+          branchingTape1ReadHeadCellAndReturnToSeparatorTarget] using hrun,
+        hactual⟩⟩
+
+theorem
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 1
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape1ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 1)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  have hrun :=
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+      (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
+      (guarded_drop_one_exists_of_length_three hlength)
+  simpa [tapeAt_guardLogicalTapes_read] using hrun
+
+def branchingTape2ReadHeadCellAndReturnToSeparatorDescription :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    seekTape2Description
+    branchingSeparatorReadHeadCellDescription
+
+def branchingTape2ReadHeadCellAndReturnToSeparatorTarget :
+    Option Bool -> Nat :=
+  fun cell =>
+    canonicalPrimitiveSeqRightStateOffset seekTape2Description +
+      branchingSeparatorReadHeadCellTarget cell
+
+theorem
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription_subroutineReady :
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription.SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    seekTape2Description_contract.subroutineReady
+    branchingSeparatorReadHeadCellDescription_subroutineReady
+
+theorem
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hstart : AtExistingTapeSeparator logical 0 physical)
+    (hshape : HasAtLeastThreeTapes logical) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator logical 2 separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape2ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape2ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape2ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 2)))
+          physical
+          separatorPhysical := by
+  rcases hshape with ⟨T, U, V, rest, hlogical⟩
+  have hshape' : HasAtLeastThreeTapes logical :=
+    ⟨T, U, V, rest, hlogical⟩
+  rcases
+      seekTape2Description_contract.realizes
+        logical physical
+        ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
+    ⟨mid, hseek, hseparator⟩
+  let hmid :
+      AtExistingTapeSeparator logical 2 mid :=
+    ⟨hseparator, HasAtLeastThreeTapes_drop_two_exists hshape'⟩
+  rcases
+      branchingSeparatorReadHeadCellDescription_runsFromSeparator hmid with
+    ⟨separatorPhysical, hsep, hread⟩
+  rcases hread with ⟨nRead, actual, hreadRun, hactual⟩
+  have hreadReach :
+      exists nRead : Nat,
+        branchingSeparatorReadHeadCellDescription.runConfig nRead
+            { state := branchingSeparatorReadHeadCellDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right mid) } =
+          { state :=
+              branchingSeparatorReadHeadCellTarget
+                (Tape.read (Description.tapeAt logical 2))
+            tape := actual } := by
+    refine ⟨nRead, ?_⟩
+    rw [atExistingTapeSeparator_moveLeft_moveRight hmid]
+    exact hreadRun
+  rcases
+      canonicalPrimitiveSeqDescription_reaches_right_state
+        (A := seekTape2Description)
+        (B := branchingSeparatorReadHeadCellDescription)
+        seekTape2Description_contract.subroutineReady
+        branchingSeparatorReadHeadCellDescription_subroutineReady
+        hseek hreadReach with
+    ⟨n, hrun⟩
+  exact
+    ⟨separatorPhysical,
+      ⟨hsep, HasAtLeastThreeTapes_drop_two_exists hshape'⟩,
+      ⟨n, actual, by
+        simpa [branchingTape2ReadHeadCellAndReturnToSeparatorDescription,
+          branchingTape2ReadHeadCellAndReturnToSeparatorTarget] using hrun,
+        hactual⟩⟩
+
+theorem
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape2ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape2ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape2ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical 2)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  have hrun :=
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+      (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
+      (guarded_hasAtLeastThreeTapes_of_length_three hlength)
+  simpa [tapeAt_guardLogicalTapes_read] using hrun
 
 /--
 Lookup a structured row after the static dispatcher has read the three logical
