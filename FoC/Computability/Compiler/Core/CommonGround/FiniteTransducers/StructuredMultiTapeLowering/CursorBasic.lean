@@ -2044,6 +2044,29 @@ theorem output_structuredShape_of_head
         (by simp [encodedGuardedStructuredTapes, guardLogicalTapes])
   exact And.intro hhead hrest
 
+theorem realizes_structuredHead_preservesShape
+    {refresh : MachineDescription}
+    (hrefresh : SingletonHeadGuardSlackRefreshContract refresh)
+    {target : Tape Bool} {targetRest : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hshape :
+      StructuredSingletonGuardSlackEndpointShape
+        (target :: targetRest) physical) :
+    exists actualRest : List (Tape Bool),
+      refresh.HaltsFromTapeEquiv physical
+        (encodedStructuredTapes
+          (guardLogicalTape target :: actualRest)) ∧
+        StructuredSingletonGuardSlackEndpointShape
+          (target :: targetRest)
+          (encodedStructuredTapes
+            (guardLogicalTape target :: actualRest)) := by
+  rcases hrefresh.realizes_structuredHead hshape with
+    ⟨actualRest, hrest, hrun⟩
+  exact
+    ⟨actualRest, hrun,
+      SingletonHeadGuardSlackRefreshContract.output_structuredShape_of_head
+        hrest⟩
+
 end SingletonHeadGuardSlackRefreshContract
 
 theorem singletonGuardSlackEndpointShapeList_singleton
