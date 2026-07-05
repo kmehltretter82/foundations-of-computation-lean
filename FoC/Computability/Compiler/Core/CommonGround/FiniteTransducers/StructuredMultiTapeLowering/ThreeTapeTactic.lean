@@ -51,6 +51,33 @@ macro "three_tape_step" : tactic =>
       Structured.TapeAction.stay,
       Structured.HeadMove.apply])
 
+/--
+Close one row-support branch for a row table built from
+{name}`ThreeTape.allReadRows3`.
+
+Append splitting is intentionally left to the proof script so failures expose
+which branch/table does not have the expected shape.
+-/
+macro "three_tape_support" : tactic =>
+  `(tactic|
+    exact
+      Structured.MultiTapeLowering.ThreeTape.allReadRows3_supportsReadWriteRow3
+        _ _ _ _ _ _ ‹_›)
+
+/--
+Simplify short fixed-step runs using an explicit list of step lemmas.
+
+The tactic intentionally requires the caller to provide the relevant step
+lemmas, so it does not search the environment or unfold large transition
+tables.
+-/
+syntax "three_tape_run " "[" Lean.Parser.Tactic.simpLemma,* "]" : tactic
+
+macro_rules
+  | `(tactic| three_tape_run [$lemmas,*]) =>
+      `(tactic|
+        simp [Structured.Description.runConfig, $lemmas,*])
+
 end MultiTapeLowering
 end Structured
 end FiniteTransducers

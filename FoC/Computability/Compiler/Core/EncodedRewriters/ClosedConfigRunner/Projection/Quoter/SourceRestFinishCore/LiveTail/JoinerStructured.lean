@@ -457,21 +457,7 @@ theorem structuredJoinerEntryRows_supportsReadWriteRow3 :
           true := by
   intro row hrow
   simp [structuredJoinerEntryRows] at hrow
-  rcases hrow with hrow | hrow
-  · exact
-      Structured.MultiTapeLowering.ThreeTape.allReadRows3_supportsReadWriteRow3
-        structuredJoinerEntryStart structuredJoinerEntrySeparator
-        Structured.MultiTapeLowering.ThreeTape.keepR
-        Structured.MultiTapeLowering.ThreeTape.keepS
-        Structured.MultiTapeLowering.ThreeTape.keepS
-        row hrow
-  · exact
-      Structured.MultiTapeLowering.ThreeTape.allReadRows3_supportsReadWriteRow3
-        structuredJoinerEntrySeparator structuredJoinerEntryHalt
-        Structured.MultiTapeLowering.ThreeTape.keepR
-        Structured.MultiTapeLowering.ThreeTape.keepS
-        Structured.MultiTapeLowering.ThreeTape.keepS
-        row hrow
+  rcases hrow with hrow | hrow <;> three_tape_support
 
 theorem structuredJoinerEntryDescription_supported :
     Structured.MultiTapeLowering.SupportsReadWriteRows3
@@ -625,7 +611,7 @@ theorem structuredJoinerEntryDescription_run_two
         structuredJoinerEntryHalt
         (Tape.move Direction.right (Tape.move Direction.right source))
         scratch work := by
-  simp [Structured.Description.runConfig,
+  three_tape_run [
     structuredJoinerEntryDescription_step_start,
     structuredJoinerEntryDescription_step_separator]
 
