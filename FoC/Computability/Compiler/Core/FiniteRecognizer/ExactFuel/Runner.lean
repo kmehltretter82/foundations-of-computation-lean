@@ -95,6 +95,93 @@ theorem runnerConstruction_of_layoutRunner
   ⟨runnerState, runner,
     runnerSpec_of_layoutRunner hparser hrunner⟩
 
+theorem runnerConstruction_of_indexed
+    {state : Type uState}
+    {M : TuringMachine MachineCodeSymbol state}
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (hindexed :
+      RunnerConstruction (TuringMachine.indexed M) build) :
+    RunnerConstruction M build := by
+  rcases hindexed with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (TuringMachine.indexed_haltsOnInputIn_iff M fuel input)
+
+theorem runnerConstruction_of_indexedDecidable
+    {state : Type uState} [DecidableEq state]
+    {M : TuringMachine MachineCodeSymbol state}
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (hindexed :
+      RunnerConstruction (TuringMachine.indexedDecidable M) build) :
+    RunnerConstruction M build := by
+  rcases hindexed with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+      M fuel input)
+
+theorem runnerConstruction_indexed_of
+    {state : Type uState}
+    (M : TuringMachine MachineCodeSymbol state)
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (h :
+      RunnerConstruction M build) :
+    RunnerConstruction (TuringMachine.indexed M) build := by
+  rcases h with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (Iff.symm
+      (TuringMachine.indexed_haltsOnInputIn_iff
+        M fuel input))
+
+theorem runnerConstruction_indexedDecidable_of
+    {state : Type uState} [DecidableEq state]
+    (M : TuringMachine MachineCodeSymbol state)
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (h :
+      RunnerConstruction M build) :
+    RunnerConstruction (TuringMachine.indexedDecidable M) build := by
+  rcases h with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro input fuel
+  exact Iff.trans (hrunner input fuel)
+    (Iff.symm
+      (TuringMachine.indexedDecidable_haltsOnInputIn_iff
+        M fuel input))
+
+theorem runnerConstruction_of_finStateConstruction
+    {state : Type uState}
+    (M : TuringMachine MachineCodeSymbol state)
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (hFin : FinStateRunnerConstruction build) :
+    RunnerConstruction M build := by
+  exact
+    runnerConstruction_of_indexed
+      (M := M)
+      (hFin M.statesFinite.elems.length
+        (TuringMachine.indexed M))
+
+theorem runnerConstruction_of_finStateConstructionDecidable
+    {state : Type uState} [DecidableEq state]
+    (M : TuringMachine MachineCodeSymbol state)
+    {build :
+      Word MachineCodeSymbol -> Nat -> Word MachineCodeSymbol}
+    (hFin : FinStateRunnerConstruction build) :
+    RunnerConstruction M build := by
+  exact
+    runnerConstruction_of_indexedDecidable
+      (M := M)
+      (hFin M.statesFinite.elems.length
+        (TuringMachine.indexedDecidable M))
+
 theorem exactFuelRunnerSpec_ext
     {state : Type uState} {runnerState : Type uRunner}
     {runner : TuringMachine MachineCodeSymbol runnerState}

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.ExactFuel
 
 set_option doc.verso true
@@ -193,51 +193,27 @@ theorem codePrefixNestedExactFuelSearchFiniteLeaf
     {machineState : Type u}
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedExactFuelSearchConstruction M := by
-  rcases codePrefixExactFuelRunnerFiniteLeaf M with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedNestedExactFuelSearchFiniteLeaf
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input
-  constructor
-  · intro hhalt
-    rcases (hsearcher input).mp hhalt with
-      ⟨inner, outer, hselectedHalt⟩
-    exact
-      ⟨inner, outer,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hM⟩
-    exact (hsearcher input).mpr
-      ⟨inner, outer,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mpr hM⟩
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input
 
 theorem codePrefixNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedExactFuelSearchConstruction M := by
-  rcases codePrefixExactFuelRunnerFiniteLeafDecidable M with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedNestedExactFuelSearchFiniteLeafDecidable
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input
-  constructor
-  · intro hhalt
-    rcases (hsearcher input).mp hhalt with
-      ⟨inner, outer, hselectedHalt⟩
-    exact
-      ⟨inner, outer,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hM⟩
-    exact (hsearcher input).mpr
-      ⟨inner, outer,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mpr hM⟩
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input
 
 /--
 Bounded generated-pair enumerator.  The input carries an outer budget; the
@@ -492,51 +468,27 @@ theorem codePrefixBoundedNestedExactFuelSearchFiniteLeaf
     {machineState : Type u}
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixBoundedNestedExactFuelSearchConstruction M := by
-  rcases codePrefixExactFuelRunnerFiniteLeaf M with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedBoundedNestedExactFuelSearchFiniteLeaf
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input budget
-  constructor
-  · intro hhalt
-    rcases (hsearcher input budget).mp hhalt with
-      ⟨inner, outer, hinner, houter, hselectedHalt⟩
-    exact
-      ⟨inner, outer, hinner, houter,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hinner, houter, hM⟩
-    exact (hsearcher input budget).mpr
-      ⟨inner, outer, hinner, houter,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mpr hM⟩
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input budget
 
 theorem codePrefixBoundedNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixBoundedNestedExactFuelSearchConstruction M := by
-  rcases codePrefixExactFuelRunnerFiniteLeafDecidable M with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedBoundedNestedExactFuelSearchFiniteLeafDecidable
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input budget
-  constructor
-  · intro hhalt
-    rcases (hsearcher input budget).mp hhalt with
-      ⟨inner, outer, hinner, houter, hselectedHalt⟩
-    exact
-      ⟨inner, outer, hinner, houter,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hinner, houter, hM⟩
-    exact (hsearcher input budget).mpr
-      ⟨inner, outer, hinner, houter,
-        (codePrefixExactFuelRunner_haltsOnNested_iff
-          hselected input inner outer).mpr hM⟩
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input budget
 
 end Computability
 end FoC
