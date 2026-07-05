@@ -1513,6 +1513,27 @@ theorem loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutp
         structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
           bits suffixTail rightPadding outputPadding⟩
 
+def StructuredBoolWordRawBitsDecoderInputInitializerSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall (bits suffixTail : Word Bool)
+      (rightPadding outputPadding : List (Option Bool)),
+      initializer.HaltsFromTapeEquiv
+        (boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding)
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+          , Tape.blank
+          , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+              bits.length outputPadding ])
+
+def StructuredBoolWordRawBitsDecoderInputInitializerConstruction : Prop :=
+  exists initializer : MachineDescription,
+    StructuredBoolWordRawBitsDecoderInputInitializerSpec initializer
+
+theorem structuredBoolWordRawBitsDecoderInputInitializerConstruction_core :
+    StructuredBoolWordRawBitsDecoderInputInitializerConstruction := by
+  sorry
+
 def boolWordRawBitsDecoderHeaderBase : List (Option Bool) :=
   List.append (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none]
 

@@ -322,9 +322,29 @@ def CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction :
       CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
         useAccept initializer
 
+theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_of_rawBitsInitializer
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderInputInitializerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
+  rcases hinitializer with ⟨initializer, hinitializerReady, hinitializerRun⟩
+  intro useAccept
+  refine ⟨initializer, hinitializerReady, ?_⟩
+  intro L pref leftBit deletedTail _hdeleted hpayload
+  simpa [countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
+    countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
+      useAccept L pref leftBit deletedTail hpayload] using
+    hinitializerRun
+      (ParsedLayoutBits L)
+      (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
+      (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+        useAccept L deletedTail)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
 theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_of_rawBitsInitializer
+      structuredBoolWordRawBitsDecoderInputInitializerConstruction_core
 
 /--
 Count-window-specific output projection from the lowered structured extractor.
