@@ -586,7 +586,7 @@ theorem structuredJoinerEntryDescription_step_start
   rw [Structured.Description.stepConfig]
   rw [structuredJoinerEntryDescription_lookup_start]
   unfold structuredJoinerEntryDescription
-  three_tape_step
+  three_tape_step []
 
 theorem structuredJoinerEntryDescription_step_separator
     (source scratch work : Tape Bool) :
@@ -600,7 +600,7 @@ theorem structuredJoinerEntryDescription_step_separator
   rw [Structured.Description.stepConfig]
   rw [structuredJoinerEntryDescription_lookup_separator]
   unfold structuredJoinerEntryDescription
-  three_tape_step
+  three_tape_step []
 
 theorem structuredJoinerEntryDescription_run_two
     (source scratch work : Tape Bool) :

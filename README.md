@@ -177,6 +177,12 @@ a left/right move; `HeadMove.stay` is deliberately outside that first fragment.
 For reusable move/write/scan/copy/append building blocks over that semantics,
 import
 `FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives`.
+For lowerer-facing three-logical-tape proof scripts, import
+`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic`.
+It provides opt-in tactics such as `three_tape_step [...]` for local table-step
+simplification, `three_tape_phase_step [...]` for phase-composed descriptions,
+`three_tape_support` for all-read row support branches, and `three_tape_run`
+for short runs assembled from explicit step lemmas.
 
 This formalization was developed with assistance from OpenAI Codex and Google Gemini.
 

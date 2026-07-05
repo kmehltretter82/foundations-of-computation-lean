@@ -3,6 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly.Prefix
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.CellPass
 
@@ -608,32 +609,22 @@ theorem structuredRawBoundaryRightEdgeEmitterDescription_run_header
   | mk left head right =>
       cases head with
       | none =>
-          simp [structuredRawBoundaryRightEdgeEmitterDescription,
+          three_tape_step [
+            structuredRawBoundaryRightEdgeEmitterDescription,
             structuredRawBoundaryHeaderRows,
             structuredAnySourceReadRows,
             structuredRawBoundaryWriteOutputRow,
             structuredRawBoundaryOutputTape,
-            structuredWriteBit, Structured.Description.runConfig,
-            Structured.Description.stepConfig,
-            Structured.Description.lookupTransition,
-            Structured.Description.Matches,
-            Structured.TapeAction.stay,
-            Structured.TapeAction.apply, Structured.HeadMove.apply,
-            Tape.blank, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+            structuredWriteBit]
       | some bit =>
           cases bit <;>
-            simp [structuredRawBoundaryRightEdgeEmitterDescription,
+            three_tape_step [
+              structuredRawBoundaryRightEdgeEmitterDescription,
               structuredRawBoundaryHeaderRows,
               structuredAnySourceReadRows,
               structuredRawBoundaryWriteOutputRow,
               structuredRawBoundaryOutputTape,
-              structuredWriteBit, Structured.Description.runConfig,
-              Structured.Description.stepConfig,
-              Structured.Description.lookupTransition,
-              Structured.Description.Matches,
-              Structured.TapeAction.stay,
-              Structured.TapeAction.apply, Structured.HeadMove.apply,
-              Tape.blank, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+              structuredWriteBit]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
     (processed outputBits : Word Bool) (markers : Nat) :
@@ -648,7 +639,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
           [ structuredRawBoundarySourceScanTape processed []
           , structuredRawBoundaryLengthReadTape markers
           , structuredRawBoundaryOutputTape outputBits ] } := by
-  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+  three_tape_step [
+    structuredRawBoundaryRightEdgeEmitterDescription,
     structuredRawBoundaryHeaderRows,
     structuredAnySourceReadRows,
     structuredRawBoundaryWriteOutputRow,
@@ -658,14 +650,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
     structuredRawBoundaryOutputTape,
     structuredRawBoundaryCountRow,
     structuredRawBoundaryCountDoneRow,
-    structuredPreserve,
-    Structured.Description.runConfig,
-    Structured.Description.stepConfig,
-    Structured.Description.lookupTransition,
-    Structured.Description.Matches,
-    Structured.TapeAction.stay,
-    Structured.TapeAction.apply, Structured.HeadMove.apply,
-    Tape.read, Tape.move, Tape.moveLeft, tapeAtCells]
+    structuredPreserve]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit
     (processed rest outputBits : Word Bool) (markers : Nat)
@@ -683,7 +668,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit
           , structuredRawBoundaryCountMarkerTape markers.succ
           , structuredRawBoundaryOutputTape outputBits ] } := by
   cases bit <;>
-    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    three_tape_step [
+      structuredRawBoundaryRightEdgeEmitterDescription,
       structuredRawBoundaryHeaderRows,
       structuredAnySourceReadRows,
       structuredRawBoundaryWriteOutputRow,
@@ -692,14 +678,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit
       structuredRawBoundaryOutputTape,
       structuredRawBoundaryCountRow,
       structuredPreserve, structuredWriteBit,
-      Structured.Description.runConfig,
-      Structured.Description.stepConfig,
-      Structured.Description.lookupTransition,
-      Structured.Description.Matches,
-      Structured.TapeAction.stay,
-      Structured.TapeAction.apply, Structured.HeadMove.apply,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      tapeAtCells, List.reverse_append, List.replicate_succ]
+      List.reverse_append, List.replicate_succ]
   all_goals
     cases List.map some rest <;> rfl
 
@@ -787,7 +766,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_mark
               (List.append outputBits
                 structuredRawBoundaryLengthTickBits) ] } := by
   cases remaining <;>
-    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    three_tape_step [
+      structuredRawBoundaryRightEdgeEmitterDescription,
       structuredRawBoundaryHeaderRows,
       structuredAnySourceReadRows,
       structuredRawBoundaryWriteOutputRow,
@@ -800,14 +780,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_mark
       structuredRawBoundaryLengthMarkerRows,
       structuredRawBoundaryLengthFinalRows,
       structuredPreserve, structuredWriteBit,
-      Structured.Description.runConfig,
-      Structured.Description.stepConfig,
-      Structured.Description.lookupTransition,
-      Structured.Description.Matches,
-      Structured.TapeAction.stay,
-      Structured.TapeAction.apply, Structured.HeadMove.apply,
-      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
-      tapeAtCells, List.reverse_append, List.replicate_succ,
+      List.reverse_append, List.replicate_succ,
       List.append_assoc]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_final
@@ -826,7 +799,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_fina
           , structuredRawBoundaryOutputTape
               (List.append outputBits
                 structuredRawBoundaryLengthDoneBits) ] } := by
-  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+  three_tape_step [
+    structuredRawBoundaryRightEdgeEmitterDescription,
     structuredRawBoundaryHeaderRows,
     structuredAnySourceReadRows,
     structuredRawBoundaryWriteOutputRow,
@@ -839,14 +813,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_fina
     structuredRawBoundaryLengthMarkerRows,
     structuredRawBoundaryLengthFinalRows,
     structuredPreserve, structuredWriteBit,
-    Structured.Description.runConfig,
-    Structured.Description.stepConfig,
-    Structured.Description.lookupTransition,
-    Structured.Description.Matches,
-    Structured.TapeAction.stay,
-    Structured.TapeAction.apply, Structured.HeadMove.apply,
-    Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
-    tapeAtCells, List.reverse_append, List.append_assoc]
+    List.reverse_append, List.append_assoc]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_loop
     (remaining emitted : Nat) (sourceLeft : List (Option Bool))
@@ -976,7 +943,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit
           , structuredRawBoundaryLengthDoneCounterTape markers
           , structuredRawBoundaryOutputTape outputBits ] } := by
   cases bit <;> cases remainingRev <;>
-    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    three_tape_step [
+      structuredRawBoundaryRightEdgeEmitterDescription,
       structuredRawBoundaryHeaderRows,
       structuredAnySourceReadRows,
       structuredRawBoundaryWriteOutputRow,
@@ -990,14 +958,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit
       structuredRawBoundaryRewindRow,
       structuredRawBoundaryRewindDoneRow,
       structuredPreserve, structuredWriteBit,
-      Structured.Description.runConfig,
-      Structured.Description.stepConfig,
-      Structured.Description.lookupTransition,
-      Structured.Description.Matches,
-      Structured.TapeAction.stay,
-      Structured.TapeAction.apply, Structured.HeadMove.apply,
-      Tape.read, Tape.move, Tape.moveLeft,
-      tapeAtCells, List.append_assoc]
+      List.append_assoc]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
     (skipped : Word Bool) (markers : Nat) (outputBits : Word Bool) :
@@ -1013,7 +974,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
           , structuredRawBoundaryLengthDoneCounterTape markers
           , structuredRawBoundaryOutputTape outputBits ] } := by
   cases skipped <;>
-    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    three_tape_step [
+      structuredRawBoundaryRightEdgeEmitterDescription,
       structuredRawBoundaryHeaderRows,
       structuredAnySourceReadRows,
       structuredRawBoundaryWriteOutputRow,
@@ -1028,14 +990,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
       structuredRawBoundaryRewindRow,
       structuredRawBoundaryRewindDoneRow,
       structuredPreserve, structuredWriteBit,
-      Structured.Description.runConfig,
-      Structured.Description.stepConfig,
-      Structured.Description.lookupTransition,
-      Structured.Description.Matches,
-      Structured.TapeAction.stay,
-      Structured.TapeAction.apply, Structured.HeadMove.apply,
-      Tape.read, Tape.move, Tape.moveRight,
-      tapeAtCells, List.append_assoc]
+      List.append_assoc]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_loop
     (remainingRev skipped : Word Bool) (markers : Nat)
@@ -1157,7 +1112,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit
               (List.append outputBits
                 (structuredRawBoundaryCellChunkBits bit)) ] } := by
   cases bit <;> cases rest <;> (try cases ‹Bool›) <;>
-    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    three_tape_step [
+      structuredRawBoundaryRightEdgeEmitterDescription,
       structuredRawBoundaryHeaderRows,
       structuredAnySourceReadRows,
       structuredRawBoundaryWriteOutputRow,
@@ -1178,14 +1134,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit
       structuredRawBoundaryCellEmitWriteRows,
       structuredRawBoundaryCellEmitWriteRow,
       structuredPreserve, structuredWriteBit,
-      Structured.Description.runConfig,
-      Structured.Description.stepConfig,
-      Structured.Description.lookupTransition,
-      Structured.Description.Matches,
-      Structured.TapeAction.stay,
-      Structured.TapeAction.apply, Structured.HeadMove.apply,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      tapeAtCells, List.reverse_append]
+      List.reverse_append]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
     (processedRev : Word Bool) (markers : Nat) (outputBits : Word Bool) :
@@ -1200,7 +1149,8 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
           [ structuredRawBoundaryCellLoopTape processedRev []
           , structuredRawBoundaryLengthDoneCounterTape markers
           , structuredRawBoundaryOutputTape outputBits ] } := by
-  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+  three_tape_step [
+    structuredRawBoundaryRightEdgeEmitterDescription,
     structuredRawBoundaryHeaderRows,
     structuredAnySourceReadRows,
     structuredRawBoundaryWriteOutputRow,
@@ -1215,14 +1165,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
     structuredRawBoundaryRewindDoneRow,
     structuredRawBoundaryCellLoopInitialRow,
     structuredRawBoundaryCellLoopHaltRow,
-    structuredPreserve, structuredWriteBit,
-    Structured.Description.runConfig,
-    Structured.Description.stepConfig,
-    Structured.Description.lookupTransition,
-    Structured.Description.Matches,
-    Structured.TapeAction.stay,
-    Structured.TapeAction.apply, Structured.HeadMove.apply,
-    Tape.read, tapeAtCells]
+    structuredPreserve, structuredWriteBit]
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_loop
     (processedRev remaining : Word Bool) (markers : Nat)
