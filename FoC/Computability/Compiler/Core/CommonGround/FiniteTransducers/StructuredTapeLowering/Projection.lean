@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppendGenerated
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.CursorSeek
 
 set_option doc.verso true
@@ -250,6 +251,149 @@ Existence wrapper for
 def StructuredSelectedSingletonSegmentDecoderConstruction : Prop :=
   exists decoder : MachineDescription,
     StructuredSelectedSingletonSegmentDecoderSpec decoder
+
+/--
+Finite-control scanner state count for decoding {name}`logicalTapeBits`.
+
+State {lit}`0` expects the first bit of a two-bit logical cell code, state
+{lit}`1` remembers that the first bit was {lit}`false`, and state {lit}`2`
+remembers that the first bit was {lit}`true`.
+-/
+def selectedSegmentLogicalTapeDecoderStateCount : Nat := 3
+
+def selectedSegmentLogicalTapeDecoderStart : Nat := 0
+
+def selectedSegmentLogicalTapeDecoderNext : Nat -> Bool -> Nat
+  | 0, false => 1
+  | 0, true => 2
+  | _, _ => 0
+
+def selectedSegmentLogicalTapeDecoderEmit : Nat -> Bool -> Option Bool
+  | 1, true => some false
+  | 2, false => some true
+  | _, _ => none
+
+theorem selectedSegmentLogicalTapeDecoderStart_lt :
+    selectedSegmentLogicalTapeDecoderStart <
+      selectedSegmentLogicalTapeDecoderStateCount := by
+  decide
+
+theorem selectedSegmentLogicalTapeDecoderNext_lt :
+    forall state bit,
+      state < selectedSegmentLogicalTapeDecoderStateCount ->
+        selectedSegmentLogicalTapeDecoderNext state bit <
+          selectedSegmentLogicalTapeDecoderStateCount := by
+  intro state bit hstate
+  cases state with
+  | zero =>
+      cases bit <;> decide
+  | succ state =>
+      cases state with
+      | zero =>
+          cases bit <;> decide
+      | succ state =>
+          cases state with
+          | zero =>
+              cases bit <;> decide
+          | succ state =>
+              simp [selectedSegmentLogicalTapeDecoderStateCount] at hstate
+              lia
+
+theorem selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero
+    (cell : Option Bool) :
+    statefulOptionAfter selectedSegmentLogicalTapeDecoderNext 0
+      (logicalCellBits cell) = 0 := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
+theorem selectedSegmentLogicalTapeDecoder_output_logicalCellBits_zero
+    (cell : Option Bool) :
+    statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 (logicalCellBits cell) =
+      match cell with
+      | none => []
+      | some bit => [bit] := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
+theorem selectedSegmentLogicalTapeDecoder_after_logicalCellListBits_zero
+    (cells : List (Option Bool)) :
+    statefulOptionAfter selectedSegmentLogicalTapeDecoderNext 0
+      (logicalCellListBits cells) = 0 := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simpa [logicalCellListBits, logicalCellBits,
+            statefulOptionAfter,
+            selectedSegmentLogicalTapeDecoderNext] using ih
+      | some bit =>
+          cases bit <;>
+            simpa [logicalCellListBits, logicalCellBits,
+              statefulOptionAfter,
+              selectedSegmentLogicalTapeDecoderNext] using ih
+
+theorem selectedSegmentLogicalTapeDecoder_output_logicalCellListBits_zero
+    (cells : List (Option Bool)) :
+    statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0
+        (logicalCellListBits cells) =
+      cells.filterMap (fun cell => cell) := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      rw [logicalCellListBits]
+      rw [statefulOptionOutputFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_output_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+      rw [ih]
+      cases cell <;> rfl
+
+theorem selectedSegmentLogicalTapeDecoder_after_headMarker_zero :
+    statefulOptionAfter selectedSegmentLogicalTapeDecoderNext 0
+      [true, true] = 0 := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoder_output_headMarker_zero :
+    statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 [true, true] = [] := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoder_output_logicalTapeBits_zero
+    (T : Tape Bool) :
+    statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 (logicalTapeBits T) =
+      Tape.normalizedOutput T := by
+  cases T with
+  | mk left head right =>
+      rw [logicalTapeBits]
+      rw [statefulOptionOutputFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_output_logicalCellListBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellListBits_zero]
+      rw [statefulOptionOutputFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_output_headMarker_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_headMarker_zero]
+      rw [statefulOptionOutputFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_output_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_output_logicalCellListBits_zero]
+      cases head with
+      | none =>
+          simp [Tape.normalizedOutput, Tape.cells,
+            List.filterMap_append]
+      | some bit =>
+          cases bit <;>
+            simp [Tape.normalizedOutput, Tape.cells,
+              List.filterMap_append]
 
 /--
 Decoder for a canonical selected structured segment that may have trailing
