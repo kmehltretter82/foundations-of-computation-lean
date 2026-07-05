@@ -964,6 +964,117 @@ theorem threeHeadReaderNoRowTransitions_runsNoRowFromExistingTapeSeparator
       (noRowJumpAllTransitions_runsFromExistingTapeSeparator
         D reads hstate hlookup hseparator)
 
+theorem threeHeadReaderTransitions_subset_threeHeadReaderNoRowTransitions
+    (D : Description) :
+    forall t : TransitionDescription,
+      t ∈ threeHeadReaderTransitions D ->
+        t ∈ threeHeadReaderNoRowTransitions D := by
+  intro t ht
+  simpa [threeHeadReaderNoRowTransitions] using Or.inl ht
+
+theorem threeHeadReaderNoRowTransitions_runsReader
+    (D : Description) {state : Nat}
+    (hstate : state ∈ activeStateValues D)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (tableMachine (noRowJumpLimit D)
+            (StaticDispatcherState.ready D.start)
+            (StaticDispatcherState.ready D.halt)
+            (threeHeadReaderNoRowTransitions D))
+          (StaticDispatcherState.ready state)
+          (StaticDispatcherState.afterRead D state
+            { read0 := Tape.read (Description.tapeAt logical 0),
+              read1 := Tape.read (Description.tapeAt logical 1),
+              read2 := Tape.read (Description.tapeAt logical 2) })
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases threeHeadReaderDescription_runs D hstate hlength with
+    ⟨separatorPhysical, hseparator, hrun⟩
+  refine ⟨separatorPhysical, hseparator, ?_⟩
+  exact
+    runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+      (small := threeHeadReaderDescription D)
+      (big :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowTransitions D))
+      (hsubset := by
+        intro t ht
+        simpa [tableMachine, threeHeadReaderDescription] using
+          threeHeadReaderTransitions_subset_threeHeadReaderNoRowTransitions
+            D t ht)
+      (hdet :=
+        tableMachine_deterministic_of_transitionListDeterministic
+          (threeHeadReaderNoRowTransitions_deterministic D))
+      (hfree := by
+        intro t ht
+        simpa [threeHeadReaderDescription] using
+          threeHeadReaderTransitions_sources_ne_afterRead
+            D
+            { read0 := Tape.read (Description.tapeAt logical 0),
+              read1 := Tape.read (Description.tapeAt logical 1),
+              read2 := Tape.read (Description.tapeAt logical 2) }
+            (activeStateValues_mem_lt hstate) t ht)
+      hrun
+
+theorem staticDispatcher_noRow_runs
+    (D : Description) {state : Nat}
+    (hstate : state ∈ activeStateValues D)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state (ReadTuple3.ofTapes logical) =
+        none) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (tableMachine (noRowJumpLimit D)
+            (StaticDispatcherState.ready D.start)
+            (StaticDispatcherState.ready D.halt)
+            (threeHeadReaderNoRowTransitions D))
+          (StaticDispatcherState.ready state)
+          (StaticDispatcherState.ready state)
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases
+      threeHeadReaderNoRowTransitions_runsReader
+        D hstate hlength with
+    ⟨separatorPhysical, hseparator, hreader⟩
+  let reads := ReadTuple3.ofTapes logical
+  have hbranch :
+      RunsFromStateTapeEquiv
+        (tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowTransitions D))
+        (StaticDispatcherState.afterRead D state reads)
+        (StaticDispatcherState.ready state)
+        separatorPhysical
+        separatorPhysical := by
+    exact
+      threeHeadReaderNoRowTransitions_runsNoRowFromExistingTapeSeparator
+        D reads hstate hlookup hseparator
+  have hreader' :
+      RunsFromStateTapeEquiv
+        (tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowTransitions D))
+        (StaticDispatcherState.ready state)
+        (StaticDispatcherState.afterRead D state reads)
+        (encodedGuardedStructuredTapes logical)
+        separatorPhysical := by
+    simpa [reads, ReadTuple3.ofTapes] using hreader
+  exact
+    ⟨separatorPhysical, hseparator,
+      runsFromStateTapeEquiv_trans hreader' hbranch⟩
+
 end StaticDispatcherReaderAssembly
 
 end MultiTapeLowering
