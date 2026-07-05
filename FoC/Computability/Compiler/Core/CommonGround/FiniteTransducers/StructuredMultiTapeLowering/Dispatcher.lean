@@ -1450,6 +1450,184 @@ theorem runsFromStateTapeEquiv_offsetReadExitRetargetDescription
   simpa [MachineDescription.readExitRetargetConfiguration] using hretarget
 
 /--
+A two-step finite-control jump that preserves a tape whose current cell is
+blank, up to {name}`Tape.Equiv`.
+
+The ordinary backend has no stay move.  Static dispatcher handoffs therefore
+use a right-left bounce from separator states when they need to change only the
+finite-control state.
+-/
+def blankHeadBounceJumpDescription
+    (stateCount source scratch target : Nat) : MachineDescription where
+  stateCount := stateCount
+  start := source
+  halt := target
+  transitions :=
+    [ { source := source
+        read := none
+        write := none
+        move := Direction.right
+        target := scratch },
+      { source := scratch
+        read := none
+        write := none
+        move := Direction.left
+        target := target },
+      { source := scratch
+        read := some false
+        write := some false
+        move := Direction.left
+        target := target },
+      { source := scratch
+        read := some true
+        write := some true
+        move := Direction.left
+        target := target } ]
+
+private theorem moveLeft_moveRight_equiv_self
+    (T : Tape Bool) :
+    Tape.Equiv
+      (Tape.move Direction.left (Tape.move Direction.right T)) T := by
+  cases T with
+  | mk left head right =>
+      simp [Tape.Equiv, Tape.move, Tape.moveLeft, Tape.moveRight]
+      cases right <;> simp [Tape.dropTrailingNone]
+
+theorem blankHeadBounceJumpDescription_lookup_source
+    (stateCount source scratch target : Nat) :
+    MachineDescription.lookupTransition
+        (blankHeadBounceJumpDescription stateCount source scratch target)
+        source none =
+      some
+        ({ source := source
+           read := none
+           write := none
+           move := Direction.right
+           target := scratch } : TransitionDescription) := by
+  simp [blankHeadBounceJumpDescription,
+    MachineDescription.lookupTransition, MachineDescription.Matches]
+
+theorem blankHeadBounceJumpDescription_lookup_scratch
+    {stateCount source scratch target : Nat}
+    (hsourceScratch : source ≠ scratch)
+    (cell : Option Bool) :
+    MachineDescription.lookupTransition
+        (blankHeadBounceJumpDescription stateCount source scratch target)
+        scratch cell =
+      some
+        ({ source := scratch
+           read := cell
+           write := cell
+           move := Direction.left
+           target := target } : TransitionDescription) := by
+  have hsourceScratchBeq : (source == scratch) = false := by
+    rw [beq_eq_false_iff_ne]
+    exact hsourceScratch
+  cases cell with
+  | none =>
+      simp [blankHeadBounceJumpDescription,
+        MachineDescription.lookupTransition, MachineDescription.Matches,
+        hsourceScratchBeq]
+  | some bit =>
+      cases bit <;>
+        simp [blankHeadBounceJumpDescription,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          hsourceScratchBeq]
+
+theorem blankHeadBounceJumpDescription_runsFromBlankHead
+    {stateCount source scratch target : Nat}
+    {T : Tape Bool}
+    (hsourceScratch : source ≠ scratch)
+    (hread : Tape.read T = none) :
+    RunsFromStateTapeEquiv
+      (blankHeadBounceJumpDescription stateCount source scratch target)
+      source target T T := by
+  refine
+    ⟨2, Tape.move Direction.left (Tape.move Direction.right T), ?_,
+      moveLeft_moveRight_equiv_self T⟩
+  cases T with
+  | mk left head right =>
+      simp [Tape.read] at hread
+      cases hread
+      cases right with
+      | nil =>
+          simp [MachineDescription.runConfig,
+            MachineDescription.stepConfig,
+            blankHeadBounceJumpDescription_lookup_source,
+            blankHeadBounceJumpDescription_lookup_scratch hsourceScratch,
+            Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight,
+            Tape.write]
+      | cons rightHead rightTail =>
+          cases rightHead <;>
+            simp [MachineDescription.runConfig,
+              MachineDescription.stepConfig,
+              blankHeadBounceJumpDescription_lookup_source,
+              blankHeadBounceJumpDescription_lookup_scratch hsourceScratch,
+              Tape.read, Tape.move, Tape.moveLeft, Tape.moveRight,
+              Tape.write]
+
+theorem blankHeadBounceJumpDescription_wellFormed
+    {stateCount source scratch target : Nat}
+    (hsource : source < stateCount)
+    (hscratch : scratch < stateCount)
+    (htarget : target < stateCount)
+    (hsourceScratch : source ≠ scratch) :
+    (blankHeadBounceJumpDescription
+      stateCount source scratch target).WellFormed := by
+  constructor
+  · exact Nat.lt_of_le_of_lt (Nat.zero_le source) hsource
+  constructor
+  · exact hsource
+  constructor
+  · exact htarget
+  constructor
+  · intro t ht
+    simp [blankHeadBounceJumpDescription] at ht
+    rcases ht with rfl | rfl | rfl | rfl
+    · exact ⟨hsource, hscratch⟩
+    · exact ⟨hscratch, htarget⟩
+    · exact ⟨hscratch, htarget⟩
+    · exact ⟨hscratch, htarget⟩
+  · intro t u ht hu hkey
+    simp [blankHeadBounceJumpDescription] at ht hu
+    rcases ht with rfl | rfl | rfl | rfl <;>
+      rcases hu with rfl | rfl | rfl | rfl <;>
+      simp [TransitionDescription.SameKey,
+        TransitionDescription.SameAction, hsourceScratch] at hkey ⊢
+    exact False.elim (hsourceScratch hkey.symm)
+
+theorem blankHeadBounceJumpDescription_haltTransitionFree
+    {stateCount source scratch target : Nat}
+    (htargetSource : target ≠ source)
+    (htargetScratch : target ≠ scratch) :
+    (blankHeadBounceJumpDescription
+      stateCount source scratch target).HaltTransitionFree := by
+  have hsourceTarget : source ≠ target := fun h => htargetSource h.symm
+  have hscratchTarget : scratch ≠ target := fun h => htargetScratch h.symm
+  intro t ht
+  simp [blankHeadBounceJumpDescription] at ht
+  rcases ht with rfl | rfl | rfl | rfl
+  · exact hsourceTarget
+  · exact hscratchTarget
+  · exact hscratchTarget
+  · exact hscratchTarget
+
+theorem blankHeadBounceJumpDescription_subroutineReady
+    {stateCount source scratch target : Nat}
+    (hsource : source < stateCount)
+    (hscratch : scratch < stateCount)
+    (htarget : target < stateCount)
+    (hsourceScratch : source ≠ scratch)
+    (htargetSource : target ≠ source)
+    (htargetScratch : target ≠ scratch) :
+    (blankHeadBounceJumpDescription
+      stateCount source scratch target).SubroutineReady :=
+  ⟨blankHeadBounceJumpDescription_wellFormed
+      hsource hscratch htarget hsourceScratch,
+    blankHeadBounceJumpDescription_haltTransitionFree
+      htargetSource htargetScratch⟩
+
+/--
 Copied return routine for the tape-1 branch of the dispatcher.  Its local halt
 is redirected to a caller-specified continuation state below the copied block.
 -/
