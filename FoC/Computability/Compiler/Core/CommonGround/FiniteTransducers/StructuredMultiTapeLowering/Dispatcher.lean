@@ -99,6 +99,17 @@ theorem readCode_lt_three
 def code (r : ReadTuple3) : Nat :=
   readCode r.read0 + 3 * readCode r.read1 + 9 * readCode r.read2
 
+def code01 (read0 read1 : Option Bool) : Nat :=
+  readCode read0 + 3 * readCode read1
+
+theorem code01_lt_nine
+    (read0 read1 : Option Bool) :
+    code01 read0 read1 < 9 := by
+  have h0 := readCode_lt_three read0
+  have h1 := readCode_lt_three read1
+  unfold code01
+  lia
+
 theorem code_lt_twentySeven
     (r : ReadTuple3) :
     r.code < 27 := by
@@ -1171,6 +1182,15 @@ private theorem HasAtLeastThreeTapes_drop_two_exists
   subst hlogical
   exact ⟨V, rest, rfl⟩
 
+private theorem HasAtLeastThreeTapes_drop_one_exists
+    {logical : List (Tape Bool)}
+    (hshape : HasAtLeastThreeTapes logical) :
+    exists T : Tape Bool, exists rest : List (Tape Bool),
+      logical.drop 1 = T :: rest := by
+  rcases hshape with ⟨T, U, V, rest, hlogical⟩
+  subst hlogical
+  exact ⟨U, V :: rest, rfl⟩
+
 private theorem guardedAtExistingTapeSeparator_zero_of_length_three
     {logical : List (Tape Bool)}
     (hlength : logical.length = 3) :
@@ -1224,6 +1244,255 @@ private theorem guarded_hasAtLeastThreeTapes_of_length_three
                 ⟨guardLogicalTape T, guardLogicalTape U,
                   guardLogicalTape V, guardLogicalTapes rest,
                   by simp [guardLogicalTapes]⟩
+
+theorem returnFromTape1SeparatorToBlockStartDescription_runsFromTape1Separator
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtTapeSeparator logical 1 physical) :
+    exists blockStartPhysical : Tape Bool,
+      AtTapeSeparator logical 0 blockStartPhysical ∧
+        RunsFromStateTapeEquiv
+          returnFromTape1SeparatorToBlockStartDescription
+          returnFromTape1SeparatorToBlockStartDescription.start
+          returnFromTape1SeparatorToBlockStartDescription.halt
+          physical
+          blockStartPhysical := by
+  rcases
+      returnFromTape1SeparatorToBlockStartDescription_contract.realizes
+        logical physical hseparator with
+    ⟨blockStartPhysical, hhalts, hblockStart⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
+    ⟨n, hrun⟩
+  exact
+    ⟨blockStartPhysical, hblockStart,
+      ⟨n, blockStartPhysical, hrun,
+        Tape.Equiv.refl blockStartPhysical⟩⟩
+
+def returnFromTape2SeparatorToBlockStartDescription :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    returnFromNextSeparatorToCurrentSeparatorDescription
+    returnFromTape1SeparatorToBlockStartDescription
+
+theorem returnFromTape2SeparatorToBlockStartDescription_subroutineReady :
+    returnFromTape2SeparatorToBlockStartDescription.SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    (returnFromNextSeparatorToCurrentSeparatorDescription_contract
+      1).subroutineReady
+    returnFromTape1SeparatorToBlockStartDescription_contract.subroutineReady
+
+theorem returnFromTape2SeparatorToBlockStartDescription_contract :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator logical 2 physical ∧
+          HasAtLeastThreeTapes logical)
+      (fun logical physical =>
+        AtTapeSeparator logical 0 physical)
+      returnFromTape2SeparatorToBlockStartDescription := by
+  let source := fun logical physical =>
+    AtExistingTapeSeparator logical 2 physical ∧
+      HasAtLeastThreeTapes logical
+  let middle := fun logical physical =>
+    AtExistingTapeSeparator logical 1 physical
+  have hfirst :
+      CursorRoutineContract source middle
+        returnFromNextSeparatorToCurrentSeparatorDescription := by
+    exact
+      { subroutineReady :=
+          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
+            1).subroutineReady
+        realizes := by
+          intro logical Tin hsource
+          rcases hsource with ⟨hseparator, hshape⟩
+          rcases
+              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
+                1).realizes logical Tin
+                ⟨hseparator.left,
+                  HasAtLeastThreeTapes_drop_one_exists hshape⟩ with
+            ⟨Tout, hhalts, hsep⟩
+          exact
+            ⟨Tout, hhalts,
+              ⟨hsep, HasAtLeastThreeTapes_drop_one_exists hshape⟩⟩ }
+  have hsecond :
+      CursorRoutineContract middle
+        (fun logical physical =>
+          AtTapeSeparator logical 0 physical)
+        returnFromTape1SeparatorToBlockStartDescription := by
+    exact
+      { subroutineReady :=
+          returnFromTape1SeparatorToBlockStartDescription_contract
+            |>.subroutineReady
+        realizes := by
+          intro logical Tin hmiddle
+          exact
+            returnFromTape1SeparatorToBlockStartDescription_contract
+              |>.realizes logical Tin hmiddle.left }
+  exact
+    cursorRoutineContract_canonicalSeq_self hfirst hsecond
+      (by
+        intro logical physical hmiddle
+        rw [atExistingTapeSeparator_moveLeft_moveRight hmiddle])
+
+theorem returnFromTape2SeparatorToBlockStartDescription_runsFromTape2Separator
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical 2 physical)
+    (hshape : HasAtLeastThreeTapes logical) :
+    exists blockStartPhysical : Tape Bool,
+      AtTapeSeparator logical 0 blockStartPhysical ∧
+        RunsFromStateTapeEquiv
+          returnFromTape2SeparatorToBlockStartDescription
+          returnFromTape2SeparatorToBlockStartDescription.start
+          returnFromTape2SeparatorToBlockStartDescription.halt
+          physical
+          blockStartPhysical := by
+  rcases
+      returnFromTape2SeparatorToBlockStartDescription_contract.realizes
+        logical physical ⟨hseparator, hshape⟩ with
+    ⟨blockStartPhysical, hhalts, hblockStart⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
+    ⟨n, hrun⟩
+  exact
+    ⟨blockStartPhysical, hblockStart,
+      ⟨n, blockStartPhysical, hrun,
+        Tape.Equiv.refl blockStartPhysical⟩⟩
+
+/--
+Lift an arbitrary-state run through a plain copied submachine block.
+-/
+theorem runsFromStateTapeEquiv_offsetDescription
+    (offset : Nat)
+    {D : MachineDescription}
+    {sourceState targetState : Nat} {Tin Tout : Tape Bool}
+    (hrun : RunsFromStateTapeEquiv D sourceState targetState Tin Tout) :
+    RunsFromStateTapeEquiv
+      (MachineDescription.offsetDescription offset D)
+      (offset + sourceState)
+      (offset + targetState)
+      Tin Tout := by
+  rcases hrun with ⟨n, Tactual, hrun, hout⟩
+  exact
+    ⟨n, Tactual,
+      MachineDescription.offsetDescription_runConfig_eq
+        (offset := offset) hrun,
+      hout⟩
+
+/--
+Lift an arbitrary-state run through a copied submachine whose local halt has
+been redirected to a caller continuation state.
+-/
+theorem runsFromStateTapeEquiv_offsetRetargetDescription
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.HaltTransitionFree)
+    {sourceState : Nat} {Tin Tout : Tape Bool}
+    (hrun : RunsFromStateTapeEquiv D sourceState D.halt Tin Tout) :
+    RunsFromStateTapeEquiv
+      (MachineDescription.offsetRetargetDescription offset target D)
+      (if sourceState = D.halt then target else offset + sourceState)
+      target Tin Tout := by
+  rcases hrun with ⟨n, Tactual, hrun, hout⟩
+  refine ⟨n, Tactual, ?_, hout⟩
+  have hretarget :=
+    MachineDescription.offsetRetargetDescription_runConfig_eq
+      (offset := offset) (target := target)
+      htarget hD hrun
+  simpa [MachineDescription.sharedExitRetargetConfiguration] using hretarget
+
+/--
+Copied return routine for the tape-1 branch of the dispatcher.  Its local halt
+is redirected to a caller-specified continuation state below the copied block.
+-/
+def retargetedReturnFromTape1SeparatorToBlockStartDescription
+    (offset target : Nat) : MachineDescription :=
+  MachineDescription.offsetRetargetDescription offset target
+    returnFromTape1SeparatorToBlockStartDescription
+
+theorem
+    retargetedReturnFromTape1SeparatorToBlockStartDescription_subroutineReady
+    {offset target : Nat} (htarget : target < offset) :
+    (retargetedReturnFromTape1SeparatorToBlockStartDescription
+      offset target).SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    htarget
+    returnFromTape1SeparatorToBlockStartDescription_contract.subroutineReady.left
+
+theorem
+    retargetedReturnFromTape1SeparatorToBlockStartDescription_runsFromTape1Separator
+    {offset target : Nat} (htarget : target < offset)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtTapeSeparator logical 1 physical) :
+    exists blockStartPhysical : Tape Bool,
+      AtTapeSeparator logical 0 blockStartPhysical ∧
+        RunsFromStateTapeEquiv
+          (retargetedReturnFromTape1SeparatorToBlockStartDescription
+            offset target)
+          (retargetedReturnFromTape1SeparatorToBlockStartDescription
+            offset target).start
+          target
+          physical
+          blockStartPhysical := by
+  rcases
+      returnFromTape1SeparatorToBlockStartDescription_runsFromTape1Separator
+        hseparator with
+    ⟨blockStartPhysical, hblockStart, hrun⟩
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetRetargetDescription
+      (offset := offset) (target := target)
+      htarget
+      returnFromTape1SeparatorToBlockStartDescription_contract.subroutineReady.right
+      hrun
+  exact
+    ⟨blockStartPhysical, hblockStart, by
+      simpa [retargetedReturnFromTape1SeparatorToBlockStartDescription,
+        MachineDescription.offsetRetargetDescription] using hcopy⟩
+
+/--
+Copied return routine for the tape-2 branch of the dispatcher.  Its local halt
+is redirected to a caller-specified continuation state, so branch assembly can
+return to the canonical block start and immediately continue in finite control.
+-/
+def retargetedReturnFromTape2SeparatorToBlockStartDescription
+    (offset target : Nat) : MachineDescription :=
+  MachineDescription.offsetRetargetDescription offset target
+    returnFromTape2SeparatorToBlockStartDescription
+
+theorem
+    retargetedReturnFromTape2SeparatorToBlockStartDescription_subroutineReady
+    {offset target : Nat} (htarget : target < offset) :
+    (retargetedReturnFromTape2SeparatorToBlockStartDescription
+      offset target).SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    htarget
+    returnFromTape2SeparatorToBlockStartDescription_subroutineReady.left
+
+theorem
+    retargetedReturnFromTape2SeparatorToBlockStartDescription_runsFromTape2Separator
+    {offset target : Nat} (htarget : target < offset)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical 2 physical)
+    (hshape : HasAtLeastThreeTapes logical) :
+    exists blockStartPhysical : Tape Bool,
+      AtTapeSeparator logical 0 blockStartPhysical ∧
+        RunsFromStateTapeEquiv
+          (retargetedReturnFromTape2SeparatorToBlockStartDescription
+            offset target)
+          (retargetedReturnFromTape2SeparatorToBlockStartDescription
+            offset target).start
+          target
+          physical
+          blockStartPhysical := by
+  rcases
+      returnFromTape2SeparatorToBlockStartDescription_runsFromTape2Separator
+        hseparator hshape with
+    ⟨blockStartPhysical, hblockStart, hrun⟩
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetRetargetDescription
+      (offset := offset) (target := target)
+      htarget
+      returnFromTape2SeparatorToBlockStartDescription_subroutineReady.right
+      hrun
+  exact
+    ⟨blockStartPhysical, hblockStart, by
+      simpa [retargetedReturnFromTape2SeparatorToBlockStartDescription,
+        MachineDescription.offsetRetargetDescription] using hcopy⟩
 
 def branchingTape0ReadHeadCellAndReturnToSeparatorDescription :
     MachineDescription :=
@@ -1554,6 +1823,47 @@ will prove it reaches these states.
 def afterRead (D : Description) (state : Nat) (reads : ReadTuple3) :
     Nat :=
   D.stateCount + 27 * state + reads.code
+
+def afterRead0Base (D : Description) : Nat :=
+  D.stateCount + 27 * D.stateCount
+
+def afterRead0 (D : Description) (state : Nat)
+    (read0 : Option Bool) : Nat :=
+  afterRead0Base D + 3 * state + ReadTuple3.readCode read0
+
+def afterRead1Base (D : Description) : Nat :=
+  afterRead0Base D + 3 * D.stateCount
+
+def afterRead1 (D : Description) (state : Nat)
+    (read0 read1 : Option Bool) : Nat :=
+  afterRead1Base D + 9 * state + ReadTuple3.code01 read0 read1
+
+def readerStateLimit (D : Description) : Nat :=
+  afterRead1Base D + 9 * D.stateCount
+
+theorem afterRead_lt_afterRead0Base
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    (hstate : state < D.stateCount) :
+    afterRead D state reads < afterRead0Base D := by
+  have hcode := ReadTuple3.code_lt_twentySeven reads
+  unfold afterRead afterRead0Base
+  lia
+
+theorem afterRead0_lt_afterRead1Base
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    afterRead0 D state read0 < afterRead1Base D := by
+  have hcode := ReadTuple3.readCode_lt_three read0
+  simp [afterRead0, afterRead0Base, afterRead1Base]
+  lia
+
+theorem afterRead1_lt_readerStateLimit
+    (D : Description) {state : Nat} (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    afterRead1 D state read0 read1 < readerStateLimit D := by
+  have hcode := ReadTuple3.code01_lt_nine read0 read1
+  simp [afterRead1, afterRead0Base, afterRead1Base, readerStateLimit]
+  lia
 
 theorem ready_start
     (D : Description) :

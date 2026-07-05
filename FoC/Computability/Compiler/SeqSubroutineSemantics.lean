@@ -918,6 +918,453 @@ end Fragment
 
 /-! ## Subroutine-level sequencing API -/
 
+/--
+Copy a machine into a state block starting at {lit}`offset`.
+
+States below {lit}`offset` are unused by the copied machine.  This is the basic
+finite-table embedding primitive needed when several branch-specific copies of
+the same subroutine must coexist in one ordinary description.
+-/
+def offsetDescription (offset : Nat) (D : MachineDescription) :
+    MachineDescription where
+  stateCount := offset + D.stateCount
+  start := offset + D.start
+  halt := offset + D.halt
+  transitions :=
+    D.transitions.map (TransitionDescription.offsetStates offset)
+
+def offsetDescriptionConfiguration
+    (offset : Nat) (c : MachineDescription.Configuration) :
+    MachineDescription.Configuration where
+  state := offset + c.state
+  tape := c.tape
+
+theorem offsetDescription_lookupTransition
+    (offset : Nat) (D : MachineDescription)
+    (state : Nat) (cell : Option Bool) :
+    (offsetDescription offset D).lookupTransition
+        (offset + state) cell =
+      Option.map (TransitionDescription.offsetStates offset)
+        (D.lookupTransition state cell) := by
+  unfold MachineDescription.lookupTransition offsetDescription
+  have hpredicate :
+      (MachineDescription.Matches (offset + state) cell ∘
+          TransitionDescription.offsetStates offset) =
+        MachineDescription.Matches state cell := by
+    funext t
+    have hsourceBeq :
+        (offset + t.source == offset + state) =
+          (t.source == state) := by
+      by_cases hsource : t.source = state
+      · have hoffset :
+            offset + t.source = offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = true := by
+          rw [beq_iff_eq]
+          exact hoffset
+        have hright : (t.source == state) = true := by
+          rw [beq_iff_eq]
+          exact hsource
+        rw [hleft, hright]
+      · have hoffset :
+            offset + t.source ≠ offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hoffset
+        have hright : (t.source == state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hsource
+        rw [hleft, hright]
+    simp [Function.comp, MachineDescription.Matches,
+      TransitionDescription.offsetStates, hsourceBeq]
+  simp [List.find?_map, hpredicate]
+
+theorem offsetDescription_stepConfig
+    (offset : Nat) (D : MachineDescription)
+    (c : MachineDescription.Configuration) :
+    (offsetDescription offset D).stepConfig
+        (offsetDescriptionConfiguration offset c) =
+      Option.map (offsetDescriptionConfiguration offset)
+        (D.stepConfig c) := by
+  cases c with
+  | mk state tape =>
+      simp [MachineDescription.stepConfig,
+        offsetDescriptionConfiguration,
+        offsetDescription_lookupTransition]
+      cases hlookup :
+          D.lookupTransition state (Tape.read tape) with
+      | none =>
+          simp
+      | some t =>
+          simp [TransitionDescription.offsetStates,
+            offsetDescriptionConfiguration]
+
+theorem offsetDescription_runConfig
+    (offset : Nat) (D : MachineDescription)
+    (n : Nat) (c : MachineDescription.Configuration) :
+    (offsetDescription offset D).runConfig n
+        (offsetDescriptionConfiguration offset c) =
+      offsetDescriptionConfiguration offset
+        (D.runConfig n c) := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp [MachineDescription.runConfig,
+        offsetDescription_stepConfig offset D c]
+      cases hstep : D.stepConfig c with
+      | none =>
+          simp [offsetDescriptionConfiguration]
+      | some next =>
+          simp [ih next]
+
+theorem offsetDescription_wellFormed
+    (offset : Nat) {D : MachineDescription}
+    (hD : D.WellFormed) :
+    (offsetDescription offset D).WellFormed := by
+  constructor
+  · have hpos : 0 < D.stateCount := hD.left
+    change 0 < offset + D.stateCount
+    lia
+  constructor
+  · exact Nat.add_lt_add_left hD.right.left offset
+  constructor
+  · exact Nat.add_lt_add_left hD.right.right.left offset
+  constructor
+  · intro t ht
+    rcases List.mem_map.mp ht with ⟨base, hbase, rfl⟩
+    have hbaseWell :=
+      hD.right.right.right.left base hbase
+    constructor
+    · change offset + base.source < offset + D.stateCount
+      exact Nat.add_lt_add_left hbaseWell.left offset
+    · change offset + base.target < offset + D.stateCount
+      exact Nat.add_lt_add_left hbaseWell.right offset
+  · intro t u ht hu hkey
+    rcases List.mem_map.mp ht with ⟨baseT, hbaseT, rfl⟩
+    rcases List.mem_map.mp hu with ⟨baseU, hbaseU, rfl⟩
+    have hbaseKey :
+        TransitionDescription.SameKey baseT baseU := by
+      constructor
+      · exact Nat.add_left_cancel hkey.left
+      · exact hkey.right
+    have hbaseAction :=
+      hD.right.right.right.right baseT baseU
+        hbaseT hbaseU hbaseKey
+    rcases hbaseAction with ⟨hwrite, hmove, htarget⟩
+    simp [TransitionDescription.SameAction,
+      TransitionDescription.offsetStates, hwrite, hmove, htarget]
+
+theorem offsetDescription_haltTransitionFree
+    (offset : Nat) {D : MachineDescription}
+    (hD : D.HaltTransitionFree) :
+    (offsetDescription offset D).HaltTransitionFree := by
+  intro t ht hsource
+  rcases List.mem_map.mp ht with ⟨base, hbase, rfl⟩
+  have hbaseSource : base.source = D.halt := by
+    exact Nat.add_left_cancel hsource
+  exact hD base hbase hbaseSource
+
+theorem offsetDescription_subroutineReady
+    (offset : Nat) {D : MachineDescription}
+    (hD : D.SubroutineReady) :
+    (offsetDescription offset D).SubroutineReady :=
+  ⟨offsetDescription_wellFormed offset hD.left,
+    offsetDescription_haltTransitionFree offset hD.right⟩
+
+theorem offsetDescription_runConfig_eq
+    (offset : Nat) {D : MachineDescription}
+    {n : Nat} {source target : Nat} {Tin Tout : Tape Bool}
+    (hrun :
+      D.runConfig n { state := source, tape := Tin } =
+        { state := target, tape := Tout }) :
+    (offsetDescription offset D).runConfig n
+        { state := offset + source, tape := Tin } =
+      { state := offset + target, tape := Tout } := by
+  simpa [offsetDescriptionConfiguration, hrun] using
+    offsetDescription_runConfig offset D n
+      { state := source, tape := Tin }
+
+theorem offsetDescription_haltsFromTape
+    (offset : Nat) {D : MachineDescription}
+    {Tin Tout : Tape Bool}
+    (hhalts : D.HaltsFromTape Tin Tout) :
+    (offsetDescription offset D).HaltsFromTape Tin Tout := by
+  rcases runConfig_eq_halt_of_haltsFromTape hhalts with
+    ⟨n, hrun⟩
+  refine ⟨n, ?_⟩
+  have hoffset :=
+    offsetDescription_runConfig_eq
+      (offset := offset) hrun
+  constructor
+  · change
+      ((offsetDescription offset D).runConfig n
+        { state := (offsetDescription offset D).start,
+          tape := Tin }).state =
+        (offsetDescription offset D).halt
+    simpa [offsetDescription] using
+      congrArg MachineDescription.Configuration.state hoffset
+  · change
+      ((offsetDescription offset D).runConfig n
+        { state := (offsetDescription offset D).start,
+          tape := Tin }).tape = Tout
+    simpa [offsetDescription] using
+      congrArg MachineDescription.Configuration.tape hoffset
+
+/--
+Copy a machine into a state block starting at {lit}`offset`, but redirect
+transitions that would enter the copied machine's halt state to
+{lit}`target`.
+
+The run-level lemmas below use the standard dispatcher layout where the caller
+continuation state is below the copied block: {lit}`target < offset`.
+-/
+def offsetRetargetDescription
+    (offset target : Nat) (D : MachineDescription) :
+    MachineDescription where
+  stateCount := Nat.max (offset + D.stateCount) (target + 1)
+  start := if D.start = D.halt then target else offset + D.start
+  halt := target
+  transitions :=
+    D.transitions.map
+      (TransitionDescription.sharedExitRetargetStates
+        offset D.halt target)
+
+theorem offsetRetargetDescription_lookupTransition
+    (offset target : Nat) (D : MachineDescription)
+    (state : Nat) (cell : Option Bool) :
+    (offsetRetargetDescription offset target D).lookupTransition
+        (offset + state) cell =
+      Option.map
+        (TransitionDescription.sharedExitRetargetStates
+          offset D.halt target)
+        (D.lookupTransition state cell) := by
+  unfold MachineDescription.lookupTransition offsetRetargetDescription
+  have hpredicate :
+      (MachineDescription.Matches (offset + state) cell ∘
+          TransitionDescription.sharedExitRetargetStates
+            offset D.halt target) =
+        MachineDescription.Matches state cell := by
+    funext t
+    have hsourceBeq :
+        (offset + t.source == offset + state) =
+          (t.source == state) := by
+      by_cases hsource : t.source = state
+      · have hoffset :
+            offset + t.source = offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = true := by
+          rw [beq_iff_eq]
+          exact hoffset
+        have hright : (t.source == state) = true := by
+          rw [beq_iff_eq]
+          exact hsource
+        rw [hleft, hright]
+      · have hoffset :
+            offset + t.source ≠ offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hoffset
+        have hright : (t.source == state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hsource
+        rw [hleft, hright]
+    simp [Function.comp, MachineDescription.Matches,
+      TransitionDescription.sharedExitRetargetStates, hsourceBeq]
+  simp [List.find?_map, hpredicate]
+
+theorem offsetRetargetDescription_lookupTransition_target_none
+    {offset target : Nat} (htarget : target < offset)
+    (D : MachineDescription) (cell : Option Bool) :
+    (offsetRetargetDescription offset target D).lookupTransition
+        target cell = none := by
+  unfold MachineDescription.lookupTransition offsetRetargetDescription
+  apply (List.find?_eq_none).mpr
+  intro t ht hmatch
+  rcases List.mem_map.mp ht with ⟨base, _hbase, rfl⟩
+  have hsource : offset + base.source = target := by
+    rcases (by
+      simpa [MachineDescription.Matches,
+        TransitionDescription.sharedExitRetargetStates] using hmatch) with
+      ⟨hsource, _hread⟩
+    exact hsource
+  lia
+
+theorem offsetRetargetDescription_stepConfig
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.HaltTransitionFree)
+    (c : MachineDescription.Configuration) :
+    (offsetRetargetDescription offset target D).stepConfig
+        (sharedExitRetargetConfiguration offset D.halt target c) =
+      Option.map
+        (sharedExitRetargetConfiguration offset D.halt target)
+        (D.stepConfig c) := by
+  cases c with
+  | mk state tape =>
+      by_cases hstate : state = D.halt
+      · subst state
+        simp [MachineDescription.stepConfig,
+          sharedExitRetargetConfiguration,
+          offsetRetargetDescription_lookupTransition_target_none
+            htarget D,
+          lookupTransition_halt_none hD]
+      · simp [MachineDescription.stepConfig,
+          sharedExitRetargetConfiguration, hstate,
+          offsetRetargetDescription_lookupTransition]
+        cases hlookup :
+            D.lookupTransition state (Tape.read tape) with
+        | none =>
+            simp
+        | some t =>
+            simp [TransitionDescription.sharedExitRetargetStates,
+              sharedExitRetargetConfiguration]
+
+theorem offsetRetargetDescription_runConfig
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.HaltTransitionFree)
+    (n : Nat) (c : MachineDescription.Configuration) :
+    (offsetRetargetDescription offset target D).runConfig n
+        (sharedExitRetargetConfiguration offset D.halt target c) =
+      sharedExitRetargetConfiguration offset D.halt target
+        (D.runConfig n c) := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp [MachineDescription.runConfig,
+        offsetRetargetDescription_stepConfig htarget hD c]
+      cases hstep : D.stepConfig c with
+      | none =>
+          simp [sharedExitRetargetConfiguration]
+      | some next =>
+          simp [ih next]
+
+theorem offsetRetargetDescription_wellFormed
+    (offset target : Nat) {D : MachineDescription}
+    (hD : D.WellFormed) :
+    (offsetRetargetDescription offset target D).WellFormed := by
+  constructor
+  · have hblock : 0 < offset + D.stateCount := by
+      have hpos : 0 < D.stateCount := hD.left
+      lia
+    exact
+      Nat.lt_of_lt_of_le hblock
+        (Nat.le_max_left (offset + D.stateCount) (target + 1))
+  constructor
+  · by_cases hstart : D.start = D.halt
+    · simp [offsetRetargetDescription, hstart]
+      exact
+        Nat.lt_of_lt_of_le (Nat.lt_succ_self target)
+          (Nat.le_max_right (offset + D.stateCount) (target + 1))
+    · simp [offsetRetargetDescription, hstart]
+      exact
+        Nat.lt_of_lt_of_le
+          (Nat.add_lt_add_left hD.right.left offset)
+          (Nat.le_max_left (offset + D.stateCount) (target + 1))
+  constructor
+  · exact
+      Nat.lt_of_lt_of_le (Nat.lt_succ_self target)
+        (Nat.le_max_right (offset + D.stateCount) (target + 1))
+  constructor
+  · intro t ht
+    rcases List.mem_map.mp ht with ⟨base, hbase, rfl⟩
+    have hbaseWell :=
+      hD.right.right.right.left base hbase
+    constructor
+    · exact
+        Nat.lt_of_lt_of_le
+          (Nat.add_lt_add_left hbaseWell.left offset)
+          (Nat.le_max_left (offset + D.stateCount) (target + 1))
+    · by_cases htargetLocal : base.target = D.halt
+      · simp [TransitionDescription.sharedExitRetargetStates,
+          htargetLocal]
+        exact
+          Nat.lt_of_lt_of_le (Nat.lt_succ_self target)
+            (Nat.le_max_right (offset + D.stateCount) (target + 1))
+      · simp [TransitionDescription.sharedExitRetargetStates,
+          htargetLocal]
+        exact
+          Nat.lt_of_lt_of_le
+            (Nat.add_lt_add_left hbaseWell.right offset)
+            (Nat.le_max_left (offset + D.stateCount) (target + 1))
+  · intro t u ht hu hkey
+    rcases List.mem_map.mp ht with ⟨baseT, hbaseT, rfl⟩
+    rcases List.mem_map.mp hu with ⟨baseU, hbaseU, rfl⟩
+    have hbaseKey :
+        TransitionDescription.SameKey baseT baseU := by
+      constructor
+      · exact Nat.add_left_cancel hkey.left
+      · exact hkey.right
+    have hbaseAction :=
+      hD.right.right.right.right baseT baseU
+        hbaseT hbaseU hbaseKey
+    rcases hbaseAction with ⟨hwrite, hmove, htargetLocal⟩
+    simp [TransitionDescription.SameAction,
+      TransitionDescription.sharedExitRetargetStates,
+      hwrite, hmove, htargetLocal]
+
+theorem offsetRetargetDescription_haltTransitionFree
+    {offset target : Nat} (htarget : target < offset)
+    (D : MachineDescription) :
+    (offsetRetargetDescription offset target D).HaltTransitionFree := by
+  intro t ht hsource
+  rcases List.mem_map.mp ht with ⟨base, _hbase, rfl⟩
+  have hsourceEq : offset + base.source = target := by
+    simpa [offsetRetargetDescription,
+      TransitionDescription.sharedExitRetargetStates] using hsource
+  lia
+
+theorem offsetRetargetDescription_subroutineReady
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.WellFormed) :
+    (offsetRetargetDescription offset target D).SubroutineReady :=
+  ⟨offsetRetargetDescription_wellFormed offset target hD,
+    offsetRetargetDescription_haltTransitionFree htarget D⟩
+
+theorem offsetRetargetDescription_runConfig_eq
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.HaltTransitionFree)
+    {n : Nat} {source localTarget : Nat} {Tin Tout : Tape Bool}
+    (hrun :
+      D.runConfig n { state := source, tape := Tin } =
+        { state := localTarget, tape := Tout }) :
+    (offsetRetargetDescription offset target D).runConfig n
+        (sharedExitRetargetConfiguration offset D.halt target
+          { state := source, tape := Tin }) =
+      sharedExitRetargetConfiguration offset D.halt target
+        { state := localTarget, tape := Tout } := by
+  simpa [hrun] using
+    offsetRetargetDescription_runConfig
+      (offset := offset) (target := target)
+      htarget hD n { state := source, tape := Tin }
+
+theorem offsetRetargetDescription_haltsFromTape
+    {offset target : Nat} (htarget : target < offset)
+    {D : MachineDescription} (hD : D.HaltTransitionFree)
+    {Tin Tout : Tape Bool}
+    (hhalts : D.HaltsFromTape Tin Tout) :
+    (offsetRetargetDescription offset target D).HaltsFromTape Tin Tout := by
+  rcases runConfig_eq_halt_of_haltsFromTape hhalts with
+    ⟨n, hrun⟩
+  refine ⟨n, ?_⟩
+  have hretarget :=
+    offsetRetargetDescription_runConfig_eq
+      (offset := offset) (target := target)
+      htarget hD hrun
+  constructor
+  · simpa [offsetRetargetDescription,
+      sharedExitRetargetConfiguration] using
+        congrArg MachineDescription.Configuration.state hretarget
+  · simpa [offsetRetargetDescription,
+      sharedExitRetargetConfiguration] using
+        congrArg MachineDescription.Configuration.tape hretarget
+
 theorem seqSubroutine_reaches
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
