@@ -426,6 +426,25 @@ def ExactOutputSpec
     TuringMachine.HaltsWithExactOutput machine input output <->
       f input = some output
 
+/--
+Every halted producer final tape is a canonical exact output governed by the
+same partial transformer.  This side condition is needed for sequencing:
+{name}`ExactOutputSpec` alone only characterizes already-canonical output
+tapes, and an arbitrary producer could otherwise halt on a non-output-shaped
+tape.
+-/
+def ExactOutputCanonicalSpec
+    (machine : TuringMachine MachineCodeSymbol producerState)
+    (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)) :
+    Prop :=
+  forall input : Word MachineCodeSymbol,
+  forall final : TuringMachine.Configuration MachineCodeSymbol producerState,
+    TuringMachine.Computes machine (TuringMachine.initial machine input)
+      final ->
+    TuringMachine.Halted machine final ->
+      exists output : Word MachineCodeSymbol,
+        f input = some output /\ final.tape = Tape.output output
+
 theorem outputThenRecognizePipeline_haltsOnInput_of_exactOutput
     {producerState recognizerState : Type}
     {producer : TuringMachine MachineCodeSymbol producerState}
@@ -558,6 +577,7 @@ def ExactOutputThenRecognizeConstruction : Prop :=
     (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol))
     (P : Word MachineCodeSymbol -> Prop),
       ExactOutputSpec producer f ->
+      ExactOutputCanonicalSpec producer f ->
       TuringMachine.HaltingTransitionsDisabled producer ->
       FiniteRecognizer.Recognizes recognizer P ->
         exists pipelineState : Type,

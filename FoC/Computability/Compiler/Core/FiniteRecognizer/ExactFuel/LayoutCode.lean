@@ -777,7 +777,8 @@ theorem codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
     (hlayout : LayoutCodeRunnerConstruction M) :
     CodeMachineConstruction M := by
   rcases hmaterializer with
-    ⟨materializerState, materializer, hmaterializer, hmaterializerStop⟩
+    ⟨materializerState, materializer, hmaterializer,
+      hmaterializerCanonical, hmaterializerStop⟩
   rcases hlayout with ⟨layoutState, layoutRunner, hlayoutRunner⟩
   let P : Word MachineCodeSymbol -> Prop :=
     fun output => TuringMachine.HaltsOnInput layoutRunner output
@@ -787,7 +788,8 @@ theorem codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
   rcases
       hcompose materializer layoutRunner
         (Layout.stageCodeToInitialLayoutCode M) P
-        hmaterializer hmaterializerStop hrecognizes with
+        hmaterializer hmaterializerCanonical hmaterializerStop
+        hrecognizes with
     ⟨pipelineState, pipeline, hpipeline⟩
   refine ⟨pipelineState, pipeline, ?_⟩
   intro tokens
