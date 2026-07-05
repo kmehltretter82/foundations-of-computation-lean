@@ -1882,6 +1882,40 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixErase
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchSpec
       eraser
 
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall L : DovetailLayout,
+      eraser.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          true L [])
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          true L)) ∧
+    (forall (L : DovetailLayout) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          true L (bit :: rest))
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          true L)) ∧
+    (forall L : DovetailLayout,
+      eraser.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          false L [])
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          false L)) ∧
+    forall (L : DovetailLayout) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          false L (bit :: rest))
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          false L)
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseSpec
+      eraser
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
@@ -1918,6 +1952,40 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction :
     Prop :=
   exists compactor : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseSpec compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] []) ∧
+    (forall (pad : Option Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (pad :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (pad :: padding))) ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) [])
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) [])) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (pad : Option Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (pad :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (pad :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseSpec
+      compactor
 
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
@@ -2385,6 +2453,27 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
   | cons bit rest =>
       exact hcons bit rest padding
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
+  rcases hcases with
+    ⟨compactor, hready, hnilNil, hnilCons, hconsNil,
+      hconsCons⟩
+  refine ⟨compactor, hready, ?_, ?_⟩
+  · intro padding
+    cases padding with
+    | nil =>
+        exact hnilNil
+    | cons pad padding =>
+        exact hnilCons pad padding
+  · intro bit rest padding
+    cases padding with
+    | nil =>
+        exact hconsNil bit rest
+    | cons pad padding =>
+        exact hconsCons bit rest pad padding
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_prefixEraser
     (hprefix :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :
@@ -2407,6 +2496,27 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
       hrun false L
         (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
           false L deletedTail)
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
+    (hcases :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
+  rcases hcases with
+    ⟨eraser, hready, hacceptNil, hacceptCons, hrejectNil,
+      hrejectCons⟩
+  refine ⟨eraser, hready, ?_, ?_⟩
+  · intro L deletedTail
+    cases deletedTail with
+    | nil =>
+        exact hacceptNil L
+    | cons bit rest =>
+        exact hacceptCons L bit rest
+  · intro L deletedTail
+    cases deletedTail with
+    | nil =>
+        exact hrejectNil L
+    | cons bit rest =>
+        exact hrejectCons L bit rest
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
     (hbranches :
@@ -2602,9 +2712,15 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
         hcases)
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+      selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
@@ -2619,9 +2735,15 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompacto
     countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
       selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
