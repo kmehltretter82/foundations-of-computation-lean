@@ -199,6 +199,79 @@ theorem branchingTape2ReadHeadCellAndReturnToSeparatorTarget_injective :
     unfold branchingTape2ReadHeadCellAndReturnToSeparatorTarget at h
     lia)
 
+theorem retargetReadExitState_eq_offset_add_of_ne_targets
+    {offset state : Nat} {localTarget target : Option Bool -> Nat}
+    (hnone : state ≠ localTarget none)
+    (hfalse : state ≠ localTarget (some false))
+    (htrue : state ≠ localTarget (some true)) :
+    MachineDescription.retargetReadExitState
+        offset localTarget target state =
+      offset + state := by
+  simp [MachineDescription.retargetReadExitState,
+    hnone, hfalse, htrue]
+
+theorem offsetReadExitRetargetDescription_runConfig_state_ge_offset_before_exit
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription}
+    (hfree :
+      forall exitCell : Option Bool,
+        D.TransitionFreeAt (localTarget exitCell))
+    (hinj : Function.Injective localTarget)
+    {observed : Option Bool} {n : Nat}
+    {c : MachineDescription.Configuration} {Tout : Tape Bool}
+    (hrun :
+      D.runConfig n c =
+        { state := localTarget observed, tape := Tout }) :
+    exists m : Nat,
+      m ≤ n ∧
+        (MachineDescription.offsetReadExitRetargetDescription
+            offset localTarget target D).runConfig m
+          (MachineDescription.readExitRetargetConfiguration
+            offset localTarget target c) =
+          MachineDescription.readExitRetargetConfiguration
+            offset localTarget target
+              { state := localTarget observed, tape := Tout } ∧
+        forall k : Nat,
+          k < m ->
+            offset ≤
+              ((MachineDescription.offsetReadExitRetargetDescription
+                  offset localTarget target D).runConfig k
+                (MachineDescription.readExitRetargetConfiguration
+                  offset localTarget target c)).state := by
+  rcases
+      firstReaches_transitionFreeAt_of_runConfig_eq
+        (hfree observed) hrun with
+    ⟨m, hmle, hmrun, hmfirst⟩
+  refine ⟨m, hmle, ?_, ?_⟩
+  · exact
+      MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+        hbelow hfree hmrun
+  · intro k hk
+    have hretarget :=
+      MachineDescription.offsetReadExitRetargetDescription_runConfig
+        (offset := offset) (localTarget := localTarget)
+        (target := target) hbelow hfree k c
+    rw [hretarget]
+    simp only [MachineDescription.readExitRetargetConfiguration]
+    have hnotExit :
+        forall cell : Option Bool,
+          (D.runConfig k c).state ≠ localTarget cell := by
+      intro cell
+      by_cases hcell : cell = observed
+      · subst cell
+        exact hmfirst k hk
+      · exact
+          runConfig_state_ne_transitionFreeAt_of_final_state_ne
+            (hfree cell) hmrun
+            (by
+              intro heq
+              exact hcell ((hinj heq).symm))
+            (Nat.le_of_lt hk)
+    rw [retargetReadExitState_eq_offset_add_of_ne_targets
+      (hnotExit none) (hnotExit (some false)) (hnotExit (some true))]
+    exact Nat.le_add_right offset (D.runConfig k c).state
+
 theorem find?_matches_none_of_sources_below
     {bound state : Nat} {cell : Option Bool}
     {transitions : List TransitionDescription}
