@@ -549,11 +549,801 @@ def structuredRawBoundaryRightEdgeEmitterSourceTapes
     (layout : Word Bool) : List (Tape Bool) :=
   [ Tape.input layout, Tape.blank, Tape.blank ]
 
-def structuredRawBoundaryRightEdgeEmitterOutputTape
-    (layout : Word Bool) : Tape Bool where
-  left := (encodedLayoutBits layout).reverse.map some
+def structuredRawBoundaryOutputTape
+    (bits : Word Bool) : Tape Bool where
+  left := bits.reverse.map some
   head := none
   right := []
+
+def structuredRawBoundaryRightEdgeEmitterOutputTape
+    (layout : Word Bool) : Tape Bool :=
+  structuredRawBoundaryOutputTape (encodedLayoutBits layout)
+
+private def structuredRawBoundarySourceScanTape
+    (processed remaining : Word Bool) : Tape Bool :=
+  tapeAtCells (processed.reverse.map some) (remaining.map some)
+
+private def structuredRawBoundaryCountMarkerTape
+    (markers : Nat) : Tape Bool :=
+  tapeAtCells (List.replicate markers (some true)) []
+
+private def structuredRawBoundaryLengthReadTape
+    (markers : Nat) : Tape Bool :=
+  Tape.move Direction.left
+    (structuredRawBoundaryCountMarkerTape markers)
+
+private def structuredRawBoundaryLengthDoneCounterTape
+    (markers : Nat) : Tape Bool :=
+  tapeAtCells []
+    (none ::
+      List.append (List.replicate markers (some true)) [none])
+
+private def structuredRawBoundaryLengthPhaseTape
+    (remaining emitted : Nat) : Tape Bool :=
+  match remaining with
+  | 0 => structuredRawBoundaryLengthDoneCounterTape emitted
+  | remaining' + 1 =>
+      tapeAtCells (List.replicate remaining' (some true))
+        (some true ::
+          List.append (List.replicate emitted (some true)) [none])
+
+private def structuredRawBoundaryLengthTickBits : Word Bool :=
+  [false, false, true, false]
+
+private def structuredRawBoundaryLengthDoneBits : Word Bool :=
+  [false, false, true, true]
+
+private def structuredRawBoundaryCellLoopSourceTape
+    (layout : Word Bool) : Tape Bool :=
+  tapeAtCells [none] (List.append (layout.map some) [none])
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_header
+    (source : Tape Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 4
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := [source, Tape.blank, Tape.blank] } =
+      { state := 10
+        tapes :=
+          [ source
+          , Tape.blank
+          , structuredRawBoundaryOutputTape
+              [false, false, false, false] ] } := by
+  cases source with
+  | mk left head right =>
+      cases head with
+      | none =>
+          simp [structuredRawBoundaryRightEdgeEmitterDescription,
+            structuredRawBoundaryHeaderRows,
+            structuredAnySourceReadRows,
+            structuredRawBoundaryWriteOutputRow,
+            structuredRawBoundaryOutputTape,
+            structuredWriteBit, Structured.Description.runConfig,
+            Structured.Description.stepConfig,
+            Structured.Description.lookupTransition,
+            Structured.Description.Matches,
+            Structured.TapeAction.stay,
+            Structured.TapeAction.apply, Structured.HeadMove.apply,
+            Tape.blank, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+      | some bit =>
+          cases bit <;>
+            simp [structuredRawBoundaryRightEdgeEmitterDescription,
+              structuredRawBoundaryHeaderRows,
+              structuredAnySourceReadRows,
+              structuredRawBoundaryWriteOutputRow,
+              structuredRawBoundaryOutputTape,
+              structuredWriteBit, Structured.Description.runConfig,
+              Structured.Description.stepConfig,
+              Structured.Description.lookupTransition,
+              Structured.Description.Matches,
+              Structured.TapeAction.stay,
+              Structured.TapeAction.apply, Structured.HeadMove.apply,
+              Tape.blank, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
+    (processed outputBits : Word Bool) (markers : Nat) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 1
+        { state := 10
+          tapes :=
+            [ structuredRawBoundarySourceScanTape processed []
+            , structuredRawBoundaryCountMarkerTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 20
+        tapes :=
+          [ structuredRawBoundarySourceScanTape processed []
+          , structuredRawBoundaryLengthReadTape markers
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    structuredRawBoundaryHeaderRows,
+    structuredAnySourceReadRows,
+    structuredRawBoundaryWriteOutputRow,
+    structuredRawBoundarySourceScanTape,
+    structuredRawBoundaryCountMarkerTape,
+    structuredRawBoundaryLengthReadTape,
+    structuredRawBoundaryOutputTape,
+    structuredRawBoundaryCountRow,
+    structuredRawBoundaryCountDoneRow,
+    structuredPreserve,
+    Structured.Description.runConfig,
+    Structured.Description.stepConfig,
+    Structured.Description.lookupTransition,
+    Structured.Description.Matches,
+    Structured.TapeAction.stay,
+    Structured.TapeAction.apply, Structured.HeadMove.apply,
+    Tape.read, Tape.move, Tape.moveLeft, tapeAtCells]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit
+    (processed rest outputBits : Word Bool) (markers : Nat)
+    (bit : Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 1
+        { state := 10
+          tapes :=
+            [ structuredRawBoundarySourceScanTape processed (bit :: rest)
+            , structuredRawBoundaryCountMarkerTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 10
+        tapes :=
+          [ structuredRawBoundarySourceScanTape
+              (List.append processed [bit]) rest
+          , structuredRawBoundaryCountMarkerTape markers.succ
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  cases bit <;>
+    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+      structuredRawBoundaryHeaderRows,
+      structuredAnySourceReadRows,
+      structuredRawBoundaryWriteOutputRow,
+      structuredRawBoundarySourceScanTape,
+      structuredRawBoundaryCountMarkerTape,
+      structuredRawBoundaryOutputTape,
+      structuredRawBoundaryCountRow,
+      structuredPreserve, structuredWriteBit,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight,
+      tapeAtCells, List.reverse_append, List.replicate_succ]
+  all_goals
+    cases List.map some rest <;> rfl
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
+    (processed remaining : Word Bool) (markers : Nat)
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (remaining.length + 1)
+        { state := 10
+          tapes :=
+            [ structuredRawBoundarySourceScanTape processed remaining
+            , structuredRawBoundaryCountMarkerTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 20
+        tapes :=
+          [ structuredRawBoundarySourceScanTape
+              (List.append processed remaining) []
+          , structuredRawBoundaryLengthReadTape
+              (markers + remaining.length)
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  induction remaining generalizing processed markers with
+  | nil =>
+      simpa using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
+          processed outputBits markers
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 =
+          1 + (rest.length + 1) by
+        simp [Nat.add_comm, Nat.add_left_comm]]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit]
+      simpa [List.append_assoc, Nat.succ_eq_add_one,
+        Nat.add_assoc, Nat.add_comm,
+        Nat.add_left_comm] using
+        ih (List.append processed [bit]) markers.succ
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count
+    (layout outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (layout.length + 1)
+        { state := 10
+          tapes :=
+            [ Tape.input layout
+            , Tape.blank
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 20
+        tapes :=
+          [ structuredRawBoundarySourceScanTape layout []
+          , structuredRawBoundaryLengthReadTape layout.length
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  cases layout with
+  | nil =>
+      simpa [structuredRawBoundarySourceScanTape,
+        structuredRawBoundaryCountMarkerTape,
+        structuredRawBoundaryLengthReadTape,
+        Tape.input, Tape.blank] using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
+          [] [] 0 outputBits
+  | cons bit rest =>
+      simpa [structuredRawBoundarySourceScanTape,
+        structuredRawBoundaryCountMarkerTape,
+        structuredRawBoundaryLengthReadTape,
+        Tape.input, Tape.blank] using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
+          [] (bit :: rest) 0 outputBits
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_marker
+    (remaining emitted : Nat) (sourceLeft : List (Option Bool))
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 4
+        { state := 20
+          tapes :=
+            [ tapeAtCells sourceLeft []
+            , structuredRawBoundaryLengthPhaseTape remaining.succ emitted
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 20
+        tapes :=
+          [ tapeAtCells sourceLeft []
+          , structuredRawBoundaryLengthPhaseTape remaining emitted.succ
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                structuredRawBoundaryLengthTickBits) ] } := by
+  cases remaining <;>
+    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+      structuredRawBoundaryHeaderRows,
+      structuredAnySourceReadRows,
+      structuredRawBoundaryWriteOutputRow,
+      structuredRawBoundaryLengthPhaseTape,
+      structuredRawBoundaryLengthDoneCounterTape,
+      structuredRawBoundaryOutputTape,
+      structuredRawBoundaryLengthTickBits,
+      structuredRawBoundaryCountRow,
+      structuredRawBoundaryCountDoneRow,
+      structuredRawBoundaryLengthMarkerRows,
+      structuredRawBoundaryLengthFinalRows,
+      structuredPreserve, structuredWriteBit,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
+      tapeAtCells, List.reverse_append, List.replicate_succ,
+      List.append_assoc]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_final
+    (emitted : Nat) (sourceLeft : List (Option Bool))
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 4
+        { state := 20
+          tapes :=
+            [ tapeAtCells sourceLeft []
+            , structuredRawBoundaryLengthPhaseTape 0 emitted
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 41
+        tapes :=
+          [ Tape.move Direction.left (tapeAtCells sourceLeft [])
+          , structuredRawBoundaryLengthDoneCounterTape emitted
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                structuredRawBoundaryLengthDoneBits) ] } := by
+  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    structuredRawBoundaryHeaderRows,
+    structuredAnySourceReadRows,
+    structuredRawBoundaryWriteOutputRow,
+    structuredRawBoundaryLengthPhaseTape,
+    structuredRawBoundaryLengthDoneCounterTape,
+    structuredRawBoundaryOutputTape,
+    structuredRawBoundaryLengthDoneBits,
+    structuredRawBoundaryCountRow,
+    structuredRawBoundaryCountDoneRow,
+    structuredRawBoundaryLengthMarkerRows,
+    structuredRawBoundaryLengthFinalRows,
+    structuredPreserve, structuredWriteBit,
+    Structured.Description.runConfig,
+    Structured.Description.stepConfig,
+    Structured.Description.lookupTransition,
+    Structured.Description.Matches,
+    Structured.TapeAction.stay,
+    Structured.TapeAction.apply, Structured.HeadMove.apply,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
+    tapeAtCells, List.reverse_append, List.append_assoc]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_loop
+    (remaining emitted : Nat) (sourceLeft : List (Option Bool))
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (4 * remaining + 4)
+        { state := 20
+          tapes :=
+            [ tapeAtCells sourceLeft []
+            , structuredRawBoundaryLengthPhaseTape remaining emitted
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 41
+        tapes :=
+          [ Tape.move Direction.left (tapeAtCells sourceLeft [])
+          , structuredRawBoundaryLengthDoneCounterTape
+              (emitted + remaining)
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  remaining)) ] } := by
+  induction remaining generalizing emitted outputBits with
+  | zero =>
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_length_final
+          emitted sourceLeft outputBits
+  | succ remaining ih =>
+      rw [show 4 * (remaining + 1) + 4 =
+          4 + (4 * remaining + 4) by
+        lia]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_length_marker]
+      simpa [structuredRawBoundaryLengthTickBits,
+        DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
+        List.append_assoc, Nat.succ_eq_add_one, Nat.add_assoc,
+        Nat.add_comm, Nat.add_left_comm] using
+        ih emitted.succ
+          (List.append outputBits structuredRawBoundaryLengthTickBits)
+
+private theorem structuredRawBoundaryLengthReadTape_eq_phaseTape
+    (markers : Nat) :
+    structuredRawBoundaryLengthReadTape markers =
+      structuredRawBoundaryLengthPhaseTape markers 0 := by
+  cases markers <;>
+    simp [structuredRawBoundaryLengthReadTape,
+      structuredRawBoundaryLengthPhaseTape,
+      structuredRawBoundaryCountMarkerTape,
+      structuredRawBoundaryLengthDoneCounterTape,
+      Tape.move, Tape.moveLeft, tapeAtCells, List.replicate_succ]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length
+    (layout outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (4 * layout.length + 4)
+        { state := 20
+          tapes :=
+            [ structuredRawBoundarySourceScanTape layout []
+            , structuredRawBoundaryLengthReadTape layout.length
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 41
+        tapes :=
+          [ Tape.move Direction.left
+              (structuredRawBoundarySourceScanTape layout [])
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  layout.length)) ] } := by
+  simpa [structuredRawBoundarySourceScanTape,
+    structuredRawBoundaryLengthReadTape_eq_phaseTape] using
+    structuredRawBoundaryRightEdgeEmitterDescription_run_length_loop
+      layout.length 0 (layout.reverse.map some) outputBits
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_header_count_length
+    (layout : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (4 + ((layout.length + 1) + (4 * layout.length + 4)))
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := [Tape.input layout, Tape.blank, Tape.blank] } =
+      { state := 41
+        tapes :=
+          [ Tape.move Direction.left
+              (structuredRawBoundarySourceScanTape layout [])
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryOutputTape
+              (List.append [false, false, false, false]
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  layout.length)) ] } := by
+  rw [Structured.Description.runConfig_add]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_header]
+  rw [Structured.Description.runConfig_add]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_count]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_length]
+
+private def structuredRawBoundaryRewindTapeRev
+    (remainingRev skipped : Word Bool) : Tape Bool :=
+  match remainingRev with
+  | [] =>
+      tapeAtCells []
+        (none :: List.append (skipped.map some) [none])
+  | bit :: rest =>
+      tapeAtCells (rest.map some)
+        (some bit :: List.append (skipped.map some) [none])
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit
+    (bit : Bool) (remainingRev skipped : Word Bool)
+    (markers : Nat) (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 1
+        { state := 41
+          tapes :=
+            [ structuredRawBoundaryRewindTapeRev
+                (bit :: remainingRev) skipped
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 41
+        tapes :=
+          [ structuredRawBoundaryRewindTapeRev
+              remainingRev (bit :: skipped)
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  cases bit <;> cases remainingRev <;>
+    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+      structuredRawBoundaryHeaderRows,
+      structuredAnySourceReadRows,
+      structuredRawBoundaryWriteOutputRow,
+      structuredRawBoundaryRewindTapeRev,
+      structuredRawBoundaryLengthDoneCounterTape,
+      structuredRawBoundaryOutputTape,
+      structuredRawBoundaryCountRow,
+      structuredRawBoundaryCountDoneRow,
+      structuredRawBoundaryLengthMarkerRows,
+      structuredRawBoundaryLengthFinalRows,
+      structuredRawBoundaryRewindRow,
+      structuredRawBoundaryRewindDoneRow,
+      structuredPreserve, structuredWriteBit,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveLeft,
+      tapeAtCells, List.append_assoc]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
+    (skipped : Word Bool) (markers : Nat) (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 1
+        { state := 41
+          tapes :=
+            [ structuredRawBoundaryRewindTapeRev [] skipped
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 50
+        tapes :=
+          [ structuredRawBoundaryCellLoopSourceTape skipped
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  cases skipped <;>
+    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+      structuredRawBoundaryHeaderRows,
+      structuredAnySourceReadRows,
+      structuredRawBoundaryWriteOutputRow,
+      structuredRawBoundaryRewindTapeRev,
+      structuredRawBoundaryCellLoopSourceTape,
+      structuredRawBoundaryLengthDoneCounterTape,
+      structuredRawBoundaryOutputTape,
+      structuredRawBoundaryCountRow,
+      structuredRawBoundaryCountDoneRow,
+      structuredRawBoundaryLengthMarkerRows,
+      structuredRawBoundaryLengthFinalRows,
+      structuredRawBoundaryRewindRow,
+      structuredRawBoundaryRewindDoneRow,
+      structuredPreserve, structuredWriteBit,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.move, Tape.moveRight,
+      tapeAtCells, List.append_assoc]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_loop
+    (remainingRev skipped : Word Bool) (markers : Nat)
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (remainingRev.length + 1)
+        { state := 41
+          tapes :=
+            [ structuredRawBoundaryRewindTapeRev remainingRev skipped
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 50
+        tapes :=
+          [ structuredRawBoundaryCellLoopSourceTape
+              (List.append remainingRev.reverse skipped)
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  induction remainingRev generalizing skipped with
+  | nil =>
+      simpa using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
+          skipped markers outputBits
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 =
+          1 + (rest.length + 1) by
+        simp [Nat.add_comm, Nat.add_left_comm]]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit]
+      simpa [List.append_assoc] using
+        ih (bit :: skipped)
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind
+    (layout outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (layout.length + 1)
+        { state := 41
+          tapes :=
+            [ Tape.move Direction.left
+                (structuredRawBoundarySourceScanTape layout [])
+            , structuredRawBoundaryLengthDoneCounterTape layout.length
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 50
+        tapes :=
+          [ structuredRawBoundaryCellLoopSourceTape layout
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  have hstart :
+      Tape.move Direction.left
+          (structuredRawBoundarySourceScanTape layout []) =
+        structuredRawBoundaryRewindTapeRev layout.reverse [] := by
+    cases hrev : layout.reverse <;>
+      simp [structuredRawBoundarySourceScanTape,
+        structuredRawBoundaryRewindTapeRev,
+        Tape.move, Tape.moveLeft, tapeAtCells, hrev]
+  rw [hstart]
+  simpa [List.length_reverse] using
+    structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_loop
+      layout.reverse [] layout.length outputBits
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_to_cell_loop
+    (layout : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        ((4 + ((layout.length + 1) + (4 * layout.length + 4))) +
+          (layout.length + 1))
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := [Tape.input layout, Tape.blank, Tape.blank] } =
+      { state := 50
+        tapes :=
+          [ structuredRawBoundaryCellLoopSourceTape layout
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryOutputTape
+              (List.append [false, false, false, false]
+                (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+                  layout.length)) ] } := by
+  rw [Structured.Description.runConfig_add]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_header_count_length]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_rewind]
+
+private def structuredRawBoundaryCellLoopTape
+    (processedRev remaining : Word Bool) : Tape Bool :=
+  tapeAtCells (List.append (processedRev.map some) [none])
+    (List.append (remaining.map some) [none])
+
+private def structuredRawBoundaryCellChunkBits (bit : Bool) : Word Bool :=
+  if bit then preservingCellPassOneBits else preservingCellPassZeroBits
+
+private theorem structuredRawBoundaryCellLoopSourceTape_eq_loopTape
+    (layout : Word Bool) :
+    structuredRawBoundaryCellLoopSourceTape layout =
+      structuredRawBoundaryCellLoopTape [] layout := by
+  rfl
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit
+    (bit : Bool) (processedRev rest : Word Bool)
+    (markers : Nat) (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 4
+        { state := 50
+          tapes :=
+            [ structuredRawBoundaryCellLoopTape
+                processedRev (bit :: rest)
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := 50
+        tapes :=
+          [ structuredRawBoundaryCellLoopTape
+              (bit :: processedRev) rest
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                (structuredRawBoundaryCellChunkBits bit)) ] } := by
+  cases bit <;> cases rest <;> (try cases ‹Bool›) <;>
+    simp [structuredRawBoundaryRightEdgeEmitterDescription,
+      structuredRawBoundaryHeaderRows,
+      structuredAnySourceReadRows,
+      structuredRawBoundaryWriteOutputRow,
+      structuredRawBoundaryCellLoopTape,
+      structuredRawBoundaryLengthDoneCounterTape,
+      structuredRawBoundaryOutputTape,
+      structuredRawBoundaryCellChunkBits,
+      preservingCellPassZeroBits,
+      preservingCellPassOneBits,
+      structuredRawBoundaryCountRow,
+      structuredRawBoundaryCountDoneRow,
+      structuredRawBoundaryLengthMarkerRows,
+      structuredRawBoundaryLengthFinalRows,
+      structuredRawBoundaryRewindRow,
+      structuredRawBoundaryRewindDoneRow,
+      structuredRawBoundaryCellLoopInitialRow,
+      structuredRawBoundaryCellLoopHaltRow,
+      structuredRawBoundaryCellEmitWriteRows,
+      structuredRawBoundaryCellEmitWriteRow,
+      structuredPreserve, structuredWriteBit,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight,
+      tapeAtCells, List.reverse_append]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
+    (processedRev : Word Bool) (markers : Nat) (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig 1
+        { state := 50
+          tapes :=
+            [ structuredRawBoundaryCellLoopTape processedRev []
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := structuredRawBoundaryRightEdgeEmitterDescription.halt
+        tapes :=
+          [ structuredRawBoundaryCellLoopTape processedRev []
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape outputBits ] } := by
+  simp [structuredRawBoundaryRightEdgeEmitterDescription,
+    structuredRawBoundaryHeaderRows,
+    structuredAnySourceReadRows,
+    structuredRawBoundaryWriteOutputRow,
+    structuredRawBoundaryCellLoopTape,
+    structuredRawBoundaryLengthDoneCounterTape,
+    structuredRawBoundaryOutputTape,
+    structuredRawBoundaryCountRow,
+    structuredRawBoundaryCountDoneRow,
+    structuredRawBoundaryLengthMarkerRows,
+    structuredRawBoundaryLengthFinalRows,
+    structuredRawBoundaryRewindRow,
+    structuredRawBoundaryRewindDoneRow,
+    structuredRawBoundaryCellLoopInitialRow,
+    structuredRawBoundaryCellLoopHaltRow,
+    structuredPreserve, structuredWriteBit,
+    Structured.Description.runConfig,
+    Structured.Description.stepConfig,
+    Structured.Description.lookupTransition,
+    Structured.Description.Matches,
+    Structured.TapeAction.stay,
+    Structured.TapeAction.apply, Structured.HeadMove.apply,
+    Tape.read, tapeAtCells]
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_loop
+    (processedRev remaining : Word Bool) (markers : Nat)
+    (outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (4 * remaining.length + 1)
+        { state := 50
+          tapes :=
+            [ structuredRawBoundaryCellLoopTape processedRev remaining
+            , structuredRawBoundaryLengthDoneCounterTape markers
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := structuredRawBoundaryRightEdgeEmitterDescription.halt
+        tapes :=
+          [ structuredRawBoundaryCellLoopTape
+              (List.append remaining.reverse processedRev) []
+          , structuredRawBoundaryLengthDoneCounterTape markers
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                (preservingCellPassCellBits remaining)) ] } := by
+  induction remaining generalizing processedRev outputBits with
+  | nil =>
+      simpa [preservingCellPassCellBits] using
+        structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
+          processedRev markers outputBits
+  | cons bit rest ih =>
+      rw [show 4 * (bit :: rest).length + 1 =
+          4 + (4 * rest.length + 1) by
+        simp
+        lia]
+      rw [Structured.Description.runConfig_add]
+      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit]
+      cases bit
+      · simpa [structuredRawBoundaryCellChunkBits,
+          preservingCellPassCellBits,
+          preservingCellPassZeroBits,
+          preservingCellPassOneBits,
+          List.append_assoc] using
+          ih (false :: processedRev)
+            (List.append outputBits
+              (structuredRawBoundaryCellChunkBits false))
+      · simpa [structuredRawBoundaryCellChunkBits,
+          preservingCellPassCellBits,
+          preservingCellPassZeroBits,
+          preservingCellPassOneBits,
+          List.append_assoc] using
+          ih (true :: processedRev)
+            (List.append outputBits
+              (structuredRawBoundaryCellChunkBits true))
+
+private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cells
+    (layout outputBits : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (4 * layout.length + 1)
+        { state := 50
+          tapes :=
+            [ structuredRawBoundaryCellLoopSourceTape layout
+            , structuredRawBoundaryLengthDoneCounterTape layout.length
+            , structuredRawBoundaryOutputTape outputBits ] } =
+      { state := structuredRawBoundaryRightEdgeEmitterDescription.halt
+        tapes :=
+          [ structuredRawBoundaryCellLoopTape layout.reverse []
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryOutputTape
+              (List.append outputBits
+                (preservingCellPassCellBits layout)) ] } := by
+  simpa [structuredRawBoundaryCellLoopSourceTape_eq_loopTape] using
+    structuredRawBoundaryRightEdgeEmitterDescription_run_cell_loop
+      [] layout layout.length outputBits
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run
+    (layout : Word Bool) :
+    structuredRawBoundaryRightEdgeEmitterDescription.runConfig
+        (10 * layout.length + 11)
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes layout } =
+      { state := structuredRawBoundaryRightEdgeEmitterDescription.halt
+        tapes :=
+          [ structuredRawBoundaryCellLoopTape layout.reverse []
+          , structuredRawBoundaryLengthDoneCounterTape layout.length
+          , structuredRawBoundaryRightEdgeEmitterOutputTape layout ] } := by
+  rw [show 10 * layout.length + 11 =
+      ((4 + ((layout.length + 1) + (4 * layout.length + 4))) +
+        (layout.length + 1)) +
+        (4 * layout.length + 1) by
+    lia]
+  rw [Structured.Description.runConfig_add]
+  simp [structuredRawBoundaryRightEdgeEmitterSourceTapes]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_to_cell_loop]
+  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_cells]
+  simp [structuredRawBoundaryRightEdgeEmitterOutputTape,
+    encodedLayoutBits_eq_header_length_cells,
+    encodeCodeSymbolAsInput]
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_empty_halts :
+    (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 11
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [] }).state =
+      structuredRawBoundaryRightEdgeEmitterDescription.halt := by
+  decide
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_empty_output :
+    Structured.Description.tapeAt
+        (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 11
+          { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+            tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [] }).tapes
+        2 =
+      structuredRawBoundaryRightEdgeEmitterOutputTape [] := by
+  decide
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_false_halts :
+    (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 21
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [false] }).state =
+      structuredRawBoundaryRightEdgeEmitterDescription.halt := by
+  decide
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_false_output :
+    Structured.Description.tapeAt
+        (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 21
+          { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+            tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [false] }).tapes
+        2 =
+      structuredRawBoundaryRightEdgeEmitterOutputTape [false] := by
+  decide
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_true_halts :
+    (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 21
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [true] }).state =
+      structuredRawBoundaryRightEdgeEmitterDescription.halt := by
+  decide
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_run_true_output :
+    Structured.Description.tapeAt
+        (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 21
+          { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+            tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes [true] }).tapes
+        2 =
+      structuredRawBoundaryRightEdgeEmitterOutputTape [true] := by
+  decide
 
 private theorem tapeAtCells_moveRight_moveLeft_append_headerBits
     (pref right : List (Option Bool)) :
