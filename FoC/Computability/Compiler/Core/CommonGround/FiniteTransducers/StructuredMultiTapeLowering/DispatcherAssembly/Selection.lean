@@ -754,6 +754,216 @@ theorem threeHeadReaderNoRowTransitions_deterministic
       (noRowJumpAllTransitions_deterministic D)
       (threeHeadReaderTransitions_noRowJumpAllTransitions_sourceDisjoint D)
 
+theorem tableMachine_deterministic_of_transitionListDeterministic
+    {stateCount start halt : Nat}
+    {transitions : List TransitionDescription}
+    (hdet : TransitionListDeterministic transitions) :
+    (tableMachine stateCount start halt transitions).Deterministic := by
+  simpa [tableMachine, MachineDescription.Deterministic] using hdet
+
+theorem noRowJumpTransitions_subset_noRowJumpAllTransitions
+    (D : Description) {state : Nat} {reads : ReadTuple3}
+    (hstate : state ∈ activeStateValues D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = none) :
+    forall t : TransitionDescription,
+      t ∈ noRowJumpTransitions D state reads ->
+        t ∈ noRowJumpAllTransitions D := by
+  intro t ht
+  unfold noRowJumpAllTransitions noRowJumpItems
+  rw [List.mem_flatMap]
+  refine ⟨(state, reads), ?_, ?_⟩
+  · rw [List.mem_flatMap]
+    refine ⟨state, hstate, ?_⟩
+    rw [List.mem_map]
+    refine ⟨reads, ?_, rfl⟩
+    -- The no-row item table ranges over all 27 read tuples; every concrete
+    -- tuple is one of those finite values by case analysis.
+    cases reads with
+    | mk read0 read1 read2 =>
+        cases read0 with
+        | none =>
+            cases read1 with
+            | none =>
+                cases read2 with
+                | none => simp [readTuple3Values, readOptionValues]
+                | some bit => cases bit <;> simp [readTuple3Values, readOptionValues]
+            | some bit1 =>
+                cases bit1 <;>
+                  cases read2 with
+                  | none => simp [readTuple3Values, readOptionValues]
+                  | some bit2 =>
+                      cases bit2 <;> simp [readTuple3Values, readOptionValues]
+        | some bit0 =>
+            cases bit0 <;>
+              cases read1 with
+              | none =>
+                  cases read2 with
+                  | none => simp [readTuple3Values, readOptionValues]
+                  | some bit2 =>
+                      cases bit2 <;> simp [readTuple3Values, readOptionValues]
+              | some bit1 =>
+                  cases bit1 <;>
+                    cases read2 with
+                    | none => simp [readTuple3Values, readOptionValues]
+                    | some bit2 =>
+                        cases bit2 <;> simp [readTuple3Values, readOptionValues]
+  · simpa [noRowJumpItemTransitions, hlookup] using ht
+
+theorem noRowJumpTransitions_sources_ne_ready
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    (hstate : state < D.stateCount) :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready state)
+      (noRowJumpTransitions D state reads) := by
+  intro t ht
+  rcases noRowJumpTransitions_source_cases D reads ht with
+    hsource | hscratch
+  · rw [hsource]
+    exact
+      (Nat.ne_of_lt (ready_lt_afterRead D reads hstate)).symm
+  · rw [hscratch]
+    exact
+      (Nat.ne_of_lt (ready_lt_noRowJumpScratch D reads hstate)).symm
+
+theorem noRowJumpItemTransitions_sources_ne_ready
+    (D : Description) {targetState : Nat} {item : Nat × ReadTuple3}
+    (htarget : targetState < D.stateCount)
+    (_hitem : item ∈ noRowJumpItems D) :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready targetState)
+      (noRowJumpItemTransitions D item) := by
+  intro t ht
+  rcases noRowJumpItemTransitions_source_cases D ht with
+    hsource | hscratch
+  · rw [hsource]
+    have hreadyLt :
+        StaticDispatcherState.ready targetState < D.stateCount := by
+      simpa [StaticDispatcherState.ready] using htarget
+    have hsourceGe :
+        D.stateCount ≤
+          StaticDispatcherState.afterRead D item.1 item.2 := by
+      unfold StaticDispatcherState.afterRead
+      lia
+    exact
+      (Nat.ne_of_lt
+        (Nat.lt_of_lt_of_le hreadyLt hsourceGe)).symm
+  · rw [hscratch]
+    have hreadyLt :
+        StaticDispatcherState.ready targetState < D.stateCount := by
+      simpa [StaticDispatcherState.ready] using htarget
+    have hscratchGe :
+        D.stateCount ≤ noRowJumpScratch D item.1 item.2 := by
+      have hbase : D.stateCount ≤ threeHeadReaderStateLimit D := by
+        exact structuredStateCount_le_threeHeadReaderStateLimit D
+      have hscratchBase :
+          threeHeadReaderStateLimit D ≤ noRowJumpScratch D item.1 item.2 :=
+        threeHeadReaderStateLimit_le_noRowJumpScratch D item.1 item.2
+      exact Nat.le_trans hbase hscratchBase
+    exact
+      (Nat.ne_of_lt
+        (Nat.lt_of_lt_of_le hreadyLt hscratchGe)).symm
+
+theorem noRowJumpAllTransitions_sources_ne_ready
+    (D : Description) {targetState : Nat}
+    (htarget : targetState < D.stateCount) :
+    TransitionSourcesNe
+      (StaticDispatcherState.ready targetState)
+      (noRowJumpAllTransitions D) := by
+  unfold noRowJumpAllTransitions
+  apply transitionSourcesNe_bind
+  intro item hitem
+  exact noRowJumpItemTransitions_sources_ne_ready
+    D htarget hitem
+
+theorem noRowJumpAllTransitions_runsFromExistingTapeSeparator
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    (hstate : state ∈ activeStateValues D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = none)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical 2 physical) :
+    RunsFromStateTapeEquiv
+      (tableMachine (noRowJumpLimit D)
+        (StaticDispatcherState.afterRead D state reads)
+        (StaticDispatcherState.ready state)
+        (noRowJumpAllTransitions D))
+      (StaticDispatcherState.afterRead D state reads)
+      (StaticDispatcherState.ready state)
+      physical
+      physical := by
+  exact
+    runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+      (small :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.afterRead D state reads)
+          (StaticDispatcherState.ready state)
+          (noRowJumpTransitions D state reads))
+      (big :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.afterRead D state reads)
+          (StaticDispatcherState.ready state)
+          (noRowJumpAllTransitions D))
+      (hsubset := by
+        intro t ht
+        simpa [tableMachine] using
+          noRowJumpTransitions_subset_noRowJumpAllTransitions
+            D hstate hlookup t ht)
+      (hdet :=
+        tableMachine_deterministic_of_transitionListDeterministic
+          (noRowJumpAllTransitions_deterministic D))
+      (hfree :=
+        tableMachine_transitionFreeAt_of_sourcesNe
+          (noRowJumpTransitions_sources_ne_ready
+            D reads (activeStateValues_mem_lt hstate)))
+      (by
+        simpa [tableMachine, noRowJumpTransitions] using
+          noRowJumpDescription_runsFromExistingTapeSeparator
+            D reads (activeStateValues_mem_lt hstate) hseparator)
+
+theorem threeHeadReaderNoRowTransitions_runsNoRowFromExistingTapeSeparator
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    (hstate : state ∈ activeStateValues D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = none)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical 2 physical) :
+    RunsFromStateTapeEquiv
+      (tableMachine (noRowJumpLimit D)
+        (StaticDispatcherState.ready D.start)
+        (StaticDispatcherState.ready D.halt)
+        (threeHeadReaderNoRowTransitions D))
+      (StaticDispatcherState.afterRead D state reads)
+      (StaticDispatcherState.ready state)
+      physical
+      physical := by
+  exact
+    runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+      (small :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.afterRead D state reads)
+          (StaticDispatcherState.ready state)
+          (noRowJumpAllTransitions D))
+      (big :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowTransitions D))
+      (hsubset := by
+        intro t ht
+        simp [tableMachine, threeHeadReaderNoRowTransitions,
+          noRowJumpAllTransitions] at ht ⊢
+        exact Or.inr ht)
+      (hdet :=
+        tableMachine_deterministic_of_transitionListDeterministic
+          (threeHeadReaderNoRowTransitions_deterministic D))
+      (hfree :=
+        tableMachine_transitionFreeAt_of_sourcesNe
+          (noRowJumpAllTransitions_sources_ne_ready
+            D (activeStateValues_mem_lt hstate)))
+      (noRowJumpAllTransitions_runsFromExistingTapeSeparator
+        D reads hstate hlookup hseparator)
+
 end StaticDispatcherReaderAssembly
 
 end MultiTapeLowering
