@@ -236,6 +236,237 @@ theorem oneStepOrSelf_eq_self_of_lookupTransitionFromReadTuple3_eq_none
       (stepConfig_eq_none_of_lookupTransitionFromReadTuple3_eq_none
         D hD hreads hlookup)
 
+theorem readTuple3Code_injective :
+    Function.Injective ReadTuple3.code := by
+  intro reads₀ reads₁ hcode
+  cases reads₀ with
+  | mk read0₀ read1₀ read2₀ =>
+      cases reads₁ with
+      | mk read0₁ read1₁ read2₁ =>
+          have hidx :=
+            boundedRemainderIndex_eq_of_eq
+              (slots := 9)
+              (state₀ := ReadTuple3.readCode read2₀)
+              (state₁ := ReadTuple3.readCode read2₁)
+              (code₀ := ReadTuple3.code01 read0₀ read1₀)
+              (code₁ := ReadTuple3.code01 read0₁ read1₁)
+              (ReadTuple3.code01_lt_nine read0₀ read1₀)
+              (ReadTuple3.code01_lt_nine read0₁ read1₁)
+              (by
+                unfold ReadTuple3.code01
+                unfold ReadTuple3.code at hcode
+                lia)
+          have h01 := code01_injective hidx.right
+          have h2 := readCode_injective hidx.left
+          cases h01.left
+          cases h01.right
+          cases h2
+          rfl
+
+def readTuple3Values : List ReadTuple3 :=
+  List.flatMap
+    (fun read0 =>
+      List.flatMap
+        (fun read1 =>
+          readOptionValues.map
+            (fun read2 : Option Bool =>
+              { read0 := read0, read1 := read1, read2 := read2 }))
+        readOptionValues)
+    readOptionValues
+
+def noRowJumpTransitions (D : Description) (state : Nat)
+    (reads : ReadTuple3) : List TransitionDescription :=
+  (noRowJumpDescription D state reads).transitions
+
+def noRowJumpItems (D : Description) : List (Nat × ReadTuple3) :=
+  List.flatMap
+    (fun state =>
+      readTuple3Values.map (fun reads => (state, reads)))
+    (activeStateValues D)
+
+def noRowJumpItemTransitions
+    (D : Description) (item : Nat × ReadTuple3) :
+    List TransitionDescription :=
+  if lookupTransitionFromReadTuple3 D item.1 item.2 = none then
+    noRowJumpTransitions D item.1 item.2
+  else
+    []
+
+def noRowJumpAllTransitions (D : Description) :
+    List TransitionDescription :=
+  List.flatMap (fun item => noRowJumpItemTransitions D item)
+    (noRowJumpItems D)
+
+theorem noRowJumpItems_mem_state_lt
+    {D : Description} {item : Nat × ReadTuple3}
+    (hitem : item ∈ noRowJumpItems D) :
+    item.1 < D.stateCount := by
+  unfold noRowJumpItems at hitem
+  rw [List.mem_flatMap] at hitem
+  rcases hitem with ⟨state, hstate, hitem⟩
+  rw [List.mem_map] at hitem
+  rcases hitem with ⟨reads, _hreads, hitem⟩
+  cases hitem
+  exact activeStateValues_mem_lt hstate
+
+theorem noRowJumpTransitions_source_cases
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    {t : TransitionDescription}
+    (ht : t ∈ noRowJumpTransitions D state reads) :
+    t.source = StaticDispatcherState.afterRead D state reads ∨
+      t.source = noRowJumpScratch D state reads := by
+  unfold noRowJumpTransitions noRowJumpDescription at ht
+  exact blankHeadBounceJumpDescription_transition_source_cases ht
+
+theorem noRowJumpTransitions_deterministic
+    (D : Description) {state : Nat} (reads : ReadTuple3)
+    (hstate : state < D.stateCount) :
+    TransitionListDeterministic
+      (noRowJumpTransitions D state reads) := by
+  have hsourceScratch :
+      StaticDispatcherState.afterRead D state reads ≠
+        noRowJumpScratch D state reads :=
+    Nat.ne_of_lt (afterRead_lt_noRowJumpScratch D reads hstate)
+  simpa [noRowJumpTransitions, noRowJumpDescription] using
+    blankHeadBounceJumpDescription_transitionListDeterministic
+      hsourceScratch
+
+theorem afterRead_lt_noRowJumpScratch_of_states
+    (D : Description) {afterState scratchState : Nat}
+    (afterReads scratchReads : ReadTuple3)
+    (hafterState : afterState < D.stateCount) :
+    StaticDispatcherState.afterRead D afterState afterReads <
+      noRowJumpScratch D scratchState scratchReads := by
+  have hafter :=
+    StaticDispatcherState.afterRead_lt_afterRead0Base
+      D afterReads hafterState
+  have hbase :
+      StaticDispatcherState.afterRead0Base D ≤
+        noRowJumpScratch D scratchState scratchReads := by
+    have h0 := StaticDispatcherState.afterRead0Base_le_readerStateLimit D
+    have h1 := readerStateLimit_le_threeHeadReaderStateLimit D
+    have h2 :
+        threeHeadReaderStateLimit D ≤
+          noRowJumpScratch D scratchState scratchReads := by
+      unfold noRowJumpScratch noRowJumpScratchBase
+      lia
+    exact Nat.le_trans h0 (Nat.le_trans h1 h2)
+  exact Nat.lt_of_lt_of_le hafter hbase
+
+theorem noRowJumpTransitions_sourceDisjoint_of_ne
+    (D : Description) {state₀ state₁ : Nat}
+    (reads₀ reads₁ : ReadTuple3)
+    (hstate₀ : state₀ < D.stateCount)
+    (hstate₁ : state₁ < D.stateCount)
+    (hne : (state₀, reads₀) ≠ (state₁, reads₁)) :
+    TransitionSourceDisjoint
+      (noRowJumpTransitions D state₀ reads₀)
+      (noRowJumpTransitions D state₁ reads₁) := by
+  intro t u ht hu hsource
+  have hpair :
+      state₀ = state₁ -> reads₀ = reads₁ -> False := by
+    intro hstate hreads
+    exact hne (by cases hstate; cases hreads; rfl)
+  have hleftCases :=
+    noRowJumpTransitions_source_cases D reads₀ ht
+  have hrightCases :=
+    noRowJumpTransitions_source_cases D reads₁ hu
+  rcases hleftCases with hleftSource | hleftScratch
+  · rcases hrightCases with hrightSource | hrightScratch
+    · have hinner :
+          27 * state₀ + reads₀.code =
+            27 * state₁ + reads₁.code := by
+        rw [hleftSource, hrightSource] at hsource
+        unfold StaticDispatcherState.afterRead at hsource
+        lia
+      have hidx :=
+        boundedRemainderIndex_eq_of_eq
+          (slots := 27)
+          (state₀ := state₀)
+          (state₁ := state₁)
+          (code₀ := reads₀.code)
+          (code₁ := reads₁.code)
+          (ReadTuple3.code_lt_twentySeven reads₀)
+          (ReadTuple3.code_lt_twentySeven reads₁)
+          hinner
+      exact hpair hidx.left (readTuple3Code_injective hidx.right)
+    · have hlt :=
+        afterRead_lt_noRowJumpScratch_of_states
+          D (afterState := state₀) (scratchState := state₁)
+          reads₀ reads₁ hstate₀
+      rw [hleftSource, hrightScratch] at hsource
+      lia
+  · rcases hrightCases with hrightSource | hrightScratch
+    · have hlt :=
+        afterRead_lt_noRowJumpScratch_of_states
+          D (afterState := state₁) (scratchState := state₀)
+          reads₁ reads₀ hstate₁
+      rw [hleftScratch, hrightSource] at hsource
+      lia
+    · have hinner :
+          27 * state₀ + reads₀.code =
+            27 * state₁ + reads₁.code := by
+        rw [hleftScratch, hrightScratch] at hsource
+        unfold noRowJumpScratch at hsource
+        lia
+      have hidx :=
+        boundedRemainderIndex_eq_of_eq
+          (slots := 27)
+          (state₀ := state₀)
+          (state₁ := state₁)
+          (code₀ := reads₀.code)
+          (code₁ := reads₁.code)
+          (ReadTuple3.code_lt_twentySeven reads₀)
+          (ReadTuple3.code_lt_twentySeven reads₁)
+          hinner
+      exact hpair hidx.left (readTuple3Code_injective hidx.right)
+
+theorem noRowJumpItemTransitions_deterministic
+    (D : Description) {item : Nat × ReadTuple3}
+    (hitem : item ∈ noRowJumpItems D) :
+    TransitionListDeterministic
+      (noRowJumpItemTransitions D item) := by
+  by_cases hlookup :
+      lookupTransitionFromReadTuple3 D item.1 item.2 = none
+  · simpa [noRowJumpItemTransitions, hlookup] using
+      noRowJumpTransitions_deterministic
+        D item.2 (noRowJumpItems_mem_state_lt hitem)
+  · simp [noRowJumpItemTransitions, hlookup, TransitionListDeterministic]
+
+theorem noRowJumpItemTransitions_sourceDisjoint_of_ne
+    (D : Description) {item₀ item₁ : Nat × ReadTuple3}
+    (hitem₀ : item₀ ∈ noRowJumpItems D)
+    (hitem₁ : item₁ ∈ noRowJumpItems D)
+    (hne : item₀ ≠ item₁) :
+    TransitionSourceDisjoint
+      (noRowJumpItemTransitions D item₀)
+      (noRowJumpItemTransitions D item₁) := by
+  by_cases hlookup₀ :
+      lookupTransitionFromReadTuple3 D item₀.1 item₀.2 = none
+  · by_cases hlookup₁ :
+        lookupTransitionFromReadTuple3 D item₁.1 item₁.2 = none
+    · simpa [noRowJumpItemTransitions, hlookup₀, hlookup₁] using
+        noRowJumpTransitions_sourceDisjoint_of_ne
+          D item₀.2 item₁.2
+          (noRowJumpItems_mem_state_lt hitem₀)
+          (noRowJumpItems_mem_state_lt hitem₁)
+          hne
+    · simp [noRowJumpItemTransitions, hlookup₀, hlookup₁,
+        TransitionSourceDisjoint]
+  · simp [noRowJumpItemTransitions, hlookup₀, TransitionSourceDisjoint]
+
+theorem noRowJumpAllTransitions_deterministic
+    (D : Description) :
+    TransitionListDeterministic (noRowJumpAllTransitions D) := by
+  unfold noRowJumpAllTransitions
+  apply transitionListDeterministic_flatMap
+  · intro item hitem
+    exact noRowJumpItemTransitions_deterministic D hitem
+  · intro item₀ hitem₀ item₁ hitem₁ hne
+    exact
+      noRowJumpItemTransitions_sourceDisjoint_of_ne
+        D hitem₀ hitem₁ hne
+
 end StaticDispatcherReaderAssembly
 
 end MultiTapeLowering
