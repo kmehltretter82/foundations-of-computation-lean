@@ -2078,6 +2078,101 @@ theorem realizes_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
 end StructuredSingletonGuardSlackRefreshContract
 
 /--
+Three-tape specialization of the structured-singleton refresh contract.
+
+The concrete lowerer currently targets supported three-tape read/write rows.
+This contract keeps that immediate machine obligation explicit while the
+fully list-polymorphic {name}`StructuredSingletonGuardSlackRefreshContract`
+remains available as the broader compatibility boundary.
+-/
+structure StructuredSingletonGuardSlackRefresh3Contract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  realizes :
+    forall {target0 target1 target2 : Tape Bool} {physical : Tape Bool},
+      StructuredSingletonGuardSlackEndpointShape
+        [target0, target1, target2] physical ->
+        refresh.HaltsFromTapeEquiv physical
+          (encodedGuardedStructuredTapes [target0, target1, target2])
+
+namespace StructuredSingletonGuardSlackRefresh3Contract
+
+theorem ofStructured
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh) :
+    StructuredSingletonGuardSlackRefresh3Contract refresh where
+  subroutineReady := hrefresh.subroutineReady
+  realizes := by
+    intro target0 target1 target2 physical hshape
+    exact hrefresh.realizes hshape
+
+theorem realizes_transitionPrimitiveSequence3_guardSlackEndpoint
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequence3 read0 read1 read2
+          action0 action1 action2)
+        [T, U, V] target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  have htarget :
+      target = [action0.apply T, action1.apply U, action2.apply V] := by
+    rw [hendpoint.left]
+    exact
+      applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3
+        read0 read1 read2 action0 action1 action2 T U V
+  have hshape :
+      StructuredSingletonGuardSlackEndpointShape
+        [action0.apply T, action1.apply U, action2.apply V] physical := by
+    rw [← htarget]
+    exact
+      structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequence3_guardSlackEndpoint
+        read0 read1 read2 action0 action1 action2 T U V hendpoint
+  rw [htarget]
+  exact hrefresh.realizes hshape
+
+theorem realizes_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (t : Transition)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2])
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequenceOfRow3 t) [T, U, V]
+        target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  have htarget :
+      target = [action0.apply T, action1.apply U, action2.apply V] := by
+    rw [hendpoint.left]
+    exact
+      applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+        t read0 read1 read2 action0 action1 action2 T U V
+        hreads hactions
+  have hshape :
+      StructuredSingletonGuardSlackEndpointShape
+        [action0.apply T, action1.apply U, action2.apply V] physical := by
+    rw [← htarget]
+    exact
+      structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
+        t read0 read1 read2 action0 action1 action2 T U V
+        hreads hactions hendpoint
+  rw [htarget]
+  exact hrefresh.realizes hshape
+
+end StructuredSingletonGuardSlackRefresh3Contract
+
+/--
 Selector for the concrete singleton action-refresh routine.
 
 This is still source-shape indexed, so it is not the final static refresh

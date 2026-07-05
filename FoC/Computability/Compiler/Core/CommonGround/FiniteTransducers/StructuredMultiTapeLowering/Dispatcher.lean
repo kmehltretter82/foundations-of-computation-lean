@@ -2603,6 +2603,19 @@ theorem SupportsReadWriteRows3.lookupFromReadTuple_lowersGuardedTransitionEquiv_
   hD.row_lowersGuardedTransitionEquiv_withStructuredSingletonRefresh
     (lookupTransitionFromReadTuple3_mem hlookup) hrefresh
 
+theorem SupportsReadWriteRows3.lookupFromReadTuple_lowersGuardedTransitionEquiv_withStructuredSingleton3Refresh
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+        t refresh) :=
+  hD.row_lowersGuardedTransitionEquiv_withStructuredSingleton3Refresh
+    (lookupTransitionFromReadTuple3_mem hlookup) hrefresh
+
 namespace StaticDispatcherState
 
 /-- Canonical physical ready state for a represented structured state. -/
