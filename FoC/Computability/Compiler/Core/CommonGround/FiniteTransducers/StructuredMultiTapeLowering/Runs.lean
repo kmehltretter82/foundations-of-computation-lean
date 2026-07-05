@@ -983,6 +983,52 @@ theorem loweredTraceDescriptionWithRefresh_simulates_initial_haltsFromConfig
     hD hrefresh hhalts
     (description_initial_tapes_length D inputs)
 
+theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_runConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : GuardSlackRefreshContract refresh)
+    (n : Nat) (inputs : List (Word Bool)) :
+    (loweredTraceDescriptionWithGuardSlackRefresh D refresh n
+      (D.initial inputs)).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+      (encodedGuardedStructuredTapes
+        (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_runConfig
+    hD hrefresh n (D.initial inputs)
+    (description_initial_tapes_length D inputs)
+
+theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsWithTapes
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : GuardSlackRefreshContract refresh)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      (loweredTraceDescriptionWithGuardSlackRefresh D refresh n
+        (D.initial inputs)).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+        (encodedGuardedStructuredTapes tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_haltsWithTapes
+    hD hrefresh hhalts
+    (description_initial_tapes_length D inputs)
+
+theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsFromConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : GuardSlackRefreshContract refresh)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (loweredTraceDescriptionWithGuardSlackRefresh D refresh n
+          (D.initial inputs)).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_haltsFromConfig
+    hD hrefresh hhalts
+    (description_initial_tapes_length D inputs)
+
 /-!
 ## Bundled refreshed route
 
@@ -1041,6 +1087,71 @@ theorem loweredTraceDescription_simulates_initial_haltsFromConfig
           (encodedGuardedStructuredTapes
             (D.runConfig n (D.initial inputs)).tapes) :=
   loweredTraceDescriptionWithRefresh_simulates_initial_haltsFromConfig
+    P.rows P.refresh.contract hhalts
+
+def loweredTraceDescriptionGuardSlack
+    (D : Description)
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D) :
+    Nat -> Configuration -> MachineDescription :=
+  loweredTraceDescriptionWithGuardSlackRefresh D P.refresh.machine
+
+theorem loweredTraceDescriptionGuardSlack_subroutineReady
+    {D : Description}
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D)
+    (n : Nat) (c : Configuration) :
+    (loweredTraceDescriptionGuardSlack D P n c).SubroutineReady :=
+  loweredTraceDescriptionWithGuardSlackRefresh_subroutineReady
+    P.rows P.refresh.contract n c
+
+theorem loweredTraceDescriptionGuardSlack_simulates_runConfig
+    {D : Description}
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D)
+    (n : Nat) (c : Configuration)
+    (hc : c.tapes.length = D.tapeCount) :
+    (loweredTraceDescriptionGuardSlack D P n c).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes (D.runConfig n c).tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_runConfig
+    P.rows P.refresh.contract n c hc
+
+theorem loweredTraceDescriptionGuardSlack_simulates_initial_runConfig
+    {D : Description}
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D)
+    (n : Nat) (inputs : List (Word Bool)) :
+    (loweredTraceDescriptionGuardSlack D P n
+      (D.initial inputs)).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+      (encodedGuardedStructuredTapes
+        (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_runConfig
+    P.rows P.refresh.contract n inputs
+
+theorem loweredTraceDescriptionGuardSlack_simulates_initial_haltsWithTapes
+    {D : Description}
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      (loweredTraceDescriptionGuardSlack D P n
+        (D.initial inputs)).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+        (encodedGuardedStructuredTapes tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsWithTapes
+    P.rows P.refresh.contract hhalts
+
+theorem loweredTraceDescriptionGuardSlack_simulates_initial_haltsFromConfig
+    {D : Description}
+    (P : StaticLoweringWithGuardSlackRefreshPrerequisites D)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (loweredTraceDescriptionGuardSlack D P n
+          (D.initial inputs)).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsFromConfig
     P.rows P.refresh.contract hhalts
 
 end MultiTapeLowering
