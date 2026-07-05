@@ -236,6 +236,34 @@ structure LogicalEquivGuardRefreshContract
           (encodedGuardedStructuredTapes logical)
 
 /--
+Bundled concrete guard-refresh normalizer for the refreshed endpoint route.
+
+This is the Milestone 1 gate for any claim of a fully concrete static lowerer:
+downstream code may stay parametric over this bundle, but a real lowered
+{name}`MachineDescription` must provide an actual machine and this contract.
+-/
+structure GuardRefreshNormalizer where
+  machine : MachineDescription
+  contract : LogicalEquivGuardRefreshContract machine
+
+namespace GuardRefreshNormalizer
+
+theorem subroutineReady (refresh : GuardRefreshNormalizer) :
+    refresh.machine.SubroutineReady :=
+  refresh.contract.subroutineReady
+
+theorem realizes
+    (refresh : GuardRefreshNormalizer)
+    (logical : List (Tape Bool)) (physical : Tape Bool)
+    (hphysical : StructuredLogicalEquivEncodedTapes logical physical) :
+    refresh.machine.HaltsFromTapeEquiv
+      physical
+      (encodedGuardedStructuredTapes logical) :=
+  refresh.contract.realizes logical physical hphysical
+
+end GuardRefreshNormalizer
+
+/--
 Canonical composition of a row machine with a guard-refresh normalizer.
 -/
 def guardedLogicalEquivThenRefreshDescription

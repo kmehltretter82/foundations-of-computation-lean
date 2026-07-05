@@ -445,6 +445,40 @@ structure StaticLoweredDescriptionWithRefresh
   stepLowering :
     StaticStepLoweringWithRefresh D machine stateMap
 
+/--
+Prerequisites for the refreshed static-lowering route.
+
+This bundle records the Milestone 1 endpoint-normalization decision: the
+static dispatcher route may be developed over a supplied
+{name}`GuardRefreshNormalizer`, but downstream users should not treat that as a
+closed concrete lowerer until this field is filled by an actual normalizer.
+-/
+structure StaticLoweringWithRefreshPrerequisites
+    (D : Description) : Type where
+  wellFormed : D.WellFormed
+  rows : SupportsReadWriteRows3 D
+  refresh : GuardRefreshNormalizer
+
+namespace StaticLoweringWithRefreshPrerequisites
+
+theorem refreshSubroutineReady
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D) :
+    P.refresh.machine.SubroutineReady :=
+  P.refresh.subroutineReady
+
+theorem refreshRealizes
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D)
+    (logical : List (Tape Bool)) (physical : Tape Bool)
+    (hphysical : StructuredLogicalEquivEncodedTapes logical physical) :
+    P.refresh.machine.HaltsFromTapeEquiv
+      physical
+      (encodedGuardedStructuredTapes logical) :=
+  P.refresh.realizes logical physical hphysical
+
+end StaticLoweringWithRefreshPrerequisites
+
 theorem StaticLoweredDescriptionWithRefresh.wellFormed
     {D : Description}
     (L : StaticLoweredDescriptionWithRefresh D) :
@@ -687,6 +721,66 @@ theorem loweredTraceDescriptionWithRefresh_simulates_initial_haltsFromConfig
   loweredTraceDescriptionWithRefresh_simulates_haltsFromConfig
     hD hrefresh hhalts
     (description_initial_tapes_length D inputs)
+
+/-!
+## Bundled refreshed route
+
+These wrappers use the Milestone 1 prerequisite bundle, so downstream callers
+cannot accidentally describe the refreshed route as concrete without supplying
+a guard-refresh normalizer.
+-/
+
+def loweredTraceDescription
+    (D : Description)
+    (P : StaticLoweringWithRefreshPrerequisites D) :
+    Nat -> Configuration -> MachineDescription :=
+  loweredTraceDescriptionWithRefresh D P.refresh.machine
+
+theorem loweredTraceDescription_subroutineReady
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D)
+    (n : Nat) (c : Configuration) :
+    (loweredTraceDescription D P n c).SubroutineReady :=
+  loweredTraceDescriptionWithRefresh_subroutineReady
+    P.rows P.refresh.contract n c
+
+theorem loweredTraceDescription_simulates_runConfig
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D)
+    (n : Nat) (c : Configuration)
+    (hc : c.tapes.length = D.tapeCount) :
+    (loweredTraceDescription D P n c).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes (D.runConfig n c).tapes) :=
+  loweredTraceDescriptionWithRefresh_simulates_runConfig
+    P.rows P.refresh.contract n c hc
+
+theorem loweredTraceDescription_simulates_initial_haltsWithTapes
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      (loweredTraceDescription D P n (D.initial inputs)).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+        (encodedGuardedStructuredTapes tapes) :=
+  loweredTraceDescriptionWithRefresh_simulates_initial_haltsWithTapes
+    P.rows P.refresh.contract hhalts
+
+theorem loweredTraceDescription_simulates_initial_haltsFromConfig
+    {D : Description}
+    (P : StaticLoweringWithRefreshPrerequisites D)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (loweredTraceDescription D P n
+          (D.initial inputs)).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithRefresh_simulates_initial_haltsFromConfig
+    P.rows P.refresh.contract hhalts
 
 end MultiTapeLowering
 end Structured
