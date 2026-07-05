@@ -349,9 +349,34 @@ def CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :
   exists projector : MachineDescription,
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorSpec projector
 
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
+    (hnormalizer :
+      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
+  rcases
+      structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
+        hnormalizer with
+    ⟨projector, hprojectorReady, hprojectorRun⟩
+  refine ⟨projector, hprojectorReady, ?_⟩
+  intro useAccept L deletedTail
+  exact
+    hprojectorRun
+      (structuredBoolWordRawBitsDecoderSourceTargetTape
+        (ParsedLayoutBits L)
+        (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
+        (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+          useAccept L deletedTail))
+      (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+        ((ParsedLayoutBits L).length + 1))
+      (postFieldDecodedPrefixScanSourceTape useAccept L)
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
+      (by
+        -- Remaining shared projection work: normalize selected guarded tape 2.
+        sorry)
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
     (hinitializer :
