@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.CursorBoundaryGap
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.FiniteMachineTactics
 
 set_option doc.verso true
 
@@ -166,10 +167,7 @@ theorem headSuffixGapShiftDescription_run_boundaryStep_none
       { state := headSuffixGapShiftPairState none none
         tape := tapeAtCells (none :: left) right } := by
   cases right <;>
-    simp [headSuffixGapShiftDescription, MachineDescription.runConfig,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, transition, tapeAtCells, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight]
+    machine_step [headSuffixGapShiftDescription]
 
 theorem headSuffixGapShiftDescription_run_boundaryStep_bit
     (bit : Bool) (left right : List (Option Bool)) :
@@ -179,10 +177,7 @@ theorem headSuffixGapShiftDescription_run_boundaryStep_bit
       { state := headSuffixGapShiftPairState none (some bit)
         tape := tapeAtCells (none :: left) right } := by
   cases bit <;> cases right <;>
-    simp [headSuffixGapShiftDescription, MachineDescription.runConfig,
-      MachineDescription.stepConfig, MachineDescription.lookupTransition,
-      MachineDescription.Matches, transition, tapeAtCells, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight]
+    machine_step [headSuffixGapShiftDescription]
 
 theorem headSuffixGapShiftDescription_run_boundaryStep
     (current : Option Bool) (left right : List (Option Bool)) :
@@ -756,7 +751,7 @@ theorem headSuffixGapShiftDescription_run_pairLoop
             tail } := by
   induction cells generalizing first second left with
   | nil =>
-      simp [MachineDescription.runConfig, headSuffixGapShiftLoopPair,
+      machine_run [headSuffixGapShiftLoopPair,
         headSuffixGapShiftLoopWrittenRev]
   | cons current rest ih =>
       rcases hactive with ⟨hstepActive, hrestActive⟩
@@ -1018,7 +1013,7 @@ theorem headSuffixGapShiftDescription_run_payloadScan
             (none :: suffixTail) } := by
   induction bits generalizing processed with
   | nil =>
-      simp [MachineDescription.runConfig]
+      machine_run []
   | cons bit rest ih =>
       rw [show (bit :: rest).length = 1 + rest.length by
         simp [Nat.add_comm]]
@@ -1300,11 +1295,7 @@ theorem headSuffixGapOpeningRewindDescription_run_openingFinish
           tape := tapeAtCells [] (none :: rightTail) } =
       { state := headSuffixGapOpeningRewindHalt
         tape := tapeAtCells [none, none, none] (none :: rightTail) } := by
-  simp [headSuffixGapOpeningRewindDescription,
-    MachineDescription.runConfig, MachineDescription.stepConfig,
-    MachineDescription.lookupTransition, MachineDescription.Matches,
-    transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-    Tape.moveLeft, Tape.moveRight]
+  machine_step [headSuffixGapOpeningRewindDescription]
 
 theorem headSuffixGapOpeningRewindDescription_run_payloadScan
     (leftStack : Word Bool) (current : Bool)
@@ -1325,11 +1316,7 @@ theorem headSuffixGapOpeningRewindDescription_run_payloadScan
   induction leftStack generalizing current rightTail with
   | nil =>
       cases current <;> cases rightTail <;>
-        simp [headSuffixGapOpeningRewindDescription,
-          MachineDescription.runConfig, MachineDescription.stepConfig,
-          MachineDescription.lookupTransition, MachineDescription.Matches,
-          transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-          Tape.moveLeft]
+        machine_step [headSuffixGapOpeningRewindDescription]
   | cons next rest ih =>
       rw [show (next :: rest).length + 1 =
         1 + (rest.length + 1) by
@@ -1349,11 +1336,7 @@ theorem headSuffixGapOpeningRewindDescription_run_payloadScan
                   (List.append (rest.map some) [none])
                   (some next :: some current :: rightTail) } := by
         cases next <;> cases current <;> cases rightTail <;>
-          simp [headSuffixGapOpeningRewindDescription,
-            MachineDescription.runConfig, MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-            Tape.moveLeft]
+          machine_step [headSuffixGapOpeningRewindDescription]
       rw [hstep]
       simpa [List.reverse_cons, List.map_append, List.append_assoc]
         using ih next (some current :: rightTail)
@@ -1437,11 +1420,7 @@ theorem headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
             { state := headSuffixGapOpeningRewindDescription.start
               tape := tapeAtCells [] (none :: some current :: rightTail) } := by
         cases current <;> cases rightTail <;>
-          simp [headSuffixGapOpeningRewindDescription,
-            MachineDescription.runConfig, MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-            Tape.moveLeft]
+          machine_step [headSuffixGapOpeningRewindDescription]
       rw [hstep]
       simpa using
         headSuffixGapOpeningRewindDescription_run_openingFinish
@@ -1465,11 +1444,7 @@ theorem headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
                   (List.append (rest.map some) [none])
                   (some next :: some current :: rightTail) } := by
         cases next <;> cases current <;> cases rightTail <;>
-          simp [headSuffixGapOpeningRewindDescription,
-            MachineDescription.runConfig, MachineDescription.stepConfig,
-            MachineDescription.lookupTransition, MachineDescription.Matches,
-            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-            Tape.moveLeft]
+          machine_step [headSuffixGapOpeningRewindDescription]
       rw [hstep]
       simpa [List.reverse_cons, List.map_append, List.append_assoc]
         using
@@ -1492,11 +1467,7 @@ theorem headSuffixGapOpeningRewindDescription_run_threeBlankGap
             (List.append (leftStack.map some) [none])
             (some current :: none :: none :: none :: rightTail) } := by
   cases current <;> cases leftStack <;> cases rightTail <;>
-    simp [headSuffixGapOpeningRewindDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft]
+    machine_step [headSuffixGapOpeningRewindDescription]
 
 theorem headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish
     (leftStack : Word Bool) (current : Bool)
