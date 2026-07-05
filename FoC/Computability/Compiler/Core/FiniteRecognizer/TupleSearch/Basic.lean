@@ -121,6 +121,47 @@ theorem boundedNestedPairEnumeratorSpec_of_hiddenFuel
       ⟨inner, outer, selectedFuel,
         hinner, houter, hselectedFuel⟩
 
+/--
+Unbounded search over a generated inner parameter and an exact selected-machine
+fuel.  The {lit}`outer` witness is the selected machine's exact run fuel.
+-/
+def UnboundedNestedExactFuelSearchSpec
+    {symbol : Type uSymbol}
+    {searcherState : Type uSearcher}
+    {selectedState : Type uSelected}
+    (searcher : TuringMachine symbol searcherState)
+    (selected : TuringMachine symbol selectedState)
+    (innerBuild : Word symbol -> Nat -> Word symbol) : Prop :=
+  forall input : Word symbol,
+    TuringMachine.HaltsOnInput searcher input <->
+      exists inner : Nat,
+      exists outer : Nat,
+        TuringMachine.HaltsOnInputIn selected outer
+          (innerBuild input inner)
+
+/--
+Bounded search over generated inner inputs and exact selected-machine fuels.
+The public budget bounds the generated {lit}`inner` parameter and the exact
+{lit}`outer` fuel witness.
+-/
+def BoundedNestedExactFuelSearchSpec
+    {symbol : Type uSymbol}
+    {searcherState : Type uSearcher}
+    {selectedState : Type uSelected}
+    (searcher : TuringMachine symbol searcherState)
+    (selected : TuringMachine symbol selectedState)
+    (outerBuild : Word symbol -> Nat -> Word symbol)
+    (innerBuild : Word symbol -> Nat -> Word symbol) : Prop :=
+  forall input : Word symbol,
+  forall budget : Nat,
+    TuringMachine.HaltsOnInput searcher (outerBuild input budget) <->
+      exists inner : Nat,
+      exists outer : Nat,
+        inner <= budget /\
+          outer <= budget /\
+          TuringMachine.HaltsOnInputIn selected outer
+            (innerBuild input inner)
+
 def GeneratedUnboundedHiddenFuelPairSpec
     {searcherState : Type uSearcher}
     {selectedState : Type uSelected}
@@ -137,6 +178,22 @@ def GeneratedBoundedHiddenFuelPairSpec
   BoundedHiddenFuelPairSpec
     searcher selected
     GeneratedCode.stageCode GeneratedCode.nestedStageCode
+
+def GeneratedUnboundedNestedExactFuelSearchSpec
+    {searcherState : Type uSearcher}
+    {selectedState : Type uSelected}
+    (searcher : TuringMachine MachineCodeSymbol searcherState)
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  UnboundedNestedExactFuelSearchSpec
+    searcher selected GeneratedCode.stageCode
+
+def GeneratedBoundedNestedExactFuelSearchSpec
+    {searcherState : Type uSearcher}
+    {selectedState : Type uSelected}
+    (searcher : TuringMachine MachineCodeSymbol searcherState)
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  BoundedNestedExactFuelSearchSpec
+    searcher selected GeneratedCode.stageCode GeneratedCode.stageCode
 
 theorem generatedNestedPairEnumeratorSpec_of_hiddenFuel
     {searcherState : Type uSearcher}

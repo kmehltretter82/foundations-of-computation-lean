@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.GeneratedCode
 
 set_option doc.verso true
@@ -446,12 +447,8 @@ def CodePrefixNestedExactFuelSearchConstruction
     (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
-    forall input : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput searcher input <->
-        exists inner : Nat,
-        exists outer : Nat,
-          TuringMachine.HaltsOnInputIn M outer
-            (CodePrefixRecognizerStageCode input inner)
+    FiniteRecognizer.TupleSearch.UnboundedNestedExactFuelSearchSpec
+      searcher M CodePrefixRecognizerStageCode
 
 /--
 Nested exact-fuel search can be reduced to the indexed copy of the wrapped

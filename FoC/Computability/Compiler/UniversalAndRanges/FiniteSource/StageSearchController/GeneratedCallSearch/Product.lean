@@ -27,14 +27,9 @@ def CodePrefixExactFuelProductRunnerConstruction
     (right : TuringMachine MachineCodeSymbol rightState) : Prop :=
   exists selectedState : Type,
   exists selected : TuringMachine MachineCodeSymbol selectedState,
-    forall input : Word MachineCodeSymbol,
-    forall leftFuel : Nat,
-    forall rightFuel : Nat,
-      TuringMachine.HaltsOnInput selected
-          (NestedCodePrefixRecognizerStageCode
-            input rightFuel leftFuel) <->
-        TuringMachine.HaltsOnInputIn left leftFuel input ∧
-          TuringMachine.HaltsOnInputIn right rightFuel input
+    FiniteRecognizer.ProductExactFuelRunnerSpec selected left right
+      (fun input inner outer =>
+        NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
 Concrete-state product exact-fuel runner target.  This is the remaining

@@ -396,16 +396,9 @@ def CodePrefixBoundedNestedExactFuelSearchConstruction
     (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
-    forall input : Word MachineCodeSymbol,
-    forall budget : Nat,
-      TuringMachine.HaltsOnInput searcher
-          (CodePrefixRecognizerStageCode input budget) <->
-        exists inner : Nat,
-        exists outer : Nat,
-          inner ≤ budget ∧
-            outer ≤ budget ∧
-            TuringMachine.HaltsOnInputIn M outer
-              (CodePrefixRecognizerStageCode input inner)
+    FiniteRecognizer.TupleSearch.BoundedNestedExactFuelSearchSpec
+      searcher M CodePrefixRecognizerStageCode
+      CodePrefixRecognizerStageCode
 
 /--
 The bounded nested exact-fuel search construction is likewise stable when the
