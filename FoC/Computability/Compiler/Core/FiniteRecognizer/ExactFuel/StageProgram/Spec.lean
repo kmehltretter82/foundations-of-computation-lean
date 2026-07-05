@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.GeneratedCode
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Runner
 
 set_option doc.verso true
@@ -23,19 +24,19 @@ namespace StageProgram
 def stageCode
     (input : Word MachineCodeSymbol) (fuel : Nat) :
     Word MachineCodeSymbol :=
-  MachineDescription.encodeNatAppend fuel input
+  GeneratedCode.stageCode input fuel
 
 theorem stageCode_decodeNat
     (input : Word MachineCodeSymbol) (fuel : Nat) :
     MachineDescription.decodeNat (stageCode input fuel) =
       some (fuel, input) :=
-  MachineDescription.decodeNat_encodeNatAppend fuel input
+  GeneratedCode.stageCode_decodeNat input fuel
 
 theorem stageCode_eq_of_decodeNat
     {tokens input : Word MachineCodeSymbol} {fuel : Nat}
     (h : MachineDescription.decodeNat tokens = some (fuel, input)) :
     tokens = stageCode input fuel :=
-  MachineDescription.decodeNat_eq_some_encodeNatAppend h
+  GeneratedCode.stageCode_eq_of_decodeNat h
 
 /--
 Parsed payload for the normalized exact-fuel staged program.

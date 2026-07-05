@@ -145,7 +145,8 @@ theorem unaryParserMachine_haltsFromIn_stageCode
           ?_, rfl⟩
       exact TuringMachine.ComputesIn.succ
         (by
-          simpa [stageCode, MachineDescription.encodeNatAppend,
+          simpa [stageCode, GeneratedCode.stageCode,
+            MachineDescription.encodeNatAppend,
             MachineDescription.encodeNat] using
             unaryParserMachine_step_done leftRev input)
         (TuringMachine.ComputesIn.zero _)
@@ -155,7 +156,8 @@ theorem unaryParserMachine_haltsFromIn_stageCode
       refine ⟨final, ?_, hhalt⟩
       exact TuringMachine.ComputesIn.succ
         (by
-          simpa [stageCode, MachineDescription.encodeNatAppend,
+          simpa [stageCode, GeneratedCode.stageCode,
+            MachineDescription.encodeNatAppend,
             MachineDescription.encodeNat] using
             unaryParserMachine_step_tick leftRev
               (stageCode input fuel))
@@ -229,12 +231,13 @@ theorem unaryParserMachine_haltsFromIn_only_stageCode
                                 using hrest
                           rcases ih htail with ⟨fuel, input, hsuffix⟩
                           exact ⟨fuel + 1, input, by
-                            simp [stageCode,
+                            simp [stageCode, GeneratedCode.stageCode,
                               MachineDescription.encodeNatAppend,
                               MachineDescription.encodeNat, hsuffix]⟩
               | done =>
                   exact ⟨0, suffix, by
-                    simp [stageCode, MachineDescription.encodeNatAppend,
+                    simp [stageCode, GeneratedCode.stageCode,
+                      MachineDescription.encodeNatAppend,
                       MachineDescription.encodeNat]⟩
               | blank =>
                   cases hstep with

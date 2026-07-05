@@ -59,6 +59,225 @@ def layoutStepCode {stateCount : Nat}
           | some L' => some (Layout.encode L')
       | _ :: _ => none
 
+def layoutFuelLoopFrom {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    Nat -> Layout stateCount -> Option (Layout stateCount)
+  | 0, L => some L
+  | fuel + 1, L =>
+      match Layout.step M L with
+      | none => none
+      | some L' => layoutFuelLoopFrom M fuel L'
+
+def layoutFuelLoopCode {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match Layout.decode stateCount tokens with
+  | none => none
+  | some (L, suffix) =>
+      match suffix with
+      | [] =>
+          match layoutFuelLoopFrom M L.fuel L with
+          | none => none
+          | some final =>
+              if final.state = M.halt then
+                some ([] : Word MachineCodeSymbol)
+              else
+                none
+      | _ :: _ => none
+
+def layoutCodeRunPrimitive {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    MachineDescription.TapeCodePrimitive where
+  transform := layoutCodeRun M
+
+def layoutStepCodePrimitive {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    MachineDescription.TapeCodePrimitive where
+  transform := layoutStepCode M
+
+def layoutFuelLoopCodePrimitive {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    MachineDescription.TapeCodePrimitive where
+  transform := layoutFuelLoopCode M
+
+/--
+Executable primitive contract for the protected layout recognizer.  A concrete
+finite table realizing this primitive is exactly the remaining layout-code
+machine leaf.
+-/
+def LayoutCodeRunPrimitiveSpec {stateCount : Nat}
+    (primitive : MachineDescription.TapeCodePrimitive)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  primitive.Realizes (layoutCodeRun M)
+
+/--
+Executable primitive contract for one protected layout step.  This isolates
+the future finite stepper from the outer fuel-induction recognizer.
+-/
+def LayoutStepCodePrimitiveSpec {stateCount : Nat}
+    (primitive : MachineDescription.TapeCodePrimitive)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  primitive.Realizes (layoutStepCode M)
+
+def LayoutFuelLoopCodePrimitiveSpec {stateCount : Nat}
+    (primitive : MachineDescription.TapeCodePrimitive)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  primitive.Realizes (layoutFuelLoopCode M)
+
+theorem layoutCodeRunPrimitive_realizes {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    LayoutCodeRunPrimitiveSpec (layoutCodeRunPrimitive M) M := by
+  intro tokens
+  rfl
+
+theorem layoutStepCodePrimitive_realizes {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    LayoutStepCodePrimitiveSpec (layoutStepCodePrimitive M) M := by
+  intro tokens
+  rfl
+
+theorem layoutFuelLoopCodePrimitive_realizes {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    LayoutFuelLoopCodePrimitiveSpec (layoutFuelLoopCodePrimitive M) M := by
+  intro tokens
+  rfl
+
+theorem layoutFuelLoopFrom_accepts_iff {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) (fuel : Nat)
+    (hfuel : L.fuel = fuel) :
+    (exists final : Layout stateCount,
+      layoutFuelLoopFrom M fuel L = some final /\
+        TuringMachine.Halted M final.config) <->
+      Layout.accepts M L := by
+  induction fuel generalizing L with
+  | zero =>
+      cases L with
+      | mk layoutFuel state left head right =>
+          cases hfuel
+          constructor
+          · intro h
+            rcases h with ⟨final, hloop, hhalt⟩
+            simp [layoutFuelLoopFrom] at hloop
+            cases hloop
+            exact
+              (Layout.accepts_zero_iff M
+                ({ fuel := 0
+                   state := state
+                   left := left
+                   head := head
+                   right := right } : Layout stateCount)).mpr
+                hhalt
+          · intro haccepts
+            refine
+              ⟨{ fuel := 0
+                 state := state
+                 left := left
+                 head := head
+                 right := right }, rfl, ?_⟩
+            exact
+              (Layout.accepts_zero_iff M
+                ({ fuel := 0
+                   state := state
+                   left := left
+                   head := head
+                   right := right } : Layout stateCount)).mp
+                haccepts
+  | succ fuel ih =>
+      constructor
+      · intro h
+        rcases h with ⟨final, hloop, hhalt⟩
+        cases hstep : Layout.step M L with
+        | none =>
+            simp [layoutFuelLoopFrom, hstep] at hloop
+        | some L' =>
+            have hloop' :
+                layoutFuelLoopFrom M fuel L' = some final := by
+              simpa [layoutFuelLoopFrom, hstep] using hloop
+            have hfuel' : L'.fuel = fuel :=
+              Layout.step_fuel_eq_of_eq_some hfuel hstep
+            have haccepts' : Layout.accepts M L' :=
+              (ih L' hfuel').mp ⟨final, hloop', hhalt⟩
+            exact
+              (Layout.accepts_succ_iff_step
+                (M := M) L fuel hfuel).mpr
+                ⟨L', hstep, haccepts'⟩
+      · intro haccepts
+        rcases
+            (Layout.accepts_succ_iff_step
+              (M := M) L fuel hfuel).mp haccepts with
+          ⟨L', hstep, haccepts'⟩
+        have hfuel' : L'.fuel = fuel :=
+          Layout.step_fuel_eq_of_eq_some hfuel hstep
+        rcases (ih L' hfuel').mpr haccepts' with
+          ⟨final, hloop', hhalt⟩
+        refine ⟨final, ?_, hhalt⟩
+        simp [layoutFuelLoopFrom, hstep, hloop']
+
+theorem layoutFuelLoopCode_encode_eq_some_iff {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) :
+    layoutFuelLoopCode M (Layout.encode L) =
+        some ([] : Word MachineCodeSymbol) <->
+      Layout.accepts M L := by
+  constructor
+  · intro hloopCode
+    unfold layoutFuelLoopCode at hloopCode
+    simp [Layout.decode_encode] at hloopCode
+    cases hloop : layoutFuelLoopFrom M L.fuel L with
+    | none =>
+        simp [hloop] at hloopCode
+    | some final =>
+        by_cases hstate : final.state = M.halt
+        · have hhalt : TuringMachine.Halted M final.config := by
+            simpa [TuringMachine.Halted, Layout.config] using hstate
+          exact
+            (layoutFuelLoopFrom_accepts_iff M L L.fuel rfl).mp
+              ⟨final, hloop, hhalt⟩
+        · simp [hloop, hstate] at hloopCode
+  · intro haccepts
+    rcases
+        (layoutFuelLoopFrom_accepts_iff M L L.fuel rfl).mpr
+          haccepts with
+      ⟨final, hloop, hhalt⟩
+    have hstate : final.state = M.halt := by
+      simpa [TuringMachine.Halted, Layout.config] using hhalt
+    simp [layoutFuelLoopCode, Layout.decode_encode, hloop, hstate]
+    rfl
+
+theorem layoutFuelLoopCodePrimitive_encode_eq_some_iff
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) :
+    (layoutFuelLoopCodePrimitive M).transform (Layout.encode L) =
+        some ([] : Word MachineCodeSymbol) <->
+      Layout.accepts M L := by
+  exact layoutFuelLoopCode_encode_eq_some_iff M L
+
+theorem layoutFuelLoopCode_encode_initial_eq_some_iff
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    layoutFuelLoopCode M
+        (Layout.encode (Layout.initial M input fuel)) =
+        some ([] : Word MachineCodeSymbol) <->
+      TuringMachine.HaltsOnInputIn M fuel input := by
+  exact Iff.trans
+    (layoutFuelLoopCode_encode_eq_some_iff M
+      (Layout.initial M input fuel))
+    (Layout.accepts_initial_iff_haltsOnInputIn M input fuel)
+
+theorem layoutFuelLoopCodePrimitive_encode_initial_eq_some_iff
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    (layoutFuelLoopCodePrimitive M).transform
+        (Layout.encode (Layout.initial M input fuel)) =
+        some ([] : Word MachineCodeSymbol) <->
+      TuringMachine.HaltsOnInputIn M fuel input := by
+  exact layoutFuelLoopCode_encode_initial_eq_some_iff M input fuel
+
 theorem layoutCodeRun_eq_some_iff_decode {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (tokens : Word MachineCodeSymbol) :
@@ -95,6 +314,64 @@ theorem layoutCodeRun_eq_some_iff_decode {stateCount : Nat}
     simp [hhalt]
     rfl
 
+theorem layoutFuelLoopCode_eq_some_iff_decode {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens : Word MachineCodeSymbol) :
+    layoutFuelLoopCode M tokens = some ([] : Word MachineCodeSymbol) <->
+      exists L : Layout stateCount,
+        Layout.decode stateCount tokens = some (L, []) /\
+          Layout.accepts M L := by
+  constructor
+  · intro hloopCode
+    unfold layoutFuelLoopCode at hloopCode
+    cases hdecode : Layout.decode stateCount tokens with
+    | none =>
+        rw [hdecode] at hloopCode
+        cases hloopCode
+    | some decoded =>
+        rcases decoded with ⟨L, suffix⟩
+        cases suffix with
+        | nil =>
+            cases hloop : layoutFuelLoopFrom M L.fuel L with
+            | none =>
+                simp [hdecode, hloop] at hloopCode
+            | some final =>
+                by_cases hstate : final.state = M.halt
+                · have hhalt :
+                      TuringMachine.Halted M final.config := by
+                    simpa [TuringMachine.Halted, Layout.config]
+                      using hstate
+                  have haccepts : Layout.accepts M L :=
+                    (layoutFuelLoopFrom_accepts_iff
+                      M L L.fuel rfl).mp
+                      ⟨final, hloop, hhalt⟩
+                  exact ⟨L, rfl, haccepts⟩
+                · simp [hdecode, hloop, hstate] at hloopCode
+        | cons _ _ =>
+            simp [hdecode] at hloopCode
+  · intro h
+    rcases h with ⟨L, hdecode, haccepts⟩
+    unfold layoutFuelLoopCode
+    rw [hdecode]
+    rcases
+        (layoutFuelLoopFrom_accepts_iff
+          M L L.fuel rfl).mpr haccepts with
+      ⟨final, hloop, hhalt⟩
+    have hstate : final.state = M.halt := by
+      simpa [TuringMachine.Halted, Layout.config] using hhalt
+    simp [hloop, hstate]
+    rfl
+
+theorem layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens : Word MachineCodeSymbol) :
+    layoutFuelLoopCode M tokens = some ([] : Word MachineCodeSymbol) <->
+      layoutCodeRun M tokens = some ([] : Word MachineCodeSymbol) := by
+  exact Iff.trans
+    (layoutFuelLoopCode_eq_some_iff_decode M tokens)
+    (Iff.symm (layoutCodeRun_eq_some_iff_decode M tokens))
+
 theorem layoutCodeRun_encode_eq_some_iff {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (L : Layout stateCount) :
@@ -112,6 +389,14 @@ theorem layoutCodeRun_encode_eq_some_iff {stateCount : Nat}
     simp [layoutCodeRun, Layout.decode_encode, hhalt]
     rfl
 
+theorem layoutCodeRunPrimitive_encode_eq_some_iff {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) :
+    (layoutCodeRunPrimitive M).transform (Layout.encode L) =
+        some ([] : Word MachineCodeSymbol) <->
+      Layout.accepts M L := by
+  exact layoutCodeRun_encode_eq_some_iff M L
+
 theorem layoutCodeRun_encode_initial_eq_some_iff {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (input : Word MachineCodeSymbol) (fuel : Nat) :
@@ -122,6 +407,16 @@ theorem layoutCodeRun_encode_initial_eq_some_iff {stateCount : Nat}
     (layoutCodeRun_encode_eq_some_iff M
       (Layout.initial M input fuel))
     (Layout.accepts_initial_iff_haltsOnInputIn M input fuel)
+
+theorem layoutCodeRunPrimitive_encode_initial_eq_some_iff
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    (layoutCodeRunPrimitive M).transform
+        (Layout.encode (Layout.initial M input fuel)) =
+        some ([] : Word MachineCodeSymbol) <->
+      TuringMachine.HaltsOnInputIn M fuel input := by
+  exact layoutCodeRun_encode_initial_eq_some_iff M input fuel
 
 theorem layoutStepCode_encode_eq_some_iff {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -143,6 +438,15 @@ theorem layoutStepCode_encode_eq_some_iff {stateCount : Nat}
     rcases h with ⟨L', hstep, houtput⟩
     subst output
     simp [layoutStepCode, Layout.decode_encode, hstep]
+
+theorem layoutStepCodePrimitive_encode_eq_some_iff {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) (output : Word MachineCodeSymbol) :
+    (layoutStepCodePrimitive M).transform (Layout.encode L) =
+        some output <->
+      exists L' : Layout stateCount,
+        Layout.step M L = some L' /\ output = Layout.encode L' := by
+  exact layoutStepCode_encode_eq_some_iff M L output
 
 theorem layoutStepCode_eq_some_iff_decode {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -176,6 +480,17 @@ theorem layoutStepCode_eq_some_iff_decode {stateCount : Nat}
     rcases h with ⟨L, L', hdecode, hstep, houtput⟩
     subst output
     simp [layoutStepCode, hdecode, hstep]
+
+theorem layoutStepCodePrimitive_eq_some_iff_decode {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens output : Word MachineCodeSymbol) :
+    (layoutStepCodePrimitive M).transform tokens = some output <->
+      exists L : Layout stateCount,
+      exists L' : Layout stateCount,
+        Layout.decode stateCount tokens = some (L, []) /\
+          Layout.step M L = some L' /\
+            output = Layout.encode L' := by
+  exact layoutStepCode_eq_some_iff_decode M tokens output
 
 theorem layoutCodeRun_encode_succ_iff_step {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -215,6 +530,14 @@ def LayoutCodeMachineSpec {stateCount : Nat}
     TuringMachine.HaltsOnInput runner tokens <->
       layoutCodeRun M tokens = some ([] : Word MachineCodeSymbol)
 
+def LayoutFuelLoopCodeMachineSpec {stateCount : Nat}
+    (runner : TuringMachine MachineCodeSymbol runnerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      layoutFuelLoopCode M tokens = some ([] : Word MachineCodeSymbol)
+
 def LayoutCodeMachineConstruction {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
     Prop :=
@@ -222,10 +545,42 @@ def LayoutCodeMachineConstruction {stateCount : Nat}
   exists runner : TuringMachine MachineCodeSymbol runnerState,
     LayoutCodeMachineSpec runner M
 
+def LayoutFuelLoopCodeMachineConstruction {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    LayoutFuelLoopCodeMachineSpec runner M
+
 def FinStateLayoutCodeMachineConstruction : Prop :=
   forall stateCount : Nat,
   forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
     LayoutCodeMachineConstruction M
+
+def FinStateLayoutFuelLoopCodeMachineConstruction : Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    LayoutFuelLoopCodeMachineConstruction M
+
+theorem layoutCodeMachineSpec_of_fuelLoopCodeMachineSpec
+    {stateCount : Nat} {runnerState : Type}
+    {runner : TuringMachine MachineCodeSymbol runnerState}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hrunner : LayoutFuelLoopCodeMachineSpec runner M) :
+    LayoutCodeMachineSpec runner M := by
+  intro tokens
+  exact Iff.trans (hrunner tokens)
+    (layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output M tokens)
+
+theorem layoutCodeMachineConstruction_of_fuelLoopCodeMachine
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hloop : LayoutFuelLoopCodeMachineConstruction M) :
+    LayoutCodeMachineConstruction M := by
+  rcases hloop with ⟨runnerState, runner, hrunner⟩
+  exact
+    ⟨runnerState, runner,
+      layoutCodeMachineSpec_of_fuelLoopCodeMachineSpec hrunner⟩
 
 def LayoutCodeRunnerSpec {stateCount : Nat}
     (runner : TuringMachine MachineCodeSymbol runnerState)
@@ -260,14 +615,21 @@ theorem layoutCodeRunnerConstruction_of_codeMachine
     ⟨runnerState, runner,
       layoutCodeRunnerSpec_of_codeMachineSpec hrunner⟩
 
-theorem layoutCodeMachineFinStateFiniteLeaf :
-    FinStateLayoutCodeMachineConstruction := by
+theorem layoutFuelLoopCodeMachineFinStateFiniteLeaf :
+    FinStateLayoutFuelLoopCodeMachineConstruction := by
   intro stateCount M
   cases stateCount with
   | zero =>
       exact False.elim (Fin.elim0 M.start)
   | succ _ =>
       sorry
+
+theorem layoutCodeMachineFinStateFiniteLeaf :
+    FinStateLayoutCodeMachineConstruction := by
+  intro stateCount M
+  exact
+    layoutCodeMachineConstruction_of_fuelLoopCodeMachine
+      (layoutFuelLoopCodeMachineFinStateFiniteLeaf stateCount M)
 
 theorem layoutCodeRunnerConstructionFiniteLeaf {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
@@ -276,6 +638,93 @@ theorem layoutCodeRunnerConstructionFiniteLeaf {stateCount : Nat}
     (layoutCodeMachineFinStateFiniteLeaf stateCount M)
 
 namespace StageProgram
+
+def CodePrimitiveEmptySpec {stateCount : Nat}
+    (primitive : MachineDescription.TapeCodePrimitive)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    primitive.transform tokens = some ([] : Word MachineCodeSymbol) <->
+      run M tokens = some ([] : Word MachineCodeSymbol)
+
+def stageProgramFuelLoopCodePrimitive {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    MachineDescription.TapeCodePrimitive :=
+  MachineDescription.TapeCodePrimitive.compose
+    (initialLayoutMaterializerCodePrimitive M)
+    (layoutFuelLoopCodePrimitive M)
+
+theorem stageProgramFuelLoopCodePrimitive_eq_some_empty_iff
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens : Word MachineCodeSymbol) :
+    (stageProgramFuelLoopCodePrimitive M).transform tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      run M tokens = some ([] : Word MachineCodeSymbol) := by
+  constructor
+  · intro h
+    change
+      (match (initialLayoutMaterializerCodePrimitive M).transform tokens with
+      | none => none
+      | some mid => (layoutFuelLoopCodePrimitive M).transform mid) =
+        some ([] : Word MachineCodeSymbol) at h
+    cases hmat :
+        (initialLayoutMaterializerCodePrimitive M).transform tokens with
+    | none =>
+        rw [hmat] at h
+        cases h
+    | some mid =>
+        rw [hmat] at h
+        have hmat' :
+            Layout.stageCodeToInitialLayoutCode M tokens = some mid := by
+          simpa [initialLayoutMaterializerCodePrimitive] using hmat
+        have hloop :
+            layoutFuelLoopCode M mid =
+              some ([] : Word MachineCodeSymbol) := by
+          simpa [layoutFuelLoopCodePrimitive] using h
+        rcases
+            (stageCodeToInitialLayoutCode_eq_some_iff
+              M tokens mid).mp hmat' with
+          ⟨input, fuel, htokens, hmid⟩
+        subst tokens
+        subst mid
+        have hhalt :
+            TuringMachine.HaltsOnInputIn M fuel input :=
+          (layoutFuelLoopCode_encode_initial_eq_some_iff
+            M input fuel).mp hloop
+        exact (run_stageCode_eq_some_iff M input fuel).mpr hhalt
+  · intro hrun
+    rcases (run_eq_some_iff_decodeNat M tokens).mp hrun with
+      ⟨fuel, input, hdecode, hhalt⟩
+    have hmat :
+        (initialLayoutMaterializerCodePrimitive M).transform tokens =
+          some (Layout.encode (Layout.initial M input fuel)) := by
+      have hcode :
+          Layout.stageCodeToInitialLayoutCode M tokens =
+            some (Layout.encode (Layout.initial M input fuel)) := by
+        simp [Layout.stageCodeToInitialLayoutCode, hdecode]
+      simpa [initialLayoutMaterializerCodePrimitive] using hcode
+    have hloop :
+        (layoutFuelLoopCodePrimitive M).transform
+            (Layout.encode (Layout.initial M input fuel)) =
+          some ([] : Word MachineCodeSymbol) := by
+      simpa [layoutFuelLoopCodePrimitive] using
+        (layoutFuelLoopCode_encode_initial_eq_some_iff
+          M input fuel).mpr hhalt
+    change
+      (match (initialLayoutMaterializerCodePrimitive M).transform tokens with
+      | none => none
+      | some mid => (layoutFuelLoopCodePrimitive M).transform mid) =
+        some ([] : Word MachineCodeSymbol)
+    rw [hmat]
+    exact hloop
+
+theorem stageProgramFuelLoopCodePrimitive_emptySpec
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    CodePrimitiveEmptySpec
+      (stageProgramFuelLoopCodePrimitive M) M := by
+  intro tokens
+  exact stageProgramFuelLoopCodePrimitive_eq_some_empty_iff M tokens
 
 theorem codeMachineConstruction_of_materializer_layoutRunner_compose
     {stateCount : Nat}

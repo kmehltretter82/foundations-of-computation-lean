@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Runner
+import FoC.Computability.Compiler.Core.FiniteRecognizer.GeneratedCode
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.LayoutCode
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.InitialLayout

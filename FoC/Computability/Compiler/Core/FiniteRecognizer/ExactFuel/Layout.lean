@@ -84,6 +84,20 @@ def encodeOptionalCodeSymbolAppend
   MachineDescription.encodeNatAppend
     (optionalCodeSymbolTag cell) suffix
 
+theorem encodeOptionalCodeSymbolAppend_none
+    (suffix : Word MachineCodeSymbol) :
+    encodeOptionalCodeSymbolAppend none suffix =
+      MachineDescription.encodeNatAppend 0 suffix := by
+  rfl
+
+theorem encodeOptionalCodeSymbolAppend_some
+    (symbol : MachineCodeSymbol)
+    (suffix : Word MachineCodeSymbol) :
+    encodeOptionalCodeSymbolAppend (some symbol) suffix =
+      MachineDescription.encodeNatAppend
+        (codeSymbolTag symbol + 1) suffix := by
+  rfl
+
 def decodeOptionalCodeSymbol
     (tokens : Word MachineCodeSymbol) :
     Option (Option MachineCodeSymbol × Word MachineCodeSymbol) :=
@@ -143,6 +157,22 @@ def encodeOptionalCodeSymbolsAppend
     Word MachineCodeSymbol :=
   MachineDescription.encodeNatAppend cells.length
     (encodeOptionalCodeSymbolsPayloadAppend cells suffix)
+
+theorem encodeOptionalCodeSymbolsAppend_nil
+    (suffix : Word MachineCodeSymbol) :
+    encodeOptionalCodeSymbolsAppend [] suffix =
+      MachineDescription.encodeNatAppend 0 suffix := by
+  rfl
+
+theorem encodeOptionalCodeSymbolsAppend_cons
+    (cell : Option MachineCodeSymbol)
+    (cells : List (Option MachineCodeSymbol))
+    (suffix : Word MachineCodeSymbol) :
+    encodeOptionalCodeSymbolsAppend (cell :: cells) suffix =
+      MachineDescription.encodeNatAppend (cells.length + 1)
+        (encodeOptionalCodeSymbolAppend cell
+          (encodeOptionalCodeSymbolsPayloadAppend cells suffix)) := by
+  rfl
 
 def decodeOptionalCodeSymbols
     (tokens : Word MachineCodeSymbol) :
@@ -214,6 +244,73 @@ theorem config_initial {stateCount : Nat}
       TuringMachine.initial M input := by
   exact config_ofConfig fuel (TuringMachine.initial M input)
 
+theorem initial_empty_eq {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    initial M ([] : Word MachineCodeSymbol) fuel =
+      { fuel := fuel
+        state := M.start
+        left := []
+        head := none
+        right := [] } := by
+  rfl
+
+theorem initial_cons_eq {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    initial M (symbol :: rest) fuel =
+      { fuel := fuel
+        state := M.start
+        left := []
+        head := some symbol
+        right := rest.map some } := by
+  rfl
+
+theorem initial_fuel {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    (initial M input fuel).fuel = fuel := by
+  cases input <;> rfl
+
+theorem initial_state {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    (initial M input fuel).state = M.start := by
+  cases input <;> rfl
+
+theorem initial_left {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    (initial M input fuel).left = [] := by
+  cases input <;> rfl
+
+theorem initial_empty_head {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    (initial M ([] : Word MachineCodeSymbol) fuel).head = none := by
+  rfl
+
+theorem initial_cons_head {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    (initial M (symbol :: rest) fuel).head = some symbol := by
+  rfl
+
+theorem initial_empty_right {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    (initial M ([] : Word MachineCodeSymbol) fuel).right = [] := by
+  rfl
+
+theorem initial_cons_right {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    (initial M (symbol :: rest) fuel).right = rest.map some := by
+  rfl
+
 def decodeState (stateCount state : Nat) :
     Option (Fin stateCount) :=
   if h : state < stateCount then
@@ -242,6 +339,57 @@ def encodeAppend {stateCount : Nat}
 def encode {stateCount : Nat} (L : Layout stateCount) :
     Word MachineCodeSymbol :=
   encodeAppend L []
+
+theorem encode_initial_empty {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    encode (initial M ([] : Word MachineCodeSymbol) fuel) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (encodeOptionalCodeSymbolsAppend []
+              (encodeOptionalCodeSymbolAppend none
+                (encodeOptionalCodeSymbolsAppend [] [])))) := by
+  rfl
+
+theorem encode_initial_empty_expanded {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    encode (initial M ([] : Word MachineCodeSymbol) fuel) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (MachineDescription.encodeNatAppend 0
+              (MachineDescription.encodeNatAppend 0
+                (MachineDescription.encodeNatAppend 0 [])))) := by
+  rfl
+
+theorem encode_initial_cons {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    encode (initial M (symbol :: rest) fuel) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (encodeOptionalCodeSymbolsAppend []
+              (encodeOptionalCodeSymbolAppend (some symbol)
+                (encodeOptionalCodeSymbolsAppend (rest.map some) [])))) := by
+  rfl
+
+theorem encode_initial_cons_expanded {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    encode (initial M (symbol :: rest) fuel) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (MachineDescription.encodeNatAppend 0
+              (MachineDescription.encodeNatAppend
+                (codeSymbolTag symbol + 1)
+                (encodeOptionalCodeSymbolsAppend (rest.map some) [])))) := by
+  rfl
 
 def decode (stateCount : Nat)
     (tokens : Word MachineCodeSymbol) :
@@ -443,6 +591,20 @@ theorem step_eq_some_iff {stateCount : Nat}
     exact
       step_of_transition_eq_some
         (M := M) (L := L) hfuel htransition
+
+theorem step_fuel_eq_of_eq_some {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L L' : Layout stateCount} {fuel : Nat}
+    (hfuel : L.fuel = fuel + 1)
+    (hstep : step M L = some L') :
+    L'.fuel = fuel := by
+  rcases (step_eq_some_iff.mp hstep) with
+    ⟨fuel', write, dir, nextState, hfuel', _htransition, hL'⟩
+  have hfuelEq : fuel' = fuel := by
+    exact Nat.succ.inj (hfuel'.symm.trans hfuel)
+  subst fuel'
+  subst L'
+  rfl
 
 theorem accepts_succ_transition_iff {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
