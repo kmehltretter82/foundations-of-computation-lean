@@ -129,6 +129,44 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_eq_prefixC
   simp [countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix,
     encodedPrefixBeforeTape, guardLogicalTapes]
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+        true L deletedTail =
+      encodedStructuredTapeCellsPrefix
+        [ guardLogicalTape
+            (structuredBoolWordRawBitsDecoderSourceTargetTape
+              (ParsedLayoutBits L)
+              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                true L)
+              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                true L deletedTail))
+        , guardLogicalTape
+            (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              ((ParsedLayoutBits L).length + 1)) ] := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_eq_prefixCells
+      true L deletedTail
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+        false L deletedTail =
+      encodedStructuredTapeCellsPrefix
+        [ guardLogicalTape
+            (structuredBoolWordRawBitsDecoderSourceTargetTape
+              (ParsedLayoutBits L)
+              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                false L)
+              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                false L deletedTail))
+        , guardLogicalTape
+            (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              ((ParsedLayoutBits L).length + 1)) ] := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_eq_prefixCells
+      false L deletedTail
+
 theorem logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_nil
     (padding : List (Option Bool)) :
     logicalTapeBits
@@ -616,6 +654,34 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTa
       useAccept L
       (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
         useAccept L deletedTail)
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_cells_accept
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape
+          true L deletedTail) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          true L deletedTail)
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding true L) := by
+  exact
+    countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_cells
+      true L deletedTail
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_cells_reject
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape
+          false L deletedTail) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          false L deletedTail)
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding false L) := by
+  exact
+    countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_cells
+      false L deletedTail
 
 theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout)
@@ -1415,6 +1481,34 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixErase
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserSpec
       eraser
 
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall (L : DovetailLayout) (deletedTail : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape true L)
+          (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+            true L deletedTail))
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape true L)
+          [])) ∧
+    forall (L : DovetailLayout) (deletedTail : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape false L)
+          (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+            false L deletedTail))
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape false L)
+          [])
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchSpec
+      eraser
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
@@ -1918,6 +2012,17 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
   | cons bit rest =>
       exact hcons bit rest padding
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
+    (hbranches :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
+  rcases hbranches with ⟨eraser, hready, haccept, hreject⟩
+  refine ⟨eraser, hready, ?_⟩
+  intro useAccept L deletedTail
+  cases useAccept
+  · exact hreject L deletedTail
+  · exact haccept L deletedTail
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
   sorry
@@ -1935,9 +2040,15 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompacto
     countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
       selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction := by
