@@ -2082,6 +2082,30 @@ theorem singletonTerminalPairProbeDescription_reaches_canonical
     singletonTerminalPairProbeDescription_reaches_canonical_bits
       canonicalTarget rightBoundaryTarget pfxBits cell []
 
+theorem singletonTerminalPairProbeDescription_reaches_canonical_cons
+    (canonicalTarget rightBoundaryTarget : Nat)
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      (singletonTerminalPairProbeDescription
+        canonicalTarget rightBoundaryTarget).runConfig steps
+        { state :=
+            (singletonTerminalPairProbeDescription
+              canonicalTarget rightBoundaryTarget).start
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) } =
+      { state := canonicalTarget
+        tape := encodedStructuredTapes (guardLogicalTape target :: rest) } := by
+  rcases
+      SingletonGuardSlackEndpointShape.canonical_singleton_bits_terminal_cell_guard
+        target with
+    ⟨pfxBits, cell, hbits⟩
+  rcases encodedStructuredTapeCells_startsWith_separator rest with
+    ⟨padding, hpadding⟩
+  simpa [encodedStructuredTapes, encodedStructuredTapeCells,
+    logicalTapeCode_eq_map_some, hbits, hpadding, tapeSeparatorCells,
+    List.map_append, List.append_assoc] using
+    singletonTerminalPairProbeDescription_reaches_canonical_bits
+      canonicalTarget rightBoundaryTarget pfxBits cell padding
+
 theorem singletonTerminalPairProbeDescription_reaches_rightBoundary
     (canonicalTarget rightBoundaryTarget : Nat)
     (left : List (Option Bool)) (head : Option Bool) :
@@ -2107,6 +2131,35 @@ theorem singletonTerminalPairProbeDescription_reaches_rightBoundary
     singletonTerminalPairProbeDescription_reaches_rightBoundary_bits
       canonicalTarget rightBoundaryTarget
       (logicalCellListBits (none :: left.reverse)) head []
+
+theorem singletonTerminalPairProbeDescription_reaches_rightBoundary_cons
+    (canonicalTarget rightBoundaryTarget : Nat)
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      (singletonTerminalPairProbeDescription
+        canonicalTarget rightBoundaryTarget).runConfig steps
+        { state :=
+            (singletonTerminalPairProbeDescription
+              canonicalTarget rightBoundaryTarget).start
+          tape :=
+            encodedStructuredTapes
+              (({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) :: rest) } =
+      { state := rightBoundaryTarget
+        tape :=
+          encodedStructuredTapes
+            (({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool) :: rest) } := by
+  rcases encodedStructuredTapeCells_startsWith_separator rest with
+    ⟨padding, hpadding⟩
+  simpa [encodedStructuredTapes, encodedStructuredTapeCells,
+    logicalTapeCode_eq_map_some,
+    SingletonGuardSlackEndpointShape.rightBoundary_bits_terminal_head,
+    hpadding, tapeSeparatorCells, List.map_append, List.append_assoc] using
+    singletonTerminalPairProbeDescription_reaches_rightBoundary_bits
+      canonicalTarget rightBoundaryTarget
+      (logicalCellListBits (none :: left.reverse)) head padding
 
 theorem singletonTerminalPairProbeDescription_reaches_of_afterOpening_read_false
     (canonicalTarget rightBoundaryTarget : Nat)
@@ -2727,6 +2780,36 @@ theorem singletonShapeTerminalProbeDescription_reaches_canonical
     MachineDescription.readExitRetargetConfiguration,
     MachineDescription.retargetReadExitState] using hcopy
 
+theorem singletonShapeTerminalProbeDescription_reaches_canonical_cons
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      singletonShapeTerminalProbeDescription.runConfig steps
+        { state := singletonShapeTerminalProbeStart
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) } =
+      { state := singletonShapeRefreshFinalHalt
+        tape := encodedStructuredTapes (guardLogicalTape target :: rest) } := by
+  rcases
+      singletonTerminalPairProbeDescription_reaches_canonical_cons
+        singletonShapeTerminalLocalCanonicalExit
+        singletonShapeTerminalLocalRightBoundaryExit
+        target rest with
+    ⟨steps, hrun⟩
+  refine ⟨steps, ?_⟩
+  have hcopy :=
+    MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+      (offset := singletonShapeTerminalProbeOffset)
+      (localTarget := singletonShapeTerminalLocalTarget)
+      (target := singletonShapeTerminalTarget)
+      singletonShapeTerminalTarget_lt_probeOffset
+      singletonShapeTerminalLocalDescription_transitionFreeAt
+      (n := steps)
+      hrun
+  simpa [singletonShapeTerminalProbeDescription,
+    singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
+    singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
+    MachineDescription.readExitRetargetConfiguration,
+    MachineDescription.retargetReadExitState] using hcopy
+
 theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary
     (left : List (Option Bool)) (head : Option Bool) :
     exists steps : Nat,
@@ -2746,6 +2829,43 @@ theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary
         singletonShapeTerminalLocalCanonicalExit
         singletonShapeTerminalLocalRightBoundaryExit
         left head with
+    ⟨steps, hrun⟩
+  refine ⟨steps, ?_⟩
+  have hcopy :=
+    MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+      (offset := singletonShapeTerminalProbeOffset)
+      (localTarget := singletonShapeTerminalLocalTarget)
+      (target := singletonShapeTerminalTarget)
+      singletonShapeTerminalTarget_lt_probeOffset
+      singletonShapeTerminalLocalDescription_transitionFreeAt
+      (n := steps)
+      hrun
+  simpa [singletonShapeTerminalProbeDescription,
+    singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
+    singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
+    MachineDescription.readExitRetargetConfiguration,
+    MachineDescription.retargetReadExitState] using hcopy
+
+theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary_cons
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      singletonShapeTerminalProbeDescription.runConfig steps
+        { state := singletonShapeTerminalProbeStart
+          tape :=
+            encodedStructuredTapes
+              (({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) :: rest) } =
+      { state := singletonShapeRightRepairStart
+        tape :=
+          encodedStructuredTapes
+            (({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool) :: rest) } := by
+  rcases
+      singletonTerminalPairProbeDescription_reaches_rightBoundary_cons
+        singletonShapeTerminalLocalCanonicalExit
+        singletonShapeTerminalLocalRightBoundaryExit
+        left head rest with
     ⟨steps, hrun⟩
   refine ⟨steps, ?_⟩
   have hcopy :=

@@ -552,6 +552,25 @@ theorem singletonShapeRefreshDescription_run_canonical_opening
     (SingletonGuardSlackEndpointShape.canonical_singleton_afterOpening_read
       target)
 
+theorem singletonShapeRefreshDescription_run_canonical_opening_cons
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    singletonShapeRefreshDescription.runConfig 2
+        { state := singletonShapeRefreshDescription.start
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) } =
+      { state := singletonShapeTerminalProbeStart
+        tape := encodedStructuredTapes (guardLogicalTape target :: rest) } := by
+  exact
+    singletonShapeRefreshDescription_run_false_of_reads
+      (encodedStructuredTapes (guardLogicalTape target :: rest))
+      (encodedStructuredTapes_read _)
+      (by
+        cases target with
+        | mk left head right =>
+            simp [encodedStructuredTapes, encodedStructuredTapeCells,
+              guardLogicalTape, logicalTapeCode, logicalCellCode,
+              logicalCellListBits, logicalCellBits, tapeSeparatorCells,
+              tapeAtCells, Tape.read, Tape.moveRight])
+
 theorem singletonShapeRefreshDescription_run_leftBoundary_opening
     (head : Option Bool) (right : List (Option Bool)) :
     singletonShapeRefreshDescription.runConfig 2
@@ -570,6 +589,32 @@ theorem singletonShapeRefreshDescription_run_leftBoundary_opening
     (SingletonGuardSlackEndpointShape.leftBoundary_afterOpening_read
       head right)
 
+theorem singletonShapeRefreshDescription_run_leftBoundary_opening_cons
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    singletonShapeRefreshDescription.runConfig 2
+        { state := singletonShapeRefreshDescription.start
+          tape :=
+            encodedStructuredTapes
+              (({ left := [], head := head, right := right ++ [none] } :
+                Tape Bool) :: rest) } =
+      { state := singletonShapeLeftRepairStart
+        tape :=
+          encodedStructuredTapes
+            (({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool) :: rest) } := by
+  exact
+    singletonShapeRefreshDescription_run_true_of_reads
+      (encodedStructuredTapes
+        (({ left := [], head := head, right := right ++ [none] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes_read _)
+      (by
+        simp [encodedStructuredTapes, encodedStructuredTapeCells,
+          logicalTapeCode, logicalCellCode, logicalCellListBits,
+          logicalCellBits, headMarkerCells, tapeSeparatorCells,
+          tapeAtCells, Tape.read, Tape.moveRight])
+
 theorem singletonShapeRefreshDescription_run_rightBoundary_opening
     (left : List (Option Bool)) (head : Option Bool) :
     singletonShapeRefreshDescription.runConfig 2
@@ -587,6 +632,32 @@ theorem singletonShapeRefreshDescription_run_rightBoundary_opening
     (SingletonGuardSlackEndpointShape.rightBoundary left head)
     (SingletonGuardSlackEndpointShape.rightBoundary_afterOpening_read
       left head)
+
+theorem singletonShapeRefreshDescription_run_rightBoundary_opening_cons
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    singletonShapeRefreshDescription.runConfig 2
+        { state := singletonShapeRefreshDescription.start
+          tape :=
+            encodedStructuredTapes
+              (({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) :: rest) } =
+      { state := singletonShapeTerminalProbeStart
+        tape :=
+          encodedStructuredTapes
+            (({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool) :: rest) } := by
+  exact
+    singletonShapeRefreshDescription_run_false_of_reads
+      (encodedStructuredTapes
+        (({ left := left ++ [none], head := head, right := [] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes_read _)
+      (by
+        simp [encodedStructuredTapes, encodedStructuredTapeCells,
+          logicalTapeCode, logicalCellCode, logicalCellListBits,
+          logicalCellBits, tapeSeparatorCells, tapeAtCells, Tape.read,
+          Tape.moveRight, List.reverse_append])
 
 theorem singletonShapeRefreshDescription_reaches_terminal_canonical
     (target : Tape Bool) :
@@ -607,6 +678,27 @@ theorem singletonShapeRefreshDescription_reaches_terminal_canonical
         { state := singletonShapeTerminalProbeStart
           tape := encodedGuardedStructuredTapes [target] }
         (encodedGuardedStructuredTapes [target])
+        hrun⟩
+
+theorem singletonShapeRefreshDescription_reaches_terminal_canonical_cons
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeTerminalProbeStart
+            tape := encodedStructuredTapes (guardLogicalTape target :: rest) } =
+        { state := singletonShapeRefreshFinalHalt
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) } := by
+  rcases singletonShapeTerminalProbeDescription_reaches_canonical_cons
+      target rest with
+    ⟨steps, hrun⟩
+  exact
+    ⟨steps,
+      singletonShapeRefreshDescription_runConfig_eq_to_halt
+        singletonShapeRefreshDescription_stepConfig_of_terminalProbe_some
+        steps
+        { state := singletonShapeTerminalProbeStart
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) }
+        (encodedStructuredTapes (guardLogicalTape target :: rest))
         hrun⟩
 
 theorem singletonShapeRefreshDescription_reaches_terminal_rightBoundary
@@ -637,6 +729,50 @@ theorem singletonShapeRefreshDescription_reaches_terminal_rightBoundary
             Tape Bool)] }
   rcases singletonShapeTerminalProbeDescription_reaches_rightBoundary
       left head with
+    ⟨witnessSteps, hwitness⟩
+  have hexists :
+      exists steps : Nat,
+        singletonShapeTerminalProbeDescription.runConfig steps startConfig =
+          finalConfig := by
+    exact ⟨witnessSteps, by
+      simpa [startConfig, finalConfig] using hwitness⟩
+  rcases exists_first_of_exists hexists with
+    ⟨steps, hsteps, hfirst⟩
+  exact
+    ⟨steps,
+      singletonShapeRefreshDescription_runConfig_eq_until
+        singletonShapeRefreshDescription_stepConfig_of_terminalProbe_some
+        steps startConfig finalConfig hfirst hsteps⟩
+
+theorem singletonShapeRefreshDescription_reaches_terminal_rightBoundary_cons
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeTerminalProbeStart
+            tape :=
+              encodedStructuredTapes
+                (({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool) :: rest) } =
+        { state := singletonShapeRightRepairStart
+          tape :=
+            encodedStructuredTapes
+              (({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) :: rest) } := by
+  let startConfig : MachineDescription.Configuration :=
+    { state := singletonShapeTerminalProbeStart
+      tape :=
+        encodedStructuredTapes
+          (({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool) :: rest) }
+  let finalConfig : MachineDescription.Configuration :=
+    { state := singletonShapeRightRepairStart
+      tape :=
+        encodedStructuredTapes
+          (({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool) :: rest) }
+  rcases singletonShapeTerminalProbeDescription_reaches_rightBoundary_cons
+      left head rest with
     ⟨witnessSteps, hwitness⟩
   have hexists :
       exists steps : Nat,
@@ -766,6 +902,43 @@ theorem singletonShapeRefreshDescription_haltsFrom_canonical
         { state := singletonShapeRefreshDescription.start
           tape := encodedGuardedStructuredTapes [target] }).tape =
         encodedGuardedStructuredTapes [target]
+  rw [hrun]
+  simp [singletonShapeRefreshDescription]
+
+theorem singletonShapeRefreshDescription_haltsFrom_canonical_cons
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    singletonShapeRefreshDescription.HaltsFromTapeEquiv
+      (encodedStructuredTapes (guardLogicalTape target :: rest))
+      (encodedStructuredTapes (guardLogicalTape target :: rest)) := by
+  rcases singletonShapeRefreshDescription_reaches_terminal_canonical_cons
+      target rest with
+    ⟨steps, hterminal⟩
+  refine
+    ⟨encodedStructuredTapes (guardLogicalTape target :: rest), ?_,
+      Tape.Equiv.refl _⟩
+  refine ⟨2 + steps, ?_⟩
+  have hrun :
+      singletonShapeRefreshDescription.runConfig (2 + steps)
+          { state := singletonShapeRefreshDescription.start
+            tape :=
+              encodedStructuredTapes (guardLogicalTape target :: rest) } =
+        { state := singletonShapeRefreshFinalHalt
+          tape := encodedStructuredTapes (guardLogicalTape target :: rest) } := by
+    rw [MachineDescription.runConfig_add]
+    rw [singletonShapeRefreshDescription_run_canonical_opening_cons
+      target rest]
+    exact hterminal
+  change
+    (singletonShapeRefreshDescription.runConfig (2 + steps)
+      { state := singletonShapeRefreshDescription.start
+        tape :=
+          encodedStructuredTapes (guardLogicalTape target :: rest) }).state =
+        singletonShapeRefreshDescription.halt ∧
+      (singletonShapeRefreshDescription.runConfig (2 + steps)
+        { state := singletonShapeRefreshDescription.start
+          tape :=
+            encodedStructuredTapes (guardLogicalTape target :: rest) }).tape =
+        encodedStructuredTapes (guardLogicalTape target :: rest)
   rw [hrun]
   simp [singletonShapeRefreshDescription]
 

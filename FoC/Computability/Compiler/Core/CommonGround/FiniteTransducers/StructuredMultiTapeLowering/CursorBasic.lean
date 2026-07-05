@@ -1815,6 +1815,237 @@ def StructuredSingletonGuardSlackEndpointShape
     SingletonGuardSlackEndpointShapeList target actual ∧
       physical = encodedStructuredTapes actual
 
+theorem singletonGuardSlackEndpointShapeList_length_eq
+    {target actual : List (Tape Bool)}
+    (hshape : SingletonGuardSlackEndpointShapeList target actual) :
+    target.length = actual.length := by
+  induction target generalizing actual with
+  | nil =>
+      cases actual with
+      | nil => rfl
+      | cons actualTape actualRest =>
+          simp [SingletonGuardSlackEndpointShapeList] at hshape
+  | cons targetTape targetRest ih =>
+      cases actual with
+      | nil =>
+          simp [SingletonGuardSlackEndpointShapeList] at hshape
+      | cons actualTape actualRest =>
+          simp [SingletonGuardSlackEndpointShapeList] at hshape
+          simp [ih hshape.right]
+
+theorem singletonGuardSlackEndpointShapeList_drop_eq_cons
+    {target actual : List (Tape Bool)} {tapeIndex : Nat}
+    {targetTape : Tape Bool} {targetRest : List (Tape Bool)}
+    (hshape : SingletonGuardSlackEndpointShapeList target actual)
+    (hdrop : target.drop tapeIndex = targetTape :: targetRest) :
+    exists actualTape : Tape Bool, exists actualRest : List (Tape Bool),
+      actual.drop tapeIndex = actualTape :: actualRest ∧
+        SingletonGuardSlackEndpointShape [targetTape]
+          (encodedStructuredTapes [actualTape]) ∧
+        SingletonGuardSlackEndpointShapeList targetRest actualRest := by
+  induction tapeIndex generalizing target actual with
+  | zero =>
+      cases target with
+      | nil =>
+          simp at hdrop
+      | cons targetHead targetTail =>
+          cases actual with
+          | nil =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+          | cons actualHead actualTail =>
+              cases hdrop
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+              exact
+                ⟨actualHead, actualTail, rfl, hshape.left,
+                  hshape.right⟩
+  | succ tapeIndex ih =>
+      cases target with
+      | nil =>
+          simp at hdrop
+      | cons targetHead targetTail =>
+          cases actual with
+          | nil =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+          | cons actualHead actualTail =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+              exact ih hshape.right hdrop
+
+theorem singletonGuardSlackEndpointShapeList_guardLogicalTapes
+    (target : List (Tape Bool)) :
+    SingletonGuardSlackEndpointShapeList target
+      (guardLogicalTapes target) := by
+  induction target with
+  | nil =>
+      simp [SingletonGuardSlackEndpointShapeList, guardLogicalTapes]
+  | cons targetTape targetRest ih =>
+      have hhead :
+          SingletonGuardSlackEndpointShape [targetTape]
+            (encodedStructuredTapes [guardLogicalTape targetTape]) := by
+        exact
+          SingletonGuardSlackEndpointShape.canonical
+            (by simp [encodedGuardedStructuredTapes, guardLogicalTapes])
+      change
+        SingletonGuardSlackEndpointShape [targetTape]
+            (encodedStructuredTapes [guardLogicalTape targetTape]) ∧
+          SingletonGuardSlackEndpointShapeList targetRest
+            (guardLogicalTapes targetRest)
+      exact And.intro hhead ih
+
+theorem singletonGuardSlackEndpointShapeList_replaceTapeAt_guarded
+    {target actual : List (Tape Bool)} {tapeIndex : Nat}
+    {targetTape : Tape Bool} {targetRest : List (Tape Bool)}
+    (hshape : SingletonGuardSlackEndpointShapeList target actual)
+    (hdrop : target.drop tapeIndex = targetTape :: targetRest) :
+    SingletonGuardSlackEndpointShapeList target
+      (replaceTapeAt tapeIndex (guardLogicalTape targetTape) actual) := by
+  induction tapeIndex generalizing target actual with
+  | zero =>
+      cases target with
+      | nil =>
+          simp at hdrop
+      | cons targetHead targetTail =>
+          cases actual with
+          | nil =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+          | cons actualHead actualTail =>
+              cases hdrop
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+              have hhead :
+                  SingletonGuardSlackEndpointShape [targetTape]
+                    (encodedStructuredTapes
+                      [guardLogicalTape targetTape]) := by
+                exact
+                  SingletonGuardSlackEndpointShape.canonical
+                    (by simp [encodedGuardedStructuredTapes,
+                      guardLogicalTapes])
+              exact And.intro hhead hshape.right
+  | succ tapeIndex ih =>
+      cases target with
+      | nil =>
+          simp at hdrop
+      | cons targetHead targetTail =>
+          cases actual with
+          | nil =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+          | cons actualHead actualTail =>
+              simp [SingletonGuardSlackEndpointShapeList] at hshape
+              exact And.intro hshape.left (ih hshape.right hdrop)
+
+theorem structuredSingletonGuardSlackEndpointShape_guarded
+    (target : List (Tape Bool)) :
+    StructuredSingletonGuardSlackEndpointShape target
+      (encodedGuardedStructuredTapes target) := by
+  exact
+    ⟨guardLogicalTapes target,
+      singletonGuardSlackEndpointShapeList_guardLogicalTapes target,
+      by rfl⟩
+
+theorem structuredSingletonGuardSlackEndpointShape_drop_eq_cons
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    {tapeIndex : Nat} {targetTape : Tape Bool}
+    {targetRest : List (Tape Bool)}
+    (hshape : StructuredSingletonGuardSlackEndpointShape target physical)
+    (hdrop : target.drop tapeIndex = targetTape :: targetRest) :
+    exists actual : List (Tape Bool),
+      exists actualTape : Tape Bool,
+        exists actualRest : List (Tape Bool),
+          physical = encodedStructuredTapes actual ∧
+            actual.drop tapeIndex = actualTape :: actualRest ∧
+            SingletonGuardSlackEndpointShape [targetTape]
+              (encodedStructuredTapes [actualTape]) ∧
+            SingletonGuardSlackEndpointShapeList targetRest actualRest := by
+  rcases hshape with ⟨actual, hlist, hphysical⟩
+  rcases singletonGuardSlackEndpointShapeList_drop_eq_cons
+      hlist hdrop with
+    ⟨actualTape, actualRest, hactualDrop, hsegment, hrest⟩
+  exact
+    ⟨actual, actualTape, actualRest, hphysical, hactualDrop,
+      hsegment, hrest⟩
+
+theorem structuredSingletonGuardSlackEndpointShape_replaceTapeAt_guarded
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    {tapeIndex : Nat} {targetTape : Tape Bool}
+    {targetRest : List (Tape Bool)}
+    (hshape : StructuredSingletonGuardSlackEndpointShape target physical)
+    (hdrop : target.drop tapeIndex = targetTape :: targetRest) :
+    exists actual : List (Tape Bool),
+      physical = encodedStructuredTapes actual ∧
+        StructuredSingletonGuardSlackEndpointShape target
+          (encodedStructuredTapes
+            (replaceTapeAt tapeIndex (guardLogicalTape targetTape)
+              actual)) := by
+  rcases hshape with ⟨actual, hlist, hphysical⟩
+  exact
+    ⟨actual, hphysical,
+      ⟨replaceTapeAt tapeIndex (guardLogicalTape targetTape) actual,
+        singletonGuardSlackEndpointShapeList_replaceTapeAt_guarded
+          hlist hdrop,
+        rfl⟩⟩
+
+/--
+Head-segment refresh contract for a structured endpoint.
+
+This is stronger than the singleton-only refresh contract: the machine must
+repair the first encoded segment while preserving the rest of the encoded
+structured tape list.  Boundary repairs for non-final segments need this
+contract rather than the edge-only singleton repair leaves.
+-/
+structure SingletonHeadGuardSlackRefreshContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  realizes :
+    forall {target actual : Tape Bool} {rest : List (Tape Bool)},
+      SingletonGuardSlackEndpointShape [target]
+        (encodedStructuredTapes [actual]) ->
+        refresh.HaltsFromTapeEquiv
+          (encodedStructuredTapes (actual :: rest))
+          (encodedStructuredTapes (guardLogicalTape target :: rest))
+
+namespace SingletonHeadGuardSlackRefreshContract
+
+theorem realizes_structuredHead
+    {refresh : MachineDescription}
+    (hrefresh : SingletonHeadGuardSlackRefreshContract refresh)
+    {target : Tape Bool} {targetRest : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hshape :
+      StructuredSingletonGuardSlackEndpointShape
+        (target :: targetRest) physical) :
+    exists actualRest : List (Tape Bool),
+      SingletonGuardSlackEndpointShapeList targetRest actualRest ∧
+        refresh.HaltsFromTapeEquiv physical
+          (encodedStructuredTapes
+            (guardLogicalTape target :: actualRest)) := by
+  rcases hshape with ⟨actual, hlist, hphysical⟩
+  cases actual with
+  | nil =>
+      simp [SingletonGuardSlackEndpointShapeList] at hlist
+  | cons actualTape actualRest =>
+      simp [SingletonGuardSlackEndpointShapeList] at hlist
+      refine ⟨actualRest, hlist.right, ?_⟩
+      rw [hphysical]
+      exact hrefresh.realizes hlist.left
+
+theorem output_structuredShape_of_head
+    {target : Tape Bool} {targetRest actualRest : List (Tape Bool)} :
+    SingletonGuardSlackEndpointShapeList targetRest actualRest ->
+      StructuredSingletonGuardSlackEndpointShape
+        (target :: targetRest)
+        (encodedStructuredTapes
+          (guardLogicalTape target :: actualRest)) := by
+  intro hrest
+  refine
+    ⟨guardLogicalTape target :: actualRest, ?_, rfl⟩
+  have hhead :
+      SingletonGuardSlackEndpointShape [target]
+        (encodedStructuredTapes [guardLogicalTape target]) := by
+    exact
+      SingletonGuardSlackEndpointShape.canonical
+        (by simp [encodedGuardedStructuredTapes, guardLogicalTapes])
+  exact And.intro hhead hrest
+
+end SingletonHeadGuardSlackRefreshContract
+
 theorem singletonGuardSlackEndpointShapeList_singleton
     {target : Tape Bool} {actual : List (Tape Bool)}
     (hshape : SingletonGuardSlackEndpointShapeList [target] actual) :
@@ -1832,6 +2063,18 @@ theorem singletonGuardSlackEndpointShapeList_singleton
           exact ⟨actualTape, rfl, hshape⟩
       | cons next rest =>
           simp [SingletonGuardSlackEndpointShapeList] at hshape
+
+theorem structuredSingletonGuardSlackEndpointShape_singleton
+    {target : Tape Bool} {physical : Tape Bool}
+    (hshape : StructuredSingletonGuardSlackEndpointShape [target] physical) :
+    exists actualTape : Tape Bool,
+      physical = encodedStructuredTapes [actualTape] ∧
+        SingletonGuardSlackEndpointShape [target]
+          (encodedStructuredTapes [actualTape]) := by
+  rcases hshape with ⟨actual, hlist, hphysical⟩
+  rcases singletonGuardSlackEndpointShapeList_singleton hlist with
+    ⟨actualTape, hactual, hsegment⟩
+  exact ⟨actualTape, by rw [hphysical, hactual], hsegment⟩
 
 theorem singletonGuardSlackEndpointShapeList_three
     {target0 target1 target2 : Tape Bool}
@@ -1890,6 +2133,26 @@ theorem structuredSingletonGuardSlackEndpointShape_three
   exact
     ⟨actual0, actual1, actual2, by rw [hphysical, hactual],
       h0, h1, h2⟩
+
+theorem structuredSingletonGuardSlackEndpointShape_three_guarded_replacements
+    {target0 target1 target2 : Tape Bool} {physical : Tape Bool}
+    (hshape :
+      StructuredSingletonGuardSlackEndpointShape
+        [target0, target1, target2] physical) :
+    exists actual0 : Tape Bool, exists actual1 : Tape Bool,
+      exists actual2 : Tape Bool,
+        physical = encodedStructuredTapes [actual0, actual1, actual2] ∧
+          encodedStructuredTapes
+              (replaceTapeAt 2 (guardLogicalTape target2)
+                (replaceTapeAt 1 (guardLogicalTape target1)
+                  (replaceTapeAt 0 (guardLogicalTape target0)
+                    [actual0, actual1, actual2]))) =
+            encodedGuardedStructuredTapes
+              [target0, target1, target2] := by
+  rcases structuredSingletonGuardSlackEndpointShape_three hshape with
+    ⟨actual0, actual1, actual2, hphysical, _h0, _h1, _h2⟩
+  refine ⟨actual0, actual1, actual2, hphysical, ?_⟩
+  simp [encodedGuardedStructuredTapes, guardLogicalTapes]
 
 theorem singletonGuardSlackEndpointShapeList_transitionPrimitiveSequence3
     (action0 action1 action2 : TapeAction)
