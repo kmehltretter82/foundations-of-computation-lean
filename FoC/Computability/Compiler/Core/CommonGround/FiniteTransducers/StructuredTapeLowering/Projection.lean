@@ -252,6 +252,80 @@ def StructuredSelectedSingletonSegmentDecoderConstruction : Prop :=
     StructuredSelectedSingletonSegmentDecoderSpec decoder
 
 /--
+Decoder for a canonical selected structured segment that may have trailing
+encoded structured segments to its right.
+
+This is the stronger projector boundary needed for tape 0 and tape 1.  The
+final-singleton decoder below is the tape-2 specialization where
+{lit}`rest = []`.
+-/
+def StructuredSelectedHeadSegmentDecoderSpec
+    (decoder : MachineDescription) : Prop :=
+  decoder.SubroutineReady ∧
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      decoder.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+        target
+
+/--
+Existence wrapper for
+{name}`StructuredSelectedHeadSegmentDecoderSpec`.
+-/
+def StructuredSelectedHeadSegmentDecoderConstruction : Prop :=
+  exists decoder : MachineDescription,
+    StructuredSelectedHeadSegmentDecoderSpec decoder
+
+theorem structuredSelectedSingletonSegmentDecoderConstruction_of_headDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderConstruction) :
+    StructuredSelectedSingletonSegmentDecoderConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro target encodedPrefix
+  simpa using hdecoderRun target [] encodedPrefix
+
+theorem structuredTape0SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderConstruction) :
+    StructuredTape0SegmentNormalizerConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro T0 T1 T2 physical hseparator
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simpa [encodedSuffixFromTape, guardLogicalTapes] using
+    hdecoderRun T0 [guardLogicalTape T1, guardLogicalTape T2]
+      (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 0)
+
+theorem structuredTape1SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderConstruction) :
+    StructuredTape1SegmentNormalizerConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro T0 T1 T2 physical hseparator
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simpa [encodedSuffixFromTape, guardLogicalTapes] using
+    hdecoderRun T1 [guardLogicalTape T2]
+      (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 1)
+
+theorem structuredTape2SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderConstruction) :
+    StructuredTape2SegmentNormalizerConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderReady, hdecoderRun⟩
+  refine ⟨decoder, hdecoderReady, ?_⟩
+  intro T0 T1 T2 physical hseparator
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simpa [encodedSuffixFromTape, guardLogicalTapes] using
+    hdecoderRun T2 []
+      (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
+
+/--
 Generic extractor for a selected singleton structured segment.
 
 This is currently the same boundary as
