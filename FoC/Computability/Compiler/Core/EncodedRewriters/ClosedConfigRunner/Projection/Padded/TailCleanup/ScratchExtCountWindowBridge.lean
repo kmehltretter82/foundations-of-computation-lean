@@ -326,8 +326,31 @@ theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_
     CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
   sorry
 
-theorem structuredTape2ProjectorConstruction_core :
-    Structured.MultiTapeLowering.StructuredTape2ProjectorConstruction := by
+/--
+Count-window-specific output projection from the lowered structured extractor.
+
+This is intentionally narrower than the reusable
+{name}`Structured.MultiTapeLowering.StructuredTape2ProjectorSpec`: the bridge
+only needs to extract the third tape from the concrete structured output shape
+produced by the decoded-prefix extractor.
+-/
+def CountWindowPostFieldDecodedPrefixStructuredOutputProjectorSpec
+    (projector : MachineDescription) : Prop :=
+  projector.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout)
+      (deletedTail : Word Bool),
+      projector.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+          useAccept L deletedTail)
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+
+def CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :
+    Prop :=
+  exists projector : MachineDescription,
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorSpec projector
+
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
   sorry
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
@@ -336,7 +359,7 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_s
     (hextractor :
       LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction)
     (hprojector :
-      Structured.MultiTapeLowering.StructuredTape2ProjectorConstruction) :
+      CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction) :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
   intro useAccept
   rcases hinitializer useAccept with ⟨initializer, hinitializerSpec⟩
@@ -383,20 +406,8 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_s
         projector.HaltsFromTapeEquiv
           (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
             useAccept L deletedTail)
-          (postFieldDecodedPrefixScanSourceTape useAccept L) := by
-      simpa [
-        countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape,
-        Structured.MultiTapeLowering.encodedGuardedStructured3Tapes] using
-        hprojectorSpec.right
-          (structuredBoolWordRawBitsDecoderSourceTargetTape
-            (ParsedLayoutBits L)
-            (countWindowPostFieldDecodedPrefixStructuredSuffixTail
-              useAccept L)
-            (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-              useAccept L deletedTail))
-          (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-            ((ParsedLayoutBits L).length + 1))
-          (postFieldDecodedPrefixScanSourceTape useAccept L)
+          (postFieldDecodedPrefixScanSourceTape useAccept L) :=
+      hprojectorSpec.right useAccept L deletedTail
     exact
       canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
         (canonicalPrimitiveSeqDescription_subroutineReady
@@ -411,7 +422,7 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_l
   countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
     countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core
     hextractor
-    structuredTape2ProjectorConstruction_core
+    countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
