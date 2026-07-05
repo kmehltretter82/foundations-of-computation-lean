@@ -247,6 +247,20 @@ theorem structuredLiftOneTapeDescription_runConfig_eq_halt_of_haltsFromTape
   rw [structuredLiftOneTapeDescription_runConfig_from_start]
   rw [hn]
 
+theorem structuredLiftOneTapeDescription_haltsWithTapes_of_haltsFromTape
+    (D : MachineDescription)
+    {input output scratch work : Tape Bool}
+    (h : D.HaltsFromTape input output) :
+    (structuredLiftOneTapeDescription D).HaltsWithTapes
+      (Structured.MultiTapeLowering.ThreeTape.config
+        D.start input scratch work)
+      [output, scratch, work] := by
+  rcases structuredLiftOneTapeDescription_runConfig_eq_halt_of_haltsFromTape
+      D h with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  simpa [Structured.MultiTapeLowering.ThreeTape.config] using hn
+
 theorem structuredLiftOneTapeRows_supportsReadWriteRow3
     (rows : List TransitionDescription) :
     forall row : Structured.Transition,
@@ -536,6 +550,72 @@ theorem structuredJoinerInitialConfig_moveRight_eq_rightEndCompactionSource
           MixedParserStackWholeSourceAfterRawTailScanTape_move_right_eq_rightEndSource
             w sourceRestBits stage head rawTailRest hraw
 
+theorem structuredJoinerInitialConfig_moveRightRight_sourceRestCons
+    (state : Nat) (w sourceRestTail : Word Bool)
+    (bit : Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits (bit :: sourceRestTail) stage =
+        List.append rawTailInit [last] ∧
+      Tape.move Direction.right
+          (Tape.move Direction.right
+            (Structured.Description.tapeAt
+              (structuredMixedOptionCellQuoteLiveTailJoinerInitialConfig
+                state
+                { w := w, sourceRestBits := bit :: sourceRestTail,
+                  stage := stage }).tapes
+              0)) =
+        tapeAtCells
+          (none :: some last ::
+            List.append (rawTailInit.reverse.map some)
+              ((assemblySourceRestFinishPrefixQuoteOutputBits
+                w (bit :: sourceRestTail) stage).reverse.map some))
+          (some false :: some true :: some bit ::
+            some (if bit then false else true) ::
+              List.append
+                ((preservingCellPassCellBits sourceRestTail).map some)
+                [none]) := by
+  rw [structuredJoinerInitialConfig_sourceTape]
+  simpa [assemblySourceRestLiveTailEmitterEmittedPrefix,
+    assemblySourceRestLiveTailEmitterRawTail,
+    assemblySourceRestLiveTailEmitterQuoteRest] using
+    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
+      w sourceRestTail bit stage
+
+theorem structuredJoinerInitialConfig_moveRight_sourceRestNil
+    (state : Nat) (w : Word Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits [] stage =
+        List.append rawTailInit [last] ∧
+      Tape.move Direction.right
+          (Structured.Description.tapeAt
+            (structuredMixedOptionCellQuoteLiveTailJoinerInitialConfig
+              state
+              { w := w, sourceRestBits := [], stage := stage }).tapes
+            0) =
+        tapeAtCells
+          (some last ::
+            List.append (rawTailInit.reverse.map some)
+              ((assemblySourceRestFinishPrefixQuoteOutputBits
+                w [] stage).reverse.map some))
+          (none ::
+            List.append ((preservingCellPassCellBits []).map some)
+              [none]) := by
+  rcases assemblySourceRestFinishRawTailBits_lastSplit_exists
+      ([] : Word Bool) stage with
+    ⟨rawTailInit, last, hraw⟩
+  refine ⟨rawTailInit, last, hraw, ?_⟩
+  rw [structuredJoinerInitialConfig_sourceTape]
+  rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+    assemblySourceRestLiveTailEmitterRawTail,
+    assemblySourceRestLiveTailEmitterQuoteRest]
+  rw [hraw]
+  exact
+    mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast
+      (assemblySourceRestFinishPrefixQuoteOutputBits w [] stage)
+      rawTailInit (preservingCellPassCellBits []) last
+
 theorem structuredJoinerFinalConfig_eq_targetTape
     (state : Nat) (p : AssemblySourceRestLiveTailEmitterParam) :
     Structured.Description.tapeAt
@@ -546,6 +626,29 @@ theorem structuredJoinerFinalConfig_eq_targetTape
         p.w p.sourceRestBits p.stage := by
   rw [structuredJoinerFinalConfig_sourceTape]
   exact assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape p
+
+theorem structuredJoinerFinalConfig_eq_assembly_stageSplit
+    (state : Nat) (w sourceRestBits : Word Bool) (stage : Nat) :
+    Structured.Description.tapeAt
+        (structuredMixedOptionCellQuoteLiveTailJoinerFinalConfig
+          state
+          { w := w, sourceRestBits := sourceRestBits, stage := stage }).tapes
+        0 =
+      tapeAtCells
+        ((List.append
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits)).reverse.map some)
+        (List.append
+          ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            stage).map some)
+          (sourceRestBits.map some)) := by
+  rw [structuredJoinerFinalConfig_sourceTape]
+  simpa [assemblySourceRestLiveTailEmitterEmittedPrefix,
+    assemblySourceRestLiveTailEmitterRawTail,
+    assemblySourceRestLiveTailEmitterQuoteRest] using
+    mixedOptionCellQuoteLiveTailJoinedTape_eq_assembly_stageSplit
+      w sourceRestBits stage
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
