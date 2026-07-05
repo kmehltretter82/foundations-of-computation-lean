@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.DispatcherAssembly.SelectedRuns
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.Runs
 
 set_option doc.verso true
 
@@ -2250,6 +2251,15 @@ theorem ready_lt_selectedRowBranchLimit
   exact Nat.lt_of_lt_of_le
     (by simpa [StaticDispatcherState.ready] using hstate) hle
 
+theorem activeStateValues_mem_of_lt_ne_halt
+    {D : Description} {state : Nat}
+    (hstate : state < D.stateCount)
+    (hne : state ≠ D.halt) :
+    state ∈ activeStateValues D := by
+  unfold activeStateValues
+  rw [List.mem_filter]
+  exact ⟨List.mem_range.mpr hstate, by simp [hne]⟩
+
 theorem staticLoweredDescription_wellFormed
     (D : Description) (hDwf : D.WellFormed)
     (hrows : SupportsReadWriteRows3 D)
@@ -2341,6 +2351,93 @@ theorem staticLoweredDescription_selectedRow_runs
   simpa [staticLoweredDescription] using
     staticReturnedDispatcher_selectedRow_runs
       D hD hDwf hrows hstate hlength hlookup hrefresh
+
+theorem staticLoweredDescription_stepLowering
+    (D : Description) (hD : D.tapeCount = 3)
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    StaticStepLoweringWithRefresh D
+      (staticLoweredDescription D refresh)
+      StaticDispatcherState.ready := by
+  refine ⟨staticLoweredDescription_wellFormed D hDwf hrows hrefresh, ?_⟩
+  intro c hstate htapes
+  cases c with
+  | mk state tapes =>
+      by_cases hhalt : state = D.halt
+      · have hone :
+            oneStepOrSelf D { state := state, tapes := tapes } =
+              { state := state, tapes := tapes } := by
+          exact
+            oneStepOrSelf_of_stepConfig_none
+              (Description.stepConfig_halt_none hhaltFree
+                { state := state, tapes := tapes } hhalt)
+        simpa [hone] using
+          runsFromStateTapeEquiv_refl
+            (staticLoweredDescription D refresh)
+            (StaticDispatcherState.ready state)
+            (encodedGuardedStructuredTapes tapes)
+      · have hactive :
+            state ∈ activeStateValues D :=
+          activeStateValues_mem_of_lt_ne_halt hstate hhalt
+        have hlength : tapes.length = 3 := by
+          simpa [hD] using htapes
+        cases hlookup :
+            lookupTransitionFromReadTuple3 D state
+              (ReadTuple3.ofTapes tapes) with
+        | none =>
+            have hone :
+                oneStepOrSelf D { state := state, tapes := tapes } =
+                  { state := state, tapes := tapes } :=
+              oneStepOrSelf_eq_self_of_lookupTransitionFromReadTuple3_eq_none
+                D hD (state := state) (logical := tapes)
+                (reads := ReadTuple3.ofTapes tapes) rfl hlookup
+            simpa [hone] using
+              staticLoweredDescription_noRow_runs
+                D hDwf hrows hrefresh hactive hlength hlookup
+        | some t =>
+            rcases
+                staticLoweredDescription_selectedRow_runs
+                  D hD hDwf hrows hactive hlength hlookup hrefresh with
+              ⟨_separatorPhysical, _hseparator, honeState, hrun⟩
+            simpa [honeState] using hrun
+
+def StaticLoweredDescription
+    (D : Description) (hD : D.tapeCount = 3)
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    StaticLoweredDescriptionWithRefresh D where
+  machine := staticLoweredDescription D refresh
+  stateMap := StaticDispatcherState.ready
+  start_eq := rfl
+  halt_eq := rfl
+  stepLowering :=
+    staticLoweredDescription_stepLowering
+      D hD hDwf hhaltFree hrows hrefresh
+
+theorem loweredRun_simulates_structured_run
+    (D : Description) (hD : D.tapeCount = 3)
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      D.runConfig n (D.initial inputs) =
+          { state := D.halt, tapes := tapes } ∧
+        (staticLoweredDescription D refresh).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes tapes) :=
+  (StaticLoweredDescription
+      D hD hDwf hhaltFree hrows hrefresh).simulates_initial_haltsWithTapes
+    hDwf hhalts
 
 end StaticDispatcherReaderAssembly
 
