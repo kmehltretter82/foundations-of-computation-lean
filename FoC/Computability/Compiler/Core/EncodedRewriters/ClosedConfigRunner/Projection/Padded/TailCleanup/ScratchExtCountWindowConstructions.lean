@@ -1119,6 +1119,17 @@ def postFieldDecodedPrefixScanSourceTape
     (ParsedLayoutBits L)
     (postFieldDecodedPrefixScanPadding useAccept L)
 
+theorem postFieldDecodedPrefixScanSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (postFieldDecodedPrefixScanSourceTape useAccept L) =
+      List.append (ParsedLayoutBits L)
+        ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
+          (fun cell => cell)) := by
+  simp [postFieldDecodedPrefixScanSourceTape,
+    rightEdgeScanSourceTapeFromLeft, tapeAtCells_normalizedOutput,
+    List.filterMap_append, Function.comp_def]
+
 /--
 Expose the skipped/count split inside {name}`ParsedLayoutBits` for the shared
 post-field materializer.  This is the cheap shape fact used before the hard
