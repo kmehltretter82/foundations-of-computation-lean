@@ -1364,6 +1364,334 @@ theorem retargetedSelectedRowSeparatorDescription_runsFromTape2Separator
   · exact honeState
   · simpa [retargetedSelectedRowSeparatorDescription] using hcopy
 
+def selectedRowBranchJumpDescription
+    (branchStateCount : Nat) (D : Description)
+    (state : Nat) (reads : ReadTuple3)
+    (scratch target : Nat) : MachineDescription :=
+  blankHeadBounceJumpDescription branchStateCount
+    (StaticDispatcherState.afterRead D state reads)
+    scratch target
+
+def selectedRowBranchTransitions
+    (branchStateCount offset : Nat) (D : Description)
+    (state : Nat) (reads : ReadTuple3)
+    (scratch : Nat) (t : Transition)
+    (refresh : MachineDescription) : List TransitionDescription :=
+  (selectedRowBranchJumpDescription branchStateCount D state reads
+      scratch
+      (retargetedSelectedRowSeparatorDescription
+        offset (StaticDispatcherState.ready t.target) t refresh).start).transitions ++
+    (retargetedSelectedRowSeparatorDescription
+      offset (StaticDispatcherState.ready t.target) t refresh).transitions
+
+theorem selectedRowBranchJumpDescription_sources_below_offset
+    {branchStateCount offset : Nat} {D : Description}
+    {state scratch target : Nat} {reads : ReadTuple3}
+    (hsourceBelow :
+      StaticDispatcherState.afterRead D state reads < offset)
+    (hscratchBelow : scratch < offset) :
+    TransitionSourcesBelow offset
+      (selectedRowBranchJumpDescription branchStateCount D state reads
+        scratch target).transitions := by
+  simpa [selectedRowBranchJumpDescription] using
+    blankHeadBounceJumpDescription_sources_below
+      hsourceBelow hscratchBelow
+
+theorem retargetedSelectedRowSeparatorDescription_sources_atLeast_offset
+    {offset target : Nat}
+    {D : Description} (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    TransitionSourcesAtLeast offset
+      (retargetedSelectedRowSeparatorDescription
+        offset target t refresh).transitions := by
+  intro u hu
+  exact
+    (retargetedSelectedRowSeparatorDescription_sources_in_offset_block
+      hrows hlookup hrefresh u hu).left
+
+theorem selectedRowBranchTransitions_deterministic
+    {branchStateCount offset : Nat} {D : Description}
+    {state scratch : Nat} {reads : ReadTuple3} {t : Transition}
+    {refresh : MachineDescription}
+    (hrows : SupportsReadWriteRows3 D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (hsourceScratch :
+      StaticDispatcherState.afterRead D state reads ≠ scratch)
+    (hsourceBelow :
+      StaticDispatcherState.afterRead D state reads < offset)
+    (hscratchBelow : scratch < offset)
+    (htargetBelow : StaticDispatcherState.ready t.target < offset) :
+    TransitionListDeterministic
+      (selectedRowBranchTransitions branchStateCount offset D state reads
+        scratch t refresh) := by
+  let rowMachine :=
+    retargetedSelectedRowSeparatorDescription
+      offset (StaticDispatcherState.ready t.target) t refresh
+  let jumpMachine :=
+    selectedRowBranchJumpDescription branchStateCount D state reads
+      scratch rowMachine.start
+  have hjumpDet :
+      TransitionListDeterministic jumpMachine.transitions := by
+    simpa [jumpMachine, selectedRowBranchJumpDescription] using
+      blankHeadBounceJumpDescription_transitionListDeterministic
+        hsourceScratch
+  have hrowDet :
+      TransitionListDeterministic rowMachine.transitions :=
+    transitionListDeterministic_of_wellFormed
+      (retargetedSelectedRowSeparatorDescription_subroutineReady
+        htargetBelow hrows hlookup hrefresh).left
+  have hdisjoint :
+      TransitionSourceDisjoint jumpMachine.transitions
+        rowMachine.transitions :=
+    transitionSourceDisjoint_of_below_atLeast
+      (by
+        simpa [jumpMachine] using
+          selectedRowBranchJumpDescription_sources_below_offset
+            (branchStateCount := branchStateCount) (offset := offset)
+            (D := D) (state := state) (reads := reads)
+            (scratch := scratch) (target := rowMachine.start)
+            hsourceBelow hscratchBelow)
+      (by
+        simpa [rowMachine] using
+          retargetedSelectedRowSeparatorDescription_sources_atLeast_offset
+            (offset := offset)
+            (target := StaticDispatcherState.ready t.target)
+            hrows hlookup hrefresh)
+  simpa [selectedRowBranchTransitions, jumpMachine, rowMachine] using
+    transitionListDeterministic_append_of_sourceDisjoint
+      hjumpDet hrowDet hdisjoint
+
+theorem selectedRowBranchTransitions_source_cases
+    {branchStateCount offset : Nat} {D : Description}
+    {state scratch : Nat} {reads : ReadTuple3} {t : Transition}
+    {refresh : MachineDescription}
+    {u : TransitionDescription}
+    (hrows : SupportsReadWriteRows3 D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (hu :
+      u ∈ selectedRowBranchTransitions branchStateCount offset D state reads
+        scratch t refresh) :
+    u.source = StaticDispatcherState.afterRead D state reads ∨
+      u.source = scratch ∨ offset ≤ u.source := by
+  let rowMachine :=
+    retargetedSelectedRowSeparatorDescription
+      offset (StaticDispatcherState.ready t.target) t refresh
+  let jumpMachine :=
+    selectedRowBranchJumpDescription branchStateCount D state reads
+      scratch rowMachine.start
+  have hu' :
+      u ∈ jumpMachine.transitions ∨ u ∈ rowMachine.transitions := by
+    simpa [selectedRowBranchTransitions, jumpMachine, rowMachine] using hu
+  rcases hu' with huJump | huRow
+  · rcases
+        blankHeadBounceJumpDescription_transition_source_cases
+          (by
+            simpa [jumpMachine, selectedRowBranchJumpDescription] using
+              huJump) with hsource | hscratch
+    · exact Or.inl hsource
+    · exact Or.inr (Or.inl hscratch)
+  · exact
+      Or.inr (Or.inr
+        ((retargetedSelectedRowSeparatorDescription_sources_in_offset_block
+          hrows hlookup hrefresh u (by simpa [rowMachine] using huRow)).left))
+
+theorem threeHeadReaderTransitions_selectedRowBranchTransitions_sourceDisjoint
+    {branchStateCount offset : Nat} {D : Description}
+    {state scratch : Nat} {reads : ReadTuple3} {t : Transition}
+    {refresh : MachineDescription}
+    (hstate : state < D.stateCount)
+    (hrows : SupportsReadWriteRows3 D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (hscratchAtLeast : threeHeadReaderStateLimit D ≤ scratch)
+    (hoffsetAtLeast : threeHeadReaderStateLimit D ≤ offset) :
+    TransitionSourceDisjoint
+      (threeHeadReaderTransitions D)
+      (selectedRowBranchTransitions branchStateCount offset D state reads
+        scratch t refresh) := by
+  intro left right hleft hright hsource
+  have hleftBelow :=
+    threeHeadReaderTransitions_sources_below_stateLimit D left hleft
+  rcases
+      selectedRowBranchTransitions_source_cases
+        hrows hlookup hrefresh hright with
+    hrightAfter | hrightCases
+  · rw [hrightAfter] at hsource
+    exact
+      (threeHeadReaderTransitions_sources_ne_afterRead
+        D reads hstate left hleft) hsource
+  · rcases hrightCases with hrightScratch | hrightOffset
+    · rw [hrightScratch] at hsource
+      have hrightGe :
+          threeHeadReaderStateLimit D ≤ right.source := by
+        simpa [hrightScratch] using hscratchAtLeast
+      lia
+    · have hrightGe :
+          threeHeadReaderStateLimit D ≤ right.source :=
+        Nat.le_trans hoffsetAtLeast hrightOffset
+      lia
+
+theorem selectedRowBranchTransitions_runsFromTape2Separator
+    (D : Description) (hD : D.tapeCount = 3)
+    (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state
+        (ReadTuple3.ofTapes logical) = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    {branchStateCount offset scratch : Nat}
+    (hsourceScratch :
+      StaticDispatcherState.afterRead D state (ReadTuple3.ofTapes logical) ≠
+        scratch)
+    (hsourceBelow :
+      StaticDispatcherState.afterRead D state (ReadTuple3.ofTapes logical) <
+        offset)
+    (hscratchBelow : scratch < offset)
+    (hsourceLimit :
+      StaticDispatcherState.afterRead D state (ReadTuple3.ofTapes logical) <
+        branchStateCount)
+    (hscratchLimit : scratch < branchStateCount)
+    (hrowStartAtLeast :
+      offset ≤
+        (retargetedSelectedRowSeparatorDescription
+          offset (StaticDispatcherState.ready t.target) t refresh).start)
+    (hrowStartLimit :
+      (retargetedSelectedRowSeparatorDescription
+        offset (StaticDispatcherState.ready t.target) t refresh).start <
+        branchStateCount)
+    (htargetBelow : StaticDispatcherState.ready t.target < offset)
+    {separatorPhysical : Tape Bool}
+    (hseparator :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical) :
+    let reads := ReadTuple3.ofTapes logical
+    let c : Configuration := { state := state, tapes := logical }
+    (oneStepOrSelf D c).state = t.target ∧
+      RunsFromStateTapeEquiv
+        (tableMachine branchStateCount
+          (StaticDispatcherState.afterRead D state reads)
+          (StaticDispatcherState.ready t.target)
+          (selectedRowBranchTransitions branchStateCount offset D state reads
+            scratch t refresh))
+        (StaticDispatcherState.afterRead D state reads)
+        (StaticDispatcherState.ready t.target)
+        separatorPhysical
+        (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
+  intro reads c
+  let rowMachine :=
+    retargetedSelectedRowSeparatorDescription
+      offset (StaticDispatcherState.ready t.target) t refresh
+  let jumpMachine :=
+    selectedRowBranchJumpDescription branchStateCount D state reads
+      scratch rowMachine.start
+  let branchMachine :=
+    tableMachine branchStateCount
+      (StaticDispatcherState.afterRead D state reads)
+      (StaticDispatcherState.ready t.target)
+      (selectedRowBranchTransitions branchStateCount offset D state reads
+        scratch t refresh)
+  have hsourceScratch' :
+      StaticDispatcherState.afterRead D state reads ≠ scratch := by
+    simpa [reads] using hsourceScratch
+  have hsourceBelow' :
+      StaticDispatcherState.afterRead D state reads < offset := by
+    simpa [reads] using hsourceBelow
+  have hsourceLimit' :
+      StaticDispatcherState.afterRead D state reads < branchStateCount := by
+    simpa [reads] using hsourceLimit
+  have hrowStartAtLeast' : offset ≤ rowMachine.start := by
+    simpa [rowMachine] using hrowStartAtLeast
+  have hrowStartLimit' : rowMachine.start < branchStateCount := by
+    simpa [rowMachine] using hrowStartLimit
+  have hrowStartSource : rowMachine.start ≠
+      StaticDispatcherState.afterRead D state reads := by
+    exact
+      (Nat.ne_of_lt
+        (Nat.lt_of_lt_of_le hsourceBelow' hrowStartAtLeast')).symm
+  have hrowStartScratch : rowMachine.start ≠ scratch := by
+    exact
+      (Nat.ne_of_lt
+        (Nat.lt_of_lt_of_le hscratchBelow hrowStartAtLeast')).symm
+  have hbranchDet : branchMachine.Deterministic := by
+    exact
+      tableMachine_deterministic_of_transitionListDeterministic
+        (by
+          simpa [branchMachine] using
+            selectedRowBranchTransitions_deterministic
+              (branchStateCount := branchStateCount) (offset := offset)
+              (D := D) (state := state) (reads := reads)
+              (scratch := scratch) (t := t) (refresh := refresh)
+              hrows
+              (by simpa [reads] using hlookup)
+              hrefresh hsourceScratch' hsourceBelow' hscratchBelow
+              htargetBelow)
+  have hjumpReady : jumpMachine.SubroutineReady := by
+    simpa [jumpMachine, selectedRowBranchJumpDescription] using
+      blankHeadBounceJumpDescription_subroutineReady
+        hsourceLimit' hscratchLimit hrowStartLimit'
+        hsourceScratch' hrowStartSource hrowStartScratch
+  have hjump :
+      RunsFromStateTapeEquiv jumpMachine
+        (StaticDispatcherState.afterRead D state reads)
+        rowMachine.start
+        separatorPhysical separatorPhysical := by
+    simpa [jumpMachine, selectedRowBranchJumpDescription] using
+      blankHeadBounceJumpDescription_runsFromTapeSeparator
+        hsourceScratch' hseparator.left
+  have hjumpBranch :
+      RunsFromStateTapeEquiv branchMachine
+        (StaticDispatcherState.afterRead D state reads)
+        rowMachine.start
+        separatorPhysical separatorPhysical := by
+    exact
+      runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+        (small := jumpMachine)
+        (big := branchMachine)
+        (hsubset := by
+          intro u hu
+          simpa [branchMachine, tableMachine, selectedRowBranchTransitions,
+            jumpMachine, rowMachine] using Or.inl hu)
+        hbranchDet hjumpReady.right hjump
+  have hrowSelected :=
+    retargetedSelectedRowSeparatorDescription_runsFromTape2Separator
+      D hD hrows hlength hlookup hrefresh htargetBelow hseparator
+  rcases hrowSelected with ⟨honeState, hrow⟩
+  have hrowReady : rowMachine.SubroutineReady := by
+    simpa [rowMachine] using
+      retargetedSelectedRowSeparatorDescription_subroutineReady
+        htargetBelow hrows
+        (by simpa [reads] using hlookup)
+        hrefresh
+  have hrowBranch :
+      RunsFromStateTapeEquiv branchMachine
+        rowMachine.start
+        (StaticDispatcherState.ready t.target)
+        separatorPhysical
+        (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
+    exact
+      runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+        (small := rowMachine)
+        (big := branchMachine)
+        (hsubset := by
+          intro u hu
+          simpa [branchMachine, tableMachine, selectedRowBranchTransitions,
+            rowMachine] using Or.inr hu)
+        hbranchDet hrowReady.right
+        (by simpa [rowMachine, c] using hrow)
+  exact ⟨by simpa [c] using honeState,
+    runsFromStateTapeEquiv_trans hjumpBranch hrowBranch⟩
+
 end StaticDispatcherReaderAssembly
 
 end MultiTapeLowering
