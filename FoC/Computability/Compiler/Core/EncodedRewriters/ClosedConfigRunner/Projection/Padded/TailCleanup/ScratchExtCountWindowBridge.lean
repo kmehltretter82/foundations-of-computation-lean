@@ -270,6 +270,16 @@ def selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
     List (Option Bool) :=
   List.append (bits.map some) (none :: padding)
 
+def selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderTargetTape
+    (rightEdgeScanSourceTapeFromLeft [none] bits padding)
+    []
+
+def selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+    (bits : Word Bool) (padding : List (Option Bool)) : Tape Bool :=
+  rightEdgeRewindSourceTape bits padding
+
 theorem selectedSegmentLogicalTapeDecoderDensifierTargetCells_eq_paddingPreservingCells
     (bits : Word Bool) (padding : List (Option Bool)) :
     selectedSegmentLogicalTapeDecoderDensifierTargetCells bits padding =
@@ -363,6 +373,28 @@ theorem selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTap
   simp [selectedSegmentLogicalTapeDecoderStart,
     selectedSegmentLogicalTapeDecoderDensifierSourceCells,
     selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] bits padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
+      [] bits padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          bits padding) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        bits padding := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
+    selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells]
+  exact rightEdgeRewindSourceTape_cells bits padding
 
 theorem postFieldDecodedPrefixScanSourceTape_cells
     (useAccept : Bool) (L : DovetailLayout) :
@@ -1250,6 +1282,21 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixErase
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserSpec
       eraser
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding)
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          bits padding)
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec compactor
+
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
@@ -1687,9 +1734,31 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponen
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction :=
   ⟨hprefix, hfootprint⟩
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+    (hgeneric :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
+  rcases hgeneric with ⟨compactor, hready, hrun⟩
+  refine ⟨compactor, hready, ?_⟩
+  intro useAccept L
+  simpa [
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape,
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
+    postFieldDecodedPrefixScanSourceTape] using
+    hrun (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+      selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
