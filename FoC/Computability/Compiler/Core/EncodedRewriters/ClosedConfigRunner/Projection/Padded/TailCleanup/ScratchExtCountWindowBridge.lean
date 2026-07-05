@@ -483,6 +483,83 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTa
   rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
   rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
 
+def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderTargetTape
+    (postFieldDecodedPrefixScanSourceTape useAccept L)
+    []
+
+def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  rightEdgeRewindSourceTape (ParsedLayoutBits L)
+    (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_cells
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding useAccept L) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTargetTape_cells_postFieldDecodedPrefixScanSourceTape_eq_densifierSource
+      useAccept L []
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_cells
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L) =
+      selectedSegmentLogicalTapeDecoderDensifierTargetCells
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding useAccept L) := by
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape,
+    selectedSegmentLogicalTapeDecoderDensifierTargetCells]
+  exact
+    rightEdgeRewindSourceTape_cells
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L) =
+      List.append (ParsedLayoutBits L)
+        ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
+          (fun cell => cell)) := by
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape]
+  rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
+  rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L) =
+      List.append (ParsedLayoutBits L)
+        ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
+          (fun cell => cell)) := by
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape]
+  exact
+    rightEdgeRewindSourceTape_normalizedOutput
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactor_normalizedOutput_eq
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L) =
+      Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_normalizedOutput,
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_normalizedOutput]
+
 theorem selectedSegmentLogicalTapeDecoderTargetTape_move_left_move_right_equiv
     (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
     Tape.Equiv
@@ -1074,11 +1151,10 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpe
   compactor.SubroutineReady ∧
     forall (useAccept : Bool) (L : DovetailLayout),
       compactor.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderTargetTape
-          (postFieldDecodedPrefixScanSourceTape useAccept L)
-          [])
-        (rightEdgeRewindSourceTape (ParsedLayoutBits L)
-          (postFieldDecodedPrefixScanPadding useAccept L))
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L)
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L)
 
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction :
     Prop :=
