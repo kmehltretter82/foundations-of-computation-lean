@@ -475,6 +475,225 @@ theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_haltsFromConfig
       loweredTraceDescriptionWithGuardSlackRefresh_simulates_runConfig
         hD hrefresh n c hc⟩
 
+/--
+Trace-shaped one-tape lowering over the structured-singleton refresh contract.
+
+This is the Milestone 1 route that keeps the exact structured target while
+requiring only row-produced singleton endpoint shapes from the refresh
+normalizer.
+-/
+def loweredTraceDescriptionWithStructuredSingletonRefresh
+    (D : Description) (refresh : MachineDescription) :
+    Nat -> Configuration -> MachineDescription
+  | 0, _c => cursorNoopDescription
+  | n + 1, c =>
+      match D.lookupTransition c with
+      | none => cursorNoopDescription
+      | some t =>
+          canonicalPrimitiveSeqDescription
+            (readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+              t refresh)
+            (loweredTraceDescriptionWithStructuredSingletonRefresh D refresh n
+              (structuredTransitionTarget D t c))
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_subroutineReady
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh) :
+    forall (n : Nat) (c : Configuration),
+      (loweredTraceDescriptionWithStructuredSingletonRefresh
+        D refresh n c).SubroutineReady := by
+  intro n
+  induction n with
+  | zero =>
+      intro c
+      exact cursorNoopDescription_subroutineReady
+  | succ n ih =>
+      intro c
+      cases hlookup : D.lookupTransition c with
+      | none =>
+          simp [loweredTraceDescriptionWithStructuredSingletonRefresh,
+            hlookup]
+          exact cursorNoopDescription_subroutineReady
+      | some t =>
+          have hrow :
+              LowersGuardedTransitionEquiv D t
+                (readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+                  t refresh) :=
+            hD.lookup_lowersGuardedTransitionEquiv_withStructuredSingletonRefresh
+              hlookup hrefresh
+          simp [loweredTraceDescriptionWithStructuredSingletonRefresh,
+            hlookup]
+          exact
+            canonicalPrimitiveSeqDescription_subroutineReady
+              hrow.subroutineReady
+              (ih (structuredTransitionTarget D t c))
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_computesIn
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh) :
+    forall {n : Nat} {c final : Configuration},
+      Description.ComputesIn D n c final ->
+        c.tapes.length = D.tapeCount ->
+          (loweredTraceDescriptionWithStructuredSingletonRefresh
+            D refresh n c).HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes final.tapes) := by
+  intro n c final hcomp
+  induction hcomp with
+  | zero c =>
+      intro _hc
+      exact
+        MachineDescription.HaltsFromTape.toEquiv
+          (cursorNoopDescription_haltsFromTape
+            (encodedGuardedStructuredTapes c.tapes))
+  | succ hstep hrest ih =>
+      rename_i n c next final
+      intro hc
+      cases hlookup : D.lookupTransition c with
+      | none =>
+          simp [Description.stepConfig, hlookup] at hstep
+      | some t =>
+          have hstepLookup :
+              D.stepConfig c =
+                some (structuredTransitionTarget D t c) :=
+            stepConfig_eq_some_of_lookupTransition hlookup
+          have hnext :
+              next = structuredTransitionTarget D t c := by
+            rw [hstep] at hstepLookup
+            exact Option.some.inj hstepLookup
+          cases hnext
+          have hrowReady :
+              (readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+                t refresh).SubroutineReady :=
+            (hD.lookup_lowersGuardedTransitionEquiv_withStructuredSingletonRefresh
+              hlookup hrefresh).subroutineReady
+          have htailReady :
+              (loweredTraceDescriptionWithStructuredSingletonRefresh
+                D refresh n
+                (structuredTransitionTarget D t c)).SubroutineReady :=
+            loweredTraceDescriptionWithStructuredSingletonRefresh_subroutineReady
+              hD hrefresh n (structuredTransitionTarget D t c)
+          have hrowRun :=
+            (hD.lookup_realizes_structured_step_withStructuredSingletonRefresh
+              hc hlookup rfl hrefresh).right
+          have htailRun :=
+            ih (Description.stepConfig_tape_count hstep)
+          simp [loweredTraceDescriptionWithStructuredSingletonRefresh,
+            hlookup]
+          exact
+            canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+              hrowReady htailReady hrowRun htailRun
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_runConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh) :
+    forall (n : Nat) (c : Configuration),
+      c.tapes.length = D.tapeCount ->
+        (loweredTraceDescriptionWithStructuredSingletonRefresh
+          D refresh n c).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes c.tapes)
+          (encodedGuardedStructuredTapes (D.runConfig n c).tapes) := by
+  intro n
+  induction n with
+  | zero =>
+      intro c _hc
+      exact
+        MachineDescription.HaltsFromTape.toEquiv
+          (cursorNoopDescription_haltsFromTape
+            (encodedGuardedStructuredTapes c.tapes))
+  | succ n ih =>
+      intro c hc
+      cases hlookup : D.lookupTransition c with
+      | none =>
+          have hstepNone : D.stepConfig c = none := by
+            simp [Description.stepConfig, hlookup]
+          have hrun :
+              D.runConfig (n + 1) c = c := by
+            simp [Description.runConfig, hstepNone]
+          rw [hrun]
+          simp [loweredTraceDescriptionWithStructuredSingletonRefresh,
+            hlookup]
+          exact
+            MachineDescription.HaltsFromTape.toEquiv
+              (cursorNoopDescription_haltsFromTape
+                (encodedGuardedStructuredTapes c.tapes))
+      | some t =>
+          have hstep :
+              D.stepConfig c =
+                some (structuredTransitionTarget D t c) :=
+            stepConfig_eq_some_of_lookupTransition hlookup
+          have hrowReady :
+              (readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+                t refresh).SubroutineReady :=
+            (hD.lookup_lowersGuardedTransitionEquiv_withStructuredSingletonRefresh
+              hlookup hrefresh).subroutineReady
+          have htailReady :
+              (loweredTraceDescriptionWithStructuredSingletonRefresh
+                D refresh n
+                (structuredTransitionTarget D t c)).SubroutineReady :=
+            loweredTraceDescriptionWithStructuredSingletonRefresh_subroutineReady
+              hD hrefresh n (structuredTransitionTarget D t c)
+          have hrowRun :=
+            (hD.lookup_realizes_structured_step_withStructuredSingletonRefresh
+              hc hlookup rfl hrefresh).right
+          have htailRun :=
+            ih (structuredTransitionTarget D t c)
+              (Description.stepConfig_tape_count hstep)
+          have hrun :
+              D.runConfig (n + 1) c =
+                D.runConfig n (structuredTransitionTarget D t c) := by
+            simp [Description.runConfig, hstep]
+          rw [hrun]
+          simp [loweredTraceDescriptionWithStructuredSingletonRefresh,
+            hlookup]
+          exact
+            canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+              hrowReady htailReady hrowRun htailRun
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_haltsWithTapes
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    {c : Configuration} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes c tapes)
+    (hc : c.tapes.length = D.tapeCount) :
+    exists n : Nat,
+      (loweredTraceDescriptionWithStructuredSingletonRefresh
+        D refresh n c).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes c.tapes)
+        (encodedGuardedStructuredTapes tapes) := by
+  rcases hhalts with ⟨n, hrun⟩
+  have hsim :=
+    loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_runConfig
+      hD hrefresh n c hc
+  have htapes :
+      (D.runConfig n c).tapes = tapes :=
+    congrArg Configuration.tapes hrun
+  exact ⟨n, by simpa [htapes] using hsim⟩
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_haltsFromConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    {c : Configuration}
+    (hhalts : D.HaltsFromConfig c)
+    (hc : c.tapes.length = D.tapeCount) :
+    exists n : Nat,
+      D.HaltsIn n c ∧
+        (loweredTraceDescriptionWithStructuredSingletonRefresh
+          D refresh n c).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes c.tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n c).tapes) := by
+  rcases hhalts with ⟨n, hhalt⟩
+  exact
+    ⟨n, hhalt,
+      loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_runConfig
+        hD hrefresh n c hc⟩
+
 theorem description_initial_tapes_length
     (D : Description) (inputs : List (Word Bool)) :
     (D.initial inputs).tapes.length = D.tapeCount := by
@@ -739,6 +958,41 @@ theorem refreshRealizesEndpointEquiv
   P.refresh.realizesEndpointEquiv hendpoint
 
 end StaticLoweringWithGuardSlackRefreshPrerequisites
+
+/--
+Milestone 1 narrowed prerequisite bundle for the structured-singleton refresh
+route.
+
+This keeps the reusable trace/static APIs away from the broader arbitrary
+guard-slack endpoint contract when the only remaining concrete refresh
+obligation is the row-produced, segment-wise singleton shape.
+-/
+structure StaticLoweringWithStructuredSingletonRefreshPrerequisites
+    (D : Description) : Type where
+  wellFormed : D.WellFormed
+  rows : SupportsReadWriteRows3 D
+  refresh : MachineDescription
+  refreshContract : StructuredSingletonGuardSlackRefreshContract refresh
+
+namespace StaticLoweringWithStructuredSingletonRefreshPrerequisites
+
+theorem refreshSubroutineReady
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D) :
+    P.refresh.SubroutineReady :=
+  P.refreshContract.subroutineReady
+
+theorem refreshRealizes
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      StructuredSingletonGuardSlackEndpointShape target physical) :
+    P.refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  P.refreshContract.realizes hendpoint
+
+end StaticLoweringWithStructuredSingletonRefreshPrerequisites
 
 theorem StaticLoweredDescriptionWithRefresh.wellFormed
     {D : Description}
@@ -1029,6 +1283,52 @@ theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsFrom
     hD hrefresh hhalts
     (description_initial_tapes_length D inputs)
 
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_runConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    (n : Nat) (inputs : List (Word Bool)) :
+    (loweredTraceDescriptionWithStructuredSingletonRefresh D refresh n
+      (D.initial inputs)).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+      (encodedGuardedStructuredTapes
+        (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_runConfig
+    hD hrefresh n (D.initial inputs)
+    (description_initial_tapes_length D inputs)
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_haltsWithTapes
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      (loweredTraceDescriptionWithStructuredSingletonRefresh D refresh n
+        (D.initial inputs)).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+        (encodedGuardedStructuredTapes tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_haltsWithTapes
+    hD hrefresh hhalts
+    (description_initial_tapes_length D inputs)
+
+theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_haltsFromConfig
+    {D : Description} {refresh : MachineDescription}
+    (hD : SupportsReadWriteRows3 D)
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (loweredTraceDescriptionWithStructuredSingletonRefresh D refresh n
+          (D.initial inputs)).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_haltsFromConfig
+    hD hrefresh hhalts
+    (description_initial_tapes_length D inputs)
+
 /-!
 ## Bundled refreshed route
 
@@ -1153,6 +1453,71 @@ theorem loweredTraceDescriptionGuardSlack_simulates_initial_haltsFromConfig
             (D.runConfig n (D.initial inputs)).tapes) :=
   loweredTraceDescriptionWithGuardSlackRefresh_simulates_initial_haltsFromConfig
     P.rows P.refresh.contract hhalts
+
+def loweredTraceDescriptionStructuredSingleton
+    (D : Description)
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D) :
+    Nat -> Configuration -> MachineDescription :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh D P.refresh
+
+theorem loweredTraceDescriptionStructuredSingleton_subroutineReady
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    (n : Nat) (c : Configuration) :
+    (loweredTraceDescriptionStructuredSingleton D P n c).SubroutineReady :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_subroutineReady
+    P.rows P.refreshContract n c
+
+theorem loweredTraceDescriptionStructuredSingleton_simulates_runConfig
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    (n : Nat) (c : Configuration)
+    (hc : c.tapes.length = D.tapeCount) :
+    (loweredTraceDescriptionStructuredSingleton D P n c).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes (D.runConfig n c).tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_runConfig
+    P.rows P.refreshContract n c hc
+
+theorem loweredTraceDescriptionStructuredSingleton_simulates_initial_runConfig
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    (n : Nat) (inputs : List (Word Bool)) :
+    (loweredTraceDescriptionStructuredSingleton D P n
+      (D.initial inputs)).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+      (encodedGuardedStructuredTapes
+        (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_runConfig
+    P.rows P.refreshContract n inputs
+
+theorem loweredTraceDescriptionStructuredSingleton_simulates_initial_haltsWithTapes
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    exists n : Nat,
+      (loweredTraceDescriptionStructuredSingleton D P n
+        (D.initial inputs)).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+        (encodedGuardedStructuredTapes tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_haltsWithTapes
+    P.rows P.refreshContract hhalts
+
+theorem loweredTraceDescriptionStructuredSingleton_simulates_initial_haltsFromConfig
+    {D : Description}
+    (P : StaticLoweringWithStructuredSingletonRefreshPrerequisites D)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (loweredTraceDescriptionStructuredSingleton D P n
+          (D.initial inputs)).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) :=
+  loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_haltsFromConfig
+    P.rows P.refreshContract hhalts
 
 end MultiTapeLowering
 end Structured
