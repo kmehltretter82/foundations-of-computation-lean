@@ -195,6 +195,16 @@ theorem finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem finiteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    FiniteDescriptionConstruction :=
+  finiteDescriptionConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+      hprefix hcases)
+
 theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction :=
   finiteDescriptionConstruction_scaffold_of_configRunner
@@ -250,6 +260,21 @@ theorem outputCompiledSubroutine_of_prefixAndFootprintCases
         runner :=
   outputCompiledSubroutine_of_finiteDescriptionConstruction
     (finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
+    accept reject
+
+theorem outputCompiledSubroutine_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (finiteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
     accept reject
 

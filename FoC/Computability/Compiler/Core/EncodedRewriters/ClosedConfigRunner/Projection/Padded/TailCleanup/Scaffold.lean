@@ -72,6 +72,16 @@ theorem selectedProjectionPaddedTailEmitterConstruction_scaffold_of_prefixAndFoo
     (SelectedProjectionPaddedTailCleanup.selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem selectedProjectionPaddedTailEmitterConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailEmitterConstruction :=
+  selectedProjectionPaddedTailEmitterConstruction_scaffold_of_postErase
+    (SelectedProjectionPaddedTailCleanup.selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFootprintBitPaddingCases
+      hprefix hcases)
+
 end BoundedLayoutRunner
 end EncodedRewriters
 

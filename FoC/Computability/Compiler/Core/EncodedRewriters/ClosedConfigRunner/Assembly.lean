@@ -85,6 +85,16 @@ theorem configRunnerPhaseEquivConstruction_scaffold_of_prefixAndFootprintCases
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem configRunnerPhaseEquivConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    ConfigRunnerPhaseEquivConstruction :=
+  configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+      hprefix hcases)
+
 theorem configRunnerPhaseEquivConstruction_scaffold :
     ConfigRunnerPhaseEquivConstruction :=
   configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
@@ -164,6 +174,16 @@ theorem acceptRejectConfigRunnerConstruction_scaffold_of_prefixAndFootprintCases
     AcceptRejectConfigRunnerConstruction :=
   acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
+
+theorem acceptRejectConfigRunnerConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    AcceptRejectConfigRunnerConstruction :=
+  acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
 theorem acceptRejectConfigRunnerConstruction_scaffold :

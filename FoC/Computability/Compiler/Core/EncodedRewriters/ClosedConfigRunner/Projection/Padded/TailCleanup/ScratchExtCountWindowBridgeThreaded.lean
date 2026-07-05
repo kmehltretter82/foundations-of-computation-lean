@@ -200,6 +200,18 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
         hcases)
 
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintCases
+      hprefix
+      (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+        hcases)
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
   sorry
@@ -373,6 +385,16 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
     (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
+  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
+      hprefix hcases)
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
     (hnormalizer :
       Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
@@ -532,6 +554,17 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_brid
     hprefix hcases
     loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
 
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_prefixAndFootprintCases
+    hprefix
+    (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+      hcases)
+
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
@@ -655,6 +688,17 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstructi
   selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
     (selectedProjectionPaddedTailCleanupScratchExtConstruction_of_prefixAndFootprintCases
       hprefix hcases)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintBitPaddingCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintCases
+    hprefix
+    (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+      hcases)
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
