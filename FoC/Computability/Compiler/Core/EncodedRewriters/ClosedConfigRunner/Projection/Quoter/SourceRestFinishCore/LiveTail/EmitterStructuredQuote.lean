@@ -170,7 +170,42 @@ theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_aft
     structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind_loop
       [] bits markers outputBits
 
-theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind_assemblyPrefix
+theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind_assemblyTargetPrefix
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription.runConfig
+        (4 *
+            (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length +
+          1)
+        (structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+          0 [] (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p)
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
+          (assemblySourceRestFinishLengthHeaderBits
+            p.w p.sourceRestBits p.stage)) =
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+        structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription.halt
+        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).reverse
+        []
+        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
+        (assemblySourceRestFinishTargetPrefixBits
+          p.w p.sourceRestBits p.stage) := by
+  rw [structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits]
+  rw [assemblySourceRestFinishTargetPrefixBits_eq_headerQuote,
+    assemblySourceRestFinishLengthHeaderBits]
+  simpa [assemblySourceRestFinishSourceBits_length_eq_prefix_add,
+    List.append_assoc] using
+    structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind
+      (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage)
+      (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage).length
+      (List.append
+        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          ((assemblySourceRestFinishSourcePrefixBits p.w p.stage).length +
+            p.sourceRestBits.length)))
+
+-- Prefix-only quoting is useful only after a separate phase has isolated the
+-- parsed prefix. The assembly rewind phase leaves the full counted source word,
+-- so the composable post-rewind theorem is the target-prefix theorem above.
+theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind_isolatedAssemblyPrefix
     (p : AssemblySourceRestLiveTailEmitterParam) :
     structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription.runConfig
         (4 *
