@@ -155,6 +155,25 @@ def DecodedDescriptionInterpreterSpec
           (MachineDescription.encodeCodeWordAsInput input)
 
 /--
+Total-token decoded-description interpreter semantics.  Unlike
+{name}`DecodedDescriptionInterpreterSpec`, this contract specifies rejection
+for malformed inputs by quantifying over every source token word.
+-/
+def DecodedDescriptionInterpreterTotalSpec
+    {runnerState : Type uRunner}
+    (runner : TuringMachine MachineCodeSymbol runnerState) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+    TuringMachine.HaltsOnInput runner tokens <->
+      exists fuel : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (fuel,
+              List.append (MachineDescription.encodeDescription D) input) ∧
+          D.HaltsIn fuel
+            (MachineDescription.encodeCodeWordAsInput input)
+
+/--
 Ordinary halting is existential exact-fuel halting.  This is the semantic
 bridge used by unbounded generated searches.
 -/

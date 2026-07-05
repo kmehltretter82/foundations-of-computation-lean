@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 
 set_option doc.verso true
@@ -2608,7 +2609,15 @@ Concrete finite-state leaf for the direct initial-halt transition-loop runner.
 -/
 theorem decodedBoundedSimulatorTransitionLoopInitialHaltMachineFiniteLeaf :
     DecodedBoundedSimulatorTransitionLoopInitialHaltMachineConstruction := by
-  sorry
+  rcases FiniteRecognizer.decodedDescriptionInterpreterFiniteLeaf with
+    ⟨state, runner, hrunner⟩
+  refine ⟨state, runner, ?_⟩
+  intro tokens
+  exact
+    Iff.trans (hrunner tokens)
+      (Iff.symm
+        (decodedBoundedSimulatorTransitionLoopInitialHalt_iff_haltsIn
+          tokens))
 
 /--
 Concrete finite-table leaf for the direct initial-halt transition-loop runner.

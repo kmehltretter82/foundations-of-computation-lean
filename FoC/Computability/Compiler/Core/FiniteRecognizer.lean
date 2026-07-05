@@ -9,6 +9,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
+import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter
 
 set_option doc.verso true
 
