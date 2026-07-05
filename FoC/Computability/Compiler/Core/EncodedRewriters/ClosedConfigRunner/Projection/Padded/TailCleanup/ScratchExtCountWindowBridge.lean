@@ -260,6 +260,15 @@ def selectedSegmentLogicalTapeDecoderDensifierSourceCells
           bits padding)
         [none, none])
 
+def selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    List (Option Bool) :=
+  none ::
+    List.append
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+        bits padding)
+      [none]
+
 def selectedSegmentLogicalTapeDecoderDensifierTargetCells
     (bits : Word Bool) (padding : List (Option Bool)) :
     List (Option Bool) :=
@@ -286,6 +295,18 @@ theorem selectedSegmentLogicalTapeDecoderDensifierTargetCells_eq_paddingPreservi
       selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
         bits padding := by
   rfl
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintVisibleCells_eq_sourceCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    rightEndCompactionVisibleCells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          bits padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] bits padding := by
+  simp [rightEndCompactionVisibleCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells,
+    selectedSegmentLogicalTapeDecoderDensifierSourceCells,
+    List.append_assoc]
 
 theorem selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint
     (bits : Word Bool) (padding : List (Option Bool)) :
@@ -385,6 +406,68 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
     selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
       [] bits padding
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] [] padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
+      [] padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons
+    (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] (bit :: rest) padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
+      (bit :: rest) padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        bits padding =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          bits padding) := by
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells,
+    selectedSegmentLogicalTapeDecoderTargetTape,
+    FSTStatefulOptionAppendTargetTapeFromLeft,
+    statefulOptionAppendWriteTargetTapeAtBlank, rightEndCompactionSourceTape,
+    tapeAtCells, selectedSegmentLogicalTapeDecoderStart,
+    selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint,
+    List.reverse_append]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] padding =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      [] padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons
+    (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) padding =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          (bit :: rest) padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      (bit :: rest) padding
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.cells
@@ -395,6 +478,29 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
     selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells]
   exact rightEdgeRewindSourceTape_cells bits padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] padding) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        [] padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
+      [] padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons
+    (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) padding) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        (bit :: rest) padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
+      (bit :: rest) padding
 
 theorem postFieldDecodedPrefixScanSourceTape_cells
     (useAccept : Bool) (L : DovetailLayout) :
@@ -555,10 +661,12 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorVisibl
       selectedSegmentLogicalTapeDecoderDensifierSourceCells
         [] (ParsedLayoutBits L)
         (postFieldDecodedPrefixScanPadding useAccept L) := by
-  simp [rightEndCompactionVisibleCells,
+  simpa [
     countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells,
-    selectedSegmentLogicalTapeDecoderDensifierSourceCells,
-    List.append_assoc]
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintVisibleCells_eq_sourceCells
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_cells
     (useAccept : Bool) (L : DovetailLayout) :
@@ -579,14 +687,14 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
       rightEndCompactionSourceTape
         (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells
           useAccept L) := by
-  simp [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape,
+  simpa [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape,
     countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells,
-    selectedSegmentLogicalTapeDecoderTargetTape,
-    FSTStatefulOptionAppendTargetTapeFromLeft,
-    statefulOptionAppendWriteTargetTapeAtBlank, rightEndCompactionSourceTape,
-    tapeAtCells, selectedSegmentLogicalTapeDecoderStart,
-    selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint,
-    postFieldDecodedPrefixScanSourceTape, List.reverse_append]
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells,
+    postFieldDecodedPrefixScanSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_cells
     (useAccept : Bool) (L : DovetailLayout) :
@@ -760,6 +868,25 @@ theorem selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
     selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
     List.filterMap_append]
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+        bits padding).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    List.filterMap_append]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintVisibleCells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (rightEndCompactionVisibleCells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          bits padding)).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simp [rightEndCompactionVisibleCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_filterMap,
+    List.filterMap_append]
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells_filterMap
     (useAccept : Bool) (L : DovetailLayout) :
     (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells
@@ -767,9 +894,12 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCe
       List.append (ParsedLayoutBits L)
         ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
           (fun cell => cell)) := by
-  simp [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells,
-    selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
-    List.filterMap_append]
+  simpa [
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_filterMap
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorVisibleCells_filterMap
     (useAccept : Bool) (L : DovetailLayout) :
@@ -779,9 +909,12 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorVisibl
       List.append (ParsedLayoutBits L)
         ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
           (fun cell => cell)) := by
-  simp [rightEndCompactionVisibleCells,
-    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells_filterMap,
-    List.filterMap_append]
+  simpa [
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorLeftCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintVisibleCells_filterMap
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
 
 theorem selectedSegmentLogicalTapeDecoderDensifierTargetCells_filterMap
     (bits : Word Bool) (padding : List (Option Bool)) :
