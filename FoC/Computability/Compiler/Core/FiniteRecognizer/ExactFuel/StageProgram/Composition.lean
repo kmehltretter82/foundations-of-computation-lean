@@ -445,6 +445,31 @@ def ExactOutputCanonicalSpec
       exists output : Word MachineCodeSymbol,
         f input = some output /\ final.tape = Tape.output output
 
+theorem outputSpec_of_exactOutput_canonical
+    {machine : TuringMachine MachineCodeSymbol producerState}
+    {f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hexact : ExactOutputSpec machine f)
+    (hcanonical : ExactOutputCanonicalSpec machine f) :
+    OutputSpec machine f := by
+  intro input output
+  constructor
+  · intro houtput
+    rcases houtput with
+      ⟨final, hcomp, hhalt, hnormalized⟩
+    rcases hcanonical input final hcomp hhalt with
+      ⟨exactOutput, hf, htape⟩
+    have hnormalizedExact :
+        Tape.normalizedOutput final.tape = exactOutput := by
+      rw [htape]
+      exact Tape.normalizedOutput_output exactOutput
+    have houtputEq : output = exactOutput :=
+      hnormalized.symm.trans hnormalizedExact
+    simpa [houtputEq] using hf
+  · intro hf
+    exact
+      TuringMachine.halts_with_exact_output_to_halts_with_output
+        ((hexact input output).mpr hf)
+
 theorem outputThenRecognizePipeline_haltsOnInput_of_exactOutput
     {producerState recognizerState : Type}
     {producer : TuringMachine MachineCodeSymbol producerState}

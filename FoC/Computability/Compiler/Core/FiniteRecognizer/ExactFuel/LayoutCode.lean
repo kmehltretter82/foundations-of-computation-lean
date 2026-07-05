@@ -769,6 +769,29 @@ theorem codeMachineConstruction_of_materializer_layoutCodeMachine_compose
     hcompose hmaterializer
     (layoutCodeRunnerConstruction_of_codeMachine hlayout)
 
+theorem codeMachineConstruction_of_exactMaterializer_layoutRunner_compose_normalized
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hcompose : OutputThenRecognizeConstruction)
+    (hmaterializer : InitialLayoutExactMaterializerConstruction M)
+    (hlayout : LayoutCodeRunnerConstruction M) :
+    CodeMachineConstruction M :=
+  codeMachineConstruction_of_materializer_layoutRunner_compose
+    hcompose
+    (initialLayoutMaterializerConstruction_of_exact hmaterializer)
+    hlayout
+
+theorem codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose_normalized
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hcompose : OutputThenRecognizeConstruction)
+    (hmaterializer : InitialLayoutExactMaterializerConstruction M)
+    (hlayout : LayoutCodeMachineConstruction M) :
+    CodeMachineConstruction M :=
+  codeMachineConstruction_of_exactMaterializer_layoutRunner_compose_normalized
+    hcompose hmaterializer
+    (layoutCodeRunnerConstruction_of_codeMachine hlayout)
+
 theorem codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
     {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}

@@ -78,6 +78,30 @@ theorem initialLayoutMaterializerCodePrimitive_stageCode
   simpa [initialLayoutMaterializerCodePrimitive, stageCode] using
     Layout.stageCodeToInitialLayoutCode_stageCode M input fuel
 
+theorem initialLayoutMaterializerSpec_of_exact_canonical
+    {stateCount : Nat} {materializerState : Type}
+    {materializer : TuringMachine MachineCodeSymbol materializerState}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hexact : InitialLayoutExactMaterializerSpec materializer M)
+    (hcanonical :
+      ExactOutputCanonicalSpec materializer
+        (Layout.stageCodeToInitialLayoutCode M)) :
+    InitialLayoutMaterializerSpec materializer M :=
+  outputSpec_of_exactOutput_canonical hexact hcanonical
+
+theorem initialLayoutMaterializerConstruction_of_exact
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (h : InitialLayoutExactMaterializerConstruction M) :
+    InitialLayoutMaterializerConstruction M := by
+  rcases h with
+    ⟨materializerState, materializer, hexact,
+      hcanonical, _hstop⟩
+  exact
+    ⟨materializerState, materializer,
+      initialLayoutMaterializerSpec_of_exact_canonical
+        hexact hcanonical⟩
+
 theorem stageCodeToInitialLayoutCode_eq_some_iff {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (tokens output : Word MachineCodeSymbol) :
@@ -237,6 +261,66 @@ theorem initialLayoutMaterializerSpec_stageCode_output
       (by
         simpa [stageCode] using
           Layout.stageCodeToInitialLayoutCode_stageCode M input fuel)
+
+theorem initialLayoutExactMaterializerSpec_stageCode_exactOutput
+    {stateCount : Nat} {materializerState : Type}
+    {materializer : TuringMachine MachineCodeSymbol materializerState}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hmaterializer :
+      InitialLayoutExactMaterializerSpec materializer M)
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    TuringMachine.HaltsWithExactOutput materializer
+      (stageCode input fuel)
+      (Layout.encode (Layout.initial M input fuel)) := by
+  exact
+    (hmaterializer (stageCode input fuel)
+      (Layout.encode (Layout.initial M input fuel))).mpr
+      (by
+        simpa [stageCode] using
+          Layout.stageCodeToInitialLayoutCode_stageCode M input fuel)
+
+theorem initialLayoutExactMaterializerSpec_haltsWithExactOutput_iff
+    {stateCount : Nat} {materializerState : Type}
+    {materializer : TuringMachine MachineCodeSymbol materializerState}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hmaterializer :
+      InitialLayoutExactMaterializerSpec materializer M)
+    (tokens output : Word MachineCodeSymbol) :
+    TuringMachine.HaltsWithExactOutput materializer tokens output <->
+      exists input : Word MachineCodeSymbol,
+      exists fuel : Nat,
+        tokens = stageCode input fuel /\
+          output = Layout.encode (Layout.initial M input fuel) := by
+  exact Iff.trans (hmaterializer tokens output)
+    (stageCodeToInitialLayoutCode_eq_some_iff M tokens output)
+
+theorem initialLayoutExactMaterializerCanonical_output_shape
+    {stateCount : Nat} {materializerState : Type}
+    {materializer : TuringMachine MachineCodeSymbol materializerState}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hcanonical :
+      ExactOutputCanonicalSpec materializer
+        (Layout.stageCodeToInitialLayoutCode M))
+    {tokens : Word MachineCodeSymbol}
+    {final :
+      TuringMachine.Configuration MachineCodeSymbol materializerState}
+    (hcomp :
+      TuringMachine.Computes materializer
+        (TuringMachine.initial materializer tokens) final)
+    (hhalt : TuringMachine.Halted materializer final) :
+    exists input : Word MachineCodeSymbol,
+    exists fuel : Nat,
+      tokens = stageCode input fuel /\
+        final.tape =
+          Tape.output (Layout.encode (Layout.initial M input fuel)) := by
+  rcases hcanonical tokens final hcomp hhalt with
+    ⟨output, houtput, htape⟩
+  rcases
+      (stageCodeToInitialLayoutCode_eq_some_iff
+        M tokens output).mp houtput with
+    ⟨input, fuel, htokens, hshape⟩
+  subst output
+  exact ⟨input, fuel, htokens, htape⟩
 
 theorem initialLayoutMaterializerSpec_haltsWithOutput_iff
     {stateCount : Nat} {materializerState : Type}
