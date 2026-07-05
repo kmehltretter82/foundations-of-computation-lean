@@ -238,6 +238,138 @@ theorem singletonShapeRefreshDescription_stepConfig_terminalProbe
   unfold MachineDescription.stepConfig
   rw [singletonShapeRefreshDescription_lookup_terminalProbe hstate]
 
+private theorem source_eq_of_lookupTransition
+    {D : MachineDescription} {state : Nat} {read : Option Bool}
+    {t : TransitionDescription}
+    (hlookup : D.lookupTransition state read = some t) :
+    t.source = state := by
+  have hmatch : Matches state read t = true := by
+    unfold MachineDescription.lookupTransition at hlookup
+    exact List.find?_some hlookup
+  unfold Matches at hmatch
+  simp at hmatch
+  exact hmatch.left
+
+private theorem singletonShapeRefreshDescription_stepConfig_of_leftRepair_some
+    {c next : MachineDescription.Configuration}
+    (hstep :
+      MachineDescription.stepConfig singletonShapeLeftRepairDescription c =
+        some next) :
+    MachineDescription.stepConfig singletonShapeRefreshDescription c =
+      some next := by
+  unfold MachineDescription.stepConfig at hstep ⊢
+  cases hlookup :
+      MachineDescription.lookupTransition singletonShapeLeftRepairDescription
+        c.state (Tape.read c.tape) with
+  | none =>
+      simp [hlookup] at hstep
+  | some t =>
+      have htmem := MachineDescription.lookupTransition_mem hlookup
+      have hsource := source_eq_of_lookupTransition hlookup
+      have hbounds :=
+        singletonShapeLeftRepairDescription_sources_in_block t htmem
+      have hlo : singletonShapeLeftRepairOffset ≤ c.state := by
+        lia
+      have hhi : c.state < singletonShapeLeftRepairLimit := by
+        lia
+      rw [singletonShapeRefreshDescription_lookup_leftRepair hlo hhi]
+      simpa [hlookup] using hstep
+
+private theorem singletonShapeRefreshDescription_stepConfig_of_rightRepair_some
+    {c next : MachineDescription.Configuration}
+    (hstep :
+      MachineDescription.stepConfig singletonShapeRightRepairDescription c =
+        some next) :
+    MachineDescription.stepConfig singletonShapeRefreshDescription c =
+      some next := by
+  unfold MachineDescription.stepConfig at hstep ⊢
+  cases hlookup :
+      MachineDescription.lookupTransition singletonShapeRightRepairDescription
+        c.state (Tape.read c.tape) with
+  | none =>
+      simp [hlookup] at hstep
+  | some t =>
+      have htmem := MachineDescription.lookupTransition_mem hlookup
+      have hsource := source_eq_of_lookupTransition hlookup
+      have hbounds :=
+        singletonShapeRightRepairDescription_sources_in_block t htmem
+      have hlo : singletonShapeRightRepairOffset ≤ c.state := by
+        lia
+      have hhi : c.state < singletonShapeRightRepairLimit := by
+        lia
+      rw [singletonShapeRefreshDescription_lookup_rightRepair hlo hhi]
+      simpa [hlookup] using hstep
+
+private theorem singletonShapeRefreshDescription_stepConfig_of_terminalProbe_some
+    {c next : MachineDescription.Configuration}
+    (hstep :
+      MachineDescription.stepConfig singletonShapeTerminalProbeDescription c =
+        some next) :
+    MachineDescription.stepConfig singletonShapeRefreshDescription c =
+      some next := by
+  unfold MachineDescription.stepConfig at hstep ⊢
+  cases hlookup :
+      MachineDescription.lookupTransition singletonShapeTerminalProbeDescription
+        c.state (Tape.read c.tape) with
+  | none =>
+      simp [hlookup] at hstep
+  | some t =>
+      have htmem := MachineDescription.lookupTransition_mem hlookup
+      have hsource := source_eq_of_lookupTransition hlookup
+      have hbounds :=
+        singletonShapeTerminalProbeDescription_sources_in_block t htmem
+      have hlo : singletonShapeTerminalProbeOffset ≤ c.state := by
+        lia
+      rw [singletonShapeRefreshDescription_lookup_terminalProbe hlo]
+      simpa [hlookup] using hstep
+
+private theorem singletonShapeRefreshDescription_runConfig_eq_to_halt
+    {D : MachineDescription}
+    (hstep :
+      forall {c next : MachineDescription.Configuration},
+        MachineDescription.stepConfig D c = some next ->
+          MachineDescription.stepConfig singletonShapeRefreshDescription c =
+            some next) :
+    forall (n : Nat) (c : MachineDescription.Configuration) (T : Tape Bool),
+      D.runConfig n c =
+          { state := singletonShapeRefreshFinalHalt, tape := T } ->
+        singletonShapeRefreshDescription.runConfig n c =
+          { state := singletonShapeRefreshFinalHalt, tape := T } := by
+  intro n
+  induction n with
+  | zero =>
+      intro c T hrun
+      simpa [MachineDescription.runConfig] using hrun
+  | succ n ih =>
+      intro c T hrun
+      simp only [MachineDescription.runConfig] at hrun ⊢
+      cases hlocal : MachineDescription.stepConfig D c with
+      | none =>
+          simp [hlocal] at hrun
+          subst c
+          have hfree :
+              singletonShapeRefreshDescription.TransitionFreeAt
+                singletonShapeRefreshFinalHalt := by
+            intro t ht hsource
+            exact singletonShapeRefreshDescription_haltTransitionFree
+              t ht (by
+                simpa [singletonShapeRefreshDescription] using hsource)
+          have hnone :
+              MachineDescription.stepConfig singletonShapeRefreshDescription
+                { state := singletonShapeRefreshFinalHalt, tape := T } =
+                none := by
+            unfold MachineDescription.stepConfig
+            rw [MachineDescription.lookupTransition_state_none hfree]
+          simp [hnone]
+      | some next =>
+          have hfull := hstep hlocal
+          have htail :
+              D.runConfig n next =
+                { state := singletonShapeRefreshFinalHalt, tape := T } := by
+            simpa [hlocal] using hrun
+          simp [hfull]
+          exact ih next T htail
+
 theorem singletonShapeRefreshDescription_run_false_of_reads
     (physical : Tape Bool)
     (hstart : Tape.read physical = none)
@@ -379,6 +511,186 @@ theorem singletonShapeRefreshDescription_run_rightBoundary_opening
     (SingletonGuardSlackEndpointShape.rightBoundary left head)
     (SingletonGuardSlackEndpointShape.rightBoundary_afterOpening_read
       left head)
+
+theorem singletonShapeRefreshDescription_reaches_terminal_canonical
+    (target : Tape Bool) :
+    exists steps : Nat,
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeTerminalProbeStart
+            tape := encodedGuardedStructuredTapes [target] } =
+        { state := singletonShapeRefreshFinalHalt
+          tape := encodedGuardedStructuredTapes [target] } := by
+  rcases singletonShapeTerminalProbeDescription_reaches_canonical
+      target with
+    ⟨steps, hrun⟩
+  exact
+    ⟨steps,
+      singletonShapeRefreshDescription_runConfig_eq_to_halt
+        singletonShapeRefreshDescription_stepConfig_of_terminalProbe_some
+        steps
+        { state := singletonShapeTerminalProbeStart
+          tape := encodedGuardedStructuredTapes [target] }
+        (encodedGuardedStructuredTapes [target])
+        hrun⟩
+
+theorem singletonShapeRefreshDescription_reaches_leftRepair_leftBoundary
+    (head : Option Bool) (right : List (Option Bool)) :
+    exists (actual : Tape Bool) (steps : Nat),
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeLeftRepairStart
+            tape :=
+              encodedStructuredTapes
+                [({ left := [], head := head, right := right ++ [none] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } ∧
+      Tape.Equiv actual
+        (encodedGuardedStructuredTapes
+          [({ left := [], head := head, right := right } : Tape Bool)]) := by
+  rcases singletonShapeLeftRepairDescription_haltsFrom_leftBoundary
+      head right with
+    ⟨actual, hhalts, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      hhalts with
+    ⟨steps, hrun⟩
+  refine ⟨actual, steps, ?_, hequiv⟩
+  have hrun' :
+      singletonShapeLeftRepairDescription.runConfig steps
+          { state := singletonShapeLeftRepairStart
+            tape :=
+              encodedStructuredTapes
+                [({ left := [], head := head, right := right ++ [none] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } := by
+    simpa [singletonShapeLeftRepairStart,
+      singletonShapeLeftRepairDescription,
+      MachineDescription.offsetRetargetDescription] using hrun
+  exact
+    singletonShapeRefreshDescription_runConfig_eq_to_halt
+      singletonShapeRefreshDescription_stepConfig_of_leftRepair_some
+      steps
+      { state := singletonShapeLeftRepairStart
+        tape :=
+          encodedStructuredTapes
+            [({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool)] }
+      actual
+      hrun'
+
+theorem singletonShapeRefreshDescription_reaches_rightRepair_rightBoundary
+    (left : List (Option Bool)) (head : Option Bool) :
+    exists (actual : Tape Bool) (steps : Nat),
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeRightRepairStart
+            tape :=
+              encodedStructuredTapes
+                [({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } ∧
+      Tape.Equiv actual
+        (encodedGuardedStructuredTapes
+          [({ left := left, head := head, right := [] } : Tape Bool)]) := by
+  rcases singletonShapeRightRepairDescription_haltsFrom_rightBoundary
+      left head with
+    ⟨actual, hhalts, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      hhalts with
+    ⟨steps, hrun⟩
+  refine ⟨actual, steps, ?_, hequiv⟩
+  have hrun' :
+      singletonShapeRightRepairDescription.runConfig steps
+          { state := singletonShapeRightRepairStart
+            tape :=
+              encodedStructuredTapes
+                [({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } := by
+    simpa [singletonShapeRightRepairStart,
+      singletonShapeRightRepairDescription,
+      MachineDescription.offsetRetargetDescription] using hrun
+  exact
+    singletonShapeRefreshDescription_runConfig_eq_to_halt
+      singletonShapeRefreshDescription_stepConfig_of_rightRepair_some
+      steps
+      { state := singletonShapeRightRepairStart
+        tape :=
+          encodedStructuredTapes
+            [({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool)] }
+      actual
+      hrun'
+
+theorem singletonShapeRefreshDescription_haltsFrom_canonical
+    (target : Tape Bool) :
+    singletonShapeRefreshDescription.HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes [target])
+      (encodedGuardedStructuredTapes [target]) := by
+  rcases singletonShapeRefreshDescription_reaches_terminal_canonical
+      target with
+    ⟨steps, hterminal⟩
+  refine ⟨encodedGuardedStructuredTapes [target], ?_, Tape.Equiv.refl _⟩
+  refine ⟨2 + steps, ?_⟩
+  have hrun :
+      singletonShapeRefreshDescription.runConfig (2 + steps)
+          { state := singletonShapeRefreshDescription.start
+            tape := encodedGuardedStructuredTapes [target] } =
+        { state := singletonShapeRefreshFinalHalt
+          tape := encodedGuardedStructuredTapes [target] } := by
+    rw [MachineDescription.runConfig_add]
+    rw [singletonShapeRefreshDescription_run_canonical_opening target]
+    exact hterminal
+  change
+    (singletonShapeRefreshDescription.runConfig (2 + steps)
+      { state := singletonShapeRefreshDescription.start
+        tape := encodedGuardedStructuredTapes [target] }).state =
+        singletonShapeRefreshDescription.halt ∧
+      (singletonShapeRefreshDescription.runConfig (2 + steps)
+        { state := singletonShapeRefreshDescription.start
+          tape := encodedGuardedStructuredTapes [target] }).tape =
+        encodedGuardedStructuredTapes [target]
+  rw [hrun]
+  simp [singletonShapeRefreshDescription]
+
+theorem singletonShapeRefreshDescription_haltsFrom_leftBoundary
+    (head : Option Bool) (right : List (Option Bool)) :
+    singletonShapeRefreshDescription.HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        [({ left := [], head := head, right := right ++ [none] } :
+          Tape Bool)])
+      (encodedGuardedStructuredTapes
+        [({ left := [], head := head, right := right } : Tape Bool)]) := by
+  rcases singletonShapeRefreshDescription_reaches_leftRepair_leftBoundary
+      head right with
+    ⟨actual, steps, hrepair, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  refine ⟨2 + steps, ?_⟩
+  have hrun :
+      singletonShapeRefreshDescription.runConfig (2 + steps)
+          { state := singletonShapeRefreshDescription.start
+            tape :=
+              encodedStructuredTapes
+                [({ left := [], head := head, right := right ++ [none] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } := by
+    rw [MachineDescription.runConfig_add]
+    rw [singletonShapeRefreshDescription_run_leftBoundary_opening head right]
+    exact hrepair
+  change
+    (singletonShapeRefreshDescription.runConfig (2 + steps)
+      { state := singletonShapeRefreshDescription.start
+        tape :=
+          encodedStructuredTapes
+            [({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool)] }).state =
+        singletonShapeRefreshDescription.halt ∧
+      (singletonShapeRefreshDescription.runConfig (2 + steps)
+        { state := singletonShapeRefreshDescription.start
+          tape :=
+            encodedStructuredTapes
+              [({ left := [], head := head, right := right ++ [none] } :
+                Tape Bool)] }).tape =
+        actual
+  rw [hrun]
+  simp [singletonShapeRefreshDescription]
 
 end MultiTapeLowering
 end Structured
