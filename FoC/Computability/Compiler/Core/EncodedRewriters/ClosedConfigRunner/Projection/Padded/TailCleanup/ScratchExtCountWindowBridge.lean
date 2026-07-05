@@ -349,6 +349,94 @@ def CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :
   exists projector : MachineDescription,
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorSpec projector
 
+/--
+Count-window-specific normalizer for the selected guarded tape-2 segment.
+
+The input cursor has already been moved to the separator before the third
+logical tape in the lowered structured output.  This is narrower than
+{name}`Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerSpec`
+because it only has to decode the concrete right-edge scan-source tape shape
+used by this bridge.
+-/
+def CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerSpec
+    (normalizer : MachineDescription) : Prop :=
+  normalizer.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout)
+      (deletedTail : Word Bool) (physical : Tape Bool),
+      AtTapeSeparator
+        (guardLogicalTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              (ParsedLayoutBits L)
+              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                useAccept L)
+              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                useAccept L deletedTail)
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              ((ParsedLayoutBits L).length + 1)
+          , postFieldDecodedPrefixScanSourceTape useAccept L ])
+        2 physical ->
+        normalizer.HaltsFromTapeEquiv physical
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+
+def CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction :
+    Prop :=
+  exists normalizer : MachineDescription,
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerSpec
+      normalizer
+
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+    (hnormalizer :
+      CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
+  rcases hnormalizer with
+    ⟨normalizer, hnormalizerReady, hnormalizerRun⟩
+  refine
+    ⟨structuredTape2ProjectorDescription normalizer, ?_⟩
+  constructor
+  · exact
+      structuredTape2ProjectorDescription_subroutineReady
+        hnormalizerReady
+  · intro useAccept L deletedTail
+    let T0 :=
+      structuredBoolWordRawBitsDecoderSourceTargetTape
+        (ParsedLayoutBits L)
+        (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+          useAccept L)
+        (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+          useAccept L deletedTail)
+    let T1 :=
+      structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+        ((ParsedLayoutBits L).length + 1)
+    let T2 := postFieldDecodedPrefixScanSourceTape useAccept L
+    have hsource :
+        exists A : Tape Bool, exists B : Tape Bool, exists C : Tape Bool,
+          guardLogicalTapes [T0, T1, T2] = [A, B, C] ∧
+            AtEncodedBlockStart (guardLogicalTapes [T0, T1, T2])
+              (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+                useAccept L deletedTail) := by
+      refine
+        ⟨guardLogicalTape T0, guardLogicalTape T1,
+          guardLogicalTape T2, ?_, ?_⟩
+      · simp [guardLogicalTapes]
+      · simpa [T0, T1, T2,
+          countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape] using
+          atEncodedBlockStart_self (guardLogicalTapes [T0, T1, T2])
+    rcases
+        seekTape2Description_contract_three.realizes
+          (guardLogicalTapes [T0, T1, T2])
+          (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+            useAccept L deletedTail)
+          hsource with
+      ⟨Tmid, hseek, hseparator⟩
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        seekTape2Description_subroutineReady
+        hnormalizerReady
+        hseek.toEquiv
+        (hnormalizerRun useAccept L deletedTail Tmid
+          (by
+            simpa [T0, T1, T2] using hseparator))
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
     (hnormalizer :
       Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
@@ -370,13 +458,15 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
         ((ParsedLayoutBits L).length + 1))
       (postFieldDecodedPrefixScanSourceTape useAccept L)
 
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
   exact
-    countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
-      (by
-        -- Remaining shared projection work: normalize selected guarded tape 2.
-        sorry)
+    countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+      countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
     (hinitializer :
