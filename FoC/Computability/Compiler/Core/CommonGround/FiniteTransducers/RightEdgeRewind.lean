@@ -1073,6 +1073,17 @@ theorem rightEdgeRewindDescription_haltsFromTape
   constructor <;>
     rw [rightEdgeRewindDescription_run]
 
+theorem rightEdgeRewindSourceTape_move_left_move_right_padding_cons
+    (bits : Word Bool) (pad : Option Bool)
+    (padding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightEdgeRewindSourceTape bits (pad :: padding))) =
+      rightEdgeRewindSourceTape bits (pad :: padding) := by
+  cases bits <;> cases pad <;> cases padding <;>
+    simp [rightEdgeRewindSourceTape, tapeAtCells, Tape.move,
+      Tape.moveLeft, Tape.moveRight]
+
 theorem rightEdgeRewindDescription_haltsFrom_lastBitStack
     (leftStack : Word Bool) (current : Bool)
     (padding : List (Option Bool)) :
