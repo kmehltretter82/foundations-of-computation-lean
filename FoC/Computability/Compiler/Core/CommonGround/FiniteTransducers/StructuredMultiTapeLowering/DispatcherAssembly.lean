@@ -47,10 +47,25 @@ def TransitionSourcesNe
     (state : Nat) (transitions : List TransitionDescription) : Prop :=
   forall t : TransitionDescription, t ∈ transitions -> t.source ≠ state
 
+def TransitionListWellFormed
+    (stateCount : Nat) (transitions : List TransitionDescription) : Prop :=
+  forall t : TransitionDescription,
+    t ∈ transitions -> TransitionDescription.WellFormed stateCount t
+
 theorem transitionListDeterministic_of_wellFormed
     {M : MachineDescription} (hM : M.WellFormed) :
     TransitionListDeterministic M.transitions :=
   hM.right.right.right.right
+
+theorem transitionListWellFormed_of_wellFormed_mono
+    {M : MachineDescription} {stateCount : Nat}
+    (hM : M.WellFormed) (hle : M.stateCount ≤ stateCount) :
+    TransitionListWellFormed stateCount M.transitions := by
+  intro t ht
+  have hformed := hM.right.right.right.left t ht
+  exact
+    ⟨Nat.lt_of_lt_of_le hformed.left hle,
+      Nat.lt_of_lt_of_le hformed.right hle⟩
 
 theorem transitionListDeterministic_append_of_sourceDisjoint
     {left right : List TransitionDescription}
@@ -150,6 +165,30 @@ theorem transitionSourcesBelow_bind
       forall item : α,
         item ∈ items -> TransitionSourcesBelow bound (transitions item)) :
     TransitionSourcesBelow bound (List.flatMap transitions items) := by
+  intro t ht
+  rw [List.mem_flatMap] at ht
+  rcases ht with ⟨item, hitem, ht⟩
+  exact h item hitem t ht
+
+theorem transitionListWellFormed_append
+    {stateCount : Nat} {left right : List TransitionDescription}
+    (hleft : TransitionListWellFormed stateCount left)
+    (hright : TransitionListWellFormed stateCount right) :
+    TransitionListWellFormed stateCount (left ++ right) := by
+  intro t ht
+  simp at ht
+  rcases ht with ht | ht
+  · exact hleft t ht
+  · exact hright t ht
+
+theorem transitionListWellFormed_bind
+    {α : Type} {stateCount : Nat} {items : List α}
+    {transitions : α -> List TransitionDescription}
+    (h :
+      forall item : α,
+        item ∈ items ->
+          TransitionListWellFormed stateCount (transitions item)) :
+    TransitionListWellFormed stateCount (List.flatMap transitions items) := by
   intro t ht
   rw [List.mem_flatMap] at ht
   rcases ht with ⟨item, hitem, ht⟩
@@ -618,6 +657,52 @@ theorem tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
       hstate
   simpa [tape2ReaderOffset, tape2ReaderLimit] using h
 
+theorem tape0ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    (tape0ReaderDescription D state).stateCount ≤
+      threeHeadReaderStateLimit D := by
+  have hblock :=
+    tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hstate
+  have hlimit : tape0ReaderLimit D ≤ threeHeadReaderStateLimit D := by
+    unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+      afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+      tape1ReaderBlockBase afterRead0JumpLimit afterRead0JumpScratchBase
+    lia
+  simpa [tape0ReaderDescription,
+    retargetedBranchingTape0ReadHeadCellAllExitsDescription,
+    MachineDescription.offsetReadExitRetargetDescription] using
+    Nat.le_trans hblock hlimit
+
+theorem tape1ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    (tape1ReaderDescription D state read0).stateCount ≤
+      threeHeadReaderStateLimit D := by
+  have hblock :=
+    tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+      D read0 hstate
+  have hlimit : tape1ReaderLimit D ≤ threeHeadReaderStateLimit D := by
+    unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+      afterRead1JumpLimit afterRead1JumpScratchBase
+    lia
+  simpa [tape1ReaderDescription,
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+    MachineDescription.offsetReadExitRetargetDescription] using
+    Nat.le_trans hblock hlimit
+
+theorem tape2ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+    (D : Description) {state : Nat} (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    (tape2ReaderDescription D state read0 read1).stateCount ≤
+      threeHeadReaderStateLimit D := by
+  have hblock :=
+    tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
+      D read0 read1 hstate
+  simpa [threeHeadReaderStateLimit, tape2ReaderDescription,
+    retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+    MachineDescription.offsetReadExitRetargetDescription] using hblock
+
 theorem tape0ReaderDescription_sources_atLeast
     (D : Description) (state : Nat) :
     TransitionSourcesAtLeast (tape0ReaderOffset D state)
@@ -930,6 +1015,164 @@ theorem afterRead1JumpTape2ReaderTransitions_deterministic
           D read0 read1 hstate).left)
       (afterRead1Jump_tape2Reader_sourceDisjoint
         D read0 read1 hstate)
+
+theorem readyJumpDescription_wellFormed
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    (readyJumpDescription D state).WellFormed := by
+  have hsource :
+      StaticDispatcherState.ready state < threeHeadReaderStateLimit D := by
+    have hready := ready_lt_readyJumpScratch D hstate
+    have hscratch := readyJumpScratch_lt_readyJumpLimit D hstate
+    have hlimit : readyJumpLimit D ≤ threeHeadReaderStateLimit D := by
+      unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+        afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+        tape1ReaderBlockBase afterRead0JumpLimit afterRead0JumpScratchBase
+        tape0ReaderLimit tape0ReaderBlockBase
+      lia
+    exact Nat.lt_of_lt_of_le (Nat.lt_trans hready hscratch) hlimit
+  have hscratch :
+      readyJumpScratch D state < threeHeadReaderStateLimit D := by
+    have hscratch := readyJumpScratch_lt_readyJumpLimit D hstate
+    have hlimit : readyJumpLimit D ≤ threeHeadReaderStateLimit D := by
+      unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+        afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+        tape1ReaderBlockBase afterRead0JumpLimit afterRead0JumpScratchBase
+        tape0ReaderLimit tape0ReaderBlockBase
+      lia
+    exact Nat.lt_of_lt_of_le hscratch hlimit
+  have htarget :
+      tape0ReaderStart D state < threeHeadReaderStateLimit D := by
+    have hstart :=
+      (tape0ReaderDescription_subroutineReady D hstate).left.right.left
+    exact Nat.lt_of_lt_of_le hstart
+      (tape0ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+        D hstate)
+  simpa [readyJumpDescription] using
+    blankHeadBounceJumpDescription_wellFormed
+      hsource hscratch htarget (ready_ne_readyJumpScratch D hstate)
+
+theorem afterRead0JumpDescription_wellFormed
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    (afterRead0JumpDescription D state read0).WellFormed := by
+  have hlimit : afterRead0JumpLimit D ≤ threeHeadReaderStateLimit D := by
+    unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+      afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+      tape1ReaderBlockBase
+    lia
+  have hscratch0 :=
+    afterRead0JumpScratch_lt_afterRead0JumpLimit D read0 hstate
+  have hsource :
+      StaticDispatcherState.afterRead0 D state read0 <
+        threeHeadReaderStateLimit D := by
+    have hsource0 := afterRead0_lt_afterRead0JumpScratch D read0 hstate
+    exact Nat.lt_of_lt_of_le (Nat.lt_trans hsource0 hscratch0) hlimit
+  have hscratch :
+      afterRead0JumpScratch D state read0 <
+        threeHeadReaderStateLimit D :=
+    Nat.lt_of_lt_of_le hscratch0 hlimit
+  have htarget :
+      tape1ReaderStart D state read0 < threeHeadReaderStateLimit D := by
+    have hstart :=
+      (tape1ReaderDescription_subroutineReady D read0 hstate).left.right.left
+    exact Nat.lt_of_lt_of_le hstart
+      (tape1ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+        D read0 hstate)
+  simpa [afterRead0JumpDescription] using
+    blankHeadBounceJumpDescription_wellFormed
+      hsource hscratch htarget
+      (afterRead0_ne_afterRead0JumpScratch D read0 hstate)
+
+theorem afterRead1JumpDescription_wellFormed
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    (afterRead1JumpDescription D state read0 read1).WellFormed := by
+  have hlimit : afterRead1JumpLimit D ≤ threeHeadReaderStateLimit D := by
+    unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+    lia
+  have hscratch0 :=
+    afterRead1JumpScratch_lt_afterRead1JumpLimit
+      D read0 read1 hstate
+  have hsource :
+      StaticDispatcherState.afterRead1 D state read0 read1 <
+        threeHeadReaderStateLimit D := by
+    have hsource0 :=
+      afterRead1_lt_afterRead1JumpScratch D read0 read1 hstate
+    exact Nat.lt_of_lt_of_le (Nat.lt_trans hsource0 hscratch0) hlimit
+  have hscratch :
+      afterRead1JumpScratch D state read0 read1 <
+        threeHeadReaderStateLimit D :=
+    Nat.lt_of_lt_of_le hscratch0 hlimit
+  have htarget :
+      tape2ReaderStart D state read0 read1 <
+        threeHeadReaderStateLimit D := by
+    have hstart :=
+      (tape2ReaderDescription_subroutineReady
+        D read0 read1 hstate).left.right.left
+    exact Nat.lt_of_lt_of_le hstart
+      (tape2ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+        D read0 read1 hstate)
+  simpa [afterRead1JumpDescription] using
+    blankHeadBounceJumpDescription_wellFormed
+      hsource hscratch htarget
+      (afterRead1_ne_afterRead1JumpScratch D read0 read1 hstate)
+
+theorem readyJumpTape0ReaderTransitions_wellFormed
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (readyJumpTape0ReaderTransitions D state) := by
+  unfold readyJumpTape0ReaderTransitions
+  apply transitionListWellFormed_append
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (readyJumpDescription_wellFormed D hstate)
+        (by simp [readyJumpDescription, blankHeadBounceJumpDescription])
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (tape0ReaderDescription_subroutineReady D hstate).left
+        (tape0ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+          D hstate)
+
+theorem afterRead0JumpTape1ReaderTransitions_wellFormed
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (afterRead0JumpTape1ReaderTransitions D state read0) := by
+  unfold afterRead0JumpTape1ReaderTransitions
+  apply transitionListWellFormed_append
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (afterRead0JumpDescription_wellFormed D read0 hstate)
+        (by
+          simp [afterRead0JumpDescription, blankHeadBounceJumpDescription])
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (tape1ReaderDescription_subroutineReady D read0 hstate).left
+        (tape1ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+          D read0 hstate)
+
+theorem afterRead1JumpTape2ReaderTransitions_wellFormed
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (afterRead1JumpTape2ReaderTransitions D state read0 read1) := by
+  unfold afterRead1JumpTape2ReaderTransitions
+  apply transitionListWellFormed_append
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (afterRead1JumpDescription_wellFormed D read0 read1 hstate)
+        (by
+          simp [afterRead1JumpDescription, blankHeadBounceJumpDescription])
+  · exact
+      transitionListWellFormed_of_wellFormed_mono
+        (tape2ReaderDescription_subroutineReady
+          D read0 read1 hstate).left
+        (tape2ReaderDescription_stateCount_le_threeHeadReaderStateLimit
+          D read0 read1 hstate)
 
 theorem readyJumpTape0ReaderTransitions_source_cases
     (D : Description) {state : Nat}
@@ -1759,6 +2002,107 @@ theorem threeHeadReaderTransitions_sources_below_stateLimit
         (readyJumpTape0ReaderAllTransitions_sources_below_stateLimit D)
         (afterRead0JumpTape1ReaderAllTransitions_sources_below_stateLimit D))
       (afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit D)
+
+theorem readyJumpTape0ReaderAllTransitions_wellFormed
+    (D : Description) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (readyJumpTape0ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+  apply transitionListWellFormed_bind
+  intro state hstate
+  exact
+    readyJumpTape0ReaderTransitions_wellFormed
+      D (activeStateValues_mem_lt hstate)
+
+theorem afterRead0JumpTape1ReaderAllTransitions_wellFormed
+    (D : Description) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (afterRead0JumpTape1ReaderAllTransitions D) := by
+  unfold afterRead0JumpTape1ReaderAllTransitions
+  apply transitionListWellFormed_bind
+  intro read0 _hread0
+  apply transitionListWellFormed_bind
+  intro state hstate
+  exact
+    afterRead0JumpTape1ReaderTransitions_wellFormed
+      D read0 (activeStateValues_mem_lt hstate)
+
+theorem afterRead1JumpTape2ReaderAllTransitions_wellFormed
+    (D : Description) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (afterRead1JumpTape2ReaderAllTransitions D) := by
+  unfold afterRead1JumpTape2ReaderAllTransitions
+  apply transitionListWellFormed_bind
+  intro read0 _hread0
+  apply transitionListWellFormed_bind
+  intro read1 _hread1
+  apply transitionListWellFormed_bind
+  intro state hstate
+  exact
+    afterRead1JumpTape2ReaderTransitions_wellFormed
+      D read0 read1 (activeStateValues_mem_lt hstate)
+
+theorem threeHeadReaderTransitions_wellFormed
+    (D : Description) :
+    TransitionListWellFormed (threeHeadReaderStateLimit D)
+      (threeHeadReaderTransitions D) := by
+  simpa [threeHeadReaderTransitions] using
+    transitionListWellFormed_append
+      (transitionListWellFormed_append
+        (readyJumpTape0ReaderAllTransitions_wellFormed D)
+        (afterRead0JumpTape1ReaderAllTransitions_wellFormed D))
+      (afterRead1JumpTape2ReaderAllTransitions_wellFormed D)
+
+theorem threeHeadReaderDescription_transitions_wellFormed
+    (D : Description) :
+    forall t : TransitionDescription,
+      t ∈ (threeHeadReaderDescription D).transitions ->
+        TransitionDescription.WellFormed
+          (threeHeadReaderDescription D).stateCount t := by
+  simpa [threeHeadReaderDescription] using
+    threeHeadReaderTransitions_wellFormed D
+
+theorem structuredStateCount_le_threeHeadReaderStateLimit
+    (D : Description) :
+    D.stateCount ≤ threeHeadReaderStateLimit D := by
+  unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+    afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+    tape1ReaderBlockBase afterRead0JumpLimit afterRead0JumpScratchBase
+    tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+    readyJumpScratchBase StaticDispatcherState.readerStateLimit
+    StaticDispatcherState.afterRead1Base StaticDispatcherState.afterRead0Base
+  lia
+
+theorem threeHeadReaderDescription_stateCount_pos
+    (D : Description) (hD : D.WellFormed) :
+    0 < (threeHeadReaderDescription D).stateCount := by
+  exact
+    Nat.lt_of_lt_of_le hD.right.left
+      (by
+        simpa [threeHeadReaderDescription] using
+          structuredStateCount_le_threeHeadReaderStateLimit D)
+
+theorem threeHeadReaderDescription_start_lt
+    (D : Description) (hD : D.WellFormed) :
+    (threeHeadReaderDescription D).start <
+      (threeHeadReaderDescription D).stateCount := by
+  exact
+    Nat.lt_of_lt_of_le hD.right.right.left
+      (by
+        simpa [threeHeadReaderDescription,
+          StaticDispatcherState.ready] using
+          structuredStateCount_le_threeHeadReaderStateLimit D)
+
+theorem threeHeadReaderDescription_halt_lt
+    (D : Description) (hD : D.WellFormed) :
+    (threeHeadReaderDescription D).halt <
+      (threeHeadReaderDescription D).stateCount := by
+  exact
+    Nat.lt_of_lt_of_le hD.right.right.right.left
+      (by
+        simpa [threeHeadReaderDescription,
+          StaticDispatcherState.ready] using
+          structuredStateCount_le_threeHeadReaderStateLimit D)
 
 theorem readyJumpTape0ReaderAllTransitions_sources_ne_halt
     (D : Description) (hhalt : D.halt < D.stateCount) :
