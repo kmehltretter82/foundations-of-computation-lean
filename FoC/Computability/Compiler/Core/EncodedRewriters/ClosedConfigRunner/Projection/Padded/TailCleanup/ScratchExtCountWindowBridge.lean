@@ -870,6 +870,39 @@ def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
     (postFieldDecodedPrefixScanSourceTape useAccept L)
     []
 
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape
+    (useAccept : Bool) (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+        useAccept L =
+      countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+        useAccept L := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept
+    (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+        true L =
+      countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+        true L := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject
+    (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+        false L =
+      countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+        false L := by
+  rfl
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_genericFootprintSourceTape
+    (useAccept : Bool) (L : DovetailLayout) :
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+        useAccept L =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding useAccept L) := by
+  rfl
+
 def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   rightEdgeRewindSourceTape (ParsedLayoutBits L)
@@ -910,6 +943,39 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
   exact
     selectedSegmentLogicalTapeDecoderTargetTape_cells_postFieldDecodedPrefixScanSourceTape_eq_densifierSource
       useAccept L []
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          useAccept L) =
+      Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape]
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells_accept
+    (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          true L) =
+      Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          true L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept]
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells_reject
+    (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          false L) =
+      Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          false L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject]
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_eq_rightEndCompactionSourceTape
     (useAccept : Bool) (L : DovetailLayout) :
@@ -968,6 +1034,39 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
   rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
   rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
   rfl
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          useAccept L) =
+      Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape]
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput_accept
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          true L) =
+      Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          true L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept]
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput_reject
+    (L : DovetailLayout) :
+    Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          false L) =
+      Tape.normalizedOutput
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          false L) := by
+  rw [
+    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject]
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
