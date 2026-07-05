@@ -127,6 +127,126 @@ theorem logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_cons
     guardLogicalTape, logicalTapeBits, logicalCellListBits,
     List.append_assoc]
 
+theorem selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_nil
+    (padding : List (Option Bool)) :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0
+        (logicalTapeBits
+          (guardLogicalTape
+            (rightEdgeScanSourceTapeFromLeft [none] [] padding))) =
+      List.append
+        (selectedSegmentLogicalTapeDecoderCellCells (none : Option Bool))
+        (List.append
+          (selectedSegmentLogicalTapeDecoderCellCells (none : Option Bool))
+          (List.append [none, none]
+            (List.append
+              (selectedSegmentLogicalTapeDecoderCellCells
+                (none : Option Bool))
+              (List.map selectedSegmentLogicalTapeDecoderCellCells
+                (List.append padding [none])).flatten))) := by
+  rw [logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_nil]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_headMarker_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_headMarker_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellListBits_zero]
+
+theorem selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_cons
+    (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0
+        (logicalTapeBits
+          (guardLogicalTape
+            (rightEdgeScanSourceTapeFromLeft [none]
+              (bit :: rest) padding))) =
+      List.append
+        (selectedSegmentLogicalTapeDecoderCellCells (none : Option Bool))
+        (List.append
+          (selectedSegmentLogicalTapeDecoderCellCells (none : Option Bool))
+          (List.append [none, none]
+            (List.append
+              (selectedSegmentLogicalTapeDecoderCellCells (some bit))
+              (List.map selectedSegmentLogicalTapeDecoderCellCells
+                (List.append (rest.map some)
+                  (none :: List.append padding [none]))).flatten))) := by
+  rw [logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_cons]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_headMarker_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_headMarker_zero]
+  rw [statefulOptionCellsFrom_append]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+  rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellListBits_zero]
+
+theorem selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_nil
+    (encodedPrefix padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (rightEdgeScanSourceTapeFromLeft [none] [] padding)
+          encodedPrefix) =
+      List.append encodedPrefix
+        (none ::
+          List.append
+            (List.append
+              (selectedSegmentLogicalTapeDecoderCellCells
+                (none : Option Bool))
+              (List.append
+                (selectedSegmentLogicalTapeDecoderCellCells
+                  (none : Option Bool))
+                (List.append [none, none]
+                  (List.append
+                    (selectedSegmentLogicalTapeDecoderCellCells
+                      (none : Option Bool))
+                    (List.map selectedSegmentLogicalTapeDecoderCellCells
+                      (List.append padding [none])).flatten))))
+            [none, none]) := by
+  rw [selectedSegmentLogicalTapeDecoderTargetTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderStart,
+    selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_nil]
+
+theorem selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_cons
+    (bit : Bool) (rest : Word Bool)
+    (encodedPrefix padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (rightEdgeScanSourceTapeFromLeft [none] (bit :: rest) padding)
+          encodedPrefix) =
+      List.append encodedPrefix
+        (none ::
+          List.append
+            (List.append
+              (selectedSegmentLogicalTapeDecoderCellCells
+                (none : Option Bool))
+              (List.append
+                (selectedSegmentLogicalTapeDecoderCellCells
+                  (none : Option Bool))
+                (List.append [none, none]
+                  (List.append
+                    (selectedSegmentLogicalTapeDecoderCellCells
+                      (some bit))
+                    (List.map selectedSegmentLogicalTapeDecoderCellCells
+                      (List.append (rest.map some)
+                        (none :: List.append padding [none]))).flatten))))
+            [none, none]) := by
+  rw [selectedSegmentLogicalTapeDecoderTargetTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderStart,
+    selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_cons]
+
 theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
     (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
     (leftBit : Bool) (deletedTail : Word Bool)

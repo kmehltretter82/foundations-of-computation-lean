@@ -273,6 +273,11 @@ def selectedSegmentLogicalTapeDecoderEmit : Nat -> Bool -> Option Bool
   | 2, false => some true
   | _, _ => none
 
+def selectedSegmentLogicalTapeDecoderCellCells :
+    Option Bool -> List (Option Bool)
+  | none => [none, none]
+  | some bit => [none, some bit]
+
 theorem selectedSegmentLogicalTapeDecoderStart_lt :
     selectedSegmentLogicalTapeDecoderStart <
       selectedSegmentLogicalTapeDecoderStateCount := by
@@ -322,6 +327,17 @@ theorem selectedSegmentLogicalTapeDecoder_output_logicalCellBits_zero
   | some bit =>
       cases bit <;> rfl
 
+theorem selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero
+    (cell : Option Bool) :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 (logicalCellBits cell) =
+      selectedSegmentLogicalTapeDecoderCellCells cell := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
 theorem selectedSegmentLogicalTapeDecoder_after_logicalCellListBits_zero
     (cells : List (Option Bool)) :
     statefulOptionAfter selectedSegmentLogicalTapeDecoderNext 0
@@ -358,6 +374,23 @@ theorem selectedSegmentLogicalTapeDecoder_output_logicalCellListBits_zero
       rw [ih]
       cases cell <;> rfl
 
+theorem selectedSegmentLogicalTapeDecoder_cells_logicalCellListBits_zero
+    (cells : List (Option Bool)) :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0
+        (logicalCellListBits cells) =
+      (cells.map selectedSegmentLogicalTapeDecoderCellCells).flatten := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      rw [logicalCellListBits]
+      rw [statefulOptionCellsFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+      rw [ih]
+      cases cell <;> rfl
+
 theorem selectedSegmentLogicalTapeDecoder_after_headMarker_zero :
     statefulOptionAfter selectedSegmentLogicalTapeDecoderNext 0
       [true, true] = 0 := by
@@ -367,6 +400,38 @@ theorem selectedSegmentLogicalTapeDecoder_output_headMarker_zero :
     statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
         selectedSegmentLogicalTapeDecoderEmit 0 [true, true] = [] := by
   rfl
+
+theorem selectedSegmentLogicalTapeDecoder_cells_headMarker_zero :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 [true, true] =
+      [none, none] := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoder_cells_logicalTapeBits_zero
+    (T : Tape Bool) :
+    statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0 (logicalTapeBits T) =
+      List.append
+        ((T.left.reverse.map
+          selectedSegmentLogicalTapeDecoderCellCells).flatten)
+        (List.append [none, none]
+          (List.append
+            (selectedSegmentLogicalTapeDecoderCellCells T.head)
+            ((T.right.map
+              selectedSegmentLogicalTapeDecoderCellCells).flatten))) := by
+  cases T with
+  | mk left head right =>
+      rw [logicalTapeBits]
+      rw [statefulOptionCellsFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellListBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellListBits_zero]
+      rw [statefulOptionCellsFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_cells_headMarker_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_headMarker_zero]
+      rw [statefulOptionCellsFrom_append]
+      rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_after_logicalCellBits_zero]
+      rw [selectedSegmentLogicalTapeDecoder_cells_logicalCellListBits_zero]
 
 theorem selectedSegmentLogicalTapeDecoder_output_logicalTapeBits_zero
     (T : Tape Bool) :
