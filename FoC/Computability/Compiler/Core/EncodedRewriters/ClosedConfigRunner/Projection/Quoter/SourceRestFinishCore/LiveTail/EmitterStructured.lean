@@ -30,7 +30,7 @@ private abbrev structuredRow :=
 private abbrev structuredStay :=
   Structured.MultiTapeLowering.ThreeTape.keepS
 
-private def structuredPreserve
+def structuredPreserve
     (move : Structured.HeadMove) : Structured.TapeAction :=
   match move with
   | Structured.HeadMove.stay =>
@@ -40,7 +40,7 @@ private def structuredPreserve
   | Structured.HeadMove.right =>
       Structured.MultiTapeLowering.ThreeTape.keepR
 
-private def structuredWriteBit
+def structuredWriteBit
     (bit : Bool) (move : Structured.HeadMove) :
     Structured.TapeAction :=
   match move with
@@ -51,7 +51,7 @@ private def structuredWriteBit
   | Structured.HeadMove.right =>
       Structured.MultiTapeLowering.ThreeTape.writeBitR bit
 
-private def structuredAnyReadRows
+def structuredAnyReadRows
     (mkRow : Option Bool -> Structured.Transition) :
     List Structured.Transition :=
   [ mkRow none, mkRow (some false), mkRow (some true) ]
@@ -247,7 +247,7 @@ theorem structuredMixedOptionCellQuoteLiveTailHeaderEmitterDescription_run
                         Tape.read, Tape.write, Tape.move, Tape.moveRight,
                         List.reverse_append]
 
-private def structuredLiveTailCellPassInitialRow
+def structuredLiveTailCellPassInitialRow
     (read : Bool) (target : Nat) : Structured.Transition :=
   structuredRow 0 (some read) none none
     (structuredPreserve Structured.HeadMove.right)
@@ -255,7 +255,7 @@ private def structuredLiveTailCellPassInitialRow
     (structuredWriteBit false Structured.HeadMove.right)
     target
 
-private def structuredLiveTailCellPassWriteRow
+def structuredLiveTailCellPassWriteRow
     (source : Nat) (sourceRead : Option Bool) (bit : Bool)
     (target : Nat) : Structured.Transition :=
   structuredRow source sourceRead none none
@@ -264,13 +264,13 @@ private def structuredLiveTailCellPassWriteRow
     (structuredWriteBit bit Structured.HeadMove.right)
     target
 
-private def structuredLiveTailCellPassWriteRows
+def structuredLiveTailCellPassWriteRows
     (source : Nat) (bit : Bool) (target : Nat) :
     List Structured.Transition :=
   structuredAnyReadRows fun sourceRead =>
     structuredLiveTailCellPassWriteRow source sourceRead bit target
 
-private def structuredLiveTailCellPassHaltRow :
+def structuredLiveTailCellPassHaltRow :
     Structured.Transition :=
   structuredRow 0 none none none
     structuredStay
@@ -328,7 +328,7 @@ def structuredMixedOptionCellQuoteLiveTailCellPassConfig
     structuredMixedOptionCellQuoteLiveTailScratchTape
     (structuredMixedOptionCellQuoteLiveTailOutputTape outputBits)
 
-private def structuredMixedOptionCellQuoteLiveTailCellChunkBits
+def structuredMixedOptionCellQuoteLiveTailCellChunkBits
     (bit : Bool) : Word Bool :=
   if bit then preservingCellPassOneBits else preservingCellPassZeroBits
 
