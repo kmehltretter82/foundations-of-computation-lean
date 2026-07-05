@@ -404,6 +404,18 @@ def selectedSegmentLogicalTapeDecoderDescription : MachineDescription :=
     selectedSegmentLogicalTapeDecoderEmit
     []
 
+/-- Exact target shape produced by the selected-segment bit decoder. -/
+def selectedSegmentLogicalTapeDecoderTargetTape
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    Tape Bool :=
+  FSTStatefulOptionAppendTargetTapeFromLeft
+    selectedSegmentLogicalTapeDecoderNext
+    selectedSegmentLogicalTapeDecoderEmit
+    selectedSegmentLogicalTapeDecoderStart
+    (logicalTapeBits (guardLogicalTape target))
+    []
+    (none :: encodedPrefix.reverse)
+
 theorem selectedSegmentLogicalTapeDecoderDescription_subroutineReady :
     selectedSegmentLogicalTapeDecoderDescription.SubroutineReady := by
   exact
@@ -431,13 +443,8 @@ theorem selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingleton
       (Tape.move Direction.right
         (tapeAtEncodedSplit encodedPrefix
           (encodedStructuredTapeCells [guardLogicalTape target])))
-      (FSTStatefulOptionAppendTargetTapeFromLeft
-        selectedSegmentLogicalTapeDecoderNext
-        selectedSegmentLogicalTapeDecoderEmit
-        selectedSegmentLogicalTapeDecoderStart
-        (logicalTapeBits (guardLogicalTape target))
-        []
-        (none :: encodedPrefix.reverse)) := by
+      (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix) := by
   have hsource :
       Tape.move Direction.right
           (tapeAtEncodedSplit encodedPrefix
@@ -463,13 +470,8 @@ theorem selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingleton
         (List.append
           ((logicalTapeBits (guardLogicalTape target)).map some)
           [none]))
-      (FSTStatefulOptionAppendTargetTapeFromLeft
-        selectedSegmentLogicalTapeDecoderNext
-        selectedSegmentLogicalTapeDecoderEmit
-        selectedSegmentLogicalTapeDecoderStart
-        (logicalTapeBits (guardLogicalTape target))
-        []
-        (none :: encodedPrefix.reverse))
+      (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix)
   exact
     generatedStatefulOptionAppendDescription_haltsFrom_tapeAtCells
       selectedSegmentLogicalTapeDecoderStateCount
@@ -481,6 +483,113 @@ theorem selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingleton
       (none :: encodedPrefix.reverse)
       selectedSegmentLogicalTapeDecoderStart_lt
       selectedSegmentLogicalTapeDecoderNext_lt
+
+theorem selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          target encodedPrefix) =
+      List.append (encodedPrefix.filterMap (fun cell => cell))
+        (Tape.normalizedOutput target) := by
+  rw [selectedSegmentLogicalTapeDecoderTargetTape,
+    FSTStatefulOptionAppendTargetTapeFromLeft_normalizedOutput]
+  simp [selectedSegmentLogicalTapeDecoderStart,
+    selectedSegmentLogicalTapeDecoder_output_guardLogicalTapeBits_zero,
+    List.filterMap_append]
+
+/--
+Cleanup needed after the selected-segment bit decoder.
+
+The decoder target still carries the old encoded structured prefix to the left
+and contains blanks for skipped physical code bits.  This contract isolates the
+remaining normalizer from the already-proved selected-segment seek and scan.
+-/
+def SelectedSegmentLogicalTapeDecoderCleanupSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          target encodedPrefix)
+        target
+
+/-- Existence wrapper for the selected-segment decoder cleanup phase. -/
+def SelectedSegmentLogicalTapeDecoderCleanupConstruction : Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderCleanupSpec cleanup
+
+/-- Full selected-singleton decoder assembled from move-right, scan, cleanup. -/
+def selectedSegmentLogicalTapeDecoderPipelineDescription
+    (cleanup : MachineDescription) : MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    (canonicalPrimitiveSeqDescription
+      (cursorMoveOnceDescription Direction.right)
+      selectedSegmentLogicalTapeDecoderDescription)
+    cleanup
+
+theorem selectedSegmentLogicalTapeDecoderPipelineDescription_subroutineReady
+    {cleanup : MachineDescription}
+    (hcleanup : cleanup.SubroutineReady) :
+    (selectedSegmentLogicalTapeDecoderPipelineDescription
+      cleanup).SubroutineReady := by
+  exact
+    canonicalPrimitiveSeqDescription_subroutineReady
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+      hcleanup
+
+theorem selectedSegmentLogicalTapeDecoderPipelineSpec_of_cleanupSpec
+    {cleanup : MachineDescription}
+    (hcleanup : SelectedSegmentLogicalTapeDecoderCleanupSpec cleanup) :
+    StructuredSelectedSingletonSegmentDecoderSpec
+      (selectedSegmentLogicalTapeDecoderPipelineDescription
+        cleanup) := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPipelineDescription_subroutineReady
+        hcleanup.left
+  · intro target encodedPrefix
+    have hmove :
+        (cursorMoveOnceDescription Direction.right).HaltsFromTapeEquiv
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells [guardLogicalTape target]))
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells [guardLogicalTape target]))) :=
+      (cursorMoveOnceDescription_haltsFromTape Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells [guardLogicalTape target]))).toEquiv
+    have hscan :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTapeEquiv
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells [guardLogicalTape target])))
+          (selectedSegmentLogicalTapeDecoderTargetTape
+            target encodedPrefix) :=
+      (selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingletonPayload
+        target encodedPrefix).toEquiv
+    have hpipelineScan :
+        (canonicalPrimitiveSeqDescription
+          (cursorMoveOnceDescription Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription).HaltsFromTapeEquiv
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells [guardLogicalTape target]))
+            (selectedSegmentLogicalTapeDecoderTargetTape
+              target encodedPrefix) :=
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady
+        hmove
+        hscan
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          (cursorMoveOnceDescription_subroutineReady Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+        hcleanup.left
+        hpipelineScan
+        (hcleanup.right target encodedPrefix)
 
 /--
 Decoder for a canonical selected structured segment that may have trailing
@@ -595,9 +704,24 @@ theorem structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtract
     hextractorRun T2
       (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
 
-theorem structuredSelectedSingletonSegmentDecoderConstruction_core :
+theorem structuredSelectedSingletonSegmentDecoderConstruction_of_cleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderCleanupConstruction) :
     StructuredSelectedSingletonSegmentDecoderConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderPipelineDescription cleanup,
+      selectedSegmentLogicalTapeDecoderPipelineSpec_of_cleanupSpec
+        hcleanupSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderCleanupConstruction := by
   sorry
+
+theorem structuredSelectedSingletonSegmentDecoderConstruction_core :
+    StructuredSelectedSingletonSegmentDecoderConstruction :=
+  structuredSelectedSingletonSegmentDecoderConstruction_of_cleanup
+    selectedSegmentLogicalTapeDecoderCleanupConstruction_core
 
 theorem structuredSelectedSingletonSegmentExtractorConstruction_core :
     StructuredSelectedSingletonSegmentExtractorConstruction :=
