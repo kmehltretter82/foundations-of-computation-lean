@@ -21,20 +21,79 @@ namespace ExactFuel
 namespace StageProgram
 
 /--
-Remaining concrete transition-table leaf for the normalized exact-fuel staged
-program.  It must parse the unary fuel prefix, protect the payload as an
-encoded work layout, run the fixed selected transition table for exactly that
-fuel, and halt exactly when the final selected state is the selected halt
-state.
+Finite-state construction target for exact initial-layout materializers.
+These machines parse the public unary generated call and emit the protected
+layout on their concrete final tape.
 -/
-theorem codeMachineFinStateFiniteLeaf :
-    FinStateCodeMachineConstruction := by
+def FinStateInitialLayoutExactMaterializerConstruction : Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    InitialLayoutExactMaterializerConstruction M
+
+/--
+Component bundle for the normalized exact-fuel stage program.
+-/
+def FinStateExactProgramComponentsConstruction : Prop :=
+  ExactOutputThenRecognizeConstruction ∧
+    FinStateInitialLayoutExactMaterializerConstruction ∧
+      FinStateLayoutCodeMachineConstruction
+
+/--
+Remaining finite-table leaf for exact-output sequencing.
+-/
+theorem exactOutputThenRecognizeFiniteLeaf :
+    ExactOutputThenRecognizeConstruction := by
+  sorry
+
+/--
+Remaining finite-table leaf for the exact initial-layout materializer.
+-/
+theorem initialLayoutExactMaterializerFinStateFiniteLeaf :
+    FinStateInitialLayoutExactMaterializerConstruction := by
   intro stateCount M
   cases stateCount with
   | zero =>
       exact False.elim (Fin.elim0 M.start)
   | succ _ =>
       sorry
+
+/--
+Remaining finite-table leaf for recognizing protected exact-fuel layouts.
+It must run the fixed selected transition table for exactly the protected
+fuel and halt exactly when the final selected state is the selected halt state.
+-/
+theorem layoutCodeMachineFinStateFiniteLeaf :
+    FinStateLayoutCodeMachineConstruction := by
+  intro stateCount M
+  cases stateCount with
+  | zero =>
+      exact False.elim (Fin.elim0 M.start)
+  | succ _ =>
+      sorry
+
+theorem exactProgramComponentsFiniteLeaf :
+    FinStateExactProgramComponentsConstruction :=
+  ⟨exactOutputThenRecognizeFiniteLeaf,
+    initialLayoutExactMaterializerFinStateFiniteLeaf,
+    layoutCodeMachineFinStateFiniteLeaf⟩
+
+theorem codeMachineFinStateFiniteLeaf_of_components
+    (hcomponents : FinStateExactProgramComponentsConstruction) :
+    FinStateCodeMachineConstruction := by
+  intro stateCount M
+  rcases hcomponents with
+    ⟨hcompose, hmaterializer, hlayout⟩
+  exact
+    codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose
+      hcompose (hmaterializer stateCount M) (hlayout stateCount M)
+
+/--
+Finite-state construction for the normalized exact-fuel staged program.
+-/
+theorem codeMachineFinStateFiniteLeaf :
+    FinStateCodeMachineConstruction :=
+  codeMachineFinStateFiniteLeaf_of_components
+    exactProgramComponentsFiniteLeaf
 
 theorem finStateRunnerConstructionFiniteLeaf :
     FinStateRunnerConstruction stageCode :=
