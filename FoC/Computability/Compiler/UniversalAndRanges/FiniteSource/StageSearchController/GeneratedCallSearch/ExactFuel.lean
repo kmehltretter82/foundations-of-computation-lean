@@ -176,11 +176,23 @@ indexed state spaces.
 theorem codePrefixExactFuelRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelRunnerFinStateConstruction := by
   intro n M
-  cases n with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ n =>
-      sorry
+  have hcore :
+      FiniteRecognizer.ExactFuel.RunnerConstruction M
+        FiniteRecognizer.ExactFuel.StageProgram.stageCode :=
+    FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf
+      n M
+  apply codePrefixExactFuelRunnerConstruction_of_runnerConstruction
+  rcases hcore with ⟨runnerState, runner, hrunner⟩
+  refine ⟨runnerState, runner, ?_⟩
+  exact
+    FiniteRecognizer.ExactFuel.exactFuelRunnerSpec_ext
+      (M := M) (runner := runner)
+      (leftBuild := FiniteRecognizer.ExactFuel.StageProgram.stageCode)
+      (rightBuild := FiniteRecognizer.GeneratedCode.stageCode)
+      (by
+        intro input fuel
+        rfl)
+      hrunner
 
 /--
 Finite-machine leaf for {name}`CodePrefixExactFuelRunnerConstruction`.
