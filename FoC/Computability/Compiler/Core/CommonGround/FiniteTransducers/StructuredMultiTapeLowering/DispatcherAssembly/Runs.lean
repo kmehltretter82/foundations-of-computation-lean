@@ -21,6 +21,184 @@ def tableMachine (stateCount start halt : Nat)
   halt := halt
   transitions := transitions
 
+theorem runConfig_transitionFreeAt
+    {D : MachineDescription} {state : Nat}
+    (hfree : D.TransitionFreeAt state)
+    (T : Tape Bool) (n : Nat) :
+    D.runConfig n { state := state, tape := T } =
+      { state := state, tape := T } := by
+  have hstep :
+      D.stepConfig { state := state, tape := T } = none := by
+    simp [MachineDescription.stepConfig,
+      MachineDescription.lookupTransition_state_none hfree]
+  exact MachineDescription.runConfig_of_stepConfig_none hstep n
+
+theorem firstReaches_transitionFreeAt_of_runConfig_eq
+    {D : MachineDescription} {target n : Nat}
+    {c : MachineDescription.Configuration} {T : Tape Bool}
+    (hfree : D.TransitionFreeAt target)
+    (hrun : D.runConfig n c = { state := target, tape := T }) :
+    exists m : Nat,
+      m ≤ n ∧
+        D.runConfig m c = { state := target, tape := T } ∧
+        forall k : Nat,
+          k < m -> (D.runConfig k c).state ≠ target := by
+  induction n generalizing c with
+  | zero =>
+      exists 0
+      simp [hrun]
+  | succ n ih =>
+      by_cases hcTarget : c.state = target
+      · have hc :
+            c = { state := target, tape := c.tape } := by
+          cases c with
+          | mk state tape =>
+              simp at hcTarget ⊢
+              exact hcTarget
+        have hstable :
+            D.runConfig (n + 1) c = c := by
+          rw [hc]
+          exact runConfig_transitionFreeAt hfree c.tape (n + 1)
+        have hcFinal : c = { state := target, tape := T } := by
+          rw [← hstable]
+          exact hrun
+        exists 0
+        constructor
+        · lia
+        constructor
+        · simp [hcFinal, MachineDescription.runConfig]
+        · intro k hk
+          lia
+      · cases hstep : D.stepConfig c with
+        | none =>
+            have hsame : D.runConfig (n + 1) c = c := by
+              simp [MachineDescription.runConfig, hstep]
+            have hstate : c.state = target := by
+              have hfinal : c = { state := target, tape := T } := by
+                rw [← hsame]
+                exact hrun
+              simpa using
+                congrArg (fun d : MachineDescription.Configuration =>
+                  d.state) hfinal
+            exact False.elim (hcTarget hstate)
+        | some next =>
+            have hnext :
+                D.runConfig n next = { state := target, tape := T } := by
+              simpa [MachineDescription.runConfig, hstep] using hrun
+            rcases ih hnext with ⟨m, hmle, hmrun, hmfirst⟩
+            exists m + 1
+            constructor
+            · lia
+            constructor
+            · simp [MachineDescription.runConfig, hstep, hmrun]
+            · intro k hk
+              cases k with
+              | zero =>
+                  simpa [MachineDescription.runConfig] using hcTarget
+              | succ j =>
+                  have hj : j < m := by
+                    lia
+                  simpa [MachineDescription.runConfig, hstep] using
+                    hmfirst j hj
+
+theorem runConfig_state_ne_transitionFreeAt_of_final_state_ne
+    {D : MachineDescription} {blocked finalState n k : Nat}
+    {c : MachineDescription.Configuration} {T : Tape Bool}
+    (hfree : D.TransitionFreeAt blocked)
+    (hrun : D.runConfig n c = { state := finalState, tape := T })
+    (hfinal : finalState ≠ blocked)
+    (hk : k ≤ n) :
+    (D.runConfig k c).state ≠ blocked := by
+  intro hblocked
+  let ck := D.runConfig k c
+  have hck :
+      ck = { state := blocked, tape := ck.tape } := by
+    cases hconfig : ck with
+    | mk state tape =>
+        have hstate : state = blocked := by
+          simpa [ck, hconfig] using hblocked
+        simp [hstate]
+  have htail :
+      D.runConfig (n - k) ck = ck := by
+    rw [hck]
+    exact runConfig_transitionFreeAt hfree ck.tape (n - k)
+  have hrunToCk : D.runConfig n c = ck := by
+    rw [← Nat.add_sub_of_le hk, MachineDescription.runConfig_add]
+    exact htail
+  have hfinalBlocked : finalState = blocked := by
+    have hfinalEqCk :
+        { state := finalState, tape := T } = ck :=
+      hrun.symm.trans hrunToCk
+    have hstates :
+        finalState = ck.state :=
+      congrArg (fun d : MachineDescription.Configuration => d.state)
+        hfinalEqCk
+    have hckState : ck.state = blocked := by
+      simpa [ck] using hblocked
+    exact hstates.trans hckState
+  exact hfinal hfinalBlocked
+
+theorem BranchingHeadCellReturn.targetForRead_injective :
+    Function.Injective BranchingHeadCellReturn.targetForRead := by
+  intro a b h
+  cases a with
+  | none =>
+      cases b with
+      | none => rfl
+      | some bit =>
+          cases bit <;>
+            simp [BranchingHeadCellReturn.targetForRead,
+              BranchingHeadCellReturn.noneExit,
+              BranchingHeadCellReturn.falseExit,
+              BranchingHeadCellReturn.trueExit,
+              BranchingHeadCellReturn.noneStart,
+              BranchingHeadCellReturn.falseStart,
+              BranchingHeadCellReturn.trueStart] at h
+  | some abit =>
+      cases abit <;>
+        cases b with
+        | none =>
+            simp [BranchingHeadCellReturn.targetForRead,
+              BranchingHeadCellReturn.noneExit,
+              BranchingHeadCellReturn.falseExit,
+              BranchingHeadCellReturn.trueExit,
+              BranchingHeadCellReturn.noneStart,
+              BranchingHeadCellReturn.falseStart,
+              BranchingHeadCellReturn.trueStart] at h
+        | some bbit =>
+            cases bbit <;>
+              simp [BranchingHeadCellReturn.targetForRead,
+                BranchingHeadCellReturn.falseExit,
+                BranchingHeadCellReturn.trueExit,
+                BranchingHeadCellReturn.falseStart,
+                BranchingHeadCellReturn.trueStart] at h ⊢
+
+theorem branchingSeparatorReadHeadCellTarget_injective :
+    Function.Injective branchingSeparatorReadHeadCellTarget := by
+  intro a b h
+  exact BranchingHeadCellReturn.targetForRead_injective (by
+    unfold branchingSeparatorReadHeadCellTarget at h
+    lia)
+
+theorem branchingTape0ReadHeadCellAndReturnToSeparatorTarget_injective :
+    Function.Injective branchingTape0ReadHeadCellAndReturnToSeparatorTarget := by
+  simpa [branchingTape0ReadHeadCellAndReturnToSeparatorTarget] using
+    branchingSeparatorReadHeadCellTarget_injective
+
+theorem branchingTape1ReadHeadCellAndReturnToSeparatorTarget_injective :
+    Function.Injective branchingTape1ReadHeadCellAndReturnToSeparatorTarget := by
+  intro a b h
+  exact branchingSeparatorReadHeadCellTarget_injective (by
+    unfold branchingTape1ReadHeadCellAndReturnToSeparatorTarget at h
+    lia)
+
+theorem branchingTape2ReadHeadCellAndReturnToSeparatorTarget_injective :
+    Function.Injective branchingTape2ReadHeadCellAndReturnToSeparatorTarget := by
+  intro a b h
+  exact branchingSeparatorReadHeadCellTarget_injective (by
+    unfold branchingTape2ReadHeadCellAndReturnToSeparatorTarget at h
+    lia)
+
 theorem find?_matches_none_of_sources_below
     {bound state : Nat} {cell : Option Bool}
     {transitions : List TransitionDescription}
@@ -267,6 +445,22 @@ theorem guardedHasAtLeastThreeTapes_of_length_three
                 ⟨guardLogicalTape T, guardLogicalTape U,
                   guardLogicalTape V, guardLogicalTapes rest,
                   by simp [guardLogicalTapes]⟩
+
+theorem guardedAtExistingTapeSeparator_zero_of_length_three
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    AtExistingTapeSeparator (guardLogicalTapes logical) 0
+      (encodedGuardedStructuredTapes logical) := by
+  cases logical with
+  | nil =>
+      simp at hlength
+  | cons T rest =>
+      exact
+        ⟨by
+          simpa [encodedGuardedStructuredTapes] using
+            atTapeSeparator_zero_self (guardLogicalTapes (T :: rest)),
+          guardLogicalTape T, guardLogicalTapes rest,
+          by simp [guardLogicalTapes]⟩
 
 theorem tape1ReaderDescription_runsFromExistingBlockStart
     (D : Description) {state : Nat} (read0 : Option Bool)
