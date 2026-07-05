@@ -370,6 +370,82 @@ private theorem singletonShapeRefreshDescription_runConfig_eq_to_halt
           simp [hfull]
           exact ih next T htail
 
+private theorem exists_first_le
+    {p : Nat -> Prop} [DecidablePred p] :
+    forall n : Nat,
+      (exists k : Nat, k ≤ n ∧ p k) ->
+        exists m : Nat, p m ∧ m ≤ n ∧
+          forall k : Nat, k < m -> ¬ p k
+  | 0, hexists => by
+      rcases hexists with ⟨k, hk, hpk⟩
+      have hk0 : k = 0 := by
+        lia
+      subst k
+      exact ⟨0, hpk, by decide, by intro k hk; cases hk⟩
+  | n + 1, hexists => by
+      by_cases hprev : exists k : Nat, k ≤ n ∧ p k
+      · rcases exists_first_le (p := p) n hprev with
+          ⟨m, hpm, hmle, hmin⟩
+        exact ⟨m, hpm, Nat.le_trans hmle (Nat.le_succ n), hmin⟩
+      · rcases hexists with ⟨k, hk, hpk⟩
+        have hk_last : k = n + 1 := by
+          by_cases hkle : k ≤ n
+          · exact False.elim (hprev ⟨k, hkle, hpk⟩)
+          · lia
+        subst k
+        refine ⟨n + 1, hpk, Nat.le_refl _, ?_⟩
+        intro k hk hpk'
+        have hkle : k ≤ n := by
+          lia
+        exact hprev ⟨k, hkle, hpk'⟩
+
+private theorem exists_first_of_exists
+    {p : Nat -> Prop} [DecidablePred p]
+    (hexists : exists n : Nat, p n) :
+    exists m : Nat, p m ∧ forall k : Nat, k < m -> ¬ p k := by
+  rcases hexists with ⟨n, hpn⟩
+  rcases exists_first_le (p := p) n ⟨n, Nat.le_refl _, hpn⟩ with
+    ⟨m, hpm, _hmle, hmin⟩
+  exact ⟨m, hpm, hmin⟩
+
+private theorem singletonShapeRefreshDescription_runConfig_eq_until
+    {D : MachineDescription}
+    (hstep :
+      forall {c next : MachineDescription.Configuration},
+        MachineDescription.stepConfig D c = some next ->
+          MachineDescription.stepConfig singletonShapeRefreshDescription c =
+            some next) :
+    forall (n : Nat) (c final : MachineDescription.Configuration),
+      (forall k : Nat, k < n -> D.runConfig k c ≠ final) ->
+        D.runConfig n c = final ->
+          singletonShapeRefreshDescription.runConfig n c = final := by
+  intro n
+  induction n with
+  | zero =>
+      intro c final _hfirst hrun
+      simpa [MachineDescription.runConfig] using hrun
+  | succ n ih =>
+      intro c final hfirst hrun
+      simp only [MachineDescription.runConfig] at hrun ⊢
+      cases hlocal : MachineDescription.stepConfig D c with
+      | none =>
+          simp [hlocal] at hrun
+          exact False.elim (hfirst 0 (Nat.succ_pos n) hrun)
+      | some next =>
+          have hfull := hstep hlocal
+          have htail :
+              D.runConfig n next = final := by
+            simpa [hlocal] using hrun
+          have hfirstTail :
+              forall k : Nat, k < n -> D.runConfig k next ≠ final := by
+            intro k hk hhit
+            have hrunSucc :
+                D.runConfig (k + 1) c = final := by
+              simp [MachineDescription.runConfig, hlocal, hhit]
+            exact hfirst (k + 1) (Nat.succ_lt_succ hk) hrunSucc
+          simp [hfull]
+          exact ih next final hfirstTail htail
+
 theorem singletonShapeRefreshDescription_run_false_of_reads
     (physical : Tape Bool)
     (hstart : Tape.read physical = none)
@@ -533,6 +609,49 @@ theorem singletonShapeRefreshDescription_reaches_terminal_canonical
         (encodedGuardedStructuredTapes [target])
         hrun⟩
 
+theorem singletonShapeRefreshDescription_reaches_terminal_rightBoundary
+    (left : List (Option Bool)) (head : Option Bool) :
+    exists steps : Nat,
+      singletonShapeRefreshDescription.runConfig steps
+          { state := singletonShapeTerminalProbeStart
+            tape :=
+              encodedStructuredTapes
+                [({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRightRepairStart
+          tape :=
+            encodedStructuredTapes
+              [({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool)] } := by
+  let startConfig : MachineDescription.Configuration :=
+    { state := singletonShapeTerminalProbeStart
+      tape :=
+        encodedStructuredTapes
+          [({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool)] }
+  let finalConfig : MachineDescription.Configuration :=
+    { state := singletonShapeRightRepairStart
+      tape :=
+        encodedStructuredTapes
+          [({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool)] }
+  rcases singletonShapeTerminalProbeDescription_reaches_rightBoundary
+      left head with
+    ⟨witnessSteps, hwitness⟩
+  have hexists :
+      exists steps : Nat,
+        singletonShapeTerminalProbeDescription.runConfig steps startConfig =
+          finalConfig := by
+    exact ⟨witnessSteps, by
+      simpa [startConfig, finalConfig] using hwitness⟩
+  rcases exists_first_of_exists hexists with
+    ⟨steps, hsteps, hfirst⟩
+  exact
+    ⟨steps,
+      singletonShapeRefreshDescription_runConfig_eq_until
+        singletonShapeRefreshDescription_stepConfig_of_terminalProbe_some
+        steps startConfig finalConfig hfirst hsteps⟩
+
 theorem singletonShapeRefreshDescription_reaches_leftRepair_leftBoundary
     (head : Option Bool) (right : List (Option Bool)) :
     exists (actual : Tape Bool) (steps : Nat),
@@ -691,6 +810,86 @@ theorem singletonShapeRefreshDescription_haltsFrom_leftBoundary
         actual
   rw [hrun]
   simp [singletonShapeRefreshDescription]
+
+theorem singletonShapeRefreshDescription_haltsFrom_rightBoundary
+    (left : List (Option Bool)) (head : Option Bool) :
+    singletonShapeRefreshDescription.HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        [({ left := left ++ [none], head := head, right := [] } :
+          Tape Bool)])
+      (encodedGuardedStructuredTapes
+        [({ left := left, head := head, right := [] } : Tape Bool)]) := by
+  rcases singletonShapeRefreshDescription_reaches_terminal_rightBoundary
+      left head with
+    ⟨terminalSteps, hterminal⟩
+  rcases singletonShapeRefreshDescription_reaches_rightRepair_rightBoundary
+      left head with
+    ⟨actual, repairSteps, hrepair, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  refine ⟨2 + terminalSteps + repairSteps, ?_⟩
+  have hprefix :
+      singletonShapeRefreshDescription.runConfig (2 + terminalSteps)
+          { state := singletonShapeRefreshDescription.start
+            tape :=
+              encodedStructuredTapes
+                [({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRightRepairStart
+          tape :=
+            encodedStructuredTapes
+              [({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool)] } := by
+    rw [MachineDescription.runConfig_add]
+    rw [singletonShapeRefreshDescription_run_rightBoundary_opening left head]
+    exact hterminal
+  have hrun :
+      singletonShapeRefreshDescription.runConfig
+          (2 + terminalSteps + repairSteps)
+          { state := singletonShapeRefreshDescription.start
+            tape :=
+              encodedStructuredTapes
+                [({ left := left ++ [none], head := head, right := [] } :
+                  Tape Bool)] } =
+        { state := singletonShapeRefreshFinalHalt, tape := actual } := by
+    rw [MachineDescription.runConfig_add]
+    rw [hprefix]
+    exact hrepair
+  change
+    (singletonShapeRefreshDescription.runConfig
+      (2 + terminalSteps + repairSteps)
+      { state := singletonShapeRefreshDescription.start
+        tape :=
+          encodedStructuredTapes
+            [({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool)] }).state =
+        singletonShapeRefreshDescription.halt ∧
+      (singletonShapeRefreshDescription.runConfig
+        (2 + terminalSteps + repairSteps)
+        { state := singletonShapeRefreshDescription.start
+          tape :=
+            encodedStructuredTapes
+              [({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool)] }).tape =
+        actual
+  rw [hrun]
+  simp [singletonShapeRefreshDescription]
+
+theorem singletonShapeRefreshDescription_caseContract :
+    SingletonShapeGuardSlackRefreshCaseContract
+      singletonShapeRefreshDescription where
+  subroutineReady := singletonShapeRefreshDescription_subroutineReady
+  canonical := singletonShapeRefreshDescription_haltsFrom_canonical
+  leftBoundary := singletonShapeRefreshDescription_haltsFrom_leftBoundary
+  rightBoundary := singletonShapeRefreshDescription_haltsFrom_rightBoundary
+
+theorem singletonShapeRefreshDescription_contract :
+    SingletonShapeGuardSlackRefreshContract singletonShapeRefreshDescription :=
+  singletonShapeRefreshDescription_caseContract.toContract
+
+def singletonShapeRefreshNormalizer :
+    SingletonShapeGuardSlackRefreshNormalizer where
+  machine := singletonShapeRefreshDescription
+  contract := singletonShapeRefreshDescription_contract
 
 end MultiTapeLowering
 end Structured
