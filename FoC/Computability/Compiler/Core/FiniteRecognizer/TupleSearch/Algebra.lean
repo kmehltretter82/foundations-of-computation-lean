@@ -221,6 +221,34 @@ theorem exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
       ⟨rightFuel, hrightFuel⟩
     exact ⟨leftFuel, rightFuel, hleftFuel, hrightFuel⟩
 
+/--
+Bounded dovetailing over two exact-fuel witnesses is equivalent to ordinary
+halting of both machines on the preserved input.
+-/
+theorem exists_bounded_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+    {symbol : Type uSymbol}
+    {leftState : Type uLeft} {rightState : Type uRight}
+    (left : TuringMachine symbol leftState)
+    (right : TuringMachine symbol rightState)
+    (input : Word symbol) :
+    (exists limit : Nat,
+      exists leftFuel : Nat,
+      exists rightFuel : Nat,
+        leftFuel <= limit /\
+          rightFuel <= limit /\
+          (TuringMachine.HaltsOnInputIn left leftFuel input /\
+            TuringMachine.HaltsOnInputIn right rightFuel input)) <->
+      TuringMachine.HaltsOnInput left input /\
+        TuringMachine.HaltsOnInput right input := by
+  exact
+    Iff.trans
+      (exists_bounded_pair_iff_exists_pair
+        (fun leftFuel rightFuel =>
+          TuringMachine.HaltsOnInputIn left leftFuel input /\
+            TuringMachine.HaltsOnInputIn right rightFuel input))
+      (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+        left right input)
+
 end TupleSearch
 end FiniteRecognizer
 

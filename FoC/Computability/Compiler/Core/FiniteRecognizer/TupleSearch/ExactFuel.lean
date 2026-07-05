@@ -42,6 +42,21 @@ def GeneratedBoundedNestedExactFuelSearchConstruction
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
     GeneratedBoundedNestedExactFuelSearchSpec searcher M
 
+/--
+Unbounded search over generated inner inputs for a wrapped machine, hiding the
+exact outer fuel behind ordinary halting.
+-/
+def GeneratedNestedHaltingSearchConstruction
+    {machineState : Type uMachine}
+    (M : TuringMachine MachineCodeSymbol machineState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput searcher input <->
+        exists inner : Nat,
+          TuringMachine.HaltsOnInput M
+            (GeneratedCode.stageCode input inner)
+
 theorem generatedStageProgramRunnerConstructionFiniteLeaf
     {machineState : Type uMachine}
     (M : TuringMachine MachineCodeSymbol machineState) :
@@ -175,6 +190,30 @@ theorem generatedBoundedNestedExactFuelSearchFiniteLeafDecidable
           simpa [GeneratedCode.nestedStageCode] using
             (hselected (GeneratedCode.stageCode input inner) outer).mpr
               hM⟩
+
+theorem generatedNestedHaltingSearchFiniteLeaf
+    {machineState : Type uMachine}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    GeneratedNestedHaltingSearchConstruction M := by
+  rcases generatedNestedExactFuelSearchFiniteLeaf M with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  exact Iff.trans (hsearcher input)
+    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M (fun inner => GeneratedCode.stageCode input inner))
+
+theorem generatedNestedHaltingSearchFiniteLeafDecidable
+    {machineState : Type uMachine} [DecidableEq machineState]
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    GeneratedNestedHaltingSearchConstruction M := by
+  rcases generatedNestedExactFuelSearchFiniteLeafDecidable M with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  exact Iff.trans (hsearcher input)
+    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M (fun inner => GeneratedCode.stageCode input inner))
 
 end TupleSearch
 end FiniteRecognizer

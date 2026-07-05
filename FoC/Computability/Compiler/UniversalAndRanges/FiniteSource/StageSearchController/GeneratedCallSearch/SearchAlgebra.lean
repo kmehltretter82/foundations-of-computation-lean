@@ -1,4 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Product
 
@@ -194,25 +196,27 @@ theorem codePrefixNestedHaltingSearchFiniteLeaf
     {machineState : Type u}
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedHaltingSearchConstruction M := by
-  rcases codePrefixNestedExactFuelSearchFiniteLeaf M with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedNestedHaltingSearchFiniteLeaf
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input
-  exact Iff.trans (hsearcher input)
-    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
-      M (fun inner => CodePrefixRecognizerStageCode input inner))
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input
 
 theorem codePrefixNestedHaltingSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedHaltingSearchConstruction M := by
-  rcases codePrefixNestedExactFuelSearchFiniteLeafDecidable M with
+  rcases
+      FiniteRecognizer.TupleSearch.generatedNestedHaltingSearchFiniteLeafDecidable
+        M with
     ⟨searcherState, searcher, hsearcher⟩
   refine ⟨searcherState, searcher, ?_⟩
   intro input
-  exact Iff.trans (hsearcher input)
-    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
-      M (fun inner => CodePrefixRecognizerStageCode input inner))
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
+    using hsearcher input
 
 /--
 Unbounded product search for recognizer intersection, hiding both exact fuel
@@ -238,13 +242,12 @@ theorem codePrefixProductHaltingSearchFiniteLeaf
     (left : TuringMachine MachineCodeSymbol leftState)
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixProductHaltingSearchConstruction left right := by
-  rcases codePrefixExactFuelProductSearchFiniteLeaf left right with
+  rcases FiniteRecognizer.generatedProductHaltingSearchFiniteLeaf
+      left right with
     ⟨bothState, both, hboth⟩
   refine ⟨bothState, both, ?_⟩
   intro input
-  exact Iff.trans (hboth input)
-    (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
-      left right input)
+  exact hboth input
 
 theorem codePrefixProductHaltingSearchFiniteLeafDecidable
     {leftState : Type uStage} {rightState : Type uDescription}
@@ -252,13 +255,12 @@ theorem codePrefixProductHaltingSearchFiniteLeafDecidable
     (left : TuringMachine MachineCodeSymbol leftState)
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixProductHaltingSearchConstruction left right := by
-  rcases codePrefixExactFuelProductSearchFiniteLeafDecidable left right with
+  rcases FiniteRecognizer.generatedProductHaltingSearchFiniteLeafDecidable
+      left right with
     ⟨bothState, both, hboth⟩
   refine ⟨bothState, both, ?_⟩
   intro input
-  exact Iff.trans (hboth input)
-    (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
-      left right input)
+  exact hboth input
 
 /--
 Bounded dovetailing over two fuel components is equivalent to both machines
@@ -280,13 +282,8 @@ theorem exists_bounded_pair_haltsOnInputIn_and_iff_haltsOnInput_and
       TuringMachine.HaltsOnInput left input ∧
         TuringMachine.HaltsOnInput right input := by
   exact
-    Iff.trans
-      (exists_bounded_pair_iff_exists_pair
-        (fun leftFuel rightFuel =>
-          TuringMachine.HaltsOnInputIn left leftFuel input ∧
-            TuringMachine.HaltsOnInputIn right rightFuel input))
-      (exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
-        left right input)
+    FiniteRecognizer.TupleSearch.exists_bounded_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input
 
 end Computability
 end FoC

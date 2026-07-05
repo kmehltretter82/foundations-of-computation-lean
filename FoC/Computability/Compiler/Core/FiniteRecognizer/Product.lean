@@ -67,6 +67,21 @@ def GeneratedProductExactFuelSearchConstruction
             TuringMachine.HaltsOnInputIn right rightFuel input
 
 /--
+Generated product search for recognizer intersection, hiding both exact fuel
+witnesses behind ordinary halting.
+-/
+def GeneratedProductHaltingSearchConstruction
+    {leftState : Type uLeft} {rightState : Type uRight}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) : Prop :=
+  exists bothState : Type,
+  exists both : TuringMachine MachineCodeSymbol bothState,
+    forall input : Word MachineCodeSymbol,
+      TuringMachine.HaltsOnInput both input <->
+        TuringMachine.HaltsOnInput left input ∧
+          TuringMachine.HaltsOnInput right input
+
+/--
 Concrete-state generated product search target.
 -/
 def GeneratedProductExactFuelSearchFinStateConstruction : Prop :=
@@ -207,6 +222,33 @@ theorem generatedProductExactFuelSearchFiniteLeafDecidable
   exact
     generatedProductExactFuelSearchConstruction_of_finStateConstructionDecidable
       left right generatedProductExactFuelSearchFinStateFiniteLeaf
+
+theorem generatedProductHaltingSearchFiniteLeaf
+    {leftState : Type uLeft} {rightState : Type uRight}
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    GeneratedProductHaltingSearchConstruction left right := by
+  rcases generatedProductExactFuelSearchFiniteLeaf left right with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  exact Iff.trans (hboth input)
+    (TupleSearch.exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input)
+
+theorem generatedProductHaltingSearchFiniteLeafDecidable
+    {leftState : Type uLeft} {rightState : Type uRight}
+    [DecidableEq leftState] [DecidableEq rightState]
+    (left : TuringMachine MachineCodeSymbol leftState)
+    (right : TuringMachine MachineCodeSymbol rightState) :
+    GeneratedProductHaltingSearchConstruction left right := by
+  rcases generatedProductExactFuelSearchFiniteLeafDecidable left right with
+    ⟨bothState, both, hboth⟩
+  refine ⟨bothState, both, ?_⟩
+  intro input
+  exact Iff.trans (hboth input)
+    (TupleSearch.exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input)
 
 end FiniteRecognizer
 
