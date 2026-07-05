@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
@@ -131,6 +132,71 @@ private def structuredBoolWordRawBitsDecoderRow
   actions := [sourceAction, counterAction, outputAction]
   target := target
 
+private def structuredTransitionWellFormedBool
+    (stateCount tapeCount : Nat) (t : Structured.Transition) : Bool :=
+  decide (t.source < stateCount) &&
+    decide (t.target < stateCount) &&
+    decide (t.reads.length = tapeCount) &&
+    decide (t.actions.length = tapeCount)
+
+private def structuredTransitionSameKeyBool
+    (t u : Structured.Transition) : Bool :=
+  decide (t.source = u.source) && decide (t.reads = u.reads)
+
+private def structuredTransitionSameActionBool
+    (t u : Structured.Transition) : Bool :=
+  decide (t.actions = u.actions) && decide (t.target = u.target)
+
+private def structuredTransitionDeterministicPairBool
+    (t u : Structured.Transition) : Bool :=
+  !structuredTransitionSameKeyBool t u ||
+    structuredTransitionSameActionBool t u
+
+private def structuredTransitionNotFromBool
+    (state : Nat) (t : Structured.Transition) : Bool :=
+  decide (t.source ≠ state)
+
+private theorem structuredTransition_wellFormed_of_all
+    {stateCount tapeCount : Nat} {l : List Structured.Transition}
+    (h : l.all (structuredTransitionWellFormedBool stateCount tapeCount) =
+      true) :
+    forall t : Structured.Transition,
+      t ∈ l -> Structured.Transition.WellFormed stateCount tapeCount t := by
+  intro t ht
+  have htbool := (List.all_eq_true.mp h) t ht
+  simpa [structuredTransitionWellFormedBool,
+    Structured.Transition.WellFormed, and_assoc] using htbool
+
+private theorem structuredTransition_deterministic_of_all
+    {l : List Structured.Transition}
+    (h :
+      l.all (fun t =>
+        l.all (fun u => structuredTransitionDeterministicPairBool t u)) =
+        true) :
+    forall t u : Structured.Transition,
+      t ∈ l ->
+      u ∈ l ->
+      Structured.Transition.SameKey t u ->
+        Structured.Transition.SameAction t u := by
+  intro t u ht hu hkey
+  have htbool := (List.all_eq_true.mp h) t ht
+  have hubool := (List.all_eq_true.mp htbool) u hu
+  have hkeyBool :
+      structuredTransitionSameKeyBool t u = true := by
+    simpa [structuredTransitionSameKeyBool,
+      Structured.Transition.SameKey] using hkey
+  simpa [structuredTransitionDeterministicPairBool, hkeyBool,
+    structuredTransitionSameActionBool, Structured.Transition.SameAction,
+    and_assoc] using hubool
+
+private theorem structuredTransition_notFrom_of_all
+    {state : Nat} {l : List Structured.Transition}
+    (h : l.all (structuredTransitionNotFromBool state) = true) :
+    forall t : Structured.Transition, t ∈ l -> t.source ≠ state := by
+  intro t ht
+  have htbool := (List.all_eq_true.mp h) t ht
+  simpa [structuredTransitionNotFromBool] using htbool
+
 /--
 A three-logical-tape structured decoder for the header-prefixed Boolean-word
 bit stream.  Tape 0 is the public source stream, tape 1 is a unary counter
@@ -226,6 +292,47 @@ def structuredBoolWordRawBitsDecoderDescription :
         structuredBoolWordRawBitsDecoderStay
         structuredBoolWordRawBitsDecoderStay
         structuredBoolWordRawBitsDecoderMoveRight 99 ]
+
+theorem structuredBoolWordRawBitsDecoderDescription_wellFormed :
+    structuredBoolWordRawBitsDecoderDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, by decide, ?_, ?_⟩
+  · exact
+      structuredTransition_wellFormed_of_all
+        (l := structuredBoolWordRawBitsDecoderDescription.transitions)
+        (stateCount :=
+          structuredBoolWordRawBitsDecoderDescription.stateCount)
+        (tapeCount :=
+          structuredBoolWordRawBitsDecoderDescription.tapeCount)
+        (by decide)
+  · exact
+      structuredTransition_deterministic_of_all
+        (l := structuredBoolWordRawBitsDecoderDescription.transitions)
+        (by decide)
+
+theorem structuredBoolWordRawBitsDecoderDescription_haltTransitionFree :
+    structuredBoolWordRawBitsDecoderDescription.HaltTransitionFree :=
+  structuredTransition_notFrom_of_all
+    (l := structuredBoolWordRawBitsDecoderDescription.transitions)
+    (state := structuredBoolWordRawBitsDecoderDescription.halt)
+    (by decide)
+
+theorem structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3 :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredBoolWordRawBitsDecoderDescription :=
+  Structured.MultiTapeLowering.supportedReadWriteRows3_of_supports_eq_true
+    (by decide)
+
+def loweredStructuredBoolWordRawBitsDecoderDescription :
+    MachineDescription :=
+  Structured.MultiTapeLowering.lowerStructured3Description
+    structuredBoolWordRawBitsDecoderDescription
+
+theorem loweredStructuredBoolWordRawBitsDecoderDescription_wellFormed :
+    loweredStructuredBoolWordRawBitsDecoderDescription.WellFormed := by
+  simpa [loweredStructuredBoolWordRawBitsDecoderDescription] using
+    Structured.MultiTapeLowering.lowerStructured3Description_wellFormed
+      structuredBoolWordRawBitsDecoderDescription_wellFormed
+      structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3
 
 def structuredBoolWordRawBitsDecoderInitialOutputTape :
     Tape Bool :=
@@ -1093,6 +1200,43 @@ theorem structuredBoolWordRawBitsDecoderDescription_run
             [none])))
       (List.append (suffixTail.map some) (none :: rightPadding))
       (bits.length + 1)
+
+theorem loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTape
+    (bits suffixTail : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    loweredStructuredBoolWordRawBitsDecoderDescription.HaltsFromTapeEquiv
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+        , Tape.blank
+        , structuredBoolWordRawBitsDecoderInitialOutputTape ])
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        [ structuredBoolWordRawBitsDecoderSourceTargetTape
+            bits suffixTail rightPadding
+        , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+            (bits.length + 1)
+        , rightEdgeScanSourceTapeFromLeft [none] bits [] ]) := by
+  simpa [loweredStructuredBoolWordRawBitsDecoderDescription] using
+    Structured.MultiTapeLowering.lowerStructured3Description_haltsFromConfigWithTapes
+      structuredBoolWordRawBitsDecoderDescription_wellFormed
+      structuredBoolWordRawBitsDecoderDescription_haltTransitionFree
+      structuredBoolWordRawBitsDecoderDescription_supportsReadWriteRows3
+      (c :=
+        { state := structuredBoolWordRawBitsDecoderDescription.start
+          tapes :=
+            [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+            , Tape.blank
+            , structuredBoolWordRawBitsDecoderInitialOutputTape ] })
+      (tapes :=
+        [ structuredBoolWordRawBitsDecoderSourceTargetTape
+            bits suffixTail rightPadding
+        , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+            (bits.length + 1)
+        , rightEdgeScanSourceTapeFromLeft [none] bits [] ])
+      rfl
+      (by simp [structuredBoolWordRawBitsDecoderDescription])
+      ⟨9 * bits.length + 11,
+        structuredBoolWordRawBitsDecoderDescription_run
+          bits suffixTail rightPadding⟩
 
 theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
     (bits suffixTail : Word Bool)

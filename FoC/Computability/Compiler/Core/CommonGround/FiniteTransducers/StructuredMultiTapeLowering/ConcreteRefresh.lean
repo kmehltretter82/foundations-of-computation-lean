@@ -124,6 +124,37 @@ def lowerStructured3StaticDescription
     D hrows.tapeCount_eq hDwf hhaltFree hrows
     concreteStructuredSingletonRefresh3Description_contract
 
+theorem lowerStructured3Description_haltsFromConfigWithTapes
+    {D : Description}
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {c : Configuration} {tapes : List (Tape Bool)}
+    (hcStart : c.state = D.start)
+    (hcTapes : c.tapes.length = D.tapeCount)
+    (hhalts : D.HaltsWithTapes c tapes) :
+    (lowerStructured3Description D).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes c.tapes)
+      (encodedGuardedStructuredTapes tapes) := by
+  rcases hhalts with ⟨n, hrun⟩
+  let L := lowerStructured3StaticDescription D hDwf hhaltFree hrows
+  have hcState : c.state < D.stateCount := by
+    rw [hcStart]
+    exact hDwf.right.right.left
+  have hsim :=
+    L.stepLowering.simulates_runConfig hDwf n c hcState hcTapes
+  have hrunToHalt :
+      RunsFromStateTapeEquiv L.machine
+        (L.stateMap D.start)
+        (L.stateMap D.halt)
+        (encodedGuardedStructuredTapes c.tapes)
+        (encodedGuardedStructuredTapes tapes) := by
+    simpa [L, lowerStructured3StaticDescription,
+      lowerStructured3Description, hcStart, hrun] using hsim
+  simpa [L, lowerStructured3StaticDescription,
+    lowerStructured3Description] using
+    hrunToHalt.toHaltsFromTapeEquiv L.start_eq L.halt_eq
+
 theorem lowerStructured3Description_haltsWithTapes
     {D : Description}
     (hDwf : D.WellFormed)
