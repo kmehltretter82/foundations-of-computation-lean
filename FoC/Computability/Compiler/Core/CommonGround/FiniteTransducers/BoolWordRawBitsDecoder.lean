@@ -1535,6 +1535,45 @@ theorem structuredBoolWordRawBitsDecoderInputInitializerConstruction_core :
     StructuredBoolWordRawBitsDecoderInputInitializerConstruction := by
   sorry
 
+/--
+Input initializer contract for a fixed tape-2 output padding.
+
+This is weaker than
+{name}`StructuredBoolWordRawBitsDecoderInputInitializerSpec`: the machine may
+depend on the padding it must preload, while still accepting any raw-bits
+source shape with that fixed padding.
+-/
+def StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerSpec
+    (outputPadding : List (Option Bool))
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall (bits suffixTail : Word Bool)
+      (rightPadding : List (Option Bool)),
+      initializer.HaltsFromTapeEquiv
+        (boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding)
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+          , Tape.blank
+          , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+              bits.length outputPadding ])
+
+def StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerConstruction
+    (outputPadding : List (Option Bool)) : Prop :=
+  exists initializer : MachineDescription,
+    StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerSpec
+      outputPadding initializer
+
+theorem structuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerConstruction_of_uniform
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderInputInitializerConstruction)
+    (outputPadding : List (Option Bool)) :
+    StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerConstruction
+      outputPadding := by
+  rcases hinitializer with ⟨initializer, hinitializerReady, hinitializerRun⟩
+  exact
+    ⟨initializer, hinitializerReady, fun bits suffixTail rightPadding =>
+      hinitializerRun bits suffixTail rightPadding outputPadding⟩
+
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
   Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription
@@ -1567,6 +1606,27 @@ def StructuredBoolWordRawBitsDecoderEndpointConstruction : Prop :=
   exists endpoint : MachineDescription,
     StructuredBoolWordRawBitsDecoderEndpointSpec endpoint
 
+def StructuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec
+    (outputPadding : List (Option Bool))
+    (endpoint : MachineDescription) : Prop :=
+  endpoint.SubroutineReady ∧
+    forall (bits suffixTail : Word Bool)
+      (rightPadding : List (Option Bool)),
+      endpoint.HaltsFromTapeEquiv
+        (boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding)
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              bits suffixTail rightPadding
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              (bits.length + 1)
+          , rightEdgeScanSourceTapeFromLeft [none] bits outputPadding ])
+
+def StructuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointConstruction
+    (outputPadding : List (Option Bool)) : Prop :=
+  exists endpoint : MachineDescription,
+    StructuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec
+      outputPadding endpoint
+
 theorem structuredBoolWordRawBitsDecoderEndpointSpec_of_inputInitializerSpec
     {initializer : MachineDescription}
     (hinitializer :
@@ -1585,6 +1645,41 @@ theorem structuredBoolWordRawBitsDecoderEndpointSpec_of_inputInitializerSpec
         (hinitializer.right bits suffixTail rightPadding outputPadding)
         (loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
           bits suffixTail rightPadding outputPadding)
+
+theorem structuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec_of_inputInitializerSpec
+    {outputPadding : List (Option Bool)}
+    {initializer : MachineDescription}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerSpec
+        outputPadding initializer) :
+    StructuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec
+      outputPadding
+      (structuredBoolWordRawBitsDecoderEndpointDescription initializer) := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderEndpointDescription_subroutineReady
+        hinitializer.left
+  · intro bits suffixTail rightPadding
+    exact
+      Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hinitializer.left
+        loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady
+        (hinitializer.right bits suffixTail rightPadding)
+        (loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
+          bits suffixTail rightPadding outputPadding)
+
+theorem structuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointConstruction_of_inputInitializer
+    {outputPadding : List (Option Bool)}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderFixedOutputPaddingInputInitializerConstruction
+        outputPadding) :
+    StructuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointConstruction
+      outputPadding := by
+  rcases hinitializer with ⟨initializer, hinitializerSpec⟩
+  exact
+    ⟨structuredBoolWordRawBitsDecoderEndpointDescription initializer,
+      structuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec_of_inputInitializerSpec
+        hinitializerSpec⟩
 
 theorem structuredBoolWordRawBitsDecoderEndpointConstruction_of_inputInitializer
     (hinitializer :
