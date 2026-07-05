@@ -1374,6 +1374,252 @@ theorem structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription_run
         (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
           p).reverse [])
 
+/--
+Lowerer-facing row table for the first composed live-tail phases: count the
+assembly source segment on tape 0, then emit the length header from tape 1 onto
+tape 2.
+
+The table uses the generic phase-packaging helpers so the count phase's local
+halt jumps directly to the offset length-header phase.  The final semantic run
+theorem still needs the phase-isolation/run-packaging lemmas that will compose
+the already-proved phase runs inside this larger table.
+-/
+def structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription :
+    Structured.Description :=
+  Structured.MultiTapeLowering.ThreeTape.description 220 0 199
+    (Structured.MultiTapeLowering.ThreeTape.phaseRows 0
+        structuredMixedOptionCellQuoteLiveTailCountDescription.halt 100
+        structuredMixedOptionCellQuoteLiveTailCountDescription.transitions ++
+      Structured.MultiTapeLowering.ThreeTape.offsetRows 100
+        structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription.transitions)
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_supportsReadWriteRows3 :
+    Structured.MultiTapeLowering.supportsReadWriteRows3
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription =
+        true := by
+  apply
+    Structured.MultiTapeLowering.ThreeTape.description_supportsReadWriteRows3
+  intro t ht
+  simp at ht
+  rcases ht with hcount | hlength
+  · exact
+      Structured.MultiTapeLowering.ThreeTape.phaseRows_supportsReadWriteRow3
+        structuredMixedOptionCellQuoteLiveTailCountDescription_supported.rows_supported
+        t hcount
+  · exact
+      Structured.MultiTapeLowering.ThreeTape.offsetRows_supportsReadWriteRow3
+        structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription_supported.rows_supported
+        t hlength
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription :=
+  Structured.MultiTapeLowering.supportedReadWriteRows3_of_supports_eq_true
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_supportsReadWriteRows3
+
+def structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
+    (processedRev : Word Bool) (markers : Nat)
+    (outputBits : Word Bool) : Structured.Configuration :=
+  Structured.MultiTapeLowering.ThreeTape.config 100
+    (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+      processedRev [])
+    (structuredMixedOptionCellQuoteLiveTailCountReadTape markers)
+    (structuredMixedOptionCellQuoteLiveTailOutputTape outputBits)
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_bit
+    (bit : Bool) (processedRev rest : Word Bool)
+    (markers : Nat) (outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.runConfig
+        1
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 processedRev (bit :: rest) markers outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCountConfig
+        0 (bit :: processedRev) rest markers.succ outputBits := by
+  cases bit <;> cases rest <;> (try cases ‹Bool›) <;>
+    simp [structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription,
+      structuredMixedOptionCellQuoteLiveTailCountDescription,
+      structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription,
+      structuredMixedOptionCellQuoteLiveTailCountConfig,
+      structuredMixedOptionCellQuoteLiveTailCellPassSourceTape,
+      structuredMixedOptionCellQuoteLiveTailCountMarkerTape,
+      structuredMixedOptionCellQuoteLiveTailOutputTape,
+      structuredLiveTailCountRow,
+      structuredLiveTailCountDoneRow,
+      structuredPreserve, structuredWriteBit,
+      Structured.MultiTapeLowering.ThreeTape.description,
+      Structured.MultiTapeLowering.ThreeTape.config,
+      Structured.MultiTapeLowering.ThreeTape.markerScratch,
+      Structured.MultiTapeLowering.ThreeTape.outputFromBits,
+      Structured.MultiTapeLowering.ThreeTape.phaseRows,
+      Structured.MultiTapeLowering.ThreeTape.offsetRows,
+      Structured.MultiTapeLowering.ThreeTape.offsetTransition,
+      Structured.MultiTapeLowering.ThreeTape.mapTransitionStates,
+      Structured.MultiTapeLowering.ThreeTape.retargetRowsTarget,
+      Structured.MultiTapeLowering.ThreeTape.retargetTransitionTarget,
+      Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      Structured.Description.Matches,
+      Structured.TapeAction.stay,
+      Structured.TapeAction.apply, Structured.HeadMove.apply,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight,
+      tapeAtCells, List.replicate_succ]
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_done
+    (processedRev : Word Bool) (markers : Nat) (outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.runConfig
+        1
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 processedRev [] markers outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
+        processedRev markers outputBits := by
+  cases markers with
+  | zero =>
+      simp [structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription,
+        structuredMixedOptionCellQuoteLiveTailCountDescription,
+        structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription,
+        structuredMixedOptionCellQuoteLiveTailCountConfig,
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig,
+        structuredMixedOptionCellQuoteLiveTailCellPassSourceTape,
+        structuredMixedOptionCellQuoteLiveTailCountMarkerTape,
+        structuredMixedOptionCellQuoteLiveTailCountReadTape,
+        structuredMixedOptionCellQuoteLiveTailOutputTape,
+        structuredLiveTailCountRow,
+        structuredLiveTailCountDoneRow,
+        structuredPreserve, structuredWriteBit,
+        Structured.MultiTapeLowering.ThreeTape.description,
+        Structured.MultiTapeLowering.ThreeTape.config,
+        Structured.MultiTapeLowering.ThreeTape.markerScratch,
+        Structured.MultiTapeLowering.ThreeTape.outputFromBits,
+        Structured.MultiTapeLowering.ThreeTape.phaseRows,
+        Structured.MultiTapeLowering.ThreeTape.offsetRows,
+        Structured.MultiTapeLowering.ThreeTape.offsetTransition,
+        Structured.MultiTapeLowering.ThreeTape.mapTransitionStates,
+        Structured.MultiTapeLowering.ThreeTape.retargetRowsTarget,
+        Structured.MultiTapeLowering.ThreeTape.retargetTransitionTarget,
+        Structured.Description.runConfig,
+        Structured.Description.stepConfig,
+        Structured.Description.lookupTransition,
+        Structured.Description.Matches,
+        Structured.TapeAction.stay,
+        Structured.TapeAction.apply, Structured.HeadMove.apply,
+        Tape.read, Tape.move, Tape.moveLeft,
+        tapeAtCells]
+  | succ markers =>
+      simp [structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription,
+        structuredMixedOptionCellQuoteLiveTailCountDescription,
+        structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription,
+        structuredMixedOptionCellQuoteLiveTailCountConfig,
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig,
+        structuredMixedOptionCellQuoteLiveTailCellPassSourceTape,
+        structuredMixedOptionCellQuoteLiveTailCountMarkerTape,
+        structuredMixedOptionCellQuoteLiveTailCountReadTape,
+        structuredMixedOptionCellQuoteLiveTailOutputTape,
+        structuredLiveTailCountRow,
+        structuredLiveTailCountDoneRow,
+        structuredPreserve, structuredWriteBit,
+        Structured.MultiTapeLowering.ThreeTape.description,
+        Structured.MultiTapeLowering.ThreeTape.config,
+        Structured.MultiTapeLowering.ThreeTape.markerScratch,
+        Structured.MultiTapeLowering.ThreeTape.outputFromBits,
+        Structured.MultiTapeLowering.ThreeTape.phaseRows,
+        Structured.MultiTapeLowering.ThreeTape.offsetRows,
+        Structured.MultiTapeLowering.ThreeTape.offsetTransition,
+        Structured.MultiTapeLowering.ThreeTape.mapTransitionStates,
+        Structured.MultiTapeLowering.ThreeTape.retargetRowsTarget,
+        Structured.MultiTapeLowering.ThreeTape.retargetTransitionTarget,
+        Structured.Description.runConfig,
+        Structured.Description.stepConfig,
+        Structured.Description.lookupTransition,
+        Structured.Description.Matches,
+        Structured.TapeAction.stay,
+        Structured.TapeAction.apply, Structured.HeadMove.apply,
+        Tape.read, Tape.move, Tape.moveLeft,
+        tapeAtCells, List.replicate_succ]
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_loop
+    (processedRev remaining : Word Bool) (markers : Nat)
+    (outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.runConfig
+        (remaining.length + 1)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 processedRev remaining markers outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
+        (List.append remaining.reverse processedRev)
+        (markers + remaining.length)
+        outputBits := by
+  induction remaining generalizing processedRev markers with
+  | nil =>
+      simpa using
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_done
+          processedRev markers outputBits
+  | cons bit rest ih =>
+      refine
+        Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+          (D := structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription)
+          (n := 1)
+          (m := rest.length + 1)
+          (htotal := ?_)
+          (structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_bit
+            bit processedRev rest markers outputBits)
+          ?_
+      · simp [Nat.add_comm, Nat.add_left_comm]
+      · have hmarkers :
+            markers.succ + rest.length =
+              markers + (rest.length + 1) := by
+          simp [Nat.succ_eq_add_one, Nat.add_comm,
+            Nat.add_left_comm]
+        simpa [Nat.succ_eq_add_one, hmarkers, List.append_assoc] using
+          ih (bit :: processedRev) markers.succ
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count
+    (bits outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.runConfig
+        (bits.length + 1)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
+        bits.reverse bits.length outputBits := by
+  simpa using
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_loop
+      [] bits 0 outputBits
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig_eq_lengthHeaderConfig
+    (processedRev : Word Bool) (markers : Nat) (outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
+        processedRev markers outputBits =
+      structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+        100
+        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+          processedRev [])
+        markers 0 outputBits := by
+  simp [structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig,
+    structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig,
+    structuredMixedOptionCellQuoteLiveTailCountReadTape_eq_lengthPhaseTape]
+
+theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_assembly
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.runConfig
+        ((structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length +
+          1)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p)
+          0 []) =
+      structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+        100
+        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+            p).reverse [])
+        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+          p).length
+        0 [] := by
+  rw [structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count]
+  exact
+    structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig_eq_lengthHeaderConfig
+      (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).reverse
+      (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
+      []
+
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner
