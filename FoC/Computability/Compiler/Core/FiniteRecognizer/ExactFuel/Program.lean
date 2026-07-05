@@ -42,8 +42,8 @@ def FinStateExactProgramComponentsConstruction : Prop :=
 Remaining finite-table leaf for exact-output sequencing.
 -/
 theorem exactOutputThenRecognizeFiniteLeaf :
-    ExactOutputThenRecognizeConstruction := by
-  sorry
+    ExactOutputThenRecognizeConstruction :=
+  exactOutputThenRecognizeConstruction
 
 /--
 Remaining finite-table leaf for the exact initial-layout materializer.
