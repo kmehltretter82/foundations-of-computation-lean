@@ -207,15 +207,6 @@ theorem stageCodeToInitialLayoutCode_stageCode_cons_expanded
     Layout.stageCodeToInitialLayoutCode_stageCode
       M (symbol :: rest) fuel
 
-theorem initialLayoutMaterializerConstructionFiniteLeaf {stateCount : Nat}
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
-    InitialLayoutMaterializerConstruction M := by
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
-
 theorem initialLayoutMaterializerSpec_stageCode_output
     {stateCount : Nat} {materializerState : Type}
     {materializer : TuringMachine MachineCodeSymbol materializerState}

@@ -615,28 +615,6 @@ theorem layoutCodeRunnerConstruction_of_codeMachine
     ⟨runnerState, runner,
       layoutCodeRunnerSpec_of_codeMachineSpec hrunner⟩
 
-theorem layoutFuelLoopCodeMachineFinStateFiniteLeaf :
-    FinStateLayoutFuelLoopCodeMachineConstruction := by
-  intro stateCount M
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
-
-theorem layoutCodeMachineFinStateFiniteLeaf :
-    FinStateLayoutCodeMachineConstruction := by
-  intro stateCount M
-  exact
-    layoutCodeMachineConstruction_of_fuelLoopCodeMachine
-      (layoutFuelLoopCodeMachineFinStateFiniteLeaf stateCount M)
-
-theorem layoutCodeRunnerConstructionFiniteLeaf {stateCount : Nat}
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
-    LayoutCodeRunnerConstruction M :=
-  layoutCodeRunnerConstruction_of_codeMachine
-    (layoutCodeMachineFinStateFiniteLeaf stateCount M)
-
 namespace StageProgram
 
 def CodePrimitiveEmptySpec {stateCount : Nat}

@@ -467,10 +467,6 @@ def OutputThenRecognizeConstruction : Prop :=
         exists pipeline : TuringMachine MachineCodeSymbol pipelineState,
           OutputThenRecognizeSpec pipeline f P
 
-theorem outputThenRecognizeConstructionFiniteLeaf :
-    OutputThenRecognizeConstruction := by
-  sorry
-
 theorem outputThenRecognizeSpec_of_recognizer
     {pipelineState recognizerState : Type}
     {pipeline : TuringMachine MachineCodeSymbol pipelineState}

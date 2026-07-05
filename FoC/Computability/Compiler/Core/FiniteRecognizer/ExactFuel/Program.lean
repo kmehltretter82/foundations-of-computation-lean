@@ -30,11 +30,11 @@ state.
 theorem codeMachineFinStateFiniteLeaf :
     FinStateCodeMachineConstruction := by
   intro stateCount M
-  exact
-    codeMachineConstruction_of_materializer_layoutCodeMachine_compose
-      outputThenRecognizeConstructionFiniteLeaf
-      (initialLayoutMaterializerConstructionFiniteLeaf M)
-      (layoutCodeMachineFinStateFiniteLeaf stateCount M)
+  cases stateCount with
+  | zero =>
+      exact False.elim (Fin.elim0 M.start)
+  | succ _ =>
+      sorry
 
 theorem finStateRunnerConstructionFiniteLeaf :
     FinStateRunnerConstruction stageCode :=
