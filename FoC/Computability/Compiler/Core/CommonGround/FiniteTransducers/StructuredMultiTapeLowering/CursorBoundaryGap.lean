@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.CursorBasic
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.SingletonRefresh
 
 set_option doc.verso true
 
@@ -553,6 +554,41 @@ def encodedStructuredHeadGapTapes
       (List.append (logicalTapeCode head)
         (none :: none :: encodedStructuredTapeCells rest)))
 
+/--
+Raw bit-level shape for a head-segment suffix gap creator.
+
+The future concrete machine can be proved against this contract without
+mentioning the left/right singleton boundary constructors.  The bridge below
+specializes the raw payload bits to the two boundary shapes.
+-/
+def encodedStructuredHeadPayloadTapes
+    (bits : Word Bool) (rest : List (Tape Bool)) : Tape Bool :=
+  tapeAtCells []
+    (List.append tapeSeparatorCells
+      (List.append (bits.map some) (encodedStructuredTapeCells rest)))
+
+/-- Target shape after inserting two physical blank cells before the suffix. -/
+def encodedStructuredHeadPayloadGapTapes
+    (bits : Word Bool) (rest : List (Tape Bool)) : Tape Bool :=
+  tapeAtCells []
+    (List.append tapeSeparatorCells
+      (List.append (bits.map some)
+        (none :: none :: encodedStructuredTapeCells rest)))
+
+theorem encodedStructuredHeadPayloadTapes_eq_structuredTapes
+    (head : Tape Bool) (rest : List (Tape Bool)) :
+    encodedStructuredHeadPayloadTapes (logicalTapeBits head) rest =
+      encodedStructuredTapes (head :: rest) := by
+  simp [encodedStructuredHeadPayloadTapes, encodedStructuredTapes,
+    encodedStructuredTapeCells, logicalTapeCode_eq_map_some]
+
+theorem encodedStructuredHeadPayloadGapTapes_eq_headGap
+    (head : Tape Bool) (rest : List (Tape Bool)) :
+    encodedStructuredHeadPayloadGapTapes (logicalTapeBits head) rest =
+      encodedStructuredHeadGapTapes head rest := by
+  simp [encodedStructuredHeadPayloadGapTapes,
+    encodedStructuredHeadGapTapes, logicalTapeCode_eq_map_some]
+
 theorem rightBoundaryGuardSlackRefreshDescription_haltsFrom_rightBoundaryHeadGap
     (left : List (Option Bool)) (head : Option Bool)
     (rest : List (Tape Bool)) :
@@ -598,6 +634,20 @@ def singletonRightBoundaryHeadRefreshDescription
   canonicalPrimitiveSeqDescription gapCreator
     rightBoundaryGuardSlackRefreshDescription
 
+theorem singletonLeftBoundaryHeadRefreshDescription_subroutineReady
+    {gapCreator : MachineDescription}
+    (hgap : gapCreator.SubroutineReady) :
+    (singletonLeftBoundaryHeadRefreshDescription gapCreator).SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady hgap
+    leftBoundaryGuardSlackRefreshDescription_subroutineReady
+
+theorem singletonRightBoundaryHeadRefreshDescription_subroutineReady
+    {gapCreator : MachineDescription}
+    (hgap : gapCreator.SubroutineReady) :
+    (singletonRightBoundaryHeadRefreshDescription gapCreator).SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady hgap
+    rightBoundaryGuardSlackRefreshDescription_subroutineReady
+
 structure SingletonBoundaryGapCreatorContract
     (gapCreator : MachineDescription) : Prop where
   subroutineReady : gapCreator.SubroutineReady
@@ -621,6 +671,50 @@ structure SingletonBoundaryGapCreatorContract
         (encodedStructuredHeadGapTapes
           ({ left := left ++ [none], head := head, right := [] } :
             Tape Bool) rest)
+
+/--
+Raw payload contract for the remaining suffix-gap creator machine.
+
+It is intentionally stated over arbitrary first-segment payload bits; this is
+the direct tape-shape target for a machine that scans past the first structured
+segment and shifts the encoded suffix two cells to the right.
+-/
+structure HeadSuffixGapCreatorContract
+    (gapCreator : MachineDescription) : Prop where
+  subroutineReady : gapCreator.SubroutineReady
+  realizes :
+    forall (bits : Word Bool) (rest : List (Tape Bool)),
+      gapCreator.HaltsFromTapeEquiv
+        (encodedStructuredHeadPayloadTapes bits rest)
+        (encodedStructuredHeadPayloadGapTapes bits rest)
+
+namespace HeadSuffixGapCreatorContract
+
+theorem toSingletonBoundary
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorContract gapCreator) :
+    SingletonBoundaryGapCreatorContract gapCreator where
+  subroutineReady := hgap.subroutineReady
+  leftBoundary := by
+    intro head right rest
+    simpa [encodedStructuredHeadPayloadTapes_eq_structuredTapes,
+      encodedStructuredHeadPayloadGapTapes_eq_headGap] using
+      hgap.realizes
+        (logicalTapeBits
+          ({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool))
+        rest
+  rightBoundary := by
+    intro left head rest
+    simpa [encodedStructuredHeadPayloadTapes_eq_structuredTapes,
+      encodedStructuredHeadPayloadGapTapes_eq_headGap] using
+      hgap.realizes
+        (logicalTapeBits
+          ({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool))
+        rest
+
+end HeadSuffixGapCreatorContract
 
 namespace SingletonBoundaryGapCreatorContract
 
@@ -669,6 +763,170 @@ theorem rightBoundaryRefresh
         (left ++ [none]) head rest)
 
 end SingletonBoundaryGapCreatorContract
+
+/-
+Retargeted branch blocks for the future suffix-preserving singleton head
+dispatcher.  They mirror the edge-only `singletonShape...RepairDescription`
+blocks, but their local bodies first create the suffix gap and then run the
+existing boundary repair leaf.
+-/
+def singletonHeadRefreshFinalHalt : Nat :=
+  2
+
+def singletonHeadLeftRepairOffset : Nat :=
+  3
+
+def singletonHeadLeftRepairDescription
+    (gapCreator : MachineDescription) : MachineDescription :=
+  MachineDescription.offsetRetargetDescription
+    singletonHeadLeftRepairOffset
+    singletonHeadRefreshFinalHalt
+    (singletonLeftBoundaryHeadRefreshDescription gapCreator)
+
+def singletonHeadLeftRepairStart
+    (gapCreator : MachineDescription) : Nat :=
+  (singletonHeadLeftRepairDescription gapCreator).start
+
+def singletonHeadLeftRepairLimit
+    (gapCreator : MachineDescription) : Nat :=
+  (singletonHeadLeftRepairDescription gapCreator).stateCount
+
+def singletonHeadRightRepairOffset
+    (gapCreator : MachineDescription) : Nat :=
+  singletonHeadLeftRepairLimit gapCreator
+
+def singletonHeadRightRepairDescription
+    (gapCreator : MachineDescription) : MachineDescription :=
+  MachineDescription.offsetRetargetDescription
+    (singletonHeadRightRepairOffset gapCreator)
+    singletonHeadRefreshFinalHalt
+    (singletonRightBoundaryHeadRefreshDescription gapCreator)
+
+def singletonHeadRightRepairStart
+    (gapCreator : MachineDescription) : Nat :=
+  (singletonHeadRightRepairDescription gapCreator).start
+
+def singletonHeadRightRepairLimit
+    (gapCreator : MachineDescription) : Nat :=
+  (singletonHeadRightRepairDescription gapCreator).stateCount
+
+theorem singletonHeadRefreshFinalHalt_lt_leftRepairOffset :
+    singletonHeadRefreshFinalHalt < singletonHeadLeftRepairOffset := by
+  decide
+
+theorem singletonHeadLeftRepairDescription_subroutineReady
+    {gapCreator : MachineDescription}
+    (hgap : gapCreator.SubroutineReady) :
+    (singletonHeadLeftRepairDescription gapCreator).SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    singletonHeadRefreshFinalHalt_lt_leftRepairOffset
+    (singletonLeftBoundaryHeadRefreshDescription_subroutineReady hgap).left
+
+theorem singletonHeadRefreshFinalHalt_lt_rightRepairOffset
+    (gapCreator : MachineDescription) :
+    singletonHeadRefreshFinalHalt <
+      singletonHeadRightRepairOffset gapCreator := by
+  simp [singletonHeadRightRepairOffset, singletonHeadLeftRepairLimit,
+    singletonHeadLeftRepairDescription,
+    MachineDescription.offsetRetargetDescription]
+  exact
+    Nat.lt_of_lt_of_le
+      (Nat.lt_succ_self singletonHeadRefreshFinalHalt)
+      (Nat.le_max_right
+        (singletonHeadLeftRepairOffset +
+          (singletonLeftBoundaryHeadRefreshDescription gapCreator).stateCount)
+        (singletonHeadRefreshFinalHalt + 1))
+
+theorem singletonHeadRightRepairDescription_subroutineReady
+    {gapCreator : MachineDescription}
+    (hgap : gapCreator.SubroutineReady) :
+    (singletonHeadRightRepairDescription gapCreator).SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    (singletonHeadRefreshFinalHalt_lt_rightRepairOffset gapCreator)
+    (singletonRightBoundaryHeadRefreshDescription_subroutineReady hgap).left
+
+theorem singletonHeadLeftRepairDescription_haltsFrom_leftBoundary
+    {gapCreator : MachineDescription}
+    (hgap : SingletonBoundaryGapCreatorContract gapCreator)
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    (singletonHeadLeftRepairDescription gapCreator).HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        (({ left := [], head := head, right := right ++ [none] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes
+        (guardLogicalTape
+          ({ left := [], head := head, right := right } : Tape Bool) ::
+            rest)) := by
+  rcases hgap.leftBoundaryRefresh head right rest with
+    ⟨actual, hhalts, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  simpa [singletonHeadLeftRepairDescription] using
+    MachineDescription.offsetRetargetDescription_haltsFromTape
+      singletonHeadRefreshFinalHalt_lt_leftRepairOffset
+      (singletonLeftBoundaryHeadRefreshDescription_subroutineReady
+        hgap.subroutineReady).right
+      hhalts
+
+theorem singletonHeadRightRepairDescription_haltsFrom_rightBoundary
+    {gapCreator : MachineDescription}
+    (hgap : SingletonBoundaryGapCreatorContract gapCreator)
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    (singletonHeadRightRepairDescription gapCreator).HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        (({ left := left ++ [none], head := head, right := [] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes
+        (guardLogicalTape
+          ({ left := left, head := head, right := [] } : Tape Bool) ::
+            rest)) := by
+  rcases hgap.rightBoundaryRefresh left head rest with
+    ⟨actual, hhalts, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  simpa [singletonHeadRightRepairDescription] using
+    MachineDescription.offsetRetargetDescription_haltsFromTape
+      (singletonHeadRefreshFinalHalt_lt_rightRepairOffset
+        gapCreator)
+      (singletonRightBoundaryHeadRefreshDescription_subroutineReady
+        hgap.subroutineReady).right
+      hhalts
+
+namespace HeadSuffixGapCreatorContract
+
+theorem leftBoundaryRefresh
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorContract gapCreator)
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    (singletonLeftBoundaryHeadRefreshDescription gapCreator).HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        (({ left := [], head := head, right := right ++ [none] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes
+        (guardLogicalTape
+          ({ left := [], head := head, right := right } : Tape Bool) ::
+            rest)) :=
+  (HeadSuffixGapCreatorContract.toSingletonBoundary hgap).leftBoundaryRefresh
+    head right rest
+
+theorem rightBoundaryRefresh
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorContract gapCreator)
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    (singletonRightBoundaryHeadRefreshDescription gapCreator).HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        (({ left := left ++ [none], head := head, right := [] } :
+          Tape Bool) :: rest))
+      (encodedStructuredTapes
+        (guardLogicalTape
+          ({ left := left, head := head, right := [] } : Tape Bool) ::
+            rest)) :=
+  (HeadSuffixGapCreatorContract.toSingletonBoundary hgap).rightBoundaryRefresh
+    left head rest
+
+end HeadSuffixGapCreatorContract
 
 end MultiTapeLowering
 end Structured
