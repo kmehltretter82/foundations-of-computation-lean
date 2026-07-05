@@ -266,6 +266,16 @@ theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_postE
     (EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
       hpostEraseConstruction)
 
+theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_prefixAndFootprintCases
+    (hprefix :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    EncodedDovetailLayoutBoundedRunnerRewriterConstruction :=
+  encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription
+    (EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
+
 theorem encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold :
     EncodedDovetailLayoutBoundedRunnerRewriterConstruction :=
   encodedDovetailLayoutBoundedRunnerRewriterConstruction_scaffold_of_finiteDescription

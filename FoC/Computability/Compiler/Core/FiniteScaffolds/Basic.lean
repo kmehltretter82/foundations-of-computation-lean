@@ -211,6 +211,15 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_
   EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
     hpostEraseConstruction
 
+theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_prefixAndFootprintCases
+    (hprefix :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
+  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+    hprefix hcases
+
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
   EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
@@ -230,6 +239,16 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
   pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
     (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_postErase
       hpostEraseConstruction)
+
+theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_prefixAndFootprintCases
+    (hprefix :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
+  pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
+    (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=

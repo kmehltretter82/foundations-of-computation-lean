@@ -238,6 +238,21 @@ theorem outputCompiledSubroutine_of_postErase
       hpostEraseConstruction)
     accept reject
 
+theorem outputCompiledSubroutine_of_prefixAndFootprintCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
+    accept reject
+
 theorem outputCompiledSubroutine
     (accept reject : MachineDescription) :
     exists runner : MachineDescription,
