@@ -458,9 +458,31 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
         ((ParsedLayoutBits L).length + 1))
       (postFieldDecodedPrefixScanSourceTape useAccept L)
 
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
+    (hnormalizer :
+      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  rcases hnormalizer with ⟨normalizer, hnormalizerReady, hnormalizerRun⟩
+  refine ⟨normalizer, hnormalizerReady, ?_⟩
+  intro useAccept L deletedTail physical hseparator
+  exact
+    hnormalizerRun
+      (structuredBoolWordRawBitsDecoderSourceTargetTape
+        (ParsedLayoutBits L)
+        (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
+        (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+          useAccept L deletedTail))
+      (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+        ((ParsedLayoutBits L).length + 1))
+      (postFieldDecodedPrefixScanSourceTape useAccept L)
+      physical hseparator
+
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
+      (structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtractor
+        structuredSelectedSingletonSegmentExtractorConstruction_core)
 
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by

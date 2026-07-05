@@ -227,6 +227,47 @@ def StructuredTape2SegmentNormalizerConstruction : Prop :=
     StructuredTape2SegmentNormalizerSpec normalizer
 
 /--
+Generic extractor for a selected singleton structured segment.
+
+The cursor is at the selected segment separator, any encoded prefix to the left
+is ignored by the contract, and the selected guarded singleton segment is
+projected back to the original plain logical tape.
+-/
+def StructuredSelectedSingletonSegmentExtractorSpec
+    (extractor : MachineDescription) : Prop :=
+  extractor.SubroutineReady ∧
+    forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
+      extractor.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells [guardLogicalTape target]))
+        target
+
+/--
+Existence wrapper for
+{name}`StructuredSelectedSingletonSegmentExtractorSpec`.
+-/
+def StructuredSelectedSingletonSegmentExtractorConstruction : Prop :=
+  exists extractor : MachineDescription,
+    StructuredSelectedSingletonSegmentExtractorSpec extractor
+
+theorem structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtractor
+    (hextractor :
+      StructuredSelectedSingletonSegmentExtractorConstruction) :
+    StructuredTape2SegmentNormalizerConstruction := by
+  rcases hextractor with ⟨extractor, hextractorReady, hextractorRun⟩
+  refine ⟨extractor, hextractorReady, ?_⟩
+  intro T0 T1 T2 physical hseparator
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simpa [encodedSuffixFromTape, guardLogicalTapes] using
+    hextractorRun T2
+      (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
+
+theorem structuredSelectedSingletonSegmentExtractorConstruction_core :
+    StructuredSelectedSingletonSegmentExtractorConstruction := by
+  sorry
+
+/--
 The canonical projector assembled from the proven tape-2 seeker and a segment
 normalizer.
 -/
