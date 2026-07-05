@@ -1161,9 +1161,28 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
           , postFieldDecodedPrefixScanSourceTape useAccept L ])
         2)
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction_of_parts
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hfootprint :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction :=
+  ⟨hprefix, hfootprint⟩
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction := by
+  sorry
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction_of_parts
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction := by
