@@ -227,20 +227,41 @@ def StructuredTape2SegmentNormalizerConstruction : Prop :=
     StructuredTape2SegmentNormalizerSpec normalizer
 
 /--
-Generic extractor for a selected singleton structured segment.
+Decoder for a canonical selected singleton structured segment.
 
 The cursor is at the selected segment separator, any encoded prefix to the left
 is ignored by the contract, and the selected guarded singleton segment is
-projected back to the original plain logical tape.
+decoded back to the original plain logical tape.  Guard-refresh machines only
+restore this canonical input shape; they do not perform this decoding step.
 -/
-def StructuredSelectedSingletonSegmentExtractorSpec
-    (extractor : MachineDescription) : Prop :=
-  extractor.SubroutineReady ∧
+def StructuredSelectedSingletonSegmentDecoderSpec
+    (decoder : MachineDescription) : Prop :=
+  decoder.SubroutineReady ∧
     forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
-      extractor.HaltsFromTapeEquiv
+      decoder.HaltsFromTapeEquiv
         (tapeAtEncodedSplit encodedPrefix
           (encodedStructuredTapeCells [guardLogicalTape target]))
         target
+
+/--
+Existence wrapper for
+{name}`StructuredSelectedSingletonSegmentDecoderSpec`.
+-/
+def StructuredSelectedSingletonSegmentDecoderConstruction : Prop :=
+  exists decoder : MachineDescription,
+    StructuredSelectedSingletonSegmentDecoderSpec decoder
+
+/--
+Generic extractor for a selected singleton structured segment.
+
+This is currently the same boundary as
+{name}`StructuredSelectedSingletonSegmentDecoderSpec`: the selected segment is
+already canonical, so the remaining operation is decoding the structured
+physical code to the plain logical tape.
+-/
+def StructuredSelectedSingletonSegmentExtractorSpec
+    (extractor : MachineDescription) : Prop :=
+  StructuredSelectedSingletonSegmentDecoderSpec extractor
 
 /--
 Existence wrapper for
@@ -249,6 +270,12 @@ Existence wrapper for
 def StructuredSelectedSingletonSegmentExtractorConstruction : Prop :=
   exists extractor : MachineDescription,
     StructuredSelectedSingletonSegmentExtractorSpec extractor
+
+theorem structuredSelectedSingletonSegmentExtractorConstruction_of_decoder
+    (hdecoder :
+      StructuredSelectedSingletonSegmentDecoderConstruction) :
+    StructuredSelectedSingletonSegmentExtractorConstruction :=
+  hdecoder
 
 theorem structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtractor
     (hextractor :
@@ -263,9 +290,14 @@ theorem structuredTape2SegmentNormalizerConstruction_of_selectedSingletonExtract
     hextractorRun T2
       (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
 
-theorem structuredSelectedSingletonSegmentExtractorConstruction_core :
-    StructuredSelectedSingletonSegmentExtractorConstruction := by
+theorem structuredSelectedSingletonSegmentDecoderConstruction_core :
+    StructuredSelectedSingletonSegmentDecoderConstruction := by
   sorry
+
+theorem structuredSelectedSingletonSegmentExtractorConstruction_core :
+    StructuredSelectedSingletonSegmentExtractorConstruction :=
+  structuredSelectedSingletonSegmentExtractorConstruction_of_decoder
+    structuredSelectedSingletonSegmentDecoderConstruction_core
 
 /--
 The canonical projector assembled from the proven tape-2 seeker and a segment
