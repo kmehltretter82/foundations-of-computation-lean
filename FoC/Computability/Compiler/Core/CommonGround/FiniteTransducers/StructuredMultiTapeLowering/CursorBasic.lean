@@ -1784,6 +1784,224 @@ theorem singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEn
                   exact SingletonGuardSlackEndpointShape.canonical rfl
 
 /--
+Segment-wise singleton guard-slack endpoint shapes.
+
+The first list is the canonical logical target.  The second list is the actual
+logical tape list encoded in the row-produced physical endpoint.  Each paired
+segment must be one of the singleton shapes handled by the fixed one-segment
+refresh dispatcher.
+-/
+def SingletonGuardSlackEndpointShapeList :
+    List (Tape Bool) -> List (Tape Bool) -> Prop
+  | [], [] => True
+  | target :: targetRest, actual :: actualRest =>
+      SingletonGuardSlackEndpointShape [target]
+        (encodedStructuredTapes [actual]) ∧
+        SingletonGuardSlackEndpointShapeList targetRest actualRest
+  | _, _ => False
+
+/--
+Whole structured-tape endpoint whose encoded segments are pointwise singleton
+guard-slack shapes.
+
+This is the list-level bridge between row-produced three-tape endpoints and
+the one-segment refresh dispatcher.  A future concrete normalizer can consume
+this predicate by refreshing one segment at a time while preserving the other
+encoded segments.
+-/
+def StructuredSingletonGuardSlackEndpointShape
+    (target : List (Tape Bool)) (physical : Tape Bool) : Prop :=
+  exists actual : List (Tape Bool),
+    SingletonGuardSlackEndpointShapeList target actual ∧
+      physical = encodedStructuredTapes actual
+
+theorem singletonGuardSlackEndpointShapeList_transitionPrimitiveSequence3
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool) :
+    SingletonGuardSlackEndpointShapeList
+      [action0.apply T, action1.apply U, action2.apply V]
+      [action0.apply (guardLogicalTape T),
+        action1.apply (guardLogicalTape U),
+        action2.apply (guardLogicalTape V)] := by
+  have h0 :
+      SingletonGuardSlackEndpointShape [action0.apply T]
+        (encodedStructuredTapes
+          [action0.apply (guardLogicalTape T)]) :=
+    singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+      action0 T
+      (actionPrimitivesAt_zero_guardSlackEndpoint_singleton action0 T)
+  have h1 :
+      SingletonGuardSlackEndpointShape [action1.apply U]
+        (encodedStructuredTapes
+          [action1.apply (guardLogicalTape U)]) :=
+    singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+      action1 U
+      (actionPrimitivesAt_zero_guardSlackEndpoint_singleton action1 U)
+  have h2 :
+      SingletonGuardSlackEndpointShape [action2.apply V]
+        (encodedStructuredTapes
+          [action2.apply (guardLogicalTape V)]) :=
+    singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+      action2 V
+      (actionPrimitivesAt_zero_guardSlackEndpoint_singleton action2 V)
+  simpa [SingletonGuardSlackEndpointShapeList] using
+    And.intro h0 (And.intro h1 (And.intro h2 trivial))
+
+theorem structuredSingletonGuardSlackEndpointShape_transitionPrimitiveSequence3
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool) :
+    StructuredSingletonGuardSlackEndpointShape
+      [action0.apply T, action1.apply U, action2.apply V]
+      (encodedStructuredTapes
+        [action0.apply (guardLogicalTape T),
+          action1.apply (guardLogicalTape U),
+          action2.apply (guardLogicalTape V)]) := by
+  exact
+    ⟨[action0.apply (guardLogicalTape T),
+        action1.apply (guardLogicalTape U),
+        action2.apply (guardLogicalTape V)],
+      singletonGuardSlackEndpointShapeList_transitionPrimitiveSequence3
+        action0 action1 action2 T U V,
+      rfl⟩
+
+theorem structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequence3_guardSlackEndpoint
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequence3 read0 read1 read2
+          action0 action1 action2)
+        [T, U, V] target physical) :
+    StructuredSingletonGuardSlackEndpointShape target physical := by
+  have htarget :
+      target = [action0.apply T, action1.apply U, action2.apply V] := by
+    rw [hendpoint.left]
+    exact
+      applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3
+        read0 read1 read2 action0 action1 action2 T U V
+  have hphysical :
+      physical =
+        encodedStructuredTapes
+          [action0.apply (guardLogicalTape T),
+            action1.apply (guardLogicalTape U),
+            action2.apply (guardLogicalTape V)] := by
+    rw [hendpoint.right]
+    simp [guardLogicalTapes,
+      applyPhysicalPrimitiveSequence_transitionPrimitiveSequence3]
+  rw [htarget, hphysical]
+  exact
+    structuredSingletonGuardSlackEndpointShape_transitionPrimitiveSequence3
+      action0 action1 action2 T U V
+
+theorem structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
+    (t : Transition)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2])
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequenceOfRow3 t) [T, U, V]
+        target physical) :
+    StructuredSingletonGuardSlackEndpointShape target physical := by
+  have htarget :
+      target = [action0.apply T, action1.apply U, action2.apply V] := by
+    rw [hendpoint.left]
+    exact
+      applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+        t read0 read1 read2 action0 action1 action2 T U V
+        hreads hactions
+  have hphysical :
+      physical =
+        encodedStructuredTapes
+          [action0.apply (guardLogicalTape T),
+            action1.apply (guardLogicalTape U),
+            action2.apply (guardLogicalTape V)] := by
+    rw [hendpoint.right]
+    change
+      encodedStructuredTapes
+          (applyPhysicalPrimitiveSequence
+            (transitionPrimitiveSequenceOfRow3 t)
+            [guardLogicalTape T, guardLogicalTape U, guardLogicalTape V]) =
+        encodedStructuredTapes
+          [action0.apply (guardLogicalTape T),
+            action1.apply (guardLogicalTape U),
+            action2.apply (guardLogicalTape V)]
+    rw [applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+      t read0 read1 read2 action0 action1 action2
+      (guardLogicalTape T) (guardLogicalTape U) (guardLogicalTape V)
+      hreads hactions]
+  rw [htarget, hphysical]
+  exact
+    structuredSingletonGuardSlackEndpointShape_transitionPrimitiveSequence3
+      action0 action1 action2 T U V
+
+/--
+Refresh contract for structured endpoints whose segments are pointwise
+singleton guard-slack shapes.
+
+This is the direct contract suggested by the current concrete singleton
+normalizer: the machine must refresh the encoded segment list as a whole, but
+the proof may reason about each segment through
+{name}`SingletonGuardSlackEndpointShape`.
+-/
+structure StructuredSingletonGuardSlackRefreshContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  realizes :
+    forall {target : List (Tape Bool)} {physical : Tape Bool},
+      StructuredSingletonGuardSlackEndpointShape target physical ->
+        refresh.HaltsFromTapeEquiv physical
+          (encodedGuardedStructuredTapes target)
+
+namespace StructuredSingletonGuardSlackRefreshContract
+
+theorem realizes_transitionPrimitiveSequence3_guardSlackEndpoint
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequence3 read0 read1 read2
+          action0 action1 action2)
+        [T, U, V] target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  hrefresh.realizes
+    (structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequence3_guardSlackEndpoint
+      read0 read1 read2 action0 action1 action2 T U V hendpoint)
+
+theorem realizes_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefreshContract refresh)
+    (t : Transition)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (T U V : Tape Bool)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions : t.actions = [action0, action1, action2])
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (transitionPrimitiveSequenceOfRow3 t) [T, U, V]
+        target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  hrefresh.realizes
+    (structuredSingletonGuardSlackEndpointShape_of_transitionPrimitiveSequenceOfRow3_guardSlackEndpoint
+      t read0 read1 read2 action0 action1 action2 T U V
+      hreads hactions hendpoint)
+
+end StructuredSingletonGuardSlackRefreshContract
+
+/--
 Selector for the concrete singleton action-refresh routine.
 
 This is still source-shape indexed, so it is not the final static refresh
