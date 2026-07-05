@@ -173,6 +173,67 @@ theorem row_supportsReadWriteRow3
     (row_supportedReadWriteRow3 source target read0 read1 read2
       action0 action1 action2)
 
+/-!
+## Read tuple enumerators
+-/
+
+/-- The three possible cells read by one Boolean logical tape. -/
+def allReadCells : List (Option Bool) :=
+  [none, some false, some true]
+
+/-- Build rows for every possible read on one logical tape. -/
+def allReads1
+    (mkRow : Option Bool -> Transition) :
+    List Transition :=
+  allReadCells.map mkRow
+
+/-- Build rows for every possible read pair on two logical tapes. -/
+def allReads2
+    (mkRow : Option Bool -> Option Bool -> Transition) :
+    List Transition :=
+  [ mkRow none none
+  , mkRow none (some false)
+  , mkRow none (some true)
+  , mkRow (some false) none
+  , mkRow (some false) (some false)
+  , mkRow (some false) (some true)
+  , mkRow (some true) none
+  , mkRow (some true) (some false)
+  , mkRow (some true) (some true) ]
+
+/-- Build rows for every possible read triple on three logical tapes. -/
+def allReads3
+    (mkRow : Option Bool -> Option Bool -> Option Bool ->
+      Transition) :
+    List Transition :=
+  [ mkRow none none none
+  , mkRow none none (some false)
+  , mkRow none none (some true)
+  , mkRow none (some false) none
+  , mkRow none (some false) (some false)
+  , mkRow none (some false) (some true)
+  , mkRow none (some true) none
+  , mkRow none (some true) (some false)
+  , mkRow none (some true) (some true)
+  , mkRow (some false) none none
+  , mkRow (some false) none (some false)
+  , mkRow (some false) none (some true)
+  , mkRow (some false) (some false) none
+  , mkRow (some false) (some false) (some false)
+  , mkRow (some false) (some false) (some true)
+  , mkRow (some false) (some true) none
+  , mkRow (some false) (some true) (some false)
+  , mkRow (some false) (some true) (some true)
+  , mkRow (some true) none none
+  , mkRow (some true) none (some false)
+  , mkRow (some true) none (some true)
+  , mkRow (some true) (some false) none
+  , mkRow (some true) (some false) (some false)
+  , mkRow (some true) (some false) (some true)
+  , mkRow (some true) (some true) none
+  , mkRow (some true) (some true) (some false)
+  , mkRow (some true) (some true) (some true) ]
+
 /--
 Build a three-tape structured description from a concrete transition table.
 
@@ -213,6 +274,193 @@ theorem description_supportsReadWriteRows3
       (description stateCount start halt transitions) = true :=
   supportsReadWriteRows3_eq_true_of_supported
     (description_supported stateCount start halt transitions hrows)
+
+/-!
+## Phase table packaging
+-/
+
+/-- Rename only the source and target states of one row. -/
+def mapTransitionStates
+    (f : Nat -> Nat) (t : Transition) : Transition :=
+  { source := f t.source
+    reads := t.reads
+    actions := t.actions
+    target := f t.target }
+
+@[simp] theorem mapTransitionStates_source
+    (f : Nat -> Nat) (t : Transition) :
+    (mapTransitionStates f t).source = f t.source := by
+  rfl
+
+@[simp] theorem mapTransitionStates_reads
+    (f : Nat -> Nat) (t : Transition) :
+    (mapTransitionStates f t).reads = t.reads := by
+  rfl
+
+@[simp] theorem mapTransitionStates_actions
+    (f : Nat -> Nat) (t : Transition) :
+    (mapTransitionStates f t).actions = t.actions := by
+  rfl
+
+@[simp] theorem mapTransitionStates_target
+    (f : Nat -> Nat) (t : Transition) :
+    (mapTransitionStates f t).target = f t.target := by
+  rfl
+
+theorem supportsReadWriteRow3_mapTransitionStates
+    (f : Nat -> Nat) (t : Transition) :
+    supportsReadWriteRow3 (mapTransitionStates f t) =
+      supportsReadWriteRow3 t := by
+  cases t
+  rfl
+
+theorem supportedReadWriteRow3_mapTransitionStates
+    {f : Nat -> Nat} {t : Transition}
+    (h : SupportedReadWriteRow3 t) :
+    SupportedReadWriteRow3 (mapTransitionStates f t) := by
+  exact
+    supportedReadWriteRow3_of_supports_eq_true
+      (by
+        rw [supportsReadWriteRow3_mapTransitionStates]
+        exact supportsReadWriteRow3_eq_true_of_supported h)
+
+/-- Shift the source and target states of one row by a fixed offset. -/
+def offsetTransition
+    (offset : Nat) (t : Transition) : Transition :=
+  mapTransitionStates (fun state => offset + state) t
+
+@[simp] theorem offsetTransition_source
+    (offset : Nat) (t : Transition) :
+    (offsetTransition offset t).source = offset + t.source := by
+  rfl
+
+@[simp] theorem offsetTransition_target
+    (offset : Nat) (t : Transition) :
+    (offsetTransition offset t).target = offset + t.target := by
+  rfl
+
+theorem supportsReadWriteRow3_offsetTransition
+    (offset : Nat) (t : Transition) :
+    supportsReadWriteRow3 (offsetTransition offset t) =
+      supportsReadWriteRow3 t :=
+  supportsReadWriteRow3_mapTransitionStates (fun state => offset + state) t
+
+def offsetRows
+    (offset : Nat) (rows : List Transition) :
+    List Transition :=
+  rows.map (offsetTransition offset)
+
+theorem offsetRows_supportsReadWriteRow3
+    {rows : List Transition} {offset : Nat}
+    (hrows :
+      forall t : Transition,
+        t ∈ rows ->
+          supportsReadWriteRow3 t = true) :
+    forall t : Transition,
+      t ∈ offsetRows offset rows ->
+        supportsReadWriteRow3 t = true := by
+  intro t ht
+  rcases List.mem_map.mp ht with ⟨row, hrow, rfl⟩
+  rw [supportsReadWriteRow3_offsetTransition]
+  exact hrows row hrow
+
+/--
+Retarget every edge into {lit}`oldTarget` so it instead jumps to
+{lit}`newTarget`.  Reads and actions are unchanged.
+-/
+def retargetTransitionTarget
+    (oldTarget newTarget : Nat) (t : Transition) :
+    Transition :=
+  if t.target = oldTarget then
+    { t with target := newTarget }
+  else
+    t
+
+theorem supportsReadWriteRow3_retargetTransitionTarget
+    (oldTarget newTarget : Nat) (t : Transition) :
+    supportsReadWriteRow3
+        (retargetTransitionTarget oldTarget newTarget t) =
+      supportsReadWriteRow3 t := by
+  by_cases htarget : t.target = oldTarget
+  · simp [retargetTransitionTarget, htarget]
+    cases t
+    rfl
+  · simp [retargetTransitionTarget, htarget]
+
+def retargetRowsTarget
+    (oldTarget newTarget : Nat) (rows : List Transition) :
+    List Transition :=
+  rows.map (retargetTransitionTarget oldTarget newTarget)
+
+theorem retargetRowsTarget_supportsReadWriteRow3
+    {rows : List Transition} {oldTarget newTarget : Nat}
+    (hrows :
+      forall t : Transition,
+        t ∈ rows ->
+          supportsReadWriteRow3 t = true) :
+    forall t : Transition,
+      t ∈ retargetRowsTarget oldTarget newTarget rows ->
+        supportsReadWriteRow3 t = true := by
+  intro t ht
+  rcases List.mem_map.mp ht with ⟨row, hrow, rfl⟩
+  rw [supportsReadWriteRow3_retargetTransitionTarget]
+  exact hrows row hrow
+
+/--
+Embed a local phase table at a state offset and retarget its local halt state
+to the next phase start.
+-/
+def phaseRows
+    (offset localHalt nextStart : Nat)
+    (rows : List Transition) : List Transition :=
+  retargetRowsTarget (offset + localHalt) nextStart
+    (offsetRows offset rows)
+
+theorem phaseRows_supportsReadWriteRow3
+    {rows : List Transition} {offset localHalt nextStart : Nat}
+    (hrows :
+      forall t : Transition,
+        t ∈ rows ->
+          supportsReadWriteRow3 t = true) :
+    forall t : Transition,
+      t ∈ phaseRows offset localHalt nextStart rows ->
+        supportsReadWriteRow3 t = true := by
+  intro t ht
+  exact
+    retargetRowsTarget_supportsReadWriteRow3
+      (offsetRows_supportsReadWriteRow3 hrows) t ht
+
+/--
+Embed a structured description into a larger state space by offsetting all
+local states.  The caller supplies the enclosing state count.
+-/
+def offsetDescription
+    (stateCount offset : Nat) (D : Description) :
+    Description where
+  tapeCount := D.tapeCount
+  stateCount := stateCount
+  start := offset + D.start
+  halt := offset + D.halt
+  transitions := offsetRows offset D.transitions
+
+theorem offsetDescription_supported
+    {stateCount offset : Nat} {D : Description}
+    (hD : SupportsReadWriteRows3 D) :
+    SupportsReadWriteRows3
+      (offsetDescription stateCount offset D) where
+  tapeCount_eq := by
+    exact hD.tapeCount_eq
+  rows_supported := by
+    intro t ht
+    exact offsetRows_supportsReadWriteRow3 hD.rows_supported t ht
+
+theorem offsetDescription_supportsReadWriteRows3
+    {stateCount offset : Nat} {D : Description}
+    (hD : SupportsReadWriteRows3 D) :
+    supportsReadWriteRows3
+        (offsetDescription stateCount offset D) = true :=
+  supportsReadWriteRows3_eq_true_of_supported
+    (offsetDescription_supported hD)
 
 /-!
 ## Three-tape configurations
