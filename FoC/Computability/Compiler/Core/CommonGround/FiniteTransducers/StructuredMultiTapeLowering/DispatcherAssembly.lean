@@ -72,6 +72,85 @@ theorem transitionSourceDisjoint_of_below_atLeast
   have huBound := hright u hu
   lia
 
+theorem transitionSourceDisjoint_flatMap_left
+    {α : Type} {items : List α}
+    {left : α -> List TransitionDescription}
+    {right : List TransitionDescription}
+    (h :
+      forall item : α,
+        item ∈ items -> TransitionSourceDisjoint (left item) right) :
+    TransitionSourceDisjoint (List.flatMap left items) right := by
+  intro t u ht hu hsource
+  rw [List.mem_flatMap] at ht
+  rcases ht with ⟨item, hitem, ht⟩
+  exact h item hitem t u ht hu hsource
+
+theorem transitionSourceDisjoint_flatMap_right
+    {α : Type} {items : List α}
+    {left : List TransitionDescription}
+    {right : α -> List TransitionDescription}
+    (h :
+      forall item : α,
+        item ∈ items -> TransitionSourceDisjoint left (right item)) :
+    TransitionSourceDisjoint left (List.flatMap right items) := by
+  intro t u ht hu hsource
+  rw [List.mem_flatMap] at hu
+  rcases hu with ⟨item, hitem, hu⟩
+  exact h item hitem t u ht hu hsource
+
+theorem transitionSourceDisjoint_append_left
+    {left₀ left₁ right : List TransitionDescription}
+    (h₀ : TransitionSourceDisjoint left₀ right)
+    (h₁ : TransitionSourceDisjoint left₁ right) :
+    TransitionSourceDisjoint (left₀ ++ left₁) right := by
+  intro t u ht hu hsource
+  simp at ht
+  rcases ht with ht | ht
+  · exact h₀ t u ht hu hsource
+  · exact h₁ t u ht hu hsource
+
+theorem transitionSourceDisjoint_append_right
+    {left right₀ right₁ : List TransitionDescription}
+    (h₀ : TransitionSourceDisjoint left right₀)
+    (h₁ : TransitionSourceDisjoint left right₁) :
+    TransitionSourceDisjoint left (right₀ ++ right₁) := by
+  intro t u ht hu hsource
+  simp at hu
+  rcases hu with hu | hu
+  · exact h₀ t u ht hu hsource
+  · exact h₁ t u ht hu hsource
+
+theorem transitionSourcesBelow_mono
+    {lower upper : Nat} {transitions : List TransitionDescription}
+    (hle : lower ≤ upper)
+    (h : TransitionSourcesBelow lower transitions) :
+    TransitionSourcesBelow upper transitions := by
+  intro t ht
+  exact Nat.lt_of_lt_of_le (h t ht) hle
+
+theorem transitionSourcesBelow_append
+    {bound : Nat} {left right : List TransitionDescription}
+    (hleft : TransitionSourcesBelow bound left)
+    (hright : TransitionSourcesBelow bound right) :
+    TransitionSourcesBelow bound (left ++ right) := by
+  intro t ht
+  simp at ht
+  rcases ht with ht | ht
+  · exact hleft t ht
+  · exact hright t ht
+
+theorem transitionSourcesBelow_bind
+    {α : Type} {bound : Nat} {items : List α}
+    {transitions : α -> List TransitionDescription}
+    (h :
+      forall item : α,
+        item ∈ items -> TransitionSourcesBelow bound (transitions item)) :
+    TransitionSourcesBelow bound (List.flatMap transitions items) := by
+  intro t ht
+  rw [List.mem_flatMap] at ht
+  rcases ht with ⟨item, hitem, ht⟩
+  exact h item hitem t ht
+
 theorem offsetReadExitRetargetDescription_sources_in_offset_block
     {offset : Nat} {localTarget target : Option Bool -> Nat}
     {M : MachineDescription}
@@ -138,21 +217,26 @@ def readyJumpScratch (D : Description) (state : Nat) : Nat :=
 def readyJumpLimit (D : Description) : Nat :=
   readyJumpScratchBase D + D.stateCount
 
-def tape0ReaderOffset (D : Description) : Nat :=
+def tape0ReaderBlockBase (D : Description) : Nat :=
   readyJumpLimit D
+
+def tape0ReaderOffset (D : Description) (state : Nat) : Nat :=
+  tape0ReaderBlockBase D +
+    state * branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def tape0ReaderDescription (D : Description) (state : Nat) :
     MachineDescription :=
   retargetedBranchingTape0ReadHeadCellAllExitsDescription
-    (tape0ReaderOffset D)
+    (tape0ReaderOffset D state)
     (StaticDispatcherState.tape0ReaderTargets D state)
 
 def tape0ReaderStart (D : Description) (state : Nat) : Nat :=
   (tape0ReaderDescription D state).start
 
 def tape0ReaderLimit (D : Description) : Nat :=
-  tape0ReaderOffset D +
-    branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount
+  tape0ReaderBlockBase D +
+    D.stateCount *
+      branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def afterRead0JumpScratchBase (D : Description) : Nat :=
   tape0ReaderLimit D
@@ -167,15 +251,16 @@ def afterRead0JumpLimit (D : Description) : Nat :=
 def tape1ReaderBlockBase (D : Description) : Nat :=
   afterRead0JumpLimit D
 
-def tape1ReaderOffset (D : Description) (read0 : Option Bool) : Nat :=
+def tape1ReaderOffset (D : Description) (state : Nat)
+    (read0 : Option Bool) : Nat :=
   tape1ReaderBlockBase D +
-    ReadTuple3.readCode read0 *
+    (ReadTuple3.readCode read0 * D.stateCount + state) *
       branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def tape1ReaderDescription (D : Description) (state : Nat)
     (read0 : Option Bool) : MachineDescription :=
   retargetedBranchingTape1ReadHeadCellAllExitsDescription
-    (tape1ReaderOffset D read0)
+    (tape1ReaderOffset D state read0)
     (StaticDispatcherState.tape1ReaderTargets D state read0)
 
 def tape1ReaderStart (D : Description) (state : Nat)
@@ -184,7 +269,8 @@ def tape1ReaderStart (D : Description) (state : Nat)
 
 def tape1ReaderLimit (D : Description) : Nat :=
   tape1ReaderBlockBase D +
-    3 * branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount
+    3 * D.stateCount *
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def afterRead1JumpScratchBase (D : Description) : Nat :=
   tape1ReaderLimit D
@@ -201,15 +287,15 @@ def tape2ReaderBlockBase (D : Description) : Nat :=
   afterRead1JumpLimit D
 
 def tape2ReaderOffset (D : Description)
-    (read0 read1 : Option Bool) : Nat :=
+    (state : Nat) (read0 read1 : Option Bool) : Nat :=
   tape2ReaderBlockBase D +
-    ReadTuple3.code01 read0 read1 *
+    (ReadTuple3.code01 read0 read1 * D.stateCount + state) *
       branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def tape2ReaderDescription (D : Description) (state : Nat)
     (read0 read1 : Option Bool) : MachineDescription :=
   retargetedBranchingTape2ReadHeadCellAllExitsDescription
-    (tape2ReaderOffset D read0 read1)
+    (tape2ReaderOffset D state read0 read1)
     (StaticDispatcherState.tape2ReaderTargets D state read0 read1)
 
 def tape2ReaderStart (D : Description) (state : Nat)
@@ -218,7 +304,8 @@ def tape2ReaderStart (D : Description) (state : Nat)
 
 def tape2ReaderLimit (D : Description) : Nat :=
   tape2ReaderBlockBase D +
-    9 * branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount
+    9 * D.stateCount *
+      branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def threeHeadReaderStateLimit (D : Description) : Nat :=
   tape2ReaderLimit D
@@ -266,28 +353,30 @@ theorem ready_ne_readyJumpScratch
   Nat.ne_of_lt (ready_lt_readyJumpScratch D hstate)
 
 theorem readerStateLimit_le_tape0ReaderOffset
-    (D : Description) :
-    StaticDispatcherState.readerStateLimit D ≤ tape0ReaderOffset D := by
-  unfold tape0ReaderOffset readyJumpLimit readyJumpScratchBase
+    (D : Description) (state : Nat) :
+    StaticDispatcherState.readerStateLimit D ≤ tape0ReaderOffset D state := by
+  unfold tape0ReaderOffset tape0ReaderBlockBase readyJumpLimit
+    readyJumpScratchBase
   lia
 
 theorem readerStateLimit_le_tape1ReaderOffset
-    (D : Description) (read0 : Option Bool) :
+    (D : Description) (state : Nat) (read0 : Option Bool) :
     StaticDispatcherState.readerStateLimit D ≤
-      tape1ReaderOffset D read0 := by
+      tape1ReaderOffset D state read0 := by
   unfold tape1ReaderOffset tape1ReaderBlockBase afterRead0JumpLimit
     afterRead0JumpScratchBase
-    tape0ReaderLimit tape0ReaderOffset readyJumpLimit readyJumpScratchBase
+    tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+    readyJumpScratchBase
   lia
 
 theorem readerStateLimit_le_tape2ReaderOffset
-    (D : Description) (read0 read1 : Option Bool) :
+    (D : Description) (state : Nat) (read0 read1 : Option Bool) :
     StaticDispatcherState.readerStateLimit D ≤
-      tape2ReaderOffset D read0 read1 := by
+      tape2ReaderOffset D state read0 read1 := by
   unfold tape2ReaderOffset tape2ReaderBlockBase afterRead1JumpLimit
     afterRead1JumpScratchBase tape1ReaderLimit tape1ReaderBlockBase
     afterRead0JumpLimit
-    afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderOffset
+    afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderBlockBase
     readyJumpLimit readyJumpScratchBase
   lia
 
@@ -295,36 +384,37 @@ theorem tape0ReaderTargets_lt_tape0ReaderOffset
     (D : Description) {state : Nat}
     (hstate : state < D.stateCount) :
     forall read0 : Option Bool,
-      StaticDispatcherState.tape0ReaderTargets D state read0 < tape0ReaderOffset D := by
+      StaticDispatcherState.tape0ReaderTargets D state read0 <
+        tape0ReaderOffset D state := by
   intro read0
   exact
     Nat.lt_of_lt_of_le
       (StaticDispatcherState.tape0ReaderTargets_lt_readerStateLimit D hstate read0)
-      (readerStateLimit_le_tape0ReaderOffset D)
+      (readerStateLimit_le_tape0ReaderOffset D state)
 
 theorem tape1ReaderTargets_lt_tape1ReaderOffset
     (D : Description) {state : Nat} (read0 : Option Bool)
     (hstate : state < D.stateCount) :
     forall read1 : Option Bool,
       StaticDispatcherState.tape1ReaderTargets D state read0 read1 <
-        tape1ReaderOffset D read0 := by
+        tape1ReaderOffset D state read0 := by
   intro read1
   exact
     Nat.lt_of_lt_of_le
       (StaticDispatcherState.tape1ReaderTargets_lt_readerStateLimit D read0 hstate read1)
-      (readerStateLimit_le_tape1ReaderOffset D read0)
+      (readerStateLimit_le_tape1ReaderOffset D state read0)
 
 theorem tape2ReaderTargets_lt_tape2ReaderOffset
     (D : Description) {state : Nat} (read0 read1 : Option Bool)
     (hstate : state < D.stateCount) :
     forall read2 : Option Bool,
       StaticDispatcherState.tape2ReaderTargets D state read0 read1 read2 <
-        tape2ReaderOffset D read0 read1 := by
+        tape2ReaderOffset D state read0 read1 := by
   intro read2
   exact
     Nat.lt_of_lt_of_le
       (StaticDispatcherState.tape2ReaderTargets_lt_readerStateLimit D read0 read1 hstate read2)
-      (readerStateLimit_le_tape2ReaderOffset D read0 read1)
+      (readerStateLimit_le_tape2ReaderOffset D state read0 read1)
 
 theorem tape0ReaderDescription_subroutineReady
     (D : Description) {state : Nat}
@@ -354,13 +444,14 @@ theorem tape0ReaderDescription_sources_in_block
     (D : Description) (state : Nat) :
     forall t : TransitionDescription,
       t ∈ (tape0ReaderDescription D state).transitions ->
-        tape0ReaderOffset D ≤ t.source ∧
-          t.source < tape0ReaderLimit D := by
+        tape0ReaderOffset D state ≤ t.source ∧
+          t.source <
+            tape0ReaderOffset D state +
+              branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
   simpa [tape0ReaderDescription,
-    retargetedBranchingTape0ReadHeadCellAllExitsDescription,
-    tape0ReaderLimit] using
+    retargetedBranchingTape0ReadHeadCellAllExitsDescription] using
     offsetReadExitRetargetDescription_sources_in_offset_block
-      (offset := tape0ReaderOffset D)
+      (offset := tape0ReaderOffset D state)
       (localTarget :=
         branchingTape0ReadHeadCellAndReturnToSeparatorTarget)
       (target := StaticDispatcherState.tape0ReaderTargets D state)
@@ -371,14 +462,14 @@ theorem tape1ReaderDescription_sources_in_block
     (D : Description) (state : Nat) (read0 : Option Bool) :
     forall t : TransitionDescription,
       t ∈ (tape1ReaderDescription D state read0).transitions ->
-        tape1ReaderOffset D read0 ≤ t.source ∧
+        tape1ReaderOffset D state read0 ≤ t.source ∧
           t.source <
-            tape1ReaderOffset D read0 +
+            tape1ReaderOffset D state read0 +
               branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
   simpa [tape1ReaderDescription,
     retargetedBranchingTape1ReadHeadCellAllExitsDescription] using
     offsetReadExitRetargetDescription_sources_in_offset_block
-      (offset := tape1ReaderOffset D read0)
+      (offset := tape1ReaderOffset D state read0)
       (localTarget :=
         branchingTape1ReadHeadCellAndReturnToSeparatorTarget)
       (target := StaticDispatcherState.tape1ReaderTargets D state read0)
@@ -390,14 +481,14 @@ theorem tape2ReaderDescription_sources_in_block
     (read0 read1 : Option Bool) :
     forall t : TransitionDescription,
       t ∈ (tape2ReaderDescription D state read0 read1).transitions ->
-        tape2ReaderOffset D read0 read1 ≤ t.source ∧
+        tape2ReaderOffset D state read0 read1 ≤ t.source ∧
           t.source <
-            tape2ReaderOffset D read0 read1 +
+            tape2ReaderOffset D state read0 read1 +
               branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
   simpa [tape2ReaderDescription,
     retargetedBranchingTape2ReadHeadCellAllExitsDescription] using
     offsetReadExitRetargetDescription_sources_in_offset_block
-      (offset := tape2ReaderOffset D read0 read1)
+      (offset := tape2ReaderOffset D state read0 read1)
       (localTarget :=
         branchingTape2ReadHeadCellAndReturnToSeparatorTarget)
       (target :=
@@ -405,16 +496,111 @@ theorem tape2ReaderDescription_sources_in_block
       (M := branchingTape2ReadHeadCellAndReturnToSeparatorDescription)
       branchingTape2ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
 
+theorem indexedReaderBlockEnd_le_limit
+    (base stateCount blockCount slots code state : Nat)
+    (hcode : code < slots) (hstate : state < stateCount) :
+    base + (code * stateCount + state) * blockCount + blockCount ≤
+      base + slots * stateCount * blockCount := by
+  have hstate' :
+      code * stateCount + state + 1 ≤ (code + 1) * stateCount := by
+    have hstep :
+        code * stateCount + (state + 1) ≤
+          code * stateCount + stateCount :=
+      Nat.add_le_add_left (Nat.succ_le_of_lt hstate)
+        (code * stateCount)
+    have hstep' :
+        code * stateCount + state + 1 ≤
+          code * stateCount + stateCount := by
+      simpa [Nat.add_assoc] using hstep
+    have hmul :
+        (code + 1) * stateCount =
+          code * stateCount + stateCount := by
+      simp [Nat.add_mul]
+    simpa [hmul] using hstep'
+  have hcode' :
+      (code + 1) * stateCount ≤ slots * stateCount :=
+    Nat.mul_le_mul_right stateCount (Nat.succ_le_of_lt hcode)
+  have hidx :
+      (code * stateCount + state + 1) * blockCount ≤
+        slots * stateCount * blockCount :=
+    Nat.mul_le_mul_right blockCount
+      (Nat.le_trans hstate' hcode')
+  have hidx' :
+      (code * stateCount + state) * blockCount + blockCount ≤
+        slots * stateCount * blockCount := by
+    simpa [Nat.succ_mul] using hidx
+  exact
+    (by
+      simpa [Nat.add_assoc] using
+        Nat.add_le_add_left hidx' base)
+
+theorem tape0ReaderOffset_blockEnd_le_tape0ReaderLimit
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    tape0ReaderOffset D state +
+      branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount ≤
+        tape0ReaderLimit D := by
+  have h :=
+    indexedReaderBlockEnd_le_limit
+      (base := tape0ReaderBlockBase D)
+      (stateCount := D.stateCount)
+      (blockCount :=
+        branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+      (slots := 1)
+      (code := 0)
+      (state := state)
+      (by decide)
+      hstate
+  simpa [tape0ReaderOffset, tape0ReaderLimit] using h
+
+theorem tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    tape1ReaderOffset D state read0 +
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount ≤
+        tape1ReaderLimit D := by
+  have h :=
+    indexedReaderBlockEnd_le_limit
+      (base := tape1ReaderBlockBase D)
+      (stateCount := D.stateCount)
+      (blockCount :=
+        branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+      (slots := 3)
+      (code := ReadTuple3.readCode read0)
+      (state := state)
+      (ReadTuple3.readCode_lt_three read0)
+      hstate
+  simpa [tape1ReaderOffset, tape1ReaderLimit] using h
+
+theorem tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
+    (D : Description) {state : Nat} (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    tape2ReaderOffset D state read0 read1 +
+      branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount ≤
+        tape2ReaderLimit D := by
+  have h :=
+    indexedReaderBlockEnd_le_limit
+      (base := tape2ReaderBlockBase D)
+      (stateCount := D.stateCount)
+      (blockCount :=
+        branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+      (slots := 9)
+      (code := ReadTuple3.code01 read0 read1)
+      (state := state)
+      (ReadTuple3.code01_lt_nine read0 read1)
+      hstate
+  simpa [tape2ReaderOffset, tape2ReaderLimit] using h
+
 theorem tape0ReaderDescription_sources_atLeast
     (D : Description) (state : Nat) :
-    TransitionSourcesAtLeast (tape0ReaderOffset D)
+    TransitionSourcesAtLeast (tape0ReaderOffset D state)
       (tape0ReaderDescription D state).transitions := by
   intro t ht
   exact (tape0ReaderDescription_sources_in_block D state t ht).left
 
 theorem tape1ReaderDescription_sources_atLeast
     (D : Description) (state : Nat) (read0 : Option Bool) :
-    TransitionSourcesAtLeast (tape1ReaderOffset D read0)
+    TransitionSourcesAtLeast (tape1ReaderOffset D state read0)
       (tape1ReaderDescription D state read0).transitions := by
   intro t ht
   exact
@@ -423,7 +609,7 @@ theorem tape1ReaderDescription_sources_atLeast
 theorem tape2ReaderDescription_sources_atLeast
     (D : Description) (state : Nat)
     (read0 read1 : Option Bool) :
-    TransitionSourcesAtLeast (tape2ReaderOffset D read0 read1)
+    TransitionSourcesAtLeast (tape2ReaderOffset D state read0 read1)
       (tape2ReaderDescription D state read0 read1).transitions := by
   intro t ht
   exact
@@ -462,7 +648,7 @@ theorem afterRead0_lt_afterRead0JumpScratch
       StaticDispatcherState.readerStateLimit D ≤
         afterRead0JumpScratch D state read0 := by
     unfold afterRead0JumpScratch afterRead0JumpScratchBase
-      tape0ReaderLimit tape0ReaderOffset readyJumpLimit readyJumpScratchBase
+      tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit readyJumpScratchBase
     lia
   exact Nat.lt_of_lt_of_le hlow hle
 
@@ -480,7 +666,7 @@ theorem afterRead1_lt_afterRead1JumpScratch
         afterRead1JumpScratch D state read0 read1 := by
     unfold afterRead1JumpScratch afterRead1JumpScratchBase
       tape1ReaderLimit tape1ReaderBlockBase afterRead0JumpLimit
-      afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderOffset
+      afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderBlockBase
       readyJumpLimit readyJumpScratchBase
     lia
   exact Nat.lt_of_lt_of_le hlow hle
@@ -518,25 +704,72 @@ def afterRead1JumpTape2ReaderTransitions
   (afterRead1JumpDescription D state read0 read1).transitions ++
     (tape2ReaderDescription D state read0 read1).transitions
 
+def readOptionValues : List (Option Bool) :=
+  [none, some false, some true]
+
+def readyJumpTape0ReaderAllTransitions
+    (D : Description) : List TransitionDescription :=
+  List.flatMap
+    (fun state => readyJumpTape0ReaderTransitions D state)
+    (List.range D.stateCount)
+
+def afterRead0JumpTape1ReaderAllTransitions
+    (D : Description) : List TransitionDescription :=
+  List.flatMap
+    (fun read0 =>
+      List.flatMap
+        (fun state =>
+          afterRead0JumpTape1ReaderTransitions D state read0)
+        (List.range D.stateCount))
+    readOptionValues
+
+def afterRead1JumpTape2ReaderAllTransitions
+    (D : Description) : List TransitionDescription :=
+  List.flatMap
+    (fun read0 =>
+      List.flatMap
+        (fun read1 =>
+          List.flatMap
+            (fun state =>
+              afterRead1JumpTape2ReaderTransitions D state read0 read1)
+            (List.range D.stateCount))
+        readOptionValues)
+    readOptionValues
+
+def threeHeadReaderTransitions
+    (D : Description) : List TransitionDescription :=
+  readyJumpTape0ReaderAllTransitions D ++
+    afterRead0JumpTape1ReaderAllTransitions D ++
+      afterRead1JumpTape2ReaderAllTransitions D
+
+def threeHeadReaderDescription (D : Description) : MachineDescription where
+  stateCount := threeHeadReaderStateLimit D
+  start := StaticDispatcherState.ready D.start
+  halt := StaticDispatcherState.ready D.halt
+  transitions := threeHeadReaderTransitions D
+
 theorem readyJumpDescription_sources_below_tape0ReaderOffset
     (D : Description) {state : Nat}
     (hstate : state < D.stateCount) :
-    TransitionSourcesBelow (tape0ReaderOffset D)
+    TransitionSourcesBelow (tape0ReaderOffset D state)
       (readyJumpDescription D state).transitions := by
   apply blankHeadBounceJumpDescription_sources_below
   · exact
-      Nat.lt_trans
-        (ready_lt_readyJumpScratch D hstate)
+      Nat.lt_of_lt_of_le
+        (Nat.lt_trans
+          (ready_lt_readyJumpScratch D hstate)
+          (readyJumpScratch_lt_readyJumpLimit D hstate))
         (by
-          simpa [tape0ReaderOffset] using
-            readyJumpScratch_lt_readyJumpLimit D hstate)
-  · simpa [tape0ReaderOffset] using
-      readyJumpScratch_lt_readyJumpLimit D hstate
+          unfold tape0ReaderOffset tape0ReaderBlockBase
+          exact Nat.le_add_right _ _)
+  · have hlt := readyJumpScratch_lt_readyJumpLimit D hstate
+    unfold tape0ReaderOffset tape0ReaderBlockBase
+    lia
 
 theorem afterRead0JumpDescription_sources_below_tape1ReaderOffset
     (D : Description) {state : Nat} (read0 : Option Bool)
     (hstate : state < D.stateCount) :
-    TransitionSourcesBelow (tape1ReaderOffset D read0)
+    TransitionSourcesBelow (tape1ReaderOffset D state read0)
       (afterRead0JumpDescription D state read0).transitions := by
   apply blankHeadBounceJumpDescription_sources_below
   · have hlow :=
@@ -545,11 +778,11 @@ theorem afterRead0JumpDescription_sources_below_tape1ReaderOffset
           D read0 hstate)
         (StaticDispatcherState.afterRead1Base_le_readerStateLimit D)
     exact Nat.lt_of_lt_of_le hlow
-      (readerStateLimit_le_tape1ReaderOffset D read0)
+      (readerStateLimit_le_tape1ReaderOffset D state read0)
   · have hscratch :=
       afterRead0JumpScratch_lt_afterRead0JumpLimit D read0 hstate
     have hbase :
-        afterRead0JumpLimit D ≤ tape1ReaderOffset D read0 := by
+        afterRead0JumpLimit D ≤ tape1ReaderOffset D state read0 := by
       unfold tape1ReaderOffset tape1ReaderBlockBase
       lia
     exact Nat.lt_of_lt_of_le hscratch hbase
@@ -558,20 +791,20 @@ theorem afterRead1JumpDescription_sources_below_tape2ReaderOffset
     (D : Description) {state : Nat}
     (read0 read1 : Option Bool)
     (hstate : state < D.stateCount) :
-    TransitionSourcesBelow (tape2ReaderOffset D read0 read1)
+    TransitionSourcesBelow (tape2ReaderOffset D state read0 read1)
       (afterRead1JumpDescription D state read0 read1).transitions := by
   apply blankHeadBounceJumpDescription_sources_below
   · have hlow :=
       StaticDispatcherState.afterRead1_lt_readerStateLimit
         D read0 read1 hstate
     exact Nat.lt_of_lt_of_le hlow
-      (readerStateLimit_le_tape2ReaderOffset D read0 read1)
+      (readerStateLimit_le_tape2ReaderOffset D state read0 read1)
   · have hscratch :=
       afterRead1JumpScratch_lt_afterRead1JumpLimit
         D read0 read1 hstate
     have hbase :
         afterRead1JumpLimit D ≤
-          tape2ReaderOffset D read0 read1 := by
+          tape2ReaderOffset D state read0 read1 := by
       unfold tape2ReaderOffset tape2ReaderBlockBase
       lia
     exact Nat.lt_of_lt_of_le hscratch hbase
@@ -654,6 +887,738 @@ theorem afterRead1JumpTape2ReaderTransitions_deterministic
       (afterRead1Jump_tape2Reader_sourceDisjoint
         D read0 read1 hstate)
 
+theorem readyJumpTape0ReaderTransitions_source_cases
+    (D : Description) {state : Nat}
+    {t : TransitionDescription}
+    (ht : t ∈ readyJumpTape0ReaderTransitions D state) :
+    t.source = StaticDispatcherState.ready state ∨
+      t.source = readyJumpScratch D state ∨
+        tape0ReaderOffset D state ≤ t.source ∧
+          t.source <
+            tape0ReaderOffset D state +
+              branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
+  unfold readyJumpTape0ReaderTransitions at ht
+  simp at ht
+  rcases ht with ht | ht
+  · rcases
+      blankHeadBounceJumpDescription_transition_source_cases ht with
+      hsource | hscratch
+    · exact Or.inl hsource
+    · exact Or.inr (Or.inl hscratch)
+  · exact Or.inr (Or.inr
+      (tape0ReaderDescription_sources_in_block D state t ht))
+
+theorem afterRead0JumpTape1ReaderTransitions_source_cases
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    {t : TransitionDescription}
+    (ht : t ∈ afterRead0JumpTape1ReaderTransitions D state read0) :
+    t.source = StaticDispatcherState.afterRead0 D state read0 ∨
+      t.source = afterRead0JumpScratch D state read0 ∨
+        tape1ReaderOffset D state read0 ≤ t.source ∧
+          t.source <
+            tape1ReaderOffset D state read0 +
+              branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
+  unfold afterRead0JumpTape1ReaderTransitions at ht
+  simp at ht
+  rcases ht with ht | ht
+  · rcases
+      blankHeadBounceJumpDescription_transition_source_cases ht with
+      hsource | hscratch
+    · exact Or.inl hsource
+    · exact Or.inr (Or.inl hscratch)
+  · exact Or.inr (Or.inr
+      (tape1ReaderDescription_sources_in_block D state read0 t ht))
+
+theorem afterRead1JumpTape2ReaderTransitions_source_cases
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    {t : TransitionDescription}
+    (ht : t ∈ afterRead1JumpTape2ReaderTransitions D state read0 read1) :
+    t.source = StaticDispatcherState.afterRead1 D state read0 read1 ∨
+      t.source = afterRead1JumpScratch D state read0 read1 ∨
+        tape2ReaderOffset D state read0 read1 ≤ t.source ∧
+          t.source <
+            tape2ReaderOffset D state read0 read1 +
+              branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
+  unfold afterRead1JumpTape2ReaderTransitions at ht
+  simp at ht
+  rcases ht with ht | ht
+  · rcases
+      blankHeadBounceJumpDescription_transition_source_cases ht with
+      hsource | hscratch
+    · exact Or.inl hsource
+    · exact Or.inr (Or.inl hscratch)
+  · exact Or.inr (Or.inr
+      (tape2ReaderDescription_sources_in_block D state read0 read1 t ht))
+
+theorem readyJumpTape0Reader_afterRead0JumpTape1Reader_sourceDisjoint
+    (D : Description) {readyState afterState : Nat}
+    (read0 : Option Bool)
+    (hready : readyState < D.stateCount)
+    (hafter : afterState < D.stateCount) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderTransitions D readyState)
+      (afterRead0JumpTape1ReaderTransitions D afterState read0) := by
+  intro t u ht hu hsource
+  have hreadyCases :=
+    readyJumpTape0ReaderTransitions_source_cases D ht
+  have hafterCases :=
+    afterRead0JumpTape1ReaderTransitions_source_cases D read0 hu
+  rcases hreadyCases with hreadySource | hreadyCases
+  · rcases hafterCases with hafterSource | hafterCases
+    · have hEq :
+          StaticDispatcherState.ready readyState =
+            StaticDispatcherState.afterRead0 D afterState read0 := by
+        rw [← hreadySource, hsource, hafterSource]
+      have hcode := ReadTuple3.readCode_lt_three read0
+      unfold StaticDispatcherState.ready StaticDispatcherState.afterRead0
+        StaticDispatcherState.afterRead0Base at hEq
+      lia
+    · rcases hafterCases with hafterScratch | hafterReader
+      · have hEq :
+            StaticDispatcherState.ready readyState =
+              afterRead0JumpScratch D afterState read0 := by
+          rw [← hreadySource, hsource, hafterScratch]
+        have hcode := ReadTuple3.readCode_lt_three read0
+        unfold StaticDispatcherState.ready afterRead0JumpScratch
+          afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderBlockBase
+          readyJumpLimit readyJumpScratchBase
+          StaticDispatcherState.readerStateLimit
+          StaticDispatcherState.afterRead1Base
+          StaticDispatcherState.afterRead0Base at hEq
+        lia
+      · have hEq :
+            StaticDispatcherState.ready readyState = u.source := by
+          rw [← hreadySource, hsource]
+        have huLower : D.stateCount ≤ u.source := by
+          have hblock := hafterReader.left
+          unfold tape1ReaderOffset tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase StaticDispatcherState.readerStateLimit
+            StaticDispatcherState.afterRead1Base
+            StaticDispatcherState.afterRead0Base at hblock
+          lia
+        unfold StaticDispatcherState.ready at hEq
+        lia
+  · rcases hreadyCases with hreadyScratch | hreadyReader
+    · rcases hafterCases with hafterSource | hafterCases
+      · have hEq :
+            readyJumpScratch D readyState =
+              StaticDispatcherState.afterRead0 D afterState read0 := by
+          rw [← hreadyScratch, hsource, hafterSource]
+        have hcode := ReadTuple3.readCode_lt_three read0
+        simp [readyJumpScratch, readyJumpScratchBase,
+          StaticDispatcherState.readerStateLimit,
+          StaticDispatcherState.afterRead1Base,
+          StaticDispatcherState.afterRead0Base,
+          StaticDispatcherState.afterRead0] at hEq
+        lia
+      · rcases hafterCases with hafterScratch | hafterReader
+        · have hEq :
+              readyJumpScratch D readyState =
+                afterRead0JumpScratch D afterState read0 := by
+            rw [← hreadyScratch, hsource, hafterScratch]
+          have hcode := ReadTuple3.readCode_lt_three read0
+          simp [readyJumpScratch, readyJumpScratchBase,
+            afterRead0JumpScratch, afterRead0JumpScratchBase,
+            tape0ReaderLimit, tape0ReaderBlockBase, readyJumpLimit] at hEq
+          lia
+        · have hEq : readyJumpScratch D readyState = u.source := by
+            rw [← hreadyScratch, hsource]
+          have huLower : readyJumpLimit D ≤ u.source := by
+            have hblock := hafterReader.left
+            unfold tape1ReaderOffset tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase
+              tape0ReaderLimit tape0ReaderBlockBase at hblock
+            lia
+          have hscratchLt :
+              readyJumpScratch D readyState < readyJumpLimit D :=
+            readyJumpScratch_lt_readyJumpLimit D hready
+          lia
+    · rcases hafterCases with hafterSource | hafterCases
+      · have hEq :
+            t.source =
+              StaticDispatcherState.afterRead0 D afterState read0 := by
+          rw [hsource, hafterSource]
+        have hafterLt :
+            StaticDispatcherState.afterRead0 D afterState read0 <
+              tape0ReaderOffset D readyState := by
+          have hlow :=
+            Nat.lt_of_lt_of_le
+              (StaticDispatcherState.afterRead0_lt_afterRead1Base
+                D read0 hafter)
+              (StaticDispatcherState.afterRead1Base_le_readerStateLimit D)
+          exact Nat.lt_of_lt_of_le hlow
+            (readerStateLimit_le_tape0ReaderOffset D readyState)
+        lia
+      · rcases hafterCases with hafterScratch | hafterReader
+        · have hEq :
+              t.source = afterRead0JumpScratch D afterState read0 := by
+            rw [hsource, hafterScratch]
+          have hreadyLt : t.source < tape0ReaderLimit D :=
+            Nat.lt_of_lt_of_le hreadyReader.right
+              (tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hready)
+          have hscratchLower :
+              tape0ReaderLimit D ≤
+                afterRead0JumpScratch D afterState read0 := by
+            unfold afterRead0JumpScratch afterRead0JumpScratchBase
+            lia
+          lia
+        · have hEq : t.source = u.source := hsource
+          have hreadyLt : t.source < tape0ReaderLimit D :=
+            Nat.lt_of_lt_of_le hreadyReader.right
+              (tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hready)
+          have huLower : tape0ReaderLimit D ≤ u.source := by
+            have hblock := hafterReader.left
+            unfold tape1ReaderOffset tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase at hblock
+            lia
+          lia
+
+theorem afterRead0JumpTape1Reader_afterRead1JumpTape2Reader_sourceDisjoint
+    (D : Description) {state0 state1 : Nat}
+    (read0 read0' read1 : Option Bool)
+    (hstate0 : state0 < D.stateCount)
+    (hstate1 : state1 < D.stateCount) :
+    TransitionSourceDisjoint
+      (afterRead0JumpTape1ReaderTransitions D state0 read0)
+      (afterRead1JumpTape2ReaderTransitions D state1 read0' read1) := by
+  intro t u ht hu hsource
+  have hleftCases :=
+    afterRead0JumpTape1ReaderTransitions_source_cases D read0 ht
+  have hrightCases :=
+    afterRead1JumpTape2ReaderTransitions_source_cases D read0' read1 hu
+  rcases hleftCases with hleftSource | hleftCases
+  · rcases hrightCases with hrightSource | hrightCases
+    · have hEq :
+          StaticDispatcherState.afterRead0 D state0 read0 =
+            StaticDispatcherState.afterRead1 D state1 read0' read1 := by
+        rw [← hleftSource, hsource, hrightSource]
+      have hleftLt :=
+        StaticDispatcherState.afterRead0_lt_afterRead1Base
+          D read0 hstate0
+      have hrightGe :=
+        StaticDispatcherState.afterRead1Base_le_afterRead1
+          D state1 read0' read1
+      lia
+    · rcases hrightCases with hrightScratch | hrightReader
+      · have hEq :
+            StaticDispatcherState.afterRead0 D state0 read0 =
+              afterRead1JumpScratch D state1 read0' read1 := by
+          rw [← hleftSource, hsource, hrightScratch]
+        have hleftLt :=
+          Nat.lt_of_lt_of_le
+            (StaticDispatcherState.afterRead0_lt_afterRead1Base
+              D read0 hstate0)
+            (StaticDispatcherState.afterRead1Base_le_readerStateLimit D)
+        have hrightGe :
+            StaticDispatcherState.readerStateLimit D ≤
+              afterRead1JumpScratch D state1 read0' read1 := by
+          unfold afterRead1JumpScratch afterRead1JumpScratchBase
+            tape1ReaderLimit tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase
+          lia
+        lia
+      · have hEq :
+            StaticDispatcherState.afterRead0 D state0 read0 = u.source := by
+          rw [← hleftSource, hsource]
+        have hleftLt :
+            StaticDispatcherState.afterRead0 D state0 read0 <
+              StaticDispatcherState.readerStateLimit D :=
+          Nat.lt_of_lt_of_le
+            (StaticDispatcherState.afterRead0_lt_afterRead1Base
+              D read0 hstate0)
+            (StaticDispatcherState.afterRead1Base_le_readerStateLimit D)
+        have hrightGe :
+            StaticDispatcherState.readerStateLimit D ≤ u.source := by
+          have hblock := hrightReader.left
+          unfold tape2ReaderOffset tape2ReaderBlockBase
+            afterRead1JumpLimit afterRead1JumpScratchBase
+            tape1ReaderLimit tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase at hblock
+          lia
+        lia
+  · rcases hleftCases with hleftScratch | hleftReader
+    · rcases hrightCases with hrightSource | hrightCases
+      · have hEq :
+            afterRead0JumpScratch D state0 read0 =
+              StaticDispatcherState.afterRead1 D state1 read0' read1 := by
+          rw [← hleftScratch, hsource, hrightSource]
+        have hleftGe :
+            StaticDispatcherState.readerStateLimit D ≤
+              afterRead0JumpScratch D state0 read0 := by
+          unfold afterRead0JumpScratch afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase
+          lia
+        have hrightLt :=
+          StaticDispatcherState.afterRead1_lt_readerStateLimit
+            D read0' read1 hstate1
+        lia
+      · rcases hrightCases with hrightScratch | hrightReader
+        · have hEq :
+              afterRead0JumpScratch D state0 read0 =
+                afterRead1JumpScratch D state1 read0' read1 := by
+            rw [← hleftScratch, hsource, hrightScratch]
+          have hleftLt :=
+            afterRead0JumpScratch_lt_afterRead0JumpLimit
+              D read0 hstate0
+          have hrightGe :
+              afterRead0JumpLimit D ≤
+                afterRead1JumpScratch D state1 read0' read1 := by
+            unfold afterRead1JumpScratch afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase
+            lia
+          lia
+        · have hEq : afterRead0JumpScratch D state0 read0 = u.source := by
+            rw [← hleftScratch, hsource]
+          have hleftLt :=
+            afterRead0JumpScratch_lt_afterRead0JumpLimit
+              D read0 hstate0
+          have hrightGe : afterRead0JumpLimit D ≤ u.source := by
+            have hblock := hrightReader.left
+            unfold tape2ReaderOffset tape2ReaderBlockBase
+              afterRead1JumpLimit afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase at hblock
+            lia
+          lia
+    · rcases hrightCases with hrightSource | hrightCases
+      · have hEq :
+            t.source =
+              StaticDispatcherState.afterRead1 D state1 read0' read1 := by
+          rw [hsource, hrightSource]
+        have hleftGe :
+            StaticDispatcherState.readerStateLimit D ≤ t.source := by
+          have hblock := hleftReader.left
+          unfold tape1ReaderOffset tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase at hblock
+          lia
+        have hrightLt :=
+          StaticDispatcherState.afterRead1_lt_readerStateLimit
+            D read0' read1 hstate1
+        lia
+      · rcases hrightCases with hrightScratch | hrightReader
+        · have hEq :
+              t.source = afterRead1JumpScratch D state1 read0' read1 := by
+            rw [hsource, hrightScratch]
+          have hleftLt : t.source < tape1ReaderLimit D := by
+            exact
+              Nat.lt_of_lt_of_le hleftReader.right
+                (tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+                  D read0 hstate0)
+          have hrightGe :
+              tape1ReaderLimit D ≤
+                afterRead1JumpScratch D state1 read0' read1 := by
+            unfold afterRead1JumpScratch afterRead1JumpScratchBase
+            lia
+          lia
+        · have hEq : t.source = u.source := hsource
+          have hleftLt : t.source < tape1ReaderLimit D := by
+            exact
+              Nat.lt_of_lt_of_le hleftReader.right
+                (tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+                  D read0 hstate0)
+          have hrightGe : tape1ReaderLimit D ≤ u.source := by
+            have hblock := hrightReader.left
+            unfold tape2ReaderOffset tape2ReaderBlockBase
+              afterRead1JumpLimit afterRead1JumpScratchBase at hblock
+            lia
+          lia
+
+theorem readyJumpTape0Reader_afterRead1JumpTape2Reader_sourceDisjoint
+    (D : Description) {readyState afterState : Nat}
+    (read0 read1 : Option Bool)
+    (hready : readyState < D.stateCount)
+    (hafter : afterState < D.stateCount) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderTransitions D readyState)
+      (afterRead1JumpTape2ReaderTransitions D afterState read0 read1) := by
+  intro t u ht hu hsource
+  have hreadyCases :=
+    readyJumpTape0ReaderTransitions_source_cases D ht
+  have hafterCases :=
+    afterRead1JumpTape2ReaderTransitions_source_cases D read0 read1 hu
+  rcases hreadyCases with hreadySource | hreadyCases
+  · rcases hafterCases with hafterSource | hafterCases
+    · have hEq :
+          StaticDispatcherState.ready readyState =
+            StaticDispatcherState.afterRead1 D afterState read0 read1 := by
+        rw [← hreadySource, hsource, hafterSource]
+      have hreadyLt : StaticDispatcherState.ready readyState < D.stateCount := by
+        simpa [StaticDispatcherState.ready] using hready
+      have hafterGe : D.stateCount ≤
+          StaticDispatcherState.afterRead1 D afterState read0 read1 := by
+        have hbase :=
+          StaticDispatcherState.afterRead1Base_le_afterRead1
+            D afterState read0 read1
+        unfold StaticDispatcherState.afterRead1Base
+          StaticDispatcherState.afterRead0Base at hbase
+        lia
+      lia
+    · rcases hafterCases with hafterScratch | hafterReader
+      · have hEq :
+            StaticDispatcherState.ready readyState =
+              afterRead1JumpScratch D afterState read0 read1 := by
+          rw [← hreadySource, hsource, hafterScratch]
+        have hreadyLt : StaticDispatcherState.ready readyState < D.stateCount := by
+          simpa [StaticDispatcherState.ready] using hready
+        have hafterGe : D.stateCount ≤
+            afterRead1JumpScratch D afterState read0 read1 := by
+          unfold afterRead1JumpScratch afterRead1JumpScratchBase
+            tape1ReaderLimit tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase StaticDispatcherState.readerStateLimit
+            StaticDispatcherState.afterRead1Base
+            StaticDispatcherState.afterRead0Base
+          lia
+        lia
+      · have hEq : StaticDispatcherState.ready readyState = u.source := by
+          rw [← hreadySource, hsource]
+        have hreadyLt : StaticDispatcherState.ready readyState < D.stateCount := by
+          simpa [StaticDispatcherState.ready] using hready
+        have hafterGe : D.stateCount ≤ u.source := by
+          have hblock := hafterReader.left
+          unfold tape2ReaderOffset tape2ReaderBlockBase
+            afterRead1JumpLimit afterRead1JumpScratchBase
+            tape1ReaderLimit tape1ReaderBlockBase
+            afterRead0JumpLimit afterRead0JumpScratchBase
+            tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase StaticDispatcherState.readerStateLimit
+            StaticDispatcherState.afterRead1Base
+            StaticDispatcherState.afterRead0Base at hblock
+          lia
+        lia
+  · rcases hreadyCases with hreadyScratch | hreadyReader
+    · rcases hafterCases with hafterSource | hafterCases
+      · have hEq :
+            readyJumpScratch D readyState =
+              StaticDispatcherState.afterRead1 D afterState read0 read1 := by
+          rw [← hreadyScratch, hsource, hafterSource]
+        have hreadyGe :
+            StaticDispatcherState.readerStateLimit D ≤
+              readyJumpScratch D readyState := by
+          unfold readyJumpScratch readyJumpScratchBase
+          lia
+        have hafterLt :=
+          StaticDispatcherState.afterRead1_lt_readerStateLimit
+            D read0 read1 hafter
+        lia
+      · rcases hafterCases with hafterScratch | hafterReader
+        · have hEq :
+              readyJumpScratch D readyState =
+                afterRead1JumpScratch D afterState read0 read1 := by
+            rw [← hreadyScratch, hsource, hafterScratch]
+          have hreadyLt :=
+            readyJumpScratch_lt_readyJumpLimit D hready
+          have hafterGe :
+              readyJumpLimit D ≤
+                afterRead1JumpScratch D afterState read0 read1 := by
+            unfold afterRead1JumpScratch afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase
+              tape0ReaderLimit tape0ReaderBlockBase
+            lia
+          lia
+        · have hEq : readyJumpScratch D readyState = u.source := by
+            rw [← hreadyScratch, hsource]
+          have hreadyLt :=
+            readyJumpScratch_lt_readyJumpLimit D hready
+          have hafterGe : readyJumpLimit D ≤ u.source := by
+            have hblock := hafterReader.left
+            unfold tape2ReaderOffset tape2ReaderBlockBase
+              afterRead1JumpLimit afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase
+              tape0ReaderLimit tape0ReaderBlockBase at hblock
+            lia
+          lia
+    · rcases hafterCases with hafterSource | hafterCases
+      · have hEq :
+            t.source =
+              StaticDispatcherState.afterRead1 D afterState read0 read1 := by
+          rw [hsource, hafterSource]
+        have hreadyGe :
+            StaticDispatcherState.readerStateLimit D ≤ t.source := by
+          have hblock := hreadyReader.left
+          unfold tape0ReaderOffset tape0ReaderBlockBase readyJumpLimit
+            readyJumpScratchBase at hblock
+          lia
+        have hafterLt :=
+          StaticDispatcherState.afterRead1_lt_readerStateLimit
+            D read0 read1 hafter
+        lia
+      · rcases hafterCases with hafterScratch | hafterReader
+        · have hEq :
+              t.source = afterRead1JumpScratch D afterState read0 read1 := by
+            rw [hsource, hafterScratch]
+          have hreadyLt : t.source < tape0ReaderLimit D :=
+            Nat.lt_of_lt_of_le hreadyReader.right
+              (tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hready)
+          have hafterGe :
+              tape0ReaderLimit D ≤
+                afterRead1JumpScratch D afterState read0 read1 := by
+            unfold afterRead1JumpScratch afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase
+            lia
+          lia
+        · have hEq : t.source = u.source := hsource
+          have hreadyLt : t.source < tape0ReaderLimit D :=
+            Nat.lt_of_lt_of_le hreadyReader.right
+              (tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hready)
+          have hafterGe : tape0ReaderLimit D ≤ u.source := by
+            have hblock := hafterReader.left
+            unfold tape2ReaderOffset tape2ReaderBlockBase
+              afterRead1JumpLimit afterRead1JumpScratchBase
+              tape1ReaderLimit tape1ReaderBlockBase
+              afterRead0JumpLimit afterRead0JumpScratchBase at hblock
+            lia
+          lia
+
+theorem readyJumpTape0ReaderAll_afterRead0JumpTape1ReaderAll_sourceDisjoint
+    (D : Description) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderAllTransitions D)
+      (afterRead0JumpTape1ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+    afterRead0JumpTape1ReaderAllTransitions
+  apply transitionSourceDisjoint_flatMap_left
+  intro readyState hreadyState
+  apply transitionSourceDisjoint_flatMap_right
+  intro read0 _hread0
+  apply transitionSourceDisjoint_flatMap_right
+  intro afterState hafterState
+  exact
+    readyJumpTape0Reader_afterRead0JumpTape1Reader_sourceDisjoint
+      D read0
+      (List.mem_range.mp hreadyState)
+      (List.mem_range.mp hafterState)
+
+theorem afterRead0JumpTape1ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
+    (D : Description) :
+    TransitionSourceDisjoint
+      (afterRead0JumpTape1ReaderAllTransitions D)
+      (afterRead1JumpTape2ReaderAllTransitions D) := by
+  unfold afterRead0JumpTape1ReaderAllTransitions
+    afterRead1JumpTape2ReaderAllTransitions
+  apply transitionSourceDisjoint_flatMap_left
+  intro read0 _hread0
+  apply transitionSourceDisjoint_flatMap_left
+  intro state0 hstate0
+  apply transitionSourceDisjoint_flatMap_right
+  intro read0' _hread0'
+  apply transitionSourceDisjoint_flatMap_right
+  intro read1 _hread1
+  apply transitionSourceDisjoint_flatMap_right
+  intro state1 hstate1
+  exact
+    afterRead0JumpTape1Reader_afterRead1JumpTape2Reader_sourceDisjoint
+      D read0 read0' read1
+      (List.mem_range.mp hstate0)
+      (List.mem_range.mp hstate1)
+
+theorem readyJumpTape0ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
+    (D : Description) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderAllTransitions D)
+      (afterRead1JumpTape2ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+    afterRead1JumpTape2ReaderAllTransitions
+  apply transitionSourceDisjoint_flatMap_left
+  intro readyState hreadyState
+  apply transitionSourceDisjoint_flatMap_right
+  intro read0 _hread0
+  apply transitionSourceDisjoint_flatMap_right
+  intro read1 _hread1
+  apply transitionSourceDisjoint_flatMap_right
+  intro afterState hafterState
+  exact
+    readyJumpTape0Reader_afterRead1JumpTape2Reader_sourceDisjoint
+      D read0 read1
+      (List.mem_range.mp hreadyState)
+      (List.mem_range.mp hafterState)
+
+theorem readyAndAfterRead0All_afterRead1JumpTape2ReaderAll_sourceDisjoint
+    (D : Description) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderAllTransitions D ++
+        afterRead0JumpTape1ReaderAllTransitions D)
+      (afterRead1JumpTape2ReaderAllTransitions D) :=
+  transitionSourceDisjoint_append_left
+    (readyJumpTape0ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint D)
+    (afterRead0JumpTape1ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint D)
+
+theorem readyJumpTape0ReaderTransitions_sources_below_afterRead0JumpLimit
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    TransitionSourcesBelow (afterRead0JumpLimit D)
+      (readyJumpTape0ReaderTransitions D state) := by
+  unfold readyJumpTape0ReaderTransitions
+  apply transitionSourcesBelow_append
+  · have hle :
+        tape0ReaderOffset D state ≤ afterRead0JumpLimit D := by
+      have hblock :=
+        tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hstate
+      have hlimit :
+          tape0ReaderLimit D ≤ afterRead0JumpLimit D := by
+        unfold afterRead0JumpLimit afterRead0JumpScratchBase
+        lia
+      exact
+        Nat.le_trans (Nat.le_trans (Nat.le_add_right _ _) hblock)
+          hlimit
+    exact
+      transitionSourcesBelow_mono hle
+        (readyJumpDescription_sources_below_tape0ReaderOffset D hstate)
+  · intro t ht
+    have hblock := tape0ReaderDescription_sources_in_block D state t ht
+    have hlimit :=
+      tape0ReaderOffset_blockEnd_le_tape0ReaderLimit D hstate
+    unfold afterRead0JumpLimit afterRead0JumpScratchBase
+    lia
+
+theorem afterRead0JumpTape1ReaderTransitions_sources_below_afterRead1JumpLimit
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    TransitionSourcesBelow (afterRead1JumpLimit D)
+      (afterRead0JumpTape1ReaderTransitions D state read0) := by
+  unfold afterRead0JumpTape1ReaderTransitions
+  apply transitionSourcesBelow_append
+  · have hle :
+        tape1ReaderOffset D state read0 ≤ afterRead1JumpLimit D := by
+      have hblock :=
+        tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+          D read0 hstate
+      have hlimit :
+          tape1ReaderLimit D ≤ afterRead1JumpLimit D := by
+        unfold afterRead1JumpLimit afterRead1JumpScratchBase
+        lia
+      exact
+        Nat.le_trans (Nat.le_trans (Nat.le_add_right _ _) hblock)
+          hlimit
+    exact
+      transitionSourcesBelow_mono hle
+        (afterRead0JumpDescription_sources_below_tape1ReaderOffset
+          D read0 hstate)
+  · intro t ht
+    have hblock :=
+      tape1ReaderDescription_sources_in_block D state read0 t ht
+    have hlimit :=
+      tape1ReaderOffset_blockEnd_le_tape1ReaderLimit
+        D read0 hstate
+    unfold afterRead1JumpLimit afterRead1JumpScratchBase
+    lia
+
+theorem afterRead1JumpTape2ReaderTransitions_sources_below_stateLimit
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    TransitionSourcesBelow (threeHeadReaderStateLimit D)
+      (afterRead1JumpTape2ReaderTransitions D state read0 read1) := by
+  unfold afterRead1JumpTape2ReaderTransitions
+  apply transitionSourcesBelow_append
+  · have hle :
+        tape2ReaderOffset D state read0 read1 ≤
+          threeHeadReaderStateLimit D := by
+      have hblock :=
+        tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
+          D read0 read1 hstate
+      exact
+        Nat.le_trans (Nat.le_add_right _ _) hblock
+    exact
+      transitionSourcesBelow_mono hle
+        (afterRead1JumpDescription_sources_below_tape2ReaderOffset
+          D read0 read1 hstate)
+  · intro t ht
+    have hblock :=
+      tape2ReaderDescription_sources_in_block
+        D state read0 read1 t ht
+    exact
+      Nat.lt_of_lt_of_le hblock.right
+        (by
+          simpa [threeHeadReaderStateLimit] using
+            tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
+              D read0 read1 hstate)
+
+theorem readyJumpTape0ReaderAllTransitions_sources_below_afterRead0JumpLimit
+    (D : Description) :
+    TransitionSourcesBelow (afterRead0JumpLimit D)
+      (readyJumpTape0ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+  apply transitionSourcesBelow_bind
+  intro state hstate
+  exact
+    readyJumpTape0ReaderTransitions_sources_below_afterRead0JumpLimit
+      D (List.mem_range.mp hstate)
+
+theorem afterRead0JumpTape1ReaderAllTransitions_sources_below_afterRead1JumpLimit
+    (D : Description) :
+    TransitionSourcesBelow (afterRead1JumpLimit D)
+      (afterRead0JumpTape1ReaderAllTransitions D) := by
+  unfold afterRead0JumpTape1ReaderAllTransitions
+  apply transitionSourcesBelow_bind
+  intro read0 _hread0
+  apply transitionSourcesBelow_bind
+  intro state hstate
+  exact
+    afterRead0JumpTape1ReaderTransitions_sources_below_afterRead1JumpLimit
+      D read0 (List.mem_range.mp hstate)
+
+theorem afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit
+    (D : Description) :
+    TransitionSourcesBelow (threeHeadReaderStateLimit D)
+      (afterRead1JumpTape2ReaderAllTransitions D) := by
+  unfold afterRead1JumpTape2ReaderAllTransitions
+  apply transitionSourcesBelow_bind
+  intro read0 _hread0
+  apply transitionSourcesBelow_bind
+  intro read1 _hread1
+  apply transitionSourcesBelow_bind
+  intro state hstate
+  exact
+    afterRead1JumpTape2ReaderTransitions_sources_below_stateLimit
+      D read0 read1 (List.mem_range.mp hstate)
+
+theorem readyJumpTape0ReaderAllTransitions_sources_below_stateLimit
+    (D : Description) :
+    TransitionSourcesBelow (threeHeadReaderStateLimit D)
+      (readyJumpTape0ReaderAllTransitions D) := by
+  apply transitionSourcesBelow_mono
+    (h := readyJumpTape0ReaderAllTransitions_sources_below_afterRead0JumpLimit D)
+  unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+    afterRead1JumpLimit afterRead1JumpScratchBase tape1ReaderLimit
+    tape1ReaderBlockBase
+  lia
+
+theorem afterRead0JumpTape1ReaderAllTransitions_sources_below_stateLimit
+    (D : Description) :
+    TransitionSourcesBelow (threeHeadReaderStateLimit D)
+      (afterRead0JumpTape1ReaderAllTransitions D) := by
+  apply transitionSourcesBelow_mono
+    (h :=
+      afterRead0JumpTape1ReaderAllTransitions_sources_below_afterRead1JumpLimit
+        D)
+  unfold threeHeadReaderStateLimit tape2ReaderLimit tape2ReaderBlockBase
+  lia
+
+theorem threeHeadReaderTransitions_sources_below_stateLimit
+    (D : Description) :
+    TransitionSourcesBelow (threeHeadReaderStateLimit D)
+      (threeHeadReaderTransitions D) := by
+  simpa [threeHeadReaderTransitions] using
+    transitionSourcesBelow_append
+      (transitionSourcesBelow_append
+        (readyJumpTape0ReaderAllTransitions_sources_below_stateLimit D)
+        (afterRead0JumpTape1ReaderAllTransitions_sources_below_stateLimit D))
+      (afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit D)
+
 theorem readyJumpDescription_runsFromTapeSeparator
     (D : Description) {state : Nat}
     (hstate : state < D.stateCount)
@@ -731,11 +1696,11 @@ theorem tape0ReaderDescription_runsFromGuardedBlockStart
           separatorPhysical := by
   simpa [tape0ReaderDescription, tape0ReaderStart,
     StaticDispatcherState.tape0ReaderTargets, StaticDispatcherState.tape0ReaderTarget] using
-    retargetedBranchingTape0ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
-      (offset := tape0ReaderOffset D)
-      (target := StaticDispatcherState.tape0ReaderTargets D state)
-      (tape0ReaderTargets_lt_tape0ReaderOffset D hstate)
-      hlength
+      retargetedBranchingTape0ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+        (offset := tape0ReaderOffset D state)
+        (target := StaticDispatcherState.tape0ReaderTargets D state)
+        (tape0ReaderTargets_lt_tape0ReaderOffset D hstate)
+        hlength
 
 theorem tape1ReaderDescription_runsFromGuardedBlockStart
     (D : Description) {state : Nat} (read0 : Option Bool)
@@ -754,11 +1719,11 @@ theorem tape1ReaderDescription_runsFromGuardedBlockStart
           separatorPhysical := by
   simpa [tape1ReaderDescription, tape1ReaderStart,
     StaticDispatcherState.tape1ReaderTargets, StaticDispatcherState.tape1ReaderTarget] using
-    retargetedBranchingTape1ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
-      (offset := tape1ReaderOffset D read0)
-      (target := StaticDispatcherState.tape1ReaderTargets D state read0)
-      (tape1ReaderTargets_lt_tape1ReaderOffset D read0 hstate)
-      hlength
+      retargetedBranchingTape1ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+        (offset := tape1ReaderOffset D state read0)
+        (target := StaticDispatcherState.tape1ReaderTargets D state read0)
+        (tape1ReaderTargets_lt_tape1ReaderOffset D read0 hstate)
+        hlength
 
 theorem tape2ReaderDescription_runsFromGuardedBlockStart
     (D : Description) {state : Nat}
@@ -780,11 +1745,11 @@ theorem tape2ReaderDescription_runsFromGuardedBlockStart
           separatorPhysical := by
   simpa [tape2ReaderDescription, tape2ReaderStart,
     StaticDispatcherState.tape2ReaderTargets, StaticDispatcherState.tape2ReaderTarget] using
-    retargetedBranchingTape2ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
-      (offset := tape2ReaderOffset D read0 read1)
-      (target := StaticDispatcherState.tape2ReaderTargets D state read0 read1)
-      (tape2ReaderTargets_lt_tape2ReaderOffset D read0 read1 hstate)
-      hlength
+      retargetedBranchingTape2ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+        (offset := tape2ReaderOffset D state read0 read1)
+        (target := StaticDispatcherState.tape2ReaderTargets D state read0 read1)
+        (tape2ReaderTargets_lt_tape2ReaderOffset D read0 read1 hstate)
+        hlength
 
 end StaticDispatcherReaderAssembly
 
