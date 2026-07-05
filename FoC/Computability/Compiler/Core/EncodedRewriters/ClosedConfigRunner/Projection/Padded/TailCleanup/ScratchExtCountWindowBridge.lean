@@ -265,6 +265,18 @@ def selectedSegmentLogicalTapeDecoderDensifierTargetCells
     List (Option Bool) :=
   List.append (bits.map some) (none :: padding)
 
+def selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append (bits.map some) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierTargetCells_eq_paddingPreservingCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierTargetCells bits padding =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        bits padding := by
+  rfl
+
 theorem selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint
     (bits : Word Bool) (padding : List (Option Bool)) :
     statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
@@ -559,6 +571,20 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTarget
       (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_cells_eq_paddingPreserving
+    (useAccept : Bool) (L : DovetailLayout) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding useAccept L) := by
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_cells]
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierTargetCells_eq_paddingPreservingCells
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -732,6 +758,23 @@ theorem selectedSegmentLogicalTapeDecoderDensifierTargetCells_filterMap
       List.append bits (padding.filterMap (fun cell => cell)) := by
   simp [selectedSegmentLogicalTapeDecoderDensifierTargetCells,
     List.filterMap_append, Function.comp_def]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        bits padding).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simp [selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells,
+    List.filterMap_append, Function.comp_def]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap_eq_paddingPreserving
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+        bits padding).filterMap (fun cell => cell) =
+      (selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        bits padding).filterMap (fun cell => cell) := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells_filterMap]
 
 theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
     (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
