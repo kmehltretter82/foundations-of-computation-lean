@@ -169,6 +169,16 @@ theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
     (selectedProjectionPaddedTailEmitterConstruction_scaffold_of_postErase
       hpostEraseConstruction)
 
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+    (hprefix :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
+    (selectedProjectionPaddedTailEmitterConstruction_scaffold_of_prefixAndFootprintCases
+      hprefix hcases)
+
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
