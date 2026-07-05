@@ -466,8 +466,9 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
         2)
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction := by
-  sorry
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction :=
+  countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_singletonDecoder
+    structuredSelectedSingletonSegmentDecoderConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
     (hnormalizer :

@@ -395,6 +395,93 @@ theorem selectedSegmentLogicalTapeDecoder_output_logicalTapeBits_zero
             simp [Tape.normalizedOutput, Tape.cells,
               List.filterMap_append]
 
+/-- Generated finite-control decoder for the selected structured segment. -/
+def selectedSegmentLogicalTapeDecoderDescription : MachineDescription :=
+  generatedStatefulOptionAppendDescription
+    selectedSegmentLogicalTapeDecoderStateCount
+    selectedSegmentLogicalTapeDecoderStart
+    selectedSegmentLogicalTapeDecoderNext
+    selectedSegmentLogicalTapeDecoderEmit
+    []
+
+theorem selectedSegmentLogicalTapeDecoderDescription_subroutineReady :
+    selectedSegmentLogicalTapeDecoderDescription.SubroutineReady := by
+  exact
+    generatedStatefulOptionAppendDescription_subroutineReady
+      selectedSegmentLogicalTapeDecoderStateCount
+      selectedSegmentLogicalTapeDecoderStart
+      selectedSegmentLogicalTapeDecoderNext
+      selectedSegmentLogicalTapeDecoderEmit
+      []
+      selectedSegmentLogicalTapeDecoderStart_lt
+      selectedSegmentLogicalTapeDecoderNext_lt
+
+theorem selectedSegmentLogicalTapeDecoder_output_guardLogicalTapeBits_zero
+    (T : Tape Bool) :
+    statefulOptionOutputFrom selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit 0
+        (logicalTapeBits (guardLogicalTape T)) =
+      Tape.normalizedOutput T := by
+  rw [selectedSegmentLogicalTapeDecoder_output_logicalTapeBits_zero]
+  exact Tape.Equiv.normalizedOutput_eq (guardLogicalTape_equiv T)
+
+theorem selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingletonPayload
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+      (Tape.move Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells [guardLogicalTape target])))
+      (FSTStatefulOptionAppendTargetTapeFromLeft
+        selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit
+        selectedSegmentLogicalTapeDecoderStart
+        (logicalTapeBits (guardLogicalTape target))
+        []
+        (none :: encodedPrefix.reverse)) := by
+  have hsource :
+      Tape.move Direction.right
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells [guardLogicalTape target])) =
+        tapeAtCells (none :: encodedPrefix.reverse)
+          (List.append
+            ((logicalTapeBits (guardLogicalTape target)).map some)
+            [none]) := by
+    simp [tapeAtEncodedSplit, encodedStructuredTapeCells,
+      tapeSeparatorCells, logicalTapeCode_eq_map_some, Tape.move,
+      Tape.moveRight, tapeAtCells]
+    cases (List.map some (logicalTapeBits (guardLogicalTape target)) ++
+      [none]) <;> rfl
+  rw [hsource]
+  change
+    (generatedStatefulOptionAppendDescription
+        selectedSegmentLogicalTapeDecoderStateCount
+        selectedSegmentLogicalTapeDecoderStart
+        selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit
+        []).HaltsFromTape
+      (tapeAtCells (none :: encodedPrefix.reverse)
+        (List.append
+          ((logicalTapeBits (guardLogicalTape target)).map some)
+          [none]))
+      (FSTStatefulOptionAppendTargetTapeFromLeft
+        selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit
+        selectedSegmentLogicalTapeDecoderStart
+        (logicalTapeBits (guardLogicalTape target))
+        []
+        (none :: encodedPrefix.reverse))
+  exact
+    generatedStatefulOptionAppendDescription_haltsFrom_tapeAtCells
+      selectedSegmentLogicalTapeDecoderStateCount
+      selectedSegmentLogicalTapeDecoderStart
+      selectedSegmentLogicalTapeDecoderNext
+      selectedSegmentLogicalTapeDecoderEmit
+      []
+      (logicalTapeBits (guardLogicalTape target))
+      (none :: encodedPrefix.reverse)
+      selectedSegmentLogicalTapeDecoderStart_lt
+      selectedSegmentLogicalTapeDecoderNext_lt
+
 /--
 Decoder for a canonical selected structured segment that may have trailing
 encoded structured segments to its right.
