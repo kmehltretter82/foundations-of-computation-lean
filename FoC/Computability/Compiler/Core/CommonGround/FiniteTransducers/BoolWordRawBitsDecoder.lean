@@ -1238,6 +1238,34 @@ theorem loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTape
         structuredBoolWordRawBitsDecoderDescription_run
           bits suffixTail rightPadding⟩
 
+def LoweredStructuredBoolWordRawBitsDecoderSpec
+    (decoder : MachineDescription) : Prop :=
+  decoder.WellFormed ∧
+    forall (bits suffixTail : Word Bool)
+      (rightPadding : List (Option Bool)),
+      decoder.HaltsFromTapeEquiv
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
+          , Tape.blank
+          , structuredBoolWordRawBitsDecoderInitialOutputTape ])
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              bits suffixTail rightPadding
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              (bits.length + 1)
+          , rightEdgeScanSourceTapeFromLeft [none] bits [] ])
+
+def LoweredStructuredBoolWordRawBitsDecoderConstruction : Prop :=
+  exists decoder : MachineDescription,
+    LoweredStructuredBoolWordRawBitsDecoderSpec decoder
+
+theorem loweredStructuredBoolWordRawBitsDecoderConstruction_core :
+    LoweredStructuredBoolWordRawBitsDecoderConstruction := by
+  exact
+    ⟨loweredStructuredBoolWordRawBitsDecoderDescription,
+      loweredStructuredBoolWordRawBitsDecoderDescription_wellFormed,
+      loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTape⟩
+
 theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
     (bits suffixTail : Word Bool)
     (rightPadding outputPadding : List (Option Bool)) :
@@ -1546,290 +1574,6 @@ theorem boolWordRawBitsDecoderPrefixScannerDescription_haltsFromTape
         bits suffixTail rightPadding)
       (boolWordSuffixScannerDescription_haltsFrom_rawBitsDecoderAfterHeader
         bits suffixTail rightPadding)
-
-def BoolWordCanonicalHandoffToRawScanSourceSpec
-    (materializer : MachineDescription) : Prop :=
-  materializer.SubroutineReady ∧
-    forall (bits suffixTail : Word Bool)
-      (rightPadding : List (Option Bool)),
-      materializer.HaltsFromTape
-        (boolWordRawBitsDecoderPrefixHandoffTape
-          bits suffixTail rightPadding)
-        (boolWordRawBitsDecoderTargetTape
-          bits suffixTail rightPadding)
-
-def BoolWordCanonicalHandoffToRawScanSourceConstruction : Prop :=
-  exists materializer : MachineDescription,
-    BoolWordCanonicalHandoffToRawScanSourceSpec materializer
-
-/--
-Concrete table for the remaining materializer.
-
-The first phase reads the restored Boolean-cell code on the left stack in the
-reverse physical order produced by the canonical suffix scanner:
-
-* {lit}`false,true,true,false` decodes a raw {lit}`true`;
-* {lit}`true,false,true,false` decodes a raw {lit}`false`;
-* {lit}`true,true,false,false` is the restored {name}`MachineCodeSymbol.done`
-  marker and enters cleanup.
-
-The cleanup phase erases the restored metadata/header scaffold and the final
-phase is the local gap-closing pass intended to compact the decoded raw cells
-toward the preserved boundary/suffix.  The run theorem below is the remaining
-proof that this table realizes the exact tape contract for all canonical
-inputs.
--/
-def boolWordCanonicalHandoffToRawScanSourceMaterializerDescription :
-    MachineDescription where
-  stateCount := 80
-  start := 0
-  halt := 79
-  transitions :=
-    [ transition 0 (some false) none Direction.left 10
-    , transition 0 (some true) none Direction.left 20
-    , transition 0 none none Direction.right 40
-
-    , transition 10 (some true) none Direction.left 11
-    , transition 11 (some true) none Direction.left 12
-    , transition 12 (some false) (some true) Direction.left 0
-
-    , transition 20 (some false) none Direction.left 21
-    , transition 21 (some true) none Direction.left 22
-    , transition 22 (some false) (some false) Direction.left 0
-
-    , transition 20 (some true) none Direction.left 30
-    , transition 30 (some false) none Direction.left 31
-    , transition 31 (some false) none Direction.left 40
-
-    , transition 40 (some false) none Direction.left 40
-    , transition 40 (some true) none Direction.left 40
-    , transition 40 none none Direction.right 50
-
-    , transition 50 none none Direction.right 50
-    , transition 50 (some false) (some false) Direction.left 60
-    , transition 50 (some true) (some true) Direction.left 60
-
-    , transition 60 none none Direction.right 61
-    , transition 61 (some false) none Direction.left 62
-    , transition 61 (some true) none Direction.left 63
-    , transition 61 none none Direction.left 79
-    , transition 62 none (some false) Direction.right 64
-    , transition 63 none (some true) Direction.right 64
-    , transition 64 none none Direction.right 61
-    ]
-
-theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_wellFormed :
-    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l :=
-        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
-      (stateCount :=
-        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l :=
-        boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
-      (by decide)
-
-theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltTransitionFree :
-    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l :=
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.transitions)
-    (state :=
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.halt)
-    (by decide)
-
-theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_subroutineReady :
-    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.SubroutineReady :=
-  ⟨boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_wellFormed,
-    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltTransitionFree⟩
-
-private abbrev boolWordRawBitsDecoderMaterializerTestMachine :
-    MachineDescription :=
-  boolWordCanonicalHandoffToRawScanSourceMaterializerDescription
-
-private theorem boolWordRawBitsDecoderMaterializerRun_decodesFalseCell
-    (right : List (Option Bool)) :
-    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := tapeAtCells
-            [some false, some true, some false]
-            (some true :: right) } =
-      { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-        tape := tapeAtCells []
-          (none :: some false :: none :: none :: none :: right) } := by
-  cases right <;>
-    simp [boolWordRawBitsDecoderMaterializerTestMachine,
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
-      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
-
-private theorem boolWordRawBitsDecoderMaterializerRun_decodesTrueCell
-    (right : List (Option Bool)) :
-    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := tapeAtCells
-            [some true, some true, some false]
-            (some false :: right) } =
-      { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-        tape := tapeAtCells []
-          (none :: some true :: none :: none :: none :: right) } := by
-  cases right <;>
-    simp [boolWordRawBitsDecoderMaterializerTestMachine,
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
-      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
-
-private theorem boolWordRawBitsDecoderMaterializerRun_reachesCleanup
-    (right : List (Option Bool)) :
-    boolWordRawBitsDecoderMaterializerTestMachine.runConfig 4
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := tapeAtCells
-            [some true, some false, some false]
-            (some true :: right) } =
-      { state := 40
-        tape := tapeAtCells []
-          (none :: none :: none :: none :: none :: right) } := by
-  cases right <;>
-    simp [boolWordRawBitsDecoderMaterializerTestMachine,
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
-      tapeAtCells, runConfig, stepConfig, lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
-
--- Exact handoff-to-target probes for these examples currently fail: the
--- cleanup phase reaches halt but leaves too many erased scaffold blanks.
-private theorem boolWordRawBitsDecoderMaterializerRun_emptyWord_halts :
-    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 50
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := boolWordRawBitsDecoderPrefixHandoffTape
-            ([] : Word Bool) ([] : Word Bool) [] }).state =
-      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
-  decide
-
-private theorem boolWordRawBitsDecoderMaterializerRun_falseWord_halts :
-    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 80
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := boolWordRawBitsDecoderPrefixHandoffTape
-            ([false] : Word Bool) ([] : Word Bool) [] }).state =
-      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
-  decide
-
-private theorem boolWordRawBitsDecoderMaterializerRun_trueWord_halts :
-    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 80
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := boolWordRawBitsDecoderPrefixHandoffTape
-            ([true] : Word Bool) ([] : Word Bool) [] }).state =
-      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
-  decide
-
-private theorem boolWordRawBitsDecoderMaterializerRun_twoBitsWithSuffix_halts :
-    (boolWordRawBitsDecoderMaterializerTestMachine.runConfig 120
-        { state := boolWordRawBitsDecoderMaterializerTestMachine.start
-          tape := boolWordRawBitsDecoderPrefixHandoffTape
-            ([false, true] : Word Bool) ([true] : Word Bool) [none] }).state =
-      boolWordRawBitsDecoderMaterializerTestMachine.halt := by
-  decide
-
-theorem boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltsFromTape
-    (bits suffixTail : Word Bool)
-    (rightPadding : List (Option Bool)) :
-    boolWordCanonicalHandoffToRawScanSourceMaterializerDescription.HaltsFromTape
-      (boolWordRawBitsDecoderPrefixHandoffTape
-        bits suffixTail rightPadding)
-      (boolWordRawBitsDecoderTargetTape
-        bits suffixTail rightPadding) := by
-  sorry
-
-/--
-The concrete remaining finite-machine leaf.  The only unresolved proof is the
-run theorem for
-{name}`boolWordCanonicalHandoffToRawScanSourceMaterializerDescription`; the
-existential no longer hides which table is intended.
--/
-theorem boolWordCanonicalHandoffToRawScanSourceConstruction_core :
-    BoolWordCanonicalHandoffToRawScanSourceConstruction := by
-  exact
-    ⟨boolWordCanonicalHandoffToRawScanSourceMaterializerDescription,
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_subroutineReady,
-      boolWordCanonicalHandoffToRawScanSourceMaterializerDescription_haltsFromTape⟩
-
-private theorem dovetailTapeAtCells_move_left_move_right_move_left_append_cons
-    (pref tail right : List (Option Bool)) (cell : Option Bool) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (Tape.move Direction.left
-            (DovetailInitialLayoutInitializer.tapeAtCells
-              (List.append pref (cell :: tail)) right))) =
-      Tape.move Direction.left
-        (DovetailInitialLayoutInitializer.tapeAtCells
-          (List.append pref (cell :: tail)) right) := by
-  rw [show
-      Tape.move Direction.right
-          (Tape.move Direction.left
-            (DovetailInitialLayoutInitializer.tapeAtCells
-              (List.append pref (cell :: tail)) right)) =
-        DovetailInitialLayoutInitializer.tapeAtCells
-          (List.append pref (cell :: tail)) right by
-    simpa [DovetailInitialLayoutInitializer.tapeAtCells,
-      tapeAtCells] using
-      tapeAtCells_move_right_move_left_append_cons
-        pref tail right cell]
-
-theorem boolWordRawBitsDecoderPrefixHandoffTape_move_left_move_right
-    (bits suffixTail : Word Bool)
-    (rightPadding : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (boolWordRawBitsDecoderPrefixHandoffTape bits suffixTail
-            rightPadding)) =
-      boolWordRawBitsDecoderPrefixHandoffTape bits suffixTail
-        rightPadding := by
-  simpa [boolWordRawBitsDecoderPrefixHandoffTape,
-    boolWordCanonicalHandoffConfigWithBaseAndRight,
-    cellListCanonicalHandoffConfigWithBaseAndRight,
-    cellListCanonicalRestoredLeftWithBase,
-    cellListCanonicalFinishStartLeftWithBase,
-    boolWordRawBitsDecoderHeaderBase, boolWordRawBitsDecoderHeaderBits,
-    encodeCodeSymbolAsInput, doneBits, List.append_assoc] using
-    dovetailTapeAtCells_move_left_move_right_move_left_append_cons
-      ((List.map some (cellsCodeBits (List.map some bits))).reverse)
-      (some true :: some false :: some false ::
-        List.append (cellListCanonicalLengthPrefixRev bits.length)
-          boolWordRawBitsDecoderHeaderBase)
-      (some false :: List.append (suffixTail.map some)
-        (none :: rightPadding))
-      (some true)
-
-/--
-The finite-machine leaf for the honest Boolean-word decoder.  It decodes the
-header-prefixed encoded field and preserves the suffix/right-padding shape
-specified above.
--/
-theorem boolWordRawBitsDecoderConstruction_core :
-    BoolWordRawBitsDecoderConstruction := by
-  rcases boolWordCanonicalHandoffToRawScanSourceConstruction_core with
-    ⟨materializer, hmaterializer⟩
-  refine
-    ⟨canonicalSeqDescription
-      boolWordRawBitsDecoderPrefixScannerDescription
-      materializer, ?_⟩
-  constructor
-  · exact
-      canonicalSeqDescription_subroutineReady
-        boolWordRawBitsDecoderPrefixScannerDescription_subroutineReady
-        hmaterializer.left
-  · intro bits suffixTail rightPadding
-    exact
-      canonicalSeqDescription_haltsFromTape_of_haltsFromTape
-        boolWordRawBitsDecoderPrefixScannerDescription_subroutineReady
-        hmaterializer.left
-        (boolWordRawBitsDecoderPrefixScannerDescription_haltsFromTape
-          bits suffixTail rightPadding)
-        (boolWordRawBitsDecoderPrefixHandoffTape_move_left_move_right
-          bits suffixTail rightPadding)
-        (hmaterializer.right bits suffixTail rightPadding)
 
 end FiniteTransducers
 end CommonGround
