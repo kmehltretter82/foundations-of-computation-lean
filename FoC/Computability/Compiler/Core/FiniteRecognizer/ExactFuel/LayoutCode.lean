@@ -769,6 +769,71 @@ theorem codeMachineConstruction_of_materializer_layoutCodeMachine_compose
     hcompose hmaterializer
     (layoutCodeRunnerConstruction_of_codeMachine hlayout)
 
+theorem codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hcompose : ExactOutputThenRecognizeConstruction)
+    (hmaterializer : InitialLayoutExactMaterializerConstruction M)
+    (hlayout : LayoutCodeRunnerConstruction M) :
+    CodeMachineConstruction M := by
+  rcases hmaterializer with
+    ⟨materializerState, materializer, hmaterializer⟩
+  rcases hlayout with ⟨layoutState, layoutRunner, hlayoutRunner⟩
+  let P : Word MachineCodeSymbol -> Prop :=
+    fun output => TuringMachine.HaltsOnInput layoutRunner output
+  have hrecognizes : FiniteRecognizer.Recognizes layoutRunner P := by
+    intro output
+    rfl
+  rcases
+      hcompose materializer layoutRunner
+        (Layout.stageCodeToInitialLayoutCode M) P
+        hmaterializer hrecognizes with
+    ⟨pipelineState, pipeline, hpipeline⟩
+  refine ⟨pipelineState, pipeline, ?_⟩
+  intro tokens
+  exact Iff.trans (hpipeline tokens) (by
+    rw [run_eq_some_iff_decodeNat M tokens]
+    constructor
+    · intro h
+      rcases h with ⟨output, houtput, hrunner⟩
+      unfold Layout.stageCodeToInitialLayoutCode at houtput
+      cases hdecode : MachineDescription.decodeNat tokens with
+      | none =>
+          rw [hdecode] at houtput
+          cases houtput
+      | some decoded =>
+          rcases decoded with ⟨fuel, input⟩
+          rw [hdecode] at houtput
+          cases houtput
+          have haccept :
+              Layout.accepts M (Layout.initial M input fuel) :=
+            (hlayoutRunner (Layout.initial M input fuel)).mp hrunner
+          have hhalt :
+              TuringMachine.HaltsOnInputIn M fuel input :=
+            (Layout.accepts_initial_iff_haltsOnInputIn
+              M input fuel).mp haccept
+          exact ⟨fuel, input, rfl, hhalt⟩
+    · intro h
+      rcases h with ⟨fuel, input, hdecode, hhalt⟩
+      refine
+        ⟨Layout.encode (Layout.initial M input fuel), ?_, ?_⟩
+      · simp [Layout.stageCodeToInitialLayoutCode, hdecode]
+      · exact
+          (hlayoutRunner (Layout.initial M input fuel)).mpr
+            ((Layout.accepts_initial_iff_haltsOnInputIn
+              M input fuel).mpr hhalt))
+
+theorem codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hcompose : ExactOutputThenRecognizeConstruction)
+    (hmaterializer : InitialLayoutExactMaterializerConstruction M)
+    (hlayout : LayoutCodeMachineConstruction M) :
+    CodeMachineConstruction M :=
+  codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
+    hcompose hmaterializer
+    (layoutCodeRunnerConstruction_of_codeMachine hlayout)
+
 end StageProgram
 end ExactFuel
 end FiniteRecognizer

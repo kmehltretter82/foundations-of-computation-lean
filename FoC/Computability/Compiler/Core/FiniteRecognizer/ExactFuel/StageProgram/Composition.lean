@@ -325,6 +325,85 @@ theorem turingMachine_haltsFrom_of_tape_equiv
     ⟨final', hcomp',
       by simpa [TuringMachine.Halted, hstate] using hfinal⟩
 
+/--
+Unbounded halting from equivalent starting tapes is equivalent.
+-/
+theorem turingMachine_haltsFrom_tape_equiv_iff
+    (M : TuringMachine symbol state)
+    (state : state) {tape tape' : Tape symbol}
+    (htape : Tape.Equiv tape tape') :
+    TuringMachine.HaltsFrom M { state := state, tape := tape } <->
+      TuringMachine.HaltsFrom M { state := state, tape := tape' } := by
+  constructor
+  · exact turingMachine_haltsFrom_of_tape_equiv htape
+  · exact
+      turingMachine_haltsFrom_of_tape_equiv
+        (Tape.Equiv.symm htape)
+
+/--
+Exact computations are stable under tape equivalence at the starting tape,
+with the same step count and final state.
+-/
+theorem turingMachine_computesIn_of_tape_equiv
+    {M : TuringMachine symbol state}
+    {n : Nat}
+    {c e : TuringMachine.Configuration symbol state}
+    {tape : Tape symbol}
+    (hcomp : TuringMachine.ComputesIn M n c e)
+    (htape : Tape.Equiv c.tape tape) :
+    exists e' : TuringMachine.Configuration symbol state,
+      TuringMachine.ComputesIn M n
+        { state := c.state, tape := tape } e' ∧
+        e'.state = e.state ∧
+        Tape.Equiv e.tape e'.tape := by
+  induction hcomp generalizing tape with
+  | zero c =>
+      exact
+        ⟨{ state := c.state, tape := tape },
+          TuringMachine.ComputesIn.zero _, rfl, htape⟩
+  | succ hstep hrest ih =>
+      rcases turingMachine_step_of_tape_equiv hstep htape with
+        ⟨nextTape, hstep', htape'⟩
+      rcases ih htape' with
+        ⟨e', hcomp', hstate, htape''⟩
+      exact
+        ⟨e', TuringMachine.ComputesIn.succ hstep' hcomp',
+          hstate, htape''⟩
+
+/--
+Exact halting from a configuration is stable under tape equivalence at the
+starting tape, preserving the same step bound.
+-/
+theorem turingMachine_haltsFromIn_of_tape_equiv
+    {M : TuringMachine symbol state}
+    {n : Nat} {state : state} {tape tape' : Tape symbol}
+    (htape : Tape.Equiv tape tape')
+    (hhalt :
+      TuringMachine.HaltsFromIn M n { state := state, tape := tape }) :
+    TuringMachine.HaltsFromIn M n { state := state, tape := tape' } := by
+  rcases hhalt with ⟨final, hcomp, hfinal⟩
+  rcases turingMachine_computesIn_of_tape_equiv hcomp htape with
+    ⟨final', hcomp', hstate, _htape'⟩
+  exact
+    ⟨final', hcomp',
+      by simpa [TuringMachine.Halted, hstate] using hfinal⟩
+
+/--
+Exact halting from equivalent starting tapes is equivalent for the same step
+bound.
+-/
+theorem turingMachine_haltsFromIn_tape_equiv_iff
+    (M : TuringMachine symbol state)
+    (n : Nat) (state : state) {tape tape' : Tape symbol}
+    (htape : Tape.Equiv tape tape') :
+    TuringMachine.HaltsFromIn M n { state := state, tape := tape } <->
+      TuringMachine.HaltsFromIn M n { state := state, tape := tape' } := by
+  constructor
+  · exact turingMachine_haltsFromIn_of_tape_equiv htape
+  · exact
+      turingMachine_haltsFromIn_of_tape_equiv
+        (Tape.Equiv.symm htape)
+
 /-- A machine realizes a partial output transformer on code words. -/
 def OutputSpec
     (machine : TuringMachine MachineCodeSymbol producerState)
@@ -462,6 +541,23 @@ def OutputThenRecognizeConstruction : Prop :=
     (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol))
     (P : Word MachineCodeSymbol -> Prop),
       OutputSpec producer f ->
+      FiniteRecognizer.Recognizes recognizer P ->
+        exists pipelineState : Type,
+        exists pipeline : TuringMachine MachineCodeSymbol pipelineState,
+          OutputThenRecognizeSpec pipeline f P
+
+/--
+Exact-output sequencing boundary.  This is the appropriate target when the
+second phase starts from the producer's concrete final tape rather than from a
+fresh canonical input tape.
+-/
+def ExactOutputThenRecognizeConstruction : Prop :=
+  forall {producerState recognizerState : Type}
+    (producer : TuringMachine MachineCodeSymbol producerState)
+    (recognizer : TuringMachine MachineCodeSymbol recognizerState)
+    (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol))
+    (P : Word MachineCodeSymbol -> Prop),
+      ExactOutputSpec producer f ->
       FiniteRecognizer.Recognizes recognizer P ->
         exists pipelineState : Type,
         exists pipeline : TuringMachine MachineCodeSymbol pipelineState,

@@ -25,11 +25,22 @@ def InitialLayoutMaterializerSpec {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
   OutputSpec materializer (Layout.stageCodeToInitialLayoutCode M)
 
+def InitialLayoutExactMaterializerSpec {stateCount : Nat}
+    (materializer : TuringMachine MachineCodeSymbol materializerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  ExactOutputSpec materializer (Layout.stageCodeToInitialLayoutCode M)
+
 def InitialLayoutMaterializerConstruction {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
   exists materializerState : Type,
   exists materializer : TuringMachine MachineCodeSymbol materializerState,
     InitialLayoutMaterializerSpec materializer M
+
+def InitialLayoutExactMaterializerConstruction {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  exists materializerState : Type,
+  exists materializer : TuringMachine MachineCodeSymbol materializerState,
+    InitialLayoutExactMaterializerSpec materializer M
 
 /--
 Executable code primitive for the initial-layout materializer.  This is not
