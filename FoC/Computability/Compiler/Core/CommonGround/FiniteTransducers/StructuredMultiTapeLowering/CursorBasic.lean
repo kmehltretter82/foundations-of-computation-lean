@@ -1377,6 +1377,659 @@ theorem leftBoundaryGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_ze
     ⟨transportedOut, htransported,
       Tape.Equiv.trans htransportedEquiv hout⟩
 
+/--
+The three one-segment guard-slack endpoint shapes that can be produced by a
+singleton local action row.
+
+The final fixed physical refresh dispatcher should implement this predicate
+directly from the raw tape: canonical inputs can be rewound/no-oped, left
+boundary inputs need the left-shift repair, and right boundary inputs need the
+right-edge append repair.
+-/
+inductive SingletonGuardSlackEndpointShape :
+    List (Tape Bool) -> Tape Bool -> Prop where
+  | canonical {target : List (Tape Bool)} {physical : Tape Bool}
+      (hphysical : physical = encodedGuardedStructuredTapes target) :
+      SingletonGuardSlackEndpointShape target physical
+  | leftBoundary
+      (head : Option Bool) (right : List (Option Bool)) :
+      SingletonGuardSlackEndpointShape
+        [({ left := [], head := head, right := right } : Tape Bool)]
+        (encodedStructuredTapes
+          [({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool)])
+  | rightBoundary
+      (left : List (Option Bool)) (head : Option Bool) :
+      SingletonGuardSlackEndpointShape
+        [({ left := left, head := head, right := [] } : Tape Bool)]
+        (encodedStructuredTapes
+          [({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool)])
+
+namespace SingletonGuardSlackEndpointShape
+
+theorem canonical_singleton_afterOpening_read
+    (target : Tape Bool) :
+    Tape.read
+        (Tape.moveRight (encodedGuardedStructuredTapes [target])) =
+      some false := by
+  simp [encodedGuardedStructuredTapes, encodedStructuredTapes,
+    encodedStructuredTapeCells, guardLogicalTapes, guardLogicalTape,
+    logicalTapeCode, logicalCellListBits, logicalCellBits,
+    tapeSeparatorCells, tapeAtCells, Tape.read, Tape.moveRight]
+
+theorem leftBoundary_afterOpening_read
+    (head : Option Bool) (right : List (Option Bool)) :
+    Tape.read
+        (Tape.moveRight
+          (encodedStructuredTapes
+            [({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool)])) =
+      some true := by
+  simp [encodedStructuredTapes, encodedStructuredTapeCells,
+    logicalTapeCode, logicalCellListBits, logicalCellBits, headMarkerCells,
+    tapeSeparatorCells, tapeAtCells, Tape.read, Tape.moveRight]
+
+theorem rightBoundary_afterOpening_read
+    (left : List (Option Bool)) (head : Option Bool) :
+    Tape.read
+        (Tape.moveRight
+          (encodedStructuredTapes
+            [({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool)])) =
+      some false := by
+  simp [encodedStructuredTapes, encodedStructuredTapeCells,
+    logicalTapeCode, logicalCellListBits, logicalCellBits,
+    headMarkerCells,
+    tapeSeparatorCells, tapeAtCells, Tape.read, Tape.moveRight]
+
+theorem canonical_singleton_tokens_terminal_guard
+    (target : Tape Bool) :
+    Exists (fun pfx : List PhysicalToken =>
+      logicalTapeTokens (guardLogicalTape target) =
+        List.append pfx [PhysicalToken.logicalCell none]) := by
+  refine
+    ⟨List.append
+      (logicalCellListTokens (guardLogicalTape target).left.reverse)
+      (PhysicalToken.headMarker ::
+        PhysicalToken.logicalCell target.head ::
+          logicalCellListTokens target.right), ?_⟩
+  simp [logicalTapeTokens, guardLogicalTape, logicalCellListTokens,
+    List.map_append, List.append_assoc]
+
+theorem rightBoundary_tokens_terminal_head
+    (left : List (Option Bool)) (head : Option Bool) :
+    logicalTapeTokens
+        ({ left := left ++ [none], head := head, right := [] } :
+          Tape Bool) =
+      List.append
+        (logicalCellListTokens (none :: left.reverse))
+        [PhysicalToken.headMarker, PhysicalToken.logicalCell head] := by
+  simp [logicalTapeTokens, logicalCellListTokens, List.reverse_append]
+
+theorem refreshes
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical) :
+    exists refresh : MachineDescription,
+      refresh.SubroutineReady ∧
+        refresh.HaltsFromTapeEquiv physical
+          (encodedGuardedStructuredTapes target) := by
+  cases hshape with
+  | canonical hphysical =>
+      rw [hphysical]
+      exact
+        ⟨cursorNoopDescription, cursorNoopDescription_subroutineReady,
+          MachineDescription.HaltsFromTape.toEquiv
+            (cursorNoopDescription_haltsFromTape
+              (encodedGuardedStructuredTapes target))⟩
+  | leftBoundary head right =>
+      refine
+        ⟨leftBoundaryGuardSlackRefreshDescription,
+          leftBoundaryGuardSlackRefreshDescription_subroutineReady, ?_⟩
+      simpa [encodedGuardedStructuredTapes, guardLogicalTapes,
+        guardLogicalTape] using
+        leftBoundaryGuardSlackRefreshDescription_haltsFrom_leftBoundarySlackSingleton
+          head (right ++ [none])
+  | rightBoundary left head =>
+      refine
+        ⟨rightBoundaryGuardSlackRefreshDescription,
+          rightBoundaryGuardSlackRefreshDescription_subroutineReady, ?_⟩
+      exact
+        MachineDescription.HaltsFromTape.toEquiv
+          (by
+            simpa [encodedGuardedStructuredTapes, guardLogicalTapes,
+              guardLogicalTape] using
+              rightBoundaryGuardSlackRefreshDescription_haltsFrom_rightBoundarySlackSingleton
+                (left ++ [none]) head)
+
+end SingletonGuardSlackEndpointShape
+
+theorem singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    SingletonGuardSlackEndpointShape target physical := by
+  cases action with
+  | mk write? move =>
+      cases T with
+      | mk left head right =>
+          cases move with
+          | stay =>
+              have hcanonical :
+                  PhysicalPrimitiveSequenceGuardSlackEndpoint
+                    (actionPrimitivesAt 0
+                      ({ write? := write?, move := HeadMove.stay } :
+                        TapeAction))
+                    [({ left := left, head := head, right := right } :
+                      Tape Bool)]
+                    [({ write? := write?, move := HeadMove.stay } :
+                      TapeAction).apply
+                        ({ left := left, head := head, right := right } :
+                          Tape Bool)]
+                    (encodedGuardedStructuredTapes
+                      [({ write? := write?, move := HeadMove.stay } :
+                        TapeAction).apply
+                          ({ left := left, head := head, right := right } :
+                            Tape Bool)]) :=
+                actionPrimitivesAt_zero_stay_guardSlackEndpoint_canonical_singleton
+                  write? ({ left := left, head := head, right := right } :
+                    Tape Bool)
+              have hphysical : physical =
+                  encodedGuardedStructuredTapes
+                    [({ write? := write?, move := HeadMove.stay } :
+                      TapeAction).apply
+                        ({ left := left, head := head, right := right } :
+                          Tape Bool)] :=
+                PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+                  hendpoint hcanonical
+              have htarget : target =
+                  [({ write? := write?, move := HeadMove.stay } :
+                    TapeAction).apply
+                      ({ left := left, head := head, right := right } :
+                        Tape Bool)] :=
+                PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+                  hendpoint hcanonical
+              rw [htarget, hphysical]
+              exact SingletonGuardSlackEndpointShape.canonical rfl
+          | left =>
+              cases left with
+              | nil =>
+                  let source : Tape Bool :=
+                    { left := [], head := head, right := right }
+                  let action : TapeAction :=
+                    { write? := write?, move := HeadMove.left }
+                  let movedHead := tapeActionWrittenHead write? head
+                  have hcanonicalEndpoint :
+                      PhysicalPrimitiveSequenceGuardSlackEndpoint
+                        (actionPrimitivesAt 0 action) [source]
+                        [action.apply source]
+                        (encodedStructuredTapes
+                          [({ left := [], head := none,
+                              right := movedHead :: (right ++ [none]) } :
+                            Tape Bool)]) := by
+                    simpa [action, source, movedHead,
+                      actionPrimitivesAt_zero_left_guardSlackPhysical_eq_boundaryLeftSlack_singleton]
+                      using
+                        actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
+                          write? source
+                  have hphysical : physical =
+                      encodedStructuredTapes
+                        [({ left := [], head := none,
+                            right := movedHead :: (right ++ [none]) } :
+                          Tape Bool)] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+                      hendpoint hcanonicalEndpoint
+                  have htarget : target = [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+                      hendpoint hcanonicalEndpoint
+                  rw [htarget, hphysical]
+                  cases write? with
+                  | none =>
+                      exact
+                        SingletonGuardSlackEndpointShape.leftBoundary
+                          none (head :: right)
+                  | some cell =>
+                      exact
+                        SingletonGuardSlackEndpointShape.leftBoundary
+                          none (cell :: right)
+              | cons cell rest =>
+                  let source : Tape Bool :=
+                    { left := cell :: rest, head := head, right := right }
+                  let action : TapeAction :=
+                    { write? := write?, move := HeadMove.left }
+                  have hcanonical :
+                      PhysicalPrimitiveSequenceGuardSlackEndpoint
+                        (actionPrimitivesAt 0 action)
+                        [source]
+                        [action.apply source]
+                        (encodedGuardedStructuredTapes
+                          [action.apply source]) := by
+                    simpa [action, source] using
+                      actionPrimitivesAt_zero_left_guardSlackEndpoint_canonical_singleton_of_left_cons
+                        write? cell rest head right
+                  have hphysical : physical =
+                      encodedGuardedStructuredTapes
+                        [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+                      hendpoint hcanonical
+                  have htarget : target =
+                      [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+                      hendpoint hcanonical
+                  rw [htarget, hphysical]
+                  exact SingletonGuardSlackEndpointShape.canonical rfl
+          | right =>
+              cases right with
+              | nil =>
+                  let source : Tape Bool :=
+                    { left := left, head := head, right := [] }
+                  let action : TapeAction :=
+                    { write? := write?, move := HeadMove.right }
+                  let movedHead := tapeActionWrittenHead write? head
+                  have hcanonicalEndpoint :
+                      PhysicalPrimitiveSequenceGuardSlackEndpoint
+                        (actionPrimitivesAt 0 action) [source]
+                        [action.apply source]
+                        (encodedStructuredTapes
+                          [({ left := movedHead :: (left ++ [none]),
+                              head := none, right := [] } : Tape Bool)]) := by
+                    simpa [action, source, movedHead,
+                      actionPrimitivesAt_zero_right_guardSlackPhysical_eq_boundaryRightSlack_singleton]
+                      using
+                        actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
+                          write? source
+                  have hphysical : physical =
+                      encodedStructuredTapes
+                        [({ left := movedHead :: (left ++ [none]),
+                            head := none, right := [] } : Tape Bool)] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+                      hendpoint hcanonicalEndpoint
+                  have htarget : target = [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+                      hendpoint hcanonicalEndpoint
+                  rw [htarget, hphysical]
+                  cases write? with
+                  | none =>
+                      exact
+                        SingletonGuardSlackEndpointShape.rightBoundary
+                          (head :: left) none
+                  | some cell =>
+                      exact
+                        SingletonGuardSlackEndpointShape.rightBoundary
+                          (cell :: left) none
+              | cons cell rest =>
+                  let source : Tape Bool :=
+                    { left := left, head := head, right := cell :: rest }
+                  let action : TapeAction :=
+                    { write? := write?, move := HeadMove.right }
+                  have hcanonical :
+                      PhysicalPrimitiveSequenceGuardSlackEndpoint
+                        (actionPrimitivesAt 0 action)
+                        [source]
+                        [action.apply source]
+                        (encodedGuardedStructuredTapes
+                          [action.apply source]) := by
+                    simpa [action, source] using
+                      actionPrimitivesAt_zero_right_guardSlackEndpoint_canonical_singleton_of_right_cons
+                        write? left head cell rest
+                  have hphysical : physical =
+                      encodedGuardedStructuredTapes
+                        [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+                      hendpoint hcanonical
+                  have htarget : target =
+                      [action.apply source] :=
+                    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+                      hendpoint hcanonical
+                  rw [htarget, hphysical]
+                  exact SingletonGuardSlackEndpointShape.canonical rfl
+
+/--
+Selector for the concrete singleton action-refresh routine.
+
+This is still source-shape indexed, so it is not the final static refresh
+normalizer.  It gives the one-segment Milestone 1 proof one entry point over
+the five local shapes that a singleton {lit}`actionPrimitivesAt 0` row can
+produce.
+-/
+def singletonActionGuardSlackRefreshDescription
+    (action : TapeAction) (T : Tape Bool) : MachineDescription :=
+  match action.move with
+  | HeadMove.stay => cursorNoopDescription
+  | HeadMove.left =>
+      match T.left with
+      | [] => leftBoundaryGuardSlackRefreshDescription
+      | _ :: _ => cursorNoopDescription
+  | HeadMove.right =>
+      match T.right with
+      | [] => rightBoundaryGuardSlackRefreshDescription
+      | _ :: _ => cursorNoopDescription
+
+theorem singletonActionGuardSlackRefreshDescription_subroutineReady
+    (action : TapeAction) (T : Tape Bool) :
+    (singletonActionGuardSlackRefreshDescription action T).SubroutineReady := by
+  cases action with
+  | mk write? move =>
+      cases T with
+      | mk left head right =>
+          cases move with
+          | stay =>
+              exact cursorNoopDescription_subroutineReady
+          | left =>
+              cases left with
+              | nil =>
+                  exact leftBoundaryGuardSlackRefreshDescription_subroutineReady
+              | cons cell rest =>
+                  exact cursorNoopDescription_subroutineReady
+          | right =>
+              cases right with
+              | nil =>
+                  exact rightBoundaryGuardSlackRefreshDescription_subroutineReady
+              | cons cell rest =>
+                  exact cursorNoopDescription_subroutineReady
+
+/--
+Reusable contract for a source-shape-indexed singleton action refresh family.
+
+This is an intermediate contract between the isolated five case lemmas and the
+final fixed {name}`GuardSlackRefreshNormalizer`.
+-/
+structure SingletonActionGuardSlackRefreshContract
+    (refresh : TapeAction -> Tape Bool -> MachineDescription) : Prop where
+  subroutineReady :
+    forall (action : TapeAction) (T : Tape Bool),
+      (refresh action T).SubroutineReady
+  realizes :
+    forall (action : TapeAction) (T : Tape Bool)
+      {target : List (Tape Bool)} {physical : Tape Bool},
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action) [T] target physical ->
+      (refresh action T).HaltsFromTapeEquiv
+        physical (encodedGuardedStructuredTapes target)
+
+namespace SingletonActionGuardSlackRefreshContract
+
+theorem realizesEndpointEquiv
+    {refresh : TapeAction -> Tape Bool -> MachineDescription}
+    (hrefresh : SingletonActionGuardSlackRefreshContract refresh)
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    (refresh action T).HaltsFromTapeEquiv
+      physical (encodedGuardedStructuredTapes target) := by
+  rcases hendpoint with ⟨exactPhysical, hexact, hequiv⟩
+  rcases hrefresh.realizes action T hexact with
+    ⟨actualOut, hhalts, hout⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := refresh action T)
+        (Tin := exactPhysical)
+        (Tin' := physical)
+        (Tout := actualOut)
+        (Tape.Equiv.symm hequiv)
+        hhalts with
+    ⟨transportedOut, htransported, htransportedEquiv⟩
+  exact
+    ⟨transportedOut, htransported,
+      Tape.Equiv.trans htransportedEquiv hout⟩
+
+end SingletonActionGuardSlackRefreshContract
+
+/--
+Fixed-machine contract for the one-segment singleton guard-slack shapes.
+
+Unlike {name}`SingletonActionGuardSlackRefreshContract`, the machine does not
+depend on the source action or the source tape.  This is the immediate
+one-segment target for the concrete refresh dispatcher.
+-/
+structure SingletonShapeGuardSlackRefreshContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  realizes :
+    forall {target : List (Tape Bool)} {physical : Tape Bool},
+      SingletonGuardSlackEndpointShape target physical ->
+      refresh.HaltsFromTapeEquiv physical
+        (encodedGuardedStructuredTapes target)
+
+/--
+Constructor-side proof obligations for a fixed singleton-shape refresh
+machine.  Future concrete dispatcher proofs can fill these three fields
+directly, then convert the result to
+{name}`SingletonShapeGuardSlackRefreshContract`.
+-/
+structure SingletonShapeGuardSlackRefreshCaseContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  canonical :
+    forall (target : List (Tape Bool)),
+      refresh.HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes target)
+        (encodedGuardedStructuredTapes target)
+  leftBoundary :
+    forall (head : Option Bool) (right : List (Option Bool)),
+      refresh.HaltsFromTapeEquiv
+        (encodedStructuredTapes
+          [({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool)])
+        (encodedGuardedStructuredTapes
+          [({ left := [], head := head, right := right } : Tape Bool)])
+  rightBoundary :
+    forall (left : List (Option Bool)) (head : Option Bool),
+      refresh.HaltsFromTapeEquiv
+        (encodedStructuredTapes
+          [({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool)])
+        (encodedGuardedStructuredTapes
+          [({ left := left, head := head, right := [] } : Tape Bool)])
+
+namespace SingletonShapeGuardSlackRefreshCaseContract
+
+theorem toContract
+    {refresh : MachineDescription}
+    (hrefresh : SingletonShapeGuardSlackRefreshCaseContract refresh) :
+    SingletonShapeGuardSlackRefreshContract refresh where
+  subroutineReady := hrefresh.subroutineReady
+  realizes := by
+    intro target physical hshape
+    cases hshape with
+    | canonical hphysical =>
+        rw [hphysical]
+        exact hrefresh.canonical target
+    | leftBoundary head right =>
+        exact hrefresh.leftBoundary head right
+    | rightBoundary left head =>
+        exact hrefresh.rightBoundary left head
+
+end SingletonShapeGuardSlackRefreshCaseContract
+
+namespace SingletonShapeGuardSlackRefreshContract
+
+theorem realizes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    {refresh : MachineDescription}
+    (hrefresh : SingletonShapeGuardSlackRefreshContract refresh)
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  hrefresh.realizes
+    (singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+      action T hendpoint)
+
+theorem realizes_actionPrimitivesAt_zero_guardSlackEndpointEquiv_singleton
+    {refresh : MachineDescription}
+    (hrefresh : SingletonShapeGuardSlackRefreshContract refresh)
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  rcases hendpoint with ⟨exactPhysical, hexact, hequiv⟩
+  rcases
+      hrefresh.realizes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+        action T hexact with
+    ⟨actualOut, hhalts, hout⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := refresh)
+        (Tin := exactPhysical)
+        (Tin' := physical)
+        (Tout := actualOut)
+        (Tape.Equiv.symm hequiv)
+        hhalts with
+    ⟨transportedOut, htransported, htransportedEquiv⟩
+  exact
+    ⟨transportedOut, htransported,
+      Tape.Equiv.trans htransportedEquiv hout⟩
+
+theorem toSingletonActionContract
+    {refresh : MachineDescription}
+    (hrefresh : SingletonShapeGuardSlackRefreshContract refresh) :
+    SingletonActionGuardSlackRefreshContract
+      (fun _action _T => refresh) where
+  subroutineReady := by
+    intro _action _T
+    exact hrefresh.subroutineReady
+  realizes := by
+    intro action T target physical hendpoint
+    exact
+      hrefresh.realizes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+        action T hendpoint
+
+end SingletonShapeGuardSlackRefreshContract
+
+/--
+Bundled fixed refresh normalizer for the singleton one-segment endpoint
+shapes.  This is the one-segment analogue of {name}`GuardSlackRefreshNormalizer`.
+-/
+structure SingletonShapeGuardSlackRefreshNormalizer where
+  machine : MachineDescription
+  contract : SingletonShapeGuardSlackRefreshContract machine
+
+namespace SingletonShapeGuardSlackRefreshCaseContract
+
+def toNormalizer
+    {refresh : MachineDescription}
+    (hrefresh : SingletonShapeGuardSlackRefreshCaseContract refresh) :
+    SingletonShapeGuardSlackRefreshNormalizer where
+  machine := refresh
+  contract := hrefresh.toContract
+
+end SingletonShapeGuardSlackRefreshCaseContract
+
+namespace SingletonShapeGuardSlackRefreshNormalizer
+
+theorem subroutineReady
+    (refresh : SingletonShapeGuardSlackRefreshNormalizer) :
+    refresh.machine.SubroutineReady :=
+  refresh.contract.subroutineReady
+
+theorem realizesShape
+    (refresh : SingletonShapeGuardSlackRefreshNormalizer)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical) :
+    refresh.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  refresh.contract.realizes hshape
+
+theorem realizes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    (refresh : SingletonShapeGuardSlackRefreshNormalizer)
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    refresh.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  refresh.contract.realizes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    action T hendpoint
+
+theorem realizes_actionPrimitivesAt_zero_guardSlackEndpointEquiv_singleton
+    (refresh : SingletonShapeGuardSlackRefreshNormalizer)
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    refresh.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  refresh.contract.realizes_actionPrimitivesAt_zero_guardSlackEndpointEquiv_singleton
+    action T hendpoint
+
+theorem toSingletonActionContract
+    (refresh : SingletonShapeGuardSlackRefreshNormalizer) :
+    SingletonActionGuardSlackRefreshContract
+      (fun _action _T => refresh.machine) :=
+  refresh.contract.toSingletonActionContract
+
+end SingletonShapeGuardSlackRefreshNormalizer
+
+theorem singletonActionGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    (singletonActionGuardSlackRefreshDescription action T).HaltsFromTapeEquiv
+      physical (encodedGuardedStructuredTapes target) := by
+  cases action with
+  | mk write? move =>
+      cases T with
+      | mk left head right =>
+          cases move with
+          | stay =>
+              exact
+                cursorNoopDescription_refreshes_actionPrimitivesAt_zero_stay_guardSlackEndpoint_singleton
+                  write? ({ left := left, head := head, right := right } :
+                    Tape Bool) hendpoint
+          | left =>
+              cases left with
+              | nil =>
+                  exact
+                    leftBoundaryGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton_of_left_nil
+                      write? head right hendpoint
+              | cons cell rest =>
+                  exact
+                    cursorNoopDescription_refreshes_actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton_of_left_cons
+                      write? cell rest head right hendpoint
+          | right =>
+              cases right with
+              | nil =>
+                  exact
+                    rightBoundaryGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton_of_right_nil
+                      write? left head hendpoint
+              | cons cell rest =>
+                  exact
+                    cursorNoopDescription_refreshes_actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton_of_right_cons
+                      write? left head cell rest hendpoint
+
+theorem singletonActionGuardSlackRefreshDescription_contract :
+    SingletonActionGuardSlackRefreshContract
+      singletonActionGuardSlackRefreshDescription where
+  subroutineReady :=
+    singletonActionGuardSlackRefreshDescription_subroutineReady
+  realizes :=
+    singletonActionGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+
+theorem singletonActionGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_zero_guardSlackEndpointEquiv_singleton
+    (action : TapeAction) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0 action) [T] target physical) :
+    (singletonActionGuardSlackRefreshDescription action T).HaltsFromTapeEquiv
+      physical (encodedGuardedStructuredTapes target) :=
+  singletonActionGuardSlackRefreshDescription_contract.realizesEndpointEquiv
+    action T hendpoint
+
 /-- The concrete fixed-index seek routine for tape 0 at block start. -/
 def seekTape0Description : MachineDescription :=
   cursorNoopDescription
