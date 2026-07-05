@@ -32,41 +32,86 @@ namespace ThreeTape
 def keepL : TapeAction :=
   TapeAction.preserveMove HeadMove.left
 
+@[simp] theorem keepL_eq :
+    keepL = TapeAction.preserveMove HeadMove.left := by
+  rfl
+
 /-- Preserve the current logical cell and move the head right. -/
 def keepR : TapeAction :=
   TapeAction.preserveMove HeadMove.right
+
+@[simp] theorem keepR_eq :
+    keepR = TapeAction.preserveMove HeadMove.right := by
+  rfl
 
 /-- Preserve the current logical cell without moving the head. -/
 def keepS : TapeAction :=
   TapeAction.stay
 
+@[simp] theorem keepS_eq :
+    keepS = TapeAction.stay := by
+  rfl
+
 /-- Write a logical cell and move the head left. -/
 def writeL (cell : Option Bool) : TapeAction :=
   TapeAction.writeMove cell HeadMove.left
+
+@[simp] theorem writeL_eq
+    (cell : Option Bool) :
+    writeL cell = TapeAction.writeMove cell HeadMove.left := by
+  rfl
 
 /-- Write a logical cell and move the head right. -/
 def writeR (cell : Option Bool) : TapeAction :=
   TapeAction.writeMove cell HeadMove.right
 
+@[simp] theorem writeR_eq
+    (cell : Option Bool) :
+    writeR cell = TapeAction.writeMove cell HeadMove.right := by
+  rfl
+
 /-- Write a logical cell without moving the head. -/
 def writeS (cell : Option Bool) : TapeAction :=
   TapeAction.writeMove cell HeadMove.stay
+
+@[simp] theorem writeS_eq
+    (cell : Option Bool) :
+    writeS cell = TapeAction.writeMove cell HeadMove.stay := by
+  rfl
 
 /-- Erase the current logical cell and move the head left. -/
 def eraseL : TapeAction :=
   writeL none
 
+@[simp] theorem eraseL_eq :
+    eraseL = TapeAction.writeMove none HeadMove.left := by
+  rfl
+
 /-- Erase the current logical cell and move the head right. -/
 def eraseR : TapeAction :=
   writeR none
+
+@[simp] theorem eraseR_eq :
+    eraseR = TapeAction.writeMove none HeadMove.right := by
+  rfl
 
 /-- Write a bit and move the head left. -/
 def writeBitL (bit : Bool) : TapeAction :=
   writeL (some bit)
 
+@[simp] theorem writeBitL_eq
+    (bit : Bool) :
+    writeBitL bit = TapeAction.writeMove (some bit) HeadMove.left := by
+  rfl
+
 /-- Write a bit and move the head right. -/
 def writeBitR (bit : Bool) : TapeAction :=
   writeR (some bit)
+
+@[simp] theorem writeBitR_eq
+    (bit : Bool) :
+    writeBitR bit = TapeAction.writeMove (some bit) HeadMove.right := by
+  rfl
 
 /-!
 ## Three-tape rows and descriptions
@@ -87,6 +132,18 @@ def row
   reads := [read0, read1, read2]
   actions := [action0, action1, action2]
   target := target
+
+@[simp] theorem row_eq
+    (source : Nat)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (target : Nat) :
+    row source read0 read1 read2 action0 action1 action2 target =
+      { source := source
+        reads := [read0, read1, read2]
+        actions := [action0, action1, action2]
+        target := target } := by
+  rfl
 
 theorem row_supportedReadWriteRow3
     (source target : Nat)

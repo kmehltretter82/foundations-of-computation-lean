@@ -2,7 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.RefreshedRows
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly.Prefix
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.CellPass
 
@@ -304,47 +304,57 @@ wrap this suffix emitter.  The table is deliberately a three-tape
 by the multi-tape lowerer.
 -/
 
+private abbrev structuredRow :=
+  Structured.MultiTapeLowering.ThreeTape.row
+
+private abbrev structuredStay :=
+  Structured.MultiTapeLowering.ThreeTape.keepS
+
 private def structuredPreserve
-    (move : Structured.HeadMove) : Structured.TapeAction where
-  write? := none
-  move := move
+    (move : Structured.HeadMove) : Structured.TapeAction :=
+  match move with
+  | Structured.HeadMove.stay =>
+      Structured.MultiTapeLowering.ThreeTape.keepS
+  | Structured.HeadMove.left =>
+      Structured.MultiTapeLowering.ThreeTape.keepL
+  | Structured.HeadMove.right =>
+      Structured.MultiTapeLowering.ThreeTape.keepR
 
 private def structuredWriteBit
     (bit : Bool) (move : Structured.HeadMove) :
-    Structured.TapeAction where
-  write? := some (some bit)
-  move := move
+    Structured.TapeAction :=
+  match move with
+  | Structured.HeadMove.stay =>
+      Structured.MultiTapeLowering.ThreeTape.writeS (some bit)
+  | Structured.HeadMove.left =>
+      Structured.MultiTapeLowering.ThreeTape.writeBitL bit
+  | Structured.HeadMove.right =>
+      Structured.MultiTapeLowering.ThreeTape.writeBitR bit
 
 private def structuredRawBoundaryCellEmitInitialRow
-    (read : Bool) (target : Nat) : Structured.Transition where
-  source := 0
-  reads := [some read, none, none]
-  actions :=
-    [ structuredPreserve Structured.HeadMove.right
-    , Structured.TapeAction.stay
-    , structuredWriteBit false Structured.HeadMove.right ]
-  target := target
+    (read : Bool) (target : Nat) : Structured.Transition :=
+  structuredRow 0 (some read) none none
+    (structuredPreserve Structured.HeadMove.right)
+    structuredStay
+    (structuredWriteBit false Structured.HeadMove.right)
+    target
 
 private def structuredRawBoundaryCellEmitWriteRow
     (source : Nat) (read : Option Bool) (bit : Bool) (target : Nat) :
-    Structured.Transition where
-  source := source
-  reads := [read, none, none]
-  actions :=
-    [ Structured.TapeAction.stay
-    , Structured.TapeAction.stay
-    , structuredWriteBit bit Structured.HeadMove.right ]
-  target := target
+    Structured.Transition :=
+  structuredRow source read none none
+    structuredStay
+    structuredStay
+    (structuredWriteBit bit Structured.HeadMove.right)
+    target
 
 private def structuredRawBoundaryCellEmitHaltRow :
-    Structured.Transition where
-  source := 0
-  reads := [none, none, none]
-  actions :=
-    [ Structured.TapeAction.stay
-    , Structured.TapeAction.stay
-    , Structured.TapeAction.stay ]
-  target := 99
+    Structured.Transition :=
+  structuredRow 0 none none none
+    structuredStay
+    structuredStay
+    structuredStay
+    99
 
 private def structuredRawBoundaryCellEmitWriteRows
     (source : Nat) (bit : Bool) (target : Nat) :
@@ -397,48 +407,42 @@ private def structuredRawBoundaryWriteOutputRow
     (source : Nat) (sourceRead : Option Bool) (tape1Read : Option Bool)
     (bit : Bool) (target : Nat)
     (tape0Action tape1Action : Structured.TapeAction) :
-    Structured.Transition where
-  source := source
-  reads := [sourceRead, tape1Read, none]
-  actions :=
-    [ tape0Action
-    , tape1Action
-    , structuredWriteBit bit Structured.HeadMove.right ]
-  target := target
+    Structured.Transition :=
+  structuredRow source sourceRead tape1Read none
+    tape0Action
+    tape1Action
+    (structuredWriteBit bit Structured.HeadMove.right)
+    target
 
 private def structuredRawBoundaryHeaderRows
     (source target : Nat) :
     List Structured.Transition :=
   structuredAnySourceReadRows fun sourceRead =>
     structuredRawBoundaryWriteOutputRow source sourceRead none false target
-      Structured.TapeAction.stay
-      Structured.TapeAction.stay
+      structuredStay
+      structuredStay
 
 private def structuredRawBoundaryCountRow
-    (read : Bool) : Structured.Transition where
-  source := 10
-  reads := [some read, none, none]
-  actions :=
-    [ structuredPreserve Structured.HeadMove.right
-    , structuredWriteBit true Structured.HeadMove.right
-    , Structured.TapeAction.stay ]
-  target := 10
+    (read : Bool) : Structured.Transition :=
+  structuredRow 10 (some read) none none
+    (structuredPreserve Structured.HeadMove.right)
+    (structuredWriteBit true Structured.HeadMove.right)
+    structuredStay
+    10
 
-private def structuredRawBoundaryCountDoneRow : Structured.Transition where
-  source := 10
-  reads := [none, none, none]
-  actions :=
-    [ Structured.TapeAction.stay
-    , structuredPreserve Structured.HeadMove.left
-    , Structured.TapeAction.stay ]
-  target := 20
+private def structuredRawBoundaryCountDoneRow : Structured.Transition :=
+  structuredRow 10 none none none
+    structuredStay
+    (structuredPreserve Structured.HeadMove.left)
+    structuredStay
+    20
 
 private def structuredRawBoundaryLengthMarkerRows
     (source : Nat) (bit : Bool) (target : Nat)
     (moveTape1 : Structured.HeadMove := Structured.HeadMove.stay) :
     List Structured.Transition :=
   [ structuredRawBoundaryWriteOutputRow source none (some true) bit target
-      Structured.TapeAction.stay
+      structuredStay
       (structuredPreserve moveTape1) ]
 
 private def structuredRawBoundaryLengthFinalRows
@@ -447,46 +451,38 @@ private def structuredRawBoundaryLengthFinalRows
     List Structured.Transition :=
   [ structuredRawBoundaryWriteOutputRow source none none bit target
       (structuredPreserve moveTape0)
-      Structured.TapeAction.stay ]
+      structuredStay ]
 
 private def structuredRawBoundaryRewindRow
-    (read : Bool) : Structured.Transition where
-  source := 41
-  reads := [some read, none, none]
-  actions :=
-    [ structuredPreserve Structured.HeadMove.left
-    , Structured.TapeAction.stay
-    , Structured.TapeAction.stay ]
-  target := 41
+    (read : Bool) : Structured.Transition :=
+  structuredRow 41 (some read) none none
+    (structuredPreserve Structured.HeadMove.left)
+    structuredStay
+    structuredStay
+    41
 
-private def structuredRawBoundaryRewindDoneRow : Structured.Transition where
-  source := 41
-  reads := [none, none, none]
-  actions :=
-    [ structuredPreserve Structured.HeadMove.right
-    , Structured.TapeAction.stay
-    , Structured.TapeAction.stay ]
-  target := 50
+private def structuredRawBoundaryRewindDoneRow : Structured.Transition :=
+  structuredRow 41 none none none
+    (structuredPreserve Structured.HeadMove.right)
+    structuredStay
+    structuredStay
+    50
 
 private def structuredRawBoundaryCellLoopInitialRow
-    (read : Bool) (target : Nat) : Structured.Transition where
-  source := 50
-  reads := [some read, none, none]
-  actions :=
-    [ structuredPreserve Structured.HeadMove.right
-    , Structured.TapeAction.stay
-    , structuredWriteBit false Structured.HeadMove.right ]
-  target := target
+    (read : Bool) (target : Nat) : Structured.Transition :=
+  structuredRow 50 (some read) none none
+    (structuredPreserve Structured.HeadMove.right)
+    structuredStay
+    (structuredWriteBit false Structured.HeadMove.right)
+    target
 
 private def structuredRawBoundaryCellLoopHaltRow :
-    Structured.Transition where
-  source := 50
-  reads := [none, none, none]
-  actions :=
-    [ Structured.TapeAction.stay
-    , Structured.TapeAction.stay
-    , Structured.TapeAction.stay ]
-  target := 99
+    Structured.Transition :=
+  structuredRow 50 none none none
+    structuredStay
+    structuredStay
+    structuredStay
+    99
 
 /--
 Three-tape structured source for the full logical raw-boundary right-edge
