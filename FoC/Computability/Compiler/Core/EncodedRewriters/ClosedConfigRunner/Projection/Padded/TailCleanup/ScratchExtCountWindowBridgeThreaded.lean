@@ -262,15 +262,9 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
           false L (bit :: rest))
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction := by
-  sorry
-
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_prefixEraser
-      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core
+  sorry
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
