@@ -51,11 +51,10 @@ Remaining finite-table leaf for the exact initial-layout materializer.
 theorem initialLayoutExactMaterializerFinStateFiniteLeaf :
     FinStateInitialLayoutExactMaterializerConstruction := by
   intro stateCount M
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
+  exact
+    initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
+      (initialLayoutExactOutputPrimitiveFinStateFiniteLeaf
+        stateCount M)
 
 /--
 Remaining finite-table leaf for the executable protected exact-fuel loop.
@@ -66,11 +65,10 @@ the selected halt state.
 theorem layoutFuelLoopCodeMachineFinStateFiniteLeaf :
     FinStateLayoutFuelLoopCodeMachineConstruction := by
   intro stateCount M
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
+  exact
+    layoutFuelLoopCodeMachineConstruction_of_exactOutputPrimitive
+      (layoutFuelLoopExactOutputPrimitiveFinStateFiniteLeaf
+        stateCount M)
 
 theorem layoutCodeMachineFinStateFiniteLeaf :
     FinStateLayoutCodeMachineConstruction := by

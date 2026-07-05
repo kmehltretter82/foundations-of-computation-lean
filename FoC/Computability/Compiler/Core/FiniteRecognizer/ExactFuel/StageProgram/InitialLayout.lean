@@ -68,6 +68,49 @@ theorem initialLayoutMaterializerCodePrimitive_realizes
   intro tokens
   rfl
 
+/--
+Finite-machine target for realizing the initial-layout primitive with exact
+canonical output.  This is the sharper construction boundary behind
+{name}`InitialLayoutExactMaterializerConstruction`.
+-/
+def InitialLayoutExactOutputPrimitiveConstruction {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  exists materializerState : Type,
+  exists materializer : TuringMachine MachineCodeSymbol materializerState,
+    ExactOutputSpec materializer
+        (initialLayoutMaterializerCodePrimitive M).transform ∧
+      ExactOutputCanonicalSpec materializer
+        (initialLayoutMaterializerCodePrimitive M).transform ∧
+      TuringMachine.HaltingTransitionsDisabled materializer
+
+theorem initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hprimitive : InitialLayoutExactOutputPrimitiveConstruction M) :
+    InitialLayoutExactMaterializerConstruction M := by
+  rcases hprimitive with
+    ⟨materializerState, materializer, hexact,
+      hcanonical, hstop⟩
+  refine
+    ⟨materializerState, materializer, ?_, ?_, hstop⟩
+  · simpa [InitialLayoutExactMaterializerSpec,
+      initialLayoutMaterializerCodePrimitive] using hexact
+  · simpa [initialLayoutMaterializerCodePrimitive] using hcanonical
+
+/--
+Remaining finite-table leaf for the exact-output initial-layout primitive.
+-/
+theorem initialLayoutExactOutputPrimitiveFinStateFiniteLeaf :
+    forall stateCount : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+      InitialLayoutExactOutputPrimitiveConstruction M := by
+  intro stateCount M
+  cases stateCount with
+  | zero =>
+      exact False.elim (Fin.elim0 M.start)
+  | succ _ =>
+      sorry
+
 theorem initialLayoutMaterializerCodePrimitive_stageCode
     {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))

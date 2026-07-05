@@ -618,6 +618,96 @@ def LayoutFuelLoopCodeMachineConstruction {stateCount : Nat}
   exists runner : TuringMachine MachineCodeSymbol runnerState,
     LayoutFuelLoopCodeMachineSpec runner M
 
+/--
+Exact-output finite-machine target for the executable protected-layout fuel
+loop primitive.  Since this primitive only succeeds with empty output, an
+exact-output realizer is also an ordinary recognizer for
+{name}`layoutFuelLoopCode`.
+-/
+def LayoutFuelLoopExactOutputPrimitiveConstruction {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    StageProgram.ExactOutputSpec runner
+        (layoutFuelLoopCodePrimitive M).transform ∧
+      StageProgram.ExactOutputCanonicalSpec runner
+        (layoutFuelLoopCodePrimitive M).transform ∧
+      TuringMachine.HaltingTransitionsDisabled runner
+
+theorem layoutFuelLoopCode_eq_some_empty_of_eq_some
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    {tokens output : Word MachineCodeSymbol}
+    (h :
+      layoutFuelLoopCode M tokens = some output) :
+    output = ([] : Word MachineCodeSymbol) := by
+  unfold layoutFuelLoopCode at h
+  cases hdecode : Layout.decode stateCount tokens with
+  | none =>
+      simp [hdecode] at h
+  | some decoded =>
+      rcases decoded with ⟨L, suffix⟩
+      cases suffix with
+      | nil =>
+          cases hloop : layoutFuelLoopFrom M L.fuel L with
+          | none =>
+              simp [hdecode, hloop] at h
+          | some final =>
+              by_cases hstate : final.state = M.halt
+              · have hsome :
+                    output = ([] : Word MachineCodeSymbol) := by
+                  simpa [hdecode, hloop, hstate] using h.symm
+                exact hsome
+              · simp [hdecode, hloop, hstate] at h
+      | cons _ _ =>
+          simp [hdecode] at h
+
+theorem layoutFuelLoopCodeMachineConstruction_of_exactOutputPrimitive
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hprimitive : LayoutFuelLoopExactOutputPrimitiveConstruction M) :
+    LayoutFuelLoopCodeMachineConstruction M := by
+  rcases hprimitive with
+    ⟨runnerState, runner, hexact, hcanonical, _hstop⟩
+  refine ⟨runnerState, runner, ?_⟩
+  intro tokens
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinalHalt⟩
+    rcases hcanonical tokens final hcomp hfinalHalt with
+      ⟨output, houtput, _htape⟩
+    have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
+      layoutFuelLoopCode_eq_some_empty_of_eq_some
+        M (by
+          simpa [layoutFuelLoopCodePrimitive] using houtput)
+    subst output
+    simpa [layoutFuelLoopCodePrimitive] using houtput
+  · intro hcode
+    have hexactOutput :
+        TuringMachine.HaltsWithExactOutput runner
+          tokens ([] : Word MachineCodeSymbol) :=
+      (hexact tokens ([] : Word MachineCodeSymbol)).mpr
+        (by
+          simpa [layoutFuelLoopCodePrimitive] using hcode)
+    rcases hexactOutput with
+      ⟨final, hcomp, hfinalHalt, _htape⟩
+    exact ⟨final, hcomp, hfinalHalt⟩
+
+/--
+Remaining finite-table leaf for the exact-output protected-layout fuel-loop
+primitive.
+-/
+theorem layoutFuelLoopExactOutputPrimitiveFinStateFiniteLeaf :
+    forall stateCount : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+      LayoutFuelLoopExactOutputPrimitiveConstruction M := by
+  intro stateCount M
+  cases stateCount with
+  | zero =>
+      exact False.elim (Fin.elim0 M.start)
+  | succ _ =>
+      sorry
+
 def FinStateLayoutCodeMachineConstruction : Prop :=
   forall stateCount : Nat,
   forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
