@@ -1,17 +1,18 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowConstructions
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions
 
 set_option doc.verso true
 
 /-!
-# Structured count-window materializer pilot
+# Structured count-window bridge
 
-This module records the three-tape pilot for the count-window decoded-prefix
-materializer.  The existing one-tape materializer contract remains in
-{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowConstructions`;
-the pilot isolates the shared decoded-prefix extraction that both accept and
-reject branches will use once the structured description has a one-tape
-lowering for this shape.
+This module records the lowered three-tape route for the count-window
+decoded-prefix materializer.  The existing one-tape materializer contract
+remains in
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions`;
+the bridge isolates the shared decoded-prefix extraction and the remaining
+adapter obligation from the structured three-tape layout back to that one-tape
+contract.
 -/
 
 namespace FoC
@@ -345,15 +346,15 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstr
   selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
     selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
+theorem selectedProjectionPaddedTailCleanupScratchExtConstruction :
+    SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
+  selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
     selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
-    selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction
+    selectedProjectionPaddedTailCleanupScratchExtConstruction
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

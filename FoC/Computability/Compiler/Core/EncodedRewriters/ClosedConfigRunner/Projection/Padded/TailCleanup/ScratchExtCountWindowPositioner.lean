@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixBoundaryLocator
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.Adapters
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtAdapters
 
 set_option doc.verso true
 

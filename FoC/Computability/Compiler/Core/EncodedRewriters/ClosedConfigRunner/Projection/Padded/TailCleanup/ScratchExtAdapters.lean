@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.Specs
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtSpecs
 
 set_option doc.verso true
 
@@ -23,12 +23,12 @@ namespace SelectedProjectionPaddedTailCleanup
 
 open CanonicalLayouts.DovetailLayoutScanner
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
+theorem selectedProjectionPaddedTailCleanupScratchExtSpec_of_countExtenderSpec
     {useAccept : Bool} {extender : MachineDescription}
     (hextender :
       SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderSpec
         useAccept extender) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+    SelectedProjectionPaddedTailCleanupScratchExtSpec
       useAccept extender := by
   constructor
   · exact hextender.left
@@ -37,21 +37,21 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_cou
       selectedProjectionPaddedTailCleanupScratchCountBits_length]
       using hextender.right L
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction_of_countExtenders
+theorem selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
     (h :
       SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction := by
+    SelectedProjectionPaddedTailCleanupScratchExtConstruction := by
   intro useAccept
   rcases h useAccept with ⟨extender, hextender⟩
   exact
     ⟨extender,
-      selectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec_of_countExtenderSpec
+      selectedProjectionPaddedTailCleanupScratchExtSpec_of_countExtenderSpec
         hextender⟩
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_extenderSpec
     {useAccept : Bool} {extender : MachineDescription}
     (hextender :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+      SelectedProjectionPaddedTailCleanupScratchExtSpec
         useAccept extender) :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
       useAccept extender := by
@@ -65,7 +65,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec_of_ex
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
     (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction) :
+      SelectedProjectionPaddedTailCleanupScratchExtConstruction) :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction := by
   intro useAccept
   rcases h useAccept with ⟨extender, hextender⟩

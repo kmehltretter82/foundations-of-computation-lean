@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawSourceEncoder
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowRawSourceEncoderBridge
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindow
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtRawSourceBridge
 
 set_option doc.verso true
 
@@ -11,7 +11,7 @@ set_option doc.verso true
 This module packages the finite-machine construction leaves for the
 scratch-count window materializer/restorer.  The tape shapes, specs, and
 shared composition lemmas live in
-{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindow`;
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindow`;
 the remaining executable construction leaves are kept here to keep that core
 module below the large-file threshold.
 -/
@@ -1274,7 +1274,7 @@ The exact one-tape materializer contract is kept as a composition boundary, but
 this module no longer exports an unproved concrete construction for it.  The
 proved replacement for the decoded-prefix extractor is the lowered structured
 three-tape construction in
-{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.CountWindowStructuredMaterializerPilot`.
+{module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge`.
 -/
 
 /--

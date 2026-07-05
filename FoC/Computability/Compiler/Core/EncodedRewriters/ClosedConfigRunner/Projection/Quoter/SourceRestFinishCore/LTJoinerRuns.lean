@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.EmitterRuns
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterRuns
 
 set_option doc.verso true
 

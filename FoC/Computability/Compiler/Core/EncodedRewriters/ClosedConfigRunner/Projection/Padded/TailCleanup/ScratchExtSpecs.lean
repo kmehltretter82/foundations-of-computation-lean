@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.PostPaddingScratchExtender.Tapes
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtTapes
 
 set_option doc.verso true
 
@@ -32,7 +32,7 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
         (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
           useAccept L)
 
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+def SelectedProjectionPaddedTailCleanupScratchExtSpec
     (useAccept : Bool) (extender : MachineDescription) : Prop :=
   extender.SubroutineReady ∧
     forall L : DovetailLayout,
@@ -63,11 +63,11 @@ def SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
       SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
         useAccept allocator
 
-def SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderConstruction :
+def SelectedProjectionPaddedTailCleanupScratchExtConstruction :
     Prop :=
   forall useAccept : Bool,
     exists extender : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchExtenderSpec
+      SelectedProjectionPaddedTailCleanupScratchExtSpec
         useAccept extender
 
 def SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
