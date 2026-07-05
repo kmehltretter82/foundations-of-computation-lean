@@ -1028,6 +1028,77 @@ theorem actionPrimitivesAt_zero_left_guardSlackPhysical_eq_guarded_singleton_of_
       (tapeAction_left_apply_guardLogicalTape_eq_guarded_apply_of_left_cons
         write? cell left head right)
 
+def tapeActionWrittenHead
+    (write? : Option (Option Bool)) (head : Option Bool) : Option Bool :=
+  match write? with
+  | none => head
+  | some cell => cell
+
+theorem tapeAction_left_apply_guardLogicalTape_eq_boundaryLeftSlack
+    (write? : Option (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    ({ write? := write?, move := HeadMove.left } : TapeAction).apply
+        (guardLogicalTape
+          ({ left := [], head := head, right := right } : Tape Bool)) =
+      ({ left := []
+         head := none
+         right :=
+          (match write? with
+          | none => head
+          | some cell => cell) :: (right ++ [none]) } : Tape Bool) := by
+  cases write? with
+  | none =>
+      rfl
+  | some cell =>
+      rfl
+
+theorem guardLogicalTape_tapeAction_left_apply_eq_boundaryLeftCanonical
+    (write? : Option (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    guardLogicalTape
+        (({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          ({ left := [], head := head, right := right } : Tape Bool)) =
+      ({ left := [none]
+         head := none
+         right :=
+          (match write? with
+          | none => head
+          | some cell => cell) :: (right ++ [none]) } : Tape Bool) := by
+  cases write? with
+  | none =>
+      rfl
+  | some cell =>
+      rfl
+
+theorem actionPrimitivesAt_zero_left_guardSlackPhysical_eq_boundaryLeftSlack_singleton
+    (write? : Option (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          (guardLogicalTape
+            ({ left := [], head := head, right := right } : Tape Bool))] =
+      encodedStructuredTapes
+        [({ left := [], head := none,
+            right := tapeActionWrittenHead write? head ::
+              (right ++ [none]) } : Tape Bool)] := by
+  rw [tapeAction_left_apply_guardLogicalTape_eq_boundaryLeftSlack]
+  rfl
+
+theorem actionPrimitivesAt_zero_left_guardedTarget_eq_boundaryLeftCanonical_singleton
+    (write? : Option (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          ({ left := [], head := head, right := right } : Tape Bool)] =
+      encodedStructuredTapes
+        [({ left := [none], head := none,
+            right := tapeActionWrittenHead write? head ::
+              (right ++ [none]) } : Tape Bool)] := by
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+    congrArg (fun U => encodedStructuredTapes [U])
+      (guardLogicalTape_tapeAction_left_apply_eq_boundaryLeftCanonical
+        write? head right)
+
 theorem actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
     PhysicalPrimitiveSequenceGuardSlackEndpoint
@@ -1133,6 +1204,71 @@ theorem actionPrimitivesAt_zero_right_guardSlackPhysical_eq_guarded_singleton_of
     congrArg (fun U => encodedStructuredTapes [U])
       (tapeAction_right_apply_guardLogicalTape_eq_guarded_apply_of_right_cons
         write? left head cell right)
+
+theorem tapeAction_right_apply_guardLogicalTape_eq_boundaryRightSlack
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool) :
+    ({ write? := write?, move := HeadMove.right } : TapeAction).apply
+        (guardLogicalTape
+          ({ left := left, head := head, right := [] } : Tape Bool)) =
+      ({ left :=
+          (match write? with
+          | none => head
+          | some cell => cell) :: (left ++ [none])
+         head := none
+         right := [] } : Tape Bool) := by
+  cases write? with
+  | none =>
+      rfl
+  | some cell =>
+      rfl
+
+theorem guardLogicalTape_tapeAction_right_apply_eq_boundaryRightCanonical
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool) :
+    guardLogicalTape
+        (({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          ({ left := left, head := head, right := [] } : Tape Bool)) =
+      ({ left :=
+          (match write? with
+          | none => head
+          | some cell => cell) :: (left ++ [none])
+         head := none
+         right := [none] } : Tape Bool) := by
+  cases write? with
+  | none =>
+      rfl
+  | some cell =>
+      rfl
+
+theorem actionPrimitivesAt_zero_right_guardSlackPhysical_eq_boundaryRightSlack_singleton
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool) :
+    encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          (guardLogicalTape
+            ({ left := left, head := head, right := [] } : Tape Bool))] =
+      encodedStructuredTapes
+        [({ left := tapeActionWrittenHead write? head ::
+              (left ++ [none]),
+            head := none, right := [] } : Tape Bool)] := by
+  rw [tapeAction_right_apply_guardLogicalTape_eq_boundaryRightSlack]
+  rfl
+
+theorem actionPrimitivesAt_zero_right_guardedTarget_eq_boundaryRightCanonical_singleton
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool) :
+    encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          ({ left := left, head := head, right := [] } : Tape Bool)] =
+      encodedStructuredTapes
+        [({ left := tapeActionWrittenHead write? head ::
+              (left ++ [none]),
+            head := none, right := [none] } : Tape Bool)] := by
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+    congrArg (fun U => encodedStructuredTapes [U])
+      (guardLogicalTape_tapeAction_right_apply_eq_boundaryRightCanonical
+        write? left head)
 
 theorem actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
