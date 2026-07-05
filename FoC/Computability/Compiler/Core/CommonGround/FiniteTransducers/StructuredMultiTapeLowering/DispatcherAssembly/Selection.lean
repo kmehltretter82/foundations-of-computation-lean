@@ -1075,6 +1075,295 @@ theorem staticDispatcher_noRow_runs
     ⟨separatorPhysical, hseparator,
       runsFromStateTapeEquiv_trans hreader' hbranch⟩
 
+def selectedRowCoreDescription
+    (t : Transition) (refresh : MachineDescription) :
+    MachineDescription :=
+  readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh
+    t refresh
+
+def selectedRowSeparatorDescription
+    (t : Transition) (refresh : MachineDescription) :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    returnFromTape2SeparatorToBlockStartDescription
+    (selectedRowCoreDescription t refresh)
+
+theorem runsFromStateTapeEquiv_to_haltsFromTapeEquiv
+    {M : MachineDescription} {Tin Tout : Tape Bool}
+    (hrun :
+      RunsFromStateTapeEquiv M M.start M.halt Tin Tout) :
+    M.HaltsFromTapeEquiv Tin Tout := by
+  rcases hrun with ⟨n, actual, hrun, hequiv⟩
+  exact
+    ⟨actual,
+      ⟨n, by
+        constructor
+        · simpa using
+            congrArg
+              (fun c : MachineDescription.Configuration => c.state)
+              hrun
+        · simpa using
+            congrArg
+              (fun c : MachineDescription.Configuration => c.tape)
+              hrun⟩,
+      hequiv⟩
+
+theorem haltsFromTapeEquiv_to_runsFromStateTapeEquiv
+    {M : MachineDescription} {Tin Tout : Tape Bool}
+    (hhalt : M.HaltsFromTapeEquiv Tin Tout) :
+    RunsFromStateTapeEquiv M M.start M.halt Tin Tout := by
+  rcases hhalt with ⟨actual, hhalts, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
+    ⟨n, hrun⟩
+  exact ⟨n, actual, hrun, hequiv⟩
+
+theorem returnFromTape2SeparatorToCanonicalBlockStart_runs
+    {logical : List (Tape Bool)} (hlength : logical.length = 3)
+    {physical : Tape Bool}
+    (hseparator :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2 physical) :
+    RunsFromStateTapeEquiv
+      returnFromTape2SeparatorToBlockStartDescription
+      returnFromTape2SeparatorToBlockStartDescription.start
+      returnFromTape2SeparatorToBlockStartDescription.halt
+      physical
+      (encodedGuardedStructuredTapes logical) := by
+  rcases
+      returnFromTape2SeparatorToBlockStartDescription_runsFromTape2Separator
+        hseparator (guardedHasAtLeastThreeTapes_of_length_three hlength) with
+    ⟨blockStartPhysical, hblockStart, hrun⟩
+  have hblockStartEq :
+      blockStartPhysical = encodedGuardedStructuredTapes logical := by
+    rcases hblockStart with ⟨_hle, heq⟩
+    simpa [encodedGuardedStructuredTapes] using heq
+  simpa [hblockStartEq] using hrun
+
+theorem selectedRowCoreDescription_subroutineReady
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    (selectedRowCoreDescription t refresh).SubroutineReady := by
+  simpa [selectedRowCoreDescription] using
+    (hD.lookupFromReadTuple_lowersGuardedTransitionEquiv_withStructuredSingleton3Refresh
+      hlookup hrefresh).subroutineReady
+
+theorem selectedRowCoreDescription_realizes_lookupFromReadTuple
+    (D : Description) (hD : D.tapeCount = 3)
+    (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state
+        (ReadTuple3.ofTapes logical) = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    let c : Configuration := { state := state, tapes := logical }
+    let next : Configuration := structuredTransitionTarget D t c
+    D.stepConfig c = some next ∧
+      oneStepOrSelf D c = next ∧
+      next.state = t.target ∧
+      (selectedRowCoreDescription t refresh).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes logical)
+        (encodedGuardedStructuredTapes next.tapes) := by
+  intro c next
+  have hlookupStructured : D.lookupTransition c = some t := by
+    have hlookupConfig :
+        lookupTransitionFromReadTuple3 D c.state
+            (ReadTuple3.ofConfig c) = some t := by
+      simpa [c, ReadTuple3.ofConfig] using hlookup
+    rw [← lookupTransitionFromReadTuple3_eq_lookupTransition D hD c]
+    exact hlookupConfig
+  have hc : c.tapes.length = D.tapeCount := by
+    simpa [c, hD] using hlength
+  have hrealized :=
+    hrows.lookup_realizes_structured_step_withStructuredSingleton3Refresh
+      (c := c) (next := next) (t := t)
+      hc hlookupStructured rfl hrefresh
+  rcases hrealized with ⟨hstep, hrow⟩
+  exact
+    ⟨hstep,
+      oneStepOrSelf_of_stepConfig_some hstep,
+      by rfl,
+      by simpa [selectedRowCoreDescription] using hrow⟩
+
+theorem selectedRowSeparatorDescription_subroutineReady
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    (selectedRowSeparatorDescription t refresh).SubroutineReady := by
+  exact
+    canonicalPrimitiveSeqDescription_subroutineReady
+      returnFromTape2SeparatorToBlockStartDescription_subroutineReady
+      (selectedRowCoreDescription_subroutineReady
+        hD hlookup hrefresh)
+
+theorem selectedRowSeparatorDescription_haltsFromTapeEquiv
+    (D : Description) (hD : D.tapeCount = 3)
+    (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state
+        (ReadTuple3.ofTapes logical) = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    {separatorPhysical : Tape Bool}
+    (hseparator :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical) :
+    let c : Configuration := { state := state, tapes := logical }
+    let next : Configuration := structuredTransitionTarget D t c
+    D.stepConfig c = some next ∧
+      oneStepOrSelf D c = next ∧
+      next.state = t.target ∧
+      (selectedRowSeparatorDescription t refresh).HaltsFromTapeEquiv
+        separatorPhysical
+        (encodedGuardedStructuredTapes next.tapes) := by
+  intro c next
+  have hreturn :
+      returnFromTape2SeparatorToBlockStartDescription.HaltsFromTapeEquiv
+        separatorPhysical (encodedGuardedStructuredTapes logical) :=
+    runsFromStateTapeEquiv_to_haltsFromTapeEquiv
+      (returnFromTape2SeparatorToCanonicalBlockStart_runs
+        hlength hseparator)
+  have hcore :=
+    selectedRowCoreDescription_realizes_lookupFromReadTuple
+      D hD hrows hlength hlookup hrefresh
+  rcases hcore with ⟨hstep, hone, htarget, hrow⟩
+  have hready :
+      (selectedRowCoreDescription t refresh).SubroutineReady :=
+    selectedRowCoreDescription_subroutineReady
+      hrows hlookup hrefresh
+  exact
+    ⟨hstep, hone, htarget,
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        returnFromTape2SeparatorToBlockStartDescription_subroutineReady
+        hready hreturn hrow⟩
+
+theorem selectedRowSeparatorDescription_runsFromTape2Separator
+    (D : Description) (hD : D.tapeCount = 3)
+    (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state
+        (ReadTuple3.ofTapes logical) = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    {separatorPhysical : Tape Bool}
+    (hseparator :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical) :
+    let c : Configuration := { state := state, tapes := logical }
+    (oneStepOrSelf D c).state = t.target ∧
+      RunsFromStateTapeEquiv
+        (selectedRowSeparatorDescription t refresh)
+        (selectedRowSeparatorDescription t refresh).start
+        (selectedRowSeparatorDescription t refresh).halt
+        separatorPhysical
+        (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
+  intro c
+  have hselected :=
+    selectedRowSeparatorDescription_haltsFromTapeEquiv
+      D hD hrows hlength hlookup hrefresh hseparator
+  rcases hselected with ⟨_hstep, hone, htarget, hhalt⟩
+  constructor
+  · simpa [c, hone] using htarget
+  · simpa [c, hone] using
+      haltsFromTapeEquiv_to_runsFromStateTapeEquiv hhalt
+
+def retargetedSelectedRowSeparatorDescription
+    (offset target : Nat)
+    (t : Transition) (refresh : MachineDescription) :
+    MachineDescription :=
+  MachineDescription.offsetRetargetDescription offset target
+    (selectedRowSeparatorDescription t refresh)
+
+theorem retargetedSelectedRowSeparatorDescription_subroutineReady
+    {offset target : Nat} (htarget : target < offset)
+    {D : Description} (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    (retargetedSelectedRowSeparatorDescription
+      offset target t refresh).SubroutineReady := by
+  exact
+    MachineDescription.offsetRetargetDescription_subroutineReady
+      htarget
+      (selectedRowSeparatorDescription_subroutineReady
+        hrows hlookup hrefresh).left
+
+theorem retargetedSelectedRowSeparatorDescription_sources_in_offset_block
+    {offset target : Nat}
+    {D : Description} (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {reads : ReadTuple3} {t : Transition}
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
+    forall u : TransitionDescription,
+      u ∈ (retargetedSelectedRowSeparatorDescription
+            offset target t refresh).transitions ->
+        offset ≤ u.source ∧
+          u.source <
+            offset + (selectedRowSeparatorDescription t refresh).stateCount := by
+  simpa [retargetedSelectedRowSeparatorDescription] using
+    offsetRetargetDescription_sources_in_offset_block
+      (selectedRowSeparatorDescription_subroutineReady
+        hrows hlookup hrefresh).left
+
+theorem retargetedSelectedRowSeparatorDescription_runsFromTape2Separator
+    (D : Description) (hD : D.tapeCount = 3)
+    (hrows : SupportsReadWriteRows3 D)
+    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state
+        (ReadTuple3.ofTapes logical) = some t)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    {offset : Nat}
+    (htargetBelow : StaticDispatcherState.ready t.target < offset)
+    {separatorPhysical : Tape Bool}
+    (hseparator :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical) :
+    let c : Configuration := { state := state, tapes := logical }
+    (oneStepOrSelf D c).state = t.target ∧
+      RunsFromStateTapeEquiv
+        (retargetedSelectedRowSeparatorDescription
+          offset (StaticDispatcherState.ready t.target) t refresh)
+        (retargetedSelectedRowSeparatorDescription
+          offset (StaticDispatcherState.ready t.target) t refresh).start
+        (StaticDispatcherState.ready t.target)
+        separatorPhysical
+        (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
+  intro c
+  have hrun :=
+    selectedRowSeparatorDescription_runsFromTape2Separator
+      D hD hrows hlength hlookup hrefresh hseparator
+  rcases hrun with ⟨honeState, hrun⟩
+  have hready :
+      (selectedRowSeparatorDescription t refresh).SubroutineReady :=
+    selectedRowSeparatorDescription_subroutineReady
+      hrows hlookup hrefresh
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetRetargetDescription
+      (offset := offset)
+      (target := StaticDispatcherState.ready t.target)
+      htargetBelow hready.right hrun
+  constructor
+  · exact honeState
+  · simpa [retargetedSelectedRowSeparatorDescription] using hcopy
+
 end StaticDispatcherReaderAssembly
 
 end MultiTapeLowering

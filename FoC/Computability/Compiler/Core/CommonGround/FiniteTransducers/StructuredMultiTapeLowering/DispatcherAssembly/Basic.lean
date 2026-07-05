@@ -257,6 +257,19 @@ theorem offsetReadExitRetargetDescription_sources_in_offset_block
   simp [MachineDescription.readExitRetargetStates]
   lia
 
+theorem offsetRetargetDescription_sources_in_offset_block
+    {offset target : Nat} {M : MachineDescription}
+    (hM : M.WellFormed) :
+    forall t : TransitionDescription,
+      t ∈ (MachineDescription.offsetRetargetDescription
+            offset target M).transitions ->
+        offset ≤ t.source ∧ t.source < offset + M.stateCount := by
+  intro t ht
+  rcases List.mem_map.mp ht with ⟨base, hbase, rfl⟩
+  have hsource := (hM.right.right.right.left base hbase).left
+  simp [TransitionDescription.sharedExitRetargetStates]
+  lia
+
 theorem blankHeadBounceJumpDescription_transition_source_cases
     {stateCount source scratch target : Nat}
     {t : TransitionDescription}
