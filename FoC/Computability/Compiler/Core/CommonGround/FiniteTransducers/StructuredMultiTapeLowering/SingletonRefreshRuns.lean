@@ -891,6 +891,22 @@ def singletonShapeRefreshNormalizer :
   machine := singletonShapeRefreshDescription
   contract := singletonShapeRefreshDescription_contract
 
+theorem singletonShapeRefreshDescription_haltsFrom_structuredSingletonEndpoint_singleton
+    {target : Tape Bool} {physical : Tape Bool}
+    (hshape : StructuredSingletonGuardSlackEndpointShape [target] physical) :
+    singletonShapeRefreshDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes [target]) :=
+  singletonShapeRefreshDescription_contract
+    |>.realizes_structuredSingletonEndpoint_singleton hshape
+
+theorem singletonShapeRefreshNormalizer_realizes_structuredSingletonEndpoint_singleton
+    {target : Tape Bool} {physical : Tape Bool}
+    (hshape : StructuredSingletonGuardSlackEndpointShape [target] physical) :
+    singletonShapeRefreshNormalizer.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes [target]) :=
+  singletonShapeRefreshNormalizer
+    |>.realizes_structuredSingletonEndpoint_singleton hshape
+
 end MultiTapeLowering
 end Structured
 end FiniteTransducers
