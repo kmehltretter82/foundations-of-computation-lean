@@ -2304,6 +2304,29 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
   | cons bit rest =>
       exact hcons bit rest padding
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_prefixEraser
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
+  rcases hprefix with ⟨eraser, hready, hrun⟩
+  refine ⟨eraser, hready, ?_, ?_⟩
+  · intro L deletedTail
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun true L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          true L deletedTail)
+  · intro L deletedTail
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun false L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          false L deletedTail)
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
     (hbranches :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction) :
@@ -2314,6 +2337,15 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
   cases useAccept
   · exact hreject L deletedTail
   · exact haccept L deletedTail
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_prefixEraser
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_prefixEraser
+        hprefix)
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
