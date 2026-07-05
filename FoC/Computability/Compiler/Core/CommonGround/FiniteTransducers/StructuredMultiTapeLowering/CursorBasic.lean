@@ -1388,9 +1388,9 @@ right-edge append repair.
 -/
 inductive SingletonGuardSlackEndpointShape :
     List (Tape Bool) -> Tape Bool -> Prop where
-  | canonical {target : List (Tape Bool)} {physical : Tape Bool}
-      (hphysical : physical = encodedGuardedStructuredTapes target) :
-      SingletonGuardSlackEndpointShape target physical
+  | canonical {target : Tape Bool} {physical : Tape Bool}
+      (hphysical : physical = encodedGuardedStructuredTapes [target]) :
+      SingletonGuardSlackEndpointShape [target] physical
   | leftBoundary
       (head : Option Bool) (right : List (Option Bool)) :
       SingletonGuardSlackEndpointShape
@@ -1467,6 +1467,104 @@ theorem rightBoundary_tokens_terminal_head
         [PhysicalToken.headMarker, PhysicalToken.logicalCell head] := by
   simp [logicalTapeTokens, logicalCellListTokens, List.reverse_append]
 
+theorem afterOpening_read
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical) :
+    Tape.read (Tape.moveRight physical) = some false ∨
+      Tape.read (Tape.moveRight physical) = some true := by
+  cases hshape with
+  | canonical hphysical =>
+      left
+      rw [hphysical]
+      exact canonical_singleton_afterOpening_read _
+  | leftBoundary head right =>
+      right
+      exact leftBoundary_afterOpening_read head right
+  | rightBoundary left head =>
+      left
+      exact rightBoundary_afterOpening_read left head
+
+theorem leftBoundary_of_afterOpening_read_true
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical)
+    (hread : Tape.read (Tape.moveRight physical) = some true) :
+    exists (head : Option Bool) (right : List (Option Bool)),
+      target =
+        [({ left := [], head := head, right := right } : Tape Bool)] ∧
+        physical =
+          encodedStructuredTapes
+            [({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool)] := by
+  cases hshape with
+  | canonical hphysical =>
+      rw [hphysical, canonical_singleton_afterOpening_read] at hread
+      cases hread
+  | leftBoundary head right =>
+      exact ⟨head, right, rfl, rfl⟩
+  | rightBoundary left head =>
+      rw [rightBoundary_afterOpening_read left head] at hread
+      cases hread
+
+theorem afterOpening_read_false_cases
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical)
+    (hread : Tape.read (Tape.moveRight physical) = some false) :
+    (exists targetTape : Tape Bool,
+      target = [targetTape] ∧
+        physical = encodedGuardedStructuredTapes [targetTape]) ∨
+      exists (left : List (Option Bool)) (head : Option Bool),
+        target =
+          [({ left := left, head := head, right := [] } : Tape Bool)] ∧
+          physical =
+            encodedStructuredTapes
+              [({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool)] := by
+  cases hshape with
+  | canonical hphysical =>
+      left
+      exact ⟨_, rfl, hphysical⟩
+  | leftBoundary head right =>
+      rw [leftBoundary_afterOpening_read head right] at hread
+      cases hread
+  | rightBoundary left head =>
+      right
+      exact ⟨left, head, rfl, rfl⟩
+
+theorem afterOpening_read_false_terminal_cases
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical)
+    (hread : Tape.read (Tape.moveRight physical) = some false) :
+    (exists (targetTape : Tape Bool) (pfx : List PhysicalToken),
+      target = [targetTape] ∧
+        physical = encodedGuardedStructuredTapes [targetTape] ∧
+        logicalTapeTokens (guardLogicalTape targetTape) =
+          List.append pfx [PhysicalToken.logicalCell none]) ∨
+      exists (left : List (Option Bool)) (head : Option Bool),
+        target =
+          [({ left := left, head := head, right := [] } : Tape Bool)] ∧
+          physical =
+            encodedStructuredTapes
+              [({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool)] ∧
+          logicalTapeTokens
+              ({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) =
+            List.append
+              (logicalCellListTokens (none :: left.reverse))
+              [PhysicalToken.headMarker, PhysicalToken.logicalCell head] := by
+  cases afterOpening_read_false_cases hshape hread with
+  | inl hcanonical =>
+      rcases hcanonical with ⟨targetTape, htarget, hphysical⟩
+      rcases canonical_singleton_tokens_terminal_guard targetTape with
+        ⟨pfx, hpfx⟩
+      exact Or.inl ⟨targetTape, pfx, htarget, hphysical, hpfx⟩
+  | inr hright =>
+      rcases hright with ⟨left, head, htarget, hphysical⟩
+      exact
+        Or.inr
+          ⟨left, head, htarget, hphysical,
+            rightBoundary_tokens_terminal_head left head⟩
+
 theorem refreshes
     {target : List (Tape Bool)} {physical : Tape Bool}
     (hshape : SingletonGuardSlackEndpointShape target physical) :
@@ -1480,8 +1578,7 @@ theorem refreshes
       exact
         ⟨cursorNoopDescription, cursorNoopDescription_subroutineReady,
           MachineDescription.HaltsFromTape.toEquiv
-            (cursorNoopDescription_haltsFromTape
-              (encodedGuardedStructuredTapes target))⟩
+            (cursorNoopDescription_haltsFromTape _)⟩
   | leftBoundary head right =>
       refine
         ⟨leftBoundaryGuardSlackRefreshDescription,
@@ -1805,10 +1902,10 @@ structure SingletonShapeGuardSlackRefreshCaseContract
     (refresh : MachineDescription) : Prop where
   subroutineReady : refresh.SubroutineReady
   canonical :
-    forall (target : List (Tape Bool)),
+    forall (target : Tape Bool),
       refresh.HaltsFromTapeEquiv
-        (encodedGuardedStructuredTapes target)
-        (encodedGuardedStructuredTapes target)
+        (encodedGuardedStructuredTapes [target])
+        (encodedGuardedStructuredTapes [target])
   leftBoundary :
     forall (head : Option Bool) (right : List (Option Bool)),
       refresh.HaltsFromTapeEquiv
@@ -1838,7 +1935,7 @@ theorem toContract
     cases hshape with
     | canonical hphysical =>
         rw [hphysical]
-        exact hrefresh.canonical target
+        exact hrefresh.canonical _
     | leftBoundary head right =>
         exact hrefresh.leftBoundary head right
     | rightBoundary left head =>
