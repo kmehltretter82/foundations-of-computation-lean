@@ -610,6 +610,26 @@ theorem guardedDropOne_exists_of_length_three
             ⟨guardLogicalTape T, guardLogicalTapes rest,
               by simp [guardLogicalTapes]⟩
 
+theorem guardedDropTwo_exists_of_length_three
+    {logical : List (Tape Bool)} (hlength : logical.length = 3) :
+    exists T : Tape Bool, exists rest : List (Tape Bool),
+      (guardLogicalTapes logical).drop 2 = T :: rest := by
+  cases logical with
+  | nil =>
+      simp at hlength
+  | cons _ rest =>
+      cases rest with
+      | nil =>
+          simp at hlength
+      | cons _ rest =>
+          cases rest with
+          | nil =>
+              simp at hlength
+          | cons T rest =>
+              exact
+                ⟨guardLogicalTape T, guardLogicalTapes rest,
+                  by simp [guardLogicalTapes]⟩
+
 theorem guardedHasAtLeastThreeTapes_of_length_three
     {logical : List (Tape Bool)} (hlength : logical.length = 3) :
     HasAtLeastThreeTapes (guardLogicalTapes logical) := by
@@ -1268,13 +1288,73 @@ theorem tape1ReaderDescription_runsFromExistingBlockStart
                   branchingSeparatorReadHeadCellTarget,
                   BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
-theorem tape2ReaderDescription_runsFromExistingBlockStart
+theorem branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromSeparator
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hstart : AtExistingTapeSeparator logical tapeIndex physical)
+    (hexists :
+      exists T : Tape Bool, exists rest : List (Tape Bool),
+        logical.drop (tapeIndex + 1) = T :: rest) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator logical (tapeIndex + 1)
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription
+          branchingTape1ReadHeadCellAndReturnToSeparatorDescription.start
+          (branchingTape1ReadHeadCellAndReturnToSeparatorTarget
+            (Tape.read (Description.tapeAt logical (tapeIndex + 1))))
+          physical
+          separatorPhysical := by
+  rcases
+      (cursorSeekNextSeparatorDescription_contract tapeIndex).realizes
+        logical physical hstart with
+    ⟨mid, hseek, hseparator⟩
+  let hmid :
+      AtExistingTapeSeparator logical (tapeIndex + 1) mid :=
+    ⟨hseparator, hexists⟩
+  rcases
+      branchingSeparatorReadHeadCellDescription_runsFromSeparator hmid with
+    ⟨separatorPhysical, hsep, hread⟩
+  rcases hread with ⟨nRead, actual, hreadRun, hactual⟩
+  have hreadReach :
+      exists nRead : Nat,
+        branchingSeparatorReadHeadCellDescription.runConfig nRead
+            { state := branchingSeparatorReadHeadCellDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (Tape.move Direction.right mid) } =
+          { state :=
+              branchingSeparatorReadHeadCellTarget
+                (Tape.read (Description.tapeAt logical
+                  (tapeIndex + 1)))
+            tape := actual } := by
+    refine ⟨nRead, ?_⟩
+    rw [atExistingTapeSeparator_moveLeft_moveRight hmid]
+    exact hreadRun
+  rcases
+      canonicalPrimitiveSeqDescription_reaches_right_state
+        (A := seekTape1Description)
+        (B := branchingSeparatorReadHeadCellDescription)
+        seekTape1Description_contract.subroutineReady
+        branchingSeparatorReadHeadCellDescription_subroutineReady
+        (by simpa [seekTape1Description] using hseek)
+        hreadReach with
+    ⟨n, hrun⟩
+  exact
+    ⟨separatorPhysical, ⟨hsep, hexists⟩,
+      ⟨n, actual, by
+        simpa [branchingTape1ReadHeadCellAndReturnToSeparatorDescription,
+          branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+          seekTape1Description] using hrun,
+        hactual⟩⟩
+
+theorem tape2ReaderDescription_runsFromExistingTape1Separator
     (D : Description) {state : Nat} (read0 read1 : Option Bool)
     (hstate : state < D.stateCount)
     {logical : List (Tape Bool)} {physical : Tape Bool}
     (hlength : logical.length = 3)
     (hstart :
-      AtExistingTapeSeparator (guardLogicalTapes logical) 0 physical) :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 1 physical) :
     exists separatorPhysical : Tape Bool,
       AtExistingTapeSeparator (guardLogicalTapes logical) 2
         separatorPhysical ∧
@@ -1288,21 +1368,22 @@ theorem tape2ReaderDescription_runsFromExistingBlockStart
           physical
           separatorPhysical := by
   rcases
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromSeparator
         (logical := guardLogicalTapes logical)
+        (tapeIndex := 1)
         (physical := physical)
         hstart
-        (guardedHasAtLeastThreeTapes_of_length_three hlength) with
+        (guardedDropTwo_exists_of_length_three hlength) with
     ⟨separatorPhysical, hseparator, hrun⟩
   have hcopy :=
     runsFromStateTapeEquiv_offsetReadExitRetargetDescription
       (offset := tape2ReaderOffset D state read0 read1)
       (localTarget :=
-        branchingTape2ReadHeadCellAndReturnToSeparatorTarget)
+        branchingTape1ReadHeadCellAndReturnToSeparatorTarget)
       (target :=
         StaticDispatcherState.tape2ReaderTargets D state read0 read1)
       (tape2ReaderTargets_lt_tape2ReaderOffset D read0 read1 hstate)
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
       (observed := Tape.read (Description.tapeAt logical 2))
       (by
         simpa [tapeAt_guardLogicalTapes_read] using hrun)
@@ -1312,12 +1393,12 @@ theorem tape2ReaderDescription_runsFromExistingBlockStart
       | none =>
           simpa
             [tape2ReaderDescription, tape2ReaderStart,
-              retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
               MachineDescription.offsetReadExitRetargetDescription,
               MachineDescription.retargetReadExitState,
               StaticDispatcherState.tape2ReaderTargets,
               StaticDispatcherState.tape2ReaderTarget,
-              branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
               branchingSeparatorReadHeadCellTarget,
               BranchingHeadCellReturn.targetForRead, hread] using hcopy
       | some bit =>
@@ -1325,25 +1406,334 @@ theorem tape2ReaderDescription_runsFromExistingBlockStart
           | false =>
               simpa
                 [tape2ReaderDescription, tape2ReaderStart,
-                  retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
                   MachineDescription.offsetReadExitRetargetDescription,
                   MachineDescription.retargetReadExitState,
                   StaticDispatcherState.tape2ReaderTargets,
                   StaticDispatcherState.tape2ReaderTarget,
-                  branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
                   BranchingHeadCellReturn.targetForRead, hread] using hcopy
           | true =>
               simpa
                 [tape2ReaderDescription, tape2ReaderStart,
-                  retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
                   MachineDescription.offsetReadExitRetargetDescription,
                   MachineDescription.retargetReadExitState,
                   StaticDispatcherState.tape2ReaderTargets,
                   StaticDispatcherState.tape2ReaderTarget,
-                  branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
                   BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+
+theorem
+    tape2ReaderDescription_runsFromExistingTape1Separator_in_afterRead1JumpTape2ReaderTransitions
+    (D : Description) {state : Nat} (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hlength : logical.length = 3)
+    (hstart :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 1 physical) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (tableMachine (threeHeadReaderStateLimit D)
+            (StaticDispatcherState.afterRead1 D state read0 read1)
+            (StaticDispatcherState.afterRead D state
+              { read0 := read0,
+                read1 := read1,
+                read2 := Tape.read (Description.tapeAt logical 2) })
+            (afterRead1JumpTape2ReaderTransitions D state read0 read1))
+          (tape2ReaderStart D state read0 read1)
+          (StaticDispatcherState.afterRead D state
+            { read0 := read0,
+              read1 := read1,
+              read2 := Tape.read (Description.tapeAt logical 2) })
+          physical
+          separatorPhysical := by
+  rcases
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromSeparator
+        (logical := guardLogicalTapes logical)
+        (tapeIndex := 1)
+        (physical := physical)
+        hstart
+        (guardedDropTwo_exists_of_length_three hlength) with
+    ⟨separatorPhysical, hseparator,
+      ⟨nBase, actual, hbaseRun, hactual⟩⟩
+  have hbaseRun' :
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.runConfig
+          nBase
+          { state :=
+              branchingTape1ReadHeadCellAndReturnToSeparatorDescription.start,
+            tape := physical } =
+        { state :=
+            branchingTape1ReadHeadCellAndReturnToSeparatorTarget
+              (Tape.read (Description.tapeAt logical 2)),
+          tape := actual } := by
+    simpa [tapeAt_guardLogicalTapes_read] using hbaseRun
+  rcases
+      offsetReadExitRetargetDescription_runConfig_state_ge_offset_before_exit
+        (offset := tape2ReaderOffset D state read0 read1)
+        (localTarget :=
+          branchingTape1ReadHeadCellAndReturnToSeparatorTarget)
+        (target :=
+          StaticDispatcherState.tape2ReaderTargets D state read0 read1)
+        (tape2ReaderTargets_lt_tape2ReaderOffset
+          D read0 read1 hstate)
+        branchingTape1ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
+        branchingTape1ReadHeadCellAndReturnToSeparatorTarget_injective
+        (observed := Tape.read (Description.tapeAt logical 2))
+        hbaseRun' with
+    ⟨n, _hle, hcopyRun, hcopyStates⟩
+  have hrightRun :
+      (tableMachine (threeHeadReaderStateLimit D)
+          (StaticDispatcherState.afterRead1 D state read0 read1)
+          (StaticDispatcherState.afterRead D state
+            { read0 := read0,
+              read1 := read1,
+              read2 := Tape.read (Description.tapeAt logical 2) })
+          (tape2ReaderDescription D state read0 read1).transitions).runConfig n
+        { state := tape2ReaderStart D state read0 read1,
+          tape := physical } =
+      { state :=
+          StaticDispatcherState.afterRead D state
+            { read0 := read0,
+              read1 := read1,
+              read2 := Tape.read (Description.tapeAt logical 2) },
+        tape := actual } := by
+    rw [tableMachine_runConfig_eq
+      (tape2ReaderDescription D state read0 read1)]
+    cases hread : Tape.read (Description.tapeAt logical 2) with
+    | none =>
+        simpa [tape2ReaderDescription, tape2ReaderStart,
+          retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+          MachineDescription.readExitRetargetConfiguration,
+          MachineDescription.retargetReadExitState,
+          StaticDispatcherState.tape2ReaderTargets,
+          StaticDispatcherState.tape2ReaderTarget,
+          branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+          branchingSeparatorReadHeadCellTarget,
+          BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+    | some bit =>
+        cases bit with
+        | false =>
+            simpa [tape2ReaderDescription, tape2ReaderStart,
+              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+              MachineDescription.readExitRetargetConfiguration,
+              MachineDescription.retargetReadExitState,
+              StaticDispatcherState.tape2ReaderTargets,
+              StaticDispatcherState.tape2ReaderTarget,
+              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+              branchingSeparatorReadHeadCellTarget,
+              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+        | true =>
+            simpa [tape2ReaderDescription, tape2ReaderStart,
+              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+              MachineDescription.readExitRetargetConfiguration,
+              MachineDescription.retargetReadExitState,
+              StaticDispatcherState.tape2ReaderTargets,
+              StaticDispatcherState.tape2ReaderTarget,
+              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+              branchingSeparatorReadHeadCellTarget,
+              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+  have hrightStates :
+      forall k : Nat, k < n ->
+        tape2ReaderOffset D state read0 read1 ≤
+          ((tableMachine (threeHeadReaderStateLimit D)
+              (StaticDispatcherState.afterRead1 D state read0 read1)
+              (StaticDispatcherState.afterRead D state
+                { read0 := read0,
+                  read1 := read1,
+                  read2 := Tape.read (Description.tapeAt logical 2) })
+              (tape2ReaderDescription D state read0 read1).transitions).runConfig k
+            { state := tape2ReaderStart D state read0 read1,
+              tape := physical }).state := by
+    intro k hk
+    rw [tableMachine_runConfig_eq
+      (tape2ReaderDescription D state read0 read1)]
+    simpa [tape2ReaderDescription, tape2ReaderStart,
+      retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+      MachineDescription.readExitRetargetConfiguration,
+      MachineDescription.retargetReadExitState] using
+      hcopyStates k hk
+  refine ⟨separatorPhysical, hseparator, ?_⟩
+  simpa [afterRead1JumpTape2ReaderTransitions] using
+    runsFromStateTapeEquiv_tableMachine_append_right_of_left_sources_below_of_run
+      (stateCount := threeHeadReaderStateLimit D)
+      (start := StaticDispatcherState.afterRead1 D state read0 read1)
+      (halt :=
+        StaticDispatcherState.afterRead D state
+          { read0 := read0,
+            read1 := read1,
+            read2 := Tape.read (Description.tapeAt logical 2) })
+      (bound := tape2ReaderOffset D state read0 read1)
+      (left := (afterRead1JumpDescription D state read0 read1).transitions)
+      (right := (tape2ReaderDescription D state read0 read1).transitions)
+      (sourceState := tape2ReaderStart D state read0 read1)
+      (targetState :=
+        StaticDispatcherState.afterRead D state
+          { read0 := read0,
+            read1 := read1,
+            read2 := Tape.read (Description.tapeAt logical 2) })
+      (n := n)
+      (Tin := physical)
+      (Tout := separatorPhysical)
+      (actual := actual)
+      (afterRead1JumpDescription_sources_below_tape2ReaderOffset
+        D read0 read1 hstate)
+      hrightRun
+      hactual
+      hrightStates
+
+theorem afterRead1JumpDescription_runsFromTapeSeparator_in_afterRead1JumpTape2ReaderTransitions
+    (D : Description) {state haltState : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount)
+    {logical : List (Tape Bool)} {tapeIndex : Nat}
+    {physical : Tape Bool}
+    (hseparator : AtTapeSeparator logical tapeIndex physical) :
+    RunsFromStateTapeEquiv
+      (tableMachine (threeHeadReaderStateLimit D)
+        (StaticDispatcherState.afterRead1 D state read0 read1)
+        haltState
+        (afterRead1JumpTape2ReaderTransitions D state read0 read1))
+      (StaticDispatcherState.afterRead1 D state read0 read1)
+      (tape2ReaderStart D state read0 read1)
+      physical
+      physical := by
+  have hread : Tape.read physical = none :=
+    atTapeSeparator_read hseparator
+  have hsourceBelow :
+      StaticDispatcherState.afterRead1 D state read0 read1 <
+        tape2ReaderOffset D state read0 read1 := by
+    exact Nat.lt_of_lt_of_le
+      (StaticDispatcherState.afterRead1_lt_readerStateLimit
+        D read0 read1 hstate)
+      (readerStateLimit_le_tape2ReaderOffset D state read0 read1)
+  have hscratchBelow :
+      afterRead1JumpScratch D state read0 read1 <
+        tape2ReaderOffset D state read0 read1 := by
+    have hscratch :=
+      afterRead1JumpScratch_lt_afterRead1JumpLimit
+        D read0 read1 hstate
+    have hbase :
+        afterRead1JumpLimit D ≤
+          tape2ReaderOffset D state read0 read1 := by
+      unfold tape2ReaderOffset tape2ReaderBlockBase
+      lia
+    exact Nat.lt_of_lt_of_le hscratch hbase
+  have hleftRun :
+      (tableMachine (threeHeadReaderStateLimit D)
+          (StaticDispatcherState.afterRead1 D state read0 read1)
+          haltState
+          (afterRead1JumpDescription D state read0 read1).transitions).runConfig 2
+        { state := StaticDispatcherState.afterRead1 D state read0 read1,
+          tape := physical } =
+      { state := tape2ReaderStart D state read0 read1,
+        tape := Tape.move Direction.left (Tape.move Direction.right physical) } := by
+    rw [tableMachine_runConfig_eq
+      (afterRead1JumpDescription D state read0 read1)]
+    simpa [afterRead1JumpDescription] using
+      blankHeadBounceJumpDescription_runConfig_two_fromBlankHead
+        (stateCount := threeHeadReaderStateLimit D)
+        (source := StaticDispatcherState.afterRead1 D state read0 read1)
+        (scratch := afterRead1JumpScratch D state read0 read1)
+        (target := tape2ReaderStart D state read0 read1)
+        (afterRead1_ne_afterRead1JumpScratch D read0 read1 hstate)
+        hread
+  have hleftStates :
+      forall k : Nat, k < 2 ->
+        ((tableMachine (threeHeadReaderStateLimit D)
+            (StaticDispatcherState.afterRead1 D state read0 read1)
+            haltState
+            (afterRead1JumpDescription D state read0 read1).transitions).runConfig k
+          { state := StaticDispatcherState.afterRead1 D state read0 read1,
+            tape := physical }).state <
+          tape2ReaderOffset D state read0 read1 := by
+    intro k hk
+    rw [tableMachine_runConfig_eq
+      (afterRead1JumpDescription D state read0 read1)]
+    simpa [afterRead1JumpDescription] using
+      blankHeadBounceJumpDescription_runConfig_state_lt_bound_before_two
+        (stateCount := threeHeadReaderStateLimit D)
+        (source := StaticDispatcherState.afterRead1 D state read0 read1)
+        (scratch := afterRead1JumpScratch D state read0 read1)
+        (target := tape2ReaderStart D state read0 read1)
+        (bound := tape2ReaderOffset D state read0 read1)
+        hsourceBelow hscratchBelow hread k hk
+  simpa [afterRead1JumpTape2ReaderTransitions] using
+    runsFromStateTapeEquiv_tableMachine_append_left_of_right_sources_atLeast_of_run
+      (stateCount := threeHeadReaderStateLimit D)
+      (start := StaticDispatcherState.afterRead1 D state read0 read1)
+      (halt := haltState)
+      (bound := tape2ReaderOffset D state read0 read1)
+      (left := (afterRead1JumpDescription D state read0 read1).transitions)
+      (right := (tape2ReaderDescription D state read0 read1).transitions)
+      (sourceState := StaticDispatcherState.afterRead1 D state read0 read1)
+      (targetState := tape2ReaderStart D state read0 read1)
+      (n := 2)
+      (Tin := physical)
+      (Tout := physical)
+      (actual := Tape.move Direction.left (Tape.move Direction.right physical))
+      (tape2ReaderDescription_sources_atLeast D state read0 read1)
+      hleftRun
+      (tape_moveLeft_moveRight_equiv_self physical)
+      hleftStates
+
+theorem afterRead1JumpTape2ReaderTransitions_runsFromExistingTape1Separator
+    (D : Description) {state : Nat} (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hlength : logical.length = 3)
+    (hstart :
+      AtExistingTapeSeparator (guardLogicalTapes logical) 1 physical) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (tableMachine (threeHeadReaderStateLimit D)
+            (StaticDispatcherState.afterRead1 D state read0 read1)
+            (StaticDispatcherState.afterRead D state
+              { read0 := read0,
+                read1 := read1,
+                read2 := Tape.read (Description.tapeAt logical 2) })
+            (afterRead1JumpTape2ReaderTransitions D state read0 read1))
+          (StaticDispatcherState.afterRead1 D state read0 read1)
+          (StaticDispatcherState.afterRead D state
+            { read0 := read0,
+              read1 := read1,
+              read2 := Tape.read (Description.tapeAt logical 2) })
+          physical
+          separatorPhysical := by
+  have hjump :
+      RunsFromStateTapeEquiv
+        (tableMachine (threeHeadReaderStateLimit D)
+          (StaticDispatcherState.afterRead1 D state read0 read1)
+          (StaticDispatcherState.afterRead D state
+            { read0 := read0,
+              read1 := read1,
+              read2 := Tape.read (Description.tapeAt logical 2) })
+          (afterRead1JumpTape2ReaderTransitions D state read0 read1))
+        (StaticDispatcherState.afterRead1 D state read0 read1)
+        (tape2ReaderStart D state read0 read1)
+        physical
+        physical :=
+    afterRead1JumpDescription_runsFromTapeSeparator_in_afterRead1JumpTape2ReaderTransitions
+      (D := D) (state := state)
+      (haltState :=
+        StaticDispatcherState.afterRead D state
+          { read0 := read0,
+            read1 := read1,
+            read2 := Tape.read (Description.tapeAt logical 2) })
+      read0 read1 hstate hstart.left
+  rcases
+      tape2ReaderDescription_runsFromExistingTape1Separator_in_afterRead1JumpTape2ReaderTransitions
+        D read0 read1 hstate hlength hstart with
+    ⟨separatorPhysical, hseparator, hreader⟩
+  exact
+    ⟨separatorPhysical, hseparator,
+      runsFromStateTapeEquiv_trans hjump hreader⟩
 
 end StaticDispatcherReaderAssembly
 

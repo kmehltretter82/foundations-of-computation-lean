@@ -420,7 +420,7 @@ theorem afterRead1JumpTape2ReaderTransitions_sourceDisjoint_of_ne
             indexedReaderBlocks_source_ne_of_state_ne
               (base := afterRead1JumpLimit D)
               (blockCount :=
-                branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+                branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount)
               (source := t.source)
               hidxNe hleftReader hrightReader'
 

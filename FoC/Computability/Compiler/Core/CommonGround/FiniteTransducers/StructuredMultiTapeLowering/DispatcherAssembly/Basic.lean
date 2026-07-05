@@ -382,11 +382,11 @@ def tape2ReaderOffset (D : Description)
     (state : Nat) (read0 read1 : Option Bool) : Nat :=
   tape2ReaderBlockBase D +
     (ReadTuple3.code01 read0 read1 * D.stateCount + state) *
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def tape2ReaderDescription (D : Description) (state : Nat)
     (read0 read1 : Option Bool) : MachineDescription :=
-  retargetedBranchingTape2ReadHeadCellAllExitsDescription
+  retargetedBranchingTape1ReadHeadCellAllExitsDescription
     (tape2ReaderOffset D state read0 read1)
     (StaticDispatcherState.tape2ReaderTargets D state read0 read1)
 
@@ -397,7 +397,7 @@ def tape2ReaderStart (D : Description) (state : Nat)
 def tape2ReaderLimit (D : Description) : Nat :=
   tape2ReaderBlockBase D +
     9 * D.stateCount *
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount
 
 def threeHeadReaderStateLimit (D : Description) : Nat :=
   tape2ReaderLimit D
@@ -529,7 +529,7 @@ theorem tape2ReaderDescription_subroutineReady
     (hstate : state < D.stateCount) :
     (tape2ReaderDescription D state read0 read1).SubroutineReady := by
   exact
-    retargetedBranchingTape2ReadHeadCellAllExitsDescription_subroutineReady
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription_subroutineReady
       (tape2ReaderTargets_lt_tape2ReaderOffset D read0 read1 hstate)
 
 theorem tape0ReaderDescription_sources_in_block
@@ -576,17 +576,17 @@ theorem tape2ReaderDescription_sources_in_block
         tape2ReaderOffset D state read0 read1 ≤ t.source ∧
           t.source <
             tape2ReaderOffset D state read0 read1 +
-              branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
+              branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
   simpa [tape2ReaderDescription,
-    retargetedBranchingTape2ReadHeadCellAllExitsDescription] using
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription] using
     offsetReadExitRetargetDescription_sources_in_offset_block
       (offset := tape2ReaderOffset D state read0 read1)
       (localTarget :=
-        branchingTape2ReadHeadCellAndReturnToSeparatorTarget)
+        branchingTape1ReadHeadCellAndReturnToSeparatorTarget)
       (target :=
         StaticDispatcherState.tape2ReaderTargets D state read0 read1)
-      (M := branchingTape2ReadHeadCellAndReturnToSeparatorDescription)
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
+      (M := branchingTape1ReadHeadCellAndReturnToSeparatorDescription)
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
 
 theorem indexedReaderBlockEnd_le_limit
     (base stateCount blockCount slots code state : Nat)
@@ -698,14 +698,14 @@ theorem tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
     (D : Description) {state : Nat} (read0 read1 : Option Bool)
     (hstate : state < D.stateCount) :
     tape2ReaderOffset D state read0 read1 +
-      branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount ≤
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount ≤
         tape2ReaderLimit D := by
   have h :=
     indexedReaderBlockEnd_le_limit
       (base := tape2ReaderBlockBase D)
       (stateCount := D.stateCount)
       (blockCount :=
-        branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+        branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount)
       (slots := 9)
       (code := ReadTuple3.code01 read0 read1)
       (state := state)
@@ -756,7 +756,7 @@ theorem tape2ReaderDescription_stateCount_le_threeHeadReaderStateLimit
     tape2ReaderOffset_blockEnd_le_tape2ReaderLimit
       D read0 read1 hstate
   simpa [threeHeadReaderStateLimit, tape2ReaderDescription,
-    retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription,
     MachineDescription.offsetReadExitRetargetDescription] using hblock
 
 theorem tape0ReaderDescription_sources_atLeast
@@ -1282,7 +1282,7 @@ theorem afterRead1JumpTape2ReaderTransitions_source_cases
         tape2ReaderOffset D state read0 read1 ≤ t.source ∧
           t.source <
             tape2ReaderOffset D state read0 read1 +
-              branchingTape2ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
+              branchingTape1ReadHeadCellAndReturnToSeparatorDescription.stateCount := by
   unfold afterRead1JumpTape2ReaderTransitions at ht
   simp at ht
   rcases ht with ht | ht
@@ -2453,32 +2453,6 @@ theorem tape1ReaderDescription_runsFromGuardedBlockStart
         (offset := tape1ReaderOffset D state read0)
         (target := StaticDispatcherState.tape1ReaderTargets D state read0)
         (tape1ReaderTargets_lt_tape1ReaderOffset D read0 hstate)
-        hlength
-
-theorem tape2ReaderDescription_runsFromGuardedBlockStart
-    (D : Description) {state : Nat}
-    (read0 read1 : Option Bool)
-    (hstate : state < D.stateCount)
-    {logical : List (Tape Bool)}
-    (hlength : logical.length = 3) :
-    exists separatorPhysical : Tape Bool,
-      AtExistingTapeSeparator (guardLogicalTapes logical) 2
-        separatorPhysical ∧
-        RunsFromStateTapeEquiv
-          (tape2ReaderDescription D state read0 read1)
-          (tape2ReaderStart D state read0 read1)
-          (StaticDispatcherState.afterRead D state
-            { read0 := read0,
-              read1 := read1,
-              read2 := Tape.read (Description.tapeAt logical 2) })
-          (encodedGuardedStructuredTapes logical)
-          separatorPhysical := by
-  simpa [tape2ReaderDescription, tape2ReaderStart,
-    StaticDispatcherState.tape2ReaderTargets, StaticDispatcherState.tape2ReaderTarget] using
-      retargetedBranchingTape2ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
-        (offset := tape2ReaderOffset D state read0 read1)
-        (target := StaticDispatcherState.tape2ReaderTargets D state read0 read1)
-        (tape2ReaderTargets_lt_tape2ReaderOffset D read0 read1 hstate)
         hlength
 
 end StaticDispatcherReaderAssembly
