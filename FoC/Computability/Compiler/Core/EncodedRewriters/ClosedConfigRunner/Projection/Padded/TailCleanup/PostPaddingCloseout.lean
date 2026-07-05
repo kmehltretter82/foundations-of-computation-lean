@@ -628,6 +628,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction
       selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec⟩,
       h⟩
 
+theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
+    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
     (h :
       SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
@@ -635,6 +645,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruc
   selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
     (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
       h)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
+    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
     {useAccept : Bool} {materializer : MachineDescription}
@@ -683,6 +703,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
     selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
       (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
         selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
+    (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
@@ -769,6 +799,16 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction
+
+theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
+  selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
+    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
