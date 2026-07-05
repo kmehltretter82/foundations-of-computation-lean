@@ -94,6 +94,39 @@ def countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
       ((ParsedLayoutBits L).length + 1))
     (postFieldDecodedPrefixScanSourceTape useAccept L)
 
+theorem logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_nil
+    (padding : List (Option Bool)) :
+    logicalTapeBits
+        (guardLogicalTape
+          (rightEdgeScanSourceTapeFromLeft [none] [] padding)) =
+      List.append (logicalCellBits (none : Option Bool))
+        (List.append (logicalCellBits (none : Option Bool))
+          (List.append [true, true]
+            (List.append (logicalCellBits (none : Option Bool))
+              (logicalCellListBits
+                (List.append padding [none]))))) := by
+  simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells,
+    guardLogicalTape, logicalTapeBits, logicalCellListBits,
+    List.append_assoc]
+
+theorem logicalTapeBits_guard_rightEdgeScanSourceTapeFromLeft_cons
+    (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    logicalTapeBits
+        (guardLogicalTape
+          (rightEdgeScanSourceTapeFromLeft [none]
+            (bit :: rest) padding)) =
+      List.append (logicalCellBits (none : Option Bool))
+        (List.append (logicalCellBits (none : Option Bool))
+          (List.append [true, true]
+            (List.append (logicalCellBits (some bit))
+              (logicalCellListBits
+                (List.append (rest.map some)
+                  (none :: List.append padding [none])))))) := by
+  simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells,
+    guardLogicalTape, logicalTapeBits, logicalCellListBits,
+    List.append_assoc]
+
 theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
     (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
     (leftBit : Bool) (deletedTail : Word Bool)
@@ -430,6 +463,98 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction :
   exists decoder : MachineDescription,
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderSpec decoder
 
+/--
+Count-window-specific cleanup after the selected-segment bit scan.
+
+The generic arbitrary-tape cleanup is too strong for the simple bit scanner:
+after scanning, the marker position has to be recovered from the concrete
+right-edge scan-source layout.  This narrowed contract is the remaining
+output-side adapter obligation for this bridge.
+-/
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout)
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+          encodedPrefix)
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction :
+    Prop :=
+  exists cleanup : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupSpec cleanup
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_cleanup
+    (hcleanup :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction := by
+  rcases hcleanup with
+    ⟨cleanup, hcleanupReady, hcleanupRun⟩
+  refine
+    ⟨selectedSegmentLogicalTapeDecoderPipelineDescription cleanup,
+      ?_⟩
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPipelineDescription_subroutineReady
+        hcleanupReady
+  · intro useAccept L encodedPrefix
+    have hmove :
+        (cursorMoveOnceDescription Direction.right).HaltsFromTapeEquiv
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              [guardLogicalTape
+                (postFieldDecodedPrefixScanSourceTape useAccept L)]))
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                [guardLogicalTape
+                  (postFieldDecodedPrefixScanSourceTape useAccept L)]))) :=
+      (cursorMoveOnceDescription_haltsFromTape Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            [guardLogicalTape
+              (postFieldDecodedPrefixScanSourceTape useAccept L)]))).toEquiv
+    have hscan :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTapeEquiv
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                [guardLogicalTape
+                  (postFieldDecodedPrefixScanSourceTape useAccept L)])))
+          (selectedSegmentLogicalTapeDecoderTargetTape
+            (postFieldDecodedPrefixScanSourceTape useAccept L)
+            encodedPrefix) :=
+      (selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedSingletonPayload
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+        encodedPrefix).toEquiv
+    have hpipelineScan :
+        (canonicalPrimitiveSeqDescription
+          (cursorMoveOnceDescription Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription).HaltsFromTapeEquiv
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                [guardLogicalTape
+                  (postFieldDecodedPrefixScanSourceTape useAccept L)]))
+            (selectedSegmentLogicalTapeDecoderTargetTape
+              (postFieldDecodedPrefixScanSourceTape useAccept L)
+              encodedPrefix) :=
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady
+        hmove
+        hscan
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          (cursorMoveOnceDescription_subroutineReady Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+        hcleanupReady
+        hpipelineScan
+        (hcleanupRun useAccept L encodedPrefix)
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_singletonDecoder
     (hdecoder :
       StructuredSelectedSingletonSegmentDecoderConstruction) :
@@ -465,10 +590,14 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
           , postFieldDecodedPrefixScanSourceTape useAccept L ])
         2)
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction :=
-  countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_singletonDecoder
-    structuredSelectedSingletonSegmentDecoderConstruction_core
+  countWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction_of_cleanup
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
     (hnormalizer :

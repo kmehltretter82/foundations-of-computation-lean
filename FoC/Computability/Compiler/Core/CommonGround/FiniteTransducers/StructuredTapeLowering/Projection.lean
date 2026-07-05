@@ -738,20 +738,6 @@ theorem structuredSelectedSingletonSegmentDecoderConstruction_of_cleanup
       selectedSegmentLogicalTapeDecoderPipelineSpec_of_cleanupSpec
         hcleanupSpec⟩
 
-theorem selectedSegmentLogicalTapeDecoderCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderCleanupConstruction := by
-  sorry
-
-theorem structuredSelectedSingletonSegmentDecoderConstruction_core :
-    StructuredSelectedSingletonSegmentDecoderConstruction :=
-  structuredSelectedSingletonSegmentDecoderConstruction_of_cleanup
-    selectedSegmentLogicalTapeDecoderCleanupConstruction_core
-
-theorem structuredSelectedSingletonSegmentExtractorConstruction_core :
-    StructuredSelectedSingletonSegmentExtractorConstruction :=
-  structuredSelectedSingletonSegmentExtractorConstruction_of_decoder
-    structuredSelectedSingletonSegmentDecoderConstruction_core
-
 /--
 The canonical projector assembled from the proven tape-2 seeker and a segment
 normalizer.
