@@ -1,6 +1,6 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Product
-import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 
 set_option doc.verso true
 
@@ -29,7 +29,8 @@ theorem exists_bounded_pair_iff_exists_pair
       exists n : Nat,
         m ≤ limit ∧ n ≤ limit ∧ P m n) <->
       exists m : Nat, exists n : Nat, P m n := by
-  exact CommonGround.exists_bounded_pair_iff_exists_pair P
+  exact
+    FiniteRecognizer.TupleSearch.exists_bounded_pair_iff_exists_pair P
 
 /--
 Generic triple-bounding algebra for dovetail drivers: existential search over
@@ -44,7 +45,8 @@ theorem exists_bounded_triple_iff_exists_triple
       exists fuel : Nat,
         m ≤ limit ∧ n ≤ limit ∧ fuel ≤ limit ∧ P m n fuel) <->
       exists m : Nat, exists n : Nat, exists fuel : Nat, P m n fuel := by
-  exact CommonGround.exists_bounded_triple_iff_exists_triple P
+  exact
+    FiniteRecognizer.TupleSearch.exists_bounded_triple_iff_exists_triple P
 
 /--
 Search over an explicit fuel component is the same as unbounded halting for
@@ -59,19 +61,9 @@ theorem exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
         TuringMachine.HaltsOnInputIn M fuel (inputOf m)) <->
       exists m : Nat,
         TuringMachine.HaltsOnInput M (inputOf m) := by
-  constructor
-  · intro h
-    rcases h with ⟨m, fuel, hfuel⟩
-    exact
-      ⟨m,
-        TuringMachine.halts_on_input_in_to_halts_on_input
-          (n := fuel) hfuel⟩
-  · intro h
-    rcases h with ⟨m, hhalt⟩
-    rcases
-        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
-      ⟨fuel, hfuel⟩
-    exact ⟨m, fuel, hfuel⟩
+  exact
+    FiniteRecognizer.TupleSearch.exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M inputOf
 
 /--
 Bounded dovetailing over a generated input index and an explicit fuel is
@@ -90,12 +82,8 @@ theorem exists_bounded_pair_haltsOnInputIn_iff_exists_haltsOnInput
       exists m : Nat,
         TuringMachine.HaltsOnInput M (inputOf m) := by
   exact
-    Iff.trans
-      (exists_bounded_pair_iff_exists_pair
-        (fun m fuel =>
-          TuringMachine.HaltsOnInputIn M fuel (inputOf m)))
-      (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
-        M inputOf)
+    FiniteRecognizer.TupleSearch.exists_bounded_pair_haltsOnInputIn_iff_exists_haltsOnInput
+      M inputOf
 
 /--
 Search over two generated indices and an explicit simulation fuel is the same
@@ -112,19 +100,9 @@ theorem exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
       exists m : Nat,
       exists n : Nat,
         TuringMachine.HaltsOnInput M (inputOf m n) := by
-  constructor
-  · intro h
-    rcases h with ⟨m, n, fuel, hfuel⟩
-    exact
-      ⟨m, n,
-        TuringMachine.halts_on_input_in_to_halts_on_input
-          (n := fuel) hfuel⟩
-  · intro h
-    rcases h with ⟨m, n, hhalt⟩
-    rcases
-        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
-      ⟨fuel, hfuel⟩
-    exact ⟨m, n, fuel, hfuel⟩
+  exact
+    FiniteRecognizer.TupleSearch.exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+      M inputOf
 
 /--
 Bounded dovetailing over two generated indices and an explicit fuel is
@@ -146,12 +124,8 @@ theorem exists_bounded_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
       exists n : Nat,
         TuringMachine.HaltsOnInput M (inputOf m n) := by
   exact
-    Iff.trans
-      (exists_bounded_triple_iff_exists_triple
-        (fun m n fuel =>
-          TuringMachine.HaltsOnInputIn M fuel (inputOf m n)))
-      (exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
-        M inputOf)
+    FiniteRecognizer.TupleSearch.exists_bounded_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+      M inputOf
 
 /--
 For a fixed public budget on the generated indices, adding a hidden exact fuel
@@ -173,19 +147,9 @@ theorem exists_bounded_pair_haltsOnInputIn_iff_exists_bounded_pair_haltsOnInput
         m ≤ budget ∧
           n ≤ budget ∧
           TuringMachine.HaltsOnInput M (inputOf m n) := by
-  constructor
-  · intro h
-    rcases h with ⟨m, n, fuel, hm, hn, hfuel⟩
-    exact
-      ⟨m, n, hm, hn,
-        TuringMachine.halts_on_input_in_to_halts_on_input
-          (n := fuel) hfuel⟩
-  · intro h
-    rcases h with ⟨m, n, hm, hn, hhalt⟩
-    rcases
-        TuringMachine.halts_on_input_to_halts_on_input_in hhalt with
-      ⟨fuel, hfuel⟩
-    exact ⟨m, n, fuel, hm, hn, hfuel⟩
+  exact
+    FiniteRecognizer.TupleSearch.exists_bounded_pair_haltsOnInputIn_iff_exists_bounded_pair_haltsOnInput
+      M inputOf budget
 
 /--
 Two explicit fuel witnesses for the same input are equivalent to unbounded
@@ -203,23 +167,9 @@ theorem exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
           TuringMachine.HaltsOnInputIn right rightFuel input) <->
       TuringMachine.HaltsOnInput left input ∧
         TuringMachine.HaltsOnInput right input := by
-  constructor
-  · intro h
-    rcases h with ⟨leftFuel, rightFuel, hleft, hright⟩
-    exact
-      ⟨TuringMachine.halts_on_input_in_to_halts_on_input
-          (n := leftFuel) hleft,
-        TuringMachine.halts_on_input_in_to_halts_on_input
-          (n := rightFuel) hright⟩
-  · intro h
-    rcases h with ⟨hleft, hright⟩
-    rcases TuringMachine.halts_on_input_to_halts_on_input_in
-        hleft with
-      ⟨leftFuel, hleftFuel⟩
-    rcases TuringMachine.halts_on_input_to_halts_on_input_in
-        hright with
-      ⟨rightFuel, hrightFuel⟩
-    exact ⟨leftFuel, rightFuel, hleftFuel, hrightFuel⟩
+  exact
+    FiniteRecognizer.TupleSearch.exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
+      left right input
 
 /--
 Unbounded search over generated inner inputs for a wrapped machine, hiding the

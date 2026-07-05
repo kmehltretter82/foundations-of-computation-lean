@@ -6,6 +6,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.I
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 
 set_option doc.verso true
 
