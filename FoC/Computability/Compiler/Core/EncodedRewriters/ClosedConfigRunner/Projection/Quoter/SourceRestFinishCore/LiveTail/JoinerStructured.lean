@@ -316,7 +316,14 @@ def mixedOptionCellQuoteLiveTailJoinerOneTapeDescription :
     scanQuoteRestToLocalGapSourceDescription
     CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription
 
-def structuredMixedOptionCellQuoteLiveTailJoinerDescription :
+/-!
+The straight lifted one-tape sequence is kept only as a diagnostic prototype.
+It halts on small assembly probes, but it is not the public structured joiner:
+the tailed three-tape debugger shows that it preserves normalized output for
+empty source rest only modulo a wrong head position, and produces a normalized
+output mismatch at the quote-rest/raw-tail boundary for nonempty source rest.
+-/
+def structuredMixedOptionCellQuoteLiveTailJoinerDiagnosticLiftDescription :
     Structured.Description :=
   structuredLiftOneTapeDescription
     mixedOptionCellQuoteLiveTailJoinerOneTapeDescription
@@ -339,9 +346,9 @@ theorem structuredScanQuoteRestToLocalGapSourceDescription_supported :
   structuredLiftOneTapeDescription_supported
     scanQuoteRestToLocalGapSourceDescription
 
-theorem structuredMixedOptionCellQuoteLiveTailJoinerDescription_supported :
+theorem structuredMixedOptionCellQuoteLiveTailJoinerDiagnosticLiftDescription_supported :
     Structured.MultiTapeLowering.SupportsReadWriteRows3
-      structuredMixedOptionCellQuoteLiveTailJoinerDescription :=
+      structuredMixedOptionCellQuoteLiveTailJoinerDiagnosticLiftDescription :=
   structuredLiftOneTapeDescription_supported
     mixedOptionCellQuoteLiveTailJoinerOneTapeDescription
 
@@ -412,6 +419,226 @@ theorem structuredRightBlankLocalGapCompactorDescription_run_leftStack_rightPadd
       (work := work)
       (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription_haltsFromTapeWithBase_leftStack_rightPadding
         baseLeft current leftRest paddingScratch pad rightPadding)
+
+def structuredJoinerEntryStart : Nat := 0
+
+def structuredJoinerEntrySeparator : Nat := 1
+
+def structuredJoinerEntryHalt : Nat := 2
+
+/--
+Entry phase for the assembly joiner.  It advances tape 0 from the last raw-tail
+cell to the first quote-rest cell (or the trailing blank when quote-rest is
+empty) while keeping the auxiliary tapes fixed.
+-/
+def structuredJoinerEntryRows : List Structured.Transition :=
+  List.append
+    (Structured.MultiTapeLowering.ThreeTape.allReadRows3
+      structuredJoinerEntryStart structuredJoinerEntrySeparator
+      Structured.MultiTapeLowering.ThreeTape.keepR
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      Structured.MultiTapeLowering.ThreeTape.keepS)
+    (Structured.MultiTapeLowering.ThreeTape.allReadRows3
+      structuredJoinerEntrySeparator structuredJoinerEntryHalt
+      Structured.MultiTapeLowering.ThreeTape.keepR
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      Structured.MultiTapeLowering.ThreeTape.keepS)
+
+def structuredJoinerEntryDescription : Structured.Description :=
+  Structured.MultiTapeLowering.ThreeTape.description
+    3 structuredJoinerEntryStart structuredJoinerEntryHalt
+    structuredJoinerEntryRows
+
+theorem structuredJoinerEntryRows_supportsReadWriteRow3 :
+    forall row : Structured.Transition,
+      row ∈ structuredJoinerEntryRows ->
+        Structured.MultiTapeLowering.supportsReadWriteRow3 row =
+          true := by
+  intro row hrow
+  simp [structuredJoinerEntryRows] at hrow
+  rcases hrow with hrow | hrow
+  · exact
+      Structured.MultiTapeLowering.ThreeTape.allReadRows3_supportsReadWriteRow3
+        structuredJoinerEntryStart structuredJoinerEntrySeparator
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        row hrow
+  · exact
+      Structured.MultiTapeLowering.ThreeTape.allReadRows3_supportsReadWriteRow3
+        structuredJoinerEntrySeparator structuredJoinerEntryHalt
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        row hrow
+
+theorem structuredJoinerEntryDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredJoinerEntryDescription :=
+  Structured.MultiTapeLowering.ThreeTape.description_supported
+    3 structuredJoinerEntryStart structuredJoinerEntryHalt
+    structuredJoinerEntryRows
+    structuredJoinerEntryRows_supportsReadWriteRow3
+
+theorem structuredJoinerEntryDescription_lookup_start
+    (source scratch work : Tape Bool) :
+    structuredJoinerEntryDescription.lookupTransition
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntryStart source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredJoinerEntryStart
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredJoinerEntrySeparator) := by
+  rw [Structured.Description.lookupTransition]
+  change
+    (structuredJoinerEntryRows.find?
+        (Structured.Description.Matches
+          structuredJoinerEntryStart
+          [Tape.read source, Tape.read scratch, Tape.read work])) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredJoinerEntryStart
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredJoinerEntrySeparator)
+  unfold structuredJoinerEntryRows
+  exact
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_some
+      (Structured.MultiTapeLowering.ThreeTape.allReadRows3_find?_same
+        structuredJoinerEntryStart structuredJoinerEntrySeparator
+        (Tape.read source) (Tape.read scratch) (Tape.read work)
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS)
+
+theorem structuredJoinerEntryDescription_lookup_separator
+    (source scratch work : Tape Bool) :
+    structuredJoinerEntryDescription.lookupTransition
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntrySeparator source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredJoinerEntrySeparator
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredJoinerEntryHalt) := by
+  rw [Structured.Description.lookupTransition]
+  change
+    (structuredJoinerEntryRows.find?
+        (Structured.Description.Matches
+          structuredJoinerEntrySeparator
+          [Tape.read source, Tape.read scratch, Tape.read work])) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredJoinerEntrySeparator
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredJoinerEntryHalt)
+  unfold structuredJoinerEntryRows
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredJoinerEntrySeparator
+          [Tape.read source, Tape.read scratch, Tape.read work])
+        (Structured.MultiTapeLowering.ThreeTape.allReadRows3
+          structuredJoinerEntryStart structuredJoinerEntrySeparator
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS ++
+        Structured.MultiTapeLowering.ThreeTape.allReadRows3
+          structuredJoinerEntrySeparator structuredJoinerEntryHalt
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredJoinerEntrySeparator
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredJoinerEntryHalt)
+  rw [
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_none
+      (Structured.MultiTapeLowering.ThreeTape.allReadRows3_find?_other
+        (state := structuredJoinerEntrySeparator)
+        (source := structuredJoinerEntryStart)
+        (target := structuredJoinerEntrySeparator)
+        (Tape.read source) (Tape.read scratch) (Tape.read work)
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        (by decide))]
+  exact
+    Structured.MultiTapeLowering.ThreeTape.allReadRows3_find?_same
+      structuredJoinerEntrySeparator structuredJoinerEntryHalt
+      (Tape.read source) (Tape.read scratch) (Tape.read work)
+      Structured.MultiTapeLowering.ThreeTape.keepR
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      Structured.MultiTapeLowering.ThreeTape.keepS
+
+theorem structuredJoinerEntryDescription_step_start
+    (source scratch work : Tape Bool) :
+    structuredJoinerEntryDescription.stepConfig
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntryStart source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntrySeparator
+          (Tape.move Direction.right source) scratch work) := by
+  rw [Structured.Description.stepConfig]
+  rw [structuredJoinerEntryDescription_lookup_start]
+  simp [Structured.MultiTapeLowering.ThreeTape.row,
+    Structured.MultiTapeLowering.ThreeTape.config,
+    structuredJoinerEntryDescription,
+    Structured.MultiTapeLowering.ThreeTape.description,
+    Structured.MultiTapeLowering.ThreeTape.keepR,
+    Structured.MultiTapeLowering.ThreeTape.keepS,
+    Structured.TapeAction.apply, Structured.TapeAction.stay,
+    Structured.HeadMove.apply]
+
+theorem structuredJoinerEntryDescription_step_separator
+    (source scratch work : Tape Bool) :
+    structuredJoinerEntryDescription.stepConfig
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntrySeparator source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntryHalt
+          (Tape.move Direction.right source) scratch work) := by
+  rw [Structured.Description.stepConfig]
+  rw [structuredJoinerEntryDescription_lookup_separator]
+  simp [Structured.MultiTapeLowering.ThreeTape.row,
+    Structured.MultiTapeLowering.ThreeTape.config,
+    structuredJoinerEntryDescription,
+    Structured.MultiTapeLowering.ThreeTape.description,
+    Structured.MultiTapeLowering.ThreeTape.keepR,
+    Structured.MultiTapeLowering.ThreeTape.keepS,
+    Structured.TapeAction.apply, Structured.TapeAction.stay,
+    Structured.HeadMove.apply]
+
+theorem structuredJoinerEntryDescription_run_two
+    (source scratch work : Tape Bool) :
+    structuredJoinerEntryDescription.runConfig 2
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntryStart source scratch work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredJoinerEntryHalt
+        (Tape.move Direction.right (Tape.move Direction.right source))
+        scratch work := by
+  simp [Structured.Description.runConfig,
+    structuredJoinerEntryDescription_step_start,
+    structuredJoinerEntryDescription_step_separator]
 
 def structuredMixedOptionCellQuoteLiveTailJoinerScratchTape :
     Tape Bool :=
@@ -581,6 +808,45 @@ theorem structuredJoinerInitialConfig_moveRightRight_sourceRestCons
     assemblySourceRestLiveTailEmitterQuoteRest] using
     mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
       w sourceRestTail bit stage
+
+theorem structuredJoinerEntryDescription_run_initial_sourceRestCons
+    (w sourceRestTail : Word Bool) (bit : Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits (bit :: sourceRestTail) stage =
+        List.append rawTailInit [last] ∧
+      structuredJoinerEntryDescription.runConfig 2
+          (structuredMixedOptionCellQuoteLiveTailJoinerInitialConfig
+            structuredJoinerEntryStart
+            { w := w, sourceRestBits := bit :: sourceRestTail,
+              stage := stage }) =
+        Structured.MultiTapeLowering.ThreeTape.config
+          structuredJoinerEntryHalt
+          (tapeAtCells
+            (none :: some last ::
+              List.append (rawTailInit.reverse.map some)
+                ((assemblySourceRestFinishPrefixQuoteOutputBits
+                  w (bit :: sourceRestTail) stage).reverse.map some))
+            (some false :: some true :: some bit ::
+              some (if bit then false else true) ::
+                List.append
+                  ((preservingCellPassCellBits sourceRestTail).map some)
+                  [none]))
+          structuredMixedOptionCellQuoteLiveTailJoinerScratchTape
+          structuredMixedOptionCellQuoteLiveTailJoinerWorkTape := by
+  rcases structuredJoinerInitialConfig_moveRightRight_sourceRestCons
+      structuredJoinerEntryStart w sourceRestTail bit stage with
+    ⟨rawTailInit, last, hraw, hmove⟩
+  refine ⟨rawTailInit, last, hraw, ?_⟩
+  rw [structuredMixedOptionCellQuoteLiveTailJoinerInitialConfig]
+  rw [structuredJoinerEntryDescription_run_two]
+  exact congrArg
+    (fun source =>
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredJoinerEntryHalt source
+        structuredMixedOptionCellQuoteLiveTailJoinerScratchTape
+        structuredMixedOptionCellQuoteLiveTailJoinerWorkTape)
+    hmove
 
 theorem structuredJoinerInitialConfig_moveRight_sourceRestNil
     (state : Nat) (w : Word Bool) (stage : Nat) :

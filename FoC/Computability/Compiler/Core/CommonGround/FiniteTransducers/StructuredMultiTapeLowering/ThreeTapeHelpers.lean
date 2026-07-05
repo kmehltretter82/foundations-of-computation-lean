@@ -235,6 +235,116 @@ def allReads3
   , mkRow (some true) (some true) (some true) ]
 
 /--
+Rows for one source state that accept every three-tape read tuple and apply a
+fixed action tuple.
+-/
+def allReadRows3
+    (source target : Nat)
+    (action0 action1 action2 : TapeAction) :
+    List Transition :=
+  allReads3
+    (fun read0 read1 read2 =>
+      row source read0 read1 read2 action0 action1 action2 target)
+
+theorem allReadRows3_supportsReadWriteRow3
+    (source target : Nat)
+    (action0 action1 action2 : TapeAction) :
+    forall row' : Transition,
+      row' ∈ allReadRows3 source target action0 action1 action2 ->
+        supportsReadWriteRow3 row' = true := by
+  intro row' hrow
+  simp [allReadRows3, allReads3] at hrow
+  rcases hrow with
+    hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow |
+    hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow |
+    hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow | hrow <;>
+    subst hrow <;>
+    exact row_supportsReadWriteRow3 _ _ _ _ _ _ _ _
+
+theorem allReadRows3_find?_same
+    (source target : Nat)
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction) :
+    List.find?
+        (Description.Matches source [read0, read1, read2])
+        (allReadRows3 source target action0 action1 action2) =
+      some
+        (row source read0 read1 read2
+          action0 action1 action2 target) := by
+  cases read0 <;> (try cases ‹Bool›) <;>
+    cases read1 <;> (try cases ‹Bool›) <;>
+      cases read2 <;> (try cases ‹Bool›) <;>
+        simp [allReadRows3, allReads3, row, Description.Matches]
+
+theorem allReadRows3_find?_other
+    {state source target : Nat}
+    (read0 read1 read2 : Option Bool)
+    (action0 action1 action2 : TapeAction)
+    (hstate : state ≠ source) :
+    List.find?
+        (Description.Matches state [read0, read1, read2])
+        (allReadRows3 source target action0 action1 action2) =
+      none := by
+  have hsource : source ≠ state := fun h => hstate h.symm
+  cases read0 <;> (try cases ‹Bool›) <;>
+    cases read1 <;> (try cases ‹Bool›) <;>
+      cases read2 <;> (try cases ‹Bool›) <;>
+        simp [allReadRows3, allReads3, row, Description.Matches,
+          hsource]
+
+theorem find?_append_of_find?_eq_some
+    {α : Type} {predicate : α -> Bool}
+    {rows rest : List α} {row' : α}
+    (hrows : rows.find? predicate = some row') :
+    (rows ++ rest).find? predicate = some row' := by
+  induction rows with
+  | nil =>
+      simp at hrows
+  | cons head tail ih =>
+      by_cases hhead : predicate head = true
+      · simp [List.find?, hhead] at hrows ⊢
+        exact hrows
+      · have hheadFalse : predicate head = false := by
+          cases h : predicate head <;> simp [h] at hhead ⊢
+        change
+          (match predicate head with
+          | true => some head
+          | false => tail.find? predicate) = some row' at hrows
+        rw [hheadFalse] at hrows
+        change
+          (match predicate head with
+          | true => some head
+          | false => (tail ++ rest).find? predicate) = some row'
+        rw [hheadFalse]
+        exact ih hrows
+
+theorem find?_append_of_find?_eq_none
+    {α : Type} {predicate : α -> Bool}
+    {rows rest : List α}
+    (hrows : rows.find? predicate = none) :
+    (rows ++ rest).find? predicate = rest.find? predicate := by
+  induction rows with
+  | nil =>
+      rfl
+  | cons head tail ih =>
+      by_cases hhead : predicate head = true
+      · simp [List.find?, hhead] at hrows
+      · have hheadFalse : predicate head = false := by
+          cases h : predicate head <;> simp [h] at hhead ⊢
+        change
+          (match predicate head with
+          | true => some head
+          | false => tail.find? predicate) = none at hrows
+        rw [hheadFalse] at hrows
+        change
+          (match predicate head with
+          | true => some head
+          | false => (tail ++ rest).find? predicate) =
+            rest.find? predicate
+        rw [hheadFalse]
+        exact ih hrows
+
+/--
 Build a three-tape structured description from a concrete transition table.
 
 Use {lit}`description_supported` or {lit}`description_supportsReadWriteRows3`
