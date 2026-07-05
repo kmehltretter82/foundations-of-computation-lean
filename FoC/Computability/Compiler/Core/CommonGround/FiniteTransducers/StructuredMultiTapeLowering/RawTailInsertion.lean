@@ -281,6 +281,113 @@ theorem description_supportsReadWriteRows3 :
 def runFuel (tail insert : Word Bool) : Nat :=
   3 * tail.length + 2 * insert.length + 7
 
+theorem replicate_none_append_cons_none
+    (n : Nat) (baseLeft : List (Option Bool)) :
+    List.replicate n (none : Option Bool) ++ none :: baseLeft =
+      none :: (List.replicate n (none : Option Bool) ++ baseLeft) := by
+  induction n with
+  | zero => simp
+  | succ n ih => simp [List.replicate_succ, ih]
+
+theorem copyTail_step_bit
+    (baseLeft : List (Option Bool)) (bit : Bool)
+    (remaining insert copied : Word Bool) :
+    description.runConfig 1
+        (config copyTail
+          (tapeAtCells baseLeft
+            (some bit :: List.append (remaining.map some)
+              (none :: List.append (insert.map some) [none])))
+          (scratchTape insert)
+          (outputFromBits copied)) =
+      config copyTail
+        (tapeAtCells (none :: baseLeft)
+          (List.append (remaining.map some)
+            (none :: List.append (insert.map some) [none])))
+        (scratchTape insert)
+        (outputFromBits (List.append copied [bit])) := by
+  cases bit <;>
+    simp [description, ThreeTape.description, rows, rowsForSourceRead,
+      rowsForScratchRead, rowsForWorkRead, allReads2, allReadRows3,
+      allReads3, Structured.Description.runConfig,
+      Structured.Description.stepConfig,
+      Structured.Description.lookupTransition,
+      config, row, eraseR, writeBitR, keepS,
+      Tape.read, tapeAtCells, outputFromBits]
+  all_goals
+    cases h :
+      List.map some remaining ++
+        none :: (List.map some insert ++ [none]) <;> rfl
+
+theorem copyTail_step_blank
+    (baseLeft : List (Option Bool)) (insert copied : Word Bool) :
+    description.runConfig 1
+        (config copyTail
+          (tapeAtCells baseLeft
+            (none :: List.append (insert.map some) [none]))
+          (scratchTape insert)
+          (outputFromBits copied)) =
+      config rewindTailEntry
+        (tapeAtCells baseLeft
+          (none :: List.append (insert.map some) [none]))
+        (scratchTape insert)
+        (outputFromBits copied) := by
+  simp [description, ThreeTape.description, rows, rowsForSourceRead,
+    rowsForScratchRead, rowsForWorkRead, allReads2, allReadRows3,
+    allReads3, Structured.Description.runConfig,
+    Structured.Description.stepConfig,
+    Structured.Description.lookupTransition,
+    Structured.Description.Matches, List.find?,
+    config, row, keepS, Structured.TapeAction.apply,
+    Structured.TapeAction.stay, Structured.HeadMove.apply,
+    Tape.read, tapeAtCells, outputFromBits, scratchTape]
+
+theorem copyTail_run_loop
+    (remaining copied insert : Word Bool)
+    (baseLeft : List (Option Bool)) :
+    description.runConfig (remaining.length + 1)
+        (config copyTail
+          (tapeAtCells baseLeft
+            (List.append (remaining.map some)
+              (none :: List.append (insert.map some) [none])))
+          (scratchTape insert)
+          (outputFromBits copied)) =
+      config rewindTailEntry
+        (tapeAtCells
+          (List.append
+            (List.replicate remaining.length (none : Option Bool))
+            baseLeft)
+          (none :: List.append (insert.map some) [none]))
+        (scratchTape insert)
+        (outputFromBits (List.append copied remaining)) := by
+  induction remaining generalizing baseLeft copied with
+  | nil =>
+      simpa using copyTail_step_blank baseLeft insert copied
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp [Nat.add_comm, Nat.add_left_comm]]
+      rw [Structured.Description.runConfig_add]
+      rw [show
+        List.append (List.map some (bit :: rest))
+            (none :: List.append (insert.map some) [none]) =
+          some bit :: List.append (List.map some rest)
+            (none :: List.append (insert.map some) [none]) by
+        rfl]
+      rw [copyTail_step_bit]
+      rw [ih (List.append copied [bit]) (none :: baseLeft)]
+      simp [List.append_assoc, replicate_none_append_cons_none,
+        List.replicate_succ]
+
+theorem copyTail_run
+    (pref tail insert : Word Bool) :
+    description.runConfig (tail.length + 1)
+        (initialConfig pref tail insert) =
+      config rewindTailEntry
+        (erasedTailSourceTape pref tail insert)
+        (scratchTape insert)
+        (outputFromBits tail) := by
+  simpa [initialConfig, sourceTape, erasedTailSourceTape] using
+    copyTail_run_loop tail [] insert (pref.reverse.map some)
+
 theorem restoredSourceTape_normalizedOutput
     (pref tail insert : Word Bool) :
     Tape.normalizedOutput (restoredSourceTape pref tail insert) =

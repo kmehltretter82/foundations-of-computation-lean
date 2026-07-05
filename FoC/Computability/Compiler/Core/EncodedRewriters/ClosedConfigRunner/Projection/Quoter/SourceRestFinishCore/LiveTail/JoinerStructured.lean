@@ -1254,6 +1254,76 @@ def structuredMixedOptionCellQuoteLiveTailJoinerWorkTape :
     Tape Bool :=
   Structured.MultiTapeLowering.ThreeTape.outputFromBits []
 
+/-!
+The raw tail insertion component is the current lowerer-facing body candidate
+for the joiner: at the visible-cell level it transforms
+{lit}`emittedPrefix ++ rawTail ++ quoteRest` into
+{lit}`emittedPrefix ++ quoteRest ++ rawTail`.
+
+Its source contract starts at the prefix/raw-tail boundary and its final tape is
+parked past the restored tail, so the bridges below deliberately prove
+{name}`Tape.cells` or {name}`Tape.normalizedOutput` facts rather than exact
+public joiner configuration equality.
+-/
+def structuredRawTailInsertionJoinerDescription :
+    Structured.Description :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description
+
+theorem structuredRawTailInsertionJoinerDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredRawTailInsertionJoinerDescription :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description_supported
+
+def structuredRawTailInsertionJoinerInitialConfig
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Structured.Configuration :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.initialConfig
+    (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+    (assemblySourceRestLiveTailEmitterRawTail p)
+    (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+def structuredRawTailInsertionJoinerFinalConfig
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Structured.Configuration :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.finalConfig
+    (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+    (assemblySourceRestLiveTailEmitterRawTail p)
+    (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionSource_cells_eq_separated
+    (emittedPrefix rawTail quoteRest : Word Bool) :
+    Tape.cells
+        (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.sourceTape
+          emittedPrefix rawTail quoteRest) =
+      Tape.cells
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          emittedPrefix rawTail quoteRest) := by
+  cases rawTail with
+  | nil =>
+      simp [
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.sourceTape,
+        mixedOptionCellQuoteLiveTailSeparatedTape,
+        DovetailInitialLayoutInitializer.tapeAtCells,
+        CommonGround.FiniteTransducers.tapeAtCells,
+        Tape.cells, List.map_reverse]
+  | cons head rest =>
+      rw [mixedOptionCellQuoteLiveTailSeparatedTape_cells_cons]
+      simp [
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.sourceTape,
+        CommonGround.FiniteTransducers.tapeAtCells,
+        Tape.cells, List.map_reverse]
+
+theorem structuredRawTailInsertionSource_normalizedOutput_eq_separated
+    (emittedPrefix rawTail quoteRest : Word Bool) :
+    Tape.normalizedOutput
+        (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.sourceTape
+          emittedPrefix rawTail quoteRest) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          emittedPrefix rawTail quoteRest) := by
+  simp [Tape.normalizedOutput,
+    structuredRawTailInsertionSource_cells_eq_separated]
+
 theorem structuredRawTailInsertionRestoredSource_normalizedOutput_eq_joined
     (emittedPrefix rawTail quoteRest : Word Bool) :
     Tape.normalizedOutput
@@ -1280,6 +1350,60 @@ theorem structuredRawTailInsertionRestoredSource_normalizedOutput_eq_joined
             (fun cell => cell)
       rw [mixedOptionCellQuoteLiveTailJoinedTape_cells_cons]
       simp [List.filterMap_append, Function.comp_def]
+
+theorem structuredRawTailInsertionJoinerInitial_source_normalizedOutput
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerInitialConfig p).tapes 0) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
+  exact
+    structuredRawTailInsertionSource_normalizedOutput_eq_separated
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerInitial_source_normalizedOutput_eq_afterRawTailScanTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerInitialConfig p).tapes 0) =
+      Tape.normalizedOutput
+        (MixedParserStackWholeSourceAfterRawTailScanTape
+          p.w p.sourceRestBits p.stage) := by
+  rw [structuredRawTailInsertionJoinerInitial_source_normalizedOutput]
+  rw [assemblySourceRestLiveTailJoinerSeparatedTape_eq_afterRawTailScanTape]
+
+theorem structuredRawTailInsertionJoinerFinal_source_normalizedOutput
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerFinalConfig p).tapes 0) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
+  exact
+    structuredRawTailInsertionRestoredSource_normalizedOutput_eq_joined
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerFinal_source_normalizedOutput_eq_targetTape
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerFinalConfig p).tapes 0) =
+      Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape
+          p.w p.sourceRestBits p.stage) := by
+  rw [structuredRawTailInsertionJoinerFinal_source_normalizedOutput]
+  rw [assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape]
 
 def structuredMixedOptionCellQuoteLiveTailJoinerCompactionLeftCells
     (w sourceRestBits : Word Bool) (stage : Nat)
