@@ -1,4 +1,6 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerRuns
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic
 
@@ -302,6 +304,16 @@ def structuredRightBlankLocalGapCompactorDescription :
   structuredLiftOneTapeDescription
     CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription
 
+def structuredRightBlankGapPayloadScanDescription :
+    Structured.Description :=
+  structuredLiftOneTapeDescription
+    CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription
+
+def structuredLiftedSentinelGapCompactorDescription :
+    Structured.Description :=
+  structuredLiftOneTapeDescription
+    CommonGround.FiniteTransducers.sentinelGapCompactorDescription
+
 def structuredOneGapRightEndCompactorDescription :
     Structured.Description :=
   structuredLiftOneTapeDescription
@@ -335,6 +347,18 @@ theorem structuredRightBlankLocalGapCompactorDescription_supported :
   structuredLiftOneTapeDescription_supported
     CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription
 
+theorem structuredRightBlankGapPayloadScanDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredRightBlankGapPayloadScanDescription :=
+  structuredLiftOneTapeDescription_supported
+    CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription
+
+theorem structuredLiftedSentinelGapCompactorDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredLiftedSentinelGapCompactorDescription :=
+  structuredLiftOneTapeDescription_supported
+    CommonGround.FiniteTransducers.sentinelGapCompactorDescription
+
 theorem structuredOneGapRightEndCompactorDescription_supported :
     Structured.MultiTapeLowering.SupportsReadWriteRows3
       structuredOneGapRightEndCompactorDescription :=
@@ -352,6 +376,74 @@ theorem structuredMixedOptionCellQuoteLiveTailJoinerDiagnosticLiftDescription_su
       structuredMixedOptionCellQuoteLiveTailJoinerDiagnosticLiftDescription :=
   structuredLiftOneTapeDescription_supported
     mixedOptionCellQuoteLiveTailJoinerOneTapeDescription
+
+theorem structuredRightBlankGapPayloadScanDescription_run_to_target
+    (baseLeft : List (Option Bool)) (gap : Nat)
+    (current : Bool) (payloadRest : Word Bool)
+    (padding : List (Option Bool)) (scratch work : Tape Bool) :
+    exists n : Nat,
+      structuredRightBlankGapPayloadScanDescription.runConfig n
+          (Structured.MultiTapeLowering.ThreeTape.config
+            CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription.start
+            (CommonGround.FiniteTransducers.rightBlankGapPayloadScanSourceTape
+              baseLeft gap current payloadRest padding)
+            scratch work) =
+        Structured.MultiTapeLowering.ThreeTape.config
+          CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription.halt
+          (CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+            baseLeft gap current payloadRest padding)
+          scratch work := by
+  simpa [structuredRightBlankGapPayloadScanDescription] using
+    structuredLiftOneTapeDescription_runConfig_eq_halt_of_haltsFromTape
+      CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription
+      (input :=
+        CommonGround.FiniteTransducers.rightBlankGapPayloadScanSourceTape
+          baseLeft gap current payloadRest padding)
+      (output :=
+        CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+          baseLeft gap current payloadRest padding)
+      (scratch := scratch)
+      (work := work)
+      (CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription_haltsFromTape
+        baseLeft gap current payloadRest padding)
+
+theorem structuredLiftedSentinelGapCompactorDescription_run_final_pass
+    (baseTail : List (Option Bool)) (leftBit current : Bool)
+    (leftRest : Word Bool) (paddingScratch : Nat)
+    (rightPadding : List (Option Bool)) (scratch work : Tape Bool) :
+    exists n : Nat,
+      structuredLiftedSentinelGapCompactorDescription.runConfig n
+          (Structured.MultiTapeLowering.ThreeTape.config
+            CommonGround.FiniteTransducers.sentinelGapCompactorDescription.start
+            (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+              (some leftBit :: baseTail) current leftRest paddingScratch
+              rightPadding)
+            scratch work) =
+        Structured.MultiTapeLowering.ThreeTape.config
+          CommonGround.FiniteTransducers.sentinelGapCompactorDescription.halt
+          (CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
+            (some leftBit :: baseTail) (current :: leftRest).reverse
+            (List.append
+              (List.replicate paddingScratch (none : Option Bool))
+              rightPadding))
+          scratch work := by
+  simpa [structuredLiftedSentinelGapCompactorDescription] using
+    structuredLiftOneTapeDescription_runConfig_eq_halt_of_haltsFromTape
+      CommonGround.FiniteTransducers.sentinelGapCompactorDescription
+      (input :=
+        CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+          (some leftBit :: baseTail) current leftRest paddingScratch
+          rightPadding)
+      (output :=
+        CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
+          (some leftBit :: baseTail) (current :: leftRest).reverse
+          (List.append
+            (List.replicate paddingScratch (none : Option Bool))
+            rightPadding))
+      (scratch := scratch)
+      (work := work)
+      (CommonGround.FiniteTransducers.sentinelGapCompactorDescription_haltsFromTape_final_pass
+        baseTail leftBit current leftRest paddingScratch rightPadding)
 
 theorem structuredOneGapRightEndCompactorDescription_run_leftStack
     (baseLeft : List (Option Bool)) (current : Bool)
@@ -420,6 +512,53 @@ theorem structuredRightBlankLocalGapCompactorDescription_run_leftStack_rightPadd
       (work := work)
       (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription_haltsFromTapeWithBase_leftStack_rightPadding
         baseLeft current leftRest paddingScratch pad rightPadding)
+
+theorem structuredRightBlankLocalGapCompactorDescription_run_gapBase_succ_to_nextSource
+    (gap : Nat) (baseTail : List (Option Bool))
+    (current : Bool) (leftRest : Word Bool)
+    (paddingScratch : Nat) (rightPadding : List (Option Bool))
+    (scratch work : Tape Bool) :
+    exists n : Nat,
+      structuredRightBlankLocalGapCompactorDescription.runConfig n
+          (Structured.MultiTapeLowering.ThreeTape.config
+            CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription.start
+            (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+              (CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft
+                gap.succ baseTail)
+              current leftRest paddingScratch
+              (none :: rightPadding))
+            scratch work) =
+        Structured.MultiTapeLowering.ThreeTape.config
+          CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription.halt
+          (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+            (CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft
+              gap baseTail)
+            current leftRest 2
+            (List.append
+              (List.replicate paddingScratch (none : Option Bool))
+              rightPadding))
+          scratch work := by
+  simpa [structuredRightBlankLocalGapCompactorDescription] using
+    structuredLiftOneTapeDescription_runConfig_eq_halt_of_haltsFromTape
+      CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription
+      (input :=
+        CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+          (CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft
+            gap.succ baseTail)
+          current leftRest paddingScratch
+          (none :: rightPadding))
+      (output :=
+        CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+          (CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft
+            gap baseTail)
+          current leftRest 2
+          (List.append
+            (List.replicate paddingScratch (none : Option Bool))
+            rightPadding))
+      (scratch := scratch)
+      (work := work)
+      (CommonGround.FiniteTransducers.rightBlankLocalGapCompactorDescription_haltsFrom_gapBase_succ_to_nextSource
+        gap baseTail current leftRest paddingScratch rightPadding)
 
 def structuredJoinerEntryStart : Nat := 0
 
@@ -615,6 +754,497 @@ theorem structuredJoinerEntryDescription_run_two
     structuredJoinerEntryDescription_step_start,
     structuredJoinerEntryDescription_step_separator]
 
+def structuredRowsForSourceRead
+    (source : Nat) (sourceRead : Option Bool)
+    (action0 action1 action2 : Structured.TapeAction)
+    (target : Nat) : List Structured.Transition :=
+  Structured.MultiTapeLowering.ThreeTape.allReads2
+    (fun read1 read2 =>
+      Structured.MultiTapeLowering.ThreeTape.row
+        source sourceRead read1 read2
+        action0 action1 action2 target)
+
+theorem structuredRowsForSourceRead_supportsReadWriteRow3
+    (source : Nat) (sourceRead : Option Bool)
+    (action0 action1 action2 : Structured.TapeAction)
+    (target : Nat) :
+    forall row : Structured.Transition,
+      row ∈ structuredRowsForSourceRead
+          source sourceRead action0 action1 action2 target ->
+        Structured.MultiTapeLowering.supportsReadWriteRow3 row =
+          true := by
+  intro row hrow
+  simp [structuredRowsForSourceRead,
+    Structured.MultiTapeLowering.ThreeTape.allReads2] at hrow
+  rcases hrow with
+    rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    exact
+      Structured.MultiTapeLowering.ThreeTape.row_supportsReadWriteRow3
+        _ _ _ _ _ _ _ _
+
+theorem structuredRowsForSourceRead_find?_same
+    (source target : Nat) (sourceRead read1 read2 : Option Bool)
+    (action0 action1 action2 : Structured.TapeAction) :
+    List.find?
+        (Structured.Description.Matches
+          source [sourceRead, read1, read2])
+        (structuredRowsForSourceRead
+          source sourceRead action0 action1 action2 target) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          source sourceRead read1 read2 action0 action1 action2
+          target) := by
+  cases sourceRead <;> (try cases ‹Bool›) <;>
+    cases read1 <;> (try cases ‹Bool›) <;>
+      cases read2 <;> (try cases ‹Bool›) <;>
+        simp [structuredRowsForSourceRead,
+          Structured.MultiTapeLowering.ThreeTape.allReads2,
+          Structured.MultiTapeLowering.ThreeTape.row,
+          Structured.Description.Matches]
+
+theorem structuredRowsForSourceRead_find?_otherSourceRead
+    (source target : Nat) (expected actual read1 read2 : Option Bool)
+    (action0 action1 action2 : Structured.TapeAction)
+    (hactual : actual ≠ expected) :
+    List.find?
+        (Structured.Description.Matches
+          source [actual, read1, read2])
+        (structuredRowsForSourceRead
+          source expected action0 action1 action2 target) =
+      none := by
+  cases expected <;> (try cases ‹Bool›) <;>
+    cases actual <;> (try cases ‹Bool›) <;>
+      cases read1 <;> (try cases ‹Bool›) <;>
+        cases read2 <;> (try cases ‹Bool›) <;>
+          simp [structuredRowsForSourceRead,
+            Structured.MultiTapeLowering.ThreeTape.allReads2,
+            Structured.MultiTapeLowering.ThreeTape.row,
+            Structured.Description.Matches] at hactual ⊢
+
+def structuredQuoteRestCopyStart : Nat := 0
+
+def structuredQuoteRestCopyHalt : Nat := 1
+
+def structuredQuoteRestCopyRows : List Structured.Transition :=
+  List.append
+    (structuredRowsForSourceRead structuredQuoteRestCopyStart
+      (some false)
+      Structured.MultiTapeLowering.ThreeTape.keepR
+      (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      structuredQuoteRestCopyStart)
+    (List.append
+      (structuredRowsForSourceRead structuredQuoteRestCopyStart
+        (some true)
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        structuredQuoteRestCopyStart)
+      (structuredRowsForSourceRead structuredQuoteRestCopyStart
+        none
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        structuredQuoteRestCopyHalt))
+
+def structuredQuoteRestCopyDescription : Structured.Description :=
+  Structured.MultiTapeLowering.ThreeTape.description
+    2 structuredQuoteRestCopyStart structuredQuoteRestCopyHalt
+    structuredQuoteRestCopyRows
+
+theorem structuredQuoteRestCopyDescription_supported :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3
+      structuredQuoteRestCopyDescription := by
+  refine ⟨rfl, ?_⟩
+  intro row hrow
+  simp [structuredQuoteRestCopyDescription,
+    Structured.MultiTapeLowering.ThreeTape.description,
+    structuredQuoteRestCopyRows] at hrow
+  rcases hrow with hrow | hrow | hrow
+  · exact
+      structuredRowsForSourceRead_supportsReadWriteRow3
+        structuredQuoteRestCopyStart (some false)
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        structuredQuoteRestCopyStart row hrow
+  · exact
+      structuredRowsForSourceRead_supportsReadWriteRow3
+        structuredQuoteRestCopyStart (some true)
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        structuredQuoteRestCopyStart row hrow
+  · exact
+      structuredRowsForSourceRead_supportsReadWriteRow3
+        structuredQuoteRestCopyStart none
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        structuredQuoteRestCopyHalt row hrow
+
+theorem structuredQuoteRestCopyRows_find?_false
+    (read1 read2 : Option Bool) :
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart [some false, read1, read2])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart (some false) read1 read2
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart) := by
+  unfold structuredQuoteRestCopyRows
+  exact
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_some
+      (structuredRowsForSourceRead_find?_same
+        structuredQuoteRestCopyStart structuredQuoteRestCopyStart
+        (some false) read1 read2
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+        Structured.MultiTapeLowering.ThreeTape.keepS)
+
+theorem structuredQuoteRestCopyRows_find?_true
+    (read1 read2 : Option Bool) :
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart [some true, read1, read2])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart (some true) read1 read2
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart) := by
+  unfold structuredQuoteRestCopyRows
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart [some true, read1, read2])
+        (structuredRowsForSourceRead structuredQuoteRestCopyStart
+            (some false)
+            Structured.MultiTapeLowering.ThreeTape.keepR
+            (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+            Structured.MultiTapeLowering.ThreeTape.keepS
+            structuredQuoteRestCopyStart ++
+          (structuredRowsForSourceRead structuredQuoteRestCopyStart
+              (some true)
+              Structured.MultiTapeLowering.ThreeTape.keepR
+              (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              structuredQuoteRestCopyStart ++
+            structuredRowsForSourceRead structuredQuoteRestCopyStart
+              none
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              structuredQuoteRestCopyHalt)) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart (some true) read1 read2
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart)
+  rw [
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_none
+      (structuredRowsForSourceRead_find?_otherSourceRead
+        structuredQuoteRestCopyStart structuredQuoteRestCopyStart
+        (some false) (some true) read1 read2
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        (by decide))]
+  exact
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_some
+      (structuredRowsForSourceRead_find?_same
+        structuredQuoteRestCopyStart structuredQuoteRestCopyStart
+        (some true) read1 read2
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+        Structured.MultiTapeLowering.ThreeTape.keepS)
+
+theorem structuredQuoteRestCopyRows_find?_blank
+    (read1 read2 : Option Bool) :
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart [none, read1, read2])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart none read1 read2
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyHalt) := by
+  unfold structuredQuoteRestCopyRows
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart [none, read1, read2])
+        (structuredRowsForSourceRead structuredQuoteRestCopyStart
+            (some false)
+            Structured.MultiTapeLowering.ThreeTape.keepR
+            (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+            Structured.MultiTapeLowering.ThreeTape.keepS
+            structuredQuoteRestCopyStart ++
+          (structuredRowsForSourceRead structuredQuoteRestCopyStart
+              (some true)
+              Structured.MultiTapeLowering.ThreeTape.keepR
+              (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              structuredQuoteRestCopyStart ++
+            structuredRowsForSourceRead structuredQuoteRestCopyStart
+              none
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              Structured.MultiTapeLowering.ThreeTape.keepS
+              structuredQuoteRestCopyHalt)) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart none read1 read2
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyHalt)
+  rw [
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_none
+      (structuredRowsForSourceRead_find?_otherSourceRead
+        structuredQuoteRestCopyStart structuredQuoteRestCopyStart
+        (some false) none read1 read2
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        (by decide))]
+  rw [
+    Structured.MultiTapeLowering.ThreeTape.find?_append_of_find?_eq_none
+      (structuredRowsForSourceRead_find?_otherSourceRead
+        structuredQuoteRestCopyStart structuredQuoteRestCopyStart
+        (some true) none read1 read2
+        Structured.MultiTapeLowering.ThreeTape.keepR
+        (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+        Structured.MultiTapeLowering.ThreeTape.keepS
+        (by decide))]
+  exact
+    structuredRowsForSourceRead_find?_same
+      structuredQuoteRestCopyStart structuredQuoteRestCopyHalt
+      none read1 read2
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      Structured.MultiTapeLowering.ThreeTape.keepS
+      Structured.MultiTapeLowering.ThreeTape.keepS
+
+theorem structuredQuoteRestCopyDescription_lookup_false
+    (source scratch work : Tape Bool)
+    (hsource : Tape.read source = some false) :
+    structuredQuoteRestCopyDescription.lookupTransition
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          (some false) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart) := by
+  rw [Structured.Description.lookupTransition]
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart
+          [Tape.read source, Tape.read scratch, Tape.read work])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          (some false) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR false)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart)
+  rw [hsource]
+  exact structuredQuoteRestCopyRows_find?_false
+    (Tape.read scratch) (Tape.read work)
+
+theorem structuredQuoteRestCopyDescription_lookup_true
+    (source scratch work : Tape Bool)
+    (hsource : Tape.read source = some true) :
+    structuredQuoteRestCopyDescription.lookupTransition
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          (some true) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart) := by
+  rw [Structured.Description.lookupTransition]
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart
+          [Tape.read source, Tape.read scratch, Tape.read work])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          (some true) (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepR
+          (Structured.MultiTapeLowering.ThreeTape.writeBitR true)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyStart)
+  rw [hsource]
+  exact structuredQuoteRestCopyRows_find?_true
+    (Tape.read scratch) (Tape.read work)
+
+theorem structuredQuoteRestCopyDescription_lookup_blank
+    (source scratch work : Tape Bool)
+    (hsource : Tape.read source = none) :
+    structuredQuoteRestCopyDescription.lookupTransition
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart source scratch work) =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          none (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyHalt) := by
+  rw [Structured.Description.lookupTransition]
+  change
+    List.find?
+        (Structured.Description.Matches
+          structuredQuoteRestCopyStart
+          [Tape.read source, Tape.read scratch, Tape.read work])
+        structuredQuoteRestCopyRows =
+      some
+        (Structured.MultiTapeLowering.ThreeTape.row
+          structuredQuoteRestCopyStart
+          none (Tape.read scratch) (Tape.read work)
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          Structured.MultiTapeLowering.ThreeTape.keepS
+          structuredQuoteRestCopyHalt)
+  rw [hsource]
+  exact structuredQuoteRestCopyRows_find?_blank
+    (Tape.read scratch) (Tape.read work)
+
+theorem structuredQuoteRestCopyDescription_step_bit
+    (baseLeft : List (Option Bool)) (bit : Bool)
+    (remaining copied : Word Bool) (work : Tape Bool) :
+    structuredQuoteRestCopyDescription.runConfig 1
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart
+          (tapeAtCells baseLeft
+            (some bit :: List.append (remaining.map some) [none]))
+          (Structured.MultiTapeLowering.ThreeTape.outputFromBits copied)
+          work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredQuoteRestCopyStart
+        (tapeAtCells (some bit :: baseLeft)
+          (List.append (remaining.map some) [none]))
+        (Structured.MultiTapeLowering.ThreeTape.outputFromBits
+          (List.append copied [bit]))
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  cases bit
+  · rw [structuredQuoteRestCopyDescription_lookup_false _ _ _ (by rfl)]
+    unfold structuredQuoteRestCopyDescription
+    three_tape_step [
+      Structured.MultiTapeLowering.ThreeTape.outputFromBits]
+    cases h :
+        List.map some remaining ++ [none] <;> rfl
+  · rw [structuredQuoteRestCopyDescription_lookup_true _ _ _ (by rfl)]
+    unfold structuredQuoteRestCopyDescription
+    three_tape_step [
+      Structured.MultiTapeLowering.ThreeTape.outputFromBits]
+    cases h :
+        List.map some remaining ++ [none] <;> rfl
+
+theorem structuredQuoteRestCopyDescription_step_blank
+    (baseLeft : List (Option Bool)) (copied : Word Bool)
+    (work : Tape Bool) :
+    structuredQuoteRestCopyDescription.runConfig 1
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart
+          (tapeAtCells baseLeft [none])
+          (Structured.MultiTapeLowering.ThreeTape.outputFromBits copied)
+          work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredQuoteRestCopyHalt
+        (tapeAtCells baseLeft [none])
+        (Structured.MultiTapeLowering.ThreeTape.outputFromBits copied)
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [structuredQuoteRestCopyDescription_lookup_blank _ _ _ (by rfl)]
+  unfold structuredQuoteRestCopyDescription
+  three_tape_step [
+    Structured.MultiTapeLowering.ThreeTape.outputFromBits]
+
+theorem structuredQuoteRestCopyDescription_run_loop
+    (remaining copied : Word Bool)
+    (baseLeft : List (Option Bool)) (work : Tape Bool) :
+    structuredQuoteRestCopyDescription.runConfig
+        (remaining.length + 1)
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart
+          (tapeAtCells baseLeft
+            (List.append (remaining.map some) [none]))
+          (Structured.MultiTapeLowering.ThreeTape.outputFromBits copied)
+          work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredQuoteRestCopyHalt
+        (tapeAtCells
+          (List.append (remaining.reverse.map some) baseLeft)
+          [none])
+        (Structured.MultiTapeLowering.ThreeTape.outputFromBits
+          (List.append copied remaining))
+        work := by
+  induction remaining generalizing baseLeft copied with
+  | nil =>
+      simpa using
+        structuredQuoteRestCopyDescription_step_blank baseLeft copied work
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp [Nat.add_comm, Nat.add_left_comm]]
+      rw [Structured.Description.runConfig_add]
+      rw [show
+        List.append (List.map some (bit :: rest)) [none] =
+          some bit :: List.append (List.map some rest) [none] by
+        rfl]
+      rw [structuredQuoteRestCopyDescription_step_bit]
+      rw [ih (List.append copied [bit]) (some bit :: baseLeft)]
+      simp [List.reverse_cons, List.map_append, List.append_assoc]
+
+theorem structuredQuoteRestCopyDescription_run
+    (quoteRest : Word Bool) (baseLeft : List (Option Bool))
+    (work : Tape Bool) :
+    structuredQuoteRestCopyDescription.runConfig
+        (quoteRest.length + 1)
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart
+          (tapeAtCells baseLeft
+            (List.append (quoteRest.map some) [none]))
+          (Structured.MultiTapeLowering.ThreeTape.outputFromBits [])
+          work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredQuoteRestCopyHalt
+        (tapeAtCells
+          (List.append (quoteRest.reverse.map some) baseLeft)
+          [none])
+        (Structured.MultiTapeLowering.ThreeTape.outputFromBits quoteRest)
+        work := by
+  simpa using
+    structuredQuoteRestCopyDescription_run_loop quoteRest [] baseLeft work
+
 def structuredMixedOptionCellQuoteLiveTailJoinerScratchTape :
     Tape Bool :=
   Structured.MultiTapeLowering.ThreeTape.outputFromBits []
@@ -784,6 +1414,134 @@ theorem structuredJoinerInitialConfig_moveRightRight_sourceRestCons
     mixedOptionCellQuoteLiveTailSeparatedTape_move_right_right_assembly_sourceRestCons
       w sourceRestTail bit stage
 
+theorem structuredJoinerInitialConfig_moveRight_eq_gapPayloadScanSource_sourceRestCons
+    (state : Nat) (w sourceRestTail : Word Bool)
+    (bit : Bool) (stage : Nat) :
+    exists rawTailInit : Word Bool,
+    exists last : Bool,
+      assemblySourceRestFinishRawTailBits (bit :: sourceRestTail) stage =
+        List.append rawTailInit [last] ∧
+      Tape.move Direction.right
+          (Structured.Description.tapeAt
+            (structuredMixedOptionCellQuoteLiveTailJoinerInitialConfig
+              state
+              { w := w, sourceRestBits := bit :: sourceRestTail,
+                stage := stage }).tapes
+            0) =
+        CommonGround.FiniteTransducers.rightBlankGapPayloadScanSourceTape
+          (some last ::
+            List.append (rawTailInit.reverse.map some)
+              ((assemblySourceRestFinishPrefixQuoteOutputBits
+                w (bit :: sourceRestTail) stage).reverse.map some))
+          1
+          false
+          (true :: bit :: (if bit then false else true) ::
+            preservingCellPassCellBits sourceRestTail)
+          [] := by
+  rcases assemblySourceRestFinishRawTailBits_lastSplit_exists
+      (bit :: sourceRestTail) stage with
+    ⟨rawTailInit, last, hraw⟩
+  refine ⟨rawTailInit, last, hraw, ?_⟩
+  rw [structuredJoinerInitialConfig_sourceTape]
+  rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
+    assemblySourceRestLiveTailEmitterRawTail,
+    assemblySourceRestLiveTailEmitterQuoteRest]
+  rw [hraw]
+  rw [mixedOptionCellQuoteLiveTailSeparatedTape_move_right_rawTailLast]
+  cases bit <;>
+    simp [CommonGround.FiniteTransducers.rightBlankGapPayloadScanSourceTape,
+      DovetailInitialLayoutInitializer.tapeAtCells,
+      CommonGround.FiniteTransducers.tapeAtCells,
+      preservingCellPassCellBits, preservingCellPassZeroBits,
+      preservingCellPassOneBits, List.replicate_succ]
+
+theorem structuredJoinerQuoteRestPayload_lastSplit_sourceRestCons
+    (sourceRestTail : Word Bool) (bit : Bool) :
+    exists payloadPref : Word Bool,
+    exists payloadLast : Bool,
+      false :: true :: bit :: (if bit then false else true) ::
+          preservingCellPassCellBits sourceRestTail =
+        List.append payloadPref [payloadLast] := by
+  rcases exists_reverse_append_singleton_of_cons false
+      (true :: bit :: (if bit then false else true) ::
+        preservingCellPassCellBits sourceRestTail) with
+    ⟨payloadRev, payloadLast, hpayload⟩
+  exact ⟨payloadRev.reverse, payloadLast, hpayload⟩
+
+theorem structuredJoinerGapPayloadScanTarget_moveRight_eq_sentinelSource_sourceRestCons
+    (baseTail : List (Option Bool)) (rawLast : Bool)
+    (sourceRestTail payloadPref : Word Bool)
+    (bit payloadLast : Bool)
+    (hpayload :
+      false :: true :: bit :: (if bit then false else true) ::
+          preservingCellPassCellBits sourceRestTail =
+        List.append payloadPref [payloadLast]) :
+    Tape.move Direction.right
+        (CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+          (some rawLast :: baseTail)
+          1
+          false
+          (true :: bit :: (if bit then false else true) ::
+            preservingCellPassCellBits sourceRestTail)
+          []) =
+      CommonGround.FiniteTransducers.rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (some rawLast :: baseTail)
+        payloadLast
+        payloadPref.reverse
+        0
+        [] := by
+  simpa [CommonGround.FiniteTransducers.rightBlankLocalGapBaseLeft] using
+    CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape_move_right_eq_localGapSource
+      (some rawLast :: baseTail)
+      0
+      false
+      payloadLast
+      (true :: bit :: (if bit then false else true) ::
+        preservingCellPassCellBits sourceRestTail)
+      payloadPref
+      []
+      hpayload
+
+theorem structuredLiftedSentinelGapCompactorDescription_run_from_scanTarget_sourceRestCons
+    (baseTail : List (Option Bool)) (rawLast : Bool)
+    (sourceRestTail payloadPref : Word Bool)
+    (bit payloadLast : Bool)
+    (hpayload :
+      false :: true :: bit :: (if bit then false else true) ::
+          preservingCellPassCellBits sourceRestTail =
+        List.append payloadPref [payloadLast])
+    (scratch work : Tape Bool) :
+    exists n : Nat,
+      structuredLiftedSentinelGapCompactorDescription.runConfig n
+          (Structured.MultiTapeLowering.ThreeTape.config
+            CommonGround.FiniteTransducers.sentinelGapCompactorDescription.start
+            (Tape.move Direction.right
+              (CommonGround.FiniteTransducers.rightBlankGapPayloadScanTargetTape
+                (some rawLast :: baseTail)
+                1
+                false
+                (true :: bit :: (if bit then false else true) ::
+                  preservingCellPassCellBits sourceRestTail)
+                []))
+            scratch work) =
+        Structured.MultiTapeLowering.ThreeTape.config
+          CommonGround.FiniteTransducers.sentinelGapCompactorDescription.halt
+          (CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding
+            (some rawLast :: baseTail)
+            (payloadLast :: payloadPref.reverse).reverse
+            [])
+          scratch work := by
+  rcases
+      structuredLiftedSentinelGapCompactorDescription_run_final_pass
+        baseTail rawLast payloadLast payloadPref.reverse 0 []
+        scratch work with
+    ⟨n, hn⟩
+  refine ⟨n, ?_⟩
+  rw [
+    structuredJoinerGapPayloadScanTarget_moveRight_eq_sentinelSource_sourceRestCons
+      baseTail rawLast sourceRestTail payloadPref bit payloadLast hpayload]
+  simpa using hn
+
 theorem structuredJoinerEntryDescription_run_initial_sourceRestCons
     (w sourceRestTail : Word Bool) (bit : Bool) (stage : Nat) :
     exists rawTailInit : Word Bool,
@@ -822,6 +1580,51 @@ theorem structuredJoinerEntryDescription_run_initial_sourceRestCons
         structuredMixedOptionCellQuoteLiveTailJoinerScratchTape
         structuredMixedOptionCellQuoteLiveTailJoinerWorkTape)
     hmove
+
+theorem structuredQuoteRestCopyDescription_run_entryTape_sourceRestCons
+    (w sourceRestTail rawTailInit : Word Bool)
+    (bit last : Bool) (stage : Nat) (work : Tape Bool) :
+    structuredQuoteRestCopyDescription.runConfig
+        ((false :: true :: bit :: (if bit then false else true) ::
+            preservingCellPassCellBits sourceRestTail).length + 1)
+        (Structured.MultiTapeLowering.ThreeTape.config
+          structuredQuoteRestCopyStart
+          (tapeAtCells
+            (none :: some last ::
+              List.append (rawTailInit.reverse.map some)
+                ((assemblySourceRestFinishPrefixQuoteOutputBits
+                  w (bit :: sourceRestTail) stage).reverse.map some))
+            (some false :: some true :: some bit ::
+              some (if bit then false else true) ::
+                List.append
+                  ((preservingCellPassCellBits sourceRestTail).map some)
+                  [none]))
+          (Structured.MultiTapeLowering.ThreeTape.outputFromBits [])
+          work) =
+      Structured.MultiTapeLowering.ThreeTape.config
+        structuredQuoteRestCopyHalt
+        (tapeAtCells
+          (List.append
+            ((false :: true :: bit :: (if bit then false else true) ::
+              preservingCellPassCellBits sourceRestTail).reverse.map some)
+            (none :: some last ::
+              List.append (rawTailInit.reverse.map some)
+                ((assemblySourceRestFinishPrefixQuoteOutputBits
+                  w (bit :: sourceRestTail) stage).reverse.map some)))
+          [none])
+        (Structured.MultiTapeLowering.ThreeTape.outputFromBits
+          (false :: true :: bit :: (if bit then false else true) ::
+            preservingCellPassCellBits sourceRestTail))
+        work := by
+  simpa using
+    structuredQuoteRestCopyDescription_run
+      (false :: true :: bit :: (if bit then false else true) ::
+        preservingCellPassCellBits sourceRestTail)
+      (none :: some last ::
+        List.append (rawTailInit.reverse.map some)
+          ((assemblySourceRestFinishPrefixQuoteOutputBits
+            w (bit :: sourceRestTail) stage).reverse.map some))
+      work
 
 theorem structuredJoinerInitialConfig_moveRight_sourceRestNil
     (state : Nat) (w : Word Bool) (stage : Nat) :
