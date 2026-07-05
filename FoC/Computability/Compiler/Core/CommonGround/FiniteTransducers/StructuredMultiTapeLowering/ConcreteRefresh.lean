@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.SelectedSeparatorRefreshRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.RunsStructuredSingleton3
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.DispatcherAssembly.StaticMachine
 
 namespace FoC
 namespace Computability
@@ -99,6 +100,76 @@ theorem concreteStructuredSingleton3TraceDescription_simulates_initial_haltsFrom
             (D.runConfig n (D.initial inputs)).tapes) :=
   loweredTraceDescriptionWithStructuredSingleton3Refresh_simulates_initial_haltsFromConfig
     hrows concreteStructuredSingletonRefresh3Description_contract hhalts
+
+def lowerStructured3Description (D : Description) : MachineDescription :=
+  StaticDispatcherReaderAssembly.staticLoweredDescription D
+    concreteStructuredSingletonRefresh3Description
+
+theorem lowerStructured3Description_wellFormed
+    {D : Description}
+    (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D) :
+    (lowerStructured3Description D).WellFormed := by
+  simpa [lowerStructured3Description] using
+    StaticDispatcherReaderAssembly.staticLoweredDescription_wellFormed
+      D hDwf hrows concreteStructuredSingletonRefresh3Description_contract
+
+def lowerStructured3StaticDescription
+    (D : Description)
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D) :
+    StaticLoweredDescriptionWithRefresh D :=
+  StaticDispatcherReaderAssembly.StaticLoweredDescription
+    D hrows.tapeCount_eq hDwf hhaltFree hrows
+    concreteStructuredSingletonRefresh3Description_contract
+
+theorem lowerStructured3Description_haltsWithTapes
+    {D : Description}
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {inputs : List (Word Bool)} {tapes : List (Tape Bool)}
+    (hhalts : D.HaltsWithTapes (D.initial inputs) tapes) :
+    (lowerStructured3Description D).HaltsFromTapeEquiv
+      (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+      (encodedGuardedStructuredTapes tapes) := by
+  rcases
+      StaticDispatcherReaderAssembly.loweredRun_simulates_structured_run
+        D hrows.tapeCount_eq hDwf hhaltFree hrows
+        concreteStructuredSingletonRefresh3Description_contract hhalts with
+    ⟨_n, _hrun, hlower⟩
+  simpa [lowerStructured3Description] using hlower
+
+theorem lowerStructured3Description_haltsFrom
+    {D : Description}
+    (hDwf : D.WellFormed)
+    (hhaltFree : D.HaltTransitionFree)
+    (hrows : SupportsReadWriteRows3 D)
+    {inputs : List (Word Bool)}
+    (hhalts : D.HaltsFromConfig (D.initial inputs)) :
+    exists n : Nat,
+      D.HaltsIn n (D.initial inputs) ∧
+        (lowerStructured3Description D).HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes (D.initial inputs).tapes)
+          (encodedGuardedStructuredTapes
+            (D.runConfig n (D.initial inputs)).tapes) := by
+  rcases hhalts with ⟨n, hhalt⟩
+  refine ⟨n, hhalt, ?_⟩
+  have hrun :
+      D.HaltsWithTapes (D.initial inputs)
+        (D.runConfig n (D.initial inputs)).tapes := by
+    exact
+      ⟨n, by
+        cases hrunConfig : D.runConfig n (D.initial inputs) with
+        | mk state tapes =>
+            have hstate : state = D.halt := by
+              simpa [Description.HaltsIn, hrunConfig] using hhalt
+            cases hstate
+            rfl⟩
+  exact
+    lowerStructured3Description_haltsWithTapes
+      hDwf hhaltFree hrows hrun
 
 end MultiTapeLowering
 end Structured
