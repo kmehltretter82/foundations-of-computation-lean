@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
@@ -1533,6 +1534,73 @@ def StructuredBoolWordRawBitsDecoderInputInitializerConstruction : Prop :=
 theorem structuredBoolWordRawBitsDecoderInputInitializerConstruction_core :
     StructuredBoolWordRawBitsDecoderInputInitializerConstruction := by
   sorry
+
+def structuredBoolWordRawBitsDecoderEndpointDescription
+    (initializer : MachineDescription) : MachineDescription :=
+  Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription
+    initializer loweredStructuredBoolWordRawBitsDecoderDescription
+
+theorem structuredBoolWordRawBitsDecoderEndpointDescription_subroutineReady
+    {initializer : MachineDescription}
+    (hinitializer : initializer.SubroutineReady) :
+    (structuredBoolWordRawBitsDecoderEndpointDescription
+      initializer).SubroutineReady :=
+  Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription_subroutineReady
+    hinitializer
+    loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady
+
+def StructuredBoolWordRawBitsDecoderEndpointSpec
+    (endpoint : MachineDescription) : Prop :=
+  endpoint.SubroutineReady ∧
+    forall (bits suffixTail : Word Bool)
+      (rightPadding outputPadding : List (Option Bool)),
+      endpoint.HaltsFromTapeEquiv
+        (boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding)
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          [ structuredBoolWordRawBitsDecoderSourceTargetTape
+              bits suffixTail rightPadding
+          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+              (bits.length + 1)
+          , rightEdgeScanSourceTapeFromLeft [none] bits outputPadding ])
+
+def StructuredBoolWordRawBitsDecoderEndpointConstruction : Prop :=
+  exists endpoint : MachineDescription,
+    StructuredBoolWordRawBitsDecoderEndpointSpec endpoint
+
+theorem structuredBoolWordRawBitsDecoderEndpointSpec_of_inputInitializerSpec
+    {initializer : MachineDescription}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderInputInitializerSpec initializer) :
+    StructuredBoolWordRawBitsDecoderEndpointSpec
+      (structuredBoolWordRawBitsDecoderEndpointDescription initializer) := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderEndpointDescription_subroutineReady
+        hinitializer.left
+  · intro bits suffixTail rightPadding outputPadding
+    exact
+      Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hinitializer.left
+        loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady
+        (hinitializer.right bits suffixTail rightPadding outputPadding)
+        (loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
+          bits suffixTail rightPadding outputPadding)
+
+theorem structuredBoolWordRawBitsDecoderEndpointConstruction_of_inputInitializer
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderInputInitializerConstruction) :
+    StructuredBoolWordRawBitsDecoderEndpointConstruction := by
+  rcases hinitializer with ⟨initializer, hinitializerSpec⟩
+  exact
+    ⟨structuredBoolWordRawBitsDecoderEndpointDescription initializer,
+      structuredBoolWordRawBitsDecoderEndpointSpec_of_inputInitializerSpec
+        hinitializerSpec⟩
+
+theorem structuredBoolWordRawBitsDecoderEndpointConstruction_core :
+    StructuredBoolWordRawBitsDecoderEndpointConstruction := by
+  exact
+    structuredBoolWordRawBitsDecoderEndpointConstruction_of_inputInitializer
+      structuredBoolWordRawBitsDecoderInputInitializerConstruction_core
 
 def boolWordRawBitsDecoderHeaderBase : List (Option Bool) :=
   List.append (boolWordRawBitsDecoderHeaderBits.reverse.map some) [none]
