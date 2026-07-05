@@ -2519,12 +2519,35 @@ theorem toSingletonBoundary
     simpa [T, encodedStructuredHeadPayloadTapes_eq_structuredTapes,
       encodedStructuredHeadPayloadGapTapes_eq_headGap] using hreal
 
+theorem singletonHeadRefreshCaseContract
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorNonemptyContract gapCreator) :
+    SingletonHeadGuardSlackRefreshCaseContract
+      (singletonHeadRefreshDescription gapCreator) :=
+  singletonHeadRefreshDescription_caseContract
+    (HeadSuffixGapCreatorNonemptyContract.toSingletonBoundary hgap)
+
 end HeadSuffixGapCreatorNonemptyContract
 
 theorem headSuffixGapCreatorDescription_singletonBoundaryContract :
     SingletonBoundaryGapCreatorContract headSuffixGapCreatorDescription :=
   HeadSuffixGapCreatorNonemptyContract.toSingletonBoundary
     headSuffixGapCreatorDescription_nonemptyContract
+
+/-- Concrete singleton head refresh dispatcher backed by the suffix gap creator. -/
+def concreteSingletonHeadRefreshDescription : MachineDescription :=
+  singletonHeadRefreshDescription headSuffixGapCreatorDescription
+
+theorem concreteSingletonHeadRefreshDescription_caseContract :
+    SingletonHeadGuardSlackRefreshCaseContract
+      concreteSingletonHeadRefreshDescription := by
+  simpa [concreteSingletonHeadRefreshDescription] using
+    HeadSuffixGapCreatorNonemptyContract.singletonHeadRefreshCaseContract
+      headSuffixGapCreatorDescription_nonemptyContract
+
+theorem concreteSingletonHeadRefreshDescription_subroutineReady :
+    concreteSingletonHeadRefreshDescription.SubroutineReady :=
+  concreteSingletonHeadRefreshDescription_caseContract.subroutineReady
 
 end MultiTapeLowering
 end Structured
