@@ -814,6 +814,20 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterRewindStartConfig_eq
     structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig,
     structuredMixedOptionCellQuoteLiveTailLengthPhaseTape]
 
+theorem structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRows_no_state300
+    (read0 read1 read2 : Option Bool) :
+    List.find?
+        (Structured.Description.Matches 300 [read0, read1, read2])
+        (Structured.MultiTapeLowering.ThreeTape.phaseRows 0
+          structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.halt
+          300
+          structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription.transitions) =
+      none := by
+  cases read0 <;> (try cases ‹Bool›) <;>
+    cases read1 <;> (try cases ‹Bool›) <;>
+      cases read2 <;> (try cases ‹Bool›) <;>
+        decide
+
 theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_countLength_assembly
     (p : AssemblySourceRestLiveTailEmitterParam) :
     structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
