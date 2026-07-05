@@ -1297,6 +1297,28 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction :
   exists compactor : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec compactor
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] padding)
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] padding)) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) padding)
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) padding)
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseSpec compactor
+
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
@@ -1750,9 +1772,29 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompacto
     hrun (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
+  rcases hcases with ⟨compactor, hready, hnil, hcons⟩
+  refine ⟨compactor, hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      exact hnil padding
+  | cons bit rest =>
+      exact hcons bit rest padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
+      selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core
+
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
