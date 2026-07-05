@@ -4,12 +4,32 @@ This is a standalone Lean 4 formalization companion for Carol Critchlow and
 David Eck's textbook *Foundations of Computation*, Second Edition, Version
 2.3.2.
 
+The project follows a familiar theory-of-computation course into a proof
+assistant and keeps going when the informal story usually waves its hands. It
+starts with truth tables, sets, induction, and finite automata, then builds up
+to grammars, pushdown automata, Turing machines, diagonal arguments, and
+concrete finite-machine compiler boundaries.
+
 The public reading experience is the
 [rendered Verso site](https://kmehltretter82.github.io/foundations-of-computation-lean/),
 generated from the Lean source in this repository. It is meant to be read
 beside the textbook, not instead of it: the textbook supplies the exposition and
 exercises, while this project records checked definitions, theorems,
 constructions, examples, and formal status notes.
+
+## Why It Is Interesting
+
+Most of the project is not just a catalog of final theorem statements. The
+regular-language and grammar chapters expose reusable constructions, the
+computability chapters separate semantic claims from finite machine
+descriptions, and the compiler layer records the places where a concrete
+construction is still a real engineering problem rather than a hidden
+assumption.
+
+That makes the repository useful in two different ways. It can be read as a
+checked companion to the book, and it can also be inspected as a Lean library
+for the mechanics behind automata, languages, grammars, computability, and
+machine encodings.
 
 ## What This Project Does
 
@@ -51,6 +71,11 @@ module:
 - regular languages and automata: `FoC.Languages`
 - grammars and pushdown automata: `FoC.Grammars`
 - Turing machines and computability: `FoC.Computability`
+
+If you are curious about the more ambitious backend work, look under
+`FoC.Computability.Compiler`. That is where the project tracks concrete
+machine-description, normalized-output, staged-search, and finite-source
+construction boundaries.
 
 If you want the current formalization status, read
 [`data/coverage.yaml`](data/coverage.yaml). It records the chapter-level
