@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Spec
+import FoC.Computability.Compiler.Core.FixedDescBoundedSim.Spec
 
 set_option doc.verso true
 

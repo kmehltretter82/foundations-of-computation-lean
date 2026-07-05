@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.StageInputMarkedScanner.ClosedBasic
+import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanner.ClosedBasic
 
 set_option doc.verso true
 

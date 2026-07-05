@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Compiled
+import FoC.Computability.Compiler.Core.DovetailInitLayout.Compiled
 
 set_option doc.verso true
 

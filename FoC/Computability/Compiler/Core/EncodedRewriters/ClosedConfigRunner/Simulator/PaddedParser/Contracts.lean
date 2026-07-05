@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Phase
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
+import FoC.Computability.Compiler.Core.FixedDescBoundedSim.CodeRightShifted
 
 set_option doc.verso true
 

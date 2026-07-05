@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.ControllerResultContinue.Base
-import FoC.Computability.Compiler.Core.ControllerStageInputProjection
+import FoC.Computability.Compiler.Core.ControllerStageInputProj
 
 set_option doc.verso true
 

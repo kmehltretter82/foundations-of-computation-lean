@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayload
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
 import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition.Runs
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.TaggedBrancher
+import FoC.Computability.Compiler.Core.DovetailInitLayout.TaggedBrancher
 
 set_option doc.verso true
 

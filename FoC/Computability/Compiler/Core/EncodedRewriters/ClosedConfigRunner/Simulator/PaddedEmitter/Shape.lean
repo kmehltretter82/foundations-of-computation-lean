@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PaddedEmitters
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.CodeRightShifted
+import FoC.Computability.Compiler.Core.FixedDescBoundedSim.CodeRightShifted
 
 set_option doc.verso true
 

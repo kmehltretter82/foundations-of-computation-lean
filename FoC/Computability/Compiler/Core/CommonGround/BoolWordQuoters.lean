@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.Controller
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.BoolWordQuoter.ControllerInitial.CellPass
+import FoC.Computability.Compiler.Core.DovetailInitLayout.Assembly
+import FoC.Computability.Compiler.Core.DovetailInitLayout.BoolWordQuoter.ControllerInitial.CellPass
 
 set_option doc.verso true
 

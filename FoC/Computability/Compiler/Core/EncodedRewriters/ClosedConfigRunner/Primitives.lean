@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.SeqSubroutineSemantics
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
-import FoC.Computability.Compiler.Core.FixedDescriptionBoundedSimulator.Skeleton
+import FoC.Computability.Compiler.Core.FixedDescBoundedSim.Skeleton
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.ConfigRunner.Basic
 
 set_option doc.verso true

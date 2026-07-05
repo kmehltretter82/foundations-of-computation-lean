@@ -1,6 +1,6 @@
 import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.EncodedRewriters.RightShifted
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Spec
+import FoC.Computability.Compiler.Core.DovetailInitLayout.Spec
 import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Parser.Basic
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
 

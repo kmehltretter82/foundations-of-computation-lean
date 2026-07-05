@@ -5,12 +5,12 @@ import FoC.Computability.Compiler.Core.TransitionTableChecks
 import FoC.Computability.Compiler.Core.TapeCodePrimitives
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 import FoC.Computability.Compiler.Core.EncodingLemmas
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer
+import FoC.Computability.Compiler.Core.DovetailInitLayout
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.ControllerCloseout
 import FoC.Computability.Compiler.Core.EncodedRewriters
 import FoC.Computability.Compiler.Core.CommonGround
-import FoC.Computability.Compiler.Core.ControllerStageInputProjection
+import FoC.Computability.Compiler.Core.ControllerStageInputProj
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers
 import FoC.Computability.Compiler.Core.Closeout

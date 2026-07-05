@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.ControllerResultContinue.GuardProjection
-import FoC.Computability.Compiler.Core.DovetailInitialLayoutInitializer.Assembly
+import FoC.Computability.Compiler.Core.DovetailInitLayout.Assembly
 
 set_option doc.verso true
 
