@@ -736,6 +736,28 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_
     countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells
       true L deletedTail
 
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_accept_eq_prefixCells
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          true L deletedTail) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        (encodedStructuredTapeCellsPrefix
+          [ guardLogicalTape
+              (structuredBoolWordRawBitsDecoderSourceTargetTape
+                (ParsedLayoutBits L)
+                (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                  true L)
+                (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                  true L deletedTail))
+          , guardLogicalTape
+              (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                ((ParsedLayoutBits L).length + 1)) ])
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding true L) := by
+  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_accept]
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells]
+
 theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject
     (L : DovetailLayout) (deletedTail : Word Bool) :
     Tape.cells
@@ -749,6 +771,28 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_
   exact
     countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells
       false L deletedTail
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject_eq_prefixCells
+    (L : DovetailLayout) (deletedTail : Word Bool) :
+    Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          false L deletedTail) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        (encodedStructuredTapeCellsPrefix
+          [ guardLogicalTape
+              (structuredBoolWordRawBitsDecoderSourceTargetTape
+                (ParsedLayoutBits L)
+                (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+                  false L)
+                (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+                  false L deletedTail))
+          , guardLogicalTape
+              (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                ((ParsedLayoutBits L).length + 1)) ])
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding false L) := by
+  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject]
+  rw [countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells]
 
 theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_accept
     (L : DovetailLayout) :
@@ -1054,6 +1098,40 @@ theorem selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
   simp [selectedSegmentLogicalTapeDecoderDensifierSourceCells,
     selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
     List.filterMap_append]
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_filterMap
+    (useAccept : Bool) (L : DovetailLayout)
+    (deletedTail : Word Bool) :
+    (Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
+          useAccept L deletedTail)).filterMap (fun cell => cell) =
+      List.append
+        ((countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          useAccept L deletedTail).filterMap (fun cell => cell))
+        (List.append (ParsedLayoutBits L)
+          ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
+            (fun cell => cell))) := by
+  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells]
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
+      (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+        useAccept L deletedTail)
+      (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
+
+theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_filterMap
+    (useAccept : Bool) (L : DovetailLayout) :
+    (Tape.cells
+        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
+          useAccept L)).filterMap (fun cell => cell) =
+      List.append (ParsedLayoutBits L)
+        ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
+          (fun cell => cell)) := by
+  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells]
+  simpa using
+    selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
+      [] (ParsedLayoutBits L)
+      (postFieldDecodedPrefixScanPadding useAccept L)
 
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_filterMap
     (bits : Word Bool) (padding : List (Option Bool)) :
