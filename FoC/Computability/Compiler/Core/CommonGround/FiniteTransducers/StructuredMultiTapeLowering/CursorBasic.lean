@@ -314,6 +314,194 @@ theorem cursorNoopDescription_contract
     intro logical Tin hsource
     exact ⟨Tin, cursorNoopDescription_haltsFromTape Tin, hsource⟩
 
+theorem cursorNoopDescription_refreshes_guardSlackEndpoint_of_canonical
+    {primitives : List PhysicalPrimitive}
+    {source target canonicalTarget : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        physical)
+    (hcanonical :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source
+        canonicalTarget (encodedGuardedStructuredTapes canonicalTarget)) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  have hphysical :
+      physical = encodedGuardedStructuredTapes canonicalTarget :=
+    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+      hendpoint hcanonical
+  have htarget : target = canonicalTarget :=
+    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+      hendpoint hcanonical
+  rw [hphysical, htarget]
+  exact
+    MachineDescription.HaltsFromTape.toEquiv
+      (cursorNoopDescription_haltsFromTape
+        (encodedGuardedStructuredTapes canonicalTarget))
+
+theorem cursorNoopDescription_refreshes_guardSlackEndpointEquiv_of_canonical
+    {primitives : List PhysicalPrimitive}
+    {source target canonicalTarget : List (Tape Bool)}
+    {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target physical)
+    (hcanonical :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source
+        canonicalTarget (encodedGuardedStructuredTapes canonicalTarget)) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  rcases hendpoint with ⟨exactPhysical, hexact, hequiv⟩
+  rcases
+      cursorNoopDescription_refreshes_guardSlackEndpoint_of_canonical
+        hexact hcanonical with
+    ⟨actualOut, hhalts, hout⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := cursorNoopDescription)
+        (Tin := exactPhysical)
+        (Tin' := physical)
+        (Tout := actualOut)
+        (Tape.Equiv.symm hequiv)
+        hhalts with
+    ⟨transportedOut, htransported, htransportedEquiv⟩
+  exact
+    ⟨transportedOut, htransported,
+      Tape.Equiv.trans htransportedEquiv hout⟩
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_stay_guardSlackEndpoint_singleton
+    (write? : Option (Option Bool)) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.stay } : TapeAction))
+        [T] target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  let action : TapeAction :=
+    { write? := write?, move := HeadMove.stay }
+  have hcanonical :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0 action)
+        [T] [action.apply T]
+        (encodedGuardedStructuredTapes [action.apply T]) := by
+    simpa [action] using
+      actionPrimitivesAt_zero_stay_guardSlackEndpoint_canonical_singleton
+        write? T
+  have hphysical :
+      physical = encodedGuardedStructuredTapes [action.apply T] :=
+    PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+      hendpoint hcanonical
+  have htarget : target = [action.apply T] :=
+    PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+      hendpoint hcanonical
+  rw [hphysical, htarget]
+  exact
+    MachineDescription.HaltsFromTape.toEquiv
+      (cursorNoopDescription_haltsFromTape
+        (encodedGuardedStructuredTapes [action.apply T]))
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_stay_guardSlackEndpointEquiv_singleton
+    (write? : Option (Option Bool)) (T : Tape Bool)
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.stay } : TapeAction))
+        [T] target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  rcases hendpoint with ⟨exactPhysical, hexact, hequiv⟩
+  rcases
+      cursorNoopDescription_refreshes_actionPrimitivesAt_zero_stay_guardSlackEndpoint_singleton
+        write? T hexact with
+    ⟨actualOut, hhalts, hout⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := cursorNoopDescription)
+        (Tin := exactPhysical)
+        (Tin' := physical)
+        (Tout := actualOut)
+        (Tape.Equiv.symm hequiv)
+        hhalts with
+    ⟨transportedOut, htransported, htransportedEquiv⟩
+  exact
+    ⟨transportedOut, htransported,
+      Tape.Equiv.trans htransportedEquiv hout⟩
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton_of_left_cons
+    (write? : Option (Option Bool))
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool))
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.left } : TapeAction))
+        [({ left := cell :: left, head := head, right := right } : Tape Bool)]
+        target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  cursorNoopDescription_refreshes_guardSlackEndpoint_of_canonical
+    hendpoint
+    (actionPrimitivesAt_zero_left_guardSlackEndpoint_canonical_singleton_of_left_cons
+      write? cell left head right)
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_left_guardSlackEndpointEquiv_singleton_of_left_cons
+    (write? : Option (Option Bool))
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool))
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.left } : TapeAction))
+        [({ left := cell :: left, head := head, right := right } : Tape Bool)]
+        target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  cursorNoopDescription_refreshes_guardSlackEndpointEquiv_of_canonical
+    hendpoint
+    (actionPrimitivesAt_zero_left_guardSlackEndpoint_canonical_singleton_of_left_cons
+      write? cell left head right)
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton_of_right_cons
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (cell : Option Bool) (right : List (Option Bool))
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.right } : TapeAction))
+        [({ left := left, head := head, right := cell :: right } : Tape Bool)]
+        target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  cursorNoopDescription_refreshes_guardSlackEndpoint_of_canonical
+    hendpoint
+    (actionPrimitivesAt_zero_right_guardSlackEndpoint_canonical_singleton_of_right_cons
+      write? left head cell right)
+
+theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_right_guardSlackEndpointEquiv_singleton_of_right_cons
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (cell : Option Bool) (right : List (Option Bool))
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+        (actionPrimitivesAt 0
+          ({ write? := write?, move := HeadMove.right } : TapeAction))
+        [({ left := left, head := head, right := cell :: right } : Tape Bool)]
+        target physical) :
+    cursorNoopDescription.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  cursorNoopDescription_refreshes_guardSlackEndpointEquiv_of_canonical
+    hendpoint
+    (actionPrimitivesAt_zero_right_guardSlackEndpoint_canonical_singleton_of_right_cons
+      write? left head cell right)
+
 /-- The concrete fixed-index seek routine for tape 0 at block start. -/
 def seekTape0Description : MachineDescription :=
   cursorNoopDescription

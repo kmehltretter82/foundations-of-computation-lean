@@ -329,6 +329,19 @@ theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
     target₁ = target₂ := by
   rw [h₁.left, h₂.left]
 
+theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.physical_eq
+    {primitives : List PhysicalPrimitive}
+    {source target₁ target₂ : List (Tape Bool)}
+    {physical₁ physical₂ : Tape Bool}
+    (h₁ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₁
+        physical₁)
+    (h₂ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₂
+        physical₂) :
+    physical₁ = physical₂ := by
+  rw [h₁.right, h₂.right]
+
 theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.guardedTarget_eq
     {primitives : List PhysicalPrimitive}
     {source target₁ target₂ : List (Tape Bool)}
@@ -979,6 +992,42 @@ theorem actionPrimitivesAt_zero_left_guardSlackPhysical_eq_left_guardedStay_sing
               T))] := by
   rw [tapeAction_left_apply_guardLogicalTape_eq_left_apply_guardedStay]
 
+theorem tapeAction_left_apply_guardLogicalTape_eq_guarded_apply_of_left_cons
+    (write? : Option (Option Bool))
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    ({ write? := write?, move := HeadMove.left } : TapeAction).apply
+        (guardLogicalTape
+          ({ left := cell :: left, head := head, right := right } :
+            Tape Bool)) =
+      guardLogicalTape
+        (({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          ({ left := cell :: left, head := head, right := right } :
+            Tape Bool)) := by
+  cases write? with
+  | none =>
+      rfl
+  | some writeCell =>
+      rfl
+
+theorem actionPrimitivesAt_zero_left_guardSlackPhysical_eq_guarded_singleton_of_left_cons
+    (write? : Option (Option Bool))
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          (guardLogicalTape
+            ({ left := cell :: left, head := head, right := right } :
+              Tape Bool))] =
+      encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          ({ left := cell :: left, head := head, right := right } :
+            Tape Bool)] := by
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+    congrArg (fun U => encodedStructuredTapes [U])
+      (tapeAction_left_apply_guardLogicalTape_eq_guarded_apply_of_left_cons
+        write? cell left head right)
+
 theorem actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
     PhysicalPrimitiveSequenceGuardSlackEndpoint
@@ -991,6 +1040,27 @@ theorem actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
           (guardLogicalTape T)]) :=
   actionPrimitivesAt_zero_guardSlackEndpoint_singleton
     ({ write? := write?, move := HeadMove.left } : TapeAction) T
+
+theorem actionPrimitivesAt_zero_left_guardSlackEndpoint_canonical_singleton_of_left_cons
+    (write? : Option (Option Bool))
+    (cell : Option Bool) (left : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool)) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0
+        ({ write? := write?, move := HeadMove.left } : TapeAction))
+      [({ left := cell :: left, head := head, right := right } : Tape Bool)]
+      [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+        ({ left := cell :: left, head := head, right := right } : Tape Bool)]
+      (encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          ({ left := cell :: left, head := head, right := right } :
+            Tape Bool)]) := by
+  simpa [
+      actionPrimitivesAt_zero_left_guardSlackPhysical_eq_guarded_singleton_of_left_cons]
+    using
+      actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
+        write?
+        ({ left := cell :: left, head := head, right := right } : Tape Bool)
 
 theorem actionPrimitivesAt_zero_left_structuredLogicalEquivEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
@@ -1028,6 +1098,42 @@ theorem actionPrimitivesAt_zero_right_guardSlackPhysical_eq_right_guardedStay_si
               T))] := by
   rw [tapeAction_right_apply_guardLogicalTape_eq_right_apply_guardedStay]
 
+theorem tapeAction_right_apply_guardLogicalTape_eq_guarded_apply_of_right_cons
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (cell : Option Bool) (right : List (Option Bool)) :
+    ({ write? := write?, move := HeadMove.right } : TapeAction).apply
+        (guardLogicalTape
+          ({ left := left, head := head, right := cell :: right } :
+            Tape Bool)) =
+      guardLogicalTape
+        (({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          ({ left := left, head := head, right := cell :: right } :
+            Tape Bool)) := by
+  cases write? with
+  | none =>
+      rfl
+  | some writeCell =>
+      rfl
+
+theorem actionPrimitivesAt_zero_right_guardSlackPhysical_eq_guarded_singleton_of_right_cons
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (cell : Option Bool) (right : List (Option Bool)) :
+    encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          (guardLogicalTape
+            ({ left := left, head := head, right := cell :: right } :
+              Tape Bool))] =
+      encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          ({ left := left, head := head, right := cell :: right } :
+            Tape Bool)] := by
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+    congrArg (fun U => encodedStructuredTapes [U])
+      (tapeAction_right_apply_guardLogicalTape_eq_guarded_apply_of_right_cons
+        write? left head cell right)
+
 theorem actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
     PhysicalPrimitiveSequenceGuardSlackEndpoint
@@ -1040,6 +1146,27 @@ theorem actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
           (guardLogicalTape T)]) :=
   actionPrimitivesAt_zero_guardSlackEndpoint_singleton
     ({ write? := write?, move := HeadMove.right } : TapeAction) T
+
+theorem actionPrimitivesAt_zero_right_guardSlackEndpoint_canonical_singleton_of_right_cons
+    (write? : Option (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (cell : Option Bool) (right : List (Option Bool)) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0
+        ({ write? := write?, move := HeadMove.right } : TapeAction))
+      [({ left := left, head := head, right := cell :: right } : Tape Bool)]
+      [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+        ({ left := left, head := head, right := cell :: right } : Tape Bool)]
+      (encodedGuardedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          ({ left := left, head := head, right := cell :: right } :
+            Tape Bool)]) := by
+  simpa [
+      actionPrimitivesAt_zero_right_guardSlackPhysical_eq_guarded_singleton_of_right_cons]
+    using
+      actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
+        write?
+        ({ left := left, head := head, right := cell :: right } : Tape Bool)
 
 theorem actionPrimitivesAt_zero_right_structuredLogicalEquivEndpoint_singleton
     (write? : Option (Option Bool)) (T : Tape Bool) :
