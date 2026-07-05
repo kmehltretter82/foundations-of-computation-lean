@@ -5,6 +5,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.C
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.InitialLayout
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 
 set_option doc.verso true
 

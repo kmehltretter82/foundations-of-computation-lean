@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.ExactFuel
 
 set_option doc.verso true
@@ -26,12 +27,36 @@ def CodePrefixNestedPairEnumeratorConstruction
     (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
-    forall input : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput searcher input <->
-        exists inner : Nat,
-        exists outer : Nat,
-          TuringMachine.HaltsOnInput selected
-            (NestedCodePrefixRecognizerStageCode input inner outer)
+    FiniteRecognizer.NestedPairEnumeratorSpec searcher selected
+      (fun input inner outer =>
+        NestedCodePrefixRecognizerStageCode input inner outer)
+
+/--
+Implementation-oriented unbounded pair enumerator contract.  This exposes the
+hidden selected-run fuel used by the actual dovetailing search while preserving
+the public ordinary-halting contract above.
+-/
+def CodePrefixNestedHiddenFuelPairEnumeratorConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    FiniteRecognizer.TupleSearch.UnboundedHiddenFuelPairSpec
+      searcher selected
+      (fun input inner outer =>
+        NestedCodePrefixRecognizerStageCode input inner outer)
+
+theorem codePrefixNestedPairEnumeratorConstruction_of_hiddenFuel
+    {selectedState : Type u}
+    {selected : TuringMachine MachineCodeSymbol selectedState}
+    (hhidden :
+      CodePrefixNestedHiddenFuelPairEnumeratorConstruction selected) :
+    CodePrefixNestedPairEnumeratorConstruction selected := by
+  rcases hhidden with ⟨searcherState, searcher, hsearcher⟩
+  exact
+    ⟨searcherState, searcher,
+      FiniteRecognizer.TupleSearch.nestedPairEnumeratorSpec_of_hiddenFuel
+        hsearcher⟩
 
 /--
 Concrete-state generated-pair enumerator target.  Proving this for all
@@ -221,16 +246,40 @@ def CodePrefixBoundedNestedPairEnumeratorConstruction
     (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
-    forall input : Word MachineCodeSymbol,
-    forall budget : Nat,
-      TuringMachine.HaltsOnInput searcher
-          (CodePrefixRecognizerStageCode input budget) <->
-        exists inner : Nat,
-        exists outer : Nat,
-          inner ≤ budget ∧
-            outer ≤ budget ∧
-            TuringMachine.HaltsOnInput selected
-              (NestedCodePrefixRecognizerStageCode input inner outer)
+    FiniteRecognizer.BoundedNestedPairEnumeratorSpec
+      searcher selected
+      CodePrefixRecognizerStageCode
+      (fun input inner outer =>
+        NestedCodePrefixRecognizerStageCode input inner outer)
+
+/--
+Implementation-oriented bounded pair enumerator contract.  The selected fuel
+is hidden and unbounded; only the generated pair parameters are bounded by the
+public budget.
+-/
+def CodePrefixBoundedNestedHiddenFuelPairEnumeratorConstruction
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    FiniteRecognizer.TupleSearch.BoundedHiddenFuelPairSpec
+      searcher selected
+      CodePrefixRecognizerStageCode
+      (fun input inner outer =>
+        NestedCodePrefixRecognizerStageCode input inner outer)
+
+theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_hiddenFuel
+    {selectedState : Type u}
+    {selected : TuringMachine MachineCodeSymbol selectedState}
+    (hhidden :
+      CodePrefixBoundedNestedHiddenFuelPairEnumeratorConstruction
+        selected) :
+    CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
+  rcases hhidden with ⟨searcherState, searcher, hsearcher⟩
+  exact
+    ⟨searcherState, searcher,
+      FiniteRecognizer.TupleSearch.boundedNestedPairEnumeratorSpec_of_hiddenFuel
+        hsearcher⟩
 
 /--
 Concrete-state bounded generated-pair enumerator target.  The public arbitrary
