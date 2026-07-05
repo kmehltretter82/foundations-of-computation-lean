@@ -481,6 +481,31 @@ def selectedSegmentLogicalTapeDecoderTargetTape
     []
     (none :: encodedPrefix.reverse)
 
+theorem selectedSegmentLogicalTapeDecoderTargetTape_left
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix).left =
+      none ::
+        List.append
+          (statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+            selectedSegmentLogicalTapeDecoderEmit
+            selectedSegmentLogicalTapeDecoderStart
+            (logicalTapeBits (guardLogicalTape target))).reverse
+          (none :: encodedPrefix.reverse) := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderTargetTape_head
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix).head = none := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderTargetTape_right
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix).right = [] := by
+  rfl
+
 theorem selectedSegmentLogicalTapeDecoderDescription_subroutineReady :
     selectedSegmentLogicalTapeDecoderDescription.SubroutineReady := by
   exact

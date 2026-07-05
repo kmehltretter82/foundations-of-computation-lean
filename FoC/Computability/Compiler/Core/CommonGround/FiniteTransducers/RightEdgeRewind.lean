@@ -106,6 +106,15 @@ def rightEdgeScanSourceTapeFromLeft
     (padding : List (Option Bool)) : Tape Bool :=
   tapeAtCells left (List.append (bits.map some) (none :: padding))
 
+theorem rightEdgeScanSourceTapeFromLeft_cells
+    (left : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells (rightEdgeScanSourceTapeFromLeft left bits padding) =
+      List.append left.reverse
+        (List.append (bits.map some) (none :: padding)) := by
+  cases bits <;>
+    simp [rightEdgeScanSourceTapeFromLeft, tapeAtCells, Tape.cells]
+
 def rightEdgeScanTargetTapeFromLeft
     (left : List (Option Bool)) (bits : Word Bool)
     (padding : List (Option Bool)) : Tape Bool :=
