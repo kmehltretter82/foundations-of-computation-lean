@@ -198,6 +198,75 @@ theorem canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
         hA hB hAactual hBactualFromBounce,
       Tape.Equiv.trans hToutActual hToutBActual⟩
 
+/-!
+## Structured endpoint bridge
+-/
+
+/--
+Canonical one-tape wrapper around a lowered structured three-tape component.
+
+The first component materializes the old source tape into a guarded structured
+three-tape encoding, the middle component is the lowered structured machine,
+and the final component projects the old destination tape back out.
+-/
+def structured3EndpointBridgeDescription
+    (initializer lowered projector : MachineDescription) :
+    MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    (canonicalPrimitiveSeqDescription initializer lowered)
+    projector
+
+theorem structured3EndpointBridgeDescription_subroutineReady
+    {initializer lowered projector : MachineDescription}
+    (hinitializer : initializer.SubroutineReady)
+    (hlowered : lowered.SubroutineReady)
+    (hprojector : projector.SubroutineReady) :
+    (structured3EndpointBridgeDescription
+      initializer lowered projector).SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    (canonicalPrimitiveSeqDescription_subroutineReady
+      hinitializer hlowered)
+    hprojector
+
+/--
+Compose an old one-tape endpoint through a lowered structured three-tape
+machine and a final projector.
+
+This is the reusable packaging theorem for construction leaves whose internal
+implementation is structured but whose public contract remains one-tape.
+-/
+theorem structured3EndpointBridgeDescription_haltsFromTapeEquiv
+    {initializer lowered projector : MachineDescription}
+    (hinitializer : initializer.SubroutineReady)
+    (hlowered : lowered.SubroutineReady)
+    (hprojector : projector.SubroutineReady)
+    {Tin T0 T1 T2 U0 U1 U2 Tout : Tape Bool}
+    (hinitializerRun :
+      initializer.HaltsFromTapeEquiv Tin
+        (encodedGuardedStructured3Tapes T0 T1 T2))
+    (hloweredRun :
+      lowered.HaltsFromTapeEquiv
+        (encodedGuardedStructured3Tapes T0 T1 T2)
+        (encodedGuardedStructured3Tapes U0 U1 U2))
+    (hprojectorRun :
+      projector.HaltsFromTapeEquiv
+        (encodedGuardedStructured3Tapes U0 U1 U2)
+        Tout) :
+    (structured3EndpointBridgeDescription
+      initializer lowered projector).HaltsFromTapeEquiv Tin Tout := by
+  have hfirst :
+      (canonicalPrimitiveSeqDescription initializer lowered)
+          |>.HaltsFromTapeEquiv
+        Tin (encodedGuardedStructured3Tapes U0 U1 U2) :=
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      hinitializer hlowered hinitializerRun hloweredRun
+  exact
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        hinitializer hlowered)
+      hprojector
+      hfirst hprojectorRun
+
 theorem physicalPrimitiveSequenceGuardedContractEquiv_append
     {first second : List PhysicalPrimitive}
     {A B : MachineDescription}

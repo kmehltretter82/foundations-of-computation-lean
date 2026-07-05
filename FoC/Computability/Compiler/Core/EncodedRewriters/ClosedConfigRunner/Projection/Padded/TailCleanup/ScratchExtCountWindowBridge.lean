@@ -481,15 +481,13 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_s
   rcases hextractor with ⟨extractor, hextractorReady, hextractorRun⟩
   rcases hprojector with ⟨projector, hprojectorSpec⟩
   refine
-    ⟨canonicalPrimitiveSeqDescription
-        (canonicalPrimitiveSeqDescription initializer extractor)
-        projector,
+    ⟨structured3EndpointBridgeDescription
+        initializer extractor projector,
       ?_⟩
   constructor
   · exact
-      canonicalPrimitiveSeqDescription_subroutineReady
-        (canonicalPrimitiveSeqDescription_subroutineReady
-          hinitializerSpec.left hextractorReady)
+      structured3EndpointBridgeDescription_subroutineReady
+        hinitializerSpec.left hextractorReady
         hprojectorSpec.left
   · intro L pref leftBit deletedTail hdeleted hpayload
     have hinitializerRun :
@@ -507,28 +505,17 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_s
             useAccept L deletedTail) :=
       hextractorRun
         useAccept L pref leftBit deletedTail hdeleted hpayload
-    have hfirst :
-        (canonicalPrimitiveSeqDescription initializer extractor)
-            |>.HaltsFromTapeEquiv
-          (countWindowPostFieldDecodedPrefixMaterializerSourceTape
-            useAccept L pref leftBit deletedTail)
-          (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
-            useAccept L deletedTail) :=
-      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
-        hinitializerSpec.left hextractorReady
-        hinitializerRun hextractorRun
     have hprojectorRun :
         projector.HaltsFromTapeEquiv
           (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
             useAccept L deletedTail)
           (postFieldDecodedPrefixScanSourceTape useAccept L) :=
       hprojectorSpec.right useAccept L deletedTail
-    exact
-      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
-        (canonicalPrimitiveSeqDescription_subroutineReady
-          hinitializerSpec.left hextractorReady)
-        hprojectorSpec.left
-        hfirst hprojectorRun
+    simpa [countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
+      countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape] using
+      structured3EndpointBridgeDescription_haltsFromTapeEquiv
+        hinitializerSpec.left hextractorReady hprojectorSpec.left
+        hinitializerRun hextractorRun hprojectorRun
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
     (hextractor :
