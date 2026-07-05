@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge
+import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeThreaded
 
 set_option doc.verso true
 
@@ -18,7 +18,9 @@ implementation is split by responsibility:
   tapes, checked counter run, and shared composition lemmas.
 - {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions` contains the reusable
   construction leaves for the scratch-count materializer and restorer.
-- {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge` exposes
-  the lowered structured extractor bridge used by the current scratch-count
+- {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge` exposes the structured
+  endpoint facts and remaining finite-machine leaves.
+- {module}`FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeThreaded` carries
+  the lowered structured extractor bridge through the current scratch-count
   materializer scaffold.
 -/
