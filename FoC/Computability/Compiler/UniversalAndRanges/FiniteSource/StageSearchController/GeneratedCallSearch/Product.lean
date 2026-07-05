@@ -201,24 +201,13 @@ theorem codePrefixExactFuelProductSearchFiniteLeaf
     (left : TuringMachine MachineCodeSymbol leftState)
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductSearchConstruction left right := by
-  rcases codePrefixExactFuelProductRunnerFiniteLeaf left right with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.generatedProductExactFuelSearchFiniteLeaf
+        left right with
     ⟨bothState, both, hboth⟩
   refine ⟨bothState, both, ?_⟩
   intro input
-  constructor
-  · intro hhalt
-    rcases (hboth input).mp hhalt with
-      ⟨rightFuel, leftFuel, hselectedHalt⟩
-    exact
-      ⟨leftFuel, rightFuel,
-        (hselected input leftFuel rightFuel).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨leftFuel, rightFuel, hleftRight⟩
-    exact (hboth input).mpr
-      ⟨rightFuel, leftFuel,
-        (hselected input leftFuel rightFuel).mpr hleftRight⟩
+  exact hboth input
 
 theorem codePrefixExactFuelProductSearchFiniteLeafDecidable
     {leftState : Type uStage} {rightState : Type uDescription}
@@ -226,25 +215,13 @@ theorem codePrefixExactFuelProductSearchFiniteLeafDecidable
     (left : TuringMachine MachineCodeSymbol leftState)
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductSearchConstruction left right := by
-  rcases codePrefixExactFuelProductRunnerFiniteLeafDecidable
-      left right with
-    ⟨selectedState, selected, hselected⟩
-  rcases codePrefixNestedPairEnumeratorFiniteLeaf selected with
+  rcases
+      FiniteRecognizer.generatedProductExactFuelSearchFiniteLeafDecidable
+        left right with
     ⟨bothState, both, hboth⟩
   refine ⟨bothState, both, ?_⟩
   intro input
-  constructor
-  · intro hhalt
-    rcases (hboth input).mp hhalt with
-      ⟨rightFuel, leftFuel, hselectedHalt⟩
-    exact
-      ⟨leftFuel, rightFuel,
-        (hselected input leftFuel rightFuel).mp hselectedHalt⟩
-  · intro htarget
-    rcases htarget with ⟨leftFuel, rightFuel, hleftRight⟩
-    exact (hboth input).mpr
-      ⟨rightFuel, leftFuel,
-        (hselected input leftFuel rightFuel).mpr hleftRight⟩
+  exact hboth input
 
 end Computability
 end FoC
