@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator
 
 set_option doc.verso true
@@ -142,15 +143,14 @@ indexed recognizers.
 theorem codePrefixExactFuelProductRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelProductRunnerFinStateConstruction := by
   intro leftN rightN left right
-  cases leftN with
-  | zero =>
-      exact False.elim (Fin.elim0 left.start)
-  | succ leftN =>
-      cases rightN with
-      | zero =>
-          exact False.elim (Fin.elim0 right.start)
-      | succ rightN =>
-          sorry
+  rcases
+      FiniteRecognizer.generatedProductExactFuelRunnerFinStateFiniteLeaf
+        leftN rightN left right with
+    ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  simpa [FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hselected input leftFuel rightFuel
 
 /--
 Finite-machine leaf for the product exact-fuel runner.

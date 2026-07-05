@@ -7,6 +7,8 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.U
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
 
 set_option doc.verso true
 

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.ExactFuel
 
 set_option doc.verso true
@@ -157,11 +157,14 @@ enumeration over indexed selected recognizers.
 theorem codePrefixNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixNestedPairEnumeratorFinStateConstruction := by
   intro n selected
-  cases n with
-  | zero =>
-      exact False.elim (Fin.elim0 selected.start)
-  | succ n =>
-      sorry
+  rcases
+      FiniteRecognizer.TupleSearch.generatedNestedPairEnumeratorFinStateFiniteLeaf
+        n selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  simpa [FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hsearcher input
 
 /--
 Finite-machine leaf for unbounded generated-pair enumeration.
@@ -381,11 +384,15 @@ over indexed selected recognizers.
 theorem codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixBoundedNestedPairEnumeratorFinStateConstruction := by
   intro n selected
-  cases n with
-  | zero =>
-      exact False.elim (Fin.elim0 selected.start)
-  | succ n =>
-      sorry
+  rcases
+      FiniteRecognizer.TupleSearch.generatedBoundedNestedPairEnumeratorFinStateFiniteLeaf
+        n selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq,
+    FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hsearcher input budget
 
 /--
 Bounded search over generated inner inputs and exact outer fuels for a wrapped
