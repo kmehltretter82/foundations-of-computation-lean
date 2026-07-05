@@ -1615,6 +1615,297 @@ theorem offsetExitRetargetDescription_runConfig_eq
       (offset := offset) (localExit := localExit) (target := target)
       htarget hD n { state := source, tape := Tin }
 
+/--
+Retarget the three read-branch exit states of a copied subroutine.  States not
+recognized as one of the three local exits are offset normally.
+-/
+def retargetReadExitState
+    (offset : Nat)
+    (localTarget target : Option Bool -> Nat)
+    (state : Nat) : Nat :=
+  if state = localTarget none then target none
+  else if state = localTarget (some false) then target (some false)
+  else if state = localTarget (some true) then target (some true)
+  else offset + state
+
+def readExitRetargetStates
+    (offset : Nat)
+    (localTarget target : Option Bool -> Nat)
+    (t : TransitionDescription) : TransitionDescription where
+  source := offset + t.source
+  read := t.read
+  write := t.write
+  move := t.move
+  target := retargetReadExitState offset localTarget target t.target
+
+def readExitRetargetConfiguration
+    (offset : Nat)
+    (localTarget target : Option Bool -> Nat)
+    (c : MachineDescription.Configuration) :
+    MachineDescription.Configuration where
+  state := retargetReadExitState offset localTarget target c.state
+  tape := c.tape
+
+/--
+Copy a branching reader and redirect all three local read exits to
+caller-specified continuation states.
+-/
+def offsetReadExitRetargetDescription
+    (offset : Nat)
+    (localTarget target : Option Bool -> Nat)
+    (D : MachineDescription) : MachineDescription where
+  stateCount := offset + D.stateCount
+  start := retargetReadExitState offset localTarget target D.start
+  halt := target none
+  transitions :=
+    D.transitions.map
+      (readExitRetargetStates offset localTarget target)
+
+theorem offsetReadExitRetargetDescription_lookupTransition
+    (offset : Nat) (localTarget target : Option Bool -> Nat)
+    (D : MachineDescription) (state : Nat) (cell : Option Bool) :
+    (offsetReadExitRetargetDescription offset localTarget target D).lookupTransition
+        (offset + state) cell =
+      Option.map
+        (readExitRetargetStates offset localTarget target)
+        (D.lookupTransition state cell) := by
+  unfold MachineDescription.lookupTransition
+    offsetReadExitRetargetDescription
+  have hpredicate :
+      (MachineDescription.Matches (offset + state) cell ∘
+          readExitRetargetStates offset localTarget target) =
+        MachineDescription.Matches state cell := by
+    funext t
+    have hsourceBeq :
+        (offset + t.source == offset + state) =
+          (t.source == state) := by
+      by_cases hsource : t.source = state
+      · have hoffset :
+            offset + t.source = offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = true := by
+          rw [beq_iff_eq]
+          exact hoffset
+        have hright : (t.source == state) = true := by
+          rw [beq_iff_eq]
+          exact hsource
+        rw [hleft, hright]
+      · have hoffset :
+            offset + t.source ≠ offset + state := by
+          lia
+        have hleft :
+            (offset + t.source == offset + state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hoffset
+        have hright : (t.source == state) = false := by
+          rw [beq_eq_false_iff_ne]
+          exact hsource
+        rw [hleft, hright]
+    simp [Function.comp, MachineDescription.Matches,
+      readExitRetargetStates, hsourceBeq]
+  simp [List.find?_map, hpredicate]
+
+theorem offsetReadExitRetargetDescription_lookupTransition_target_none
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    (D : MachineDescription) (exitCell readCell : Option Bool) :
+    (offsetReadExitRetargetDescription offset localTarget target D).lookupTransition
+        (target exitCell) readCell = none := by
+  unfold MachineDescription.lookupTransition
+    offsetReadExitRetargetDescription
+  apply (List.find?_eq_none).mpr
+  intro t ht hmatch
+  rcases List.mem_map.mp ht with ⟨base, _hbase, rfl⟩
+  have hsource : offset + base.source = target exitCell := by
+    rcases (by
+      simpa [MachineDescription.Matches,
+        readExitRetargetStates] using hmatch) with
+      ⟨hsource, _hread⟩
+    exact hsource
+  have hexit := hbelow exitCell
+  lia
+
+theorem offsetReadExitRetargetDescription_stepConfig
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription}
+    (hD :
+      forall exitCell : Option Bool,
+        D.TransitionFreeAt (localTarget exitCell))
+    (c : MachineDescription.Configuration) :
+    (offsetReadExitRetargetDescription offset localTarget target D).stepConfig
+        (readExitRetargetConfiguration offset localTarget target c) =
+      Option.map
+        (readExitRetargetConfiguration offset localTarget target)
+        (D.stepConfig c) := by
+  cases c with
+  | mk state tape =>
+      unfold readExitRetargetConfiguration
+      unfold retargetReadExitState
+      split
+      · rename_i hnone
+        have hstate : state = localTarget none := by
+          simpa using hnone
+        simp [MachineDescription.stepConfig,
+          hstate,
+          offsetReadExitRetargetDescription_lookupTransition_target_none
+            hbelow D none,
+          lookupTransition_state_none (hD none)]
+      · split
+        · rename_i hnone hfalse
+          have hstate : state = localTarget (some false) := by
+            simpa using hfalse
+          simp [MachineDescription.stepConfig,
+            hstate,
+            offsetReadExitRetargetDescription_lookupTransition_target_none
+              hbelow D (some false),
+            lookupTransition_state_none (hD (some false))]
+        · split
+          · rename_i hnone hfalse htrue
+            have hstate : state = localTarget (some true) := by
+              simpa using htrue
+            simp [MachineDescription.stepConfig,
+              hstate,
+              offsetReadExitRetargetDescription_lookupTransition_target_none
+                hbelow D (some true),
+              lookupTransition_state_none (hD (some true))]
+          · rename_i hnone hfalse htrue
+            simp [MachineDescription.stepConfig,
+              offsetReadExitRetargetDescription_lookupTransition]
+            cases hlookup :
+                D.lookupTransition state (Tape.read tape) with
+            | none =>
+                simp
+            | some t =>
+                simp [readExitRetargetStates, retargetReadExitState]
+
+theorem offsetReadExitRetargetDescription_runConfig
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription}
+    (hD :
+      forall exitCell : Option Bool,
+        D.TransitionFreeAt (localTarget exitCell))
+    (n : Nat) (c : MachineDescription.Configuration) :
+    (offsetReadExitRetargetDescription offset localTarget target D).runConfig n
+        (readExitRetargetConfiguration offset localTarget target c) =
+      readExitRetargetConfiguration offset localTarget target
+        (D.runConfig n c) := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      simp [MachineDescription.runConfig,
+        offsetReadExitRetargetDescription_stepConfig hbelow hD c]
+      cases hstep : D.stepConfig c with
+      | none =>
+          simp [readExitRetargetConfiguration]
+      | some next =>
+          simp [ih next]
+
+theorem offsetReadExitRetargetDescription_runConfig_eq
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription}
+    (hD :
+      forall exitCell : Option Bool,
+        D.TransitionFreeAt (localTarget exitCell))
+    {n : Nat} {source localTargetState : Nat} {Tin Tout : Tape Bool}
+    (hrun :
+      D.runConfig n { state := source, tape := Tin } =
+        { state := localTargetState, tape := Tout }) :
+    (offsetReadExitRetargetDescription offset localTarget target D).runConfig n
+        (readExitRetargetConfiguration offset localTarget target
+          { state := source, tape := Tin }) =
+      readExitRetargetConfiguration offset localTarget target
+        { state := localTargetState, tape := Tout } := by
+  simpa [hrun] using
+    offsetReadExitRetargetDescription_runConfig
+      (offset := offset) (localTarget := localTarget) (target := target)
+      hbelow hD n { state := source, tape := Tin }
+
+theorem offsetReadExitRetargetDescription_wellFormed
+    (offset : Nat) {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription} (hD : D.WellFormed) :
+    (offsetReadExitRetargetDescription offset localTarget target D).WellFormed := by
+  constructor
+  · have hpos : 0 < D.stateCount := hD.left
+    change 0 < offset + D.stateCount
+    lia
+  constructor
+  · unfold offsetReadExitRetargetDescription
+    unfold retargetReadExitState
+    split
+    · exact Nat.lt_of_lt_of_le (hbelow none)
+        (Nat.le_add_right offset D.stateCount)
+    · split
+      · exact Nat.lt_of_lt_of_le (hbelow (some false))
+          (Nat.le_add_right offset D.stateCount)
+      · split
+        · exact Nat.lt_of_lt_of_le (hbelow (some true))
+            (Nat.le_add_right offset D.stateCount)
+        · exact Nat.add_lt_add_left hD.right.left offset
+  constructor
+  · unfold offsetReadExitRetargetDescription
+    exact Nat.lt_of_lt_of_le (hbelow none)
+      (Nat.le_add_right offset D.stateCount)
+  constructor
+  · intro t ht
+    rcases List.mem_map.mp ht with ⟨base, hbase, rfl⟩
+    have hbaseWell :=
+      hD.right.right.right.left base hbase
+    constructor
+    · exact Nat.add_lt_add_left hbaseWell.left offset
+    · unfold readExitRetargetStates retargetReadExitState
+      split
+      · exact Nat.lt_of_lt_of_le (hbelow none)
+          (Nat.le_add_right offset D.stateCount)
+      · split
+        · exact Nat.lt_of_lt_of_le (hbelow (some false))
+            (Nat.le_add_right offset D.stateCount)
+        · split
+          · exact Nat.lt_of_lt_of_le (hbelow (some true))
+              (Nat.le_add_right offset D.stateCount)
+          · exact Nat.add_lt_add_left hbaseWell.right offset
+  · intro t u ht hu hkey
+    rcases List.mem_map.mp ht with ⟨baseT, hbaseT, rfl⟩
+    rcases List.mem_map.mp hu with ⟨baseU, hbaseU, rfl⟩
+    have hbaseKey :
+        TransitionDescription.SameKey baseT baseU := by
+      constructor
+      · exact Nat.add_left_cancel hkey.left
+      · exact hkey.right
+    have hbaseAction :=
+      hD.right.right.right.right baseT baseU
+        hbaseT hbaseU hbaseKey
+    rcases hbaseAction with ⟨hwrite, hmove, htarget⟩
+    simp [TransitionDescription.SameAction,
+      readExitRetargetStates, retargetReadExitState,
+      hwrite, hmove, htarget]
+
+theorem offsetReadExitRetargetDescription_haltTransitionFree
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    (D : MachineDescription) :
+    (offsetReadExitRetargetDescription offset localTarget target D).HaltTransitionFree := by
+  intro t ht hsource
+  rcases List.mem_map.mp ht with ⟨base, _hbase, rfl⟩
+  have hsourceEq : offset + base.source = target none := by
+    simpa [offsetReadExitRetargetDescription,
+      readExitRetargetStates] using hsource
+  have htarget := hbelow none
+  lia
+
+theorem offsetReadExitRetargetDescription_subroutineReady
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription} (hD : D.WellFormed) :
+    (offsetReadExitRetargetDescription offset localTarget target D).SubroutineReady :=
+  ⟨offsetReadExitRetargetDescription_wellFormed offset hbelow hD,
+    offsetReadExitRetargetDescription_haltTransitionFree hbelow D⟩
+
 theorem seqSubroutine_reaches
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

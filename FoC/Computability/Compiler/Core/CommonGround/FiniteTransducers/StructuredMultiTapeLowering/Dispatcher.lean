@@ -1419,6 +1419,37 @@ theorem runsFromStateTapeEquiv_offsetExitRetargetDescription
   simpa [MachineDescription.sharedExitRetargetConfiguration] using hretarget
 
 /--
+Lift an arbitrary-state run through a copied branching reader whose three local
+read exits have been redirected to a continuation-state family.
+-/
+theorem runsFromStateTapeEquiv_offsetReadExitRetargetDescription
+    {offset : Nat} {localTarget target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {D : MachineDescription}
+    (hD :
+      forall exitCell : Option Bool,
+        D.TransitionFreeAt (localTarget exitCell))
+    {sourceState : Nat} {observed : Option Bool}
+    {Tin Tout : Tape Bool}
+    (hrun :
+      RunsFromStateTapeEquiv D sourceState (localTarget observed)
+        Tin Tout) :
+    RunsFromStateTapeEquiv
+      (MachineDescription.offsetReadExitRetargetDescription
+        offset localTarget target D)
+      (MachineDescription.retargetReadExitState
+        offset localTarget target sourceState)
+      (MachineDescription.retargetReadExitState
+        offset localTarget target (localTarget observed)) Tin Tout := by
+  rcases hrun with ⟨n, Tactual, hrun, hout⟩
+  refine ⟨n, Tactual, ?_, hout⟩
+  have hretarget :=
+    MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+      (offset := offset) (localTarget := localTarget) (target := target)
+      hbelow hD hrun
+  simpa [MachineDescription.readExitRetargetConfiguration] using hretarget
+
+/--
 Copied return routine for the tape-1 branch of the dispatcher.  Its local halt
 is redirected to a caller-specified continuation state below the copied block.
 -/
@@ -1584,6 +1615,24 @@ theorem
     htarget
     branchingTape0ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
 
+def retargetedBranchingTape0ReadHeadCellAllExitsDescription
+    (offset : Nat) (target : Option Bool -> Nat) :
+    MachineDescription :=
+  MachineDescription.offsetReadExitRetargetDescription offset
+    branchingTape0ReadHeadCellAndReturnToSeparatorTarget
+    target
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription
+
+theorem
+    retargetedBranchingTape0ReadHeadCellAllExitsDescription_subroutineReady
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset) :
+    (retargetedBranchingTape0ReadHeadCellAllExitsDescription
+      offset target).SubroutineReady :=
+  MachineDescription.offsetReadExitRetargetDescription_subroutineReady
+    hbelow
+    branchingTape0ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
+
 theorem
     branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
     {logical : List (Tape Bool)} {physical : Tape Bool}
@@ -1623,6 +1672,67 @@ theorem
     branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
       (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
   simpa [tapeAt_guardLogicalTapes_read] using hrun
+
+theorem
+    retargetedBranchingTape0ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 0
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (retargetedBranchingTape0ReadHeadCellAllExitsDescription
+            offset target)
+          (retargetedBranchingTape0ReadHeadCellAllExitsDescription
+            offset target).start
+          (target (Tape.read (Description.tapeAt logical 0)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases
+      branchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+        hlength with
+    ⟨separatorPhysical, hseparator, hrun⟩
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetReadExitRetargetDescription
+      (offset := offset)
+      (localTarget :=
+        branchingTape0ReadHeadCellAndReturnToSeparatorTarget)
+      (target := target)
+      hbelow
+      branchingTape0ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
+      (observed := Tape.read (Description.tapeAt logical 0))
+      hrun
+  exact
+    ⟨separatorPhysical, hseparator, by
+      cases hread : Tape.read (Description.tapeAt logical 0) with
+      | none =>
+          simpa
+            [retargetedBranchingTape0ReadHeadCellAllExitsDescription,
+              MachineDescription.offsetReadExitRetargetDescription,
+              MachineDescription.retargetReadExitState,
+              branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
+              branchingSeparatorReadHeadCellTarget,
+              BranchingHeadCellReturn.targetForRead, hread] using hcopy
+      | some bit =>
+          cases bit with
+          | false =>
+              simpa
+                [retargetedBranchingTape0ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+          | true =>
+              simpa
+                [retargetedBranchingTape0ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
 theorem
     retargetedBranchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
@@ -1735,6 +1845,24 @@ theorem
     htarget
     branchingTape1ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
 
+def retargetedBranchingTape1ReadHeadCellAllExitsDescription
+    (offset : Nat) (target : Option Bool -> Nat) :
+    MachineDescription :=
+  MachineDescription.offsetReadExitRetargetDescription offset
+    branchingTape1ReadHeadCellAndReturnToSeparatorTarget
+    target
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription
+
+theorem
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription_subroutineReady
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset) :
+    (retargetedBranchingTape1ReadHeadCellAllExitsDescription
+      offset target).SubroutineReady :=
+  MachineDescription.offsetReadExitRetargetDescription_subroutineReady
+    hbelow
+    branchingTape1ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
+
 theorem
     branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
     {logical : List (Tape Bool)} {physical : Tape Bool}
@@ -1810,6 +1938,67 @@ theorem
       (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
       (guarded_drop_one_exists_of_length_three hlength)
   simpa [tapeAt_guardLogicalTapes_read] using hrun
+
+theorem
+    retargetedBranchingTape1ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 1
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (retargetedBranchingTape1ReadHeadCellAllExitsDescription
+            offset target)
+          (retargetedBranchingTape1ReadHeadCellAllExitsDescription
+            offset target).start
+          (target (Tape.read (Description.tapeAt logical 1)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+        hlength with
+    ⟨separatorPhysical, hseparator, hrun⟩
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetReadExitRetargetDescription
+      (offset := offset)
+      (localTarget :=
+        branchingTape1ReadHeadCellAndReturnToSeparatorTarget)
+      (target := target)
+      hbelow
+      branchingTape1ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
+      (observed := Tape.read (Description.tapeAt logical 1))
+      hrun
+  exact
+    ⟨separatorPhysical, hseparator, by
+      cases hread : Tape.read (Description.tapeAt logical 1) with
+      | none =>
+          simpa
+            [retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+              MachineDescription.offsetReadExitRetargetDescription,
+              MachineDescription.retargetReadExitState,
+              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+              branchingSeparatorReadHeadCellTarget,
+              BranchingHeadCellReturn.targetForRead, hread] using hcopy
+      | some bit =>
+          cases bit with
+          | false =>
+              simpa
+                [retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+          | true =>
+              simpa
+                [retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
 theorem
     retargetedBranchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
@@ -1922,6 +2111,24 @@ theorem
     htarget
     branchingTape2ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
 
+def retargetedBranchingTape2ReadHeadCellAllExitsDescription
+    (offset : Nat) (target : Option Bool -> Nat) :
+    MachineDescription :=
+  MachineDescription.offsetReadExitRetargetDescription offset
+    branchingTape2ReadHeadCellAndReturnToSeparatorTarget
+    target
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription
+
+theorem
+    retargetedBranchingTape2ReadHeadCellAllExitsDescription_subroutineReady
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset) :
+    (retargetedBranchingTape2ReadHeadCellAllExitsDescription
+      offset target).SubroutineReady :=
+  MachineDescription.offsetReadExitRetargetDescription_subroutineReady
+    hbelow
+    branchingTape2ReadHeadCellAndReturnToSeparatorDescription_subroutineReady.left
+
 theorem
     branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromBlockStart
     {logical : List (Tape Bool)} {physical : Tape Bool}
@@ -2000,6 +2207,67 @@ theorem
       (guardedAtExistingTapeSeparator_zero_of_length_three hlength)
       (guarded_hasAtLeastThreeTapes_of_length_three hlength)
   simpa [tapeAt_guardLogicalTapes_read] using hrun
+
+theorem
+    retargetedBranchingTape2ReadHeadCellAllExitsDescription_runsFromGuardedBlockStart
+    {offset : Nat} {target : Option Bool -> Nat}
+    (hbelow : forall cell : Option Bool, target cell < offset)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (retargetedBranchingTape2ReadHeadCellAllExitsDescription
+            offset target)
+          (retargetedBranchingTape2ReadHeadCellAllExitsDescription
+            offset target).start
+          (target (Tape.read (Description.tapeAt logical 2)))
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases
+      branchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
+        hlength with
+    ⟨separatorPhysical, hseparator, hrun⟩
+  have hcopy :=
+    runsFromStateTapeEquiv_offsetReadExitRetargetDescription
+      (offset := offset)
+      (localTarget :=
+        branchingTape2ReadHeadCellAndReturnToSeparatorTarget)
+      (target := target)
+      hbelow
+      branchingTape2ReadHeadCellAndReturnToSeparatorDescription_transitionFreeAt
+      (observed := Tape.read (Description.tapeAt logical 2))
+      hrun
+  exact
+    ⟨separatorPhysical, hseparator, by
+      cases hread : Tape.read (Description.tapeAt logical 2) with
+      | none =>
+          simpa
+            [retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+              MachineDescription.offsetReadExitRetargetDescription,
+              MachineDescription.retargetReadExitState,
+              branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+              branchingSeparatorReadHeadCellTarget,
+              BranchingHeadCellReturn.targetForRead, hread] using hcopy
+      | some bit =>
+          cases bit with
+          | false =>
+              simpa
+                [retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+          | true =>
+              simpa
+                [retargetedBranchingTape2ReadHeadCellAllExitsDescription,
+                  MachineDescription.offsetReadExitRetargetDescription,
+                  MachineDescription.retargetReadExitState,
+                  branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
+                  branchingSeparatorReadHeadCellTarget,
+                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
 theorem
     retargetedBranchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
@@ -2151,6 +2419,20 @@ def tape2ReaderTarget (D : Description) (state : Nat)
     (reads : ReadTuple3) : Nat :=
   afterRead D state reads
 
+def tape0ReaderTargets (D : Description) (state : Nat) :
+    Option Bool -> Nat :=
+  fun read0 => tape0ReaderTarget D state read0
+
+def tape1ReaderTargets (D : Description) (state : Nat)
+    (read0 : Option Bool) : Option Bool -> Nat :=
+  fun read1 => tape1ReaderTarget D state read0 read1
+
+def tape2ReaderTargets (D : Description) (state : Nat)
+    (read0 read1 : Option Bool) : Option Bool -> Nat :=
+  fun read2 =>
+    tape2ReaderTarget D state
+      { read0 := read0, read1 := read1, read2 := read2 }
+
 theorem ready_lt_afterRead0Base
     (D : Description) {state : Nat}
     (hstate : state < D.stateCount) :
@@ -2169,6 +2451,18 @@ theorem afterRead1Base_le_afterRead1
     (read0 read1 : Option Bool) :
     afterRead1Base D ≤ afterRead1 D state read0 read1 := by
   unfold afterRead1
+  lia
+
+theorem afterRead0Base_le_readerStateLimit
+    (D : Description) :
+    afterRead0Base D ≤ readerStateLimit D := by
+  unfold readerStateLimit afterRead1Base
+  lia
+
+theorem afterRead1Base_le_readerStateLimit
+    (D : Description) :
+    afterRead1Base D ≤ readerStateLimit D := by
+  unfold readerStateLimit
   lia
 
 theorem afterRead_lt_afterRead0Base
@@ -2216,6 +2510,40 @@ theorem tape2ReaderTarget_lt_afterRead0Base
     tape2ReaderTarget D state reads < afterRead0Base D := by
   simpa [tape2ReaderTarget] using
     afterRead_lt_afterRead0Base D reads hstate
+
+theorem tape0ReaderTargets_lt_readerStateLimit
+    (D : Description) {state : Nat}
+    (hstate : state < D.stateCount) :
+    forall read0 : Option Bool,
+      tape0ReaderTargets D state read0 < readerStateLimit D := by
+  intro read0
+  have htarget :=
+    tape0ReaderTarget_lt_afterRead1Base D read0 hstate
+  have hlimit := afterRead1Base_le_readerStateLimit D
+  simpa [tape0ReaderTargets] using Nat.lt_of_lt_of_le htarget hlimit
+
+theorem tape1ReaderTargets_lt_readerStateLimit
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state < D.stateCount) :
+    forall read1 : Option Bool,
+      tape1ReaderTargets D state read0 read1 < readerStateLimit D := by
+  intro read1
+  simpa [tape1ReaderTargets] using
+    tape1ReaderTarget_lt_readerStateLimit D read0 read1 hstate
+
+theorem tape2ReaderTargets_lt_readerStateLimit
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state < D.stateCount) :
+    forall read2 : Option Bool,
+      tape2ReaderTargets D state read0 read1 read2 < readerStateLimit D := by
+  intro read2
+  have htarget :=
+    tape2ReaderTarget_lt_afterRead0Base D
+      ({ read0 := read0, read1 := read1, read2 := read2 } : ReadTuple3)
+      hstate
+  have hlimit := afterRead0Base_le_readerStateLimit D
+  simpa [tape2ReaderTargets] using Nat.lt_of_lt_of_le htarget hlimit
 
 theorem afterRead_lt_tape0ReaderTarget
     (D : Description) {state targetState : Nat}
