@@ -249,6 +249,49 @@ theorem applyPhysicalPrimitiveSequence_guardLogicalTapes_equiv
     primitives (guardLogicalTapes_equiv logical)
 
 /--
+Exact guard-slack endpoint produced by running a primitive sequence on the
+guarded representative of a source logical tape list.
+
+Unlike the broader {name}`StructuredLogicalEquivEncodedTapes` invariant, this
+predicate records enough source information to determine the exact logical
+representative that a later refresh step should re-guard.
+-/
+def PhysicalPrimitiveSequenceGuardSlackEndpoint
+    (primitives : List PhysicalPrimitive)
+    (source target : List (Tape Bool)) (physical : Tape Bool) : Prop :=
+  target = applyPhysicalPrimitiveSequence primitives source ∧
+    physical =
+      encodedStructuredTapes
+        (applyPhysicalPrimitiveSequence primitives
+          (guardLogicalTapes source))
+
+theorem physicalPrimitiveSequenceGuardSlackEndpoint_self
+    (primitives : List PhysicalPrimitive)
+    (source : List (Tape Bool)) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source
+      (applyPhysicalPrimitiveSequence primitives source)
+      (encodedStructuredTapes
+        (applyPhysicalPrimitiveSequence primitives
+          (guardLogicalTapes source))) := by
+  exact ⟨rfl, rfl⟩
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.toStructuredLogicalEquiv
+    {primitives : List PhysicalPrimitive}
+    {source target : List (Tape Bool)} {physical : Tape Bool}
+    (h :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        physical) :
+    StructuredLogicalEquivEncodedTapes target physical := by
+  rcases h with ⟨htarget, hphysical⟩
+  rw [htarget, hphysical]
+  exact
+    ⟨applyPhysicalPrimitiveSequence primitives
+        (guardLogicalTapes source),
+      applyPhysicalPrimitiveSequence_guardLogicalTapes_equiv primitives
+        source,
+      rfl⟩
+
+/--
 Contract for one concrete physical primitive machine.
 
 The machine starts and ends at the canonical encoded block boundary.  Internal

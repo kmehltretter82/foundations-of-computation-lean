@@ -268,6 +268,49 @@ theorem physicalPrimitiveSequenceGuardedContractEquiv_append_logicalEquiv
 -/
 
 /--
+Refresh contract for exact guard-slack endpoints produced by primitive rows.
+
+This is the implementable Milestone 1 shape: the physical input is not an
+arbitrary member of {name}`StructuredLogicalEquivEncodedTapes`, but an exact
+endpoint obtained by running a primitive sequence on the guarded representative
+of some source logical tapes.  The endpoint predicate records the exact target
+logical representative that should be re-guarded.
+-/
+structure GuardSlackRefreshContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  realizes :
+    forall (primitives : List PhysicalPrimitive)
+      (source target : List (Tape Bool)) (physical : Tape Bool),
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        physical ->
+        refresh.HaltsFromTapeEquiv
+          physical
+          (encodedGuardedStructuredTapes target)
+
+namespace GuardSlackRefreshContract
+
+theorem realizesSelf
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh)
+    (primitives : List PhysicalPrimitive)
+    (source : List (Tape Bool)) :
+    refresh.HaltsFromTapeEquiv
+      (encodedStructuredTapes
+        (applyPhysicalPrimitiveSequence primitives
+          (guardLogicalTapes source)))
+      (encodedGuardedStructuredTapes
+        (applyPhysicalPrimitiveSequence primitives source)) :=
+  hrefresh.realizes primitives source
+    (applyPhysicalPrimitiveSequence primitives source)
+    (encodedStructuredTapes
+      (applyPhysicalPrimitiveSequence primitives
+        (guardLogicalTapes source)))
+    (physicalPrimitiveSequenceGuardSlackEndpoint_self primitives source)
+
+end GuardSlackRefreshContract
+
+/--
 Contract for a machine that restores the canonical guarded encoding from a
 logical-equivalence endpoint.
 

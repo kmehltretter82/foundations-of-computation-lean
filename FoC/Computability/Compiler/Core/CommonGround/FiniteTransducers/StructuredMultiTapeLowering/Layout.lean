@@ -872,6 +872,27 @@ theorem structuredLogicalEquivEncodedTapes_guarded_self
   exact ⟨guardLogicalTapes logical,
     guardLogicalTapes_equiv logical, rfl⟩
 
+/--
+Guarded physical encodings are not invariant under
+{name}`LogicalTapeListEquiv`.
+
+This matters for guard-refresh normalization: a concrete normalizer cannot be
+specified only by an arbitrary representative equivalent to the input unless
+the refresh endpoint also records which exact logical representative should be
+re-guarded.
+-/
+theorem encodedGuardedStructuredTapes_not_invariant_under_logicalTapeListEquiv :
+    exists actual expected : List (Tape Bool),
+      LogicalTapeListEquiv actual expected ∧
+        encodedGuardedStructuredTapes actual ≠
+          encodedGuardedStructuredTapes expected := by
+  let T0 : Tape Bool := { left := [], head := none, right := [] }
+  let T1 : Tape Bool := { left := [none], head := none, right := [] }
+  refine ⟨[T0], [T1], ?_, ?_⟩
+  · simp [LogicalTapeListEquiv, Tape.Equiv, T0, T1,
+      Tape.dropTrailingNone]
+  · decide
+
 theorem structuredLogicalEquivEncodedTapes_self
     (logical : List (Tape Bool)) :
     StructuredLogicalEquivEncodedTapes logical
