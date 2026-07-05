@@ -223,9 +223,54 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompacto
     countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
       selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_prefixEraser
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
+  rcases hprefix with ⟨eraser, hready, hrun⟩
+  refine ⟨eraser, hready, ?_, ?_, ?_, ?_⟩
+  · intro L
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun true L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          true L [])
+  · intro L bit rest
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun true L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          true L (bit :: rest))
+  · intro L
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun false L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          false L [])
+  · intro L bit rest
+    simpa [
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
+      hrun false L
+        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
+          false L (bit :: rest))
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_prefixEraser
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
