@@ -498,6 +498,30 @@ theorem selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput
     List.filterMap_append]
 
 /--
+Exact visible-cell shape left by the selected-segment bit decoder.
+
+The stale structured prefix is still present to the left of a separator blank;
+the decoded selected segment is represented by optional output cells; and the
+machine halts at the right blank after the scanned segment.
+-/
+theorem selectedSegmentLogicalTapeDecoderTargetTape_cells
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          target encodedPrefix) =
+      List.append encodedPrefix
+        (none ::
+          List.append
+            (statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+              selectedSegmentLogicalTapeDecoderEmit
+              selectedSegmentLogicalTapeDecoderStart
+              (logicalTapeBits (guardLogicalTape target)))
+            [none, none]) := by
+  rw [selectedSegmentLogicalTapeDecoderTargetTape,
+    FSTStatefulOptionAppendTargetTapeFromLeft_cells]
+  simp [selectedSegmentLogicalTapeDecoderStart, List.append_assoc]
+
+/--
 Cleanup needed after the selected-segment bit decoder.
 
 The decoder target still carries the old encoded structured prefix to the left

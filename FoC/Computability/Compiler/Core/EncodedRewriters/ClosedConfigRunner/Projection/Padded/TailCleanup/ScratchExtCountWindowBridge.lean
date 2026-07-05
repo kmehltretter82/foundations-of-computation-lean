@@ -523,6 +523,14 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
           (by
             simpa [T0, T1, T2] using hseparator))
 
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_selectedSegmentDecoder
+    (hdecoder :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
+  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_selectedSegmentDecoder
+      hdecoder)
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
     (hnormalizer :
       Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
@@ -633,16 +641,35 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_l
     hextractor
     countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core
 
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_selectedSegmentDecoder
+    (hdecoder :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction)
+    (hextractor :
+      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
+    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core
+    hextractor
+    (countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_selectedSegmentDecoder
+      hdecoder)
+
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
   countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
     loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
 
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore :
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
+    (hdecoder :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_selectedSegmentDecoder
+    hdecoder
+    loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
+    (hmaterializer :
+      CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction := by
-  let hmaterializer :
-      CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore
   let hrejectScan :
       RejectPostFieldDecodedPrefixScanSourceConstruction :=
     rejectPostFieldDecodedPrefixScanSourceConstruction_of_countWindowMaterializer
@@ -677,6 +704,19 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstru
   exact
     selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_openConstructions
       ⟨hacceptBoundary, hrejectRemaining⟩
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
+    countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore
+
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
+    (hdecoder :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
+    (countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
+      hdecoder)
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
