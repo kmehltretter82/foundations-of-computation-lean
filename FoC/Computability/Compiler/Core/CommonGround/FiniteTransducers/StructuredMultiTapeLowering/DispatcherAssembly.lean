@@ -81,6 +81,32 @@ theorem transitionListDeterministic_append_of_sourceDisjoint
   · exact False.elim ((hdisjoint u t hu ht) hkey.left.symm)
   · exact hright t u ht hu hkey
 
+theorem transitionListDeterministic_flatMap
+    {α : Type} {items : List α}
+    {transitions : α -> List TransitionDescription}
+    (hdet :
+      forall item : α,
+        item ∈ items -> TransitionListDeterministic (transitions item))
+    (hdisjoint :
+      forall item₀ : α,
+        item₀ ∈ items ->
+          forall item₁ : α,
+            item₁ ∈ items ->
+              item₀ ≠ item₁ ->
+                TransitionSourceDisjoint
+                  (transitions item₀) (transitions item₁)) :
+    TransitionListDeterministic (List.flatMap transitions items) := by
+  intro t u ht hu hkey
+  rw [List.mem_flatMap] at ht hu
+  rcases ht with ⟨item₀, hitem₀, ht⟩
+  rcases hu with ⟨item₁, hitem₁, hu⟩
+  by_cases hsame : item₀ = item₁
+  · subst item₁
+    exact hdet item₀ hitem₀ t u ht hu hkey
+  · exact False.elim
+      ((hdisjoint item₀ hitem₀ item₁ hitem₁ hsame) t u ht hu
+        hkey.left)
+
 theorem transitionSourceDisjoint_of_below_atLeast
     {bound : Nat} {left right : List TransitionDescription}
     (hleft : TransitionSourcesBelow bound left)
@@ -599,6 +625,36 @@ theorem indexedReaderBlockEnd_le_limit
     (by
       simpa [Nat.add_assoc] using
         Nat.add_le_add_left hidx' base)
+
+theorem indexedReaderBlocks_source_ne_of_state_ne
+    {base blockCount state₀ state₁ source : Nat}
+    (hne : state₀ ≠ state₁)
+    (h₀ :
+      base + state₀ * blockCount ≤ source ∧
+        source < base + state₀ * blockCount + blockCount)
+    (h₁ :
+      base + state₁ * blockCount ≤ source ∧
+        source < base + state₁ * blockCount + blockCount) :
+    False := by
+  rcases Nat.lt_or_gt_of_ne hne with hlt | hgt
+  · have hidx :
+        (state₀ + 1) * blockCount ≤ state₁ * blockCount :=
+      Nat.mul_le_mul_right blockCount (Nat.succ_le_of_lt hlt)
+    have hupper :
+        base + state₀ * blockCount + blockCount ≤
+          base + state₁ * blockCount := by
+      simpa [Nat.succ_mul, Nat.add_assoc] using
+        Nat.add_le_add_left hidx base
+    exact (Nat.not_lt_of_ge (Nat.le_trans hupper h₁.left)) h₀.right
+  · have hidx :
+        (state₁ + 1) * blockCount ≤ state₀ * blockCount :=
+      Nat.mul_le_mul_right blockCount (Nat.succ_le_of_lt hgt)
+    have hupper :
+        base + state₁ * blockCount + blockCount ≤
+          base + state₀ * blockCount := by
+      simpa [Nat.succ_mul, Nat.add_assoc] using
+        Nat.add_le_add_left hidx base
+    exact (Nat.not_lt_of_ge (Nat.le_trans hupper h₀.left)) h₁.right
 
 theorem tape0ReaderOffset_blockEnd_le_tape0ReaderLimit
     (D : Description) {state : Nat}
@@ -1238,6 +1294,119 @@ theorem afterRead1JumpTape2ReaderTransitions_source_cases
   · exact Or.inr (Or.inr
       (tape2ReaderDescription_sources_in_block D state read0 read1 t ht))
 
+theorem readyJumpTape0ReaderTransitions_sourceDisjoint_of_ne
+    (D : Description) {state₀ state₁ : Nat}
+    (hstate₀ : state₀ < D.stateCount)
+    (hstate₁ : state₁ < D.stateCount)
+    (hne : state₀ ≠ state₁) :
+    TransitionSourceDisjoint
+      (readyJumpTape0ReaderTransitions D state₀)
+      (readyJumpTape0ReaderTransitions D state₁) := by
+  intro t u ht hu hsource
+  have hleftCases :=
+    readyJumpTape0ReaderTransitions_source_cases D ht
+  have hrightCases :=
+    readyJumpTape0ReaderTransitions_source_cases D hu
+  rcases hleftCases with hleftReady | hleftCases
+  · rcases hrightCases with hrightReady | hrightCases
+    · have heq : state₀ = state₁ := by
+        rw [hleftReady, hrightReady] at hsource
+        simpa [StaticDispatcherState.ready] using hsource
+      exact hne heq
+    · rcases hrightCases with hrightScratch | hrightReader
+      · have hreadyLt :
+            StaticDispatcherState.ready state₀ <
+              StaticDispatcherState.readerStateLimit D := by
+          unfold StaticDispatcherState.ready
+            StaticDispatcherState.readerStateLimit
+            StaticDispatcherState.afterRead1Base
+            StaticDispatcherState.afterRead0Base
+          lia
+        have hscratchGe :
+            StaticDispatcherState.readerStateLimit D ≤
+              readyJumpScratch D state₁ := by
+          unfold readyJumpScratch readyJumpScratchBase
+          lia
+        rw [hleftReady, hrightScratch] at hsource
+        lia
+      · have hreadyLt :=
+          Nat.lt_trans (ready_lt_readyJumpScratch D hstate₀)
+            (readyJumpScratch_lt_readyJumpLimit D hstate₀)
+        have hreaderGe : readyJumpLimit D ≤ u.source := by
+          exact Nat.le_trans
+            (by
+              unfold tape0ReaderOffset tape0ReaderBlockBase
+              exact Nat.le_add_right _ _)
+            hrightReader.left
+        rw [hleftReady] at hsource
+        lia
+  · rcases hleftCases with hleftScratch | hleftReader
+    · rcases hrightCases with hrightReady | hrightCases
+      · have hreadyLt :
+            StaticDispatcherState.ready state₁ <
+              StaticDispatcherState.readerStateLimit D := by
+          unfold StaticDispatcherState.ready
+            StaticDispatcherState.readerStateLimit
+            StaticDispatcherState.afterRead1Base
+            StaticDispatcherState.afterRead0Base
+          lia
+        have hscratchGe :
+            StaticDispatcherState.readerStateLimit D ≤
+              readyJumpScratch D state₀ := by
+          unfold readyJumpScratch readyJumpScratchBase
+          lia
+        rw [hleftScratch, hrightReady] at hsource
+        lia
+      · rcases hrightCases with hrightScratch | hrightReader
+        · have heq : state₀ = state₁ := by
+            rw [hleftScratch, hrightScratch] at hsource
+            unfold readyJumpScratch at hsource
+            lia
+          exact hne heq
+        · have hscratchLt :=
+            readyJumpScratch_lt_readyJumpLimit D hstate₀
+          have hreaderGe : readyJumpLimit D ≤ u.source := by
+            exact Nat.le_trans
+              (by
+                unfold tape0ReaderOffset tape0ReaderBlockBase
+                exact Nat.le_add_right _ _)
+              hrightReader.left
+          rw [hleftScratch] at hsource
+          lia
+    · rcases hrightCases with hrightReady | hrightCases
+      · have hreadyLt :=
+          Nat.lt_trans (ready_lt_readyJumpScratch D hstate₁)
+            (readyJumpScratch_lt_readyJumpLimit D hstate₁)
+        have hreaderGe : readyJumpLimit D ≤ t.source := by
+          exact Nat.le_trans
+            (by
+              unfold tape0ReaderOffset tape0ReaderBlockBase
+              exact Nat.le_add_right _ _)
+            hleftReader.left
+        rw [hrightReady] at hsource
+        lia
+      · rcases hrightCases with hrightScratch | hrightReader
+        · have hscratchLt :=
+            readyJumpScratch_lt_readyJumpLimit D hstate₁
+          have hreaderGe : readyJumpLimit D ≤ t.source := by
+            exact Nat.le_trans
+              (by
+                unfold tape0ReaderOffset tape0ReaderBlockBase
+                exact Nat.le_add_right _ _)
+              hleftReader.left
+          rw [hrightScratch] at hsource
+          lia
+        · have hrightReader' := hrightReader
+          rw [← hsource] at hrightReader'
+          unfold tape0ReaderOffset tape0ReaderBlockBase at hleftReader hrightReader'
+          exact
+            indexedReaderBlocks_source_ne_of_state_ne
+              (base := readyJumpLimit D)
+              (blockCount :=
+                branchingTape0ReadHeadCellAndReturnToSeparatorDescription.stateCount)
+              (source := t.source)
+              hne hleftReader hrightReader'
+
 theorem readyJumpTape0ReaderTransitions_sources_ne_halt
     (D : Description) {state : Nat}
     (hhalt : D.halt < D.stateCount)
@@ -1785,6 +1954,24 @@ theorem readyJumpTape0ReaderAll_afterRead0JumpTape1ReaderAll_sourceDisjoint
       D read0
       (activeStateValues_mem_lt hreadyState)
       (activeStateValues_mem_lt hafterState)
+
+theorem readyJumpTape0ReaderAllTransitions_deterministic
+    (D : Description) :
+    TransitionListDeterministic
+      (readyJumpTape0ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+  apply transitionListDeterministic_flatMap
+  · intro state hstate
+    exact
+      readyJumpTape0ReaderTransitions_deterministic
+        D (activeStateValues_mem_lt hstate)
+  · intro state₀ hstate₀ state₁ hstate₁ hne
+    exact
+      readyJumpTape0ReaderTransitions_sourceDisjoint_of_ne
+        D
+        (activeStateValues_mem_lt hstate₀)
+        (activeStateValues_mem_lt hstate₁)
+        hne
 
 theorem afterRead0JumpTape1ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
     (D : Description) :
