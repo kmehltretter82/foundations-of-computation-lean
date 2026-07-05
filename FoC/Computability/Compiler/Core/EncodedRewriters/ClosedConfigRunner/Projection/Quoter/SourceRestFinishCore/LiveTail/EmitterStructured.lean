@@ -56,7 +56,7 @@ def structuredAnyReadRows
     List Structured.Transition :=
   [ mkRow none, mkRow (some false), mkRow (some true) ]
 
-private def structuredAnySourceScratchReadRows
+def structuredAnySourceScratchReadRows
     (mkRow : Option Bool -> Option Bool -> Structured.Transition) :
     List Structured.Transition :=
   [ mkRow none none
@@ -69,7 +69,7 @@ private def structuredAnySourceScratchReadRows
   , mkRow (some true) (some false)
   , mkRow (some true) (some true) ]
 
-private def structuredAnySourceOutputReadRows
+def structuredAnySourceOutputReadRows
     (mkRow : Option Bool -> Option Bool -> Structured.Transition) :
     List Structured.Transition :=
   [ mkRow none none
@@ -82,7 +82,7 @@ private def structuredAnySourceOutputReadRows
   , mkRow (some true) (some false)
   , mkRow (some true) (some true) ]
 
-private def structuredLiveTailPreserveWriteOutputRow
+def structuredLiveTailPreserveWriteOutputRow
     (source target : Nat) (sourceRead scratchRead : Option Bool)
     (bit : Bool) : Structured.Transition :=
   structuredRow source sourceRead scratchRead none
@@ -91,13 +91,13 @@ private def structuredLiveTailPreserveWriteOutputRow
     (structuredWriteBit bit Structured.HeadMove.right)
     target
 
-private def structuredLiveTailPreserveWriteOutputRows
+def structuredLiveTailPreserveWriteOutputRows
     (source target : Nat) (bit : Bool) : List Structured.Transition :=
   structuredAnySourceScratchReadRows fun sourceRead scratchRead =>
     structuredLiveTailPreserveWriteOutputRow source target sourceRead
       scratchRead bit
 
-private def structuredMixedOptionCellQuoteLiveTailHeaderBits :
+def structuredMixedOptionCellQuoteLiveTailHeaderBits :
     Word Bool :=
   [false, false, false, false]
 
@@ -485,7 +485,7 @@ theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_ass
       (assemblySourceRestFinishLengthHeaderBits
         p.w p.sourceRestBits p.stage)
 
-private def structuredLiveTailCountRow
+def structuredLiveTailCountRow
     (read : Bool) : Structured.Transition :=
   structuredRow 0 (some read) none none
     (structuredPreserve Structured.HeadMove.right)
@@ -493,7 +493,7 @@ private def structuredLiveTailCountRow
     structuredStay
     0
 
-private def structuredLiveTailCountDoneRow :
+def structuredLiveTailCountDoneRow :
     Structured.Transition :=
   structuredRow 0 none none none
     structuredStay
@@ -687,7 +687,7 @@ theorem structuredMixedOptionCellQuoteLiveTailCountDescription_run
     structuredMixedOptionCellQuoteLiveTailCountDescription_run_loop
       [] bits 0 outputBits
 
-private def structuredLiveTailWriteOutputRow
+def structuredLiveTailWriteOutputRow
     (source target : Nat) (sourceRead tape1Read : Option Bool)
     (bit : Bool) (tape1Action : Structured.TapeAction) :
     Structured.Transition :=
@@ -697,7 +697,7 @@ private def structuredLiveTailWriteOutputRow
     (structuredWriteBit bit Structured.HeadMove.right)
     target
 
-private def structuredLiveTailLengthMarkerRows
+def structuredLiveTailLengthMarkerRows
     (source target : Nat) (bit : Bool)
     (moveTape1 : Structured.HeadMove := Structured.HeadMove.stay) :
     List Structured.Transition :=
@@ -705,18 +705,18 @@ private def structuredLiveTailLengthMarkerRows
     structuredLiveTailWriteOutputRow source target sourceRead (some true)
       bit (structuredPreserve moveTape1)
 
-private def structuredLiveTailLengthFinalRows
+def structuredLiveTailLengthFinalRows
     (source target : Nat) (bit : Bool) :
     List Structured.Transition :=
   structuredAnyReadRows fun sourceRead =>
     structuredLiveTailWriteOutputRow source target sourceRead none bit
       structuredStay
 
-private def structuredMixedOptionCellQuoteLiveTailLengthTickBits :
+def structuredMixedOptionCellQuoteLiveTailLengthTickBits :
     Word Bool :=
   [false, false, true, false]
 
-private def structuredMixedOptionCellQuoteLiveTailLengthDoneBits :
+def structuredMixedOptionCellQuoteLiveTailLengthDoneBits :
     Word Bool :=
   [false, false, true, true]
 
@@ -2013,7 +2013,7 @@ theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_a
           p).reverse [])
       []
 
-private def structuredLiveTailRewindInitRow
+def structuredLiveTailRewindInitRow
     (sourceRead outputRead : Option Bool) : Structured.Transition :=
   structuredRow 0 sourceRead none outputRead
     structuredStay
@@ -2021,7 +2021,7 @@ private def structuredLiveTailRewindInitRow
     structuredStay
     1
 
-private def structuredLiveTailRewindLoopRow
+def structuredLiveTailRewindLoopRow
     (sourceRead outputRead : Option Bool) : Structured.Transition :=
   structuredRow 1 sourceRead (some true) outputRead
     (structuredPreserve Structured.HeadMove.left)
@@ -2029,7 +2029,7 @@ private def structuredLiveTailRewindLoopRow
     structuredStay
     1
 
-private def structuredLiveTailRewindDoneRow
+def structuredLiveTailRewindDoneRow
     (sourceRead outputRead : Option Bool) : Structured.Transition :=
   structuredRow 1 sourceRead none outputRead
     structuredStay
