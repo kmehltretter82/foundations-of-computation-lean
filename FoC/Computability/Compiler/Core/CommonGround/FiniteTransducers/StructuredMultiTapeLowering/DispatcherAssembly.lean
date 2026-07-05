@@ -43,6 +43,10 @@ def TransitionSourcesAtLeast
     (bound : Nat) (transitions : List TransitionDescription) : Prop :=
   forall t : TransitionDescription, t ∈ transitions -> bound ≤ t.source
 
+def TransitionSourcesNe
+    (state : Nat) (transitions : List TransitionDescription) : Prop :=
+  forall t : TransitionDescription, t ∈ transitions -> t.source ≠ state
+
 theorem transitionListDeterministic_of_wellFormed
     {M : MachineDescription} (hM : M.WellFormed) :
     TransitionListDeterministic M.transitions :=
@@ -146,6 +150,29 @@ theorem transitionSourcesBelow_bind
       forall item : α,
         item ∈ items -> TransitionSourcesBelow bound (transitions item)) :
     TransitionSourcesBelow bound (List.flatMap transitions items) := by
+  intro t ht
+  rw [List.mem_flatMap] at ht
+  rcases ht with ⟨item, hitem, ht⟩
+  exact h item hitem t ht
+
+theorem transitionSourcesNe_append
+    {state : Nat} {left right : List TransitionDescription}
+    (hleft : TransitionSourcesNe state left)
+    (hright : TransitionSourcesNe state right) :
+    TransitionSourcesNe state (left ++ right) := by
+  intro t ht
+  simp at ht
+  rcases ht with ht | ht
+  · exact hleft t ht
+  · exact hright t ht
+
+theorem transitionSourcesNe_bind
+    {α : Type} {state : Nat} {items : List α}
+    {transitions : α -> List TransitionDescription}
+    (h :
+      forall item : α,
+        item ∈ items -> TransitionSourcesNe state (transitions item)) :
+    TransitionSourcesNe state (List.flatMap transitions items) := by
   intro t ht
   rw [List.mem_flatMap] at ht
   rcases ht with ⟨item, hitem, ht⟩
@@ -707,11 +734,28 @@ def afterRead1JumpTape2ReaderTransitions
 def readOptionValues : List (Option Bool) :=
   [none, some false, some true]
 
+def activeStateValues (D : Description) : List Nat :=
+  (List.range D.stateCount).filter (fun state => decide (state ≠ D.halt))
+
+theorem activeStateValues_mem_lt
+    {D : Description} {state : Nat}
+    (hstate : state ∈ activeStateValues D) :
+    state < D.stateCount := by
+  rcases List.mem_filter.mp hstate with ⟨hstate, _hne⟩
+  exact List.mem_range.mp hstate
+
+theorem activeStateValues_mem_ne_halt
+    {D : Description} {state : Nat}
+    (hstate : state ∈ activeStateValues D) :
+    state ≠ D.halt := by
+  rcases List.mem_filter.mp hstate with ⟨_hstate, hne⟩
+  exact of_decide_eq_true hne
+
 def readyJumpTape0ReaderAllTransitions
     (D : Description) : List TransitionDescription :=
   List.flatMap
     (fun state => readyJumpTape0ReaderTransitions D state)
-    (List.range D.stateCount)
+    (activeStateValues D)
 
 def afterRead0JumpTape1ReaderAllTransitions
     (D : Description) : List TransitionDescription :=
@@ -720,7 +764,7 @@ def afterRead0JumpTape1ReaderAllTransitions
       List.flatMap
         (fun state =>
           afterRead0JumpTape1ReaderTransitions D state read0)
-        (List.range D.stateCount))
+        (activeStateValues D))
     readOptionValues
 
 def afterRead1JumpTape2ReaderAllTransitions
@@ -732,7 +776,7 @@ def afterRead1JumpTape2ReaderAllTransitions
           List.flatMap
             (fun state =>
               afterRead1JumpTape2ReaderTransitions D state read0 read1)
-            (List.range D.stateCount))
+            (activeStateValues D))
         readOptionValues)
     readOptionValues
 
@@ -950,6 +994,103 @@ theorem afterRead1JumpTape2ReaderTransitions_source_cases
     · exact Or.inr (Or.inl hscratch)
   · exact Or.inr (Or.inr
       (tape2ReaderDescription_sources_in_block D state read0 read1 t ht))
+
+theorem readyJumpTape0ReaderTransitions_sources_ne_halt
+    (D : Description) {state : Nat}
+    (hhalt : D.halt < D.stateCount)
+    (hstate : state < D.stateCount) (hne : state ≠ D.halt) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (readyJumpTape0ReaderTransitions D state) := by
+  intro t ht
+  rcases readyJumpTape0ReaderTransitions_source_cases D ht with
+    hsource | hcases
+  · rw [hsource]
+    simpa [StaticDispatcherState.ready] using hne
+  · rcases hcases with hscratch | hreader
+    · rw [hscratch]
+      unfold StaticDispatcherState.ready readyJumpScratch
+        readyJumpScratchBase StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base
+      lia
+    · have hlow := hreader.left
+      unfold tape0ReaderOffset tape0ReaderBlockBase
+        readyJumpLimit readyJumpScratchBase
+        StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base at hlow
+      unfold StaticDispatcherState.ready
+      lia
+
+theorem afterRead0JumpTape1ReaderTransitions_sources_ne_halt
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hhalt : D.halt < D.stateCount)
+    (_hstate : state < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (afterRead0JumpTape1ReaderTransitions D state read0) := by
+  intro t ht
+  rcases afterRead0JumpTape1ReaderTransitions_source_cases D read0 ht with
+    hsource | hcases
+  · rw [hsource]
+    unfold StaticDispatcherState.ready StaticDispatcherState.afterRead0
+      StaticDispatcherState.afterRead0Base
+    lia
+  · rcases hcases with hscratch | hreader
+    · rw [hscratch]
+      unfold StaticDispatcherState.ready afterRead0JumpScratch
+        afterRead0JumpScratchBase tape0ReaderLimit tape0ReaderBlockBase
+        readyJumpLimit readyJumpScratchBase
+        StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base
+      lia
+    · have hlow := hreader.left
+      unfold tape1ReaderOffset tape1ReaderBlockBase
+        afterRead0JumpLimit afterRead0JumpScratchBase
+        tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+        readyJumpScratchBase StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base at hlow
+      unfold StaticDispatcherState.ready
+      lia
+
+theorem afterRead1JumpTape2ReaderTransitions_sources_ne_halt
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hhalt : D.halt < D.stateCount)
+    (_hstate : state < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (afterRead1JumpTape2ReaderTransitions D state read0 read1) := by
+  intro t ht
+  rcases afterRead1JumpTape2ReaderTransitions_source_cases
+      D read0 read1 ht with
+    hsource | hcases
+  · rw [hsource]
+    unfold StaticDispatcherState.ready StaticDispatcherState.afterRead1
+      StaticDispatcherState.afterRead1Base
+      StaticDispatcherState.afterRead0Base
+    lia
+  · rcases hcases with hscratch | hreader
+    · rw [hscratch]
+      unfold StaticDispatcherState.ready afterRead1JumpScratch
+        afterRead1JumpScratchBase tape1ReaderLimit tape1ReaderBlockBase
+        afterRead0JumpLimit afterRead0JumpScratchBase
+        tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+        readyJumpScratchBase StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base
+      lia
+    · have hlow := hreader.left
+      unfold tape2ReaderOffset tape2ReaderBlockBase
+        afterRead1JumpLimit afterRead1JumpScratchBase
+        tape1ReaderLimit tape1ReaderBlockBase
+        afterRead0JumpLimit afterRead0JumpScratchBase
+        tape0ReaderLimit tape0ReaderBlockBase readyJumpLimit
+        readyJumpScratchBase StaticDispatcherState.readerStateLimit
+        StaticDispatcherState.afterRead1Base
+        StaticDispatcherState.afterRead0Base at hlow
+      unfold StaticDispatcherState.ready
+      lia
 
 theorem readyJumpTape0Reader_afterRead0JumpTape1Reader_sourceDisjoint
     (D : Description) {readyState afterState : Nat}
@@ -1399,8 +1540,8 @@ theorem readyJumpTape0ReaderAll_afterRead0JumpTape1ReaderAll_sourceDisjoint
   exact
     readyJumpTape0Reader_afterRead0JumpTape1Reader_sourceDisjoint
       D read0
-      (List.mem_range.mp hreadyState)
-      (List.mem_range.mp hafterState)
+      (activeStateValues_mem_lt hreadyState)
+      (activeStateValues_mem_lt hafterState)
 
 theorem afterRead0JumpTape1ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
     (D : Description) :
@@ -1422,8 +1563,8 @@ theorem afterRead0JumpTape1ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
   exact
     afterRead0JumpTape1Reader_afterRead1JumpTape2Reader_sourceDisjoint
       D read0 read0' read1
-      (List.mem_range.mp hstate0)
-      (List.mem_range.mp hstate1)
+      (activeStateValues_mem_lt hstate0)
+      (activeStateValues_mem_lt hstate1)
 
 theorem readyJumpTape0ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
     (D : Description) :
@@ -1443,8 +1584,8 @@ theorem readyJumpTape0ReaderAll_afterRead1JumpTape2ReaderAll_sourceDisjoint
   exact
     readyJumpTape0Reader_afterRead1JumpTape2Reader_sourceDisjoint
       D read0 read1
-      (List.mem_range.mp hreadyState)
-      (List.mem_range.mp hafterState)
+      (activeStateValues_mem_lt hreadyState)
+      (activeStateValues_mem_lt hafterState)
 
 theorem readyAndAfterRead0All_afterRead1JumpTape2ReaderAll_sourceDisjoint
     (D : Description) :
@@ -1556,7 +1697,7 @@ theorem readyJumpTape0ReaderAllTransitions_sources_below_afterRead0JumpLimit
   intro state hstate
   exact
     readyJumpTape0ReaderTransitions_sources_below_afterRead0JumpLimit
-      D (List.mem_range.mp hstate)
+      D (activeStateValues_mem_lt hstate)
 
 theorem afterRead0JumpTape1ReaderAllTransitions_sources_below_afterRead1JumpLimit
     (D : Description) :
@@ -1569,7 +1710,7 @@ theorem afterRead0JumpTape1ReaderAllTransitions_sources_below_afterRead1JumpLimi
   intro state hstate
   exact
     afterRead0JumpTape1ReaderTransitions_sources_below_afterRead1JumpLimit
-      D read0 (List.mem_range.mp hstate)
+      D read0 (activeStateValues_mem_lt hstate)
 
 theorem afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit
     (D : Description) :
@@ -1584,7 +1725,7 @@ theorem afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit
   intro state hstate
   exact
     afterRead1JumpTape2ReaderTransitions_sources_below_stateLimit
-      D read0 read1 (List.mem_range.mp hstate)
+      D read0 read1 (activeStateValues_mem_lt hstate)
 
 theorem readyJumpTape0ReaderAllTransitions_sources_below_stateLimit
     (D : Description) :
@@ -1618,6 +1759,64 @@ theorem threeHeadReaderTransitions_sources_below_stateLimit
         (readyJumpTape0ReaderAllTransitions_sources_below_stateLimit D)
         (afterRead0JumpTape1ReaderAllTransitions_sources_below_stateLimit D))
       (afterRead1JumpTape2ReaderAllTransitions_sources_below_stateLimit D)
+
+theorem readyJumpTape0ReaderAllTransitions_sources_ne_halt
+    (D : Description) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (readyJumpTape0ReaderAllTransitions D) := by
+  unfold readyJumpTape0ReaderAllTransitions
+  apply transitionSourcesNe_bind
+  intro state hstate
+  exact
+    readyJumpTape0ReaderTransitions_sources_ne_halt
+      D hhalt (activeStateValues_mem_lt hstate)
+      (activeStateValues_mem_ne_halt hstate)
+
+theorem afterRead0JumpTape1ReaderAllTransitions_sources_ne_halt
+    (D : Description) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (afterRead0JumpTape1ReaderAllTransitions D) := by
+  unfold afterRead0JumpTape1ReaderAllTransitions
+  apply transitionSourcesNe_bind
+  intro read0 _hread0
+  apply transitionSourcesNe_bind
+  intro state hstate
+  exact
+    afterRead0JumpTape1ReaderTransitions_sources_ne_halt
+      D read0 hhalt (activeStateValues_mem_lt hstate)
+
+theorem afterRead1JumpTape2ReaderAllTransitions_sources_ne_halt
+    (D : Description) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (afterRead1JumpTape2ReaderAllTransitions D) := by
+  unfold afterRead1JumpTape2ReaderAllTransitions
+  apply transitionSourcesNe_bind
+  intro read0 _hread0
+  apply transitionSourcesNe_bind
+  intro read1 _hread1
+  apply transitionSourcesNe_bind
+  intro state hstate
+  exact
+    afterRead1JumpTape2ReaderTransitions_sources_ne_halt
+      D read0 read1 hhalt (activeStateValues_mem_lt hstate)
+
+theorem threeHeadReaderTransitions_sources_ne_halt
+    (D : Description) (hhalt : D.halt < D.stateCount) :
+    TransitionSourcesNe (StaticDispatcherState.ready D.halt)
+      (threeHeadReaderTransitions D) := by
+  simpa [threeHeadReaderTransitions] using
+    transitionSourcesNe_append
+      (transitionSourcesNe_append
+        (readyJumpTape0ReaderAllTransitions_sources_ne_halt D hhalt)
+        (afterRead0JumpTape1ReaderAllTransitions_sources_ne_halt
+          D hhalt))
+      (afterRead1JumpTape2ReaderAllTransitions_sources_ne_halt D hhalt)
+
+theorem threeHeadReaderDescription_haltTransitionFree
+    (D : Description) (hhalt : D.halt < D.stateCount) :
+    (threeHeadReaderDescription D).HaltTransitionFree := by
+  simpa [threeHeadReaderDescription] using
+    threeHeadReaderTransitions_sources_ne_halt D hhalt
 
 theorem readyJumpDescription_runsFromTapeSeparator
     (D : Description) {state : Nat}
