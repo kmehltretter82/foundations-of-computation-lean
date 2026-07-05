@@ -40,7 +40,8 @@ def InitialLayoutExactMaterializerConstruction {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
   exists materializerState : Type,
   exists materializer : TuringMachine MachineCodeSymbol materializerState,
-    InitialLayoutExactMaterializerSpec materializer M
+    InitialLayoutExactMaterializerSpec materializer M ∧
+      TuringMachine.HaltingTransitionsDisabled materializer
 
 /--
 Executable code primitive for the initial-layout materializer.  This is not

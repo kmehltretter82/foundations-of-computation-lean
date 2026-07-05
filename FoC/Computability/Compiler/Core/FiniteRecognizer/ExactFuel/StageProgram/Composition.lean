@@ -558,6 +558,7 @@ def ExactOutputThenRecognizeConstruction : Prop :=
     (f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol))
     (P : Word MachineCodeSymbol -> Prop),
       ExactOutputSpec producer f ->
+      TuringMachine.HaltingTransitionsDisabled producer ->
       FiniteRecognizer.Recognizes recognizer P ->
         exists pipelineState : Type,
         exists pipeline : TuringMachine MachineCodeSymbol pipelineState,
