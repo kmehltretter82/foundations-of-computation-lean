@@ -407,6 +407,21 @@ theorem selectedSegmentLogicalTapeDecoderTargetTape_cells_postFieldDecodedPrefix
       encodedPrefix (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
 
+theorem selectedSegmentLogicalTapeDecoderTargetTape_move_left_move_right_equiv
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderTargetTape
+        target encodedPrefix)
+      (Tape.move Direction.left
+        (Tape.move Direction.right
+          (selectedSegmentLogicalTapeDecoderTargetTape
+            target encodedPrefix))) := by
+  simp [selectedSegmentLogicalTapeDecoderTargetTape,
+    FSTStatefulOptionAppendTargetTapeFromLeft,
+    statefulOptionAppendWriteTargetTapeAtBlank, tapeAtCells,
+    Tape.Equiv, Tape.dropTrailingNone, Tape.move, Tape.moveLeft,
+    Tape.moveRight]
+
 theorem rightEdgeRewindSourceTape_cells_eq_densifierTarget
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.cells (rightEdgeRewindSourceTape bits padding) =
@@ -882,6 +897,106 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierSpec
       densifier
 
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout)
+      (encodedPrefix : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+          encodedPrefix)
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+          [])
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserSpec
+      eraser
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTargetTape
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+          [])
+        (rightEdgeRewindSourceTape (ParsedLayoutBits L)
+          (postFieldDecodedPrefixScanPadding useAccept L))
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
+      compactor
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction :
+    Prop :=
+  CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction ∧
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction
+
+def countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription
+    (eraser compactor : MachineDescription) : MachineDescription :=
+  canonicalSeqDescription eraser compactor
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription_subroutineReady
+    {eraser compactor : MachineDescription}
+    (heraser : eraser.SubroutineReady)
+    (hcompactor : compactor.SubroutineReady) :
+    (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription
+      eraser compactor).SubroutineReady :=
+  canonicalSeqDescription_subroutineReady heraser hcompactor
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction_of_components
+    (hcomponents :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction := by
+  rcases hcomponents with
+    ⟨⟨eraser, heraserReady, heraserRun⟩,
+      ⟨compactor, hcompactorReady, hcompactorRun⟩⟩
+  refine
+    ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription
+      eraser compactor, ?_⟩
+  constructor
+  · exact
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription_subroutineReady
+        heraserReady hcompactorReady
+  · intro useAccept L encodedPrefix
+    let Tmid :=
+      selectedSegmentLogicalTapeDecoderTargetTape
+        (postFieldDecodedPrefixScanSourceTape useAccept L)
+        []
+    have hcompactorFromBridge :
+        compactor.HaltsFromTapeEquiv
+          (Tape.move Direction.left (Tape.move Direction.right Tmid))
+          (rightEdgeRewindSourceTape (ParsedLayoutBits L)
+            (postFieldDecodedPrefixScanPadding useAccept L)) := by
+      rcases hcompactorRun useAccept L with
+        ⟨Tactual, hactual, hactualEquiv⟩
+      rcases
+        HaltsFromTapeEquiv_of_input_equiv
+          (D := compactor)
+          (Tin := Tmid)
+          (Tin' :=
+            Tape.move Direction.left (Tape.move Direction.right Tmid))
+          (selectedSegmentLogicalTapeDecoderTargetTape_move_left_move_right_equiv
+            (postFieldDecodedPrefixScanSourceTape useAccept L) [])
+          hactual with
+        ⟨Ttransported, htransported, htransportedEquiv⟩
+      exact
+        ⟨Ttransported, htransported,
+          Tape.Equiv.trans htransportedEquiv hactualEquiv⟩
+    exact
+      canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
+        heraserReady
+        hcompactorReady
+        (heraserRun useAccept L encodedPrefix)
+        rfl
+        hcompactorFromBridge
+
 def countWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupDescription
     (densifier : MachineDescription) : MachineDescription :=
   canonicalSeqDescription densifier rightEdgeRewindDescription
@@ -1046,9 +1161,15 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
           , postFieldDecodedPrefixScanSourceTape useAccept L ])
         2)
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierConstruction_of_components
+      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderCleanupConstruction := by
