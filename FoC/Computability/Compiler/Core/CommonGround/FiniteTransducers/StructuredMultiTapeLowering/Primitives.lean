@@ -265,6 +265,21 @@ def PhysicalPrimitiveSequenceGuardSlackEndpoint
         (applyPhysicalPrimitiveSequence primitives
           (guardLogicalTapes source))
 
+/--
+Guard-slack endpoint observed up to raw tape equivalence.
+
+This is the endpoint shape produced after composing through standard
+subroutine handoffs: the machine may halt on a tape equivalent to the exact
+row-produced guard-slack encoding.
+-/
+def PhysicalPrimitiveSequenceGuardSlackEndpointEquiv
+    (primitives : List PhysicalPrimitive)
+    (source target : List (Tape Bool)) (physical : Tape Bool) : Prop :=
+  exists exactPhysical : Tape Bool,
+    PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+      exactPhysical ∧
+      Tape.Equiv physical exactPhysical
+
 theorem physicalPrimitiveSequenceGuardSlackEndpoint_self
     (primitives : List PhysicalPrimitive)
     (source : List (Tape Bool)) :
@@ -290,6 +305,73 @@ theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.toStructuredLogicalEquiv
       applyPhysicalPrimitiveSequence_guardLogicalTapes_equiv primitives
         source,
       rfl⟩
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.toEquiv
+    {primitives : List PhysicalPrimitive}
+    {source target : List (Tape Bool)} {physical : Tape Bool}
+    (h :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        physical) :
+    PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source target
+      physical :=
+  ⟨physical, h, Tape.Equiv.refl physical⟩
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+    {primitives : List PhysicalPrimitive}
+    {source target₁ target₂ : List (Tape Bool)}
+    {physical₁ physical₂ : Tape Bool}
+    (h₁ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₁
+        physical₁)
+    (h₂ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₂
+        physical₂) :
+    target₁ = target₂ := by
+  rw [h₁.left, h₂.left]
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpoint.guardedTarget_eq
+    {primitives : List PhysicalPrimitive}
+    {source target₁ target₂ : List (Tape Bool)}
+    {physical₁ physical₂ : Tape Bool}
+    (h₁ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₁
+        physical₁)
+    (h₂ :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target₂
+        physical₂) :
+    encodedGuardedStructuredTapes target₁ =
+      encodedGuardedStructuredTapes target₂ := by
+  rw [PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq h₁ h₂]
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpointEquiv.target_eq
+    {primitives : List PhysicalPrimitive}
+    {source target₁ target₂ : List (Tape Bool)}
+    {physical₁ physical₂ : Tape Bool}
+    (h₁ :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target₁ physical₁)
+    (h₂ :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target₂ physical₂) :
+    target₁ = target₂ := by
+  rcases h₁ with ⟨exact₁, hexact₁, _hequiv₁⟩
+  rcases h₂ with ⟨exact₂, hexact₂, _hequiv₂⟩
+  exact PhysicalPrimitiveSequenceGuardSlackEndpoint.target_eq
+    hexact₁ hexact₂
+
+theorem PhysicalPrimitiveSequenceGuardSlackEndpointEquiv.guardedTarget_eq
+    {primitives : List PhysicalPrimitive}
+    {source target₁ target₂ : List (Tape Bool)}
+    {physical₁ physical₂ : Tape Bool}
+    (h₁ :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target₁ physical₁)
+    (h₂ :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target₂ physical₂) :
+    encodedGuardedStructuredTapes target₁ =
+      encodedGuardedStructuredTapes target₂ := by
+  rw [PhysicalPrimitiveSequenceGuardSlackEndpointEquiv.target_eq h₁ h₂]
 
 /--
 Contract for one concrete physical primitive machine.
@@ -554,6 +636,28 @@ structure PhysicalPrimitiveSequenceGuardedContractEquiv
             (applyPhysicalPrimitiveSequence primitives logical))
 
 /--
+Guarded sequence contract whose endpoint is the exact row-produced guard-slack
+encoding, observed up to raw tape equivalence.
+
+This is the implementable pre-refresh boundary: the source logical tapes are
+known, the primitive sequence is known, and the exact logical target is
+therefore determined by
+{lit}`applyPhysicalPrimitiveSequence primitives logical`.
+-/
+structure PhysicalPrimitiveSequenceGuardSlackContractEquiv
+    (primitives : List PhysicalPrimitive)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall logical : List (Tape Bool),
+      physicalPrimitiveSequenceEnabled primitives logical ->
+        machine.HaltsFromTapeEquiv
+          (encodedGuardedStructuredTapes logical)
+          (encodedStructuredTapes
+            (applyPhysicalPrimitiveSequence primitives
+              (guardLogicalTapes logical)))
+
+/--
 Guarded sequence contract whose output physically encodes a logical tape list
 equivalent to the represented target.
 
@@ -682,6 +786,23 @@ def PhysicalPrimitiveSequenceGuardedLogicalEquivContract.toEquiv
     exact ⟨actual, hactual,
       MachineDescription.HaltsFromTape.toEquiv hhalts⟩
 
+def PhysicalPrimitiveSequenceGuardSlackContractEquiv.toLogicalEquiv
+    {primitives : List PhysicalPrimitive} {machine : MachineDescription}
+    (h :
+      PhysicalPrimitiveSequenceGuardSlackContractEquiv
+        primitives machine) :
+    PhysicalPrimitiveSequenceGuardedLogicalEquivContractEquiv
+      primitives machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro logical hlogical
+    exact
+      ⟨applyPhysicalPrimitiveSequence primitives
+          (guardLogicalTapes logical),
+        applyPhysicalPrimitiveSequence_guardLogicalTapes_equiv primitives
+          logical,
+        h.realizes logical hlogical⟩
+
 def PhysicalPrimitiveSequenceGuardedContractEquiv.toLogicalEquiv
     {primitives : List PhysicalPrimitive} {machine : MachineDescription}
     (h :
@@ -743,6 +864,70 @@ theorem applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_three
           cases move <;> rfl
       | some cell =>
           cases move <;> rfl
+
+theorem applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_singleton
+    (action : TapeAction) (T : Tape Bool) :
+    applyPhysicalPrimitiveSequence
+        (actionPrimitivesAt 0 action) [T] =
+      [action.apply T] := by
+  cases action with
+  | mk write? move =>
+      cases write? with
+      | none =>
+          cases move <;> rfl
+      | some cell =>
+          cases move <;> rfl
+
+theorem actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    (action : TapeAction) (T : Tape Bool) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0 action) [T] [action.apply T]
+      (encodedStructuredTapes [action.apply (guardLogicalTape T)]) := by
+  constructor
+  · exact
+      (applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_singleton
+        action T).symm
+  · simp [guardLogicalTapes,
+      applyPhysicalPrimitiveSequence_actionPrimitivesAt_zero_singleton]
+
+theorem actionPrimitivesAt_zero_stay_guardSlackEndpoint_singleton
+    (write? : Option (Option Bool)) (T : Tape Bool) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0
+        ({ write? := write?, move := HeadMove.stay } : TapeAction))
+      [T]
+      [({ write? := write?, move := HeadMove.stay } : TapeAction).apply T]
+      (encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.stay } : TapeAction).apply
+          (guardLogicalTape T)]) :=
+  actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    ({ write? := write?, move := HeadMove.stay } : TapeAction) T
+
+theorem actionPrimitivesAt_zero_left_guardSlackEndpoint_singleton
+    (write? : Option (Option Bool)) (T : Tape Bool) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0
+        ({ write? := write?, move := HeadMove.left } : TapeAction))
+      [T]
+      [({ write? := write?, move := HeadMove.left } : TapeAction).apply T]
+      (encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.left } : TapeAction).apply
+          (guardLogicalTape T)]) :=
+  actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    ({ write? := write?, move := HeadMove.left } : TapeAction) T
+
+theorem actionPrimitivesAt_zero_right_guardSlackEndpoint_singleton
+    (write? : Option (Option Bool)) (T : Tape Bool) :
+    PhysicalPrimitiveSequenceGuardSlackEndpoint
+      (actionPrimitivesAt 0
+        ({ write? := write?, move := HeadMove.right } : TapeAction))
+      [T]
+      [({ write? := write?, move := HeadMove.right } : TapeAction).apply T]
+      (encodedStructuredTapes
+        [({ write? := write?, move := HeadMove.right } : TapeAction).apply
+          (guardLogicalTape T)]) :=
+  actionPrimitivesAt_zero_guardSlackEndpoint_singleton
+    ({ write? := write?, move := HeadMove.right } : TapeAction) T
 
 theorem applyPhysicalPrimitiveSequence_actionPrimitivesAt_one_three
     (action : TapeAction) (T U V : Tape Bool) :
@@ -1132,6 +1317,34 @@ structure LowersGuardedTransitionLogicalEquiv
                 (encodedGuardedStructuredTapes c.tapes)
                 physical
 
+/--
+Guarded row-lowering contract with an exact row-produced guard-slack endpoint.
+
+This is the endpoint-aware replacement for
+{name}`LowersGuardedTransitionLogicalEquiv` when the row implementation is
+known to produce the slack layout obtained by running
+{name}`transitionPrimitiveSequenceOfRow3` on the guarded representative of the
+source tapes.
+-/
+structure LowersGuardedTransitionGuardSlack
+    (D : Description) (t : Transition)
+    (machine : MachineDescription) : Prop where
+  subroutineReady : machine.SubroutineReady
+  realizes :
+    forall c : Configuration,
+      c.tapes.length = D.tapeCount ->
+      t.source = c.state ->
+        t.reads = D.currentReads c ->
+          exists physical : Tape Bool,
+            PhysicalPrimitiveSequenceGuardSlackEndpoint
+              (transitionPrimitiveSequenceOfRow3 t)
+              c.tapes
+              (D.applyActions t.actions c.tapes)
+              physical ∧
+              machine.HaltsFromTapeEquiv
+                (encodedGuardedStructuredTapes c.tapes)
+                physical
+
 def LowersGuardedTransition.toEquiv
     {D : Description} {t : Transition} {machine : MachineDescription}
     (h : LowersGuardedTransition D t machine) :
@@ -1171,6 +1384,20 @@ def LowersGuardedTransitionEquiv.toLogicalEquiv
         structuredLogicalEquivEncodedTapes_guarded_self
           (D.applyActions t.actions c.tapes),
         h.realizes c hc hsource hreads⟩
+
+def LowersGuardedTransitionGuardSlack.toLogicalEquiv
+    {D : Description} {t : Transition} {machine : MachineDescription}
+    (h : LowersGuardedTransitionGuardSlack D t machine) :
+    LowersGuardedTransitionLogicalEquiv D t machine where
+  subroutineReady := h.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    rcases h.realizes c hc hsource hreads with
+      ⟨physical, hendpoint, hrun⟩
+    exact
+      ⟨physical,
+        hendpoint.toStructuredLogicalEquiv,
+        hrun⟩
 
 /-- Stay-machine row-lowering contract over the guarded encoded layout. -/
 structure LowersGuardedTransitionWithStay

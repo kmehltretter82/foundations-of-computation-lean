@@ -252,6 +252,28 @@ def readActionSlackRow3DescriptionOfRow
         write0? move0 write1? move1 write2? move2
   | _, _ => cursorNoopDescription
 
+/--
+Endpoint-aware refreshed row selector built from the chainable slack row.
+
+This is the guard-slack-refresh successor to
+{name}`readWriteRow3DescriptionOfRowWithRefresh`: it uses the row-produced
+guard-slack endpoint contract rather than the broad logical-equivalence
+refresh contract.
+-/
+def readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+    (t : Transition) (refresh : MachineDescription) :
+    MachineDescription :=
+  match t.reads, t.actions with
+  | [read0, read1, read2],
+    [ TapeAction.mk write0? move0
+    , TapeAction.mk write1? move1
+    , TapeAction.mk write2? move2 ] =>
+      readActionSlackRow3DescriptionWithGuardSlackRefresh
+        read0 read1 read2
+        write0? move0 write1? move1 write2? move2
+        refresh
+  | _, _ => cursorNoopDescription
+
 inductive SupportedReadWriteRow3
     (t : Transition) : Prop where
   | mk
@@ -429,6 +451,89 @@ theorem readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv_
     D t hD
     (supportedReadWriteRow3_of_supports_eq_true hsupported)
 
+theorem readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionGuardSlack
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : SupportedReadWriteRow3 t) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3DescriptionOfRow t) := by
+  cases hsupported with
+  | mk read0 read1 read2 write0? write1? write2? move0 move1 move2
+      hreads hactions =>
+      cases t with
+      | mk source reads actions target =>
+          simp [readActionSlackRow3DescriptionOfRow]
+            at hreads hactions ⊢
+          cases hreads
+          cases hactions
+          exact
+            readActionSlackRow3Description_lowersGuardedTransitionGuardSlack
+              D
+              { source := source
+                reads := [read0, read1, read2]
+                actions :=
+                  [ { write? := write0?, move := move0 }
+                  , { write? := write1?, move := move1 }
+                  , { write? := write2?, move := move2 } ]
+                target := target }
+              hD read0 read1 read2 write0? move0 write1?
+              move1 write2? move2 rfl rfl
+
+theorem readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionGuardSlack_of_supports
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : supportsReadWriteRow3 t = true) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionGuardSlack
+    D t hD
+    (supportedReadWriteRow3_of_supports_eq_true hsupported)
+
+theorem readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh_lowersGuardedTransitionEquiv
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : SupportedReadWriteRow3 t)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh) := by
+  cases hsupported with
+  | mk read0 read1 read2 write0? write1? write2? move0 move1 move2
+      hreads hactions =>
+      cases t with
+      | mk source reads actions target =>
+          simp [readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh]
+            at hreads hactions ⊢
+          cases hreads
+          cases hactions
+          exact
+            readActionSlackRow3DescriptionWithGuardSlackRefresh_lowersGuardedTransitionEquiv
+              D
+              { source := source
+                reads := [read0, read1, read2]
+                actions :=
+                  [ { write? := write0?, move := move0 }
+                  , { write? := write1?, move := move1 }
+                  , { write? := write2?, move := move2 } ]
+                target := target }
+              hD read0 read1 read2 write0? move0 write1?
+              move1 write2? move2 rfl rfl hrefresh
+
+theorem readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh_lowersGuardedTransitionEquiv_of_supports
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : supportsReadWriteRow3 t = true)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh) :=
+  readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh_lowersGuardedTransitionEquiv
+    D t hD
+    (supportedReadWriteRow3_of_supports_eq_true hsupported)
+    hrefresh
+
 structure SupportsReadWriteRows3
     (D : Description) : Prop where
   tapeCount_eq : D.tapeCount = 3
@@ -491,6 +596,25 @@ theorem SupportsReadWriteRows3.row_lowersGuardedTransitionLogicalEquiv
   readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv_of_supports
     D t hD.tapeCount_eq (hD.rows_supported t ht)
 
+theorem SupportsReadWriteRows3.row_lowersGuardedTransitionGuardSlack
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {t : Transition} (ht : t ∈ D.transitions) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionGuardSlack_of_supports
+    D t hD.tapeCount_eq (hD.rows_supported t ht)
+
+theorem SupportsReadWriteRows3.row_lowersGuardedTransitionEquiv_withGuardSlackRefresh
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {t : Transition} (ht : t ∈ D.transitions)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh) :=
+  readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh_lowersGuardedTransitionEquiv_of_supports
+    D t hD.tapeCount_eq (hD.rows_supported t ht) hrefresh
+
 theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionEquiv_withRefresh
     {D : Description} (hD : SupportsReadWriteRows3 D)
     {c : Configuration} {t : Transition}
@@ -511,6 +635,27 @@ theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionLogicalEquiv
   hD.row_lowersGuardedTransitionLogicalEquiv
     (Description.lookupTransition_mem hlookup)
 
+theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionGuardSlack
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  hD.row_lowersGuardedTransitionGuardSlack
+    (Description.lookupTransition_mem hlookup)
+
+theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionEquiv_withGuardSlackRefresh
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh) :=
+  hD.row_lowersGuardedTransitionEquiv_withGuardSlackRefresh
+    (Description.lookupTransition_mem hlookup) hrefresh
+
 theorem lookup_lowersGuardedTransitionLogicalEquiv_of_supportsReadWriteRows3
     {D : Description}
     (hD : supportsReadWriteRows3 D = true)
@@ -520,6 +665,30 @@ theorem lookup_lowersGuardedTransitionLogicalEquiv_of_supportsReadWriteRows3
       (readActionSlackRow3DescriptionOfRow t) :=
   (supportedReadWriteRows3_of_supports_eq_true hD)
     |>.lookup_lowersGuardedTransitionLogicalEquiv hlookup
+
+theorem lookup_lowersGuardedTransitionGuardSlack_of_supportsReadWriteRows3
+    {D : Description}
+    (hD : supportsReadWriteRows3 D = true)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  (supportedReadWriteRows3_of_supports_eq_true hD)
+    |>.lookup_lowersGuardedTransitionGuardSlack hlookup
+
+theorem lookup_lowersGuardedTransitionEquiv_withGuardSlackRefresh_of_supportsReadWriteRows3
+    {D : Description}
+    (hD : supportsReadWriteRows3 D = true)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh) :=
+  (supportedReadWriteRows3_of_supports_eq_true hD)
+    |>.lookup_lowersGuardedTransitionEquiv_withGuardSlackRefresh
+      hlookup hrefresh
 
 theorem SupportsReadWriteRows3.lookup_realizes_structured_step_withRefresh
     {D : Description} (hD : SupportsReadWriteRows3 D)
@@ -536,6 +705,24 @@ theorem SupportsReadWriteRows3.lookup_realizes_structured_step_withRefresh
         (encodedGuardedStructuredTapes next.tapes) :=
   lowersGuardedTransitionEquiv_realizes_structured_step
     (hD.lookup_lowersGuardedTransitionEquiv_withRefresh
+      hlookup hrefresh)
+    hc hlookup hnext
+
+theorem SupportsReadWriteRows3.lookup_realizes_structured_step_withGuardSlackRefresh
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c next : Configuration} {t : Transition}
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    D.stepConfig c = some next ∧
+      (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+        t refresh).HaltsFromTapeEquiv
+        (encodedGuardedStructuredTapes c.tapes)
+        (encodedGuardedStructuredTapes next.tapes) :=
+  lowersGuardedTransitionEquiv_realizes_structured_step
+    (hD.lookup_lowersGuardedTransitionEquiv_withGuardSlackRefresh
       hlookup hrefresh)
     hc hlookup hnext
 
@@ -614,6 +801,36 @@ theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step_withRefresh
           hc hlookup hnext hrefresh
       exact ⟨t, rfl, hnext, hreal.right⟩
 
+theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step_withGuardSlackRefresh
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c next : Configuration}
+    (hc : c.tapes.length = D.tapeCount)
+    (hstep : D.stepConfig c = some next)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    exists t : Transition,
+      D.lookupTransition c = some t ∧
+        next = structuredTransitionTarget D t c ∧
+          (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+            t refresh).HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes next.tapes) := by
+  cases hlookup : D.lookupTransition c with
+  | none =>
+      simp [Description.stepConfig, hlookup] at hstep
+  | some t =>
+      have hstepLookup :
+          D.stepConfig c =
+            some (structuredTransitionTarget D t c) :=
+        stepConfig_eq_some_of_lookupTransition hlookup
+      have hnext : next = structuredTransitionTarget D t c := by
+        rw [hstep] at hstepLookup
+        exact Option.some.inj hstepLookup
+      have hreal :=
+        hD.lookup_realizes_structured_step_withGuardSlackRefresh
+          hc hlookup hnext hrefresh
+      exact ⟨t, rfl, hnext, hreal.right⟩
+
 theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step
     {D : Description} (hD : SupportsReadWriteRows3 D)
     (hwellFormed : D.WellFormed)
@@ -673,6 +890,25 @@ theorem stepConfig_realizes_structured_step_withRefresh_of_supportsReadWriteRows
             (encodedGuardedStructuredTapes next.tapes) :=
   (supportedReadWriteRows3_of_supports_eq_true hD)
     |>.stepConfig_realizes_structured_step_withRefresh
+      hc hstep hrefresh
+
+theorem stepConfig_realizes_structured_step_withGuardSlackRefresh_of_supportsReadWriteRows3
+    {D : Description}
+    (hD : supportsReadWriteRows3 D = true)
+    {c next : Configuration}
+    (hc : c.tapes.length = D.tapeCount)
+    (hstep : D.stepConfig c = some next)
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    exists t : Transition,
+      D.lookupTransition c = some t ∧
+        next = structuredTransitionTarget D t c ∧
+          (readActionSlackRow3DescriptionOfRowWithGuardSlackRefresh
+            t refresh).HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            (encodedGuardedStructuredTapes next.tapes) :=
+  (supportedReadWriteRows3_of_supports_eq_true hD)
+    |>.stepConfig_realizes_structured_step_withGuardSlackRefresh
       hc hstep hrefresh
 
 theorem stepConfig_realizes_structured_step_of_supportsReadWriteRows3

@@ -308,7 +308,89 @@ theorem realizesSelf
         (guardLogicalTapes source)))
     (physicalPrimitiveSequenceGuardSlackEndpoint_self primitives source)
 
+theorem realizesOfInputEquiv
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh)
+    {primitives : List PhysicalPrimitive}
+    {source target : List (Tape Bool)}
+    {exactPhysical physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        exactPhysical)
+    (hequiv : Tape.Equiv physical exactPhysical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  rcases
+      hrefresh.realizes primitives source target exactPhysical
+        hendpoint with
+    ⟨actualOut, hhalts, hout⟩
+  rcases
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := refresh)
+        (Tin := exactPhysical)
+        (Tin' := physical)
+        (Tout := actualOut)
+        (Tape.Equiv.symm hequiv)
+        hhalts with
+    ⟨transportedOut, htransported, htransportedEquiv⟩
+  exact
+    ⟨transportedOut, htransported,
+      Tape.Equiv.trans htransportedEquiv hout⟩
+
+theorem realizesEndpointEquiv
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh)
+    {primitives : List PhysicalPrimitive}
+    {source target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target physical) :
+    refresh.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) := by
+  rcases hendpoint with ⟨exactPhysical, hexact, hequiv⟩
+  exact hrefresh.realizesOfInputEquiv hexact hequiv
+
 end GuardSlackRefreshContract
+
+/--
+Bundled concrete normalizer for row-produced guard-slack endpoints.
+
+This is the endpoint-aware successor to {lit}`GuardRefreshNormalizer` for the
+refreshed static-lowering route.
+-/
+structure GuardSlackRefreshNormalizer where
+  machine : MachineDescription
+  contract : GuardSlackRefreshContract machine
+
+namespace GuardSlackRefreshNormalizer
+
+theorem subroutineReady (refresh : GuardSlackRefreshNormalizer) :
+    refresh.machine.SubroutineReady :=
+  refresh.contract.subroutineReady
+
+theorem realizes
+    (refresh : GuardSlackRefreshNormalizer)
+    (primitives : List PhysicalPrimitive)
+    (source target : List (Tape Bool)) (physical : Tape Bool)
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpoint primitives source target
+        physical) :
+    refresh.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  refresh.contract.realizes primitives source target physical hendpoint
+
+theorem realizesEndpointEquiv
+    (refresh : GuardSlackRefreshNormalizer)
+    {primitives : List PhysicalPrimitive}
+    {source target : List (Tape Bool)} {physical : Tape Bool}
+    (hendpoint :
+      PhysicalPrimitiveSequenceGuardSlackEndpointEquiv primitives source
+        target physical) :
+    refresh.machine.HaltsFromTapeEquiv physical
+      (encodedGuardedStructuredTapes target) :=
+  refresh.contract.realizesEndpointEquiv hendpoint
+
+end GuardSlackRefreshNormalizer
 
 /--
 Contract for a machine that restores the canonical guarded encoding from a
@@ -363,6 +445,61 @@ Canonical composition of a row machine with a guard-refresh normalizer.
 def guardedLogicalEquivThenRefreshDescription
     (row refresh : MachineDescription) : MachineDescription :=
   canonicalPrimitiveSeqDescription row refresh
+
+/--
+Turn a row-produced guard-slack endpoint into a canonical guarded endpoint by
+appending an endpoint-aware refresh normalizer.
+-/
+theorem physicalPrimitiveSequenceGuardSlackContractEquiv_thenRefresh
+    {primitives : List PhysicalPrimitive}
+    {machine refresh : MachineDescription}
+    (hsequence :
+      PhysicalPrimitiveSequenceGuardSlackContractEquiv primitives machine)
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    PhysicalPrimitiveSequenceGuardedContractEquiv
+      primitives
+      (guardedLogicalEquivThenRefreshDescription machine refresh) where
+  subroutineReady :=
+    canonicalPrimitiveSeqDescription_subroutineReady
+      hsequence.subroutineReady hrefresh.subroutineReady
+  realizes := by
+    intro logical henabled
+    have hrefreshHalts :=
+      hrefresh.realizesSelf primitives logical
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hsequence.subroutineReady hrefresh.subroutineReady
+        (hsequence.realizes logical henabled) hrefreshHalts
+
+/--
+Turn an endpoint-aware guard-slack row into a canonical guarded row by
+appending an endpoint-aware refresh normalizer.
+-/
+theorem lowersGuardedTransitionGuardSlack_thenRefresh
+    {D : Description} {t : Transition}
+    {row refresh : MachineDescription}
+    (hrow : LowersGuardedTransitionGuardSlack D t row)
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (guardedLogicalEquivThenRefreshDescription row refresh) where
+  subroutineReady :=
+    canonicalPrimitiveSeqDescription_subroutineReady
+      hrow.subroutineReady hrefresh.subroutineReady
+  realizes := by
+    intro c hc hsource hreads
+    rcases hrow.realizes c hc hsource hreads with
+      ⟨physical, hendpoint, hrowHalts⟩
+    have hrefreshHalts :=
+      hrefresh.realizes
+        (transitionPrimitiveSequenceOfRow3 t)
+        c.tapes
+        (D.applyActions t.actions c.tapes)
+        physical
+        hendpoint
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hrow.subroutineReady hrefresh.subroutineReady
+        hrowHalts hrefreshHalts
 
 /--
 Turn a row with a logical-equivalence endpoint into a canonical guarded row

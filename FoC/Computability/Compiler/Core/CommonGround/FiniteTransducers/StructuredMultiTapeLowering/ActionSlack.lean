@@ -1384,6 +1384,140 @@ theorem readActionSlackRow3Description_lowersGuardedTransitionLogicalEquiv
         simpa [readActionSlackRow3Description, action0, action1,
           action2, actual] using hrun
 
+theorem readActionSlackRow3Description_lowersGuardedTransitionGuardSlack
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (read0 read1 read2 : Option Bool)
+    (write0? : Option (Option Bool)) (move0 : HeadMove)
+    (write1? : Option (Option Bool)) (move1 : HeadMove)
+    (write2? : Option (Option Bool)) (move2 : HeadMove)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions :
+      t.actions =
+        [ { write? := write0?, move := move0 }
+        , { write? := write1?, move := move1 }
+        , { write? := write2?, move := move2 } ]) :
+    LowersGuardedTransitionGuardSlack D t
+      (readActionSlackRow3Description read0 read1 read2
+        write0? move0 write1? move1 write2? move2) where
+  subroutineReady :=
+    canonicalPrimitiveSeqDescription_subroutineReady
+      (readCheckRow3Description_physicalPrimitiveSequenceGuardedContractEquiv
+        read0 read1 read2 |>.subroutineReady)
+      (actionSlackRow3Description_subroutineReady
+        write0? move0 write1? move1 write2? move2)
+  realizes := by
+    intro c hc _hsource hcurrentReads
+    have hlen : c.tapes.length = 3 := by
+      simpa [hD] using hc
+    rcases list_eq_three_of_length_eq_three hlen with
+      ⟨T, U, V, htapes⟩
+    cases c with
+    | mk state tapes =>
+        simp at htapes
+        cases htapes
+        let action0 : TapeAction := { write? := write0?, move := move0 }
+        let action1 : TapeAction := { write? := write1?, move := move1 }
+        let action2 : TapeAction := { write? := write2?, move := move2 }
+        have hreadsEq :
+            [read0, read1, read2] =
+              [Tape.read T, Tape.read U, Tape.read V] := by
+          simpa [hreads, hD] using hcurrentReads
+        have hreadsComponents :
+            read0 = Tape.read T ∧
+              read1 = Tape.read U ∧
+                read2 = Tape.read V := by
+          simpa using hreadsEq
+        rcases hreadsComponents with ⟨hread0', hread1', hread2'⟩
+        have hread0 : Tape.read T = read0 := hread0'.symm
+        have hread1 : Tape.read U = read1 := hread1'.symm
+        have hread2 : Tape.read V = read2 := hread2'.symm
+        have hrun :=
+          readActionSlackRow3Description_haltsFromEncodedGuardedStructuredThreeTapes
+            read0 read1 read2
+            write0? move0 write1? move1 write2? move2
+            T U V hread0 hread1 hread2
+        let actual : List (Tape Bool) :=
+          [action0.apply (guardLogicalTape T),
+            action1.apply (guardLogicalTape U),
+            action2.apply (guardLogicalTape V)]
+        have hsourceApply :
+            applyPhysicalPrimitiveSequence
+                (transitionPrimitiveSequenceOfRow3 t) [T, U, V] =
+              D.applyActions t.actions [T, U, V] := by
+          rw [applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+            t read0 read1 read2 action0 action1 action2 T U V
+            hreads hactions]
+          rw [hactions]
+          exact (Description.applyActions_three D hD
+            action0 action1 action2 T U V).symm
+        have hguardApply :
+            applyPhysicalPrimitiveSequence
+                (transitionPrimitiveSequenceOfRow3 t)
+                (guardLogicalTapes [T, U, V]) =
+              actual := by
+          change
+            applyPhysicalPrimitiveSequence
+                (transitionPrimitiveSequenceOfRow3 t)
+                [guardLogicalTape T, guardLogicalTape U,
+                  guardLogicalTape V] =
+              actual
+          simpa [actual] using
+            applyPhysicalPrimitiveSequence_transitionPrimitiveSequenceOfRow3
+              t read0 read1 read2 action0 action1 action2
+              (guardLogicalTape T) (guardLogicalTape U)
+              (guardLogicalTape V) hreads hactions
+        have hendpoint :
+            PhysicalPrimitiveSequenceGuardSlackEndpoint
+              (transitionPrimitiveSequenceOfRow3 t)
+              [T, U, V]
+              (D.applyActions t.actions [T, U, V])
+              (encodedStructuredTapes actual) := by
+          exact ⟨hsourceApply.symm, by
+            rw [hguardApply]⟩
+        refine
+          ⟨encodedStructuredTapes actual, hendpoint, ?_⟩
+        simpa [readActionSlackRow3Description, action0, action1,
+          action2, actual] using hrun
+
+def readActionSlackRow3DescriptionWithGuardSlackRefresh
+    (read0 read1 read2 : Option Bool)
+    (write0? : Option (Option Bool)) (move0 : HeadMove)
+    (write1? : Option (Option Bool)) (move1 : HeadMove)
+    (write2? : Option (Option Bool)) (move2 : HeadMove)
+    (refresh : MachineDescription) : MachineDescription :=
+  guardedLogicalEquivThenRefreshDescription
+    (readActionSlackRow3Description read0 read1 read2
+      write0? move0 write1? move1 write2? move2)
+    refresh
+
+theorem readActionSlackRow3DescriptionWithGuardSlackRefresh_lowersGuardedTransitionEquiv
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (read0 read1 read2 : Option Bool)
+    (write0? : Option (Option Bool)) (move0 : HeadMove)
+    (write1? : Option (Option Bool)) (move1 : HeadMove)
+    (write2? : Option (Option Bool)) (move2 : HeadMove)
+    (hreads : t.reads = [read0, read1, read2])
+    (hactions :
+      t.actions =
+        [ { write? := write0?, move := move0 }
+        , { write? := write1?, move := move1 }
+        , { write? := write2?, move := move2 } ])
+    {refresh : MachineDescription}
+    (hrefresh : GuardSlackRefreshContract refresh) :
+    LowersGuardedTransitionEquiv D t
+      (readActionSlackRow3DescriptionWithGuardSlackRefresh
+        read0 read1 read2
+        write0? move0 write1? move1 write2? move2 refresh) := by
+  simpa [readActionSlackRow3DescriptionWithGuardSlackRefresh] using
+    lowersGuardedTransitionGuardSlack_thenRefresh
+      (readActionSlackRow3Description_lowersGuardedTransitionGuardSlack
+        D t hD read0 read1 read2
+        write0? move0 write1? move1 write2? move2
+        hreads hactions)
+      hrefresh
+
 end MultiTapeLowering
 end Structured
 end FiniteTransducers
