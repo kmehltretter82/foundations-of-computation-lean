@@ -60,6 +60,139 @@ theorem runsFromStateTapeEquiv_tableMachine_of_machine
       exact hrun,
       hequiv⟩
 
+theorem lookupTransition_match
+    {D : MachineDescription} {source : Nat} {read : Option Bool}
+    {t : TransitionDescription}
+    (h : D.lookupTransition source read = some t) :
+    t.source = source ∧ t.read = read := by
+  unfold MachineDescription.lookupTransition at h
+  have hpred :
+      MachineDescription.Matches source read t = true :=
+    List.find?_some h
+  simpa [MachineDescription.Matches] using hpred
+
+theorem lookupTransition_sameAction_of_subset_deterministic
+    {small big : MachineDescription}
+    (hsubset :
+      forall t : TransitionDescription,
+        t ∈ small.transitions -> t ∈ big.transitions)
+    (hdet : big.Deterministic)
+    {source : Nat} {read : Option Bool} {t : TransitionDescription}
+    (hlookup : small.lookupTransition source read = some t) :
+    exists u : TransitionDescription,
+      big.lookupTransition source read = some u ∧
+        TransitionDescription.SameAction t u := by
+  have htmem : t ∈ small.transitions :=
+    MachineDescription.lookupTransition_mem hlookup
+  have htmemBig : t ∈ big.transitions :=
+    hsubset t htmem
+  have htmatch := lookupTransition_match hlookup
+  have htmatchBool :
+      MachineDescription.Matches source read t = true := by
+    simp [MachineDescription.Matches, htmatch.left, htmatch.right]
+  cases hbig : big.lookupTransition source read with
+  | none =>
+      unfold MachineDescription.lookupTransition at hbig
+      have hnone :=
+        List.find?_eq_none.mp hbig t htmemBig
+      rw [htmatchBool] at hnone
+      contradiction
+  | some u =>
+      have humem : u ∈ big.transitions :=
+        MachineDescription.lookupTransition_mem hbig
+      have humatch := lookupTransition_match hbig
+      have hkey : TransitionDescription.SameKey t u := by
+        exact
+          ⟨htmatch.left.trans humatch.left.symm,
+            htmatch.right.trans humatch.right.symm⟩
+      exact ⟨u, rfl, hdet t u htmemBig humem hkey⟩
+
+theorem stepConfig_eq_some_of_subset_deterministic
+    {small big : MachineDescription}
+    (hsubset :
+      forall t : TransitionDescription,
+        t ∈ small.transitions -> t ∈ big.transitions)
+    (hdet : big.Deterministic)
+    {c next : MachineDescription.Configuration}
+    (hstep : small.stepConfig c = some next) :
+    big.stepConfig c = some next := by
+  unfold MachineDescription.stepConfig at hstep ⊢
+  cases hlookup : small.lookupTransition c.state (Tape.read c.tape) with
+  | none =>
+      rw [hlookup] at hstep
+      cases hstep
+  | some t =>
+      rw [hlookup] at hstep
+      rcases
+          lookupTransition_sameAction_of_subset_deterministic
+            hsubset hdet hlookup with
+        ⟨u, hbig, haction⟩
+      rw [hbig]
+      rcases haction with ⟨hwrite, hmove, htarget⟩
+      cases hstep
+      simp [hwrite, hmove, htarget]
+
+theorem runConfig_eq_of_subset_deterministic_of_steps
+    {small big : MachineDescription}
+    (hsubset :
+      forall t : TransitionDescription,
+        t ∈ small.transitions -> t ∈ big.transitions)
+    (hdet : big.Deterministic)
+    {n : Nat} {c : MachineDescription.Configuration}
+    (hsteps :
+      forall k : Nat, k < n ->
+        exists next : MachineDescription.Configuration,
+          small.stepConfig (small.runConfig k c) = some next) :
+    big.runConfig n c = small.runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      rcases hsteps 0 (by simp) with ⟨next, hstepSmall⟩
+      have hstepSmall0 : small.stepConfig c = some next := by
+        simpa [MachineDescription.runConfig] using hstepSmall
+      have hstepBig0 :=
+        stepConfig_eq_some_of_subset_deterministic
+          hsubset hdet hstepSmall0
+      have htail :
+          big.runConfig n next = small.runConfig n next := by
+        apply ih
+        intro k hk
+        have hsucc : k + 1 < n + 1 := Nat.succ_lt_succ hk
+        rcases hsteps (k + 1) hsucc with ⟨next', hstep'⟩
+        have hrunSucc :
+            small.runConfig (k + 1) c =
+              small.runConfig k next := by
+          simp [MachineDescription.runConfig, hstepSmall0]
+        exact ⟨next', by simpa [hrunSucc] using hstep'⟩
+      simpa [MachineDescription.runConfig, hstepSmall0, hstepBig0] using
+        htail
+
+theorem runsFromStateTapeEquiv_of_subset_deterministic_of_run
+    {small big : MachineDescription}
+    (hsubset :
+      forall t : TransitionDescription,
+        t ∈ small.transitions -> t ∈ big.transitions)
+    (hdet : big.Deterministic)
+    {sourceState targetState n : Nat} {Tin Tout actual : Tape Bool}
+    (hrun :
+      small.runConfig n { state := sourceState, tape := Tin } =
+        { state := targetState, tape := actual })
+    (hequiv : Tape.Equiv actual Tout)
+    (hsteps :
+      forall k : Nat, k < n ->
+        exists next : MachineDescription.Configuration,
+          small.stepConfig
+            (small.runConfig k { state := sourceState, tape := Tin }) =
+              some next) :
+    RunsFromStateTapeEquiv big sourceState targetState Tin Tout := by
+  exact
+    ⟨n, actual, by
+      rw [runConfig_eq_of_subset_deterministic_of_steps
+        hsubset hdet hsteps]
+      exact hrun,
+      hequiv⟩
+
 theorem tape_moveLeft_moveRight_equiv_self
     (T : Tape Bool) :
     Tape.Equiv
@@ -665,6 +798,58 @@ theorem guardedAtExistingTapeSeparator_zero_of_length_three
             atTapeSeparator_zero_self (guardLogicalTapes (T :: rest)),
           guardLogicalTape T, guardLogicalTapes rest,
           by simp [guardLogicalTapes]⟩
+
+theorem readOptionValues_mem (read : Option Bool) :
+    read ∈ readOptionValues := by
+  cases read with
+  | none =>
+      simp [readOptionValues]
+  | some bit =>
+      cases bit <;> simp [readOptionValues]
+
+theorem readyJumpTape0ReaderTransitions_subset_threeHeadReaderTransitions
+    (D : Description) {state : Nat}
+    (hstate : state ∈ activeStateValues D) :
+    forall t : TransitionDescription,
+      t ∈ readyJumpTape0ReaderTransitions D state ->
+        t ∈ threeHeadReaderTransitions D := by
+  intro t ht
+  simp [threeHeadReaderTransitions, readyJumpTape0ReaderAllTransitions]
+  exact Or.inl ⟨state, hstate, ht⟩
+
+theorem afterRead0JumpTape1ReaderTransitions_subset_threeHeadReaderTransitions
+    (D : Description) {state : Nat} (read0 : Option Bool)
+    (hstate : state ∈ activeStateValues D) :
+    forall t : TransitionDescription,
+      t ∈ afterRead0JumpTape1ReaderTransitions D state read0 ->
+        t ∈ threeHeadReaderTransitions D := by
+  intro t ht
+  simp [threeHeadReaderTransitions,
+    afterRead0JumpTape1ReaderAllTransitions]
+  exact Or.inr
+    (Or.inl ⟨read0, readOptionValues_mem read0,
+      state, hstate, ht⟩)
+
+theorem afterRead1JumpTape2ReaderTransitions_subset_threeHeadReaderTransitions
+    (D : Description) {state : Nat}
+    (read0 read1 : Option Bool)
+    (hstate : state ∈ activeStateValues D) :
+    forall t : TransitionDescription,
+      t ∈ afterRead1JumpTape2ReaderTransitions D state read0 read1 ->
+        t ∈ threeHeadReaderTransitions D := by
+  intro t ht
+  simp [threeHeadReaderTransitions,
+    afterRead1JumpTape2ReaderAllTransitions]
+  exact Or.inr
+    (Or.inr ⟨read0, readOptionValues_mem read0,
+      read1, readOptionValues_mem read1,
+      state, hstate, ht⟩)
+
+theorem threeHeadReaderDescription_deterministic
+    (D : Description) :
+    (threeHeadReaderDescription D).Deterministic := by
+  simpa [threeHeadReaderDescription, MachineDescription.Deterministic] using
+    threeHeadReaderTransitions_deterministic D
 
 theorem readyJumpDescription_runsFromTapeSeparator_in_readyJumpTape0ReaderTransitions
     (D : Description) {state haltState : Nat}
