@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.Rows
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ActionSlack
 
 set_option doc.verso true
 
@@ -231,6 +232,26 @@ def readWriteRow3DescriptionOfRowWithRefresh
         write0? write1? write2? move0 move1 move2 refresh
   | _, _ => cursorNoopDescription
 
+/--
+Extract the chainable-slack row lowering machine directly from a transition
+row.
+
+This path supports arbitrary local moves on all three tapes without an abstract
+guard refresh normalizer.  Its endpoint is only a logical-equivalence physical
+tape, so callers that need the canonical guarded endpoint should use
+{name}`readWriteRow3DescriptionOfRowWithRefresh`.
+-/
+def readActionSlackRow3DescriptionOfRow
+    (t : Transition) : MachineDescription :=
+  match t.reads, t.actions with
+  | [read0, read1, read2],
+    [ TapeAction.mk write0? move0
+    , TapeAction.mk write1? move1
+    , TapeAction.mk write2? move2 ] =>
+      readActionSlackRow3Description read0 read1 read2
+        write0? move0 write1? move1 write2? move2
+  | _, _ => cursorNoopDescription
+
 inductive SupportedReadWriteRow3
     (t : Transition) : Prop where
   | mk
@@ -370,6 +391,44 @@ theorem readWriteRow3DescriptionOfRowWithRefresh_lowersGuardedTransitionEquiv_of
     (supportedReadWriteRow3_of_supports_eq_true hsupported)
     hrefresh
 
+theorem readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : SupportedReadWriteRow3 t) :
+    LowersGuardedTransitionLogicalEquiv D t
+      (readActionSlackRow3DescriptionOfRow t) := by
+  cases hsupported with
+  | mk read0 read1 read2 write0? write1? write2? move0 move1 move2
+      hreads hactions =>
+      cases t with
+      | mk source reads actions target =>
+          simp [readActionSlackRow3DescriptionOfRow]
+            at hreads hactions ⊢
+          cases hreads
+          cases hactions
+          exact
+            readActionSlackRow3Description_lowersGuardedTransitionLogicalEquiv
+              D
+              { source := source
+                reads := [read0, read1, read2]
+                actions :=
+                  [ { write? := write0?, move := move0 }
+                  , { write? := write1?, move := move1 }
+                  , { write? := write2?, move := move2 } ]
+                target := target }
+              hD read0 read1 read2 write0? move0 write1?
+              move1 write2? move2 rfl rfl
+
+theorem readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv_of_supports
+    (D : Description) (t : Transition)
+    (hD : D.tapeCount = 3)
+    (hsupported : supportsReadWriteRow3 t = true) :
+    LowersGuardedTransitionLogicalEquiv D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv
+    D t hD
+    (supportedReadWriteRow3_of_supports_eq_true hsupported)
+
 structure SupportsReadWriteRows3
     (D : Description) : Prop where
   tapeCount_eq : D.tapeCount = 3
@@ -424,6 +483,14 @@ theorem SupportsReadWriteRows3.row_lowersGuardedTransitionEquiv_withRefresh
   readWriteRow3DescriptionOfRowWithRefresh_lowersGuardedTransitionEquiv_of_supports
     D t hD.tapeCount_eq (hD.rows_supported t ht) hrefresh
 
+theorem SupportsReadWriteRows3.row_lowersGuardedTransitionLogicalEquiv
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {t : Transition} (ht : t ∈ D.transitions) :
+    LowersGuardedTransitionLogicalEquiv D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  readActionSlackRow3DescriptionOfRow_lowersGuardedTransitionLogicalEquiv_of_supports
+    D t hD.tapeCount_eq (hD.rows_supported t ht)
+
 theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionEquiv_withRefresh
     {D : Description} (hD : SupportsReadWriteRows3 D)
     {c : Configuration} {t : Transition}
@@ -434,6 +501,25 @@ theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionEquiv_withRefresh
       (readWriteRow3DescriptionOfRowWithRefresh t refresh) :=
   hD.row_lowersGuardedTransitionEquiv_withRefresh
     (Description.lookupTransition_mem hlookup) hrefresh
+
+theorem SupportsReadWriteRows3.lookup_lowersGuardedTransitionLogicalEquiv
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t) :
+    LowersGuardedTransitionLogicalEquiv D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  hD.row_lowersGuardedTransitionLogicalEquiv
+    (Description.lookupTransition_mem hlookup)
+
+theorem lookup_lowersGuardedTransitionLogicalEquiv_of_supportsReadWriteRows3
+    {D : Description}
+    (hD : supportsReadWriteRows3 D = true)
+    {c : Configuration} {t : Transition}
+    (hlookup : D.lookupTransition c = some t) :
+    LowersGuardedTransitionLogicalEquiv D t
+      (readActionSlackRow3DescriptionOfRow t) :=
+  (supportedReadWriteRows3_of_supports_eq_true hD)
+    |>.lookup_lowersGuardedTransitionLogicalEquiv hlookup
 
 theorem SupportsReadWriteRows3.lookup_realizes_structured_step_withRefresh
     {D : Description} (hD : SupportsReadWriteRows3 D)
@@ -451,6 +537,51 @@ theorem SupportsReadWriteRows3.lookup_realizes_structured_step_withRefresh
   lowersGuardedTransitionEquiv_realizes_structured_step
     (hD.lookup_lowersGuardedTransitionEquiv_withRefresh
       hlookup hrefresh)
+    hc hlookup hnext
+
+theorem SupportsReadWriteRows3.lookup_realizes_structured_step
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    {c next : Configuration} {t : Transition}
+    (hstate : next.state < D.stateCount)
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      exists physical : Tape Bool,
+        StructuredLogicalEquivEncodedConfig D next physical ∧
+          (readActionSlackRow3DescriptionOfRow t).HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            physical :=
+  let hstep :=
+    lowersGuardedTransitionLogicalEquiv_realizes_structured_step
+      (hD.lookup_lowersGuardedTransitionLogicalEquiv hlookup)
+      hc hlookup hnext
+  ⟨hstep.left, by
+    rcases hstep.right with
+      ⟨physical, hphysical, hhalts⟩
+    exact
+      ⟨physical,
+        ⟨hstate, Description.stepConfig_tape_count hstep.left, hphysical⟩,
+        hhalts⟩⟩
+
+theorem SupportsReadWriteRows3.lookup_realizes_structured_step_of_wellFormed
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    (hwellFormed : D.WellFormed)
+    {c next : Configuration} {t : Transition}
+    (hc : c.tapes.length = D.tapeCount)
+    (hlookup : D.lookupTransition c = some t)
+    (hnext : next = structuredTransitionTarget D t c) :
+    D.stepConfig c = some next ∧
+      exists physical : Tape Bool,
+        StructuredLogicalEquivEncodedConfig D next physical ∧
+          (readActionSlackRow3DescriptionOfRow t).HaltsFromTapeEquiv
+            (encodedGuardedStructuredTapes c.tapes)
+            physical :=
+  let hstep := stepConfig_eq_some_of_lookupTransition hlookup
+  hD.lookup_realizes_structured_step
+    (Description.stepConfig_state_bound hwellFormed (by
+      rw [hnext]
+      exact hstep))
     hc hlookup hnext
 
 theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step_withRefresh
@@ -483,6 +614,36 @@ theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step_withRefresh
           hc hlookup hnext hrefresh
       exact ⟨t, rfl, hnext, hreal.right⟩
 
+theorem SupportsReadWriteRows3.stepConfig_realizes_structured_step
+    {D : Description} (hD : SupportsReadWriteRows3 D)
+    (hwellFormed : D.WellFormed)
+    {c next : Configuration}
+    (hc : c.tapes.length = D.tapeCount)
+    (hstep : D.stepConfig c = some next) :
+    exists t : Transition,
+      D.lookupTransition c = some t ∧
+        next = structuredTransitionTarget D t c ∧
+          exists physical : Tape Bool,
+            StructuredLogicalEquivEncodedConfig D next physical ∧
+              (readActionSlackRow3DescriptionOfRow t).HaltsFromTapeEquiv
+                (encodedGuardedStructuredTapes c.tapes)
+                physical := by
+  cases hlookup : D.lookupTransition c with
+  | none =>
+      simp [Description.stepConfig, hlookup] at hstep
+  | some t =>
+      have hstepLookup :
+          D.stepConfig c =
+            some (structuredTransitionTarget D t c) :=
+        stepConfig_eq_some_of_lookupTransition hlookup
+      have hnext : next = structuredTransitionTarget D t c := by
+        rw [hstep] at hstepLookup
+        exact Option.some.inj hstepLookup
+      have hreal :=
+        hD.lookup_realizes_structured_step_of_wellFormed
+          hwellFormed hc hlookup hnext
+      exact ⟨t, rfl, hnext, hreal.right⟩
+
 theorem lookup_lowersGuardedTransitionEquiv_withRefresh_of_supportsReadWriteRows3
     {D : Description}
     (hD : supportsReadWriteRows3 D = true)
@@ -513,6 +674,24 @@ theorem stepConfig_realizes_structured_step_withRefresh_of_supportsReadWriteRows
   (supportedReadWriteRows3_of_supports_eq_true hD)
     |>.stepConfig_realizes_structured_step_withRefresh
       hc hstep hrefresh
+
+theorem stepConfig_realizes_structured_step_of_supportsReadWriteRows3
+    {D : Description}
+    (hD : supportsReadWriteRows3 D = true)
+    (hwellFormed : D.WellFormed)
+    {c next : Configuration}
+    (hc : c.tapes.length = D.tapeCount)
+    (hstep : D.stepConfig c = some next) :
+    exists t : Transition,
+      D.lookupTransition c = some t ∧
+        next = structuredTransitionTarget D t c ∧
+          exists physical : Tape Bool,
+            StructuredLogicalEquivEncodedConfig D next physical ∧
+              (readActionSlackRow3DescriptionOfRow t).HaltsFromTapeEquiv
+                (encodedGuardedStructuredTapes c.tapes)
+                physical :=
+  (supportedReadWriteRows3_of_supports_eq_true hD)
+    |>.stepConfig_realizes_structured_step hwellFormed hc hstep
 
 end MultiTapeLowering
 end Structured
