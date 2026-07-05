@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.StructuredRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.FiniteMachineTactics
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.SelectedSeparatorTerminalPairProbe
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true
@@ -810,6 +811,444 @@ theorem selectedHeadGapOpeningRewindDescription_subroutineReady :
   ⟨selectedHeadGapOpeningRewindDescription_wellFormed,
     selectedHeadGapOpeningRewindDescription_haltTransitionFree⟩
 
+def selectedHeadGapOpeningRewindScanNext
+    (state : Nat) : Option Bool -> Nat
+  | some _ => selectedHeadGapOpeningRewindDescription.start
+  | none =>
+      match state with
+      | 0 => 1
+      | _ => 2
+
+def selectedHeadGapOpeningRewindScanState
+    (state : Nat) : List (Option Bool) -> Nat
+  | [] => state
+  | current :: rest =>
+      selectedHeadGapOpeningRewindScanState
+        (selectedHeadGapOpeningRewindScanNext state current) rest
+
+def selectedHeadGapOpeningRewindScanSafe
+    (state : Nat) : List (Option Bool) -> Prop
+  | [] => True
+  | none :: rest =>
+      state = selectedHeadGapOpeningRewindDescription.start ∧
+        selectedHeadGapOpeningRewindScanSafe 1 rest
+  | some _bit :: rest =>
+      selectedHeadGapOpeningRewindScanSafe
+        selectedHeadGapOpeningRewindDescription.start rest
+
+def selectedHeadGapOpeningRewindScanSource
+    (scan left : List (Option Bool)) (stop : Option Bool)
+    (right : List (Option Bool)) : Tape Bool :=
+  match scan with
+  | [] => tapeAtCells left (stop :: right)
+  | current :: rest =>
+      tapeAtCells (List.append rest (stop :: left)) (current :: right)
+
+theorem selectedHeadGapOpeningRewindScanState_append
+    (state : Nat) (left right : List (Option Bool)) :
+    selectedHeadGapOpeningRewindScanState state
+        (List.append left right) =
+      selectedHeadGapOpeningRewindScanState
+        (selectedHeadGapOpeningRewindScanState state left) right := by
+  induction left generalizing state with
+  | nil =>
+      rfl
+  | cons current rest ih =>
+      exact ih (selectedHeadGapOpeningRewindScanNext state current)
+
+theorem selectedHeadGapOpeningRewindScanSafe_append
+    (state : Nat) (left right : List (Option Bool)) :
+    selectedHeadGapOpeningRewindScanSafe state
+        (List.append left right) ↔
+      selectedHeadGapOpeningRewindScanSafe state left ∧
+        selectedHeadGapOpeningRewindScanSafe
+          (selectedHeadGapOpeningRewindScanState state left) right := by
+  induction left generalizing state with
+  | nil =>
+      simp [selectedHeadGapOpeningRewindScanSafe,
+        selectedHeadGapOpeningRewindScanState]
+  | cons current rest ih =>
+      cases current with
+      | none =>
+          simp [selectedHeadGapOpeningRewindScanSafe,
+            selectedHeadGapOpeningRewindScanState]
+          constructor
+          · intro h
+            rcases h with ⟨hstate, hrestRight⟩
+            subst state
+            rcases
+                (ih 1).mp hrestRight with
+              ⟨hrest, hright⟩
+            exact ⟨⟨rfl, hrest⟩, hright⟩
+          · intro h
+            rcases h with ⟨⟨hstate, hrest⟩, hright⟩
+            subst state
+            exact ⟨rfl, (ih 1).mpr ⟨hrest, hright⟩⟩
+      | some bit =>
+          cases bit <;>
+            simpa [selectedHeadGapOpeningRewindScanSafe,
+              selectedHeadGapOpeningRewindScanState,
+              selectedHeadGapOpeningRewindScanNext] using
+              ih selectedHeadGapOpeningRewindDescription.start
+
+theorem selectedHeadGapOpeningRewindScanSafe_map_some
+    (state : Nat) (bits : Word Bool) :
+    selectedHeadGapOpeningRewindScanSafe state (bits.map some) := by
+  induction bits generalizing state with
+  | nil =>
+      trivial
+  | cons bit rest ih =>
+      cases bit <;>
+        simpa [selectedHeadGapOpeningRewindScanSafe,
+          selectedHeadGapOpeningRewindScanNext] using
+          ih selectedHeadGapOpeningRewindDescription.start
+
+theorem selectedHeadGapOpeningRewindScanState_zero_map_some
+    (bits : Word Bool) :
+    selectedHeadGapOpeningRewindScanState
+        selectedHeadGapOpeningRewindDescription.start (bits.map some) =
+      selectedHeadGapOpeningRewindDescription.start := by
+  induction bits with
+  | nil =>
+      rfl
+  | cons bit rest ih =>
+      cases bit <;>
+        simpa [selectedHeadGapOpeningRewindScanState,
+          selectedHeadGapOpeningRewindScanNext] using ih
+
+theorem selectedHeadGapOpeningRewindScanState_map_some_of_cons
+    (state : Nat) (bit : Bool) (bits : Word Bool) :
+    selectedHeadGapOpeningRewindScanState state
+        ((bit :: bits).map some) =
+      selectedHeadGapOpeningRewindDescription.start := by
+  cases bit <;>
+    simpa [selectedHeadGapOpeningRewindScanState,
+      selectedHeadGapOpeningRewindScanNext] using
+      selectedHeadGapOpeningRewindScanState_zero_map_some bits
+
+theorem selectedHeadGapOpeningRewindScanState_reverse_map_some_of_cons
+    (state : Nat) (bit : Bool) (bits : Word Bool) :
+    selectedHeadGapOpeningRewindScanState state
+        ((bit :: bits).reverse.map some) =
+      selectedHeadGapOpeningRewindDescription.start := by
+  rcases word_exists_reverse_append_singleton_of_cons bit bits with
+    ⟨scanRev, current, hword⟩
+  have hrev : (bit :: bits).reverse = current :: scanRev := by
+    rw [hword]
+    simp [List.reverse_append]
+  rw [hrev]
+  exact
+    selectedHeadGapOpeningRewindScanState_map_some_of_cons
+      state current scanRev
+
+theorem selectedHeadGapOpeningRewindScanState_encodedScanRev_of_nonempty
+    (logical : List (Tape Bool)) (hlogical : logical ≠ []) :
+    selectedHeadGapOpeningRewindScanState
+        selectedHeadGapOpeningRewindDescription.start
+        (encodedStructuredTapeCellsScanRev logical) =
+      selectedHeadGapOpeningRewindDescription.start := by
+  induction logical with
+  | nil =>
+      contradiction
+  | cons T rest ih =>
+      cases rest with
+      | nil =>
+          rcases logicalTapeBits_exists_cons T with ⟨bit, bits, hbits⟩
+          rw [encodedStructuredTapeCellsScanRev, hbits]
+          exact
+            selectedHeadGapOpeningRewindScanState_reverse_map_some_of_cons
+              selectedHeadGapOpeningRewindDescription.start bit bits
+      | cons U rest =>
+          rcases logicalTapeBits_exists_cons T with ⟨bit, bits, hbits⟩
+          rw [encodedStructuredTapeCellsScanRev, hbits]
+          rw [selectedHeadGapOpeningRewindScanState_append]
+          rw [selectedHeadGapOpeningRewindScanState_append]
+          rw [ih (by simp)]
+          simp [selectedHeadGapOpeningRewindScanState,
+            selectedHeadGapOpeningRewindScanNext,
+            selectedHeadGapOpeningRewindDescription]
+          simpa [List.map_reverse,
+            selectedHeadGapOpeningRewindDescription] using
+            selectedHeadGapOpeningRewindScanState_reverse_map_some_of_cons
+              1 bit bits
+
+theorem selectedHeadGapOpeningRewindScanState_encodedScanRev
+    (T : Tape Bool) (rest : List (Tape Bool)) :
+    selectedHeadGapOpeningRewindScanState
+        selectedHeadGapOpeningRewindDescription.start
+        (encodedStructuredTapeCellsScanRev (T :: rest)) =
+      selectedHeadGapOpeningRewindDescription.start :=
+  selectedHeadGapOpeningRewindScanState_encodedScanRev_of_nonempty
+    (T :: rest) (by simp)
+
+theorem selectedHeadGapOpeningRewindScanSafe_encodedScanRev_of_nonempty
+    (logical : List (Tape Bool)) (hlogical : logical ≠ []) :
+    selectedHeadGapOpeningRewindScanSafe
+        selectedHeadGapOpeningRewindDescription.start
+        (encodedStructuredTapeCellsScanRev logical) := by
+  induction logical with
+  | nil =>
+      contradiction
+  | cons T rest ih =>
+      cases rest with
+      | nil =>
+          exact
+            selectedHeadGapOpeningRewindScanSafe_map_some
+              selectedHeadGapOpeningRewindDescription.start
+              (logicalTapeBits T).reverse
+      | cons U rest =>
+          rw [encodedStructuredTapeCellsScanRev]
+          rw [selectedHeadGapOpeningRewindScanSafe_append]
+          constructor
+          · rw [selectedHeadGapOpeningRewindScanSafe_append]
+            constructor
+            · exact ih (by simp)
+            · rw [selectedHeadGapOpeningRewindScanState_encodedScanRev U rest]
+              simp [selectedHeadGapOpeningRewindScanSafe,
+                selectedHeadGapOpeningRewindDescription]
+          · have hstateLeft :
+                selectedHeadGapOpeningRewindScanState
+                    selectedHeadGapOpeningRewindDescription.start
+                    (List.append
+                      (encodedStructuredTapeCellsScanRev (U :: rest))
+                      [none]) = 1 := by
+              rw [selectedHeadGapOpeningRewindScanState_append]
+              rw [selectedHeadGapOpeningRewindScanState_encodedScanRev U rest]
+              simp [selectedHeadGapOpeningRewindScanState,
+                selectedHeadGapOpeningRewindScanNext,
+                selectedHeadGapOpeningRewindDescription]
+            rw [hstateLeft]
+            exact
+              selectedHeadGapOpeningRewindScanSafe_map_some 1
+                (logicalTapeBits T).reverse
+
+theorem selectedHeadGapOpeningRewindScanSafe_encodedScanRev
+    (T : Tape Bool) (rest : List (Tape Bool)) :
+    selectedHeadGapOpeningRewindScanSafe
+        selectedHeadGapOpeningRewindDescription.start
+        (encodedStructuredTapeCellsScanRev (T :: rest)) :=
+  selectedHeadGapOpeningRewindScanSafe_encodedScanRev_of_nonempty
+    (T :: rest) (by simp)
+
+theorem selectedHeadGapOpeningRewindDescription_run_scanStep
+    (state : Nat) (current stop : Option Bool)
+    (rest left right : List (Option Bool))
+    (hstate : state = 0 ∨ state = 1)
+    (hsafe :
+      selectedHeadGapOpeningRewindScanSafe state (current :: rest)) :
+    selectedHeadGapOpeningRewindDescription.runConfig 1
+        { state := state
+          tape :=
+            selectedHeadGapOpeningRewindScanSource
+              (current :: rest) left stop right } =
+      { state := selectedHeadGapOpeningRewindScanNext state current
+        tape :=
+          selectedHeadGapOpeningRewindScanSource
+            rest left stop (current :: right) } := by
+  rcases hstate with rfl | rfl
+  · cases current with
+    | none =>
+        cases rest <;>
+          machine_step [selectedHeadGapOpeningRewindDescription,
+            selectedHeadGapOpeningRewindScanSource,
+            selectedHeadGapOpeningRewindScanNext]
+    | some bit =>
+        cases bit <;> cases rest <;>
+          machine_step [selectedHeadGapOpeningRewindDescription,
+            selectedHeadGapOpeningRewindScanSource,
+            selectedHeadGapOpeningRewindScanNext]
+  · cases current with
+    | none =>
+        simp [selectedHeadGapOpeningRewindScanSafe,
+          selectedHeadGapOpeningRewindDescription] at hsafe
+    | some bit =>
+        cases bit <;> cases rest <;>
+          machine_step [selectedHeadGapOpeningRewindDescription,
+            selectedHeadGapOpeningRewindScanSource,
+            selectedHeadGapOpeningRewindScanNext]
+
+theorem selectedHeadGapOpeningRewindScanNext_state
+    (state : Nat) (current : Option Bool)
+    (hstate : state = 0 ∨ state = 1)
+    (hsafe :
+      selectedHeadGapOpeningRewindScanSafe state [current]) :
+    let next := selectedHeadGapOpeningRewindScanNext state current
+    next = 0 ∨ next = 1 := by
+  rcases hstate with rfl | rfl <;>
+    cases current with
+    | none =>
+        simp [selectedHeadGapOpeningRewindScanSafe,
+          selectedHeadGapOpeningRewindScanNext,
+          selectedHeadGapOpeningRewindDescription] at hsafe ⊢
+    | some bit =>
+        cases bit <;>
+          simp [selectedHeadGapOpeningRewindScanNext,
+            selectedHeadGapOpeningRewindDescription]
+
+theorem selectedHeadGapOpeningRewindDescription_run_scanLeft
+    (scan left right : List (Option Bool)) (stop : Option Bool)
+    (state : Nat)
+    (hstate : state = 0 ∨ state = 1)
+    (hsafe : selectedHeadGapOpeningRewindScanSafe state scan) :
+    selectedHeadGapOpeningRewindDescription.runConfig scan.length
+        { state := state
+          tape :=
+            selectedHeadGapOpeningRewindScanSource scan left stop right } =
+      { state := selectedHeadGapOpeningRewindScanState state scan
+        tape :=
+          tapeAtCells left
+            (stop :: List.append scan.reverse right) } := by
+  induction scan generalizing state right with
+  | nil =>
+      machine_run [selectedHeadGapOpeningRewindScanSource,
+        selectedHeadGapOpeningRewindScanState]
+  | cons current rest ih =>
+      rw [show (current :: rest).length = 1 + rest.length by
+        simp [Nat.add_comm]]
+      rw [MachineDescription.runConfig_add]
+      have hstep :=
+        selectedHeadGapOpeningRewindDescription_run_scanStep
+          state current stop rest left right hstate hsafe
+      rw [hstep]
+      have hsafeRest :
+          selectedHeadGapOpeningRewindScanSafe
+            (selectedHeadGapOpeningRewindScanNext state current) rest := by
+        cases current with
+        | none =>
+            have hstate0 := hsafe.1
+            subst state
+            simpa [selectedHeadGapOpeningRewindScanNext,
+              selectedHeadGapOpeningRewindDescription] using hsafe.2
+        | some bit =>
+            simpa [selectedHeadGapOpeningRewindScanSafe,
+              selectedHeadGapOpeningRewindScanNext] using hsafe
+      have hnextState :
+          selectedHeadGapOpeningRewindScanNext state current = 0 ∨
+            selectedHeadGapOpeningRewindScanNext state current = 1 := by
+        have hsafeOne :
+            selectedHeadGapOpeningRewindScanSafe state [current] := by
+          cases current with
+          | none =>
+              exact ⟨hsafe.1, trivial⟩
+          | some bit =>
+              trivial
+        simpa using
+          selectedHeadGapOpeningRewindScanNext_state
+            state current hstate hsafeOne
+      simpa [selectedHeadGapOpeningRewindScanState, List.reverse_cons,
+        List.append_assoc] using
+        ih (current :: right)
+          (selectedHeadGapOpeningRewindScanNext state current)
+          hnextState hsafeRest
+
+theorem selectedHeadGapOpeningRewindDescription_run_shiftedSuffixScan
+    (scanRest gap : List (Option Bool))
+    (last current : Option Bool) (cells : List (Option Bool))
+    (hsafe :
+      selectedHeadGapOpeningRewindScanSafe
+        selectedHeadGapOpeningRewindDescription.start
+        (last :: scanRest))
+    (hstate :
+      selectedHeadGapOpeningRewindScanState
+        selectedHeadGapOpeningRewindDescription.start
+        (last :: scanRest) =
+          selectedHeadGapOpeningRewindDescription.start)
+    (hcells :
+      List.append scanRest.reverse [last, none] = current :: cells) :
+    selectedHeadGapOpeningRewindDescription.runConfig (scanRest.length + 1)
+        { state := selectedHeadGapOpeningRewindDescription.start
+          tape :=
+            Tape.move Direction.left
+              (tapeAtCells
+                (last :: List.append scanRest (none :: gap)) []) } =
+      { state := selectedHeadGapOpeningRewindDescription.start
+        tape := tapeAtCells gap (none :: current :: cells) } := by
+  rw [show scanRest.length + 1 = (last :: scanRest).length by
+    simp]
+  have hsource :
+      Tape.move Direction.left
+          (tapeAtCells
+            (last :: List.append scanRest (none :: gap)) []) =
+        selectedHeadGapOpeningRewindScanSource
+          (last :: scanRest) gap none [none] := by
+    simp [selectedHeadGapOpeningRewindScanSource, tapeAtCells,
+      Tape.move, Tape.moveLeft]
+  rw [hsource]
+  have hrun :=
+    selectedHeadGapOpeningRewindDescription_run_scanLeft
+      (last :: scanRest) gap [none] none
+      selectedHeadGapOpeningRewindDescription.start
+      (Or.inl rfl) hsafe
+  rw [hrun]
+  simp [hstate, List.reverse_cons, List.append_assoc]
+  exact congrArg (fun tail => tapeAtCells gap (none :: tail)) hcells
+
+theorem selectedHeadGapOpeningRewindDescription_run_shiftedSuffixScan_encodedTail
+    (gap : List (Option Bool)) (T : Tape Bool) (rest : List (Tape Bool))
+    (current : Option Bool) (cells : List (Option Bool))
+    (htail :
+      encodedStructuredTapeCellsTail (T :: rest) = current :: cells)
+    (hfirst :
+      (headSuffixGapShiftLoopPair none current cells).1 ≠ none)
+    (hsecond :
+      (headSuffixGapShiftLoopPair none current cells).2 = none) :
+    selectedHeadGapOpeningRewindDescription.runConfig
+        (encodedStructuredTapeCellsScanRev (T :: rest)).length
+        { state := selectedHeadGapOpeningRewindDescription.start
+          tape :=
+            Tape.move Direction.left
+              (tapeAtCells
+                ((headSuffixGapShiftLoopPair none current cells).1 ::
+                  List.append
+                    (headSuffixGapShiftLoopWrittenRev none current cells)
+                    gap) []) } =
+      { state := selectedHeadGapOpeningRewindDescription.start
+        tape := tapeAtCells gap (none :: current :: cells) } := by
+  have hscanAppend :=
+    headSuffixGapShiftLoop_scanRev_append_none
+      T rest current cells htail hsecond
+  rcases
+      optionList_cons_eq_append_none_split
+        hscanAppend hfirst with
+    ⟨scanRest, hscan, hwritten⟩
+  have hcells :
+      List.append scanRest.reverse
+          [ (headSuffixGapShiftLoopPair none current cells).1, none ] =
+        current :: cells := by
+    have hencoded :
+        current :: cells =
+          List.append
+            (encodedStructuredTapeCellsScanRev (T :: rest)).reverse
+            [none] := by
+      have hencodedFull :
+          none :: current :: cells =
+            none ::
+              List.append
+                (encodedStructuredTapeCellsScanRev (T :: rest)).reverse
+                [none] := by
+        rw [← htail]
+        rw [← encodedStructuredTapeCells_eq_cons_tail (T :: rest)]
+        exact encodedStructuredTapeCells_eq_scanRev T rest
+      simpa using congrArg List.tail hencodedFull
+    rw [hscan] at hencoded
+    simpa [List.reverse_cons, List.append_assoc] using hencoded.symm
+  rw [show (encodedStructuredTapeCellsScanRev (T :: rest)).length =
+      scanRest.length + 1 by
+    rw [hscan]
+    simp]
+  rw [hwritten]
+  simpa [List.append_assoc] using
+    selectedHeadGapOpeningRewindDescription_run_shiftedSuffixScan
+      scanRest gap
+      (headSuffixGapShiftLoopPair none current cells).1 current cells
+      (by
+        simpa [hscan] using
+          selectedHeadGapOpeningRewindScanSafe_encodedScanRev T rest)
+      (by
+        simpa [hscan] using
+          selectedHeadGapOpeningRewindScanState_encodedScanRev T rest)
+      hcells
+
 theorem selectedHeadGapOpeningRewindDescription_run_threeBlankGap
     (base : List (Option Bool)) (leftStack : Word Bool)
     (current : Bool) (rightTail : List (Option Bool)) :
@@ -1076,6 +1515,140 @@ theorem selectedHeadGapOpeningRewindDescription_haltsFrom_shifted_emptyRest
       encodedStructuredTapeCells, tapeSeparatorCells, Tape.Equiv,
       tapeAtCells, List.map_append, List.append_assoc]
 
+theorem selectedHeadGapOpeningRewindDescription_haltsFrom_shifted_cons
+    (encodedPrefix : List (Option Bool)) (first : Bool)
+    (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool))
+    (current : Option Bool) (cells : List (Option Bool))
+    (htail :
+      encodedStructuredTapeCellsTail (T :: rest) = current :: cells)
+    (hfirst :
+      (headSuffixGapShiftLoopPair none current cells).1 ≠ none)
+    (hsecond :
+      (headSuffixGapShiftLoopPair none current cells).2 = none) :
+    selectedHeadGapOpeningRewindDescription.HaltsFromTapeEquiv
+      (Tape.move Direction.left
+        (tapeAtCells
+          ((headSuffixGapShiftLoopPair none current cells).1 ::
+            List.append
+              (headSuffixGapShiftLoopWrittenRev none current cells)
+              (none :: none ::
+                List.append ((first :: bits).reverse.map some)
+                  (none :: encodedPrefix.reverse)))
+          []))
+      (tapeAtSelectedHeadPayloadGap encodedPrefix
+        (first :: bits) (T :: rest)) := by
+  rcases word_exists_reverse_append_singleton_of_cons first bits with
+    ⟨leftStack, payloadCurrent, hpayload⟩
+  let gap : List (Option Bool) :=
+    none :: none ::
+      List.append ((first :: bits).reverse.map some)
+        (none :: encodedPrefix.reverse)
+  let actual : Tape Bool :=
+    tapeAtCells encodedPrefix.reverse
+      (none ::
+        List.append
+          ((List.append leftStack.reverse [payloadCurrent]).map some)
+          (none :: none :: none :: current :: cells))
+  have hgap :
+      gap =
+        none :: none :: some payloadCurrent ::
+          List.append (leftStack.map some)
+            (none :: encodedPrefix.reverse) := by
+    simp [gap, hpayload, List.reverse_append]
+  refine ⟨actual, ?_, ?_⟩
+  · refine
+      ⟨(encodedStructuredTapeCellsScanRev (T :: rest)).length +
+          (leftStack.length + 6), ?_⟩
+    constructor
+    · rw [MachineDescription.runConfig_add]
+      change
+        (selectedHeadGapOpeningRewindDescription.runConfig
+          (leftStack.length + 6)
+          (selectedHeadGapOpeningRewindDescription.runConfig
+            (encodedStructuredTapeCellsScanRev (T :: rest)).length
+            { state := selectedHeadGapOpeningRewindDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (tapeAtCells
+                    ((headSuffixGapShiftLoopPair none current cells).1 ::
+                      List.append
+                        (headSuffixGapShiftLoopWrittenRev none current cells)
+                        gap) []) })).state =
+          selectedHeadGapOpeningRewindDescription.halt
+      rw [selectedHeadGapOpeningRewindDescription_run_shiftedSuffixScan_encodedTail
+        gap T rest current cells htail hfirst hsecond]
+      rw [hgap]
+      rw [selectedHeadGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
+      rfl
+    · rw [MachineDescription.runConfig_add]
+      change
+        (selectedHeadGapOpeningRewindDescription.runConfig
+          (leftStack.length + 6)
+          (selectedHeadGapOpeningRewindDescription.runConfig
+            (encodedStructuredTapeCellsScanRev (T :: rest)).length
+            { state := selectedHeadGapOpeningRewindDescription.start
+              tape :=
+                Tape.move Direction.left
+                  (tapeAtCells
+                    ((headSuffixGapShiftLoopPair none current cells).1 ::
+                      List.append
+                        (headSuffixGapShiftLoopWrittenRev none current cells)
+                        gap) []) })).tape =
+          actual
+      rw [selectedHeadGapOpeningRewindDescription_run_shiftedSuffixScan_encodedTail
+        gap T rest current cells htail hfirst hsecond]
+      rw [hgap]
+      rw [selectedHeadGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
+  · simp [actual, tapeAtSelectedHeadPayloadGap, tapeAtEncodedSplit,
+      encodedStructuredTapeCells_eq_cons_tail, htail, hpayload,
+      tapeSeparatorCells, Tape.Equiv, tapeAtCells, List.map_append,
+      List.append_assoc]
+
+def selectedHeadGapCreatorDescription : MachineDescription :=
+  canonicalPrimitiveSeqDescription
+    headSuffixGapShiftDescription
+    selectedHeadGapOpeningRewindDescription
+
+theorem selectedHeadGapCreatorDescription_subroutineReady :
+    selectedHeadGapCreatorDescription.SubroutineReady :=
+  canonicalPrimitiveSeqDescription_subroutineReady
+    headSuffixGapShiftDescription_subroutineReady
+    selectedHeadGapOpeningRewindDescription_subroutineReady
+
+theorem selectedHeadGapCreatorDescription_realizes_emptyRest
+    (encodedPrefix : List (Option Bool)) (first : Bool)
+    (bits : Word Bool) :
+    selectedHeadGapCreatorDescription.HaltsFromTapeEquiv
+      (tapeAtSelectedHeadPayload encodedPrefix (first :: bits) [])
+      (tapeAtSelectedHeadPayloadGap encodedPrefix (first :: bits) []) :=
+  canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+    headSuffixGapShiftDescription_subroutineReady
+    selectedHeadGapOpeningRewindDescription_subroutineReady
+    (MachineDescription.HaltsFromTape.toEquiv
+      (headSuffixGapShiftDescription_haltsFrom_selectedPayload_emptyRest
+        encodedPrefix (first :: bits)))
+    (selectedHeadGapOpeningRewindDescription_haltsFrom_shifted_emptyRest
+      encodedPrefix first bits)
+
+theorem selectedHeadGapCreatorDescription_realizes_cons
+    (encodedPrefix : List (Option Bool)) (first : Bool)
+    (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool)) :
+    selectedHeadGapCreatorDescription.HaltsFromTapeEquiv
+      (tapeAtSelectedHeadPayload encodedPrefix (first :: bits) (T :: rest))
+      (tapeAtSelectedHeadPayloadGap encodedPrefix
+        (first :: bits) (T :: rest)) := by
+  rcases
+      headSuffixGapShiftDescription_haltsFrom_selectedPayload_cons
+        encodedPrefix (first :: bits) T rest with
+    ⟨current, cells, htail, hfirst, hsecond, hshift⟩
+  exact
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      headSuffixGapShiftDescription_subroutineReady
+      selectedHeadGapOpeningRewindDescription_subroutineReady
+      (MachineDescription.HaltsFromTape.toEquiv hshift)
+      (selectedHeadGapOpeningRewindDescription_haltsFrom_shifted_cons
+        encodedPrefix first bits T rest current cells htail hfirst hsecond)
+
 /--
 Local gap-creator contract for a selected segment.
 
@@ -1094,6 +1667,185 @@ structure SelectedHeadGapCreatorContract
         (tapeAtEncodedSplit encodedPrefix
           (encodedStructuredTapeCells (head :: rest)))
         (tapeAtSelectedHeadGap encodedPrefix head rest)
+
+theorem selectedHeadGapCreatorDescription_contract :
+    SelectedHeadGapCreatorContract selectedHeadGapCreatorDescription where
+  subroutineReady := selectedHeadGapCreatorDescription_subroutineReady
+  realizes := by
+    intro encodedPrefix head rest
+    rcases logicalTapeBits_exists_cons head with
+      ⟨first, bits, hbits⟩
+    cases rest with
+    | nil =>
+        have hrun :=
+          selectedHeadGapCreatorDescription_realizes_emptyRest
+            encodedPrefix first bits
+        rw [← hbits] at hrun
+        simpa [tapeAtSelectedHeadPayload_logicalTapeBits,
+          tapeAtSelectedHeadPayloadGap_logicalTapeBits] using hrun
+    | cons T rest =>
+        have hrun :=
+          selectedHeadGapCreatorDescription_realizes_cons
+            encodedPrefix first bits T rest
+        rw [← hbits] at hrun
+        simpa [tapeAtSelectedHeadPayload_logicalTapeBits,
+          tapeAtSelectedHeadPayloadGap_logicalTapeBits] using hrun
+
+private theorem logicalTapeCode_eq_of_encodedStructuredTapes_singleton_eq
+    {actual expected : Tape Bool}
+    (h :
+      encodedStructuredTapes [actual] =
+        encodedStructuredTapes [expected]) :
+    logicalTapeCode actual = logicalTapeCode expected := by
+  unfold encodedStructuredTapes at h
+  simp [encodedStructuredTapeCells] at h
+  injection h with _ _ hcode
+  simpa using hcode
+
+private theorem encodedStructuredTapeCells_cons_eq_of_singleton_eq
+    {actual expected : Tape Bool} {rest : List (Tape Bool)}
+    (h :
+      encodedStructuredTapes [actual] =
+        encodedStructuredTapes [expected]) :
+    encodedStructuredTapeCells (actual :: rest) =
+      encodedStructuredTapeCells (expected :: rest) := by
+  have hcode :=
+    logicalTapeCode_eq_of_encodedStructuredTapes_singleton_eq h
+  simp [encodedStructuredTapeCells, hcode]
+
+/--
+Case-split contract for a selected-separator local refresher.
+
+This is the proof boundary for the eventual selected-separator classifier:
+canonical selected segments may no-op, while the two boundary shapes use the
+gap creator followed by the corresponding boundary repair.
+-/
+structure SelectedSeparatorGuardSlackRefreshCaseContract
+    (refresh : MachineDescription) : Prop where
+  subroutineReady : refresh.SubroutineReady
+  canonical :
+    forall (encodedPrefix : List (Option Bool))
+      (target actual : Tape Bool) (rest : List (Tape Bool)),
+      encodedStructuredTapes [actual] =
+          encodedGuardedStructuredTapes [target] ->
+        refresh.HaltsFromTapeEquiv
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells (actual :: rest)))
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (guardLogicalTape target :: rest)))
+  leftBoundary :
+    forall (encodedPrefix : List (Option Bool))
+      (head : Option Bool) (right : List (Option Bool))
+      (rest : List (Tape Bool)),
+      refresh.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool) :: rest)))
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape
+              ({ left := [], head := head, right := right } :
+                Tape Bool) :: rest)))
+  rightBoundary :
+    forall (encodedPrefix : List (Option Bool))
+      (left : List (Option Bool)) (head : Option Bool)
+      (rest : List (Tape Bool)),
+      refresh.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool) :: rest)))
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape
+              ({ left := left, head := head, right := [] } :
+                Tape Bool) :: rest)))
+
+namespace SelectedSeparatorGuardSlackRefreshCaseContract
+
+theorem toSelectedSeparatorContract
+    {refresh : MachineDescription}
+    (hrefresh : SelectedSeparatorGuardSlackRefreshCaseContract refresh)
+    (tapeIndex : Nat) :
+    SelectedSeparatorGuardSlackRefreshContract refresh tapeIndex where
+  subroutineReady := hrefresh.subroutineReady
+  realizes := by
+    intro target actual targetTape targetRest hlist hdrop
+    rcases singletonGuardSlackEndpointShapeList_drop_eq_cons hlist hdrop with
+      ⟨actualTape, actualRest, hactualDrop, hsegment, _hrest⟩
+    have hsourceSuffix :
+        encodedSuffixFromTape actual tapeIndex =
+          encodedStructuredTapeCells (actualTape :: actualRest) := by
+      simp [encodedSuffixFromTape, hactualDrop]
+    have htargetPrefix :
+        encodedPrefixBeforeTape
+            (replaceTapeAt tapeIndex (guardLogicalTape targetTape) actual)
+            tapeIndex =
+          encodedPrefixBeforeTape actual tapeIndex :=
+      encodedPrefixBeforeTape_replaceTapeAt_eq actual tapeIndex
+        (guardLogicalTape targetTape)
+    have htargetDrop :
+        (replaceTapeAt tapeIndex (guardLogicalTape targetTape)
+          actual).drop tapeIndex =
+            guardLogicalTape targetTape :: actualRest :=
+      replaceTapeAt_drop_eq_of_drop_eq_cons hactualDrop
+    have htargetSuffix :
+        encodedSuffixFromTape
+            (replaceTapeAt tapeIndex (guardLogicalTape targetTape) actual)
+            tapeIndex =
+          encodedStructuredTapeCells
+            (guardLogicalTape targetTape :: actualRest) := by
+      simp [encodedSuffixFromTape, htargetDrop]
+    generalize hphysicalEq :
+      encodedStructuredTapes [actualTape] = physical at hsegment
+    cases hsegment with
+    | canonical hphysical =>
+        have hcanonical :
+            encodedStructuredTapes [actualTape] =
+              encodedGuardedStructuredTapes [targetTape] := by
+          rw [hphysicalEq, hphysical]
+        simpa [hsourceSuffix, htargetPrefix, htargetSuffix] using
+          hrefresh.canonical
+            (encodedPrefixBeforeTape actual tapeIndex)
+            targetTape actualTape actualRest hcanonical
+    | leftBoundary head right =>
+        let boundaryActual : Tape Bool :=
+          { left := [], head := head, right := right ++ [none] }
+        let boundaryTarget : Tape Bool :=
+          { left := [], head := head, right := right }
+        have hsourceCells :
+            encodedStructuredTapeCells (actualTape :: actualRest) =
+              encodedStructuredTapeCells
+                (boundaryActual :: actualRest) := by
+          exact
+            encodedStructuredTapeCells_cons_eq_of_singleton_eq
+              (by simpa [boundaryActual] using hphysicalEq)
+        simpa [hsourceSuffix, htargetPrefix, htargetSuffix, hsourceCells,
+          boundaryActual, boundaryTarget] using
+          hrefresh.leftBoundary
+            (encodedPrefixBeforeTape actual tapeIndex)
+            head right actualRest
+    | rightBoundary left head =>
+        let boundaryActual : Tape Bool :=
+          { left := left ++ [none], head := head, right := [] }
+        let boundaryTarget : Tape Bool :=
+          { left := left, head := head, right := [] }
+        have hsourceCells :
+            encodedStructuredTapeCells (actualTape :: actualRest) =
+              encodedStructuredTapeCells
+                (boundaryActual :: actualRest) := by
+          exact
+            encodedStructuredTapeCells_cons_eq_of_singleton_eq
+              (by simpa [boundaryActual] using hphysicalEq)
+        simpa [hsourceSuffix, htargetPrefix, htargetSuffix, hsourceCells,
+          boundaryActual, boundaryTarget] using
+          hrefresh.rightBoundary
+            (encodedPrefixBeforeTape actual tapeIndex)
+            left head actualRest
+
+end SelectedSeparatorGuardSlackRefreshCaseContract
 
 def selectedLeftBoundaryRefreshDescription
     (gapCreator : MachineDescription) : MachineDescription :=
@@ -1184,6 +1936,882 @@ theorem rightBoundaryRefresh
       hcreate hrepair
 
 end SelectedHeadGapCreatorContract
+
+theorem selectedCanonicalRefreshDescription_haltsFrom
+    (encodedPrefix : List (Option Bool))
+    (target actual : Tape Bool) (rest : List (Tape Bool))
+    (hcanonical :
+      encodedStructuredTapes [actual] =
+        encodedGuardedStructuredTapes [target]) :
+    cursorNoopDescription.HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells (actual :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape target :: rest))) := by
+  have hcode :
+      logicalTapeCode actual =
+        logicalTapeCode (guardLogicalTape target) := by
+    have hsingleton :
+        encodedStructuredTapes [actual] =
+          encodedStructuredTapes [guardLogicalTape target] := by
+      simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+        hcanonical
+    exact logicalTapeCode_eq_of_encodedStructuredTapes_singleton_eq
+      hsingleton
+  have hcells :
+      encodedStructuredTapeCells (actual :: rest) =
+        encodedStructuredTapeCells (guardLogicalTape target :: rest) := by
+    simp [encodedStructuredTapeCells, hcode]
+  rw [hcells]
+  exact
+    MachineDescription.HaltsFromTape.toEquiv
+      (cursorNoopDescription_haltsFromTape _)
+
+theorem tapeAtEncodedSplit_selectedSeparator_read
+    (encodedPrefix : List (Option Bool)) (head : Tape Bool)
+    (rest : List (Tape Bool)) :
+    Tape.read
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (head :: rest))) = none := by
+  simp [tapeAtEncodedSplit, encodedStructuredTapeCells, tapeSeparatorCells,
+    tapeAtCells, Tape.read]
+
+theorem tapeAtEncodedSplit_selectedCanonical_afterOpening_read
+    (encodedPrefix : List (Option Bool))
+    (target actual : Tape Bool) (rest : List (Tape Bool))
+    (hcanonical :
+      encodedStructuredTapes [actual] =
+        encodedGuardedStructuredTapes [target]) :
+    Tape.read
+        (Tape.moveRight
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells (actual :: rest)))) =
+      some false := by
+  have hcode :
+      logicalTapeCode actual =
+        logicalTapeCode (guardLogicalTape target) := by
+    have hsingleton :
+        encodedStructuredTapes [actual] =
+          encodedStructuredTapes [guardLogicalTape target] := by
+      simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+        hcanonical
+    exact logicalTapeCode_eq_of_encodedStructuredTapes_singleton_eq
+      hsingleton
+  simp [tapeAtEncodedSplit, encodedStructuredTapeCells, hcode,
+    logicalTapeCode_eq_map_some, guardLogicalTape, logicalTapeBits,
+    logicalCellListBits, logicalCellBits, tapeSeparatorCells, tapeAtCells,
+    Tape.read, Tape.moveRight]
+
+theorem tapeAtEncodedSplit_selectedLeftBoundary_afterOpening_read
+    (encodedPrefix : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) (rest : List (Tape Bool)) :
+    Tape.read
+        (Tape.moveRight
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := [], head := head, right := right ++ [none] } :
+                Tape Bool) :: rest)))) =
+      some true := by
+  simp [tapeAtEncodedSplit, encodedStructuredTapeCells,
+    logicalTapeCode_eq_map_some, logicalTapeBits, logicalCellListBits,
+    logicalCellBits, tapeSeparatorCells, tapeAtCells,
+    Tape.read, Tape.moveRight]
+
+theorem tapeAtEncodedSplit_selectedRightBoundary_afterOpening_read
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    Tape.read
+        (Tape.moveRight
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := left ++ [none], head := head, right := [] } :
+                Tape Bool) :: rest)))) =
+      some false := by
+  simp [tapeAtEncodedSplit, encodedStructuredTapeCells,
+    logicalTapeCode_eq_map_some, logicalTapeBits, logicalCellListBits,
+    logicalCellBits, tapeSeparatorCells, tapeAtCells,
+    Tape.read, Tape.moveRight]
+
+theorem singletonOpeningProbeDescription_run_selectedCanonical
+    (falseTarget trueTarget : Nat)
+    (encodedPrefix : List (Option Bool))
+    (target actual : Tape Bool) (rest : List (Tape Bool))
+    (hcanonical :
+      encodedStructuredTapes [actual] =
+        encodedGuardedStructuredTapes [target]) :
+    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
+        { state :=
+            (singletonOpeningProbeDescription
+              falseTarget trueTarget).start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells (actual :: rest)) } =
+      { state := falseTarget
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells (actual :: rest)) } :=
+  singletonOpeningProbeDescription_run_false_of_reads
+    falseTarget trueTarget
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells (actual :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix actual rest)
+    (tapeAtEncodedSplit_selectedCanonical_afterOpening_read
+      encodedPrefix target actual rest hcanonical)
+
+theorem singletonOpeningProbeDescription_run_selectedLeftBoundary
+    (falseTarget trueTarget : Nat)
+    (encodedPrefix : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) (rest : List (Tape Bool)) :
+    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
+        { state :=
+            (singletonOpeningProbeDescription
+              falseTarget trueTarget).start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (({ left := [], head := head,
+                    right := right ++ [none] } : Tape Bool) :: rest)) } =
+      { state := trueTarget
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := [], head := head,
+                  right := right ++ [none] } : Tape Bool) :: rest)) } :=
+  singletonOpeningProbeDescription_run_true_of_reads
+    falseTarget trueTarget
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells
+        (({ left := [], head := head,
+            right := right ++ [none] } : Tape Bool) :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix
+      ({ left := [], head := head, right := right ++ [none] } :
+        Tape Bool)
+      rest)
+    (tapeAtEncodedSplit_selectedLeftBoundary_afterOpening_read
+      encodedPrefix head right rest)
+
+theorem singletonOpeningProbeDescription_run_selectedRightBoundary
+    (falseTarget trueTarget : Nat)
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
+        { state :=
+            (singletonOpeningProbeDescription
+              falseTarget trueTarget).start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (({ left := left ++ [none], head := head,
+                    right := [] } : Tape Bool) :: rest)) } =
+      { state := falseTarget
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := left ++ [none], head := head,
+                  right := [] } : Tape Bool) :: rest)) } :=
+  singletonOpeningProbeDescription_run_false_of_reads
+    falseTarget trueTarget
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells
+        (({ left := left ++ [none], head := head,
+            right := [] } : Tape Bool) :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix
+      ({ left := left ++ [none], head := head, right := [] } :
+        Tape Bool)
+      rest)
+    (tapeAtEncodedSplit_selectedRightBoundary_afterOpening_read
+      encodedPrefix left head rest)
+
+
+theorem selectedLeftBoundaryRefreshDescription_leftBoundaryCase
+    {gapCreator : MachineDescription}
+    (hgap : SelectedHeadGapCreatorContract gapCreator)
+    (encodedPrefix : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    (selectedLeftBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := [], head := head, right := right } :
+              Tape Bool) :: rest))) :=
+  hgap.leftBoundaryRefresh encodedPrefix head right rest
+
+theorem selectedRightBoundaryRefreshDescription_rightBoundaryCase
+    {gapCreator : MachineDescription}
+    (hgap : SelectedHeadGapCreatorContract gapCreator)
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    (selectedRightBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := left, head := head, right := [] } :
+              Tape Bool) :: rest))) :=
+  hgap.rightBoundaryRefresh encodedPrefix left head rest
+
+def concreteSelectedLeftBoundaryRefreshDescription : MachineDescription :=
+  selectedLeftBoundaryRefreshDescription selectedHeadGapCreatorDescription
+
+def concreteSelectedRightBoundaryRefreshDescription : MachineDescription :=
+  selectedRightBoundaryRefreshDescription selectedHeadGapCreatorDescription
+
+theorem concreteSelectedLeftBoundaryRefreshDescription_subroutineReady :
+    concreteSelectedLeftBoundaryRefreshDescription.SubroutineReady :=
+  selectedLeftBoundaryRefreshDescription_subroutineReady
+    selectedHeadGapCreatorDescription_contract.subroutineReady
+
+theorem concreteSelectedRightBoundaryRefreshDescription_subroutineReady :
+    concreteSelectedRightBoundaryRefreshDescription.SubroutineReady :=
+  selectedRightBoundaryRefreshDescription_subroutineReady
+    selectedHeadGapCreatorDescription_contract.subroutineReady
+
+theorem concreteSelectedLeftBoundaryRefreshDescription_leftBoundaryCase
+    (encodedPrefix : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    concreteSelectedLeftBoundaryRefreshDescription.HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := [], head := head, right := right } :
+              Tape Bool) :: rest))) :=
+  selectedLeftBoundaryRefreshDescription_leftBoundaryCase
+    selectedHeadGapCreatorDescription_contract encodedPrefix head right rest
+
+theorem concreteSelectedRightBoundaryRefreshDescription_rightBoundaryCase
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    concreteSelectedRightBoundaryRefreshDescription.HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := left, head := head, right := [] } :
+              Tape Bool) :: rest))) :=
+  selectedRightBoundaryRefreshDescription_rightBoundaryCase
+    selectedHeadGapCreatorDescription_contract encodedPrefix left head rest
+
+/-!
+## Selected-shape dispatcher branch layout
+-/
+
+def selectedShapeRefreshFinalHalt : Nat :=
+  2
+
+def selectedShapeLeftRepairOffset : Nat :=
+  3
+
+def selectedShapeLeftRepairDescription : MachineDescription :=
+  MachineDescription.offsetRetargetDescription
+    selectedShapeLeftRepairOffset
+    selectedShapeRefreshFinalHalt
+    concreteSelectedLeftBoundaryRefreshDescription
+
+def selectedShapeLeftRepairStart : Nat :=
+  selectedShapeLeftRepairDescription.start
+
+def selectedShapeLeftRepairLimit : Nat :=
+  selectedShapeLeftRepairDescription.stateCount
+
+def selectedShapeRightRepairOffset : Nat :=
+  selectedShapeLeftRepairLimit
+
+def selectedShapeRightRepairDescription : MachineDescription :=
+  MachineDescription.offsetRetargetDescription
+    selectedShapeRightRepairOffset
+    selectedShapeRefreshFinalHalt
+    concreteSelectedRightBoundaryRefreshDescription
+
+def selectedShapeRightRepairStart : Nat :=
+  selectedShapeRightRepairDescription.start
+
+def selectedShapeRightRepairLimit : Nat :=
+  selectedShapeRightRepairDescription.stateCount
+
+def selectedShapeTerminalProbeOffset : Nat :=
+  selectedShapeRightRepairLimit
+
+def selectedShapeTerminalLocalCanonicalExit : Nat :=
+  11
+
+def selectedShapeTerminalLocalRightBoundaryExit : Nat :=
+  12
+
+def selectedShapeTerminalLocalUnusedExit : Nat :=
+  13
+
+def selectedShapeTerminalLocalTarget : Option Bool -> Nat
+  | none => selectedShapeTerminalLocalCanonicalExit
+  | some false => selectedShapeTerminalLocalRightBoundaryExit
+  | some true => selectedShapeTerminalLocalUnusedExit
+
+def selectedShapeTerminalTarget : Option Bool -> Nat
+  | none => selectedShapeRefreshFinalHalt
+  | some false => selectedShapeRightRepairStart
+  | some true => selectedShapeRefreshFinalHalt
+
+def selectedShapeTerminalLocalDescription : MachineDescription :=
+  singletonTerminalPairProbeDescription
+    selectedShapeTerminalLocalCanonicalExit
+    selectedShapeTerminalLocalRightBoundaryExit
+
+def selectedShapeTerminalProbeDescription : MachineDescription :=
+  MachineDescription.offsetReadExitRetargetDescription
+    selectedShapeTerminalProbeOffset
+    selectedShapeTerminalLocalTarget
+    selectedShapeTerminalTarget
+    selectedShapeTerminalLocalDescription
+
+def selectedShapeTerminalProbeStart : Nat :=
+  selectedShapeTerminalProbeDescription.start
+
+def selectedShapeRefreshOpeningDescription : MachineDescription :=
+  singletonOpeningProbeDescription
+    selectedShapeTerminalProbeStart
+    selectedShapeLeftRepairStart
+
+def selectedShapeRefreshDescription : MachineDescription where
+  stateCount := selectedShapeTerminalProbeDescription.stateCount
+  start := selectedShapeRefreshOpeningDescription.start
+  halt := selectedShapeRefreshFinalHalt
+  transitions :=
+    selectedShapeRefreshOpeningDescription.transitions ++
+      selectedShapeLeftRepairDescription.transitions ++
+      selectedShapeRightRepairDescription.transitions ++
+      selectedShapeTerminalProbeDescription.transitions
+
+theorem selectedShapeRefreshFinalHalt_lt_leftRepairOffset :
+    selectedShapeRefreshFinalHalt < selectedShapeLeftRepairOffset := by
+  decide
+
+theorem selectedShapeLeftRepairDescription_subroutineReady :
+    selectedShapeLeftRepairDescription.SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    selectedShapeRefreshFinalHalt_lt_leftRepairOffset
+    concreteSelectedLeftBoundaryRefreshDescription_subroutineReady.left
+
+theorem selectedShapeLeftRepairOffset_lt_rightRepairOffset :
+    selectedShapeLeftRepairOffset < selectedShapeRightRepairOffset := by
+  have hstart :=
+    selectedShapeLeftRepairDescription_subroutineReady.left.right.left
+  simpa [selectedShapeRightRepairOffset, selectedShapeLeftRepairLimit,
+    selectedShapeLeftRepairDescription,
+    MachineDescription.offsetRetargetDescription] using hstart
+
+theorem selectedShapeRefreshFinalHalt_lt_rightRepairOffset :
+    selectedShapeRefreshFinalHalt < selectedShapeRightRepairOffset :=
+  Nat.lt_trans selectedShapeRefreshFinalHalt_lt_leftRepairOffset
+    selectedShapeLeftRepairOffset_lt_rightRepairOffset
+
+theorem selectedShapeRightRepairDescription_subroutineReady :
+    selectedShapeRightRepairDescription.SubroutineReady :=
+  MachineDescription.offsetRetargetDescription_subroutineReady
+    selectedShapeRefreshFinalHalt_lt_rightRepairOffset
+    concreteSelectedRightBoundaryRefreshDescription_subroutineReady.left
+
+theorem selectedShapeTerminalLocalDescription_subroutineReady :
+    selectedShapeTerminalLocalDescription.SubroutineReady :=
+  singletonTerminalPairProbeDescription_subroutineReady
+    selectedShapeTerminalLocalCanonicalExit
+    selectedShapeTerminalLocalRightBoundaryExit
+
+theorem selectedShapeTerminalLocalDescription_transitionFreeAt
+    (cell : Option Bool) :
+    selectedShapeTerminalLocalDescription.TransitionFreeAt
+      (selectedShapeTerminalLocalTarget cell) := by
+  cases cell with
+  | none =>
+      exact
+        transition_notFrom_of_all
+          (l := selectedShapeTerminalLocalDescription.transitions)
+          (state := selectedShapeTerminalLocalTarget none)
+          (by decide)
+  | some bit =>
+      cases bit with
+      | false =>
+          exact
+            transition_notFrom_of_all
+              (l := selectedShapeTerminalLocalDescription.transitions)
+              (state := selectedShapeTerminalLocalTarget (some false))
+              (by decide)
+      | true =>
+          exact
+            transition_notFrom_of_all
+              (l := selectedShapeTerminalLocalDescription.transitions)
+              (state := selectedShapeTerminalLocalTarget (some true))
+              (by decide)
+
+theorem selectedShapeTerminalTarget_lt_probeOffset :
+    forall cell : Option Bool,
+      selectedShapeTerminalTarget cell <
+        selectedShapeTerminalProbeOffset := by
+  intro cell
+  cases cell with
+  | none =>
+      have hhalt :=
+        selectedShapeRightRepairDescription_subroutineReady.left.right.right.left
+      simpa [selectedShapeTerminalTarget,
+        selectedShapeTerminalProbeOffset,
+        selectedShapeRightRepairLimit,
+        selectedShapeRightRepairDescription] using hhalt
+  | some bit =>
+      cases bit with
+      | false =>
+          have hstart :=
+            selectedShapeRightRepairDescription_subroutineReady.left.right.left
+          simpa [selectedShapeTerminalTarget,
+            selectedShapeTerminalProbeOffset,
+            selectedShapeRightRepairLimit,
+            selectedShapeRightRepairStart] using hstart
+      | true =>
+          have hhalt :=
+            selectedShapeRightRepairDescription_subroutineReady.left.right.right.left
+          simpa [selectedShapeTerminalTarget,
+            selectedShapeTerminalProbeOffset,
+            selectedShapeRightRepairLimit,
+            selectedShapeRightRepairDescription] using hhalt
+
+theorem selectedShapeTerminalProbeDescription_subroutineReady :
+    selectedShapeTerminalProbeDescription.SubroutineReady :=
+  MachineDescription.offsetReadExitRetargetDescription_subroutineReady
+    selectedShapeTerminalTarget_lt_probeOffset
+    selectedShapeTerminalLocalDescription_subroutineReady.left
+
+theorem selectedShapeRefreshOpeningDescription_subroutineReady :
+    selectedShapeRefreshOpeningDescription.SubroutineReady :=
+  singletonOpeningProbeDescription_subroutineReady
+    selectedShapeTerminalProbeStart
+    selectedShapeLeftRepairStart
+
+theorem selectedShapeRefreshOpeningDescription_sources_below_leftRepairOffset :
+    forall t : TransitionDescription,
+      t ∈ selectedShapeRefreshOpeningDescription.transitions ->
+        t.source < selectedShapeLeftRepairOffset := by
+  intro t ht
+  simp [selectedShapeRefreshOpeningDescription,
+    singletonOpeningProbeDescription] at ht
+  rcases ht with rfl | rfl | rfl <;>
+    decide
+
+theorem selectedShapeLeftRepairDescription_sources_in_block :
+    forall t : TransitionDescription,
+      t ∈ selectedShapeLeftRepairDescription.transitions ->
+        selectedShapeLeftRepairOffset ≤ t.source ∧
+          t.source < selectedShapeLeftRepairLimit := by
+  intro t ht
+  rcases List.mem_map.mp (by
+      simpa [selectedShapeLeftRepairDescription,
+        MachineDescription.offsetRetargetDescription] using ht) with
+    ⟨base, hbase, rfl⟩
+  have hsource :=
+    (concreteSelectedLeftBoundaryRefreshDescription_subroutineReady.left
+      |>.right.right.right.left base hbase).left
+  constructor
+  · simp [TransitionDescription.sharedExitRetargetStates]
+  · simp [TransitionDescription.sharedExitRetargetStates,
+      selectedShapeLeftRepairLimit, selectedShapeLeftRepairDescription,
+      MachineDescription.offsetRetargetDescription]
+    apply Nat.lt_of_lt_of_le
+    · exact Nat.add_lt_add_left hsource selectedShapeLeftRepairOffset
+    · exact Nat.le_max_left _ _
+
+theorem selectedShapeRightRepairDescription_sources_in_block :
+    forall t : TransitionDescription,
+      t ∈ selectedShapeRightRepairDescription.transitions ->
+        selectedShapeRightRepairOffset ≤ t.source ∧
+          t.source < selectedShapeRightRepairLimit := by
+  intro t ht
+  rcases List.mem_map.mp (by
+      simpa [selectedShapeRightRepairDescription,
+        MachineDescription.offsetRetargetDescription] using ht) with
+    ⟨base, hbase, rfl⟩
+  have hsource :=
+    (concreteSelectedRightBoundaryRefreshDescription_subroutineReady.left
+      |>.right.right.right.left base hbase).left
+  constructor
+  · simp [TransitionDescription.sharedExitRetargetStates]
+  · simp [TransitionDescription.sharedExitRetargetStates,
+      selectedShapeRightRepairLimit, selectedShapeRightRepairDescription,
+      MachineDescription.offsetRetargetDescription]
+    apply Nat.lt_of_lt_of_le
+    · exact Nat.add_lt_add_left hsource selectedShapeRightRepairOffset
+    · exact Nat.le_max_left _ _
+
+theorem selectedShapeTerminalProbeDescription_sources_in_block :
+    forall t : TransitionDescription,
+      t ∈ selectedShapeTerminalProbeDescription.transitions ->
+        selectedShapeTerminalProbeOffset ≤ t.source ∧
+          t.source < selectedShapeTerminalProbeDescription.stateCount := by
+  intro t ht
+  rcases List.mem_map.mp (by
+      simpa [selectedShapeTerminalProbeDescription,
+        MachineDescription.offsetReadExitRetargetDescription] using ht) with
+    ⟨base, hbase, rfl⟩
+  have hsource :=
+    (selectedShapeTerminalLocalDescription_subroutineReady.left
+      |>.right.right.right.left base hbase).left
+  constructor
+  · simp [MachineDescription.readExitRetargetStates]
+  · simp [MachineDescription.readExitRetargetStates,
+      selectedShapeTerminalProbeDescription,
+      MachineDescription.offsetReadExitRetargetDescription]
+    simpa [selectedShapeTerminalLocalDescription] using
+      Nat.add_lt_add_left hsource selectedShapeTerminalProbeOffset
+
+theorem selectedShapeRightRepairOffset_lt_terminalProbeOffset :
+    selectedShapeRightRepairOffset < selectedShapeTerminalProbeOffset := by
+  have hstart :=
+    selectedShapeRightRepairDescription_subroutineReady.left.right.left
+  simpa [selectedShapeTerminalProbeOffset, selectedShapeRightRepairLimit,
+    selectedShapeRightRepairDescription,
+    MachineDescription.offsetRetargetDescription] using hstart
+
+theorem selectedShapeRightRepairOffset_le_terminalProbeOffset :
+    selectedShapeRightRepairOffset ≤ selectedShapeTerminalProbeOffset :=
+  Nat.le_of_lt selectedShapeRightRepairOffset_lt_terminalProbeOffset
+
+theorem selectedShapeLeftRepairLimit_le_terminalProbeOffset :
+    selectedShapeLeftRepairLimit ≤ selectedShapeTerminalProbeOffset := by
+  simpa [selectedShapeRightRepairOffset] using
+    selectedShapeRightRepairOffset_le_terminalProbeOffset
+
+theorem selectedShapeLeftRepairOffset_le_terminalProbeOffset :
+    selectedShapeLeftRepairOffset ≤ selectedShapeTerminalProbeOffset :=
+  Nat.le_trans (Nat.le_of_lt selectedShapeLeftRepairOffset_lt_rightRepairOffset)
+    selectedShapeRightRepairOffset_le_terminalProbeOffset
+
+theorem selectedShapeRefreshFinalHalt_lt_stateCount :
+    selectedShapeRefreshFinalHalt <
+      selectedShapeRefreshDescription.stateCount := by
+  have hhalt :=
+    selectedShapeTerminalProbeDescription_subroutineReady.left.right.right.left
+  simpa [selectedShapeRefreshDescription,
+    selectedShapeTerminalProbeDescription,
+    selectedShapeTerminalTarget] using hhalt
+
+theorem selectedShapeTerminalProbeOffset_lt_stateCount :
+    selectedShapeTerminalProbeOffset <
+      selectedShapeRefreshDescription.stateCount := by
+  have hpos := selectedShapeTerminalLocalDescription_subroutineReady.left.left
+  simpa [selectedShapeRefreshDescription,
+    selectedShapeTerminalProbeDescription,
+    MachineDescription.offsetReadExitRetargetDescription] using
+    Nat.lt_add_of_pos_right (n := selectedShapeTerminalProbeOffset) hpos
+
+theorem selectedShapeLeftRepairLimit_le_stateCount :
+    selectedShapeLeftRepairLimit ≤
+      selectedShapeRefreshDescription.stateCount :=
+  Nat.le_trans selectedShapeLeftRepairLimit_le_terminalProbeOffset
+    (Nat.le_of_lt selectedShapeTerminalProbeOffset_lt_stateCount)
+
+theorem selectedShapeRightRepairLimit_le_stateCount :
+    selectedShapeRightRepairLimit ≤
+      selectedShapeRefreshDescription.stateCount :=
+  Nat.le_trans (Nat.le_of_eq rfl)
+    (Nat.le_of_lt selectedShapeTerminalProbeOffset_lt_stateCount)
+
+theorem selectedShapeLeftRepairDescription_haltsFrom_leftBoundary
+    (encodedPrefix : List (Option Bool))
+    (head : Option Bool) (right : List (Option Bool))
+    (rest : List (Tape Bool)) :
+    selectedShapeLeftRepairDescription.HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := [], head := head, right := right ++ [none] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := [], head := head, right := right } :
+              Tape Bool) :: rest))) := by
+  rcases
+      concreteSelectedLeftBoundaryRefreshDescription_leftBoundaryCase
+        encodedPrefix head right rest with
+    ⟨actual, hhalts, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  simpa [selectedShapeLeftRepairDescription] using
+    MachineDescription.offsetRetargetDescription_haltsFromTape
+      selectedShapeRefreshFinalHalt_lt_leftRepairOffset
+      concreteSelectedLeftBoundaryRefreshDescription_subroutineReady.right
+      hhalts
+
+theorem selectedShapeRightRepairDescription_haltsFrom_rightBoundary
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    selectedShapeRightRepairDescription.HaltsFromTapeEquiv
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (({ left := left ++ [none], head := head, right := [] } :
+            Tape Bool) :: rest)))
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape
+            ({ left := left, head := head, right := [] } :
+              Tape Bool) :: rest))) := by
+  rcases
+      concreteSelectedRightBoundaryRefreshDescription_rightBoundaryCase
+        encodedPrefix left head rest with
+    ⟨actual, hhalts, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  simpa [selectedShapeRightRepairDescription] using
+    MachineDescription.offsetRetargetDescription_haltsFromTape
+      selectedShapeRefreshFinalHalt_lt_rightRepairOffset
+      concreteSelectedRightBoundaryRefreshDescription_subroutineReady.right
+      hhalts
+
+theorem selectedShapeRefreshDescription_run_false_of_reads
+    (physical : Tape Bool)
+    (hstart : Tape.read physical = none)
+    (hread : Tape.read (Tape.moveRight physical) = some false) :
+    selectedShapeRefreshDescription.runConfig 2
+        { state := selectedShapeRefreshDescription.start
+          tape := physical } =
+      { state := selectedShapeTerminalProbeStart
+        tape := physical } := by
+  cases physical with
+  | mk left head right =>
+      cases head with
+      | none =>
+          cases right with
+          | nil =>
+              simp [Tape.read, Tape.moveRight] at hread
+          | cons cell rest =>
+              cases cell with
+              | none =>
+                  simp [Tape.read, Tape.moveRight] at hread
+              | some bit =>
+                  cases bit
+                  · simp [selectedShapeRefreshDescription,
+                      selectedShapeRefreshOpeningDescription,
+                      singletonOpeningProbeDescription,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches, transition,
+                      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+                      Tape.moveRight]
+                  · simp [Tape.read, Tape.moveRight] at hread
+      | some bit =>
+          cases bit <;> simp [Tape.read] at hstart
+
+theorem selectedShapeRefreshDescription_run_true_of_reads
+    (physical : Tape Bool)
+    (hstart : Tape.read physical = none)
+    (hread : Tape.read (Tape.moveRight physical) = some true) :
+    selectedShapeRefreshDescription.runConfig 2
+        { state := selectedShapeRefreshDescription.start
+          tape := physical } =
+      { state := selectedShapeLeftRepairStart
+        tape := physical } := by
+  cases physical with
+  | mk left head right =>
+      cases head with
+      | none =>
+          cases right with
+          | nil =>
+              simp [Tape.read, Tape.moveRight] at hread
+          | cons cell rest =>
+              cases cell with
+              | none =>
+                  simp [Tape.read, Tape.moveRight] at hread
+              | some bit =>
+                  cases bit
+                  · simp [Tape.read, Tape.moveRight] at hread
+                  · simp [selectedShapeRefreshDescription,
+                      selectedShapeRefreshOpeningDescription,
+                      singletonOpeningProbeDescription,
+                      MachineDescription.runConfig,
+                      MachineDescription.stepConfig,
+                      MachineDescription.lookupTransition,
+                      MachineDescription.Matches, transition,
+                      Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+                      Tape.moveRight]
+      | some bit =>
+          cases bit <;> simp [Tape.read] at hstart
+
+theorem selectedShapeRefreshDescription_run_canonical_opening
+    (encodedPrefix : List (Option Bool))
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    selectedShapeRefreshDescription.runConfig 2
+        { state := selectedShapeRefreshDescription.start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest)) } =
+      { state := selectedShapeTerminalProbeStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (guardLogicalTape target :: rest)) } :=
+  selectedShapeRefreshDescription_run_false_of_reads
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix (guardLogicalTape target) rest)
+    (tapeAtEncodedSplit_selectedCanonical_afterOpening_read
+      encodedPrefix target (guardLogicalTape target) rest
+      (by simp [encodedGuardedStructuredTapes, guardLogicalTapes]))
+
+theorem selectedShapeRefreshDescription_run_leftBoundary_opening
+    (encodedPrefix : List (Option Bool)) (head : Option Bool)
+    (right : List (Option Bool)) (rest : List (Tape Bool)) :
+    selectedShapeRefreshDescription.runConfig 2
+        { state := selectedShapeRefreshDescription.start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (({ left := [], head := head,
+                    right := right ++ [none] } : Tape Bool) :: rest)) } =
+      { state := selectedShapeLeftRepairStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := [], head := head,
+                  right := right ++ [none] } : Tape Bool) :: rest)) } :=
+  selectedShapeRefreshDescription_run_true_of_reads
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells
+        (({ left := [], head := head,
+            right := right ++ [none] } : Tape Bool) :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix
+      ({ left := [], head := head, right := right ++ [none] } :
+        Tape Bool)
+      rest)
+    (tapeAtEncodedSplit_selectedLeftBoundary_afterOpening_read
+      encodedPrefix head right rest)
+
+theorem selectedShapeRefreshDescription_run_rightBoundary_opening
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    selectedShapeRefreshDescription.runConfig 2
+        { state := selectedShapeRefreshDescription.start
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (({ left := left ++ [none], head := head,
+                    right := [] } : Tape Bool) :: rest)) } =
+      { state := selectedShapeTerminalProbeStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := left ++ [none], head := head,
+                  right := [] } : Tape Bool) :: rest)) } :=
+  selectedShapeRefreshDescription_run_false_of_reads
+    (tapeAtEncodedSplit encodedPrefix
+      (encodedStructuredTapeCells
+        (({ left := left ++ [none], head := head,
+            right := [] } : Tape Bool) :: rest)))
+    (tapeAtEncodedSplit_selectedSeparator_read
+      encodedPrefix
+      ({ left := left ++ [none], head := head, right := [] } :
+        Tape Bool)
+      rest)
+    (tapeAtEncodedSplit_selectedRightBoundary_afterOpening_read
+      encodedPrefix left head rest)
+
+theorem selectedShapeTerminalProbeDescription_reaches_selectedCanonical
+    (encodedPrefix : List (Option Bool))
+    (target : Tape Bool) (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      selectedShapeTerminalProbeDescription.runConfig steps
+        { state := selectedShapeTerminalProbeStart
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest)) } =
+      { state := selectedShapeRefreshFinalHalt
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (guardLogicalTape target :: rest)) } := by
+  rcases
+      singletonTerminalPairProbeDescription_reaches_selectedCanonical
+        selectedShapeTerminalLocalCanonicalExit
+        selectedShapeTerminalLocalRightBoundaryExit
+        encodedPrefix target rest with
+    ⟨steps, hrun⟩
+  refine ⟨steps, ?_⟩
+  have hcopy :=
+    MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+      (offset := selectedShapeTerminalProbeOffset)
+      (localTarget := selectedShapeTerminalLocalTarget)
+      (target := selectedShapeTerminalTarget)
+      selectedShapeTerminalTarget_lt_probeOffset
+      selectedShapeTerminalLocalDescription_transitionFreeAt
+      (n := steps)
+      hrun
+  simpa [selectedShapeTerminalProbeDescription,
+    selectedShapeTerminalProbeStart, selectedShapeTerminalLocalDescription,
+    selectedShapeTerminalLocalTarget, selectedShapeTerminalTarget,
+    MachineDescription.readExitRetargetConfiguration,
+    MachineDescription.retargetReadExitState] using hcopy
+
+theorem selectedShapeTerminalProbeDescription_reaches_selectedRightBoundary
+    (encodedPrefix : List (Option Bool))
+    (left : List (Option Bool)) (head : Option Bool)
+    (rest : List (Tape Bool)) :
+    exists steps : Nat,
+      selectedShapeTerminalProbeDescription.runConfig steps
+        { state := selectedShapeTerminalProbeStart
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (({ left := left ++ [none], head := head,
+                    right := [] } : Tape Bool) :: rest)) } =
+      { state := selectedShapeRightRepairStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := left ++ [none], head := head,
+                  right := [] } : Tape Bool) :: rest)) } := by
+  rcases
+      singletonTerminalPairProbeDescription_reaches_selectedRightBoundary
+        selectedShapeTerminalLocalCanonicalExit
+        selectedShapeTerminalLocalRightBoundaryExit
+        encodedPrefix left head rest with
+    ⟨steps, hrun⟩
+  refine ⟨steps, ?_⟩
+  have hcopy :=
+    MachineDescription.offsetReadExitRetargetDescription_runConfig_eq
+      (offset := selectedShapeTerminalProbeOffset)
+      (localTarget := selectedShapeTerminalLocalTarget)
+      (target := selectedShapeTerminalTarget)
+      selectedShapeTerminalTarget_lt_probeOffset
+      selectedShapeTerminalLocalDescription_transitionFreeAt
+      (n := steps)
+      hrun
+  simpa [selectedShapeTerminalProbeDescription,
+    selectedShapeTerminalProbeStart, selectedShapeTerminalLocalDescription,
+    selectedShapeTerminalLocalTarget, selectedShapeTerminalTarget,
+    MachineDescription.readExitRetargetConfiguration,
+    MachineDescription.retargetReadExitState] using hcopy
 
 end MultiTapeLowering
 end Structured
