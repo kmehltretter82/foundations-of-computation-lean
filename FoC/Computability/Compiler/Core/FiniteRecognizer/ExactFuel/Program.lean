@@ -36,7 +36,7 @@ Component bundle for the normalized exact-fuel stage program.
 def FinStateExactProgramComponentsConstruction : Prop :=
   ExactOutputThenRecognizeConstruction ∧
     FinStateInitialLayoutExactMaterializerConstruction ∧
-      FinStateLayoutCodeMachineConstruction
+      FinStateLayoutFuelLoopCodeMachineConstruction
 
 /--
 Remaining finite-table leaf for exact-output sequencing.
@@ -58,12 +58,13 @@ theorem initialLayoutExactMaterializerFinStateFiniteLeaf :
       sorry
 
 /--
-Remaining finite-table leaf for recognizing protected exact-fuel layouts.
-It must run the fixed selected transition table for exactly the protected
-fuel and halt exactly when the final selected state is the selected halt state.
+Remaining finite-table leaf for the executable protected exact-fuel loop.
+It must parse the protected layout, run the fixed selected transition table for
+exactly the protected fuel, and halt exactly when the final selected state is
+the selected halt state.
 -/
-theorem layoutCodeMachineFinStateFiniteLeaf :
-    FinStateLayoutCodeMachineConstruction := by
+theorem layoutFuelLoopCodeMachineFinStateFiniteLeaf :
+    FinStateLayoutFuelLoopCodeMachineConstruction := by
   intro stateCount M
   cases stateCount with
   | zero =>
@@ -71,11 +72,18 @@ theorem layoutCodeMachineFinStateFiniteLeaf :
   | succ _ =>
       sorry
 
+theorem layoutCodeMachineFinStateFiniteLeaf :
+    FinStateLayoutCodeMachineConstruction := by
+  intro stateCount M
+  exact
+    layoutCodeMachineConstruction_of_fuelLoopCodeMachine
+      (layoutFuelLoopCodeMachineFinStateFiniteLeaf stateCount M)
+
 theorem exactProgramComponentsFiniteLeaf :
     FinStateExactProgramComponentsConstruction :=
   ⟨exactOutputThenRecognizeFiniteLeaf,
     initialLayoutExactMaterializerFinStateFiniteLeaf,
-    layoutCodeMachineFinStateFiniteLeaf⟩
+    layoutFuelLoopCodeMachineFinStateFiniteLeaf⟩
 
 theorem codeMachineFinStateFiniteLeaf_of_components
     (hcomponents : FinStateExactProgramComponentsConstruction) :
@@ -85,7 +93,9 @@ theorem codeMachineFinStateFiniteLeaf_of_components
     ⟨hcompose, hmaterializer, hlayout⟩
   exact
     codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose
-      hcompose (hmaterializer stateCount M) (hlayout stateCount M)
+      hcompose (hmaterializer stateCount M)
+      (layoutCodeMachineConstruction_of_fuelLoopCodeMachine
+        (hlayout stateCount M))
 
 /--
 Finite-state construction for the normalized exact-fuel staged program.

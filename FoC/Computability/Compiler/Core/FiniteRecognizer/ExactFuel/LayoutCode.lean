@@ -522,6 +522,72 @@ theorem layoutCodeRun_encode_succ_iff_step {stateCount : Nat}
         (M := M) L fuel hfuel).mpr
         ⟨L', hstep, htail⟩
 
+theorem layoutFuelLoopCode_encode_zero_iff_halted {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount)
+    (hfuel : L.fuel = 0) :
+    layoutFuelLoopCode M (Layout.encode L) =
+        some ([] : Word MachineCodeSymbol) <->
+      TuringMachine.Halted M L.config := by
+  cases L with
+  | mk layoutFuel state left head right =>
+      cases hfuel
+      exact
+        Iff.trans
+          (layoutFuelLoopCode_encode_eq_some_iff M
+            ({ fuel := 0
+               state := state
+               left := left
+               head := head
+               right := right } : Layout stateCount))
+          (Layout.accepts_zero_iff M
+            ({ fuel := 0
+               state := state
+               left := left
+               head := head
+               right := right } : Layout stateCount))
+
+theorem layoutFuelLoopCode_encode_succ_iff_step {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) (fuel : Nat)
+    (hfuel : L.fuel = fuel + 1) :
+    layoutFuelLoopCode M (Layout.encode L) =
+        some ([] : Word MachineCodeSymbol) <->
+      exists L' : Layout stateCount,
+        Layout.step M L = some L' /\
+          layoutFuelLoopCode M (Layout.encode L') =
+            some ([] : Word MachineCodeSymbol) := by
+  constructor
+  · intro hloop
+    have hrun :
+        layoutCodeRun M (Layout.encode L) =
+          some ([] : Word MachineCodeSymbol) :=
+      (layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output
+        M (Layout.encode L)).mp hloop
+    rcases
+        (layoutCodeRun_encode_succ_iff_step
+          M L fuel hfuel).mp hrun with
+      ⟨L', hstep, htailRun⟩
+    exact
+      ⟨L', hstep,
+        (layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output
+          M (Layout.encode L')).mpr htailRun⟩
+  · intro h
+    rcases h with ⟨L', hstep, htailLoop⟩
+    have htailRun :
+        layoutCodeRun M (Layout.encode L') =
+          some ([] : Word MachineCodeSymbol) :=
+      (layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output
+        M (Layout.encode L')).mp htailLoop
+    have hrun :
+        layoutCodeRun M (Layout.encode L) =
+          some ([] : Word MachineCodeSymbol) :=
+      (layoutCodeRun_encode_succ_iff_step M L fuel hfuel).mpr
+        ⟨L', hstep, htailRun⟩
+    exact
+      (layoutFuelLoopCode_eq_layoutCodeRun_on_empty_output
+        M (Layout.encode L)).mpr hrun
+
 def LayoutCodeMachineSpec {stateCount : Nat}
     (runner : TuringMachine MachineCodeSymbol runnerState)
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
