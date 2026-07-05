@@ -1022,7 +1022,7 @@ theorem threeHeadReaderNoRowTransitions_runsReader
             (activeStateValues_mem_lt hstate) t ht)
       hrun
 
-theorem staticDispatcher_noRow_runs
+theorem staticDispatcher_noRow_noRowTable_runs
     (D : Description) {state : Nat}
     (hstate : state ∈ activeStateValues D)
     {logical : List (Tape Bool)}

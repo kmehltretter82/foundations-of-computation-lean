@@ -394,6 +394,142 @@ theorem threeHeadReaderNoRowSelectedTransitions_runsReader
             (activeStateValues_mem_lt hstate) u hu)
       hrun
 
+theorem noRowJumpAllTransitions_subset_threeHeadReaderNoRowSelectedTransitions
+    (D : Description) (refresh : MachineDescription)
+    (rowBlockSize : Nat) :
+    forall u : TransitionDescription,
+      u ∈ noRowJumpAllTransitions D ->
+        u ∈ threeHeadReaderNoRowSelectedTransitions D refresh rowBlockSize := by
+  intro u hu
+  simpa [threeHeadReaderNoRowSelectedTransitions,
+    threeHeadReaderNoRowTransitions] using Or.inr (Or.inl hu)
+
+theorem threeHeadReaderNoRowSelectedTransitions_runsNoRowFromExistingTapeSeparator
+    {D : Description} (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (rowBlockSize : Nat)
+    (hrowFits :
+      forall item : Nat × ReadTuple3,
+        item ∈ noRowJumpItems D ->
+          forall t : Transition,
+            lookupTransitionFromReadTuple3 D item.1 item.2 = some t ->
+              (selectedRowSeparatorDescription t refresh).stateCount ≤
+                rowBlockSize)
+    {state : Nat} (reads : ReadTuple3)
+    (hstate : state ∈ activeStateValues D)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state reads = none)
+    {logical : List (Tape Bool)} {physical : Tape Bool}
+    (hseparator : AtExistingTapeSeparator logical 2 physical) :
+    RunsFromStateTapeEquiv
+      (tableMachine (selectedRowBranchLimit D rowBlockSize)
+        (StaticDispatcherState.ready D.start)
+        (StaticDispatcherState.ready D.halt)
+        (threeHeadReaderNoRowSelectedTransitions D refresh rowBlockSize))
+      (StaticDispatcherState.afterRead D state reads)
+      (StaticDispatcherState.ready state)
+      physical
+      physical := by
+  exact
+    runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
+      (small :=
+        tableMachine (noRowJumpLimit D)
+          (StaticDispatcherState.afterRead D state reads)
+          (StaticDispatcherState.ready state)
+          (noRowJumpAllTransitions D))
+      (big :=
+        tableMachine (selectedRowBranchLimit D rowBlockSize)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowSelectedTransitions
+            D refresh rowBlockSize))
+      (hsubset := by
+        intro u hu
+        simpa [tableMachine] using
+          noRowJumpAllTransitions_subset_threeHeadReaderNoRowSelectedTransitions
+            D refresh rowBlockSize u hu)
+      (hdet :=
+        tableMachine_deterministic_of_transitionListDeterministic
+          (threeHeadReaderNoRowSelectedTransitions_deterministic
+            hDwf hrows hrefresh rowBlockSize hrowFits))
+      (hfree :=
+        tableMachine_transitionFreeAt_of_sourcesNe
+          (noRowJumpAllTransitions_sources_ne_ready
+            D (activeStateValues_mem_lt hstate)))
+      (noRowJumpAllTransitions_runsFromExistingTapeSeparator
+        D reads hstate hlookup hseparator)
+
+theorem staticDispatcher_noRow_runs
+    (D : Description) (hDwf : D.WellFormed)
+    (hrows : SupportsReadWriteRows3 D)
+    {refresh : MachineDescription}
+    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
+    (rowBlockSize : Nat)
+    (hrowFits :
+      forall item : Nat × ReadTuple3,
+        item ∈ noRowJumpItems D ->
+          forall t : Transition,
+            lookupTransitionFromReadTuple3 D item.1 item.2 = some t ->
+              (selectedRowSeparatorDescription t refresh).stateCount ≤
+                rowBlockSize)
+    {state : Nat}
+    (hstate : state ∈ activeStateValues D)
+    {logical : List (Tape Bool)}
+    (hlength : logical.length = 3)
+    (hlookup :
+      lookupTransitionFromReadTuple3 D state (ReadTuple3.ofTapes logical) =
+        none) :
+    exists separatorPhysical : Tape Bool,
+      AtExistingTapeSeparator (guardLogicalTapes logical) 2
+        separatorPhysical ∧
+        RunsFromStateTapeEquiv
+          (tableMachine (selectedRowBranchLimit D rowBlockSize)
+            (StaticDispatcherState.ready D.start)
+            (StaticDispatcherState.ready D.halt)
+            (threeHeadReaderNoRowSelectedTransitions
+              D refresh rowBlockSize))
+          (StaticDispatcherState.ready state)
+          (StaticDispatcherState.ready state)
+          (encodedGuardedStructuredTapes logical)
+          separatorPhysical := by
+  rcases
+      threeHeadReaderNoRowSelectedTransitions_runsReader
+        hDwf hrows hrefresh rowBlockSize hrowFits hstate hlength with
+    ⟨separatorPhysical, hseparator, hreader⟩
+  let reads := ReadTuple3.ofTapes logical
+  have hbranch :
+      RunsFromStateTapeEquiv
+        (tableMachine (selectedRowBranchLimit D rowBlockSize)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowSelectedTransitions
+            D refresh rowBlockSize))
+        (StaticDispatcherState.afterRead D state reads)
+        (StaticDispatcherState.ready state)
+        separatorPhysical
+        separatorPhysical := by
+    exact
+      threeHeadReaderNoRowSelectedTransitions_runsNoRowFromExistingTapeSeparator
+        hDwf hrows hrefresh rowBlockSize hrowFits reads hstate
+        (by simpa [reads] using hlookup) hseparator
+  have hreader' :
+      RunsFromStateTapeEquiv
+        (tableMachine (selectedRowBranchLimit D rowBlockSize)
+          (StaticDispatcherState.ready D.start)
+          (StaticDispatcherState.ready D.halt)
+          (threeHeadReaderNoRowSelectedTransitions
+            D refresh rowBlockSize))
+        (StaticDispatcherState.ready state)
+        (StaticDispatcherState.afterRead D state reads)
+        (encodedGuardedStructuredTapes logical)
+        separatorPhysical := by
+    simpa [reads, ReadTuple3.ofTapes] using hreader
+  exact
+    ⟨separatorPhysical, hseparator,
+      runsFromStateTapeEquiv_trans hreader' hbranch⟩
+
 theorem staticDispatcher_selectedRow_runs
     (D : Description) (hD : D.tapeCount = 3)
     (hDwf : D.WellFormed)
