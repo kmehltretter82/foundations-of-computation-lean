@@ -2869,20 +2869,61 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRest
     selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore
     selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
 
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_of_parts
+    (selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_prefixAndFootprintCases
+      hprefix hcases)
+    selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
     selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
+    (selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore_of_prefixAndFootprintCases
+      hprefix hcases)
 
 theorem selectedProjectionPaddedTailCleanupScratchExtConstruction :
     SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
   selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
     selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction
 
+theorem selectedProjectionPaddedTailCleanupScratchExtConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
+  selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
+    (selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
     selectedProjectionPaddedTailCleanupScratchExtConstruction
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintCases
+    (hprefix :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
+    (selectedProjectionPaddedTailCleanupScratchExtConstruction_of_prefixAndFootprintCases
+      hprefix hcases)
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
