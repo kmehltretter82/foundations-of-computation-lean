@@ -304,6 +304,19 @@ theorem decodedDescriptionInterpreterSpec_codePrefix
               (MachineDescription.encodeCodeWordAsInput input)) := by
   rfl
 
+theorem stageCodeToExactFuelInitialLayoutCode_stageCode
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (input : Word MachineCodeSymbol) (fuel : Nat) :
+    ExactFuel.Layout.stageCodeToInitialLayoutCode M
+        (stageCode input fuel) =
+      some
+        (ExactFuel.Layout.encode
+          (ExactFuel.Layout.initial M input fuel)) := by
+  simpa [stageCode] using
+    ExactFuel.Layout.stageCodeToInitialLayoutCode_stageCode
+      M input fuel
+
 end GeneratedCode
 end FiniteRecognizer
 

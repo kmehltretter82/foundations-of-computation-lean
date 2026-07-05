@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.GeneratedCode
 
 set_option doc.verso true
 
@@ -33,6 +33,47 @@ def CodePrefixExactFuelRunnerConstruction
       TuringMachine.HaltsOnInput runner
           (CodePrefixRecognizerStageCode input fuel) <->
         TuringMachine.HaltsOnInputIn M fuel input
+
+/--
+The public generated-call exact-fuel construction is the code-prefix
+specialization of the generic finite-recognizer exact-fuel runner contract.
+-/
+theorem codePrefixExactFuelRunnerConstruction_iff_runnerConstruction
+    {machineState : Type u}
+    (M : TuringMachine MachineCodeSymbol machineState) :
+    CodePrefixExactFuelRunnerConstruction M <->
+      FiniteRecognizer.ExactFuel.RunnerConstruction M
+        FiniteRecognizer.GeneratedCode.stageCode := by
+  constructor
+  · intro h
+    rcases h with ⟨runnerState, runner, hrunner⟩
+    exact ⟨runnerState, runner, by
+      intro input fuel
+      simpa [FiniteRecognizer.GeneratedCode.stageCode] using
+        hrunner input fuel⟩
+  · intro h
+    rcases h with ⟨runnerState, runner, hrunner⟩
+    exact ⟨runnerState, runner, by
+      intro input fuel
+      simpa [FiniteRecognizer.GeneratedCode.stageCode] using
+        hrunner input fuel⟩
+
+theorem codePrefixExactFuelRunnerConstruction_of_runnerConstruction
+    {machineState : Type u}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    (h :
+      FiniteRecognizer.ExactFuel.RunnerConstruction M
+        FiniteRecognizer.GeneratedCode.stageCode) :
+    CodePrefixExactFuelRunnerConstruction M :=
+  (codePrefixExactFuelRunnerConstruction_iff_runnerConstruction M).mpr h
+
+theorem codePrefixExactFuelRunnerConstruction_to_runnerConstruction
+    {machineState : Type u}
+    {M : TuringMachine MachineCodeSymbol machineState}
+    (h : CodePrefixExactFuelRunnerConstruction M) :
+      FiniteRecognizer.ExactFuel.RunnerConstruction M
+        FiniteRecognizer.GeneratedCode.stageCode :=
+  (codePrefixExactFuelRunnerConstruction_iff_runnerConstruction M).mp h
 
 /--
 Concrete-state version of the exact-fuel runner leaf.  This is the remaining

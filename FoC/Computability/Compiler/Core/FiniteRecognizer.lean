@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Basic
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Runner
 
 set_option doc.verso true
 
