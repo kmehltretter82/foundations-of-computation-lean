@@ -1238,6 +1238,378 @@ theorem headSuffixGapShiftDescription_run_payload_cons_cells
     headSuffixGapShiftDescription_payload_cons_cells
       bits T rest current cells htail hsecond
 
+def headSuffixGapOpeningRewindHalt : Nat :=
+  6
+
+/--
+Return from the shifted block's right side to the global opening separator.
+
+The scanner moves left while counting consecutive blank cells.  Internal
+structured separators are single blanks, and the inserted suffix gap contributes
+three blanks, so four consecutive blanks identify the implicit blank region to
+the left of the whole encoded block.  After seeing the fourth blank it moves
+right three cells and halts on the opening separator.
+-/
+def headSuffixGapOpeningRewindDescription : MachineDescription where
+  stateCount := 7
+  start := 0
+  halt := headSuffixGapOpeningRewindHalt
+  transitions :=
+    [ transition 0 none none Direction.left 1
+    , transition 0 (some false) (some false) Direction.left 0
+    , transition 0 (some true) (some true) Direction.left 0
+    , transition 1 none none Direction.left 2
+    , transition 1 (some false) (some false) Direction.left 0
+    , transition 1 (some true) (some true) Direction.left 0
+    , transition 2 none none Direction.left 3
+    , transition 2 (some false) (some false) Direction.left 0
+    , transition 2 (some true) (some true) Direction.left 0
+    , transition 3 none none Direction.right 4
+    , transition 3 (some false) (some false) Direction.left 0
+    , transition 3 (some true) (some true) Direction.left 0
+    , transition 4 none none Direction.right 5
+    , transition 5 none none Direction.right headSuffixGapOpeningRewindHalt ]
+
+theorem headSuffixGapOpeningRewindDescription_wellFormed :
+    headSuffixGapOpeningRewindDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := headSuffixGapOpeningRewindDescription.transitions)
+      (stateCount := headSuffixGapOpeningRewindDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := headSuffixGapOpeningRewindDescription.transitions)
+      (by decide)
+
+theorem headSuffixGapOpeningRewindDescription_haltTransitionFree :
+    headSuffixGapOpeningRewindDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := headSuffixGapOpeningRewindDescription.transitions)
+    (state := headSuffixGapOpeningRewindDescription.halt)
+    (by decide)
+
+theorem headSuffixGapOpeningRewindDescription_subroutineReady :
+    headSuffixGapOpeningRewindDescription.SubroutineReady :=
+  ⟨headSuffixGapOpeningRewindDescription_wellFormed,
+    headSuffixGapOpeningRewindDescription_haltTransitionFree⟩
+
+theorem headSuffixGapOpeningRewindDescription_run_openingFinish
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig 6
+        { state := headSuffixGapOpeningRewindDescription.start
+          tape := tapeAtCells [] (none :: rightTail) } =
+      { state := headSuffixGapOpeningRewindHalt
+        tape := tapeAtCells [none, none, none] (none :: rightTail) } := by
+  simp [headSuffixGapOpeningRewindDescription,
+    MachineDescription.runConfig, MachineDescription.stepConfig,
+    MachineDescription.lookupTransition, MachineDescription.Matches,
+    transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
+
+theorem headSuffixGapOpeningRewindDescription_run_payloadScan
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig (leftStack.length + 1)
+        { state := headSuffixGapOpeningRewindDescription.start
+          tape :=
+            tapeAtCells
+              (List.append (leftStack.map some) [none])
+              (some current :: rightTail) } =
+      { state := headSuffixGapOpeningRewindDescription.start
+        tape :=
+          tapeAtCells []
+            (none ::
+              List.append
+                ((List.append leftStack.reverse [current]).map some)
+                rightTail) } := by
+  induction leftStack generalizing current rightTail with
+  | nil =>
+      cases current <;> cases rightTail <;>
+        simp [headSuffixGapOpeningRewindDescription,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, MachineDescription.Matches,
+          transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+          Tape.moveLeft]
+  | cons next rest ih =>
+      rw [show (next :: rest).length + 1 =
+        1 + (rest.length + 1) by
+        simp
+        lia]
+      rw [MachineDescription.runConfig_add]
+      have hstep :
+          headSuffixGapOpeningRewindDescription.runConfig 1
+              { state := headSuffixGapOpeningRewindDescription.start
+                tape :=
+                  tapeAtCells
+                    (List.append ((next :: rest).map some) [none])
+                    (some current :: rightTail) } =
+            { state := headSuffixGapOpeningRewindDescription.start
+              tape :=
+                tapeAtCells
+                  (List.append (rest.map some) [none])
+                  (some next :: some current :: rightTail) } := by
+        cases next <;> cases current <;> cases rightTail <;>
+          simp [headSuffixGapOpeningRewindDescription,
+            MachineDescription.runConfig, MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+            Tape.moveLeft]
+      rw [hstep]
+      simpa [List.reverse_cons, List.map_append, List.append_assoc]
+        using ih next (some current :: rightTail)
+
+theorem headSuffixGapOpeningRewindDescription_run_payloadFinish
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig (leftStack.length + 7)
+        { state := headSuffixGapOpeningRewindDescription.start
+          tape :=
+            tapeAtCells
+              (List.append (leftStack.map some) [none])
+              (some current :: rightTail) } =
+      { state := headSuffixGapOpeningRewindHalt
+        tape :=
+          tapeAtCells [none, none, none]
+            (none ::
+              List.append
+                ((List.append leftStack.reverse [current]).map some)
+                rightTail) } := by
+  rw [show leftStack.length + 7 = (leftStack.length + 1) + 6 by lia]
+  rw [MachineDescription.runConfig_add]
+  rw [headSuffixGapOpeningRewindDescription_run_payloadScan]
+  exact headSuffixGapOpeningRewindDescription_run_openingFinish
+    (List.append ((List.append leftStack.reverse [current]).map some)
+      rightTail)
+
+theorem headSuffixGapOpeningRewindDescription_haltsFrom_payload
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.HaltsFromTapeEquiv
+      (tapeAtCells
+        (List.append (leftStack.map some) [none])
+        (some current :: rightTail))
+      (tapeAtCells []
+        (none ::
+          List.append
+            ((List.append leftStack.reverse [current]).map some)
+            rightTail)) := by
+  refine
+    ⟨tapeAtCells [none, none, none]
+        (none ::
+          List.append
+            ((List.append leftStack.reverse [current]).map some)
+            rightTail),
+      ?_, ?_⟩
+  · refine ⟨leftStack.length + 7, ?_⟩
+    constructor
+    · rw [headSuffixGapOpeningRewindDescription_run_payloadFinish]
+      rfl
+    · rw [headSuffixGapOpeningRewindDescription_run_payloadFinish]
+  · simp [Tape.Equiv, tapeAtCells, Tape.dropTrailingNone]
+
+theorem headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig (leftStack.length + 7)
+        { state := 3
+          tape :=
+            tapeAtCells
+              (List.append (leftStack.map some) [none])
+              (some current :: rightTail) } =
+      { state := headSuffixGapOpeningRewindHalt
+        tape :=
+          tapeAtCells [none, none, none]
+            (none ::
+              List.append
+                ((List.append leftStack.reverse [current]).map some)
+                rightTail) } := by
+  induction leftStack generalizing current rightTail with
+  | nil =>
+      rw [show ([] : Word Bool).length + 7 = 1 + 6 by rfl]
+      rw [MachineDescription.runConfig_add]
+      have hstep :
+          headSuffixGapOpeningRewindDescription.runConfig 1
+              { state := 3
+                tape :=
+                  tapeAtCells
+                    (List.append (([] : Word Bool).map some) [none])
+                    (some current :: rightTail) } =
+            { state := headSuffixGapOpeningRewindDescription.start
+              tape := tapeAtCells [] (none :: some current :: rightTail) } := by
+        cases current <;> cases rightTail <;>
+          simp [headSuffixGapOpeningRewindDescription,
+            MachineDescription.runConfig, MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+            Tape.moveLeft]
+      rw [hstep]
+      simpa using
+        headSuffixGapOpeningRewindDescription_run_openingFinish
+          (some current :: rightTail)
+  | cons next rest ih =>
+      rw [show (next :: rest).length + 7 =
+        1 + (rest.length + 7) by
+        simp
+        lia]
+      rw [MachineDescription.runConfig_add]
+      have hstep :
+          headSuffixGapOpeningRewindDescription.runConfig 1
+              { state := 3
+                tape :=
+                  tapeAtCells
+                    (List.append ((next :: rest).map some) [none])
+                    (some current :: rightTail) } =
+            { state := headSuffixGapOpeningRewindDescription.start
+              tape :=
+                tapeAtCells
+                  (List.append (rest.map some) [none])
+                  (some next :: some current :: rightTail) } := by
+        cases next <;> cases current <;> cases rightTail <;>
+          simp [headSuffixGapOpeningRewindDescription,
+            MachineDescription.runConfig, MachineDescription.stepConfig,
+            MachineDescription.lookupTransition, MachineDescription.Matches,
+            transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+            Tape.moveLeft]
+      rw [hstep]
+      simpa [List.reverse_cons, List.map_append, List.append_assoc]
+        using
+          headSuffixGapOpeningRewindDescription_run_payloadFinish
+            rest next (some current :: rightTail)
+
+theorem headSuffixGapOpeningRewindDescription_run_threeBlankGap
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig 3
+        { state := headSuffixGapOpeningRewindDescription.start
+          tape :=
+            tapeAtCells
+              (none :: none :: some current ::
+                List.append (leftStack.map some) [none])
+              (none :: rightTail) } =
+      { state := 3
+        tape :=
+          tapeAtCells
+            (List.append (leftStack.map some) [none])
+            (some current :: none :: none :: none :: rightTail) } := by
+  cases current <;> cases leftStack <;> cases rightTail <;>
+    simp [headSuffixGapOpeningRewindDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
+      Tape.moveLeft]
+
+theorem headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.runConfig (leftStack.length + 10)
+        { state := headSuffixGapOpeningRewindDescription.start
+          tape :=
+            tapeAtCells
+              (none :: none :: some current ::
+                List.append (leftStack.map some) [none])
+              (none :: rightTail) } =
+      { state := headSuffixGapOpeningRewindHalt
+        tape :=
+          tapeAtCells [none, none, none]
+            (none ::
+              List.append
+                ((List.append leftStack.reverse [current]).map some)
+                (none :: none :: none :: rightTail)) } := by
+  rw [show leftStack.length + 10 = 3 + (leftStack.length + 7) by
+    lia]
+  rw [MachineDescription.runConfig_add]
+  rw [headSuffixGapOpeningRewindDescription_run_threeBlankGap]
+  exact
+    headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
+      leftStack current (none :: none :: none :: rightTail)
+
+theorem headSuffixGapOpeningRewindDescription_haltsFrom_threeBlankGapPayload
+    (leftStack : Word Bool) (current : Bool)
+    (rightTail : List (Option Bool)) :
+    headSuffixGapOpeningRewindDescription.HaltsFromTapeEquiv
+      (tapeAtCells
+        (none :: none :: some current ::
+          List.append (leftStack.map some) [none])
+        (none :: rightTail))
+      (tapeAtCells []
+        (none ::
+          List.append
+            ((List.append leftStack.reverse [current]).map some)
+            (none :: none :: none :: rightTail))) := by
+  refine
+    ⟨tapeAtCells [none, none, none]
+        (none ::
+          List.append
+            ((List.append leftStack.reverse [current]).map some)
+            (none :: none :: none :: rightTail)),
+      ?_, ?_⟩
+  · refine ⟨leftStack.length + 10, ?_⟩
+    constructor
+    · rw [headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
+      rfl
+    · rw [headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
+  · simp [Tape.Equiv, tapeAtCells, Tape.dropTrailingNone]
+
+/--
+Nonempty raw payload contract for the suffix-gap creator.
+
+The stronger {name}`HeadSuffixGapCreatorContract` in `CursorBoundaryGap.lean` is
+still useful when available, but the singleton-boundary bridge only feeds
+payloads of the form {name}`logicalTapeBits`, and those are always nonempty.
+Keeping this narrower contract explicit avoids forcing the concrete
+right-edge-to-opening return routine to solve the degenerate arbitrary-empty
+payload case.
+-/
+structure HeadSuffixGapCreatorNonemptyContract
+    (gapCreator : MachineDescription) : Prop where
+  subroutineReady : gapCreator.SubroutineReady
+  realizes :
+    forall (first : Bool) (bits : Word Bool) (rest : List (Tape Bool)),
+      gapCreator.HaltsFromTapeEquiv
+        (encodedStructuredHeadPayloadTapes (first :: bits) rest)
+        (encodedStructuredHeadPayloadGapTapes (first :: bits) rest)
+
+namespace HeadSuffixGapCreatorContract
+
+theorem toNonempty
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorContract gapCreator) :
+    HeadSuffixGapCreatorNonemptyContract gapCreator where
+  subroutineReady := hgap.subroutineReady
+  realizes := by
+    intro first bits rest
+    exact hgap.realizes (first :: bits) rest
+
+end HeadSuffixGapCreatorContract
+
+namespace HeadSuffixGapCreatorNonemptyContract
+
+theorem toSingletonBoundary
+    {gapCreator : MachineDescription}
+    (hgap : HeadSuffixGapCreatorNonemptyContract gapCreator) :
+    SingletonBoundaryGapCreatorContract gapCreator where
+  subroutineReady := hgap.subroutineReady
+  leftBoundary := by
+    intro head right rest
+    let T : Tape Bool :=
+      { left := [], head := head, right := right ++ [none] }
+    rcases logicalTapeBits_exists_cons T with ⟨first, bits, hbits⟩
+    have hreal := hgap.realizes first bits rest
+    rw [← hbits] at hreal
+    simpa [T, encodedStructuredHeadPayloadTapes_eq_structuredTapes,
+      encodedStructuredHeadPayloadGapTapes_eq_headGap] using hreal
+  rightBoundary := by
+    intro left head rest
+    let T : Tape Bool :=
+      { left := left ++ [none], head := head, right := [] }
+    rcases logicalTapeBits_exists_cons T with ⟨first, bits, hbits⟩
+    have hreal := hgap.realizes first bits rest
+    rw [← hbits] at hreal
+    simpa [T, encodedStructuredHeadPayloadTapes_eq_structuredTapes,
+      encodedStructuredHeadPayloadGapTapes_eq_headGap] using hreal
+
+end HeadSuffixGapCreatorNonemptyContract
+
 end MultiTapeLowering
 end Structured
 end FiniteTransducers
