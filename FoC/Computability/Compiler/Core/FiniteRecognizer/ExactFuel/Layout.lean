@@ -399,6 +399,51 @@ theorem step_eq_none_of_transition_eq_none {stateCount : Nat}
       simp [step, tape]
       rw [htransition']
 
+theorem step_eq_some_iff {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L L' : Layout stateCount} :
+    step M L = some L' <->
+      exists fuel : Nat,
+      exists write : Option MachineCodeSymbol,
+      exists dir : Direction,
+      exists nextState : Fin stateCount,
+        L.fuel = fuel + 1 /\
+          M.transition L.state (Tape.read L.tape) =
+            some (write, dir, nextState) /\
+          L' =
+            ofConfig fuel
+              { state := nextState
+                tape := Tape.move dir (Tape.write write L.tape) } := by
+  constructor
+  · intro hstep
+    cases L with
+    | mk layoutFuel state left head right =>
+        cases layoutFuel with
+        | zero =>
+            simp [step] at hstep
+        | succ fuel =>
+            cases htransition :
+                M.transition state
+                  (Tape.read
+                    ({ left := left, head := head, right := right } :
+                      Tape MachineCodeSymbol)) with
+            | none =>
+                simp [step, tape, htransition] at hstep
+            | some action =>
+                rcases action with ⟨write, dir, nextState⟩
+                simp [step, tape, htransition] at hstep
+                subst L'
+                exact
+                  ⟨fuel, write, dir, nextState, rfl,
+                    by simpa [tape] using htransition, rfl⟩
+  · intro h
+    rcases h with
+      ⟨fuel, write, dir, nextState, hfuel, htransition, hL'⟩
+    subst L'
+    exact
+      step_of_transition_eq_some
+        (M := M) (L := L) hfuel htransition
+
 theorem accepts_succ_transition_iff {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
     (L : Layout stateCount) (fuel : Nat)
@@ -465,6 +510,52 @@ theorem accepts_succ_iff_false_of_transition_eq_none {stateCount : Nat}
             { state := state
               tape := { left := left, head := head, right := right } })
           htransition)
+
+theorem accepts_succ_iff_step {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (L : Layout stateCount) (fuel : Nat)
+    (hfuel : L.fuel = fuel + 1) :
+    accepts M L <->
+      exists L' : Layout stateCount,
+        step M L = some L' /\ accepts M L' := by
+  constructor
+  · intro haccepts
+    rcases
+        (accepts_succ_transition_iff
+          (M := M) L fuel hfuel).mp haccepts with
+      ⟨write, dir, nextState, htransition, htail⟩
+    refine
+      ⟨ofConfig fuel
+        { state := nextState
+          tape := Tape.move dir (Tape.write write L.tape) },
+        ?_, htail⟩
+    exact step_of_transition_eq_some
+      (M := M) (L := L) hfuel htransition
+  · intro h
+    rcases h with ⟨L', hstep, htail⟩
+    cases L with
+    | mk layoutFuel state left head right =>
+        cases hfuel
+        cases htransition :
+            M.transition state
+              (Tape.read
+                ({ left := left, head := head, right := right } :
+                  Tape MachineCodeSymbol)) with
+        | none =>
+            simp [step, tape, htransition] at hstep
+        | some action =>
+            rcases action with ⟨write, dir, nextState⟩
+            simp [step, tape, htransition] at hstep
+            cases hstep
+            exact
+              (accepts_succ_iff_of_transition_eq_some
+                (M := M)
+                { fuel := fuel + 1
+                  state := state
+                  left := left
+                  head := head
+                  right := right }
+                fuel rfl htransition).mpr htail
 
 theorem accepts_initial_iff_haltsOnInputIn {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
