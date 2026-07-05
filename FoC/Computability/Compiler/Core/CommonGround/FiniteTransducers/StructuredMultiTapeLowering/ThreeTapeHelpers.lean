@@ -344,6 +344,16 @@ theorem runConfig_chain2
     D.runConfig (n + m) c = c2 := by
   rw [Description.runConfig_add, h1, h2]
 
+theorem runConfig_chain2_of_eq
+    {D : Description} {total n m : Nat}
+    {c c1 c2 : Configuration}
+    (htotal : total = n + m)
+    (h1 : D.runConfig n c = c1)
+    (h2 : D.runConfig m c1 = c2) :
+    D.runConfig total c = c2 := by
+  rw [htotal]
+  exact runConfig_chain2 h1 h2
+
 theorem runConfig_chain3
     {D : Description} {n m k : Nat}
     {c c1 c2 c3 : Configuration}
@@ -354,6 +364,17 @@ theorem runConfig_chain3
   rw [Description.runConfig_add]
   rw [runConfig_chain2 h1 h2]
   exact h3
+
+theorem runConfig_chain3_of_eq
+    {D : Description} {total n m k : Nat}
+    {c c1 c2 c3 : Configuration}
+    (htotal : total = (n + m) + k)
+    (h1 : D.runConfig n c = c1)
+    (h2 : D.runConfig m c1 = c2)
+    (h3 : D.runConfig k c2 = c3) :
+    D.runConfig total c = c3 := by
+  rw [htotal]
+  exact runConfig_chain3 h1 h2 h3
 
 theorem runConfig_chain4
     {D : Description} {n m k l : Nat}
@@ -366,6 +387,62 @@ theorem runConfig_chain4
   rw [Description.runConfig_add]
   rw [runConfig_chain3 h1 h2 h3]
   exact h4
+
+theorem runConfig_chain4_of_eq
+    {D : Description} {total n m k l : Nat}
+    {c c1 c2 c3 c4 : Configuration}
+    (htotal : total = ((n + m) + k) + l)
+    (h1 : D.runConfig n c = c1)
+    (h2 : D.runConfig m c1 = c2)
+    (h3 : D.runConfig k c2 = c3)
+    (h4 : D.runConfig l c3 = c4) :
+    D.runConfig total c = c4 := by
+  rw [htotal]
+  exact runConfig_chain4 h1 h2 h3 h4
+
+/--
+Generic list-loop runner for structured phase proofs.
+
+The phase state is split into an accumulator {lit}`σ` and an unprocessed input
+list.  A fixed-cost step consumes one list cell and updates the accumulator;
+the fixed-cost done phase handles the empty list.
+-/
+theorem runConfig_listLoop
+    {D : Description} {α σ : Type}
+    (stepCount doneCount : Nat)
+    (cfg : σ -> List α -> Configuration)
+    (next : σ -> α -> σ)
+    (finish : σ -> Configuration)
+    (hstep :
+      forall (state : σ) (head : α) (tail : List α),
+        D.runConfig stepCount (cfg state (head :: tail)) =
+          cfg (next state head) tail)
+    (hdone :
+      forall state : σ,
+        D.runConfig doneCount (cfg state []) =
+          finish state)
+    (initial : σ) :
+    forall remaining : List α,
+      D.runConfig (stepCount * remaining.length + doneCount)
+          (cfg initial remaining) =
+        finish (remaining.foldl next initial) := by
+  intro remaining
+  induction remaining generalizing initial with
+  | nil =>
+      simpa using hdone initial
+  | cons head tail ih =>
+      refine
+        runConfig_chain2_of_eq
+          (D := D)
+          (n := stepCount)
+          (m := stepCount * tail.length + doneCount)
+          (c := cfg initial (head :: tail))
+          (c1 := cfg (next initial head) tail)
+          (c2 := finish (tail.foldl next (next initial head)))
+          ?_ ?_ ?_
+      · simp [Nat.mul_succ, Nat.add_comm, Nat.add_left_comm]
+      · exact hstep initial head tail
+      · simpa using ih (next initial head)
 
 end ThreeTape
 end MultiTapeLowering

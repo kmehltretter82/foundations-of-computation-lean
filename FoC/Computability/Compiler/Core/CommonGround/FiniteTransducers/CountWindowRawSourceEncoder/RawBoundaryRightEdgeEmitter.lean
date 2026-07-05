@@ -726,15 +726,19 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
         structuredRawBoundaryRightEdgeEmitterDescription_run_count_done
           processed outputBits markers
   | cons bit rest ih =>
-      rw [show (bit :: rest).length + 1 =
-          1 + (rest.length + 1) by
-        simp [Nat.add_comm, Nat.add_left_comm]]
-      rw [Structured.Description.runConfig_add]
-      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit]
-      simpa [List.append_assoc, Nat.succ_eq_add_one,
-        Nat.add_assoc, Nat.add_comm,
-        Nat.add_left_comm] using
-        ih (List.append processed [bit]) markers.succ
+      refine
+        Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+          (D := structuredRawBoundaryRightEdgeEmitterDescription)
+          (m := rest.length + 1)
+          (htotal := ?_)
+          (structuredRawBoundaryRightEdgeEmitterDescription_run_count_bit
+            processed rest outputBits markers bit)
+          ?_
+      · simp [Nat.add_comm, Nat.add_left_comm]
+      · simpa [List.append_assoc, Nat.succ_eq_add_one,
+          Nat.add_assoc, Nat.add_comm,
+          Nat.add_left_comm] using
+          ih (List.append processed [bit]) markers.succ
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count
     (layout outputBits : Word Bool) :
@@ -869,17 +873,21 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_loop
         structuredRawBoundaryRightEdgeEmitterDescription_run_length_final
           emitted sourceLeft outputBits
   | succ remaining ih =>
-      rw [show 4 * (remaining + 1) + 4 =
-          4 + (4 * remaining + 4) by
-        lia]
-      rw [Structured.Description.runConfig_add]
-      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_length_marker]
-      simpa [structuredRawBoundaryLengthTickBits,
-        DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
-        List.append_assoc, Nat.succ_eq_add_one, Nat.add_assoc,
-        Nat.add_comm, Nat.add_left_comm] using
-        ih emitted.succ
-          (List.append outputBits structuredRawBoundaryLengthTickBits)
+      refine
+        Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+          (D := structuredRawBoundaryRightEdgeEmitterDescription)
+          (m := 4 * remaining + 4)
+          (htotal := ?_)
+          (structuredRawBoundaryRightEdgeEmitterDescription_run_length_marker
+            remaining emitted sourceLeft outputBits)
+          ?_
+      · lia
+      · simpa [structuredRawBoundaryLengthTickBits,
+          DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
+          List.append_assoc, Nat.succ_eq_add_one, Nat.add_assoc,
+          Nat.add_comm, Nat.add_left_comm] using
+          ih emitted.succ
+            (List.append outputBits structuredRawBoundaryLengthTickBits)
 
 private theorem structuredRawBoundaryLengthReadTape_eq_phaseTape
     (markers : Nat) :
@@ -930,11 +938,16 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_header_coun
               (List.append [false, false, false, false]
                 (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
                   layout.length)) ] } := by
-  rw [Structured.Description.runConfig_add]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_header]
-  rw [Structured.Description.runConfig_add]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_count]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_length]
+  exact
+    Structured.MultiTapeLowering.ThreeTape.runConfig_chain3_of_eq
+      (D := structuredRawBoundaryRightEdgeEmitterDescription)
+      (htotal := by lia)
+      (structuredRawBoundaryRightEdgeEmitterDescription_run_header
+        (Tape.input layout))
+      (structuredRawBoundaryRightEdgeEmitterDescription_run_count
+        layout [false, false, false, false])
+      (structuredRawBoundaryRightEdgeEmitterDescription_run_length
+        layout [false, false, false, false])
 
 private def structuredRawBoundaryRewindTapeRev
     (remainingRev skipped : Word Bool) : Tape Bool :=
@@ -1046,13 +1059,17 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_loop
         structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_done
           skipped markers outputBits
   | cons bit rest ih =>
-      rw [show (bit :: rest).length + 1 =
-          1 + (rest.length + 1) by
-        simp [Nat.add_comm, Nat.add_left_comm]]
-      rw [Structured.Description.runConfig_add]
-      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit]
-      simpa [List.append_assoc] using
-        ih (bit :: skipped)
+      refine
+        Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+          (D := structuredRawBoundaryRightEdgeEmitterDescription)
+          (m := rest.length + 1)
+          (htotal := ?_)
+          (structuredRawBoundaryRightEdgeEmitterDescription_run_rewind_bit
+            bit rest skipped markers outputBits)
+          ?_
+      · simp [Nat.add_comm, Nat.add_left_comm]
+      · simpa [List.append_assoc] using
+          ih (bit :: skipped)
 
 private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_rewind
     (layout outputBits : Word Bool) :
@@ -1097,9 +1114,15 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_to_cell_loo
               (List.append [false, false, false, false]
                 (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
                   layout.length)) ] } := by
-  rw [Structured.Description.runConfig_add]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_header_count_length]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_rewind]
+  exact
+    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2
+      (structuredRawBoundaryRightEdgeEmitterDescription_run_header_count_length
+        layout)
+      (structuredRawBoundaryRightEdgeEmitterDescription_run_rewind
+        layout
+        (List.append [false, false, false, false]
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+            layout.length)))
 
 private def structuredRawBoundaryCellLoopTape
     (processedRev remaining : Word Bool) : Tape Bool :=
@@ -1225,12 +1248,16 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_cell_loop
         structuredRawBoundaryRightEdgeEmitterDescription_run_cell_done
           processedRev markers outputBits
   | cons bit rest ih =>
-      rw [show 4 * (bit :: rest).length + 1 =
-          4 + (4 * rest.length + 1) by
-        simp
-        lia]
-      rw [Structured.Description.runConfig_add]
-      rw [structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit]
+      refine
+        Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+          (D := structuredRawBoundaryRightEdgeEmitterDescription)
+          (m := 4 * rest.length + 1)
+          (htotal := ?_)
+          (structuredRawBoundaryRightEdgeEmitterDescription_run_cell_bit
+            bit processedRev rest markers outputBits)
+          ?_
+      · simp
+        lia
       cases bit
       · simpa [structuredRawBoundaryCellChunkBits,
           preservingCellPassCellBits,
@@ -1285,10 +1312,14 @@ theorem structuredRawBoundaryRightEdgeEmitterDescription_run
         (layout.length + 1)) +
         (4 * layout.length + 1) by
     lia]
-  rw [Structured.Description.runConfig_add]
   simp [structuredRawBoundaryRightEdgeEmitterSourceTapes]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_to_cell_loop]
-  rw [structuredRawBoundaryRightEdgeEmitterDescription_run_cells]
+  rw [Structured.MultiTapeLowering.ThreeTape.runConfig_chain2
+    (structuredRawBoundaryRightEdgeEmitterDescription_run_to_cell_loop layout)
+    (structuredRawBoundaryRightEdgeEmitterDescription_run_cells
+      layout
+      (List.append [false, false, false, false]
+        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+          layout.length)))]
   simp [structuredRawBoundaryRightEdgeEmitterOutputTape,
     encodedLayoutBits_eq_header_length_cells,
     encodeCodeSymbolAsInput]
