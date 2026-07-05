@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.SourceRestFinishCore.LiveTail.JoinerRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic
 
 set_option doc.verso true
 
@@ -598,14 +599,8 @@ theorem structuredJoinerEntryDescription_step_start
           (Tape.move Direction.right source) scratch work) := by
   rw [Structured.Description.stepConfig]
   rw [structuredJoinerEntryDescription_lookup_start]
-  simp [Structured.MultiTapeLowering.ThreeTape.row,
-    Structured.MultiTapeLowering.ThreeTape.config,
-    structuredJoinerEntryDescription,
-    Structured.MultiTapeLowering.ThreeTape.description,
-    Structured.MultiTapeLowering.ThreeTape.keepR,
-    Structured.MultiTapeLowering.ThreeTape.keepS,
-    Structured.TapeAction.apply, Structured.TapeAction.stay,
-    Structured.HeadMove.apply]
+  unfold structuredJoinerEntryDescription
+  three_tape_step
 
 theorem structuredJoinerEntryDescription_step_separator
     (source scratch work : Tape Bool) :
@@ -618,14 +613,8 @@ theorem structuredJoinerEntryDescription_step_separator
           (Tape.move Direction.right source) scratch work) := by
   rw [Structured.Description.stepConfig]
   rw [structuredJoinerEntryDescription_lookup_separator]
-  simp [Structured.MultiTapeLowering.ThreeTape.row,
-    Structured.MultiTapeLowering.ThreeTape.config,
-    structuredJoinerEntryDescription,
-    Structured.MultiTapeLowering.ThreeTape.description,
-    Structured.MultiTapeLowering.ThreeTape.keepR,
-    Structured.MultiTapeLowering.ThreeTape.keepS,
-    Structured.TapeAction.apply, Structured.TapeAction.stay,
-    Structured.HeadMove.apply]
+  unfold structuredJoinerEntryDescription
+  three_tape_step
 
 theorem structuredJoinerEntryDescription_run_two
     (source scratch work : Tape Bool) :
