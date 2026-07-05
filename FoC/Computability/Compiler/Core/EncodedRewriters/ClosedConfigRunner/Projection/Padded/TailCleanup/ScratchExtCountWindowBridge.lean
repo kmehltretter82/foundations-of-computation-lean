@@ -1,4 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions
 
 set_option doc.verso true
@@ -21,6 +23,7 @@ namespace Computability
 open Languages
 open MachineDescription
 open CommonGround.FiniteTransducers
+open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 
 namespace EncodedRewriters
 namespace BoundedLayoutRunner
@@ -65,6 +68,31 @@ def countWindowPostFieldDecodedPrefixStructuredSourcePadding
 def structuredCountWindowPostFieldDecodedPrefixOutputTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   postFieldDecodedPrefixScanSourceTape useAccept L
+
+def countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
+    (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
+    (leftBit : Bool) (deletedTail : Word Bool) : Tape Bool :=
+  Structured.MultiTapeLowering.encodedGuardedStructured3Tapes
+    (countWindowPostFieldDecodedPrefixMaterializerSourceTape
+      useAccept L pref leftBit deletedTail)
+    Tape.blank
+    (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+      (ParsedLayoutBits L).length
+      (postFieldDecodedPrefixScanPadding useAccept L))
+
+def countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+    (useAccept : Bool) (L : DovetailLayout)
+    (deletedTail : Word Bool) : Tape Bool :=
+  Structured.MultiTapeLowering.encodedGuardedStructured3Tapes
+    (structuredBoolWordRawBitsDecoderSourceTargetTape
+      (ParsedLayoutBits L)
+      (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+        useAccept L)
+      (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+        useAccept L deletedTail))
+    (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+      ((ParsedLayoutBits L).length + 1))
+    (postFieldDecodedPrefixScanSourceTape useAccept L)
 
 theorem countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
     (useAccept : Bool) (L : DovetailLayout) (pref : Word Bool)
@@ -243,23 +271,10 @@ def LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorSpec
       countWindowPostFieldDecodedPrefixMaterializerPayload useAccept L =
           List.append pref [leftBit] ->
       extractor.HaltsFromTapeEquiv
-        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
-          [ countWindowPostFieldDecodedPrefixMaterializerSourceTape
-              useAccept L pref leftBit deletedTail
-          , Tape.blank
-          , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
-              (ParsedLayoutBits L).length
-              (postFieldDecodedPrefixScanPadding useAccept L) ])
-        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
-          [ structuredBoolWordRawBitsDecoderSourceTargetTape
-              (ParsedLayoutBits L)
-              (countWindowPostFieldDecodedPrefixStructuredSuffixTail
-                useAccept L)
-              (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-                useAccept L deletedTail)
-          , structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-              ((ParsedLayoutBits L).length + 1)
-          , postFieldDecodedPrefixScanSourceTape useAccept L ])
+        (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
+          useAccept L pref leftBit deletedTail)
+        (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+          useAccept L deletedTail)
 
 def LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction :
     Prop :=
@@ -273,10 +288,12 @@ theorem loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_
       loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady,
       ?_⟩
   intro useAccept L pref leftBit deletedTail _hdeleted hpayload
-  rw [
+  simpa [countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
+    countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape,
+    Structured.MultiTapeLowering.encodedGuardedStructured3Tapes,
+    postFieldDecodedPrefixScanSourceTape,
     countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
-      useAccept L pref leftBit deletedTail hpayload]
-  simpa [postFieldDecodedPrefixScanSourceTape] using
+      useAccept L pref leftBit deletedTail hpayload] using
     loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
       (ParsedLayoutBits L)
       (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
@@ -284,11 +301,117 @@ theorem loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_
         useAccept L deletedTail)
       (postFieldDecodedPrefixScanPadding useAccept L)
 
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
-    (_hextractor :
-      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
+def CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
+    (useAccept : Bool) (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall (L : DovetailLayout) (pref : Word Bool)
+      (leftBit : Bool) (deletedTail : Word Bool),
+      configurationFieldBits L.acceptConfig [] = false :: deletedTail ->
+      countWindowPostFieldDecodedPrefixMaterializerPayload useAccept L =
+          List.append pref [leftBit] ->
+      initializer.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixMaterializerSourceTape
+          useAccept L pref leftBit deletedTail)
+        (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
+          useAccept L pref leftBit deletedTail)
+
+def CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists initializer : MachineDescription,
+      CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
+        useAccept initializer
+
+theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core :
+    CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
   sorry
+
+theorem structuredTape2ProjectorConstruction_core :
+    Structured.MultiTapeLowering.StructuredTape2ProjectorConstruction := by
+  sorry
+
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
+    (hinitializer :
+      CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction)
+    (hextractor :
+      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction)
+    (hprojector :
+      Structured.MultiTapeLowering.StructuredTape2ProjectorConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction := by
+  intro useAccept
+  rcases hinitializer useAccept with ⟨initializer, hinitializerSpec⟩
+  rcases hextractor with ⟨extractor, hextractorReady, hextractorRun⟩
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  refine
+    ⟨canonicalPrimitiveSeqDescription
+        (canonicalPrimitiveSeqDescription initializer extractor)
+        projector,
+      ?_⟩
+  constructor
+  · exact
+      canonicalPrimitiveSeqDescription_subroutineReady
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          hinitializerSpec.left hextractorReady)
+        hprojectorSpec.left
+  · intro L pref leftBit deletedTail hdeleted hpayload
+    have hinitializerRun :
+        initializer.HaltsFromTapeEquiv
+          (countWindowPostFieldDecodedPrefixMaterializerSourceTape
+            useAccept L pref leftBit deletedTail)
+          (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
+            useAccept L pref leftBit deletedTail) :=
+      hinitializerSpec.right L pref leftBit deletedTail hdeleted hpayload
+    have hextractorRun :
+        extractor.HaltsFromTapeEquiv
+          (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
+            useAccept L pref leftBit deletedTail)
+          (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+            useAccept L deletedTail) :=
+      hextractorRun
+        useAccept L pref leftBit deletedTail hdeleted hpayload
+    have hfirst :
+        (canonicalPrimitiveSeqDescription initializer extractor)
+            |>.HaltsFromTapeEquiv
+          (countWindowPostFieldDecodedPrefixMaterializerSourceTape
+            useAccept L pref leftBit deletedTail)
+          (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+            useAccept L deletedTail) :=
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hinitializerSpec.left hextractorReady
+        hinitializerRun hextractorRun
+    have hprojectorRun :
+        projector.HaltsFromTapeEquiv
+          (countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape
+            useAccept L deletedTail)
+          (postFieldDecodedPrefixScanSourceTape useAccept L) := by
+      simpa [
+        countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape,
+        Structured.MultiTapeLowering.encodedGuardedStructured3Tapes] using
+        hprojectorSpec.right
+          (structuredBoolWordRawBitsDecoderSourceTargetTape
+            (ParsedLayoutBits L)
+            (countWindowPostFieldDecodedPrefixStructuredSuffixTail
+              useAccept L)
+            (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+              useAccept L deletedTail))
+          (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+            ((ParsedLayoutBits L).length + 1))
+          (postFieldDecodedPrefixScanSourceTape useAccept L)
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          hinitializerSpec.left hextractorReady)
+        hprojectorSpec.left
+        hfirst hprojectorRun
+
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
+    (hextractor :
+      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
+    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core
+    hextractor
+    structuredTape2ProjectorConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=

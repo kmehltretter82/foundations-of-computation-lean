@@ -26,6 +26,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.RunsStructuredSingleton3
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Dispatcher
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 
 set_option doc.verso true
 
