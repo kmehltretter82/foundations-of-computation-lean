@@ -283,6 +283,92 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
         hcases)
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil_nil :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] []) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells [] [] [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil
+      []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil_cons
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (pad :: padding)) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] [] (pad :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil
+      (pad :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) []) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] (bit :: rest) [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons
+      bit rest []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons_cons
+    (bit : Bool) (rest : Word Bool)
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (pad :: padding)) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] (bit :: rest) (pad :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons
+      bit rest (pad :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil_nil :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] []) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells [] [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil
+      []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil_cons
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (pad :: padding)) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        [] (pad :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil
+      (pad :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) []) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        (bit :: rest) [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons
+      bit rest []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons_cons
+    (bit : Bool) (rest : Word Bool)
+    (pad : Option Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (pad :: padding)) =
+      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
+        (bit :: rest) (pad :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons
+      bit rest (pad :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
   sorry
