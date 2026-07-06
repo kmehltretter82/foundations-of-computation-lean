@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge
 
 set_option doc.verso true
@@ -736,6 +737,152 @@ def SelectedFootprintCompactorBridgeConstruction : Prop :=
   exists compactor : MachineDescription,
     SelectedFootprintCompactorBridgeSpec compactor
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding)
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+            bits padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
+      compactor
+
+/--
+Normalized-output version of {name}`SelectedFootprintCompactorBridgeSpec`.
+It deliberately forgets the final head position while preserving the decoded
+selected-footprint output.
+-/
+def SelectedFootprintCompactorBridgeOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape bits padding))
+
+def SelectedFootprintCompactorBridgeOutputConstruction : Prop :=
+  exists compactor : MachineDescription,
+    SelectedFootprintCompactorBridgeOutputSpec compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_of_exact
+    {compactor : MachineDescription}
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
+        compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
+      compactor := by
+  rcases hcompactor with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  rcases hrun bits padding with ⟨actual, hhalt, hequiv⟩
+  have houtput :=
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+  rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+  exact houtput
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction_of_exact
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction := by
+  rcases hcompactor with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_of_exact
+        hspec⟩
+
+theorem selectedFootprintCompactorBridgeOutputSpec_of_exact
+    {compactor : MachineDescription}
+    (hcompactor :
+      SelectedFootprintCompactorBridgeSpec compactor) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor := by
+  rcases hcompactor with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  rcases hrun bits padding with ⟨actual, hhalt, hequiv⟩
+  have houtput :=
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+  rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+  exact houtput
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_of_exact
+    (hbridge : SelectedFootprintCompactorBridgeConstruction) :
+    SelectedFootprintCompactorBridgeOutputConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedFootprintCompactorBridgeOutputSpec_of_exact hspec⟩
+
+theorem selectedFootprintCompactorBridgeOutputSpec_of_compactorOutputSpec
+    {compactor : MachineDescription}
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
+        compactor) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor := by
+  rcases hcompactor with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    hrun bits padding
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_of_compactorOutput
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction) :
+    SelectedFootprintCompactorBridgeOutputConstruction := by
+  rcases hcompactor with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedFootprintCompactorBridgeOutputSpec_of_compactorOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_of_bridgeOutputSpec
+    {compactor : MachineDescription}
+    (hbridge : SelectedFootprintCompactorBridgeOutputSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
+      compactor := by
+  rcases hbridge with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    hrun bits padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction_of_bridgeOutput
+    (hbridge : SelectedFootprintCompactorBridgeOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_of_bridgeOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_iff_bridgeOutputSpec
+    (compactor : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec compactor ↔
+      SelectedFootprintCompactorBridgeOutputSpec compactor := by
+  constructor
+  · exact selectedFootprintCompactorBridgeOutputSpec_of_compactorOutputSpec
+  · exact selectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec_of_bridgeOutputSpec
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction_iff_bridgeOutputConstruction :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction ↔
+      SelectedFootprintCompactorBridgeOutputConstruction := by
+  constructor
+  · exact selectedFootprintCompactorBridgeOutputConstruction_of_compactorOutput
+  · exact selectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction_of_bridgeOutput
+
 theorem selectedFootprintCompactorBridgeSpec_of_compactorSpec
     {compactor : MachineDescription}
     (hcompactor :
@@ -940,6 +1087,382 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstr
   exists compactor : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
       compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeWithOutput
+      (rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []))
+      (Tape.normalizedOutput (rightEdgeRewindSourceTape [] [])) ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (none :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape [] (none :: padding)))) ∧
+    (forall (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (some padBit :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape [] (some padBit :: padding)))) ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) []))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape (bit :: rest) []))) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (none :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape (bit :: rest) (none :: padding)))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (some padBit :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape
+            (bit :: rest) (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+      compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeWithOutput
+      (rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []))
+      (Tape.normalizedOutput (rightEdgeRewindSourceTape [] [])) ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (none :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape [] (none :: padding)))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (some padBit :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape [] (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) []))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape (bit :: rest) []))) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (none :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape (bit :: rest) (none :: padding)))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeWithOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (some padBit :: padding)))
+        (Tape.normalizedOutput
+          (rightEdgeRewindSourceTape
+            (bit :: rest) (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+    (compactor : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilOutputSpec
+      compactor ∧
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsOutputSpec
+      compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+      compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_bridgeOutputSpec
+    {compactor : MachineDescription}
+    (hbridge : SelectedFootprintCompactorBridgeOutputSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+      compactor := by
+  rcases hbridge with ⟨hready, hrun⟩
+  refine ⟨hready, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hrun [] []
+  · intro padding
+    exact hrun [] (none :: padding)
+  · intro padBit padding
+    exact hrun [] (some padBit :: padding)
+  · intro bit rest
+    exact hrun (bit :: rest) []
+  · intro bit rest padding
+    exact hrun (bit :: rest) (none :: padding)
+  · intro bit rest padBit padding
+    exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction_of_bridgeOutput
+    (hbridge : SelectedFootprintCompactorBridgeOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_bridgeOutputSpec
+        hspec⟩
+
+theorem selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeOutputSpec
+    {compactor : MachineDescription}
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+        compactor) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor := by
+  rcases hbridge with
+    ⟨hready, hnilNil, hnilNone, hnilSome, hconsNil,
+      hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone padding
+          | some padBit =>
+              exact hnilSome padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone bit rest padding
+          | some padBit =>
+              exact hconsSome bit rest padBit padding
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_of_rightEndBridgeOutput
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction) :
+    SelectedFootprintCompactorBridgeOutputConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeOutputSpec
+        hspec⟩
+
+theorem selectedFootprintCompactorBridgeOutputSpec_iff_rightEndBridgeOutputSpec
+    (compactor : MachineDescription) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor ↔
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+        compactor := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_bridgeOutputSpec
+  · exact selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeOutputSpec
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_iff_rightEndBridgeOutputConstruction :
+    SelectedFootprintCompactorBridgeOutputConstruction ↔
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction_of_bridgeOutput
+  · exact selectedFootprintCompactorBridgeOutputConstruction_of_rightEndBridgeOutput
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec_of_bridgeOutputSpec
+    {compactor : MachineDescription}
+    (hbridge : SelectedFootprintCompactorBridgeOutputSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+      compactor := by
+  rcases hbridge with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction_of_bridgeOutput
+    (hbridge : SelectedFootprintCompactorBridgeOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction := by
+  rcases hbridge with ⟨compactor, hready, hrun⟩
+  refine ⟨compactor, ?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_splitOutputSpec
+    {compactor : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+        compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+      compactor := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  exact
+    ⟨hready, hnilNil, hnilNone, hnilSome,
+      hconsNil, hconsNone, hconsSome⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction_of_splitOutput
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction := by
+  rcases hsplit with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_splitOutputSpec
+        hspec⟩
+
+theorem selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeSplitOutputSpec
+    {compactor : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+        compactor) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor :=
+  selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeOutputSpec
+    (selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_splitOutputSpec
+      hsplit)
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_of_rightEndBridgeSplitOutput
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction) :
+    SelectedFootprintCompactorBridgeOutputConstruction :=
+  selectedFootprintCompactorBridgeOutputConstruction_of_rightEndBridgeOutput
+    (selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction_of_splitOutput
+      hsplit)
+
+theorem selectedFootprintCompactorBridgeOutputSpec_iff_rightEndBridgeSplitOutputSpec
+    (compactor : MachineDescription) :
+    SelectedFootprintCompactorBridgeOutputSpec compactor ↔
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+        compactor := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec_of_bridgeOutputSpec
+  · exact selectedFootprintCompactorBridgeOutputSpec_of_rightEndBridgeSplitOutputSpec
+
+theorem selectedFootprintCompactorBridgeOutputConstruction_iff_rightEndBridgeSplitOutputConstruction :
+    SelectedFootprintCompactorBridgeOutputConstruction ↔
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction_of_bridgeOutput
+  · exact selectedFootprintCompactorBridgeOutputConstruction_of_rightEndBridgeSplitOutput
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_exact
+    {compactor : MachineDescription}
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
+        compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
+      compactor :=
+  selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_bridgeOutputSpec
+    (selectedFootprintCompactorBridgeOutputSpec_of_exact
+      (selectedFootprintCompactorBridgeSpec_of_rightEndBridgeSpec
+        hbridge))
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction_of_exact
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec_of_exact
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec_of_exact
+    {compactor : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
+        compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec
+      compactor := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  have toOutput :
+      forall {Tin Tout : Tape Bool},
+        compactor.HaltsFromTapeEquiv Tin Tout ->
+          compactor.HaltsFromTapeWithOutput Tin
+            (Tape.normalizedOutput Tout) := by
+    intro Tin Tout hhaltEquiv
+    rcases hhaltEquiv with ⟨actual, hhalt, hequiv⟩
+    have houtput :=
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+    rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+    exact houtput
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact toOutput hnilNil
+    · intro padding
+      exact toOutput (hnilNone padding)
+    · intro padBit padding
+      exact toOutput (hnilSome padBit padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact toOutput (hconsNil bit rest)
+    · intro bit rest padding
+      exact toOutput (hconsNone bit rest padding)
+    · intro bit rest padBit padding
+      exact toOutput (hconsSome bit rest padBit padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction_of_exact
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputConstruction := by
+  rcases hsplit with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitOutputSpec_of_exact
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec_of_bridgeSpec
     {compactor : MachineDescription}
