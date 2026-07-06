@@ -391,6 +391,38 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_p
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells]
   rfl
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding)).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint]
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    List.filterMap_append]
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          bits padding)).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving]
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells_filterMap
+      bits padding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding)).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          bits padding)).filterMap (fun cell => cell) := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap]
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
   sorry
