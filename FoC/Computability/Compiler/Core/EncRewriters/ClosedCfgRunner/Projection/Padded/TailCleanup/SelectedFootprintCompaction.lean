@@ -2091,6 +2091,25 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocu
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec
       focus
 
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+            bits padding)
+          (encodedGuardedStructured3Tapes
+            source marker
+            (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+              bits padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction :
+    Prop :=
+  exists focus : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec
+      focus
+
 def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusNilPadSymbolCaseSpec
     (focus : MachineDescription) : Prop :=
   focus.SubroutineReady ∧
@@ -2287,6 +2306,35 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparator
         (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec_of_pairEncodedSplitTarget
           hspec)⟩
 
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec_of_pairEncoded
+    {focus : MachineDescription}
+    (hfocus :
+      PairEncodedOptionCellCompactor.SplitTargetProjectableRightEdgeRewindOutputSpec
+        focus) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec
+      focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  rcases hrun bits padding with ⟨source, marker, hrunBits⟩
+  refine ⟨source, marker, ?_⟩
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape_eq_pairEncodedSplitTargetOutputTape
+      bits padding,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape_eq_rightEdgeRewind
+      bits padding] using
+    hrunBits
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_of_pairEncoded
+    (hfocus :
+      PairEncodedOptionCellCompactor.SplitTargetProjectableRightEdgeRewindOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction := by
+  rcases hfocus with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec_of_pairEncoded
+        hspec⟩
+
 def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription
     (focus projector : MachineDescription) : MachineDescription :=
   canonicalPrimitiveSeqDescription focus projector
@@ -2333,6 +2381,32 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructure
             (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
               bits padding))
 
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec_of_projectableSeparatorFocus_projector
+    {focus projector : MachineDescription}
+    (hfocus :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec
+        focus)
+    (hprojector : StructuredTape2ProjectorSpec projector) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription
+        focus projector) := by
+  rcases hfocus with ⟨hfocusReady, hfocusRun⟩
+  rcases hprojector with ⟨hprojectorReady, hprojectorRun⟩
+  refine
+    ⟨selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription_subroutineReady
+        hfocusReady hprojectorReady,
+      ?_⟩
+  intro bits padding
+  rcases hfocusRun bits padding with ⟨source, marker, hfocusRunBits⟩
+  exact
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      hfocusReady
+      hprojectorReady
+      hfocusRunBits
+      (hprojectorRun source marker
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+          bits padding))
+
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_of_separatorFocus_projector
     (hfocus :
       SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction)
@@ -2344,6 +2418,19 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructure
     ⟨selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription
         focus projector,
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec_of_separatorFocus_projector
+        hfocusSpec hprojectorSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_of_projectableSeparatorFocus_projector
+    (hfocus :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction)
+    (hprojector : StructuredTape2ProjectorConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction := by
+  rcases hfocus with ⟨focus, hfocusSpec⟩
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription
+        focus projector,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec_of_projectableSeparatorFocus_projector
         hfocusSpec hprojectorSpec⟩
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec_of_structuredEgressSpec
@@ -2689,17 +2776,11 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBr
     selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_of_inputMaterializer
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction := by
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction := by
   exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_of_pairEncodedSplitTarget
-      PairEncodedOptionCellCompactor.splitTargetSeparatorFocusConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_of_splitPadSymbolCases
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_core
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_of_pairEncoded
+      PairEncodedOptionCellCompactor.splitTargetProjectableRightEdgeRewindOutputConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeHeadCleanupSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction := by
@@ -2713,8 +2794,8 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjector
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction := by
   exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_of_separatorFocus_projector
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_core
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_of_projectableSeparatorFocus_projector
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_core
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectorConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_core :

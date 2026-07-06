@@ -283,6 +283,256 @@ def SplitTargetRightEdgeRewindOutputConstruction : Prop :=
   exists focus : MachineDescription,
     SplitTargetRightEdgeRewindOutputSpec focus
 
+def SplitTargetRightEdgeRewindOutputNilPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    focus.HaltsFromTapeEquiv
+      (splitTargetOutputTape [] [])
+      (splitTargetRightEdgeRewindOutputTape [] []) ∧
+    (forall padding : List (Option Bool),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape [] (none :: padding))
+        (splitTargetRightEdgeRewindOutputTape [] (none :: padding))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape [] (some padBit :: padding))
+        (splitTargetRightEdgeRewindOutputTape [] (some padBit :: padding))
+
+def SplitTargetRightEdgeRewindOutputConsPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) [])
+        (splitTargetRightEdgeRewindOutputTape (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) (none :: padding))
+        (splitTargetRightEdgeRewindOutputTape
+          (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) (some padBit :: padding))
+        (splitTargetRightEdgeRewindOutputTape
+          (bit :: rest) (some padBit :: padding))
+
+def SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  SplitTargetRightEdgeRewindOutputNilPadSymbolCaseSpec focus ∧
+    SplitTargetRightEdgeRewindOutputConsPadSymbolCaseSpec focus
+
+def SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseConstruction :
+    Prop :=
+  exists focus : MachineDescription,
+    SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec focus
+
+theorem splitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_spec
+    {focus : MachineDescription}
+    (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
+    SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem splitTargetRightEdgeRewindOutputSpec_of_splitPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hsplit :
+      SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec focus) :
+    SplitTargetRightEdgeRewindOutputSpec focus := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone padding
+          | some padBit =>
+              exact hnilSome padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone bit rest padding
+          | some padBit =>
+              exact hconsSome bit rest padBit padding
+
+theorem splitTargetRightEdgeRewindOutputConstruction_of_splitPadSymbolCases
+    (hsplit :
+      SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseConstruction) :
+    SplitTargetRightEdgeRewindOutputConstruction := by
+  rcases hsplit with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetRightEdgeRewindOutputSpec_of_splitPadSymbolCaseSpec
+        hspec⟩
+
+def SplitTargetProjectableRightEdgeRewindOutputSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape bits padding)
+          (encodedGuardedStructured3Tapes
+            source marker (rightEdgeRewindSourceTape bits padding))
+
+def SplitTargetProjectableRightEdgeRewindOutputConstruction : Prop :=
+  exists focus : MachineDescription,
+    SplitTargetProjectableRightEdgeRewindOutputSpec focus
+
+def SplitTargetProjectableRightEdgeRewindOutputNilPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    (exists source marker : Tape Bool,
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape [] [])
+        (encodedGuardedStructured3Tapes
+          source marker (rightEdgeRewindSourceTape [] []))) ∧
+    (forall padding : List (Option Bool),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape [] (none :: padding))
+          (encodedGuardedStructured3Tapes
+            source marker
+            (rightEdgeRewindSourceTape [] (none :: padding)))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape [] (some padBit :: padding))
+          (encodedGuardedStructured3Tapes
+            source marker
+            (rightEdgeRewindSourceTape [] (some padBit :: padding)))
+
+def SplitTargetProjectableRightEdgeRewindOutputConsPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape (bit :: rest) [])
+          (encodedGuardedStructured3Tapes
+            source marker
+            (rightEdgeRewindSourceTape (bit :: rest) []))) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape (bit :: rest) (none :: padding))
+          (encodedGuardedStructured3Tapes
+            source marker
+            (rightEdgeRewindSourceTape
+              (bit :: rest) (none :: padding)))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      exists source marker : Tape Bool,
+        focus.HaltsFromTapeEquiv
+          (splitTargetOutputTape (bit :: rest) (some padBit :: padding))
+          (encodedGuardedStructured3Tapes
+            source marker
+            (rightEdgeRewindSourceTape
+              (bit :: rest) (some padBit :: padding)))
+
+def SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  SplitTargetProjectableRightEdgeRewindOutputNilPadSymbolCaseSpec focus ∧
+    SplitTargetProjectableRightEdgeRewindOutputConsPadSymbolCaseSpec focus
+
+def SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction :
+    Prop :=
+  exists focus : MachineDescription,
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec focus
+
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_spec
+    {focus : MachineDescription}
+    (hfocus :
+      SplitTargetProjectableRightEdgeRewindOutputSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec
+      focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem splitTargetProjectableRightEdgeRewindOutputSpec_of_splitPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hsplit :
+      SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec
+        focus) :
+    SplitTargetProjectableRightEdgeRewindOutputSpec focus := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone padding
+          | some padBit =>
+              exact hnilSome padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone bit rest padding
+          | some padBit =>
+              exact hconsSome bit rest padBit padding
+
+theorem splitTargetProjectableRightEdgeRewindOutputConstruction_of_splitPadSymbolCases
+    (hsplit :
+      SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction) :
+    SplitTargetProjectableRightEdgeRewindOutputConstruction := by
+  rcases hsplit with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetProjectableRightEdgeRewindOutputSpec_of_splitPadSymbolCaseSpec
+        hspec⟩
+
 theorem splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec
     {focus : MachineDescription}
     (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
@@ -414,24 +664,19 @@ theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_of_rightEdgeRewi
         (splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec
           hspec)⟩
 
-theorem splitTargetRightEdgeRewindOutputConstruction_core :
-    SplitTargetRightEdgeRewindOutputConstruction := by
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction_core :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction := by
   -- Reusable finite-machine egress: use the pair-encoded source/marker
   -- structure to focus tape 2 at the semantic separator of
-  -- bits.map some ++ none :: padding.
+  -- bits.map some ++ none :: padding.  The scan may leave tapes 0 and 1 in
+  -- noncanonical positions; only tape 2 must be projectable.
   sorry
 
-theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core :
-    SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction := by
+theorem splitTargetProjectableRightEdgeRewindOutputConstruction_core :
+    SplitTargetProjectableRightEdgeRewindOutputConstruction := by
   exact
-    splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutput
-      splitTargetRightEdgeRewindOutputConstruction_core
-
-theorem splitTargetSeparatorFocusConstruction_core :
-    SplitTargetSeparatorFocusConstruction := by
-  exact
-    splitTargetSeparatorFocusConstruction_of_rightEdgeRewindOutput
-      splitTargetRightEdgeRewindOutputConstruction_core
+    splitTargetProjectableRightEdgeRewindOutputConstruction_of_splitPadSymbolCases
+      splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction_core
 
 def pendingState : Option Bool -> Nat
   | none => 10
