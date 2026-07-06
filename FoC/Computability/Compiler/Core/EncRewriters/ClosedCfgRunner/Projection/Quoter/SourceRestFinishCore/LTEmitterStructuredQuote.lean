@@ -1127,6 +1127,388 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote
     structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote_loop
       [] bits markers outputBits
 
+def structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+    (bits outputBits : Word Bool) : Word Bool :=
+  List.append
+    (List.append outputBits
+      structuredMixedOptionCellQuoteLiveTailHeaderBits)
+    (List.append
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        bits.length)
+      (preservingCellPassCellBits bits))
+
+def structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps
+    (bits : Word Bool) : Nat :=
+  bits.length + 1 + (4 * bits.length + 8)
+
+def structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+    (bits outputBits : Word Bool) : Word Bool :=
+  List.append
+    (List.append outputBits
+      structuredMixedOptionCellQuoteLiveTailHeaderBits)
+    (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+      bits.length)
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length
+    (bits outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+        300
+        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+          bits.reverse [])
+        0 bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits) := by
+  refine
+    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
+      (n := bits.length + 1)
+      (m := 4 * bits.length + 8)
+      (htotal := ?_)
+      (structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count
+        bits outputBits)
+      ?_
+  · rw [structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps]
+  · rw [
+      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig_eq_lengthHeaderConfig]
+    exact
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_length
+        bits.length
+        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+          bits.reverse [])
+        outputBits
+
+def structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
+    (bits : Word Bool) : Nat :=
+  structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps bits +
+    (bits.length + 2)
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length_rewind
+    (bits outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
+          bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailRewindConfig
+        400 [] bits bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits) := by
+  refine
+    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
+      (n := structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps
+        bits)
+      (m := bits.length + 2)
+      (htotal := ?_)
+      (structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length
+        bits outputBits)
+      ?_
+  · rw [structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps]
+  · simpa [structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig,
+      structuredMixedOptionCellQuoteLiveTailLengthPhaseTape] using
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind
+        bits
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits)
+
+def structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps
+    (bits : Word Bool) : Nat :=
+  structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps bits +
+    (4 * bits.length + 1)
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_fullSource
+    (bits outputBits : Word Bool) :
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+        499 bits.reverse [] bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+          bits outputBits) := by
+  refine
+    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
+      (n := structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
+        bits)
+      (m := 4 * bits.length + 1)
+      (htotal := ?_)
+      (structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length_rewind
+        bits outputBits)
+      ?_
+  · rw [structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps]
+  · simpa [
+      structuredMixedOptionCellQuoteLiveTailRewindConfig,
+      structuredMixedOptionCellQuoteLiveTailRewindSourceTape,
+      structuredMixedOptionCellQuoteLiveTailRewindScratchTape,
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig,
+      structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits,
+      structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits,
+      List.append_assoc] using
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote
+        bits bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits)
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits_eq_targetPrefix
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage) [] =
+      assemblySourceRestFinishTargetPrefixBits w sourceRestBits stage := by
+  rw [structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits,
+    structuredMixedOptionCellQuoteLiveTailHeaderBits_eq,
+    assemblySourceRestFinishTargetPrefixBits]
+  rfl
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits_eq_append_targetPrefix
+    (w sourceRestBits outputBits : Word Bool) (stage : Nat) :
+    structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+        outputBits =
+      List.append outputBits
+        (assemblySourceRestFinishTargetPrefixBits
+          w sourceRestBits stage) := by
+  rw [structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits,
+    structuredMixedOptionCellQuoteLiveTailHeaderBits_eq,
+    assemblySourceRestFinishTargetPrefixBits]
+  simp [List.append_assoc]
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_assemblyFullSource
+    (w sourceRestBits outputBits : Word Bool) (stage : Nat) :
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage))
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 []
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+          0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+        499
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage).reverse
+        []
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage).length
+        (List.append outputBits
+          (assemblySourceRestFinishTargetPrefixBits
+            w sourceRestBits stage)) := by
+  simpa [
+    structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits_eq_append_targetPrefix]
+    using
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_fullSource
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+        outputBits
+
+def StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec
+    (D : Structured.Description) : Prop :=
+  Structured.MultiTapeLowering.SupportsReadWriteRows3 D ∧
+    forall (bits outputBits : Word Bool),
+      D.runConfig
+          (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps bits)
+          (structuredMixedOptionCellQuoteLiveTailCountConfig
+            0 [] bits 0 outputBits) =
+        structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+          300
+          (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+            bits.reverse [])
+          0 bits.length
+          (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+            bits outputBits)
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec.run
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec D)
+    (bits outputBits : Word Bool) :
+    D.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+        300
+        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+          bits.reverse [])
+        0 bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits) :=
+  hD.right bits outputBits
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec.supported
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec D) :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3 D :=
+  hD.left
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_countLengthSpec :
+    StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription := by
+  refine ⟨structuredMixedOptionCellQuoteLiveTailEmitterDescription_supported, ?_⟩
+  intro bits outputBits
+  exact
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length
+      bits outputBits
+
+def StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec
+    (D : Structured.Description) : Prop :=
+  StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthSpec D ∧
+    forall (bits outputBits : Word Bool),
+      D.runConfig
+          (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
+            bits)
+          (structuredMixedOptionCellQuoteLiveTailCountConfig
+            0 [] bits 0 outputBits) =
+        structuredMixedOptionCellQuoteLiveTailRewindConfig
+          400 [] bits bits.length
+          (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+            bits outputBits)
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec.run
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec D)
+    (bits outputBits : Word Bool) :
+    D.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
+          bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailRewindConfig
+        400 [] bits bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits
+          bits outputBits) :=
+  hD.right bits outputBits
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec.supported
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec
+      D) :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3 D :=
+  hD.left.supported
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_countLengthRewindSpec :
+    StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription := by
+  refine
+    ⟨structuredMixedOptionCellQuoteLiveTailEmitterDescription_countLengthSpec,
+      ?_⟩
+  intro bits outputBits
+  exact
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_length_rewind
+      bits outputBits
+
+def StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec
+    (D : Structured.Description) : Prop :=
+  StructuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSpec D ∧
+    forall (bits outputBits : Word Bool),
+      D.runConfig
+          (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps bits)
+          (structuredMixedOptionCellQuoteLiveTailCountConfig
+            0 [] bits 0 outputBits) =
+        structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+          499 bits.reverse [] bits.length
+          (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+            bits outputBits)
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec.run
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec D)
+    (bits outputBits : Word Bool) :
+    D.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps bits)
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 [] bits 0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+        499 bits.reverse [] bits.length
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits
+          bits outputBits) :=
+  hD.right bits outputBits
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec.supported
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec D) :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3 D :=
+  hD.left.supported
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_fullSourceSpec :
+    StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription := by
+  refine
+    ⟨structuredMixedOptionCellQuoteLiveTailEmitterDescription_countLengthRewindSpec,
+      ?_⟩
+  intro bits outputBits
+  exact
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_fullSource
+      bits outputBits
+
+def StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec
+    (D : Structured.Description) : Prop :=
+  StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec D ∧
+    forall (w sourceRestBits outputBits : Word Bool) (stage : Nat),
+      D.runConfig
+          (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps
+            (assemblySourceRestFinishSourceBits w sourceRestBits stage))
+          (structuredMixedOptionCellQuoteLiveTailCountConfig
+            0 []
+            (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+            0 outputBits) =
+        structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+          499
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage).reverse
+          []
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage).length
+          (List.append outputBits
+            (assemblySourceRestFinishTargetPrefixBits
+              w sourceRestBits stage))
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec.run
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec
+      D)
+    (w sourceRestBits outputBits : Word Bool) (stage : Nat) :
+    D.runConfig
+        (structuredMixedOptionCellQuoteLiveTailEmitterFullSourceSteps
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage))
+        (structuredMixedOptionCellQuoteLiveTailCountConfig
+          0 []
+          (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+          0 outputBits) =
+      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
+        499
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage).reverse
+        []
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage).length
+        (List.append outputBits
+          (assemblySourceRestFinishTargetPrefixBits
+            w sourceRestBits stage)) :=
+  hD.right w sourceRestBits outputBits stage
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec.supported
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec
+      D) :
+    Structured.MultiTapeLowering.SupportsReadWriteRows3 D :=
+  hD.left.supported
+
+theorem StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec_of_fullSource
+    {D : Structured.Description}
+    (hD : StructuredMixedOptionCellQuoteLiveTailEmitterFullSourceSpec D) :
+    StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec
+      D := by
+  refine ⟨hD, ?_⟩
+  intro w sourceRestBits outputBits stage
+  simpa [
+    structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits_eq_append_targetPrefix]
+    using
+      hD.run
+        (assemblySourceRestFinishSourceBits w sourceRestBits stage)
+        outputBits
+
+theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_assemblyTargetPrefixSpec :
+    StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec
+      structuredMixedOptionCellQuoteLiveTailEmitterDescription :=
+  StructuredMixedOptionCellQuoteLiveTailEmitterAssemblyTargetPrefixSpec_of_fullSource
+    structuredMixedOptionCellQuoteLiveTailEmitterDescription_fullSourceSpec
+
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner

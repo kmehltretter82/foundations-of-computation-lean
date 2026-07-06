@@ -868,6 +868,86 @@ def assemblySourceRestLiveTailEmitterTargetBits
     (assemblySourceRestLiveTailEmitterRawTail p)
     (assemblySourceRestLiveTailEmitterQuoteRest p)
 
+theorem assemblySourceRestLiveTailEmitterLeftRev_defaultBits
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (List.reverse (assemblySourceRestLiveTailEmitterLeftRev p)) =
+      List.append
+        (false ::
+          List.map optionBitDefaultFalse
+            assemblySourceRestFinishParserMarkerLeftCells)
+        [false] := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestLiveTailEmitterLeftRev]
+      simp [List.reverse_append, optionBitDefaultFalse]
+
+theorem assemblySourceRestLiveTailEmitterSourceBits_eq_segments
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    assemblySourceRestLiveTailEmitterSourceBits p =
+      List.append
+        (List.map optionBitDefaultFalse
+          (List.reverse (assemblySourceRestLiveTailEmitterLeftRev p)))
+        (List.append
+          (assemblySourceRestLiveTailEmitterQuoteScan p)
+          (List.append
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (false ::
+              List.append
+                (assemblySourceRestLiveTailEmitterQuoteRest p)
+                [false]))) := by
+  rfl
+
+theorem assemblySourceRestLiveTailEmitterTargetBits_eq_emitted_raw_quoteRest
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    assemblySourceRestLiveTailEmitterTargetBits p =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (List.append
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (false ::
+            List.append
+              (assemblySourceRestLiveTailEmitterQuoteRest p)
+              [false])) := by
+  rfl
+
+theorem assemblySourceRestLiveTailEmitterTargetPrefixBits_eq_emitted_quoteRest
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    assemblySourceRestFinishTargetPrefixBits
+        p.w p.sourceRestBits p.stage =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      rw [assemblySourceRestFinishTargetPrefixBits_eq_prefixQuote_append_restQuote]
+      rfl
+
+theorem assemblySourceRestLiveTailEmitterSourceBits_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+            (assemblySourceRestLiveTailEmitterLeftRev p)
+            (assemblySourceRestLiveTailEmitterQuoteScan p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestLiveTailEmitterSourceBits p := by
+  rw [mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_defaultedCells]
+  rfl
+
+theorem assemblySourceRestLiveTailEmitterTargetBits_defaultedCells
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    List.map optionBitDefaultFalse
+        (Tape.cells
+          (mixedOptionCellQuoteLiveTailEmitterTargetTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))) =
+      assemblySourceRestLiveTailEmitterTargetBits p := by
+  rw [mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells]
+  rfl
+
 theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)
     (head : Bool) (rawTailRest : Word Bool)

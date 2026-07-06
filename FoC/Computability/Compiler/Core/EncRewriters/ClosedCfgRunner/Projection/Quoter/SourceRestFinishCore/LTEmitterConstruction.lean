@@ -24,15 +24,75 @@ namespace BoundedLayoutRunner
 
 namespace SelectedProjectionInputQuoterFiniteLeaf
 
+def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec
+    (finish : MachineDescription) : Prop :=
+  MixedOptionCellQuoteLiveTailEmitterFamilySpec
+    assemblySourceRestLiveTailEmitterLeftRev
+    assemblySourceRestLiveTailEmitterQuoteScan
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    finish
+
+def MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
+    Prop :=
+  MixedOptionCellQuoteLiveTailEmitterFamilyConstruction
+    assemblySourceRestLiveTailEmitterLeftRev
+    assemblySourceRestLiveTailEmitterQuoteScan
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+    (finish : MachineDescription) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish ↔
+      MixedOptionCellQuoteLiveTailEmitterForAssemblySourceRestSpec finish := by
+  constructor
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro w sourceRestBits stage
+    exact hfinish.right
+      { w := w, sourceRestBits := sourceRestBits, stage := stage }
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro p
+    cases p with
+    | mk w sourceRestBits stage =>
+        exact hfinish.right w sourceRestBits stage
+
+theorem MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+    (h : MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction) :
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+        finish).mp hfinish⟩
+
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction_of_assembly
+    (h : MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
+        finish).mpr hfinish⟩
+
 /--
 Reusable emitter obligation for the specialized assembly parser-prefix grammar.
 It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
 live raw tail to the right, and keeps the already-computed quote-rest separated
 for the live-tail joiner.
 -/
+theorem mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction := by
+  sorry
+
 theorem mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest := by
-  sorry
+  exact
+    MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
+      mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
 
 def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
