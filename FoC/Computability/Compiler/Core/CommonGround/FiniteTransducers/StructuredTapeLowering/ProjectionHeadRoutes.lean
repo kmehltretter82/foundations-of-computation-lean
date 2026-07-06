@@ -1078,7 +1078,227 @@ private def rewindCellStackDoneConfig
     (tapeAtCells outputLeft
       (List.append stack.reverse (rewindOutputCurrentCells outputRight)))
 
-set_option maxHeartbeats 800000 in
+private theorem description_rewinds_cellStack_step_nilSource
+    (baseLeft stack outputLeft outputRight :
+      List (Option Bool)) (cell : Option Bool) :
+    description.runConfig 2
+        (rewindCellStackConfig baseLeft (cell :: stack)
+          [] outputLeft outputRight) =
+      rewindCellStackConfig baseLeft stack
+        (List.append (logicalCellListCode [cell])
+          (rewindOutputCurrentCells []))
+        outputLeft
+        (cell :: rewindOutputCurrentCells outputRight) := by
+  cases cell with
+  | none =>
+      cases outputRight with
+      | nil =>
+          three_tape_step [
+            description, rows, rewindCellStackConfig,
+            rewindOutputCurrentCells, logicalCellCode,
+            logicalCellListCode, logicalCellListBits, logicalCellBits,
+            tapeAtCells]
+      | cons outHead outTail =>
+          cases outHead with
+          | none =>
+              three_tape_step [
+                description, rows, rewindCellStackConfig,
+                rewindOutputCurrentCells, logicalCellCode,
+                logicalCellListCode, logicalCellListBits,
+                logicalCellBits,
+                tapeAtCells]
+          | some outBit =>
+              cases outBit <;>
+                three_tape_step [
+                  description, rows, rewindCellStackConfig,
+                  rewindOutputCurrentCells, logicalCellCode,
+                  logicalCellListCode, logicalCellListBits,
+                  logicalCellBits,
+                  tapeAtCells]
+  | some bit =>
+      cases bit <;>
+        cases outputRight with
+        | nil =>
+            three_tape_step [
+              description, rows, rewindCellStackConfig,
+              rewindOutputCurrentCells, logicalCellCode,
+              logicalCellListCode, logicalCellListBits, logicalCellBits,
+              tapeAtCells]
+        | cons outHead outTail =>
+            cases outHead with
+            | none =>
+                three_tape_step [
+                  description, rows, rewindCellStackConfig,
+                  rewindOutputCurrentCells, logicalCellCode,
+                  logicalCellListCode, logicalCellListBits,
+                  logicalCellBits,
+                  tapeAtCells]
+            | some outBit =>
+                cases outBit <;>
+                  three_tape_step [
+                    description, rows, rewindCellStackConfig,
+                    rewindOutputCurrentCells, logicalCellCode,
+                    logicalCellListCode, logicalCellListBits,
+                    logicalCellBits,
+                    tapeAtCells]
+
+private theorem description_rewinds_cellStack_step_sourceHeadNone
+    (baseLeft stack sourceTail outputLeft outputRight :
+      List (Option Bool)) (cell : Option Bool) :
+    description.runConfig 2
+        (rewindCellStackConfig baseLeft (cell :: stack)
+          (none :: sourceTail) outputLeft outputRight) =
+      rewindCellStackConfig baseLeft stack
+        (List.append (logicalCellListCode [cell])
+          (rewindOutputCurrentCells (none :: sourceTail)))
+        outputLeft
+        (cell :: rewindOutputCurrentCells outputRight) := by
+  cases cell with
+  | none =>
+      cases outputRight with
+      | nil =>
+          three_tape_step [
+            description, rows, rewindCellStackConfig,
+            rewindOutputCurrentCells, logicalCellCode,
+            logicalCellListCode, logicalCellListBits,
+            logicalCellBits,
+            tapeAtCells]
+      | cons outHead outTail =>
+          cases outHead with
+          | none =>
+              three_tape_step [
+                description, rows, rewindCellStackConfig,
+                rewindOutputCurrentCells, logicalCellCode,
+                logicalCellListCode, logicalCellListBits,
+                logicalCellBits,
+                tapeAtCells]
+          | some outBit =>
+              cases outBit <;>
+                three_tape_step [
+                  description, rows, rewindCellStackConfig,
+                  rewindOutputCurrentCells, logicalCellCode,
+                  logicalCellListCode, logicalCellListBits,
+                  logicalCellBits,
+                  tapeAtCells]
+  | some bit =>
+      cases bit <;>
+        cases outputRight with
+        | nil =>
+            three_tape_step [
+              description, rows, rewindCellStackConfig,
+              rewindOutputCurrentCells, logicalCellCode,
+              logicalCellListCode, logicalCellListBits,
+              logicalCellBits,
+              tapeAtCells]
+        | cons outHead outTail =>
+            cases outHead with
+            | none =>
+                three_tape_step [
+                  description, rows, rewindCellStackConfig,
+                  rewindOutputCurrentCells, logicalCellCode,
+                  logicalCellListCode, logicalCellListBits,
+                  logicalCellBits,
+                  tapeAtCells]
+            | some outBit =>
+                cases outBit <;>
+                  three_tape_step [
+                    description, rows, rewindCellStackConfig,
+                    rewindOutputCurrentCells, logicalCellCode,
+                    logicalCellListCode, logicalCellListBits,
+                    logicalCellBits,
+                    tapeAtCells]
+
+private theorem description_rewinds_cellStack_step_sourceHeadSome
+    (baseLeft stack sourceTail outputLeft outputRight :
+      List (Option Bool)) (sourceBit : Bool) (cell : Option Bool) :
+    description.runConfig 2
+        (rewindCellStackConfig baseLeft (cell :: stack)
+          (some sourceBit :: sourceTail) outputLeft outputRight) =
+      rewindCellStackConfig baseLeft stack
+        (List.append (logicalCellListCode [cell])
+          (rewindOutputCurrentCells (some sourceBit :: sourceTail)))
+        outputLeft
+        (cell :: rewindOutputCurrentCells outputRight) := by
+  cases sourceBit <;>
+    cases cell with
+    | none =>
+        cases outputRight with
+        | nil =>
+            three_tape_step [
+              description, rows, rewindCellStackConfig,
+              rewindOutputCurrentCells, logicalCellCode,
+              logicalCellListCode, logicalCellListBits,
+              logicalCellBits,
+              tapeAtCells]
+        | cons outHead outTail =>
+            cases outHead with
+            | none =>
+                three_tape_step [
+                  description, rows, rewindCellStackConfig,
+                  rewindOutputCurrentCells, logicalCellCode,
+                  logicalCellListCode, logicalCellListBits,
+                  logicalCellBits,
+                  tapeAtCells]
+            | some outBit =>
+                cases outBit <;>
+                  three_tape_step [
+                    description, rows, rewindCellStackConfig,
+                    rewindOutputCurrentCells, logicalCellCode,
+                    logicalCellListCode, logicalCellListBits,
+                    logicalCellBits,
+                    tapeAtCells]
+    | some bit =>
+        cases bit <;>
+          cases outputRight with
+          | nil =>
+              three_tape_step [
+                description, rows, rewindCellStackConfig,
+                rewindOutputCurrentCells, logicalCellCode,
+                logicalCellListCode, logicalCellListBits,
+                logicalCellBits,
+                tapeAtCells]
+          | cons outHead outTail =>
+              cases outHead with
+              | none =>
+                  three_tape_step [
+                    description, rows, rewindCellStackConfig,
+                    rewindOutputCurrentCells, logicalCellCode,
+                    logicalCellListCode, logicalCellListBits,
+                    logicalCellBits,
+                    tapeAtCells]
+              | some outBit =>
+                  cases outBit <;>
+                    three_tape_step [
+                      description, rows, rewindCellStackConfig,
+                      rewindOutputCurrentCells, logicalCellCode,
+                      logicalCellListCode, logicalCellListBits,
+                      logicalCellBits,
+                      tapeAtCells]
+
+private theorem description_rewinds_cellStack_step
+    (baseLeft stack sourceRight outputLeft outputRight :
+      List (Option Bool)) (cell : Option Bool) :
+    description.runConfig 2
+        (rewindCellStackConfig baseLeft (cell :: stack)
+          sourceRight outputLeft outputRight) =
+      rewindCellStackConfig baseLeft stack
+        (List.append (logicalCellListCode [cell])
+          (rewindOutputCurrentCells sourceRight))
+        outputLeft
+        (cell :: rewindOutputCurrentCells outputRight) := by
+  cases sourceRight with
+  | nil =>
+      exact description_rewinds_cellStack_step_nilSource
+        baseLeft stack outputLeft outputRight cell
+  | cons sourceHead sourceTail =>
+      cases sourceHead with
+      | none =>
+          exact description_rewinds_cellStack_step_sourceHeadNone
+            baseLeft stack sourceTail outputLeft outputRight cell
+      | some sourceBit =>
+          exact description_rewinds_cellStack_step_sourceHeadSome
+            baseLeft stack sourceTail outputLeft outputRight sourceBit cell
+
 private theorem description_rewinds_cellStackConfig
     (baseLeft stack sourceRight outputLeft outputRight :
       List (Option Bool)) :
@@ -1099,183 +1319,7 @@ private theorem description_rewinds_cellStackConfig
         simp
         lia]
       rw [Description.runConfig_add]
-      have hstep :
-          description.runConfig 2
-              (rewindCellStackConfig baseLeft (cell :: stack)
-                sourceRight outputLeft outputRight) =
-            rewindCellStackConfig baseLeft stack
-              (List.append (logicalCellListCode [cell])
-                (rewindOutputCurrentCells sourceRight))
-              outputLeft
-              (cell :: rewindOutputCurrentCells outputRight) := by
-        cases sourceRight with
-        | nil =>
-            cases cell with
-            | none =>
-                cases outputRight with
-                | nil =>
-                    three_tape_step [
-                      description, rows, rewindCellStackConfig,
-                      rewindOutputCurrentCells, logicalCellCode,
-                      logicalCellListCode, logicalCellListBits, logicalCellBits,
-                      tapeAtCells]
-                | cons outHead outTail =>
-                    cases outHead with
-                    | none =>
-                        three_tape_step [
-                          description, rows, rewindCellStackConfig,
-                          rewindOutputCurrentCells, logicalCellCode,
-                          logicalCellListCode, logicalCellListBits,
-                          logicalCellBits,
-                          tapeAtCells]
-                    | some outBit =>
-                        cases outBit <;>
-                          three_tape_step [
-                            description, rows, rewindCellStackConfig,
-                            rewindOutputCurrentCells, logicalCellCode,
-                            logicalCellListCode, logicalCellListBits,
-                            logicalCellBits,
-                            tapeAtCells]
-            | some bit =>
-                cases bit <;>
-                  cases outputRight with
-                  | nil =>
-                      three_tape_step [
-                        description, rows, rewindCellStackConfig,
-                        rewindOutputCurrentCells, logicalCellCode,
-                        logicalCellListCode, logicalCellListBits, logicalCellBits,
-                        tapeAtCells]
-                  | cons outHead outTail =>
-                      cases outHead with
-                      | none =>
-                          three_tape_step [
-                            description, rows, rewindCellStackConfig,
-                            rewindOutputCurrentCells, logicalCellCode,
-                            logicalCellListCode, logicalCellListBits,
-                            logicalCellBits,
-                            tapeAtCells]
-                      | some outBit =>
-                          cases outBit <;>
-                            three_tape_step [
-                              description, rows, rewindCellStackConfig,
-                              rewindOutputCurrentCells, logicalCellCode,
-                              logicalCellListCode, logicalCellListBits,
-                              logicalCellBits,
-                              tapeAtCells]
-        | cons sourceHead sourceTail =>
-            cases sourceHead with
-            | none =>
-                cases cell with
-                | none =>
-                    cases outputRight with
-                    | nil =>
-                        three_tape_step [
-                          description, rows, rewindCellStackConfig,
-                          rewindOutputCurrentCells, logicalCellCode,
-                          logicalCellListCode, logicalCellListBits,
-                          logicalCellBits,
-                          tapeAtCells]
-                    | cons outHead outTail =>
-                        cases outHead with
-                        | none =>
-                            three_tape_step [
-                              description, rows, rewindCellStackConfig,
-                              rewindOutputCurrentCells, logicalCellCode,
-                              logicalCellListCode, logicalCellListBits,
-                              logicalCellBits,
-                              tapeAtCells]
-                        | some outBit =>
-                            cases outBit <;>
-                              three_tape_step [
-                                description, rows, rewindCellStackConfig,
-                                rewindOutputCurrentCells, logicalCellCode,
-                                logicalCellListCode, logicalCellListBits,
-                                logicalCellBits,
-                                tapeAtCells]
-                | some bit =>
-                    cases bit <;>
-                      cases outputRight with
-                      | nil =>
-                          three_tape_step [
-                            description, rows, rewindCellStackConfig,
-                            rewindOutputCurrentCells, logicalCellCode,
-                            logicalCellListCode, logicalCellListBits,
-                            logicalCellBits,
-                            tapeAtCells]
-                      | cons outHead outTail =>
-                          cases outHead with
-                          | none =>
-                              three_tape_step [
-                                description, rows, rewindCellStackConfig,
-                                rewindOutputCurrentCells, logicalCellCode,
-                                logicalCellListCode, logicalCellListBits,
-                                logicalCellBits,
-                                tapeAtCells]
-                          | some outBit =>
-                              cases outBit <;>
-                                three_tape_step [
-                                  description, rows, rewindCellStackConfig,
-                                  rewindOutputCurrentCells, logicalCellCode,
-                                  logicalCellListCode, logicalCellListBits,
-                                  logicalCellBits,
-                                  tapeAtCells]
-            | some sourceBit =>
-                cases sourceBit <;>
-                  cases cell with
-                  | none =>
-                      cases outputRight with
-                      | nil =>
-                          three_tape_step [
-                            description, rows, rewindCellStackConfig,
-                            rewindOutputCurrentCells, logicalCellCode,
-                            logicalCellListCode, logicalCellListBits,
-                            logicalCellBits,
-                            tapeAtCells]
-                      | cons outHead outTail =>
-                          cases outHead with
-                          | none =>
-                              three_tape_step [
-                                description, rows, rewindCellStackConfig,
-                                rewindOutputCurrentCells, logicalCellCode,
-                                logicalCellListCode, logicalCellListBits,
-                                logicalCellBits,
-                                tapeAtCells]
-                          | some outBit =>
-                              cases outBit <;>
-                                three_tape_step [
-                                  description, rows, rewindCellStackConfig,
-                                  rewindOutputCurrentCells, logicalCellCode,
-                                  logicalCellListCode, logicalCellListBits,
-                                  logicalCellBits,
-                                  tapeAtCells]
-                  | some bit =>
-                      cases bit <;>
-                        cases outputRight with
-                        | nil =>
-                            three_tape_step [
-                              description, rows, rewindCellStackConfig,
-                              rewindOutputCurrentCells, logicalCellCode,
-                              logicalCellListCode, logicalCellListBits,
-                              logicalCellBits,
-                              tapeAtCells]
-                        | cons outHead outTail =>
-                            cases outHead with
-                            | none =>
-                                three_tape_step [
-                                  description, rows, rewindCellStackConfig,
-                                  rewindOutputCurrentCells, logicalCellCode,
-                                  logicalCellListCode, logicalCellListBits,
-                                  logicalCellBits,
-                                  tapeAtCells]
-                            | some outBit =>
-                                cases outBit <;>
-                                  three_tape_step [
-                                    description, rows, rewindCellStackConfig,
-                                    rewindOutputCurrentCells, logicalCellCode,
-                                    logicalCellListCode, logicalCellListBits,
-                                    logicalCellBits,
-                                    tapeAtCells]
-      rw [hstep]
+      rw [description_rewinds_cellStack_step]
       rw [ih (List.append (logicalCellListCode [cell])
           (rewindOutputCurrentCells sourceRight))
         (cell :: rewindOutputCurrentCells outputRight)]
