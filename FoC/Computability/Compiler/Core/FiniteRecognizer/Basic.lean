@@ -150,9 +150,9 @@ def DecodedDescriptionInterpreterSpec
   forall fuel : Nat,
     MachineDescription.decodeDescriptionPrefix encoded =
         some (D, input) ->
-      TuringMachine.HaltsOnInput runner (build encoded fuel) <->
+      (TuringMachine.HaltsOnInput runner (build encoded fuel) <->
         D.HaltsIn fuel
-          (MachineDescription.encodeCodeWordAsInput input)
+          (MachineDescription.encodeCodeWordAsInput input))
 
 /--
 Total-token decoded-description interpreter semantics.  Unlike

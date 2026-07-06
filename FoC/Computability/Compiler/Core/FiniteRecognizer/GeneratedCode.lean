@@ -319,9 +319,9 @@ theorem decodedDescriptionInterpreterSpec_codePrefix
        forall fuel : Nat,
         MachineDescription.decodeDescriptionPrefix encoded =
             some (D, input) ->
-          TuringMachine.HaltsOnInput runner (stageCode encoded fuel) <->
+          (TuringMachine.HaltsOnInput runner (stageCode encoded fuel) <->
             D.HaltsIn fuel
-              (MachineDescription.encodeCodeWordAsInput input)) := by
+              (MachineDescription.encodeCodeWordAsInput input))) := by
   rfl
 
 end GeneratedCode
