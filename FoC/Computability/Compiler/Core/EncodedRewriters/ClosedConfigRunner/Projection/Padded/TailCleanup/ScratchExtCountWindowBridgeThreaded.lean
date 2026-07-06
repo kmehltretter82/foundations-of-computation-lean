@@ -1268,6 +1268,30 @@ theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDe
       selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding_source_equiv_target
         padding hpadding
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_none_blank_padding_source_equiv_target
+    (padding : List (Option Bool))
+    (hpadding : padding.filterMap (fun cell => cell) = []) :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (none :: padding))
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (none :: padding)) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding_source_equiv_target
+      (none :: padding) (by simp [hpadding])
+
+theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_none_blank_padding
+    (padding : List (Option Bool))
+    (hpadding : padding.filterMap (fun cell => cell) = []) :
+    ExactIdentityDescription.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (none :: padding))
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (none :: padding)) := by
+  exact
+    exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding
+      (none :: padding) (by simp [hpadding])
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
