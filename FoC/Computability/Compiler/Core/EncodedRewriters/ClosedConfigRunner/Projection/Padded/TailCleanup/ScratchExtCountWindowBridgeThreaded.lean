@@ -657,6 +657,26 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filt
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap,
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap]
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] []) := by
+  simp [Tape.Equiv,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
+    selectedSegmentLogicalTapeDecoderTargetTape,
+    rightEdgeScanSourceTapeFromLeft, rightEdgeRewindSourceTape,
+    FSTStatefulOptionAppendTargetTapeFromLeft,
+    statefulOptionAppendWriteTargetTapeAtBlank, tapeAtCells,
+    statefulOptionCellsFrom, logicalTapeBits, logicalCellListBits,
+    logicalCellBits, guardLogicalTape,
+    selectedSegmentLogicalTapeDecoderStart,
+    selectedSegmentLogicalTapeDecoderNext,
+    selectedSegmentLogicalTapeDecoderEmit,
+    Tape.dropTrailingNone]
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
