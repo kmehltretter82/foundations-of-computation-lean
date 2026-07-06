@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompaction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserShape
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserEndpoint
 
 set_option doc.verso true
 
