@@ -154,17 +154,6 @@ theorem transitionSourceDisjoint_append_left
   · exact h₀ t u ht hu hsource
   · exact h₁ t u ht hu hsource
 
-theorem transitionSourceDisjoint_append_right
-    {left right₀ right₁ : List TransitionDescription}
-    (h₀ : TransitionSourceDisjoint left right₀)
-    (h₁ : TransitionSourceDisjoint left right₁) :
-    TransitionSourceDisjoint left (right₀ ++ right₁) := by
-  intro t u ht hu hsource
-  simp at hu
-  rcases hu with hu | hu
-  · exact h₀ t u ht hu hsource
-  · exact h₁ t u ht hu hsource
-
 theorem transitionSourcesBelow_mono
     {lower upper : Nat} {transitions : List TransitionDescription}
     (hle : lower ≤ upper)
