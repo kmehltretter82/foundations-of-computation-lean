@@ -1,4 +1,5 @@
 import FoC.Computability.ListLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true
@@ -2363,42 +2364,6 @@ private theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
     List.map_append, List.append_assoc, Tape.move, Tape.moveLeft,
     tapeAtCells]
 
-private theorem countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
-    (pref suffixRest : Word Bool)
-    (suffixFirst guardBit tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (countedSuffixBoundaryLeftAdvancedTape
-            pref (suffixFirst :: suffixRest) guardBit
-            (some tailFirst :: tail))) =
-      countedSuffixBoundaryLeftAdvancedTape
-        pref (suffixFirst :: suffixRest) guardBit
-        (some tailFirst :: tail) := by
-  cases suffixFirst <;> cases guardBit <;> cases tailFirst <;>
-    cases suffixRest <;> cases pref <;> cases tail <;>
-    simp [countedSuffixBoundaryLeftAdvancedTape, Tape.move,
-      Tape.moveLeft, Tape.moveRight, tapeAtCells,
-      List.replicate_succ, List.append_assoc]
-
-private theorem countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
-    (pref suffixRest : Word Bool)
-    (suffixFirst guardBit tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    Tape.move Direction.left
-        (Tape.move Direction.right
-          (countedSuffixBoundaryPrefixShiftedTape
-            pref (suffixFirst :: suffixRest) guardBit
-            (some tailFirst :: tail))) =
-      countedSuffixBoundaryPrefixShiftedTape
-        pref (suffixFirst :: suffixRest) guardBit
-        (some tailFirst :: tail) := by
-  cases suffixFirst <;> cases guardBit <;> cases tailFirst <;>
-    cases suffixRest <;> cases pref <;> cases tail <;>
-    simp [countedSuffixBoundaryPrefixShiftedTape, Tape.move,
-      Tape.moveLeft, Tape.moveRight, tapeAtCells,
-      List.replicate_succ]
-
 theorem countedSuffixBoundaryLocatorConstruction_core :
     CountedSuffixBoundaryLocatorConstruction := by
   refine ⟨countedSuffixBoundaryLocatorDescription, ?_⟩
@@ -2525,8 +2490,20 @@ theorem countedSuffixBoundaryLocatorConstruction_core :
               countedSuffixBoundaryRightRestoreDescription_subroutineReady
               rightEdgeRewindDescription_subroutineReady)
             hPrefix
-            (countedSuffixBoundaryPrefixShiftedTape_move_left_move_right
-              pref suffixRest suffixFirst guardBit tailFirst tail)
+            (by
+              simpa [countedSuffixBoundaryPrefixShiftedTape,
+                List.replicate_succ, List.append_assoc] using
+                tapeAtCells_move_left_move_right_cons_cons
+                  (left := none :: pref.reverse.map some)
+                  (head := (none : Option Bool))
+                  (next := some suffixFirst)
+                  (right :=
+                    List.append (suffixRest.map some)
+                      (List.append
+                        (List.replicate
+                          (suffixFirst :: suffixRest).length
+                          (none : Option Bool))
+                        (some guardBit :: some tailFirst :: tail))))
             hRightRewind
         exact
           canonicalSeqDescription_haltsFromTape_of_haltsFromTape
@@ -2537,8 +2514,20 @@ theorem countedSuffixBoundaryLocatorConstruction_core :
                 countedSuffixBoundaryRightRestoreDescription_subroutineReady
                 rightEdgeRewindDescription_subroutineReady))
             hLeft
-            (countedSuffixBoundaryLeftAdvancedTape_move_left_move_right
-              pref suffixRest suffixFirst guardBit tailFirst tail)
+            (by
+              simpa [countedSuffixBoundaryLeftAdvancedTape,
+                List.replicate_succ, List.append_assoc] using
+                tapeAtCells_move_left_move_right_cons_cons
+                  (left := List.append (pref.reverse.map some) [none])
+                  (head := (none : Option Bool))
+                  (next := some suffixFirst)
+                  (right :=
+                    List.append (suffixRest.map some)
+                      (List.append
+                        (List.replicate
+                          (suffixFirst :: suffixRest).length
+                          (none : Option Bool))
+                        (some guardBit :: some tailFirst :: tail))))
             hPrefixRightRewind
 
 end FiniteTransducers
