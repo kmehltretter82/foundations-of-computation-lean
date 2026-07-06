@@ -198,6 +198,95 @@ theorem canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
         hA hB hAactual hBactualFromBounce,
       Tape.Equiv.trans hToutActual hToutBActual⟩
 
+theorem canonicalPrimitiveSeqDescription_haltsFromTape_inv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tout : Tape Bool}
+    (hseq :
+      (canonicalPrimitiveSeqDescription A B).HaltsFromTape Tin Tout) :
+    exists Tmid : Tape Bool,
+      A.HaltsFromTape Tin Tmid ∧
+        B.HaltsFromTape
+          (Tape.move Direction.left
+            (Tape.move Direction.right Tmid))
+          Tout := by
+  have hid : ExactIdentityDescription.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  rcases
+      seqSubroutine_haltsFromTape_closed_exists_mid
+        (A := seqSubroutine A ExactIdentityDescription Direction.right)
+        (B := B)
+        (handoffMove := Direction.left)
+        (seqSubroutine_subroutineReady hA hid)
+        hB
+        (by
+          simpa [canonicalPrimitiveSeqDescription] using hseq) with
+    ⟨TafterId, hAid, hBRun⟩
+  rcases
+      seqSubroutine_haltsFromTape_closed_exists_mid
+        (A := A)
+        (B := ExactIdentityDescription)
+        (handoffMove := Direction.right)
+        hA hid hAid with
+    ⟨Tmid, hARun, hIdRun⟩
+  have hTafterId :
+      TafterId = Tape.move Direction.right Tmid := by
+    rcases hIdRun with ⟨nId, hnId⟩
+    have hrun :=
+      CommonGround.Identity.exactIdentityDescription_runConfig_from_start
+        nId (Tape.move Direction.right Tmid)
+    have htape :
+        (ExactIdentityDescription.runConfig nId
+            { state := ExactIdentityDescription.start,
+              tape := Tape.move Direction.right Tmid }).tape =
+          TafterId :=
+      hnId.right
+    rw [hrun] at htape
+    exact htape.symm
+  exact
+    ⟨Tmid, hARun, by
+      simpa [hTafterId] using hBRun⟩
+
+theorem canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool}
+    (hAclosed : A.ClosedFromTapeEquiv Tin Tmid)
+    (hBclosed : B.ClosedFromTapeEquiv Tmid Tout) :
+    (canonicalPrimitiveSeqDescription A B).ClosedFromTapeEquiv
+      Tin Tout := by
+  intro T hhalt
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        hA hB hhalt with
+    ⟨TmidActual, hAactual, hBactual⟩
+  have hTmidActual : Tape.Equiv TmidActual Tmid :=
+    hAclosed TmidActual hAactual
+  have hBounceToMid :
+      Tape.Equiv
+        (Tape.move Direction.left
+          (Tape.move Direction.right TmidActual))
+        Tmid :=
+    Tape.Equiv.trans
+      (moveLeft_moveRight_equiv_self TmidActual)
+      hTmidActual
+  have hBfromMid :
+      B.HaltsFromTapeEquiv Tmid T :=
+    HaltsFromTapeEquiv_of_input_equiv
+      (D := B)
+      (Tin :=
+        Tape.move Direction.left
+          (Tape.move Direction.right TmidActual))
+      (Tin' := Tmid)
+      (Tout := T)
+      hBounceToMid
+      hBactual
+  rcases hBfromMid with
+    ⟨Tactual, hBactualFromMid, hTactual⟩
+  have hout : Tape.Equiv Tactual Tout :=
+    hBclosed Tactual hBactualFromMid
+  exact Tape.Equiv.trans (Tape.Equiv.symm hTactual) hout
+
 /-!
 ## Structured endpoint bridge
 -/
@@ -266,6 +355,45 @@ theorem structured3EndpointBridgeDescription_haltsFromTapeEquiv
         hinitializer hlowered)
       hprojector
       hfirst hprojectorRun
+
+/--
+Closed-side endpoint composition for a lowered structured core.
+
+Any public halt of the wrapper must pass through the initializer, lowered core,
+and projector, up to the same tape equivalence used by the canonical handoff
+bounce.
+-/
+theorem structured3EndpointBridgeDescription_closedFromTapeEquiv
+    {initializer lowered projector : MachineDescription}
+    (hinitializer : initializer.SubroutineReady)
+    (hlowered : lowered.SubroutineReady)
+    (hprojector : projector.SubroutineReady)
+    {Tin T0 T1 T2 U0 U1 U2 Tout : Tape Bool}
+    (hinitializerClosed :
+      initializer.ClosedFromTapeEquiv Tin
+        (encodedGuardedStructured3Tapes T0 T1 T2))
+    (hloweredClosed :
+      lowered.ClosedFromTapeEquiv
+        (encodedGuardedStructured3Tapes T0 T1 T2)
+        (encodedGuardedStructured3Tapes U0 U1 U2))
+    (hprojectorClosed :
+      projector.ClosedFromTapeEquiv
+        (encodedGuardedStructured3Tapes U0 U1 U2)
+        Tout) :
+    (structured3EndpointBridgeDescription
+      initializer lowered projector).ClosedFromTapeEquiv Tin Tout := by
+  have hfirst :
+      (canonicalPrimitiveSeqDescription initializer lowered)
+          |>.ClosedFromTapeEquiv
+        Tin (encodedGuardedStructured3Tapes U0 U1 U2) :=
+    canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+      hinitializer hlowered hinitializerClosed hloweredClosed
+  exact
+    canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        hinitializer hlowered)
+      hprojector
+      hfirst hprojectorClosed
 
 theorem physicalPrimitiveSequenceGuardedContractEquiv_append
     {first second : List PhysicalPrimitive}
