@@ -45,6 +45,12 @@ def InitialLayoutExactMaterializerConstruction {stateCount : Nat}
         (Layout.stageCodeToInitialLayoutCode M) ∧
         TuringMachine.HaltingTransitionsDisabled materializer
 
+def initialLayoutDecodedOutput {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) (input : Word MachineCodeSymbol) :
+    Word MachineCodeSymbol :=
+  Layout.encode (Layout.initial M input fuel)
+
 /--
 Executable code primitive for the initial-layout materializer.  This is not
 yet the finite transition table; it is the precise code-level transformer that
@@ -68,6 +74,79 @@ theorem initialLayoutMaterializerCodePrimitive_realizes
   intro tokens
   rfl
 
+theorem initialLayoutMaterializerCodePrimitive_transform_eq_decodeNat
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens : Word MachineCodeSymbol) :
+    (initialLayoutMaterializerCodePrimitive M).transform tokens =
+      match MachineDescription.decodeNat tokens with
+      | none => none
+      | some (fuel, input) =>
+          some (initialLayoutDecodedOutput M fuel input) := by
+  cases hdecode : MachineDescription.decodeNat tokens with
+  | none =>
+      simp [initialLayoutMaterializerCodePrimitive,
+        Layout.stageCodeToInitialLayoutCode, hdecode]
+  | some decoded =>
+      rcases decoded with ⟨fuel, input⟩
+      simp [initialLayoutMaterializerCodePrimitive,
+        Layout.stageCodeToInitialLayoutCode,
+        initialLayoutDecodedOutput, hdecode]
+
+theorem initialLayoutDecodedOutput_empty {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (fuel : Nat) :
+    initialLayoutDecodedOutput M fuel
+        ([] : Word MachineCodeSymbol) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (encodeOptionalCodeSymbolsAppend []
+              (encodeOptionalCodeSymbolAppend none
+                (encodeOptionalCodeSymbolsAppend [] [])))) := by
+  simpa [initialLayoutDecodedOutput] using
+    Layout.encode_initial_empty M fuel
+
+theorem initialLayoutDecodedOutput_cons {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (symbol : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) (fuel : Nat) :
+    initialLayoutDecodedOutput M fuel (symbol :: rest) =
+      MachineCodeSymbol.header ::
+        MachineDescription.encodeNatAppend fuel
+          (MachineDescription.encodeNatAppend M.start.val
+            (encodeOptionalCodeSymbolsAppend []
+              (encodeOptionalCodeSymbolAppend (some symbol)
+                (encodeOptionalCodeSymbolsAppend
+                  (rest.map some) [])))) := by
+  simpa [initialLayoutDecodedOutput] using
+    Layout.encode_initial_cons M symbol rest fuel
+
+def InitialLayoutDecodedExactOutputForwardSpec {stateCount : Nat}
+    (materializer : TuringMachine MachineCodeSymbol materializerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  forall input : Word MachineCodeSymbol,
+  forall fuel : Nat,
+    TuringMachine.HaltsWithExactOutput materializer
+      (stageCode input fuel)
+      (initialLayoutDecodedOutput M fuel input)
+
+def InitialLayoutDecodedExactOutputClosedSpec {stateCount : Nat}
+    (materializer : TuringMachine MachineCodeSymbol materializerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  forall tokens output : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithExactOutput materializer tokens output ->
+      exists input : Word MachineCodeSymbol,
+      exists fuel : Nat,
+        tokens = stageCode input fuel /\
+          output = initialLayoutDecodedOutput M fuel input
+
+def InitialLayoutDecodedExactOutputSpec {stateCount : Nat}
+    (materializer : TuringMachine MachineCodeSymbol materializerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  InitialLayoutDecodedExactOutputForwardSpec materializer M ∧
+    InitialLayoutDecodedExactOutputClosedSpec materializer M
+
 /--
 Finite-machine target for realizing the initial-layout primitive with exact
 canonical output.  This is the sharper construction boundary behind
@@ -87,6 +166,21 @@ def InitialLayoutExactOutputPrimitiveFinStateConstruction : Prop :=
   forall stateCount : Nat,
   forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
     InitialLayoutExactOutputPrimitiveConstruction M
+
+def InitialLayoutDecodedExactOutputPrimitiveConstruction
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  exists materializerState : Type,
+  exists materializer : TuringMachine MachineCodeSymbol materializerState,
+    InitialLayoutDecodedExactOutputSpec materializer M ∧
+      ExactOutputCanonicalSpec materializer
+        (Layout.stageCodeToInitialLayoutCode M) ∧
+        TuringMachine.HaltingTransitionsDisabled materializer
+
+def InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction : Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    InitialLayoutDecodedExactOutputPrimitiveConstruction M
 
 theorem initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
@@ -356,6 +450,88 @@ theorem initialLayoutExactMaterializerSpec_haltsWithExactOutput_iff
           output = Layout.encode (Layout.initial M input fuel) := by
   exact Iff.trans (hmaterializer tokens output)
     (stageCodeToInitialLayoutCode_eq_some_iff M tokens output)
+
+theorem initialLayoutExactMaterializerSpec_iff_decodedExactOutput
+    {stateCount : Nat} {materializerState : Type}
+    (materializer : TuringMachine MachineCodeSymbol materializerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    InitialLayoutExactMaterializerSpec materializer M <->
+      InitialLayoutDecodedExactOutputSpec materializer M := by
+  constructor
+  · intro hmaterializer
+    constructor
+    · intro input fuel
+      simpa [initialLayoutDecodedOutput] using
+        initialLayoutExactMaterializerSpec_stageCode_exactOutput
+          hmaterializer input fuel
+    · intro tokens output hhalt
+      rcases
+          (initialLayoutExactMaterializerSpec_haltsWithExactOutput_iff
+            hmaterializer tokens output).mp hhalt with
+        ⟨input, fuel, htokens, houtput⟩
+      exact
+        ⟨input, fuel, htokens, by
+          simpa [initialLayoutDecodedOutput] using houtput⟩
+  · intro hdecoded
+    intro tokens output
+    constructor
+    · intro hhalt
+      rcases hdecoded.right tokens output hhalt with
+        ⟨input, fuel, htokens, houtput⟩
+      exact
+        (stageCodeToInitialLayoutCode_eq_some_iff
+          M tokens output).mpr
+          ⟨input, fuel, htokens, by
+            simpa [initialLayoutDecodedOutput] using houtput⟩
+    · intro htransform
+      rcases
+          (stageCodeToInitialLayoutCode_eq_some_iff
+            M tokens output).mp htransform with
+        ⟨input, fuel, htokens, houtput⟩
+      subst tokens
+      subst output
+      simpa [initialLayoutDecodedOutput] using
+        hdecoded.left input fuel
+
+theorem initialLayoutExactOutputPrimitiveConstruction_iff_decoded
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    InitialLayoutExactOutputPrimitiveConstruction M <->
+      InitialLayoutDecodedExactOutputPrimitiveConstruction M := by
+  constructor
+  · intro hprimitive
+    rcases hprimitive with
+      ⟨materializerState, materializer, hexact,
+        hcanonical, hstop⟩
+    refine ⟨materializerState, materializer, ?_, hcanonical, hstop⟩
+    exact
+      (initialLayoutExactMaterializerSpec_iff_decodedExactOutput
+        materializer M).mp
+        (by
+          simpa [InitialLayoutExactMaterializerSpec,
+            initialLayoutMaterializerCodePrimitive] using hexact)
+  · intro hdecoded
+    rcases hdecoded with
+      ⟨materializerState, materializer, hspec,
+        hcanonical, hstop⟩
+    refine ⟨materializerState, materializer, ?_, hcanonical, hstop⟩
+    simpa [InitialLayoutExactMaterializerSpec,
+      initialLayoutMaterializerCodePrimitive] using
+      (initialLayoutExactMaterializerSpec_iff_decodedExactOutput
+        materializer M).mpr hspec
+
+theorem initialLayoutExactOutputPrimitiveFinStateConstruction_iff_decoded :
+    InitialLayoutExactOutputPrimitiveFinStateConstruction <->
+      InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction := by
+  constructor
+  · intro hconstruction stateCount M
+    exact
+      (initialLayoutExactOutputPrimitiveConstruction_iff_decoded M).mp
+        (hconstruction stateCount M)
+  · intro hconstruction stateCount M
+    exact
+      (initialLayoutExactOutputPrimitiveConstruction_iff_decoded M).mpr
+        (hconstruction stateCount M)
 
 theorem initialLayoutExactMaterializerCanonical_output_shape
     {stateCount : Nat} {materializerState : Type}
