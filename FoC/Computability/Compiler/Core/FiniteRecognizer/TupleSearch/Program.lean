@@ -43,6 +43,14 @@ def GeneratedBoundedHiddenFuelPairFinStateConstruction : Prop :=
         GeneratedBoundedHiddenFuelPairSpec searcher selected
 
 /--
+Concrete-state generated unbounded and bounded pair search with hidden
+selected-machine fuel.
+-/
+def GeneratedHiddenFuelPairFinStateConstruction : Prop :=
+  GeneratedUnboundedHiddenFuelPairFinStateConstruction /\
+    GeneratedBoundedHiddenFuelPairFinStateConstruction
+
+/--
 Concrete-state generated unbounded pair enumerator after hiding selected
 machine fuel.
 -/
@@ -88,6 +96,16 @@ def GeneratedBoundedHiddenFuelPairConstruction
   exists searcherState : Type,
   exists searcher : TuringMachine MachineCodeSymbol searcherState,
     GeneratedBoundedHiddenFuelPairSpec searcher selected
+
+/--
+Generated unbounded and bounded pair search with hidden selected-machine fuel
+for an arbitrary finite selected recognizer state type.
+-/
+def GeneratedHiddenFuelPairConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  GeneratedUnboundedHiddenFuelPairConstruction selected /\
+    GeneratedBoundedHiddenFuelPairConstruction selected
 
 /--
 Generated unbounded pair enumerator for an arbitrary finite selected
@@ -400,6 +418,46 @@ theorem generatedBoundedHiddenFuelPairConstruction_of_finStateConstructionDecida
       (hFin selected.statesFinite.elems.length
         (TuringMachine.indexedDecidable selected))
 
+theorem generatedHiddenFuelPairConstruction_of_finStateConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedHiddenFuelPairFinStateConstruction) :
+    GeneratedHiddenFuelPairConstruction selected := by
+  exact
+    ⟨generatedUnboundedHiddenFuelPairConstruction_of_finStateConstruction
+        selected hFin.left,
+      generatedBoundedHiddenFuelPairConstruction_of_finStateConstruction
+        selected hFin.right⟩
+
+theorem generatedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedHiddenFuelPairFinStateConstruction) :
+    GeneratedHiddenFuelPairConstruction selected := by
+  exact
+    ⟨generatedUnboundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+        selected hFin.left,
+      generatedBoundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+        selected hFin.right⟩
+
+theorem generatedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponents
+    (hFin : GeneratedHiddenFuelPairFinStateConstruction) :
+    GeneratedNestedPairEnumeratorFinStateConstruction := by
+  intro n selected
+  rcases hFin.left n selected with ⟨searcherState, searcher, hsearcher⟩
+  exact
+    ⟨searcherState, searcher,
+      generatedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+
+theorem generatedBoundedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponents
+    (hFin : GeneratedHiddenFuelPairFinStateConstruction) :
+    GeneratedBoundedNestedPairEnumeratorFinStateConstruction := by
+  intro n selected
+  rcases hFin.right n selected with ⟨searcherState, searcher, hsearcher⟩
+  exact
+    ⟨searcherState, searcher,
+      generatedBoundedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+
 theorem generatedNestedPairEnumeratorConstruction_of_finStateConstruction
     {selectedState : Type uSelected}
     (selected : TuringMachine MachineCodeSymbol selectedState)
@@ -501,23 +559,39 @@ theorem generatedBoundedHiddenFuelPairFiniteLeafDecidable
     generatedBoundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
       selected generatedBoundedHiddenFuelPairFinStateFiniteLeaf
 
+theorem generatedHiddenFuelPairFinStateFiniteLeaves :
+    GeneratedHiddenFuelPairFinStateConstruction := by
+  exact
+    ⟨generatedUnboundedHiddenFuelPairFinStateFiniteLeaf,
+      generatedBoundedHiddenFuelPairFinStateFiniteLeaf⟩
+
+theorem generatedHiddenFuelPairFiniteLeaves
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedHiddenFuelPairConstruction selected := by
+  exact
+    generatedHiddenFuelPairConstruction_of_finStateConstruction
+      selected generatedHiddenFuelPairFinStateFiniteLeaves
+
+theorem generatedHiddenFuelPairFiniteLeavesDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedHiddenFuelPairConstruction selected := by
+  exact
+    generatedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+      selected generatedHiddenFuelPairFinStateFiniteLeaves
+
 theorem generatedNestedPairEnumeratorFinStateFiniteLeaf :
     GeneratedNestedPairEnumeratorFinStateConstruction := by
-  intro n selected
-  rcases generatedUnboundedHiddenFuelPairFinStateFiniteLeaf n selected with
-    ⟨searcherState, searcher, hsearcher⟩
   exact
-    ⟨searcherState, searcher,
-      generatedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+    generatedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponents
+      generatedHiddenFuelPairFinStateFiniteLeaves
 
 theorem generatedBoundedNestedPairEnumeratorFinStateFiniteLeaf :
     GeneratedBoundedNestedPairEnumeratorFinStateConstruction := by
-  intro n selected
-  rcases generatedBoundedHiddenFuelPairFinStateFiniteLeaf n selected with
-    ⟨searcherState, searcher, hsearcher⟩
   exact
-    ⟨searcherState, searcher,
-      generatedBoundedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+    generatedBoundedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponents
+      generatedHiddenFuelPairFinStateFiniteLeaves
 
 theorem generatedNestedPairEnumeratorFiniteLeaf
     {selectedState : Type uSelected}
