@@ -1614,12 +1614,102 @@ def CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction :
       CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
         useAccept initializer
 
+structure CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
+    (useAccept : Bool) where
+  L : DovetailLayout
+  pref : Word Bool
+  leftBit : Bool
+  deletedTail : Word Bool
+  hdeleted : configurationFieldBits L.acceptConfig [] = false :: deletedTail
+  hpayload :
+    countWindowPostFieldDecodedPrefixMaterializerPayload useAccept L =
+      List.append pref [leftBit]
+
+def countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
+    (useAccept : Bool)
+    (input :
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
+        useAccept) : Tape Bool :=
+  countWindowPostFieldDecodedPrefixMaterializerSourceTape
+    useAccept input.L input.pref input.leftBit input.deletedTail
+
+def countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
+    (useAccept : Bool)
+    (input :
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
+        useAccept) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+    (ParsedLayoutBits input.L).length
+    (postFieldDecodedPrefixScanPadding useAccept input.L)
+
+def CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
+    (useAccept : Bool) (initializer : MachineDescription) : Prop :=
+  Structured3InputMaterializerSpec
+    (countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
+      useAccept)
+    (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
+      useAccept)
+    initializer
+
+def CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction :
+    Prop :=
+  forall useAccept : Bool,
+    exists initializer : MachineDescription,
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
+        useAccept initializer
+
+theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
+    {useAccept : Bool} {initializer : MachineDescription}
+    (hmaterializer :
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
+        useAccept initializer) :
+    CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
+      useAccept initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro L pref leftBit deletedTail hdeleted hpayload
+  let input :
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
+        useAccept :=
+    { L := L
+      pref := pref
+      leftBit := leftBit
+      deletedTail := deletedTail
+      hdeleted := hdeleted
+      hpayload := hpayload }
+  simpa [
+    input,
+    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec,
+    countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource,
+    countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape,
+    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
+    structured3InputMaterializerTargetTape] using
+    hrun input
+
+theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_of_structured3InputMaterializer
+    (hmaterializer :
+      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
+  intro useAccept
+  rcases hmaterializer useAccept with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
+        hspec⟩
+
+theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_core :
+    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction := by
+  -- This is a count-window specialization of the reusable three-tape input
+  -- materializer contract.  The old route through the uniform raw-bits
+  -- initializer is impossible because the target padding depends on
+  -- `useAccept` and `L`.
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
-  -- This is a count-window-specific initializer obligation.  The old route
-  -- through the uniform raw-bits initializer is impossible because the target
-  -- padding depends on `useAccept` and `L`.
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_of_structured3InputMaterializer
+      countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_core
 
 /--
 Count-window-specific output projection from the lowered structured extractor.

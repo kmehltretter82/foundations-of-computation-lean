@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
@@ -1894,6 +1895,58 @@ def StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction :
   exists initializer : MachineDescription,
     StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
       initializer
+
+def structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSource
+    (input : Word Bool × Word Bool) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderCanonicalSourceTape input.1 input.2
+
+def structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+    (input : Word Bool × Word Bool) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+    input.1.length
+    (boolWordRawBitsDecoderPreservedPadding input.2 [])
+
+def StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec
+    (initializer : MachineDescription) : Prop :=
+  Structured3InputMaterializerSpec
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSource
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+    initializer
+
+def StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction :
+    Prop :=
+  Structured3InputMaterializerConstruction
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSource
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec_of_structured3InputMaterializerSpec
+    {initializer : MachineDescription}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec
+        initializer) :
+    StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+      initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits suffixTail
+  simpa [
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec,
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSource,
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
+    structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
+    structured3InputMaterializerTargetTape] using
+    hrun (bits, suffixTail)
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction_of_structured3InputMaterializer
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction) :
+    StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec_of_structured3InputMaterializerSpec
+        hspec⟩
 
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
