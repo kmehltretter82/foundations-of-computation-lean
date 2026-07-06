@@ -504,6 +504,45 @@ def rewindScratchHandoffConfig
     (writeInsertScratchTape insert)
     (rewindTailHandoffWorkTape tail)
 
+def writeInsertSourceTapeFromLeft
+    (leftBoundary : List (Option Bool))
+    (written : Word Bool)
+    (rightCells : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append (written.reverse.map some)
+      (match leftBoundary with
+      | [] => [none]
+      | _ => leftBoundary))
+    rightCells
+
+def writeInsertLoopScratchTape
+    (written remaining : Word Bool) : Tape Bool :=
+  tapeAtCells
+    (List.append (written.reverse.map some) [none])
+    (List.append (remaining.map some) [none])
+
+def writeInsertHandoffRightCells
+    (tail insert : Word Bool) : List (Option Bool) :=
+  (rewindTailRightCells tail insert).drop insert.length
+
+def writeInsertHandoffSourceTapeFromLeft
+    (leftBoundary : List (Option Bool))
+    (tail insert : Word Bool) : Tape Bool :=
+  writeInsertSourceTapeFromLeft leftBoundary insert
+    (writeInsertHandoffRightCells tail insert)
+
+def writeInsertHandoffSourceTape
+    (pref tail insert : Word Bool) : Tape Bool :=
+  writeInsertHandoffSourceTapeFromLeft
+    (pref.reverse.map some) tail insert
+
+def writeInsertHandoffConfig
+    (pref tail insert : Word Bool) : Configuration :=
+  config restoreTail
+    (writeInsertHandoffSourceTape pref tail insert)
+    (finalScratchTape insert)
+    (rewindTailHandoffWorkTape tail)
+
 theorem description_lookup_rewindTailEntry
     (source scratch work : Tape Bool) :
     description.lookupTransition
@@ -613,6 +652,43 @@ theorem description_lookup_rewindScratchLoop_blank
         allReads2, allReadRows3, allReads3,
         Structured.Description.lookupTransition, config, row,
         keepL, keepR, keepS, h0, hscratch, h2]
+
+theorem description_lookup_writeInsert_bit
+    (source scratch work : Tape Bool) (bit : Bool)
+    (hscratch : Tape.read scratch = some bit) :
+    description.lookupTransition
+        (config writeInsert source scratch work) =
+      some
+        (row writeInsert
+          (Tape.read source) (some bit) (Tape.read work)
+          (writeBitR bit) keepR keepS writeInsert) := by
+  cases bit <;>
+    cases h0 : Tape.read source <;> (try cases ‹Bool›) <;>
+      cases h2 : Tape.read work <;> (try cases ‹Bool›) <;>
+        simp (config := {decide := true}) [description,
+          ThreeTape.description, rows,
+          rowsForSourceRead, rowsForScratchRead, rowsForWorkRead,
+          allReads2, allReadRows3, allReads3,
+          Structured.Description.lookupTransition, config, row,
+          keepR, keepS, writeBitR, writeR, h0, hscratch, h2]
+
+theorem description_lookup_writeInsert_blank
+    (source scratch work : Tape Bool)
+    (hscratch : Tape.read scratch = none) :
+    description.lookupTransition
+        (config writeInsert source scratch work) =
+      some
+        (row writeInsert
+          (Tape.read source) none (Tape.read work)
+          keepS keepS keepS restoreTail) := by
+  cases h0 : Tape.read source <;> (try cases ‹Bool›) <;>
+    cases h2 : Tape.read work <;> (try cases ‹Bool›) <;>
+      simp (config := {decide := true}) [description,
+        ThreeTape.description, rows,
+        rowsForSourceRead, rowsForScratchRead, rowsForWorkRead,
+        allReads2, allReadRows3, allReads3,
+        Structured.Description.lookupTransition, config, row,
+        keepR, keepS, writeBitR, writeR, h0, hscratch, h2]
 
 theorem rewindTail_entry_step
     (pref tail insert : Word Bool) :
@@ -997,6 +1073,194 @@ theorem description_copyRewindScratchSpec :
   exact RewindScratchSpec.run
     description_rewindScratchSpec pref tail insert
 
+theorem writeInsert_step_bit
+    (leftBoundary : List (Option Bool)) (written remaining : Word Bool)
+    (sourceCell : Option Bool) (rightCells : List (Option Bool))
+    (work : Tape Bool) (bit : Bool) :
+    description.runConfig 1
+        (config writeInsert
+          (writeInsertSourceTapeFromLeft leftBoundary written
+            (sourceCell :: rightCells))
+          (writeInsertLoopScratchTape written (bit :: remaining))
+          work) =
+      config writeInsert
+        (writeInsertSourceTapeFromLeft leftBoundary
+          (List.append written [bit]) rightCells)
+        (writeInsertLoopScratchTape
+          (List.append written [bit]) remaining)
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [description_lookup_writeInsert_bit _ _ _ bit (by rfl)]
+  unfold description
+  three_tape_step [writeInsertSourceTapeFromLeft,
+    writeInsertLoopScratchTape]
+  all_goals
+    cases sourceCell <;>
+      cases remaining <;>
+        cases rightCells <;>
+          simp
+
+theorem writeInsert_step_blank
+    (source work : Tape Bool) (insert : Word Bool) :
+    description.runConfig 1
+        (config writeInsert source
+          (writeInsertLoopScratchTape insert [])
+          work) =
+      config restoreTail source
+        (finalScratchTape insert)
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [description_lookup_writeInsert_blank _ _ _ (by rfl)]
+  unfold description
+  three_tape_step [writeInsertLoopScratchTape,
+    finalScratchTape]
+
+theorem writeInsert_loop_run
+    (remaining written : Word Bool)
+    (leftBoundary : List (Option Bool))
+    (overwritten suffix : List (Option Bool))
+    (work : Tape Bool)
+    (hlen : overwritten.length = remaining.length) :
+    description.runConfig (remaining.length + 1)
+        (config writeInsert
+          (writeInsertSourceTapeFromLeft leftBoundary written
+            (List.append overwritten suffix))
+          (writeInsertLoopScratchTape written remaining)
+          work) =
+      config restoreTail
+        (writeInsertSourceTapeFromLeft leftBoundary
+          (List.append written remaining) suffix)
+        (finalScratchTape (List.append written remaining))
+        work := by
+  induction remaining generalizing written overwritten with
+  | nil =>
+      have hoverwritten : overwritten = [] :=
+        List.eq_nil_of_length_eq_zero hlen
+      subst overwritten
+      simpa using
+        writeInsert_step_blank
+          (writeInsertSourceTapeFromLeft leftBoundary written suffix)
+          work written
+  | cons bit rest ih =>
+      cases overwritten with
+      | nil =>
+          simp at hlen
+      | cons sourceCell overwrittenRest =>
+          have hlenRest : overwrittenRest.length = rest.length := by
+            exact Nat.succ.inj hlen
+          rw [show (bit :: rest).length + 1 =
+              1 + (rest.length + 1) by
+            simp [Nat.add_comm, Nat.add_left_comm]]
+          rw [show
+            List.append (sourceCell :: overwrittenRest) suffix =
+              sourceCell :: List.append overwrittenRest suffix by
+            rfl]
+          rw [Structured.Description.runConfig_add]
+          rw [writeInsert_step_bit]
+          rw [ih (List.append written [bit])
+            overwrittenRest hlenRest]
+          simp [List.append_assoc]
+
+theorem writeInsert_overwriteCells_length
+    (tail insert : Word Bool) :
+    ((rewindTailRightCells tail insert).take insert.length).length =
+      insert.length := by
+  rw [List.length_take]
+  have hle :
+      insert.length <= (rewindTailRightCells tail insert).length := by
+    simp [rewindTailRightCells]
+    lia
+  exact Nat.min_eq_left hle
+
+theorem writeInsert_run
+    (pref tail insert : Word Bool) :
+    description.runConfig (insert.length + 1)
+        (rewindScratchHandoffConfig pref tail insert) =
+      writeInsertHandoffConfig pref tail insert := by
+  let cells := rewindTailRightCells tail insert
+  have hrun :=
+    writeInsert_loop_run insert []
+      (pref.reverse.map some)
+      (cells.take insert.length)
+      (cells.drop insert.length)
+      (rewindTailHandoffWorkTape tail)
+      (by
+        simpa [cells] using
+          writeInsert_overwriteCells_length tail insert)
+  simpa [rewindScratchHandoffConfig, rewindTailHandoffSourceTape,
+    rewindTailHandoffSourceTapeFromLeft, writeInsertHandoffConfig,
+    writeInsertHandoffSourceTape, writeInsertHandoffSourceTapeFromLeft,
+    writeInsertHandoffRightCells, writeInsertSourceTapeFromLeft,
+    writeInsertScratchTape, writeInsertLoopScratchTape, cells,
+    List.take_append_drop] using hrun
+
+def WriteInsertSpec (D : Description) : Prop :=
+  SupportsReadWriteRows3 D ∧
+    forall (pref tail insert : Word Bool),
+      D.runConfig (insert.length + 1)
+          (rewindScratchHandoffConfig pref tail insert) =
+        writeInsertHandoffConfig pref tail insert
+
+theorem WriteInsertSpec.supported
+    {D : Description} (hD : WriteInsertSpec D) :
+    SupportsReadWriteRows3 D :=
+  hD.left
+
+theorem WriteInsertSpec.run
+    {D : Description} (hD : WriteInsertSpec D)
+    (pref tail insert : Word Bool) :
+    D.runConfig (insert.length + 1)
+        (rewindScratchHandoffConfig pref tail insert) =
+      writeInsertHandoffConfig pref tail insert :=
+  hD.right pref tail insert
+
+theorem description_writeInsertSpec :
+    WriteInsertSpec description := by
+  refine ⟨description_supported, ?_⟩
+  intro pref tail insert
+  exact writeInsert_run pref tail insert
+
+def CopyRewindScratchWriteInsertSpec (D : Description) : Prop :=
+  CopyRewindScratchSpec D ∧ WriteInsertSpec D ∧
+    forall (pref tail insert : Word Bool),
+      D.runConfig (2 * tail.length + 2 * insert.length + 6)
+          (initialConfig pref tail insert) =
+        writeInsertHandoffConfig pref tail insert
+
+theorem CopyRewindScratchWriteInsertSpec.copyRewindScratch
+    {D : Description} (hD : CopyRewindScratchWriteInsertSpec D) :
+    CopyRewindScratchSpec D :=
+  hD.left
+
+theorem CopyRewindScratchWriteInsertSpec.writeInsert
+    {D : Description} (hD : CopyRewindScratchWriteInsertSpec D) :
+    WriteInsertSpec D :=
+  hD.right.left
+
+theorem CopyRewindScratchWriteInsertSpec.run
+    {D : Description} (hD : CopyRewindScratchWriteInsertSpec D)
+    (pref tail insert : Word Bool) :
+    D.runConfig (2 * tail.length + 2 * insert.length + 6)
+        (initialConfig pref tail insert) =
+      writeInsertHandoffConfig pref tail insert :=
+  hD.right.right pref tail insert
+
+theorem description_copyRewindScratchWriteInsertSpec :
+    CopyRewindScratchWriteInsertSpec description := by
+  refine ⟨description_copyRewindScratchSpec,
+    description_writeInsertSpec, ?_⟩
+  intro pref tail insert
+  rw [show 2 * tail.length + 2 * insert.length + 6 =
+      (2 * tail.length + insert.length + 5) +
+        (insert.length + 1) by
+    lia]
+  rw [Structured.Description.runConfig_add]
+  rw [CopyRewindScratchSpec.run description_copyRewindScratchSpec]
+  exact WriteInsertSpec.run description_writeInsertSpec
+    pref tail insert
+
 theorem rewindTailHandoffSourceTapeFromLeft_normalizedOutput
     (leftBoundary : List (Option Bool)) (tail insert : Word Bool) :
     Tape.normalizedOutput
@@ -1089,6 +1353,85 @@ theorem rewindScratchHandoffConfig_work_normalizedOutput
           (rewindScratchHandoffConfig pref tail insert).tapes 2) =
       tail := by
   simpa [rewindScratchHandoffConfig] using
+    rewindTailHandoffWorkTape_normalizedOutput tail
+
+theorem writeInsertSourceTapeFromLeft_normalizedOutput
+    (leftBoundary : List (Option Bool))
+    (written : Word Bool)
+    (rightCells : List (Option Bool)) :
+    Tape.normalizedOutput
+        (writeInsertSourceTapeFromLeft
+          leftBoundary written rightCells) =
+      List.append
+        (leftBoundary.reverse.filterMap (fun cell => cell))
+        (List.append written
+          (rightCells.filterMap (fun cell => cell))) := by
+  cases leftBoundary with
+  | nil =>
+      simp [writeInsertSourceTapeFromLeft,
+        tapeAtCells_normalizedOutput,
+        List.filterMap_append, Function.comp_def]
+  | cons cell rest =>
+      cases cell <;>
+      simp [writeInsertSourceTapeFromLeft,
+        tapeAtCells_normalizedOutput,
+        List.filterMap_append, Function.comp_def]
+
+theorem writeInsertHandoffSourceTapeFromLeft_normalizedOutput
+    (leftBoundary : List (Option Bool))
+    (tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (writeInsertHandoffSourceTapeFromLeft
+          leftBoundary tail insert) =
+      List.append
+        (leftBoundary.reverse.filterMap (fun cell => cell))
+        (List.append insert
+          ((writeInsertHandoffRightCells tail insert).filterMap
+            (fun cell => cell))) := by
+  rw [writeInsertHandoffSourceTapeFromLeft,
+    writeInsertSourceTapeFromLeft_normalizedOutput]
+
+theorem writeInsertHandoffSourceTape_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (writeInsertHandoffSourceTape pref tail insert) =
+      List.append pref
+        (List.append insert
+          ((writeInsertHandoffRightCells tail insert).filterMap
+            (fun cell => cell))) := by
+  rw [writeInsertHandoffSourceTape,
+    writeInsertHandoffSourceTapeFromLeft_normalizedOutput]
+  simp [List.filterMap_map, Function.comp_def]
+
+theorem writeInsertHandoffConfig_source_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (writeInsertHandoffConfig pref tail insert).tapes 0) =
+      List.append pref
+        (List.append insert
+          ((writeInsertHandoffRightCells tail insert).filterMap
+            (fun cell => cell))) := by
+  simpa [writeInsertHandoffConfig] using
+    writeInsertHandoffSourceTape_normalizedOutput pref tail insert
+
+theorem writeInsertHandoffConfig_scratch_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (writeInsertHandoffConfig pref tail insert).tapes 1) =
+      insert := by
+  change Tape.normalizedOutput (finalScratchTape insert) = insert
+  simp [finalScratchTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, List.map_reverse, Function.comp_def]
+
+theorem writeInsertHandoffConfig_work_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (writeInsertHandoffConfig pref tail insert).tapes 2) =
+      tail := by
+  simpa [writeInsertHandoffConfig] using
     rewindTailHandoffWorkTape_normalizedOutput tail
 
 theorem sourceTape_normalizedOutput
