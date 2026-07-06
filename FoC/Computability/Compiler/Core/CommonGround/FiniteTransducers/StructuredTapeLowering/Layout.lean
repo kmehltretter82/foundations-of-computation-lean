@@ -629,6 +629,20 @@ def encodedGuardedStructuredTapes
     (logical : List (Tape Bool)) : Tape Bool :=
   encodedStructuredTapes (guardLogicalTapes logical)
 
+theorem encodedGuardedStructuredTapes_three_cells
+    (T0 T1 T2 : Tape Bool) :
+    Tape.cells (encodedGuardedStructuredTapes [T0, T1, T2]) =
+      List.append tapeSeparatorCells
+        (List.append (logicalTapeCode (guardLogicalTape T0))
+          (List.append tapeSeparatorCells
+            (List.append (logicalTapeCode (guardLogicalTape T1))
+              (List.append tapeSeparatorCells
+                (List.append (logicalTapeCode (guardLogicalTape T2))
+                  tapeSeparatorCells))))) := by
+  simp [encodedGuardedStructuredTapes, encodedStructuredTapes,
+    guardLogicalTapes, encodedStructuredTapeCells, tapeAtCells,
+    tapeSeparatorCells, Tape.cells]
+
 def StructuredGuardedEncodedTapes
     (logical : List (Tape Bool)) (physical : Tape Bool) : Prop :=
   physical = encodedGuardedStructuredTapes logical
