@@ -21,14 +21,24 @@ namespace ExactFuel
 namespace StageProgram
 
 /--
-Remaining decoded component leaves for the normalized exact-fuel staged
+Remaining fully decoded component leaves for the normalized exact-fuel staged
 program.  The first component materializes the protected initial layout from
-decoded generated stage code; the second component runs the protected layout
-fuel loop with canonical empty output.
+decoded generated stage code; the second component recognizes decoded
+protected layouts with canonical empty output.
+-/
+theorem exactOutputPrimitiveFullyDecodedComponentFiniteLeaves :
+    ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction := by
+  sorry
+
+/--
+Decoded compatibility component package for the normalized exact-fuel staged
+program.
 -/
 theorem exactOutputPrimitiveDecodedComponentFiniteLeaves :
     ExactOutputPrimitiveDecodedComponentFinStateConstruction := by
-  sorry
+  exact
+    exactOutputPrimitiveDecodedComponentFinStateConstruction_of_fullyDecodedComponents
+      exactOutputPrimitiveFullyDecodedComponentFiniteLeaves
 
 /--
 Compatibility component package for the normalized exact-fuel staged program.

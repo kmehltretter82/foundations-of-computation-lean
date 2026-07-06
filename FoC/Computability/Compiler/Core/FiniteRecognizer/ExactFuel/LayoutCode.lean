@@ -667,6 +667,199 @@ theorem layoutFuelLoopCode_eq_some_empty_of_eq_some
       | cons _ _ =>
           simp [hdecode] at h
 
+theorem layoutFuelLoopCode_eq_some_empty_iff_of_decode
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    {tokens : Word MachineCodeSymbol} {L : Layout stateCount}
+    (hdecode : Layout.decode stateCount tokens = some (L, [])) :
+    layoutFuelLoopCode M tokens = some ([] : Word MachineCodeSymbol) <->
+      Layout.accepts M L := by
+  constructor
+  · intro hloop
+    rcases
+        (layoutFuelLoopCode_eq_some_iff_decode M tokens).mp
+          hloop with
+      ⟨L', hdecode', haccepts⟩
+    have hL : L' = L := by
+      rw [hdecode] at hdecode'
+      cases hdecode'
+      rfl
+    subst L'
+    exact haccepts
+  · intro haccepts
+    exact
+      (layoutFuelLoopCode_eq_some_iff_decode M tokens).mpr
+        ⟨L, hdecode, haccepts⟩
+
+theorem layoutFuelLoopCodePrimitive_eq_some_empty_iff_of_decode
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    {tokens : Word MachineCodeSymbol} {L : Layout stateCount}
+    (hdecode : Layout.decode stateCount tokens = some (L, [])) :
+    (layoutFuelLoopCodePrimitive M).transform tokens =
+        some ([] : Word MachineCodeSymbol) <->
+      Layout.accepts M L := by
+  simpa [layoutFuelLoopCodePrimitive] using
+    layoutFuelLoopCode_eq_some_empty_iff_of_decode M hdecode
+
+theorem layoutFuelLoopCode_eq_some_iff_decode_output
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens output : Word MachineCodeSymbol) :
+    layoutFuelLoopCode M tokens = some output <->
+      exists L : Layout stateCount,
+        Layout.decode stateCount tokens = some (L, []) /\
+          output = ([] : Word MachineCodeSymbol) /\
+          Layout.accepts M L := by
+  constructor
+  · intro hloop
+    have houtput :
+        output = ([] : Word MachineCodeSymbol) :=
+      layoutFuelLoopCode_eq_some_empty_of_eq_some M hloop
+    subst output
+    rcases
+        (layoutFuelLoopCode_eq_some_iff_decode M tokens).mp
+          hloop with
+      ⟨L, hdecode, haccepts⟩
+    exact ⟨L, hdecode, rfl, haccepts⟩
+  · intro h
+    rcases h with ⟨L, hdecode, houtput, haccepts⟩
+    subst output
+    exact
+      (layoutFuelLoopCode_eq_some_iff_decode M tokens).mpr
+        ⟨L, hdecode, haccepts⟩
+
+theorem layoutFuelLoopCodePrimitive_eq_some_iff_decode_output
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (tokens output : Word MachineCodeSymbol) :
+    (layoutFuelLoopCodePrimitive M).transform tokens = some output <->
+      exists L : Layout stateCount,
+        Layout.decode stateCount tokens = some (L, []) /\
+          output = ([] : Word MachineCodeSymbol) /\
+          Layout.accepts M L := by
+  simpa [layoutFuelLoopCodePrimitive] using
+    layoutFuelLoopCode_eq_some_iff_decode_output M tokens output
+
+def LayoutFuelLoopDecodedExactOutputForwardSpec
+    {stateCount : Nat}
+    (runner : TuringMachine MachineCodeSymbol runnerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  forall tokens : Word MachineCodeSymbol,
+  forall L : Layout stateCount,
+    Layout.decode stateCount tokens = some (L, []) ->
+      (TuringMachine.HaltsWithExactOutput runner tokens
+          ([] : Word MachineCodeSymbol) <->
+        Layout.accepts M L)
+
+def LayoutFuelLoopDecodedExactOutputClosedSpec
+    {stateCount : Nat}
+    (runner : TuringMachine MachineCodeSymbol runnerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  forall tokens output : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithExactOutput runner tokens output ->
+      exists L : Layout stateCount,
+        Layout.decode stateCount tokens = some (L, []) /\
+          output = ([] : Word MachineCodeSymbol) /\
+          Layout.accepts M L
+
+def LayoutFuelLoopDecodedExactOutputSpec
+    {stateCount : Nat}
+    (runner : TuringMachine MachineCodeSymbol runnerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  LayoutFuelLoopDecodedExactOutputForwardSpec runner M ∧
+    LayoutFuelLoopDecodedExactOutputClosedSpec runner M
+
+def LayoutFuelLoopDecodedExactOutputPrimitiveConstruction
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop :=
+  exists runnerState : Type,
+  exists runner : TuringMachine MachineCodeSymbol runnerState,
+    LayoutFuelLoopDecodedExactOutputSpec runner M ∧
+      StageProgram.ExactOutputCanonicalSpec runner
+        (layoutFuelLoopCodePrimitive M).transform ∧
+      TuringMachine.HaltingTransitionsDisabled runner
+
+def FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction :
+    Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    LayoutFuelLoopDecodedExactOutputPrimitiveConstruction M
+
+theorem layoutFuelLoopExactOutputSpec_iff_decoded
+    {stateCount : Nat} {runnerState : Type}
+    (runner : TuringMachine MachineCodeSymbol runnerState)
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    StageProgram.ExactOutputSpec runner
+        (layoutFuelLoopCodePrimitive M).transform <->
+      LayoutFuelLoopDecodedExactOutputSpec runner M := by
+  constructor
+  · intro hexact
+    constructor
+    · intro tokens L hdecode
+      exact Iff.trans
+        (hexact tokens ([] : Word MachineCodeSymbol))
+        (layoutFuelLoopCodePrimitive_eq_some_empty_iff_of_decode
+          M hdecode)
+    · intro tokens output hhalt
+      exact
+        (layoutFuelLoopCodePrimitive_eq_some_iff_decode_output
+          M tokens output).mp
+          ((hexact tokens output).mp hhalt)
+  · intro hdecoded
+    intro tokens output
+    constructor
+    · intro hhalt
+      rcases hdecoded.right tokens output hhalt with
+        ⟨L, hdecode, houtput, haccepts⟩
+      exact
+        (layoutFuelLoopCodePrimitive_eq_some_iff_decode_output
+          M tokens output).mpr
+          ⟨L, hdecode, houtput, haccepts⟩
+    · intro hloop
+      rcases
+          (layoutFuelLoopCodePrimitive_eq_some_iff_decode_output
+            M tokens output).mp hloop with
+        ⟨L, hdecode, houtput, haccepts⟩
+      subst output
+      exact (hdecoded.left tokens L hdecode).mpr haccepts
+
+theorem layoutFuelLoopExactOutputPrimitiveConstruction_iff_decoded
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
+    LayoutFuelLoopExactOutputPrimitiveConstruction M <->
+      LayoutFuelLoopDecodedExactOutputPrimitiveConstruction M := by
+  constructor
+  · intro hprimitive
+    rcases hprimitive with
+      ⟨runnerState, runner, hexact, hcanonical, hstop⟩
+    refine ⟨runnerState, runner, ?_, hcanonical, hstop⟩
+    exact
+      (layoutFuelLoopExactOutputSpec_iff_decoded runner M).mp
+        hexact
+  · intro hdecoded
+    rcases hdecoded with
+      ⟨runnerState, runner, hspec, hcanonical, hstop⟩
+    refine ⟨runnerState, runner, ?_, hcanonical, hstop⟩
+    exact
+      (layoutFuelLoopExactOutputSpec_iff_decoded runner M).mpr
+        hspec
+
+theorem finStateLayoutFuelLoopExactOutputPrimitiveConstruction_iff_decoded :
+    FinStateLayoutFuelLoopExactOutputPrimitiveConstruction <->
+      FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction := by
+  constructor
+  · intro hconstruction stateCount M
+    exact
+      (layoutFuelLoopExactOutputPrimitiveConstruction_iff_decoded
+        M).mp
+        (hconstruction stateCount M)
+  · intro hconstruction stateCount M
+    exact
+      (layoutFuelLoopExactOutputPrimitiveConstruction_iff_decoded
+        M).mpr
+        (hconstruction stateCount M)
+
 theorem layoutFuelLoopCodeMachineConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
@@ -946,6 +1139,20 @@ def ExactOutputPrimitiveComponentFinStateConstruction : Prop :=
 def ExactOutputPrimitiveDecodedComponentFinStateConstruction : Prop :=
   InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction ∧
     FinStateLayoutFuelLoopExactOutputPrimitiveConstruction
+
+def ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction :
+    Prop :=
+  InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction ∧
+    FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction
+
+theorem exactOutputPrimitiveDecodedComponentFinStateConstruction_of_fullyDecodedComponents
+    (hcomponents :
+      ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction) :
+    ExactOutputPrimitiveDecodedComponentFinStateConstruction := by
+  exact
+    ⟨hcomponents.left,
+      finStateLayoutFuelLoopExactOutputPrimitiveConstruction_iff_decoded.mpr
+        hcomponents.right⟩
 
 theorem exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
     (hcomponents :
