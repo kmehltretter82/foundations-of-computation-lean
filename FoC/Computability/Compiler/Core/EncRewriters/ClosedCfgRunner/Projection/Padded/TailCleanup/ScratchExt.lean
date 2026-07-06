@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtOutput
 
 set_option doc.verso true
 
@@ -25,4 +25,6 @@ implementation is split by responsibility:
   materializer scaffold.
 - {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput` records
   normalized-output endpoint views for the count-window bridge wrappers.
+- {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtOutput` records
+  normalized-output endpoint views for the scratch-extension boundary.
 -/
