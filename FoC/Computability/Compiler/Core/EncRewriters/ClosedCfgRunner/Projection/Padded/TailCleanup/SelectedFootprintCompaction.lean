@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.DescriptionExecution
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionShape
 
 set_option doc.verso true
 
@@ -1087,6 +1087,99 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstr
   exists compactor : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
       compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec_of_guardedFootprintSpec
+    {compactor : MachineDescription}
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorNilSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec
+      compactor := by
+  rcases hguard with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hnilNil
+  · intro padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hnilNone padding
+  · intro padBit padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hnilSome padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsSpec_of_guardedFootprintSpec
+    {compactor : MachineDescription}
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorConsSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsSpec
+      compactor := by
+  rcases hguard with ⟨hready, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · intro bit rest
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hconsNil bit rest
+  · intro bit rest padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hconsNone bit rest padding
+  · intro bit rest padBit padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+      selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+      hconsSome bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec_of_guardedFootprintSpec
+    {compactor : MachineDescription}
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorSplitSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
+      compactor := by
+  rcases hguard with ⟨hnil, hcons⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec_of_guardedFootprintSpec
+        hnil,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsSpec_of_guardedFootprintSpec
+        hcons⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_guardedFootprint
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
+  rcases hguard with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec_of_guardedFootprintSpec
+        hspec⟩
+
+theorem selectedFootprintCompactorBridgeSpec_of_guardedFootprintSpec
+    {compactor : MachineDescription}
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorSpec compactor) :
+    SelectedFootprintCompactorBridgeSpec compactor := by
+  rcases hguard with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintSourceTape_eq_fromPayload,
+    selectedSegmentLogicalTapeDecoderFootprintTargetTapeFromPayload_eq] using
+    hrun bits padding
+
+theorem selectedFootprintCompactorBridgeConstruction_of_guardedFootprint
+    (hguard :
+      GuardedLogicalTapeDecoderFootprintCompactorConstruction) :
+    SelectedFootprintCompactorBridgeConstruction := by
+  rcases hguard with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedFootprintCompactorBridgeSpec_of_guardedFootprintSpec
+        hspec⟩
 
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeOutputSpec
     (compactor : MachineDescription) : Prop :=
