@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
 import FoC.Computability.Compiler.Core.FiniteRecognizer.GeneratedCode
 
 set_option doc.verso true
@@ -17,6 +18,135 @@ namespace Computability
 open Languages
 
 namespace FiniteRecognizer
+
+/--
+Semantic parser/recognizer for the uniform decoded-description interpreter.
+Malformed outer generated calls, malformed description prefixes, and exact
+bounded rejecting runs all return {lean}`none`; accepting exact bounded runs
+return canonical empty output.
+-/
+def decodedDescriptionInterpreterRun
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match MachineDescription.decodeNat tokens with
+  | none => none
+  | some (fuel, encoded) =>
+      match MachineDescription.decodeDescriptionPrefix encoded with
+      | none => none
+      | some (D, input) =>
+          if D.HaltsIn fuel
+              (MachineDescription.encodeCodeWordAsInput input) then
+            some ([] : Word MachineCodeSymbol)
+          else
+            none
+
+theorem decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
+    {tokens output : Word MachineCodeSymbol}
+    (h :
+      decodedDescriptionInterpreterRun tokens = some output) :
+    output = ([] : Word MachineCodeSymbol) := by
+  unfold decodedDescriptionInterpreterRun at h
+  cases hstage : MachineDescription.decodeNat tokens with
+  | none =>
+      simp [hstage] at h
+  | some decodedStage =>
+      rcases decodedStage with ⟨fuel, encoded⟩
+      cases hprefix :
+          MachineDescription.decodeDescriptionPrefix encoded with
+      | none =>
+          simp [hstage, hprefix] at h
+      | some decodedPrefix =>
+          rcases decodedPrefix with ⟨D, input⟩
+          by_cases hhalts :
+              D.HaltsIn fuel
+                (MachineDescription.encodeCodeWordAsInput input)
+          · simpa [hstage, hprefix, hhalts] using h.symm
+          · simp [hstage, hprefix, hhalts] at h
+
+theorem decodedDescriptionInterpreterRun_stageCode_eq_some_iff
+    (D : MachineDescription)
+    (input : Word MachineCodeSymbol)
+    (fuel : Nat) :
+    decodedDescriptionInterpreterRun
+        (GeneratedCode.stageCode
+          (List.append (MachineDescription.encodeDescription D) input)
+          fuel) =
+        some ([] : Word MachineCodeSymbol) <->
+      D.HaltsIn fuel
+        (MachineDescription.encodeCodeWordAsInput input) := by
+  unfold decodedDescriptionInterpreterRun
+  have hprefix :
+      MachineDescription.decodeDescriptionPrefix
+          (List.append (MachineDescription.encodeDescription D) input) =
+        some (D, input) :=
+    MachineDescription.decodeDescriptionPrefix_encodeDescription_append
+      D input
+  rw [GeneratedCode.stageCode_decodeNat]
+  simp only
+  rw [hprefix]
+  by_cases hhalts :
+      D.HaltsIn fuel
+        (MachineDescription.encodeCodeWordAsInput input)
+  · simp [hhalts]
+    rfl
+  · simp [hhalts]
+
+theorem decodedDescriptionInterpreterRun_eq_some_shape
+    {tokens : Word MachineCodeSymbol}
+    (h :
+      decodedDescriptionInterpreterRun tokens =
+        some ([] : Word MachineCodeSymbol)) :
+    exists fuel : Nat,
+    exists D : MachineDescription,
+    exists input : Word MachineCodeSymbol,
+      MachineDescription.decodeNat tokens =
+        some (fuel,
+          List.append (MachineDescription.encodeDescription D) input) := by
+  unfold decodedDescriptionInterpreterRun at h
+  cases hstage : MachineDescription.decodeNat tokens with
+  | none =>
+      simp [hstage] at h
+  | some decodedStage =>
+      rcases decodedStage with ⟨fuel, encoded⟩
+      cases hprefix :
+          MachineDescription.decodeDescriptionPrefix encoded with
+      | none =>
+          simp [hstage, hprefix] at h
+      | some decodedPrefix =>
+          rcases decodedPrefix with ⟨D, input⟩
+          by_cases hhalts :
+              D.HaltsIn fuel
+                (MachineDescription.encodeCodeWordAsInput input)
+          · have hencoded :
+                encoded =
+                  List.append (MachineDescription.encodeDescription D)
+                    input :=
+              MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                hprefix
+            have hdecode :
+                some (fuel, encoded) =
+                  some (fuel,
+                    List.append
+                      (MachineDescription.encodeDescription D) input) := by
+              simp [hencoded]
+              rfl
+            exact ⟨fuel, D, input, hdecode⟩
+          · simp [hstage, hprefix, hhalts] at h
+
+/--
+Exact-output primitive boundary for the uniform decoded-description
+interpreter.  This is the backend target: one finite machine parses the outer
+fuel, parses one encoded description prefix as tape data, and interprets that
+description for exactly the parsed fuel.
+-/
+def DecodedDescriptionInterpreterExactOutputPrimitiveConstruction : Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
+        runner decodedDescriptionInterpreterRun ∧
+      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
+        runner decodedDescriptionInterpreterRun ∧
+      TuringMachine.HaltingTransitionsDisabled runner
 
 /--
 Canonical generated-input behavior for the uniform decoded-description
@@ -225,6 +355,44 @@ def DecodedDescriptionInterpreterConstruction : Prop :=
   exists runner : TuringMachine MachineCodeSymbol state,
     DecodedDescriptionInterpreterTotalSpec runner
 
+theorem decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimitive
+    (hprimitive :
+      DecodedDescriptionInterpreterExactOutputPrimitiveConstruction) :
+    DecodedDescriptionInterpreterComponentsConstruction := by
+  rcases hprimitive with
+    ⟨state, runner, hexact, hcanonical, _hstop⟩
+  have hrunnerEmpty :
+      forall tokens : Word MachineCodeSymbol,
+        TuringMachine.HaltsOnInput runner tokens <->
+          decodedDescriptionInterpreterRun tokens =
+            some ([] : Word MachineCodeSymbol) := by
+    intro tokens
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨final, hcomp, hfinal⟩
+      rcases hcanonical tokens final hcomp hfinal with
+        ⟨output, houtput, _htape⟩
+      have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
+        decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
+          houtput
+      subst output
+      exact houtput
+    · intro hrun
+      rcases (hexact tokens ([] : Word MachineCodeSymbol)).mpr hrun with
+        ⟨final, hcomp, hfinal, _htape⟩
+      exact ⟨final, hcomp, hfinal⟩
+  refine ⟨state, runner, ?_, ?_⟩
+  · intro D input fuel
+    exact Iff.trans (hrunnerEmpty
+      (GeneratedCode.stageCode
+        (List.append (MachineDescription.encodeDescription D) input)
+        fuel))
+      (decodedDescriptionInterpreterRun_stageCode_eq_some_iff
+        D input fuel)
+  · intro tokens hhalt
+    exact decodedDescriptionInterpreterRun_eq_some_shape
+      ((hrunnerEmpty tokens).mp hhalt)
+
 theorem decodedDescriptionInterpreterConstruction_of_components
     (hcomponents : DecodedDescriptionInterpreterComponentsConstruction) :
     DecodedDescriptionInterpreterConstruction := by
@@ -262,12 +430,22 @@ theorem decodedDescriptionInterpreterConstruction_iff_finState :
   · exact decodedDescriptionInterpreterConstruction_of_finState
 
 /--
-Remaining concrete finite-table leaf for the uniform decoded-description
-interpreter components.
+Remaining exact-output primitive leaf for the uniform decoded-description
+interpreter.
+-/
+theorem decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf :
+    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction := by
+  sorry
+
+/--
+Concrete component construction for the uniform decoded-description
+interpreter, derived from the sharper exact-output primitive boundary above.
 -/
 theorem decodedDescriptionInterpreterComponentsFiniteLeaf :
     DecodedDescriptionInterpreterComponentsConstruction := by
-  sorry
+  exact
+    decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimitive
+      decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf
 
 /--
 Remaining concrete finite-table leaf for the uniform decoded-description
