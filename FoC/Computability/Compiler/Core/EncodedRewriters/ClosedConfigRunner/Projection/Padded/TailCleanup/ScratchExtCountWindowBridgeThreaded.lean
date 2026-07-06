@@ -212,6 +212,77 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
         hcases)
 
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_structuredPrefixBranchCasesAndFootprint
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hfootprint :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction :=
+  ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
+        heraser),
+    hfootprint⟩
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_structuredPrefixBranchCasesAndGenericFootprint
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hgeneric :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_components
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_structuredPrefixBranchCasesAndFootprint
+        heraser
+        (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+          hgeneric))
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_densifier
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_structuredPrefixBranchCasesAndGenericFootprint
+        heraser
+        (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
+          hcases))
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_cleanup
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+        heraser hcases)
+
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixSelectedSegmentDecoder
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+        heraser hcases)
+
+theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
+  exact
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintCases
+      heraser
+      (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+        hcases)
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
   sorry
@@ -395,6 +466,16 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
     (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
+  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
     (hnormalizer :
       Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
@@ -565,6 +646,18 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_brid
     (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
       hcases)
 
+theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
+  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
+    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core
+    loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
+    (countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction) :
@@ -627,6 +720,16 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstru
     (countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
+    (countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
   selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_of_parts
@@ -644,6 +747,17 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRest
       hprefix hcases)
     selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
 
+theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
+  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_of_parts
+    (selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+    selectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction_core
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
@@ -659,6 +773,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstr
     (selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore_of_prefixAndFootprintCases
       hprefix hcases)
 
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_countWindowMaterializers
+    (selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction_bridgeCore_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem selectedProjectionPaddedTailCleanupScratchExtConstruction :
     SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
   selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
@@ -673,6 +797,16 @@ theorem selectedProjectionPaddedTailCleanupScratchExtConstruction_of_prefixAndFo
   selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
     (selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_prefixAndFootprintCases
       hprefix hcases)
+
+theorem selectedProjectionPaddedTailCleanupScratchExtConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
+  selectedProjectionPaddedTailCleanupScratchExtConstruction_of_countExtenders
+    (selectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
@@ -699,6 +833,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstructi
     hprefix
     (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
       hcases)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_extenders
+    (selectedProjectionPaddedTailCleanupScratchExtConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

@@ -205,6 +205,16 @@ theorem finiteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCa
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
+theorem finiteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    FiniteDescriptionConstruction :=
+  finiteDescriptionConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem finiteDescriptionConstruction_scaffold :
     FiniteDescriptionConstruction :=
   finiteDescriptionConstruction_scaffold_of_configRunner
@@ -276,6 +286,21 @@ theorem outputCompiledSubroutine_of_prefixAndFootprintBitPaddingCases
   outputCompiledSubroutine_of_finiteDescriptionConstruction
     (finiteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
+    accept reject
+
+theorem outputCompiledSubroutine_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction)
+    (accept reject : MachineDescription) :
+    exists runner : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailLayoutCode accept reject)
+        runner :=
+  outputCompiledSubroutine_of_finiteDescriptionConstruction
+    (finiteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
     accept reject
 
 theorem outputCompiledSubroutine

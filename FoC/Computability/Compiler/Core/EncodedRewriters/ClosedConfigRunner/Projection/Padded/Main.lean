@@ -189,6 +189,16 @@ theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFoo
     (selectedProjectionPaddedTailEmitterConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
+theorem selectedProjectionFiniteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionFiniteDescriptionConstruction :=
+  selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter
+    (selectedProjectionPaddedTailEmitterConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem selectedProjectionFiniteDescriptionConstruction_scaffold :
     SelectedProjectionFiniteDescriptionConstruction :=
   selectedProjectionFiniteDescriptionConstruction_scaffold_of_tailEmitter

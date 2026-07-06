@@ -648,6 +648,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction
     (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
+theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
+    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
     (h :
       SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
@@ -675,6 +685,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruc
   selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
     (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
+    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
     {useAccept : Bool} {materializer : MachineDescription}
@@ -743,6 +763,16 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndF
   selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
     (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
+
+theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
+  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
+    (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
@@ -849,6 +879,16 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFoo
   selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
     (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
+
+theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
+  selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
+    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=

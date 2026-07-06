@@ -95,6 +95,16 @@ theorem configRunnerPhaseEquivConstruction_scaffold_of_prefixAndFootprintBitPadd
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
+theorem configRunnerPhaseEquivConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    ConfigRunnerPhaseEquivConstruction :=
+  configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
+
 theorem configRunnerPhaseEquivConstruction_scaffold :
     ConfigRunnerPhaseEquivConstruction :=
   configRunnerPhaseEquivConstruction_scaffold_of_selectedProjection
@@ -185,6 +195,16 @@ theorem acceptRejectConfigRunnerConstruction_scaffold_of_prefixAndFootprintBitPa
   acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
     (selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
+
+theorem acceptRejectConfigRunnerConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (heraser :
+      SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
+    (hcases :
+      SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
+    AcceptRejectConfigRunnerConstruction :=
+  acceptRejectConfigRunnerConstruction_scaffold_of_selectedProjection
+    (selectedProjectionFiniteDescriptionConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      heraser hcases)
 
 theorem acceptRejectConfigRunnerConstruction_scaffold :
     AcceptRejectConfigRunnerConstruction :=
