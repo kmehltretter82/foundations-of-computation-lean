@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerRuns
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerOutput
 
 set_option doc.verso true
 
@@ -231,6 +231,11 @@ theorem mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySou
     MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :=
   MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
     mixedOptionCellQuoteLiveTailJoinerConstruction
+
+theorem mixedParserStackAfterRawTailScanJoinFinisherOutputConstruction_for_assemblySourceRest :
+    MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest :=
+  MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoinerOutput
+    mixedOptionCellQuoteLiveTailJoinerOutputConstruction_for_assemblySourceRest
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
