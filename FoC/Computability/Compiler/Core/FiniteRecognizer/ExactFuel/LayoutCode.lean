@@ -68,6 +68,63 @@ def layoutFuelLoopFrom {stateCount : Nat}
       | none => none
       | some L' => layoutFuelLoopFrom M fuel L'
 
+theorem layoutFuelLoopFrom_zero {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount) :
+    layoutFuelLoopFrom M 0 L = some L := by
+  rfl
+
+theorem layoutFuelLoopFrom_succ_of_step_eq_none
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    (hstep : Layout.step M L = none) :
+    layoutFuelLoopFrom M (fuel + 1) L = none := by
+  simp [layoutFuelLoopFrom, hstep]
+
+theorem layoutFuelLoopFrom_succ_of_step_eq_some
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L L' : Layout stateCount} {fuel : Nat}
+    (hstep : Layout.step M L = some L') :
+    layoutFuelLoopFrom M (fuel + 1) L =
+      layoutFuelLoopFrom M fuel L' := by
+  simp [layoutFuelLoopFrom, hstep]
+
+theorem layoutFuelLoopFrom_succ_of_transition_eq_none
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) = none)
+    (remaining : Nat) :
+    layoutFuelLoopFrom M (remaining + 1) L = none := by
+  exact layoutFuelLoopFrom_succ_of_step_eq_none
+    (M := M) (L := L)
+    (Layout.step_eq_none_of_transition_eq_none
+      (M := M) (L := L) hfuel htransition)
+
+theorem layoutFuelLoopFrom_succ_of_transition_eq_some
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel remaining : Nat}
+    {write : Option MachineCodeSymbol} {dir : Direction}
+    {nextState : Fin stateCount}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) =
+        some (write, dir, nextState)) :
+    layoutFuelLoopFrom M (remaining + 1) L =
+      layoutFuelLoopFrom M remaining
+        (Layout.ofConfig fuel
+          { state := nextState
+            tape := Tape.move dir (Tape.write write L.tape) }) := by
+  exact layoutFuelLoopFrom_succ_of_step_eq_some
+    (M := M) (L := L)
+    (Layout.step_of_transition_eq_some
+      (M := M) (L := L) hfuel htransition)
+
 def layoutFuelLoopCode {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (tokens : Word MachineCodeSymbol) :
@@ -447,6 +504,85 @@ theorem layoutStepCodePrimitive_encode_eq_some_iff {stateCount : Nat}
       exists L' : Layout stateCount,
         Layout.step M L = some L' /\ output = Layout.encode L' := by
   exact layoutStepCode_encode_eq_some_iff M L output
+
+theorem layoutStepCode_encode_of_transition_eq_some
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    {write : Option MachineCodeSymbol} {dir : Direction}
+    {nextState : Fin stateCount}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) =
+        some (write, dir, nextState)) :
+    layoutStepCode M (Layout.encode L) =
+      some
+        (Layout.encode
+          (Layout.ofConfig fuel
+            { state := nextState
+              tape := Tape.move dir (Tape.write write L.tape) })) := by
+  simp [layoutStepCode, Layout.decode_encode,
+    Layout.step_of_transition_eq_some
+      (M := M) (L := L) hfuel htransition]
+
+theorem layoutStepCodePrimitive_encode_of_transition_eq_some
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    {write : Option MachineCodeSymbol} {dir : Direction}
+    {nextState : Fin stateCount}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) =
+        some (write, dir, nextState)) :
+    (layoutStepCodePrimitive M).transform (Layout.encode L) =
+      some
+        (Layout.encode
+          (Layout.ofConfig fuel
+            { state := nextState
+              tape := Tape.move dir (Tape.write write L.tape) })) := by
+  exact layoutStepCode_encode_of_transition_eq_some
+    (M := M) (L := L) hfuel htransition
+
+theorem layoutStepCode_encode_eq_none_of_fuel_zero
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount)
+    (hfuel : L.fuel = 0) :
+    layoutStepCode M (Layout.encode L) = none := by
+  simp [layoutStepCode, Layout.decode_encode,
+    Layout.step_eq_none_of_fuel_zero M L hfuel]
+
+theorem layoutStepCodePrimitive_encode_eq_none_of_fuel_zero
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (L : Layout stateCount)
+    (hfuel : L.fuel = 0) :
+    (layoutStepCodePrimitive M).transform (Layout.encode L) = none := by
+  exact layoutStepCode_encode_eq_none_of_fuel_zero M L hfuel
+
+theorem layoutStepCode_encode_eq_none_of_transition_eq_none
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) = none) :
+    layoutStepCode M (Layout.encode L) = none := by
+  simp [layoutStepCode, Layout.decode_encode,
+    Layout.step_eq_none_of_transition_eq_none
+      (M := M) (L := L) hfuel htransition]
+
+theorem layoutStepCodePrimitive_encode_eq_none_of_transition_eq_none
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {L : Layout stateCount} {fuel : Nat}
+    (hfuel : L.fuel = fuel + 1)
+    (htransition :
+      M.transition L.state (Tape.read L.tape) = none) :
+    (layoutStepCodePrimitive M).transform (Layout.encode L) = none := by
+  exact layoutStepCode_encode_eq_none_of_transition_eq_none
+    (M := M) (L := L) hfuel htransition
 
 theorem layoutStepCode_eq_some_iff_decode {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
