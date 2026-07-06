@@ -8,6 +8,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixExtraBlankRestorer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitterRouteContracts
 
 set_option doc.verso true
 
