@@ -1058,6 +1058,16 @@ theorem structuredRawTailInsertionJoinerDescription_copyTailSpec :
       structuredRawTailInsertionJoinerDescription :=
   Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description_copyTailSpec
 
+theorem structuredRawTailInsertionJoinerDescription_rewindTailSpec :
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.RewindTailSpec
+      structuredRawTailInsertionJoinerDescription :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description_rewindTailSpec
+
+theorem structuredRawTailInsertionJoinerDescription_copyRewindTailSpec :
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.CopyRewindTailSpec
+      structuredRawTailInsertionJoinerDescription :=
+  Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description_copyRewindTailSpec
+
 def StructuredRawTailInsertionJoinerAssemblyCopyTailSpec
     (D : Structured.Description) : Prop :=
   Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.CopyTailSpec D ∧
@@ -1108,6 +1118,76 @@ theorem structuredRawTailInsertionJoinerDescription_assemblyCopyTailSpec :
       structuredRawTailInsertionJoinerDescription :=
   StructuredRawTailInsertionJoinerAssemblyCopyTailSpec_of_copyTailSpec
     structuredRawTailInsertionJoinerDescription_copyTailSpec
+
+def StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec
+    (D : Structured.Description) : Prop :=
+  StructuredRawTailInsertionJoinerAssemblyCopyTailSpec D ∧
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.CopyRewindTailSpec
+      D ∧
+    forall p : AssemblySourceRestLiveTailEmitterParam,
+      D.runConfig
+          (2 * (assemblySourceRestLiveTailEmitterRawTail p).length + 3)
+          (structuredRawTailInsertionJoinerInitialConfig p) =
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec.copyTail
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyCopyTailSpec D :=
+  hD.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec.copyRewindTail
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D) :
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.CopyRewindTailSpec
+      D :=
+  hD.right.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec.rewindTail
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D) :
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.RewindTailSpec
+      D :=
+  hD.copyRewindTail.rewindTail
+
+theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec.run
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    D.runConfig
+        (2 * (assemblySourceRestLiveTailEmitterRawTail p).length + 3)
+        (structuredRawTailInsertionJoinerInitialConfig p) =
+      Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) :=
+  hD.right.right p
+
+theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec_of_copyRewindTailSpec
+    {D : Structured.Description}
+    (hD : Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.CopyRewindTailSpec
+      D) :
+    StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D := by
+  refine
+    ⟨StructuredRawTailInsertionJoinerAssemblyCopyTailSpec_of_copyTailSpec
+        hD.copyTail,
+      hD, ?_⟩
+  intro p
+  simpa [structuredRawTailInsertionJoinerInitialConfig]
+    using
+      hD.run
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerDescription_assemblyCopyRewindTailSpec :
+    StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec
+      structuredRawTailInsertionJoinerDescription :=
+  StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec_of_copyRewindTailSpec
+    structuredRawTailInsertionJoinerDescription_copyRewindTailSpec
 
 theorem structuredRawTailInsertionJoinerInitialConfig_source_cells_eq_separated
     (p : AssemblySourceRestLiveTailEmitterParam) :
@@ -1223,6 +1303,53 @@ theorem structuredRawTailInsertionJoinerCopyTailHandoff_work_normalizedOutput
       assemblySourceRestLiveTailEmitterRawTail p := by
   exact
     Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.copyTailHandoffConfig_work_normalizedOutput
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerRewindTailHandoff_source_normalizedOutput
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 0) =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) := by
+  exact
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig_source_normalizedOutput
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerRewindTailHandoff_scratch_normalizedOutput
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 1) =
+      assemblySourceRestLiveTailEmitterQuoteRest p := by
+  exact
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig_scratch_normalizedOutput
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p)
+
+theorem structuredRawTailInsertionJoinerRewindTailHandoff_work_normalizedOutput
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 2) =
+      assemblySourceRestLiveTailEmitterRawTail p := by
+  exact
+    Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig_work_normalizedOutput
       (assemblySourceRestLiveTailEmitterEmittedPrefix p)
       (assemblySourceRestLiveTailEmitterRawTail p)
       (assemblySourceRestLiveTailEmitterQuoteRest p)
@@ -1516,6 +1643,104 @@ theorem structuredRawTailInsertionJoinerDescription_assemblyTapeStateSpec :
       structuredRawTailInsertionJoinerCopyTailHandoff_work_normalizedOutput p,
       structuredRawTailInsertionJoinerFinalConfig_scratch_normalizedOutput p,
       structuredRawTailInsertionJoinerFinalConfig_work_normalizedOutput p⟩
+
+def StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec
+    (D : Structured.Description) : Prop :=
+  StructuredRawTailInsertionJoinerAssemblyTapeStateSpec D ∧
+    StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D ∧
+    forall p : AssemblySourceRestLiveTailEmitterParam,
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+              (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+              (assemblySourceRestLiveTailEmitterRawTail p)
+              (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 0) =
+        List.append
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p) ∧
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+              (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+              (assemblySourceRestLiveTailEmitterRawTail p)
+              (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 1) =
+        assemblySourceRestLiveTailEmitterQuoteRest p ∧
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+              (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+              (assemblySourceRestLiveTailEmitterRawTail p)
+              (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 2) =
+        assemblySourceRestLiveTailEmitterRawTail p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec.tapeState
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyTapeStateSpec D :=
+  hD.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec.copyRewindTail
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec D :=
+  hD.right.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec.rewind_source
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 0) =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) :=
+  (hD.right.right p).left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec.rewind_scratch
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 1) =
+      assemblySourceRestLiveTailEmitterQuoteRest p :=
+  (hD.right.right p).right.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec.rewind_work
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rewindTailHandoffConfig
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p)).tapes 2) =
+      assemblySourceRestLiveTailEmitterRawTail p :=
+  (hD.right.right p).right.right
+
+theorem structuredRawTailInsertionJoinerDescription_assemblyRewindTapeStateSpec :
+    StructuredRawTailInsertionJoinerAssemblyRewindTapeStateSpec
+      structuredRawTailInsertionJoinerDescription := by
+  refine
+    ⟨structuredRawTailInsertionJoinerDescription_assemblyTapeStateSpec,
+      structuredRawTailInsertionJoinerDescription_assemblyCopyRewindTailSpec,
+      ?_⟩
+  intro p
+  exact
+    ⟨structuredRawTailInsertionJoinerRewindTailHandoff_source_normalizedOutput
+        p,
+      structuredRawTailInsertionJoinerRewindTailHandoff_scratch_normalizedOutput
+        p,
+      structuredRawTailInsertionJoinerRewindTailHandoff_work_normalizedOutput
+        p⟩
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
