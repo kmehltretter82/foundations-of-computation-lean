@@ -445,18 +445,22 @@ theorem generatedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponent
     GeneratedNestedPairEnumeratorFinStateConstruction := by
   intro n selected
   rcases hFin.left n selected with ⟨searcherState, searcher, hsearcher⟩
-  exact
-    ⟨searcherState, searcher,
-      generatedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  exact Iff.trans (hsearcher input)
+    (generatedNested_exists_hiddenFuel_iff_exists_pair_haltsOnInput
+      selected input)
 
 theorem generatedBoundedNestedPairEnumeratorFinStateConstruction_of_hiddenFuelComponents
     (hFin : GeneratedHiddenFuelPairFinStateConstruction) :
     GeneratedBoundedNestedPairEnumeratorFinStateConstruction := by
   intro n selected
   rcases hFin.right n selected with ⟨searcherState, searcher, hsearcher⟩
-  exact
-    ⟨searcherState, searcher,
-      generatedBoundedNestedPairEnumeratorSpec_of_hiddenFuel hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  exact Iff.trans (hsearcher input budget)
+    (generatedNested_exists_bounded_hiddenFuel_iff_exists_bounded_pair_haltsOnInput
+      selected input budget)
 
 theorem generatedNestedPairEnumeratorConstruction_of_finStateConstruction
     {selectedState : Type uSelected}
