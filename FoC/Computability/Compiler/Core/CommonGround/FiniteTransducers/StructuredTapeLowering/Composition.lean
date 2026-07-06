@@ -99,6 +99,12 @@ tape, not merely on the equivalent unbounced tape.
 def canonicalPrimitiveSeqHandoffTape (T : Tape Bool) : Tape Bool :=
   Tape.move Direction.left (Tape.move Direction.right T)
 
+theorem canonicalPrimitiveSeqHandoffTape_equiv
+    (T : Tape Bool) :
+    Tape.Equiv (canonicalPrimitiveSeqHandoffTape T) T := by
+  simpa [canonicalPrimitiveSeqHandoffTape] using
+    moveLeft_moveRight_equiv_self T
+
 /--
 Exact closedness from a concrete input tape to a concrete output tape.
 

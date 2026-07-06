@@ -419,6 +419,289 @@ theorem closed_equiv
 end Structured3EndpointExactFamilySpec
 
 /--
+Exact indexed closedness for a component.
+
+Any halt from any public tape must come from one of the indexed source tapes
+and must finish at that index's exact target tape.
+-/
+def ExactClosedIndexedFromTape {ι : Type}
+    (D : MachineDescription)
+    (source target : ι -> Tape Bool) : Prop :=
+  forall Tin T : Tape Bool,
+    D.HaltsFromTape Tin T ->
+      exists i : ι, Tin = source i ∧ T = target i
+
+/--
+Equivalence indexed closedness for a component.
+
+This is the indexed analogue of
+{name (full := FoC.Computability.MachineDescription.ClosedFromTapeEquiv)}`MachineDescription.ClosedFromTapeEquiv`.
+-/
+def EquivClosedIndexedFromTape {ι : Type}
+    (D : MachineDescription)
+    (source target : ι -> Tape Bool) : Prop :=
+  forall Tin T : Tape Bool,
+    D.HaltsFromTape Tin T ->
+      exists i : ι, Tin = source i ∧ Tape.Equiv T (target i)
+
+/--
+Exact indexed endpoint data for the wrapped
+materializer/lowered-core/projector pipeline.
+
+The per-index fields give forward and exact closed behavior for valid inputs;
+{lit}`initializerClosedIndex` is the public-input inversion fact used to prove that
+arbitrary wrapper halts originate from one of those valid inputs.
+-/
+structure Structured3EndpointExactIndexedFamilySpec
+    {ι : Type} (W : Structured3EndpointWrapper)
+    (input initialized lowered output : ι -> Tape Bool) : Prop where
+  initializerForward :
+    forall i : ι,
+      W.initializer.HaltsFromTape (input i) (initialized i)
+  loweredForward :
+    forall i : ι,
+      W.lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape (initialized i))
+        (lowered i)
+  projectorForward :
+    forall i : ι,
+      W.projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape (lowered i))
+        (output i)
+  initializerClosed :
+    forall i : ι,
+      ExactClosedFromTape W.initializer
+        (input i) (initialized i)
+  loweredClosed :
+    forall i : ι,
+      ExactClosedFromTape W.lowered
+        (canonicalPrimitiveSeqHandoffTape (initialized i))
+        (lowered i)
+  projectorClosed :
+    forall i : ι,
+      ExactClosedFromTape W.projector
+        (canonicalPrimitiveSeqHandoffTape (lowered i))
+        (output i)
+  initializerClosedIndex :
+    ExactClosedIndexedFromTape W.initializer input initialized
+
+namespace Structured3EndpointExactIndexedFamilySpec
+
+theorem family
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W input initialized lowered output) :
+    Structured3EndpointExactFamilySpec
+      W input initialized lowered output where
+  initializerForward := hspec.initializerForward
+  loweredForward := hspec.loweredForward
+  projectorForward := hspec.projectorForward
+  initializerClosed := hspec.initializerClosed
+  loweredClosed := hspec.loweredClosed
+  projectorClosed := hspec.projectorClosed
+
+theorem forward
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.HaltsFromTape (input i) (output i) :=
+  Structured3EndpointExactFamilySpec.forward (family hspec) i
+
+theorem closed
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    ExactClosedFromTape W.machine (input i) (output i) :=
+  Structured3EndpointExactFamilySpec.closed (family hspec) i
+
+theorem closedIndex
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W input initialized lowered output) :
+    ExactClosedIndexedFromTape W.machine input output := by
+  intro Tin T hhalt
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          W.initializerSubroutineReady W.lowered_subroutineReady)
+        W.projectorSubroutineReady
+        (by
+          simpa [Structured3EndpointWrapper.machine] using hhalt) with
+    ⟨TloweredActual, hfirst, hprojectorActual⟩
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        W.initializerSubroutineReady
+        W.lowered_subroutineReady
+        hfirst with
+    ⟨TinitActual, hinitializerActual, hloweredActual⟩
+  rcases
+      hspec.initializerClosedIndex Tin TinitActual
+        hinitializerActual with
+    ⟨i, hTin, hTinit⟩
+  subst Tin
+  subst TinitActual
+  have hTlowered : TloweredActual = lowered i :=
+    hspec.loweredClosed i TloweredActual
+      (by
+        simpa [canonicalPrimitiveSeqHandoffTape] using
+          hloweredActual)
+  subst TloweredActual
+  have hT : T = output i :=
+    hspec.projectorClosed i T
+      (by
+        simpa [canonicalPrimitiveSeqHandoffTape] using
+          hprojectorActual)
+  exact ⟨i, rfl, hT⟩
+
+theorem closedIndex_eq
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W input initialized lowered output)
+    {Tin T : Tape Bool}
+    (hhalt : W.machine.HaltsFromTape Tin T) :
+    exists i : ι, Tin = input i ∧ T = output i :=
+  closedIndex hspec Tin T hhalt
+
+end Structured3EndpointExactIndexedFamilySpec
+
+/--
+Equivalence indexed endpoint data for the wrapped endpoint pipeline.
+
+This is useful for output-normalized contracts where the public final tape may
+differ by harmless guard blanks, while the input inversion is still indexed.
+-/
+structure Structured3EndpointEquivIndexedFamilySpec
+    {ι : Type} (W : Structured3EndpointWrapper)
+    (input initialized lowered output : ι -> Tape Bool) : Prop where
+  family :
+    Structured3EndpointEquivFamilySpec
+      W input initialized lowered output
+  initializerClosedIndex :
+    EquivClosedIndexedFromTape W.initializer input initialized
+
+namespace Structured3EndpointEquivIndexedFamilySpec
+
+theorem forward
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.HaltsFromTapeEquiv (input i) (output i) :=
+  Structured3EndpointEquivFamilySpec.forward hspec.family i
+
+theorem closed
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.ClosedFromTapeEquiv (input i) (output i) :=
+  Structured3EndpointEquivFamilySpec.closed hspec.family i
+
+theorem closedIndex
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W input initialized lowered output) :
+    EquivClosedIndexedFromTape W.machine input output := by
+  intro Tin T hhalt
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          W.initializerSubroutineReady W.lowered_subroutineReady)
+        W.projectorSubroutineReady
+        (by
+          simpa [Structured3EndpointWrapper.machine] using hhalt) with
+    ⟨TloweredActual, hfirst, hprojectorActual⟩
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        W.initializerSubroutineReady
+        W.lowered_subroutineReady
+        hfirst with
+    ⟨TinitActual, hinitializerActual, hloweredActual⟩
+  rcases
+      hspec.initializerClosedIndex Tin TinitActual
+        hinitializerActual with
+    ⟨i, hTin, hTinit⟩
+  have hLoweredInput :
+      Tape.Equiv
+        (canonicalPrimitiveSeqHandoffTape TinitActual)
+        (initialized i) :=
+    Tape.Equiv.trans
+      (canonicalPrimitiveSeqHandoffTape_equiv TinitActual)
+      hTinit
+  rcases
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := W.lowered)
+        (Tin := canonicalPrimitiveSeqHandoffTape TinitActual)
+        (Tin' := initialized i)
+        (Tout := TloweredActual)
+        hLoweredInput
+        hloweredActual with
+    ⟨TloweredFromIndex, hloweredFromIndex, hTloweredFromIndex⟩
+  have hTlowered :
+      Tape.Equiv TloweredActual (lowered i) :=
+    Tape.Equiv.trans
+      (Tape.Equiv.symm hTloweredFromIndex)
+      (hspec.family.loweredClosed i
+        TloweredFromIndex hloweredFromIndex)
+  have hProjectorInput :
+      Tape.Equiv
+        (canonicalPrimitiveSeqHandoffTape TloweredActual)
+        (lowered i) :=
+    Tape.Equiv.trans
+      (canonicalPrimitiveSeqHandoffTape_equiv TloweredActual)
+      hTlowered
+  rcases
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := W.projector)
+        (Tin := canonicalPrimitiveSeqHandoffTape TloweredActual)
+        (Tin' := lowered i)
+        (Tout := T)
+        hProjectorInput
+        hprojectorActual with
+    ⟨TprojectedFromIndex, hprojectorFromIndex,
+      hTprojectedFromIndex⟩
+  have hTprojected :
+      Tape.Equiv TprojectedFromIndex (output i) :=
+    hspec.family.projectorClosed i
+      TprojectedFromIndex hprojectorFromIndex
+  exact
+    ⟨i, hTin,
+      Tape.Equiv.trans
+        (Tape.Equiv.symm hTprojectedFromIndex)
+        hTprojected⟩
+
+theorem closedIndex_equiv
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W input initialized lowered output)
+    {Tin T : Tape Bool}
+    (hhalt : W.machine.HaltsFromTape Tin T) :
+    exists i : ι, Tin = input i ∧ Tape.Equiv T (output i) :=
+  closedIndex hspec Tin T hhalt
+
+end Structured3EndpointEquivIndexedFamilySpec
+
+/--
 Generic public target shape for structured-core endpoint wrappers.
 
 The {lit}`publicContract` argument is one of the ordinary one-tape
@@ -433,17 +716,19 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRig
     Prop :=
   forall attempt : MachineDescription,
     Structured3EndpointWrappedConstruction
-      (EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
-        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
-          attempt))
+      (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
+        attempt)
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction) :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction := by
-  intro attempt
-  rcases h attempt with ⟨W, hcompiled⟩
-  exact ⟨W.machine, hcompiled⟩
+  exact
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
+      (by
+        intro attempt
+        rcases h attempt with ⟨W, hspec⟩
+        exact ⟨W.machine, hspec⟩)
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
@@ -459,16 +744,19 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructio
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
       Structured3EndpointWrappedConstruction
-        (CommonGround.ControllerInvocation.StageAttemptFramedRealizes
+        (CommonGround.ControllerInvocation.StageAttemptFramedExactSpec
           attempt)
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_structured
     (h :
       PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData) :
     CommonGround.ControllerInvocation.StageAttemptFramedConstruction := by
-  intro attempt hattempt
-  rcases h attempt hattempt with ⟨W, hrealizes⟩
-  exact ⟨W.machine, hrealizes⟩
+  exact
+    CommonGround.ControllerInvocation.stageAttemptFramedConstruction_of_exact
+      (by
+        intro attempt hattempt
+        rcases h attempt hattempt with ⟨W, hspec⟩
+        exact ⟨W.machine, hspec⟩)
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
@@ -482,17 +770,19 @@ def PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubrou
     Prop :=
   forall attempt : MachineDescription,
     Structured3EndpointWrappedConstruction
-      (TapeCodePrimitiveOutputCompiledSubroutineByDescription
-        (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
-          attempt))
+      (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
+        attempt)
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction) :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
-  intro attempt
-  rcases h attempt with ⟨W, hcompiled⟩
-  exact ⟨W.machine, hcompiled⟩
+  exact
+    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_spec
+      (by
+        intro attempt
+        rcases h attempt with ⟨W, hspec⟩
+        exact ⟨W.machine, hspec⟩)
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
