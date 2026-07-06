@@ -43,35 +43,11 @@ private theorem guardedAtExistingTapeSeparator_zero
       · simp [guardLogicalTapes]
 
 private theorem atExistingTapeSeparator_zero_of_atHasGuardCells
-    {logical : List (Tape Bool)}
-    (hguards : LogicalTapeAtHasGuardCells logical 0) :
+    {logical : List (Tape Bool)} {idx : Nat}
+    (hguards : LogicalTapeAtHasGuardCells logical idx) :
     AtExistingTapeSeparator logical 0
       (encodedStructuredTapes logical) := by
-  rcases hguards with ⟨T, rest, hdrop, _hguard⟩
-  constructor
-  · exact atTapeSeparator_zero_self logical
-  · exact ⟨T, rest, hdrop⟩
-
-private theorem atExistingTapeSeparator_zero_of_atHasGuardCells_one
-    {logical : List (Tape Bool)}
-    (hguards : LogicalTapeAtHasGuardCells logical 1) :
-    AtExistingTapeSeparator logical 0
-      (encodedStructuredTapes logical) := by
-  rcases hguards with ⟨U, rest, hdrop, _hguard⟩
-  cases logical with
-  | nil =>
-      simp at hdrop
-  | cons T tail =>
-      exact
-        ⟨atTapeSeparator_zero_self (T :: tail),
-          ⟨T, tail, rfl⟩⟩
-
-private theorem atExistingTapeSeparator_zero_of_atHasGuardCells_two
-    {logical : List (Tape Bool)}
-    (hguards : LogicalTapeAtHasGuardCells logical 2) :
-    AtExistingTapeSeparator logical 0
-      (encodedStructuredTapes logical) := by
-  rcases hguards with ⟨V, rest, hdrop, _hguard⟩
+  rcases hguards with ⟨_, _, hdrop, _hguard⟩
   cases logical with
   | nil =>
       simp at hdrop
@@ -482,8 +458,7 @@ theorem moveHead1LeftLocalDescription_haltsFromEncodedStructuredTapes_of_guardCe
       cursorTape1MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_withGuardCells
         |>.realizes logical (encodedStructuredTapes logical)
           ⟨hguards,
-            atExistingTapeSeparator_zero_of_atHasGuardCells_one
-              hguards⟩
+            atExistingTapeSeparator_zero_of_atHasGuardCells hguards⟩
     with ⟨Tout, hhalts, hseparator⟩
   have hTout :
       Tout =
@@ -545,8 +520,7 @@ theorem moveHead1RightLocalDescription_haltsFromEncodedStructuredTapes_of_guardC
       cursorTape1MoveHeadRightLocalAndReturnToBlockStartDescription_contract_withGuardCells
         |>.realizes logical (encodedStructuredTapes logical)
           ⟨hguards,
-            atExistingTapeSeparator_zero_of_atHasGuardCells_one
-              hguards⟩
+            atExistingTapeSeparator_zero_of_atHasGuardCells hguards⟩
     with ⟨Tout, hhalts, hseparator⟩
   have hTout :
       Tout =
@@ -610,8 +584,7 @@ theorem moveHead2LeftLocalDescription_haltsFromEncodedStructuredTapes_of_guardCe
       cursorTape2MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_withGuardCells
         |>.realizes logical (encodedStructuredTapes logical)
           ⟨hguards,
-            atExistingTapeSeparator_zero_of_atHasGuardCells_two
-              hguards⟩
+            atExistingTapeSeparator_zero_of_atHasGuardCells hguards⟩
     with ⟨Tout, hhalts, hseparator⟩
   have hTout :
       Tout =
@@ -672,8 +645,7 @@ theorem moveHead2RightLocalDescription_haltsFromEncodedStructuredTapes_of_guardC
       cursorTape2MoveHeadRightLocalAndReturnToBlockStartDescription_contract_withGuardCells
         |>.realizes logical (encodedStructuredTapes logical)
           ⟨hguards,
-            atExistingTapeSeparator_zero_of_atHasGuardCells_two
-              hguards⟩
+            atExistingTapeSeparator_zero_of_atHasGuardCells hguards⟩
     with ⟨Tout, hhalts, hseparator⟩
   have hTout :
       Tout =
@@ -1114,22 +1086,17 @@ def action1StayDescription
   | some cell =>
       cursorTape1WriteHeadCellAndReturnToBlockStartDescription cell
 
-private theorem actionPrimitivesAt_one_stay_enabled
-    {logical : List (Tape Bool)} {write? : Option (Option Bool)}
+private theorem actionPrimitivesAt_one_enabled
+    {logical : List (Tape Bool)}
+    {write? : Option (Option Bool)} {move : HeadMove}
     (henabled :
       physicalPrimitiveSequenceEnabled
-        (actionPrimitivesAt 1
-          { write? := write?, move := HeadMove.stay }) logical) :
+        (actionPrimitivesAt 1 { write? := write?, move := move })
+        logical) :
     1 < logical.length := by
-  cases write? with
-  | none =>
-      simp [actionPrimitivesAt, writePrimitivesForAction,
-        PhysicalPrimitive.apply] at henabled
-      exact henabled
-  | some cell =>
-      simp [actionPrimitivesAt, writePrimitivesForAction,
-        PhysicalPrimitive.apply] at henabled
-      exact henabled
+  cases write? <;>
+    simpa [actionPrimitivesAt, writePrimitivesForAction]
+      using henabled.left
 
 private theorem applyPhysicalPrimitiveSequence_actionPrimitivesAt_one_stay
     (write? : Option (Option Bool))
@@ -1177,7 +1144,7 @@ theorem action1StayDescription_physicalPrimitiveSequenceGuardedContractEquiv
             cell).subroutineReady
   · intro logical henabled
     have hlength : 1 < logical.length :=
-      actionPrimitivesAt_one_stay_enabled henabled
+      actionPrimitivesAt_one_enabled henabled
     have hzero : 0 < logical.length :=
       Nat.lt_trans (by decide : 0 < 1) hlength
     have hsource :
@@ -1238,18 +1205,6 @@ theorem action1StayDescription_physicalPrimitiveSequenceGuardedContractEquiv
               rw [hseq]
               simpa [action1StayDescription, hTout, hguard]
                 using hhalts)
-
-private theorem actionPrimitivesAt_one_enabled
-    {logical : List (Tape Bool)}
-    {write? : Option (Option Bool)} {move : HeadMove}
-    (henabled :
-      physicalPrimitiveSequenceEnabled
-        (actionPrimitivesAt 1 { write? := write?, move := move })
-        logical) :
-    1 < logical.length := by
-  cases write? <;>
-    simpa [actionPrimitivesAt, writePrimitivesForAction]
-      using henabled.left
 
 /--
 Tape-1 action fragment for a local left move, with an optional write first.
@@ -1493,22 +1448,17 @@ def action2StayDescription
   | some cell =>
       cursorTape2WriteHeadCellAndReturnToBlockStartDescription cell
 
-private theorem actionPrimitivesAt_two_stay_enabled
-    {logical : List (Tape Bool)} {write? : Option (Option Bool)}
+private theorem actionPrimitivesAt_two_enabled
+    {logical : List (Tape Bool)}
+    {write? : Option (Option Bool)} {move : HeadMove}
     (henabled :
       physicalPrimitiveSequenceEnabled
-        (actionPrimitivesAt 2
-          { write? := write?, move := HeadMove.stay }) logical) :
+        (actionPrimitivesAt 2 { write? := write?, move := move })
+        logical) :
     2 < logical.length := by
-  cases write? with
-  | none =>
-      simp [actionPrimitivesAt, writePrimitivesForAction,
-        PhysicalPrimitive.apply] at henabled
-      exact henabled
-  | some cell =>
-      simp [actionPrimitivesAt, writePrimitivesForAction,
-        PhysicalPrimitive.apply] at henabled
-      exact henabled
+  cases write? <;>
+    simpa [actionPrimitivesAt, writePrimitivesForAction]
+      using henabled.left
 
 private theorem applyPhysicalPrimitiveSequence_actionPrimitivesAt_two_stay
     (write? : Option (Option Bool))
@@ -1560,7 +1510,7 @@ theorem action2StayDescription_physicalPrimitiveSequenceGuardedContractEquiv
             cell).subroutineReady
   · intro logical henabled
     have hlength : 2 < logical.length :=
-      actionPrimitivesAt_two_stay_enabled henabled
+      actionPrimitivesAt_two_enabled henabled
     have hzero : 0 < logical.length :=
       Nat.lt_trans (by decide : 0 < 2) hlength
     have hsource :
@@ -1620,18 +1570,6 @@ theorem action2StayDescription_physicalPrimitiveSequenceGuardedContractEquiv
               rw [hseq]
               simpa [action2StayDescription, hTout, hguard]
                 using hhalts)
-
-private theorem actionPrimitivesAt_two_enabled
-    {logical : List (Tape Bool)}
-    {write? : Option (Option Bool)} {move : HeadMove}
-    (henabled :
-      physicalPrimitiveSequenceEnabled
-        (actionPrimitivesAt 2 { write? := write?, move := move })
-        logical) :
-    2 < logical.length := by
-  cases write? <;>
-    simpa [actionPrimitivesAt, writePrimitivesForAction]
-      using henabled.left
 
 /--
 Tape-2 action fragment for a local left move, with an optional write first.
