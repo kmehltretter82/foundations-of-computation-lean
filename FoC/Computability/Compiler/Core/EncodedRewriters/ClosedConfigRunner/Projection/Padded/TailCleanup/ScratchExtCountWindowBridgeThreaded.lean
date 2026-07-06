@@ -625,6 +625,123 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_p
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
       (bit :: rest) (some padBit :: padding)
 
+theorem selectedSegmentLogicalTapeDecoderCellCells_length
+    (cell : Option Bool) :
+    (selectedSegmentLogicalTapeDecoderCellCells cell).length = 2 := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
+theorem list_map_const_two_sum {α : Type} (xs : List α) :
+    (xs.map (fun _ => 2)).sum = 2 * xs.length := by
+  induction xs with
+  | nil =>
+      rfl
+  | cons _ rest ih =>
+      change 2 + (rest.map (fun _ => 2)).sum =
+        2 * (rest.length + 1)
+      rw [ih]
+      lia
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_length_sum
+    (cells : List (Option Bool)) :
+    (cells.map
+        (fun cell =>
+          (selectedSegmentLogicalTapeDecoderCellCells cell).length)).sum =
+      2 * cells.length := by
+  simpa [selectedSegmentLogicalTapeDecoderCellCells_length] using
+    (list_map_const_two_sum cells)
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_length_comp_sum
+    (cells : List (Option Bool)) :
+    (List.map
+        (List.length ∘ selectedSegmentLogicalTapeDecoderCellCells)
+        cells).sum =
+      2 * cells.length := by
+  simpa [Function.comp_def] using
+    selectedSegmentLogicalTapeDecoderCellCells_length_sum cells
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_some_length_comp_sum
+    (bits : Word Bool) :
+    (List.map
+        (List.length ∘ selectedSegmentLogicalTapeDecoderCellCells ∘ some)
+        bits).sum =
+      2 * bits.length := by
+  simpa [Function.comp_def,
+    selectedSegmentLogicalTapeDecoderCellCells_length] using
+    (list_map_const_two_sum bits)
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_flatten_length
+    (cells : List (Option Bool)) :
+    ((cells.map selectedSegmentLogicalTapeDecoderCellCells).flatten).length =
+      2 * cells.length := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      simp [selectedSegmentLogicalTapeDecoderCellCells_length, ih]
+      lia
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_flatten_length_append_none
+    (padding : List (Option Bool)) :
+    ((List.map selectedSegmentLogicalTapeDecoderCellCells
+        (List.append padding [none])).flatten).length =
+      2 * padding.length + 2 := by
+  rw [selectedSegmentLogicalTapeDecoderCellCells_flatten_length]
+  simp
+  lia
+
+theorem selectedSegmentLogicalTapeDecoderCellCells_flatten_length_rest_padding
+    (rest : Word Bool) (padding : List (Option Bool)) :
+    ((List.map selectedSegmentLogicalTapeDecoderCellCells
+        (List.append (rest.map some)
+          (none :: List.append padding [none]))).flatten).length =
+      2 * rest.length + 2 * padding.length + 4 := by
+  rw [selectedSegmentLogicalTapeDecoderCellCells_flatten_length]
+  simp
+  lia
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintCells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+      bits padding).length =
+      10 + 2 * bits.length + 2 * padding.length := by
+  cases bits with
+  | nil =>
+      simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells,
+        selectedSegmentLogicalTapeDecoderCellCells_length,
+        list_map_const_two_sum,
+        Function.comp_def]
+      lia
+  | cons bit rest =>
+      simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells,
+        selectedSegmentLogicalTapeDecoderCellCells_length,
+        list_map_const_two_sum,
+        Function.comp_def, List.length_append]
+      lia
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding)).length =
+      13 + 2 * bits.length + 2 * padding.length := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint]
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_length]
+  lia
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          bits padding)).length =
+      bits.length + padding.length + 1 := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving]
+  simp
+  lia
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap
     (bits : Word Bool) (padding : List (Option Bool)) :
     (Tape.cells
