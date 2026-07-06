@@ -1809,11 +1809,68 @@ def structuredBoolWordRawBitsDecoderCanonicalSourceTape
     (bits suffixTail : Word Bool) : Tape Bool :=
   boolWordRawBitsDecoderSourceTape bits suffixTail []
 
+theorem structuredBoolWordRawBitsDecoderCanonicalSourceTape_cells
+    (bits suffixTail : Word Bool) :
+    Tape.cells
+        (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+          bits suffixTail) =
+      none ::
+        List.append
+          ((List.append boolWordRawBitsDecoderHeaderBits
+            (List.append
+              (boolWordRawBitsDecoderEncodedFieldBits bits)
+              (false :: suffixTail))).map some)
+          [none] := by
+  simpa [structuredBoolWordRawBitsDecoderCanonicalSourceTape] using
+    boolWordRawBitsDecoderSourceTape_cells bits suffixTail []
+
 def structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
     (bits suffixTail : Word Bool) : Tape Bool :=
   structuredBoolWordRawBitsDecoderInputInitializerTargetTape
     bits suffixTail []
     (boolWordRawBitsDecoderPreservedPadding suffixTail [])
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInitialOutputTape_cells
+    (bits suffixTail : Word Bool) :
+    Tape.cells
+        (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+          bits.length
+          (boolWordRawBitsDecoderPreservedPadding suffixTail [])) =
+      none ::
+        List.append
+          (List.replicate (bits.length + 1) (none : Option Bool))
+          (List.append ((false :: suffixTail).map some) [none]) := by
+  simp [structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding_cells,
+    boolWordRawBitsDecoderPreservedPadding]
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_cells
+    (bits suffixTail : Word Bool) :
+    Tape.cells
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail) =
+      List.append Structured.MultiTapeLowering.tapeSeparatorCells
+        (List.append
+          (Structured.MultiTapeLowering.logicalTapeCode
+            (Structured.MultiTapeLowering.guardLogicalTape
+              (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+                bits suffixTail)))
+          (List.append Structured.MultiTapeLowering.tapeSeparatorCells
+            (List.append
+              (Structured.MultiTapeLowering.logicalTapeCode
+                (Structured.MultiTapeLowering.guardLogicalTape Tape.blank))
+              (List.append
+                Structured.MultiTapeLowering.tapeSeparatorCells
+                (List.append
+                  (Structured.MultiTapeLowering.logicalTapeCode
+                    (Structured.MultiTapeLowering.guardLogicalTape
+                      (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+                        bits.length
+                        (boolWordRawBitsDecoderPreservedPadding suffixTail []))))
+                  Structured.MultiTapeLowering.tapeSeparatorCells))))) := by
+  simpa [structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
+    structuredBoolWordRawBitsDecoderCanonicalSourceTape] using
+    structuredBoolWordRawBitsDecoderInputInitializerTargetTape_cells
+      bits suffixTail [] (boolWordRawBitsDecoderPreservedPadding suffixTail [])
 
 /--
 Primary bool-word input-initializer contract for future construction work.
@@ -1965,6 +2022,39 @@ def structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape
       (bits.length + 1))
     (rightEdgeScanSourceTapeFromLeft [none] bits
       (boolWordRawBitsDecoderPreservedPadding suffixTail []))
+
+theorem structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape_cells
+    (bits suffixTail : Word Bool) :
+    Tape.cells
+        (structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape
+          bits suffixTail) =
+      List.append Structured.MultiTapeLowering.tapeSeparatorCells
+        (List.append
+          (Structured.MultiTapeLowering.logicalTapeCode
+            (Structured.MultiTapeLowering.guardLogicalTape
+              (structuredBoolWordRawBitsDecoderSourceTargetTape
+                bits suffixTail [])))
+          (List.append Structured.MultiTapeLowering.tapeSeparatorCells
+            (List.append
+              (Structured.MultiTapeLowering.logicalTapeCode
+                (Structured.MultiTapeLowering.guardLogicalTape
+                  (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+                    (bits.length + 1))))
+              (List.append
+                Structured.MultiTapeLowering.tapeSeparatorCells
+                (List.append
+                  (Structured.MultiTapeLowering.logicalTapeCode
+                    (Structured.MultiTapeLowering.guardLogicalTape
+                      (rightEdgeScanSourceTapeFromLeft [none] bits
+                        (boolWordRawBitsDecoderPreservedPadding suffixTail []))))
+                  Structured.MultiTapeLowering.tapeSeparatorCells))))) := by
+  simpa [structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape] using
+    Structured.MultiTapeLowering.encodedGuardedStructured3Tapes_cells
+      (structuredBoolWordRawBitsDecoderSourceTargetTape bits suffixTail [])
+      (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+        (bits.length + 1))
+      (rightEdgeScanSourceTapeFromLeft [none] bits
+        (boolWordRawBitsDecoderPreservedPadding suffixTail []))
 
 def StructuredBoolWordRawBitsDecoderCanonicalEndpointSpec
     (endpoint : MachineDescription) : Prop :=
