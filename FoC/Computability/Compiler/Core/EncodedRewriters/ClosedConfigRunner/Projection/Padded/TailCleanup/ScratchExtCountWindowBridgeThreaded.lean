@@ -1318,6 +1318,74 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
     selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
       [] bits padding
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        bits padding =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        bits padding := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_nil :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        [] [] =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_none
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        [] (none :: padding) =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        [] (some padBit :: padding) =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        (bit :: rest) [] =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        (bit :: rest) (none :: padding) =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) (none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        (bit :: rest) (some padBit :: padding) =
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) (some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
+      (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
