@@ -2,8 +2,6 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredEndpointRouteContracts
 
 set_option doc.verso true
-set_option maxRecDepth 2000
-set_option maxHeartbeats 800000
 
 /-!
 # Live-tail structured lowerer readiness
@@ -59,17 +57,102 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_subroutineReady
   ⟨structuredMixedOptionCellQuoteLiveTailEmitterDescription_wellFormed,
     structuredMixedOptionCellQuoteLiveTailEmitterDescription_haltTransitionFree⟩
 
+private def structuredRawTailInsertionJoinerTransitionChunks :
+    List (List Structured.Transition) :=
+  open Structured.MultiTapeLowering.ThreeTape in
+  [ RawTailInsertion.rowsForSourceRead RawTailInsertion.copyTail (some false)
+      eraseR keepS (writeBitR false) RawTailInsertion.copyTail
+  , RawTailInsertion.rowsForSourceRead RawTailInsertion.copyTail (some true)
+      eraseR keepS (writeBitR true) RawTailInsertion.copyTail
+  , RawTailInsertion.rowsForSourceRead RawTailInsertion.copyTail none
+      keepS keepS keepS RawTailInsertion.rewindTailEntry
+  , allReadRows3 RawTailInsertion.rewindTailEntry
+      RawTailInsertion.rewindTailLoop keepL keepS keepL
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.rewindTailLoop
+      (some false) keepL keepS keepL RawTailInsertion.rewindTailLoop
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.rewindTailLoop
+      (some true) keepL keepS keepL RawTailInsertion.rewindTailLoop
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.rewindTailLoop none
+      keepR keepS keepR RawTailInsertion.rewindScratchEntry
+  , allReadRows3 RawTailInsertion.rewindScratchEntry
+      RawTailInsertion.rewindScratchLoop keepS keepL keepS
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.rewindScratchLoop
+      (some false) keepS keepL keepS
+      RawTailInsertion.rewindScratchLoop
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.rewindScratchLoop
+      (some true) keepS keepL keepS
+      RawTailInsertion.rewindScratchLoop
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.rewindScratchLoop
+      none keepS keepR keepS RawTailInsertion.writeInsert
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.writeInsert
+      (some false) (writeBitR false) keepR keepS
+      RawTailInsertion.writeInsert
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.writeInsert
+      (some true) (writeBitR true) keepR keepS
+      RawTailInsertion.writeInsert
+  , RawTailInsertion.rowsForScratchRead RawTailInsertion.writeInsert none
+      keepS keepS keepS RawTailInsertion.restoreTail
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.restoreTail
+      (some false) (writeBitR false) keepS eraseR
+      RawTailInsertion.restoreTail
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.restoreTail
+      (some true) (writeBitR true) keepS eraseR
+      RawTailInsertion.restoreTail
+  , RawTailInsertion.rowsForWorkRead RawTailInsertion.restoreTail none
+      eraseR keepS keepS RawTailInsertion.halt ]
+
+private theorem structuredRawTailInsertionJoinerTransitionChunks_flatten :
+    structuredRawTailInsertionJoinerTransitionChunks.flatten =
+      Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.rows := by
+  rfl
+
+private theorem structuredRawTailInsertionJoinerTransitionChunks_wellFormedBool :
+    structuredRawTailInsertionJoinerTransitionChunks.all
+        (fun rows =>
+          rows.all
+            (structuredTransitionWellFormedBool
+              Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.stateCount
+              3)) =
+      true := by
+  decide
+
+private theorem structuredRawTailInsertionJoinerTransitionChunks_deterministicBool :
+    structuredTransitionChunksDeterministicBool
+        structuredRawTailInsertionJoinerTransitionChunks =
+      true := by
+  decide
+
 theorem structuredRawTailInsertionJoinerDescription_wellFormed :
     structuredRawTailInsertionJoinerDescription.WellFormed := by
-  exact
-    structuredDescription_wellFormed_of_transition_checks
-      structuredRawTailInsertionJoinerDescription
-      (by decide)
-      (by decide)
-      (by decide)
-      (by decide)
-      (by decide)
-      (by decide)
+  refine ⟨by decide, by decide, by decide, by decide, ?_, ?_⟩
+  · intro t ht
+    have ht' : t ∈ structuredRawTailInsertionJoinerTransitionChunks.flatten := by
+      simpa [structuredRawTailInsertionJoinerDescription,
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description,
+        Structured.MultiTapeLowering.ThreeTape.description,
+        structuredRawTailInsertionJoinerTransitionChunks_flatten] using ht
+    have hrow :=
+      structuredTransition_wellFormed_of_chunk_all
+        structuredRawTailInsertionJoinerTransitionChunks_wellFormedBool
+        t ht'
+    simpa [structuredRawTailInsertionJoinerDescription,
+      Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description,
+      Structured.MultiTapeLowering.ThreeTape.description] using hrow
+  · intro t u ht hu hkey
+    have ht' : t ∈ structuredRawTailInsertionJoinerTransitionChunks.flatten := by
+      simpa [structuredRawTailInsertionJoinerDescription,
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description,
+        Structured.MultiTapeLowering.ThreeTape.description,
+        structuredRawTailInsertionJoinerTransitionChunks_flatten] using ht
+    have hu' : u ∈ structuredRawTailInsertionJoinerTransitionChunks.flatten := by
+      simpa [structuredRawTailInsertionJoinerDescription,
+        Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.description,
+        Structured.MultiTapeLowering.ThreeTape.description,
+        structuredRawTailInsertionJoinerTransitionChunks_flatten] using hu
+    exact
+      structuredTransition_deterministic_of_chunk_all
+        structuredRawTailInsertionJoinerTransitionChunks_deterministicBool
+        t u ht' hu' hkey
 
 theorem structuredRawTailInsertionJoinerDescription_haltTransitionFree :
     structuredRawTailInsertionJoinerDescription.HaltTransitionFree :=
