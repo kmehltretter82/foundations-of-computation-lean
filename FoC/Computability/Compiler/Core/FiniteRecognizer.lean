@@ -14,6 +14,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.RouteContrac
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ProductRouteContracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter
+import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreterRouteContracts
 
 set_option doc.verso true
 
