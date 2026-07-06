@@ -786,6 +786,393 @@ theorem outputThenRecognizePipeline_haltsFrom_producer
                 exact TuringMachine.Computes.step
                   (TuringMachine.Step.mk htrans) hcompP
 
+theorem outputThenRecognizePipeline_haltsWithExactOutput_of_exactOutput
+    {producerState recognizerState : Type}
+    {producer : TuringMachine MachineCodeSymbol producerState}
+    {recognizer : TuringMachine MachineCodeSymbol recognizerState}
+    {f g : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hproducerStop : TuringMachine.HaltingTransitionsDisabled producer)
+    (hproducer : ExactOutputSpec producer f)
+    (hrecognizer : ExactOutputSpec recognizer g)
+    (hhandoff :
+      forall {input output : Word MachineCodeSymbol},
+        f input = some output ->
+          outputThenRecognizeHandoffTape (Tape.output output) =
+            Tape.input output)
+    {input mid output : Word MachineCodeSymbol}
+    (hf : f input = some mid)
+    (hg : g mid = some output) :
+    TuringMachine.HaltsWithExactOutput
+      (outputThenRecognizePipeline producer recognizer) input output := by
+  rcases (hproducer input mid).mpr hf with
+    ⟨producerFinal, hproducerComputes,
+      hproducerHalt, hproducerTape⟩
+  rcases (hrecognizer mid output).mpr hg with
+    ⟨recognizerFinal, hrecognizerComputes,
+      hrecognizerHalt, hrecognizerTape⟩
+  let handoffTape : Tape MachineCodeSymbol :=
+    outputThenRecognizeHandoffTape producerFinal.tape
+  have hproducerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        (TuringMachine.initial
+          (outputThenRecognizePipeline producer recognizer) input)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape } := by
+    simpa [TuringMachine.initial, outputThenRecognizePipeline] using
+      outputThenRecognizePipeline_producer_computes
+        (recognizer := recognizer) hproducerStop hproducerComputes
+  have hhandoffPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape }
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := handoffTape } := by
+    have hstate : producerFinal.state = producer.halt := hproducerHalt
+    rw [hstate]
+    simpa [handoffTape, outputThenRecognizeHandoffTape] using
+      outputThenRecognizePipeline_handoff_computes
+        producer recognizer producerFinal.tape
+  have hhandoffInput : handoffTape = Tape.input mid := by
+    change
+      outputThenRecognizeHandoffTape producerFinal.tape =
+        Tape.input mid
+    rw [hproducerTape]
+    exact hhandoff hf
+  have hrecognizerComputesFromHandoff :
+      TuringMachine.Computes recognizer
+        { state := recognizer.start, tape := handoffTape }
+        recognizerFinal := by
+    simpa [TuringMachine.initial, hhandoffInput] using
+      hrecognizerComputes
+  have hrecognizerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := handoffTape }
+        { state := OutputThenRecognizeState.recognizer recognizerFinal.state
+          tape := recognizerFinal.tape } :=
+    outputThenRecognizePipeline_recognizer_computes
+      (producer := producer) hrecognizerComputesFromHandoff
+  refine
+    ⟨{ state := OutputThenRecognizeState.recognizer recognizerFinal.state
+       tape := recognizerFinal.tape },
+      ?_, ?_, hrecognizerTape⟩
+  · exact TuringMachine.computes_trans hproducerPipeline
+      (TuringMachine.computes_trans hhandoffPipeline
+        hrecognizerPipeline)
+  · simpa [TuringMachine.Halted, outputThenRecognizePipeline] using
+      hrecognizerHalt
+
+theorem outputThenRecognizePipeline_haltsWithExactOutput_to_recognizer
+    {producerState recognizerState : Type}
+    {producer : TuringMachine MachineCodeSymbol producerState}
+    {recognizer : TuringMachine MachineCodeSymbol recognizerState}
+    {f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hproducerStop : TuringMachine.HaltingTransitionsDisabled producer)
+    (hproducerCanonical : ExactOutputCanonicalSpec producer f)
+    (hrecognizerStop :
+      TuringMachine.HaltingTransitionsDisabled recognizer)
+    (hhandoff :
+      forall {input output : Word MachineCodeSymbol},
+        f input = some output ->
+          outputThenRecognizeHandoffTape (Tape.output output) =
+            Tape.input output)
+    {input output : Word MachineCodeSymbol}
+    (h :
+      TuringMachine.HaltsWithExactOutput
+        (outputThenRecognizePipeline producer recognizer)
+        input output) :
+    exists mid : Word MachineCodeSymbol,
+      f input = some mid /\
+        TuringMachine.HaltsWithExactOutput recognizer mid output := by
+  rcases h with
+    ⟨pipelineFinal, hpipelineComputes,
+      hpipelineHalt, hpipelineTape⟩
+  rcases
+      outputThenRecognizePipeline_haltsFrom_producer
+        (producer := producer) (recognizer := recognizer)
+        ⟨pipelineFinal, hpipelineComputes, hpipelineHalt⟩ with
+    ⟨producerFinal, hproducerComputes, hproducerHalt,
+      hrecognizerFromHandoff⟩
+  rcases
+      hproducerCanonical input producerFinal hproducerComputes
+        hproducerHalt with
+    ⟨mid, hmid, hproducerTape⟩
+  rcases hrecognizerFromHandoff with
+    ⟨recognizerFinal, hrecognizerComputes,
+      hrecognizerHalt⟩
+  have hrecognizerComputesHandoff :
+      TuringMachine.Computes recognizer
+        { state := recognizer.start,
+          tape := outputThenRecognizeHandoffTape producerFinal.tape }
+        recognizerFinal := by
+    simpa [outputThenRecognizeHandoffTape] using
+      hrecognizerComputes
+  have hhandoffInput :
+      outputThenRecognizeHandoffTape producerFinal.tape =
+        Tape.input mid := by
+    rw [hproducerTape]
+    exact hhandoff hmid
+  have hrecognizerComputesInput :
+      TuringMachine.Computes recognizer
+        (TuringMachine.initial recognizer mid) recognizerFinal := by
+    simpa [TuringMachine.initial, hhandoffInput] using
+      hrecognizerComputesHandoff
+  have hproducerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        (TuringMachine.initial
+          (outputThenRecognizePipeline producer recognizer) input)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape } := by
+    simpa [TuringMachine.initial, outputThenRecognizePipeline] using
+      outputThenRecognizePipeline_producer_computes
+        (recognizer := recognizer) hproducerStop hproducerComputes
+  have hhandoffPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape }
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := outputThenRecognizeHandoffTape producerFinal.tape } := by
+    have hstate : producerFinal.state = producer.halt := hproducerHalt
+    rw [hstate]
+    simpa [outputThenRecognizeHandoffTape] using
+      outputThenRecognizePipeline_handoff_computes
+        producer recognizer producerFinal.tape
+  have hrecognizerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := outputThenRecognizeHandoffTape producerFinal.tape }
+        { state := OutputThenRecognizeState.recognizer recognizerFinal.state
+          tape := recognizerFinal.tape } :=
+    outputThenRecognizePipeline_recognizer_computes
+      (producer := producer) hrecognizerComputesHandoff
+  have hpipelineAlternative :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        (TuringMachine.initial
+          (outputThenRecognizePipeline producer recognizer) input)
+        { state := OutputThenRecognizeState.recognizer
+            recognizerFinal.state
+          tape := recognizerFinal.tape } :=
+    TuringMachine.computes_trans hproducerPipeline
+      (TuringMachine.computes_trans hhandoffPipeline
+        hrecognizerPipeline)
+  have hpipelineAlternativeHalt :
+      TuringMachine.Halted
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.recognizer
+            recognizerFinal.state
+          tape := recognizerFinal.tape } := by
+    simpa [TuringMachine.Halted, outputThenRecognizePipeline] using
+      hrecognizerHalt
+  have hpipelineStop :
+      TuringMachine.HaltingTransitionsDisabled
+        (outputThenRecognizePipeline producer recognizer) :=
+    outputThenRecognizePipeline_haltingTransitionsDisabled
+      (producer := producer) hrecognizerStop
+  have hfinalEq :
+      ({ state := OutputThenRecognizeState.recognizer
+          recognizerFinal.state
+         tape := recognizerFinal.tape } :
+        TuringMachine.Configuration MachineCodeSymbol
+          (OutputThenRecognizeState producerState recognizerState)) =
+        pipelineFinal :=
+    TuringMachine.computes_to_halted_unique hpipelineStop
+      hpipelineAlternative hpipelineAlternativeHalt
+      hpipelineComputes hpipelineHalt
+  have hrecognizerTape :
+      recognizerFinal.tape = Tape.output output := by
+    have htape : recognizerFinal.tape = pipelineFinal.tape := by
+      simpa using congrArg
+        (fun c =>
+          (c : TuringMachine.Configuration MachineCodeSymbol
+            (OutputThenRecognizeState producerState recognizerState)).tape)
+        hfinalEq
+    exact htape.trans hpipelineTape
+  exact
+    ⟨mid, hmid,
+      ⟨recognizerFinal, hrecognizerComputesInput,
+        hrecognizerHalt, hrecognizerTape⟩⟩
+
+theorem outputThenRecognizePipeline_compose_exactOutputSpec
+    {producerState recognizerState : Type}
+    {producer : TuringMachine MachineCodeSymbol producerState}
+    {recognizer : TuringMachine MachineCodeSymbol recognizerState}
+    {f g : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hproducerStop : TuringMachine.HaltingTransitionsDisabled producer)
+    (hproducer : ExactOutputSpec producer f)
+    (hproducerCanonical : ExactOutputCanonicalSpec producer f)
+    (hrecognizerStop :
+      TuringMachine.HaltingTransitionsDisabled recognizer)
+    (hrecognizer : ExactOutputSpec recognizer g)
+    (hhandoff :
+      forall {input output : Word MachineCodeSymbol},
+        f input = some output ->
+          outputThenRecognizeHandoffTape (Tape.output output) =
+            Tape.input output) :
+    ExactOutputSpec
+      (outputThenRecognizePipeline producer recognizer)
+      (fun input =>
+        match f input with
+        | none => none
+        | some mid => g mid) := by
+  intro input output
+  constructor
+  · intro h
+    rcases
+        outputThenRecognizePipeline_haltsWithExactOutput_to_recognizer
+          hproducerStop hproducerCanonical hrecognizerStop hhandoff h with
+      ⟨mid, hf, hrecognizerOutput⟩
+    have hg : g mid = some output :=
+      (hrecognizer mid output).mp hrecognizerOutput
+    simp [hf, hg]
+  · intro h
+    cases hf : f input with
+    | none =>
+        simp [hf] at h
+    | some mid =>
+        have hg : g mid = some output := by
+          simpa [hf] using h
+        exact
+          outputThenRecognizePipeline_haltsWithExactOutput_of_exactOutput
+            hproducerStop hproducer hrecognizer hhandoff hf hg
+
+theorem outputThenRecognizePipeline_compose_exactOutputCanonicalSpec
+    {producerState recognizerState : Type}
+    {producer : TuringMachine MachineCodeSymbol producerState}
+    {recognizer : TuringMachine MachineCodeSymbol recognizerState}
+    {f g : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hproducerStop : TuringMachine.HaltingTransitionsDisabled producer)
+    (hproducerCanonical : ExactOutputCanonicalSpec producer f)
+    (hrecognizerStop :
+      TuringMachine.HaltingTransitionsDisabled recognizer)
+    (hrecognizerCanonical : ExactOutputCanonicalSpec recognizer g)
+    (hhandoff :
+      forall {input output : Word MachineCodeSymbol},
+        f input = some output ->
+          outputThenRecognizeHandoffTape (Tape.output output) =
+            Tape.input output) :
+    ExactOutputCanonicalSpec
+      (outputThenRecognizePipeline producer recognizer)
+      (fun input =>
+        match f input with
+        | none => none
+        | some mid => g mid) := by
+  intro input final hpipelineComputes hpipelineHalt
+  rcases
+      outputThenRecognizePipeline_haltsFrom_producer
+        (producer := producer) (recognizer := recognizer)
+        ⟨final, hpipelineComputes, hpipelineHalt⟩ with
+    ⟨producerFinal, hproducerComputes, hproducerHalt,
+      hrecognizerFromHandoff⟩
+  rcases
+      hproducerCanonical input producerFinal hproducerComputes
+        hproducerHalt with
+    ⟨mid, hmid, hproducerTape⟩
+  rcases hrecognizerFromHandoff with
+    ⟨recognizerFinal, hrecognizerComputes,
+      hrecognizerHalt⟩
+  have hrecognizerComputesHandoff :
+      TuringMachine.Computes recognizer
+        { state := recognizer.start,
+          tape := outputThenRecognizeHandoffTape producerFinal.tape }
+        recognizerFinal := by
+    simpa [outputThenRecognizeHandoffTape] using
+      hrecognizerComputes
+  have hhandoffInput :
+      outputThenRecognizeHandoffTape producerFinal.tape =
+        Tape.input mid := by
+    rw [hproducerTape]
+    exact hhandoff hmid
+  have hrecognizerComputesInput :
+      TuringMachine.Computes recognizer
+        (TuringMachine.initial recognizer mid) recognizerFinal := by
+    simpa [TuringMachine.initial, hhandoffInput] using
+      hrecognizerComputesHandoff
+  rcases
+      hrecognizerCanonical mid recognizerFinal
+        hrecognizerComputesInput hrecognizerHalt with
+    ⟨output, hg, hrecognizerTape⟩
+  have hproducerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        (TuringMachine.initial
+          (outputThenRecognizePipeline producer recognizer) input)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape } := by
+    simpa [TuringMachine.initial, outputThenRecognizePipeline] using
+      outputThenRecognizePipeline_producer_computes
+        (recognizer := recognizer) hproducerStop hproducerComputes
+  have hhandoffPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.producer producerFinal.state
+          tape := producerFinal.tape }
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := outputThenRecognizeHandoffTape producerFinal.tape } := by
+    have hstate : producerFinal.state = producer.halt := hproducerHalt
+    rw [hstate]
+    simpa [outputThenRecognizeHandoffTape] using
+      outputThenRecognizePipeline_handoff_computes
+        producer recognizer producerFinal.tape
+  have hrecognizerPipeline :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.recognizer recognizer.start
+          tape := outputThenRecognizeHandoffTape producerFinal.tape }
+        { state := OutputThenRecognizeState.recognizer recognizerFinal.state
+          tape := recognizerFinal.tape } :=
+    outputThenRecognizePipeline_recognizer_computes
+      (producer := producer) hrecognizerComputesHandoff
+  have hpipelineAlternative :
+      TuringMachine.Computes
+        (outputThenRecognizePipeline producer recognizer)
+        (TuringMachine.initial
+          (outputThenRecognizePipeline producer recognizer) input)
+        { state := OutputThenRecognizeState.recognizer
+            recognizerFinal.state
+          tape := recognizerFinal.tape } :=
+    TuringMachine.computes_trans hproducerPipeline
+      (TuringMachine.computes_trans hhandoffPipeline
+        hrecognizerPipeline)
+  have hpipelineAlternativeHalt :
+      TuringMachine.Halted
+        (outputThenRecognizePipeline producer recognizer)
+        { state := OutputThenRecognizeState.recognizer
+            recognizerFinal.state
+          tape := recognizerFinal.tape } := by
+    simpa [TuringMachine.Halted, outputThenRecognizePipeline] using
+      hrecognizerHalt
+  have hpipelineStop :
+      TuringMachine.HaltingTransitionsDisabled
+        (outputThenRecognizePipeline producer recognizer) :=
+    outputThenRecognizePipeline_haltingTransitionsDisabled
+      (producer := producer) hrecognizerStop
+  have hfinalEq :
+      ({ state := OutputThenRecognizeState.recognizer
+          recognizerFinal.state
+         tape := recognizerFinal.tape } :
+        TuringMachine.Configuration MachineCodeSymbol
+          (OutputThenRecognizeState producerState recognizerState)) =
+        final :=
+    TuringMachine.computes_to_halted_unique hpipelineStop
+      hpipelineAlternative hpipelineAlternativeHalt
+      hpipelineComputes hpipelineHalt
+  have hfinalTape : final.tape = Tape.output output := by
+    have htape : recognizerFinal.tape = final.tape := by
+      simpa using congrArg
+        (fun c =>
+          (c : TuringMachine.Configuration MachineCodeSymbol
+            (OutputThenRecognizeState producerState recognizerState)).tape)
+        hfinalEq
+    exact htape.symm.trans hrecognizerTape
+  exact ⟨output, by simp [hmid, hg], hfinalTape⟩
+
 /--
 A pipeline first applies a partial output transformer and then recognizes the
 produced word with predicate {lean}`P`.

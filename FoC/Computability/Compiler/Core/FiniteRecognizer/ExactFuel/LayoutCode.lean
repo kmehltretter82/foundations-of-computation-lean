@@ -873,6 +873,54 @@ theorem stageProgramFuelLoopCodePrimitive_eq_some_empty_of_eq_some
         simpa [layoutFuelLoopCodePrimitive] using h
       exact layoutFuelLoopCode_eq_some_empty_of_eq_some M hloop
 
+theorem exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    (hmaterializer : InitialLayoutExactOutputPrimitiveConstruction M)
+    (hlayout : LayoutFuelLoopExactOutputPrimitiveConstruction M) :
+    ExactOutputPrimitiveConstruction M := by
+  rcases hmaterializer with
+    ⟨materializerState, materializer, hmaterializer,
+      hmaterializerCanonical, hmaterializerStop⟩
+  rcases hlayout with
+    ⟨layoutState, layoutRunner, hlayout,
+      hlayoutCanonical, hlayoutStop⟩
+  refine
+    ⟨OutputThenRecognizeState materializerState layoutState,
+      outputThenRecognizePipeline materializer layoutRunner,
+      ?_, ?_, ?_⟩
+  · simpa [stageProgramFuelLoopCodePrimitive,
+      initialLayoutMaterializerCodePrimitive,
+      layoutFuelLoopCodePrimitive,
+      MachineDescription.TapeCodePrimitive.compose] using
+      (outputThenRecognizePipeline_compose_exactOutputSpec
+        hmaterializerStop hmaterializer hmaterializerCanonical
+        hlayoutStop hlayout
+        (by
+          intro tokens output houtput
+          exact
+            outputThenRecognizeHandoffTape_stageCodeToInitialLayoutCode
+              M (by
+                simpa [initialLayoutMaterializerCodePrimitive] using
+                  houtput)))
+  · simpa [stageProgramFuelLoopCodePrimitive,
+      initialLayoutMaterializerCodePrimitive,
+      layoutFuelLoopCodePrimitive,
+      MachineDescription.TapeCodePrimitive.compose] using
+      (outputThenRecognizePipeline_compose_exactOutputCanonicalSpec
+        hmaterializerStop hmaterializerCanonical
+        hlayoutStop hlayoutCanonical
+        (by
+          intro tokens output houtput
+          exact
+            outputThenRecognizeHandoffTape_stageCodeToInitialLayoutCode
+              M (by
+                simpa [initialLayoutMaterializerCodePrimitive] using
+                  houtput)))
+  · exact
+      outputThenRecognizePipeline_haltingTransitionsDisabled
+        (producer := materializer) hlayoutStop
+
 theorem codeMachineConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
