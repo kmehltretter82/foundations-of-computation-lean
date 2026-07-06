@@ -712,12 +712,135 @@ def Structured3EndpointWrappedConstruction
   exists W : Structured3EndpointWrapper,
     publicContract W.machine
 
+/-- Convert an exact tape halt from {lit}`Tape.input` into the usual word-input halt. -/
+theorem haltsWithTape_of_haltsFromTape_input
+    {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsFromTape (Tape.input w) T) :
+    D.HaltsWithTape w T := by
+  rcases h with ⟨n, hn⟩
+  exact
+    ⟨n, by
+      simpa [HaltsWithTapeIn, HaltsFromTapeIn, initial] using hn⟩
+
+/-- Convert a word-input halt into an exact tape halt from {lit}`Tape.input`. -/
+theorem haltsFromTape_input_of_haltsWithTape
+    {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
+    (h : D.HaltsWithTape w T) :
+    D.HaltsFromTape (Tape.input w) T := by
+  rcases h with ⟨n, hn⟩
+  exact
+    ⟨n, by
+      simpa [HaltsWithTapeIn, HaltsFromTapeIn, initial] using hn⟩
+
+def FuelSimulatorStructuredIndex : Type :=
+  Sigma (fun _w : Word Bool => Nat × Nat)
+
+def fuelSimulatorStructuredInputCode
+    (i : FuelSimulatorStructuredIndex) : Word MachineCodeSymbol :=
+  PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+    i.1 i.2.1 i.2.2
+
+def fuelSimulatorStructuredInputTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  Tape.input
+    (encodeCodeWordAsInput
+      (fuelSimulatorStructuredInputCode i))
+
+def fuelSimulatorStructuredOutputTape
+    (attempt : MachineDescription)
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
+    attempt i.1 i.2.1 i.2.2
+
+def FuelSimulatorStructuredEndpointExactIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered : FuelSimulatorStructuredIndex -> Tape Bool,
+    Structured3EndpointExactIndexedFamilySpec
+      W
+      fuelSimulatorStructuredInputTape
+      initialized
+      lowered
+      (fuelSimulatorStructuredOutputTape attempt)
+
+theorem fuelSimulatorStructuredInputCode_eq_of_inputTape_eq
+    {code : Word MachineCodeSymbol}
+    {i : FuelSimulatorStructuredIndex}
+    (h :
+      Tape.input (encodeCodeWordAsInput code) =
+        fuelSimulatorStructuredInputTape i) :
+    code = fuelSimulatorStructuredInputCode i := by
+  apply encodeCodeWordAsInput_injective
+  exact
+    Tape.input_injective
+      (by
+        simpa [fuelSimulatorStructuredInputTape] using h)
+
+theorem fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered : FuelSimulatorStructuredIndex -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W
+        fuelSimulatorStructuredInputTape
+        initialized
+        lowered
+        (fuelSimulatorStructuredOutputTape attempt)) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
+      attempt W.machine := by
+  constructor
+  · exact W.machine_subroutineReady
+  constructor
+  · intro w limit fuel
+    simpa [fuelSimulatorStructuredInputTape,
+      fuelSimulatorStructuredInputCode,
+      fuelSimulatorStructuredOutputTape] using
+      haltsWithTape_of_haltsFromTape_input
+        (Structured3EndpointExactIndexedFamilySpec.forward
+          hspec ⟨w, (limit, fuel)⟩)
+  · intro code T hhalt
+    have hfrom :
+        W.machine.HaltsFromTape
+          (Tape.input (encodeCodeWordAsInput code)) T :=
+      haltsFromTape_input_of_haltsWithTape hhalt
+    rcases
+        Structured3EndpointExactIndexedFamilySpec.closedIndex
+          hspec
+          (Tape.input (encodeCodeWordAsInput code)) T
+          hfrom with
+      ⟨i, hinput, hT⟩
+    have hcode : code = fuelSimulatorStructuredInputCode i :=
+      fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hinput
+    exact
+      ⟨i.1, i.2.1, i.2.2,
+        by
+          simpa [fuelSimulatorStructuredInputCode] using hcode,
+        by
+          simpa [fuelSimulatorStructuredOutputTape] using hT⟩
+
 def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction :
     Prop :=
   forall attempt : MachineDescription,
     Structured3EndpointWrappedConstruction
       (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
         attempt)
+
+theorem fuelSimulatorStructuredConstruction_of_endpointExactIndexed
+    (h :
+      forall attempt : MachineDescription,
+        FuelSimulatorStructuredEndpointExactIndexedConstruction attempt) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
+  intro attempt
+  rcases h attempt with ⟨W, initialized, lowered, hspec⟩
+  exact
+    ⟨W,
+      fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
+        (attempt := attempt)
+        (W := W)
+        (initialized := initialized)
+        (lowered := lowered)
+        hspec⟩
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_structured
     (h :
@@ -766,12 +889,109 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstru
   -- result in the controller layout and is closed over framed outputs.
   sorry
 
+def fuelOutputStructuredInputTape
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) : Tape Bool :=
+  Tape.input
+    (encodeCodeWordAsInput
+      (PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+        i))
+
+def FuelOutputStructuredEndpointExactIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt -> Tape Bool,
+    Structured3EndpointExactIndexedFamilySpec
+      W
+      fuelOutputStructuredInputTape
+      initialized
+      lowered
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+
+theorem fuelOutputInputCode_eq_of_inputTape_eq
+    {attempt : MachineDescription}
+    {code : Word MachineCodeSymbol}
+    {i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt}
+    (h :
+      Tape.input (encodeCodeWordAsInput code) =
+        fuelOutputStructuredInputTape i) :
+    code =
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+        i := by
+  apply encodeCodeWordAsInput_injective
+  exact
+    Tape.input_injective
+      (by
+        simpa [fuelOutputStructuredInputTape] using h)
+
+theorem fuelOutputCodeSubroutineSpec_of_endpointExactIndexed
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W
+        fuelOutputStructuredInputTape
+        initialized
+        lowered
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputTape) :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
+      attempt W.machine := by
+  constructor
+  · exact W.machine_subroutineReady
+  constructor
+  · intro i
+    simpa [fuelOutputStructuredInputTape] using
+      haltsWithTape_of_haltsFromTape_input
+        (Structured3EndpointExactIndexedFamilySpec.forward hspec i)
+  · intro code T hhalt
+    have hfrom :
+        W.machine.HaltsFromTape
+          (Tape.input (encodeCodeWordAsInput code)) T :=
+      haltsFromTape_input_of_haltsWithTape hhalt
+    rcases
+        Structured3EndpointExactIndexedFamilySpec.closedIndex
+          hspec
+          (Tape.input (encodeCodeWordAsInput code)) T
+          hfrom with
+      ⟨i, hinput, hT⟩
+    have hcode :
+        code =
+          PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+            i :=
+      fuelOutputInputCode_eq_of_inputTape_eq hinput
+    exact ⟨i, hcode, hT⟩
+
 def PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction :
     Prop :=
   forall attempt : MachineDescription,
     Structured3EndpointWrappedConstruction
       (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpec
         attempt)
+
+theorem fuelOutputStructuredConstruction_of_endpointExactIndexed
+    (h :
+      forall attempt : MachineDescription,
+        FuelOutputStructuredEndpointExactIndexedConstruction attempt) :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
+  intro attempt
+  rcases h attempt with ⟨W, initialized, lowered, hspec⟩
+  exact
+    ⟨W,
+      fuelOutputCodeSubroutineSpec_of_endpointExactIndexed
+        (attempt := attempt)
+        (W := W)
+        (initialized := initialized)
+        (lowered := lowered)
+        hspec⟩
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
     (h :
@@ -792,6 +1012,75 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSu
   -- code on halted simulator layouts and rejects all other inputs.
   sorry
 
+def boundedFuelPairEnumeratorStructuredInputTape
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) : Tape Bool :=
+  Tape.input i.input
+
+def BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
+    (runner : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner -> Tape Bool,
+    Structured3EndpointExactIndexedFamilySpec
+      W
+      boundedFuelPairEnumeratorStructuredInputTape
+      initialized
+      lowered
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+
+theorem boundedFuelPairEnumeratorInput_eq_of_inputTape_eq
+    {runner : MachineDescription}
+    {w : Word Bool}
+    {i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner}
+    (h :
+      Tape.input w =
+        boundedFuelPairEnumeratorStructuredInputTape i) :
+    w = i.input := by
+  exact
+    Tape.input_injective
+      (by
+        simpa [boundedFuelPairEnumeratorStructuredInputTape] using h)
+
+theorem boundedFuelPairEnumeratorRightShiftedSpec_of_endpointExactIndexed
+    {runner : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W
+        boundedFuelPairEnumeratorStructuredInputTape
+        initialized
+        lowered
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape) :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
+      runner W.machine := by
+  constructor
+  · exact W.machine_subroutineReady
+  constructor
+  · intro i
+    simpa [boundedFuelPairEnumeratorStructuredInputTape] using
+      haltsWithTape_of_haltsFromTape_input
+        (Structured3EndpointExactIndexedFamilySpec.forward hspec i)
+  · intro w T hhalt
+    have hfrom :
+        W.machine.HaltsFromTape (Tape.input w) T :=
+      haltsFromTape_input_of_haltsWithTape hhalt
+    rcases
+        Structured3EndpointExactIndexedFamilySpec.closedIndex
+          hspec (Tape.input w) T hfrom with
+      ⟨i, hinput, hT⟩
+    have hw : w = i.input :=
+      boundedFuelPairEnumeratorInput_eq_of_inputTape_eq hinput
+    exact ⟨i, hw, hT⟩
+
 def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction :
     Prop :=
   forall runner : MachineDescription,
@@ -799,6 +1088,24 @@ def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStruc
       Structured3EndpointWrappedConstruction
         (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
           runner)
+
+theorem boundedFuelPairEnumeratorStructuredConstruction_of_endpointExactIndexed
+    (h :
+      forall runner : MachineDescription,
+        runner.SubroutineReady ->
+          BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
+            runner) :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
+  intro runner hrunner
+  rcases h runner hrunner with ⟨W, initialized, lowered, hspec⟩
+  exact
+    ⟨W,
+      boundedFuelPairEnumeratorRightShiftedSpec_of_endpointExactIndexed
+        (runner := runner)
+        (W := W)
+        (initialized := initialized)
+        (lowered := lowered)
+        hspec⟩
 
 theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_of_structured
     (h :
