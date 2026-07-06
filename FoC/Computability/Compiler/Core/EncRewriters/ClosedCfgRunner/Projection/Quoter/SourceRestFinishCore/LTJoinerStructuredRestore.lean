@@ -256,6 +256,263 @@ theorem structuredRawTailInsertionJoinerDescription_assemblyRestoreTapeStateSpec
       structuredRawTailInsertionJoinerRestoreHandoff_work_normalizedOutput
         p⟩
 
+def structuredRawTailInsertionJoinerAssemblyRunConfig
+    (D : Structured.Description)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Structured.Configuration :=
+  D.runConfig
+    (Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.runFuel
+      (assemblySourceRestLiveTailEmitterRawTail p)
+      (assemblySourceRestLiveTailEmitterQuoteRest p))
+    (structuredRawTailInsertionJoinerInitialConfig p)
+
+theorem structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    structuredRawTailInsertionJoinerAssemblyRunConfig D p =
+      Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.restoreTailHandoffConfig
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (assemblySourceRestLiveTailEmitterRawTail p)
+        (assemblySourceRestLiveTailEmitterQuoteRest p) := by
+  exact hD.run p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreSpec.run_source_normalizedOutput
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (List.append
+          (assemblySourceRestLiveTailEmitterQuoteRest p)
+          (assemblySourceRestLiveTailEmitterRawTail p)) := by
+  rw [structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    hD p]
+  exact structuredRawTailInsertionJoinerRestoreHandoff_source_normalizedOutput
+    p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreSpec.run_source_normalizedOutput_eq_joined
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
+  rw [structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    hD p]
+  exact
+    structuredRawTailInsertionJoinerRestoreHandoff_source_normalizedOutput_eq_joined
+      p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreSpec.run_source_normalizedOutput_eq_target
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape
+          p.w p.sourceRestBits p.stage) := by
+  rw [structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    hD p]
+  exact
+    structuredRawTailInsertionJoinerRestoreHandoff_source_normalizedOutput_eq_target
+      p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreSpec.run_scratch_normalizedOutput
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 1) =
+      assemblySourceRestLiveTailEmitterQuoteRest p := by
+  rw [structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    hD p]
+  exact structuredRawTailInsertionJoinerRestoreHandoff_scratch_normalizedOutput
+    p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreSpec.run_work_normalizedOutput
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 2) =
+      [] := by
+  rw [structuredRawTailInsertionJoinerAssemblyRunConfig_eq_restoreHandoff
+    hD p]
+  exact structuredRawTailInsertionJoinerRestoreHandoff_work_normalizedOutput p
+
+def StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec
+    (D : Structured.Description) : Prop :=
+  StructuredRawTailInsertionJoinerAssemblyRestoreSpec D ∧
+    forall p : AssemblySourceRestLiveTailEmitterParam,
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes
+            0) =
+        Tape.normalizedOutput
+          (mixedOptionCellQuoteLiveTailJoinedTape
+            (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+            (assemblySourceRestLiveTailEmitterRawTail p)
+            (assemblySourceRestLiveTailEmitterQuoteRest p))
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec.restore
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyRestoreSpec D :=
+  hD.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec.output
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      Tape.normalizedOutput
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) :=
+  hD.right p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec.target
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape
+          p.w p.sourceRestBits p.stage) := by
+  rw [hD.output p, assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape]
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec.source_words
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      List.append
+        (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+        (List.append
+          (assemblySourceRestLiveTailEmitterQuoteRest p)
+          (assemblySourceRestLiveTailEmitterRawTail p)) :=
+  hD.restore.run_source_normalizedOutput p
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec_of_restore
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D := by
+  refine ⟨hD, ?_⟩
+  intro p
+  exact hD.run_source_normalizedOutput_eq_joined p
+
+theorem structuredRawTailInsertionJoinerDescription_assemblyRestoreRunOutputSpec :
+    StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec
+      structuredRawTailInsertionJoinerDescription :=
+  StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec_of_restore
+    structuredRawTailInsertionJoinerDescription_assemblyRestoreSpec
+
+def StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec
+    (D : Structured.Description) : Prop :=
+  StructuredRawTailInsertionJoinerAssemblyRestoreSpec D ∧
+    forall p : AssemblySourceRestLiveTailEmitterParam,
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes
+            0) =
+        Tape.normalizedOutput
+          (assemblySourceRestFinishTargetTape
+            p.w p.sourceRestBits p.stage) ∧
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes
+            1) =
+        assemblySourceRestLiveTailEmitterQuoteRest p ∧
+      Tape.normalizedOutput
+          (Structured.Description.tapeAt
+            (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes
+            2) =
+        []
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec.restore
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyRestoreSpec D :=
+  hD.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec.outputSpec
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyRestoreRunOutputSpec D := by
+  refine ⟨hD.restore, ?_⟩
+  intro p
+  rw [(hD.right p).left]
+  rw [← assemblySourceRestLiveTailJoinerJoinedTape_eq_targetTape]
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec.source
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 0) =
+      Tape.normalizedOutput
+        (assemblySourceRestFinishTargetTape
+          p.w p.sourceRestBits p.stage) :=
+  (hD.right p).left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec.scratch
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 1) =
+      assemblySourceRestLiveTailEmitterQuoteRest p :=
+  (hD.right p).right.left
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec.work
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D)
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.normalizedOutput
+        (Structured.Description.tapeAt
+          (structuredRawTailInsertionJoinerAssemblyRunConfig D p).tapes 2) =
+      [] :=
+  (hD.right p).right.right
+
+theorem StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec_of_restore
+    {D : Structured.Description}
+    (hD : StructuredRawTailInsertionJoinerAssemblyRestoreSpec D) :
+    StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec D := by
+  refine ⟨hD, ?_⟩
+  intro p
+  exact
+    ⟨hD.run_source_normalizedOutput_eq_target p,
+      hD.run_scratch_normalizedOutput p,
+      hD.run_work_normalizedOutput p⟩
+
+theorem structuredRawTailInsertionJoinerDescription_assemblyRestoreRunTapeStateSpec :
+    StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec
+      structuredRawTailInsertionJoinerDescription :=
+  StructuredRawTailInsertionJoinerAssemblyRestoreRunTapeStateSpec_of_restore
+    structuredRawTailInsertionJoinerDescription_assemblyRestoreSpec
+
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner

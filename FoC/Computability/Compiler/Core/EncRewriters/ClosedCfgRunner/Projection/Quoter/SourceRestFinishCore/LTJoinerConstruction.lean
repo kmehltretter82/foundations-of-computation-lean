@@ -39,6 +39,21 @@ def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     assemblySourceRestLiveTailEmitterRawTail
     assemblySourceRestLiveTailEmitterQuoteRest
 
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec
+    (finish : MachineDescription) : Prop :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    finish
+
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :
+    Prop :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+
 theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
     (finish : MachineDescription) :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish ↔
@@ -74,6 +89,55 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_assembly
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
+    (finish : MachineDescription) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec finish ↔
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec
+        finish := by
+  constructor
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro w sourceRestBits stage
+    exact hfinish.right
+      { w := w, sourceRestBits := sourceRestBits, stage := stage }
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro p
+    cases p with
+    | mk w sourceRestBits stage =>
+        exact hfinish.right w sourceRestBits stage
+
+theorem MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest_of_outputFamily
+    (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
+        finish).mp hfinish⟩
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_assemblyOutput
+    (h :
+      MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
+        finish).mpr hfinish⟩
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_of_exact
+    {finish : MachineDescription}
+    (hfinish :
+      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec finish :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec_of_exact hfinish
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_exact
+    (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction_of_exact h
+
 /--
 Guardrail for the live-tail joiner construction.  The arbitrary stage/source
 joiner route is inconsistent: the separated tape can erase the boundary between
@@ -105,6 +169,16 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSou
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
   sorry
+
+theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :=
+  MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_exact
+    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
+
+theorem mixedOptionCellQuoteLiveTailJoinerOutputConstruction_for_assemblySourceRest :
+    MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest :=
+  MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest_of_outputFamily
+    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction
 
 /--
 Specialized finite-table obligation for joining the reusable quote-rest field

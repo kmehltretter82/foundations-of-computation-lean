@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterRuns
 
@@ -729,6 +730,50 @@ def MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest :
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish
 
+def MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTapeWithOutput
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestFinishPrefixQuoteOutputBits
+            w sourceRestBits stage)
+          (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+          (preservingCellPassCellBits sourceRestBits))
+        (Tape.normalizedOutput
+          (mixedOptionCellQuoteLiveTailJoinedTape
+            (assemblySourceRestFinishPrefixQuoteOutputBits
+              w sourceRestBits stage)
+            (assemblySourceRestFinishRawTailBits sourceRestBits stage)
+            (preservingCellPassCellBits sourceRestBits)))
+
+def MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec finish
+
+theorem MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec_of_exact
+    {finish : MachineDescription}
+    (hfinish :
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish) :
+    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec
+      finish := by
+  refine ⟨hfinish.left, ?_⟩
+  intro w sourceRestBits stage
+  exact
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape
+      (hfinish.right w sourceRestBits stage)
+
+theorem MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest_of_exact
+    (h :
+      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec_of_exact
+        hfinish⟩
+
 def MixedOptionCellQuoteLiveTailJoinerFamilySpec
     {ι : Type}
     (emittedPrefix rawTail quoteRest : ι -> Word Bool)
@@ -747,6 +792,55 @@ def MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
   exists finish : MachineDescription,
     MixedOptionCellQuoteLiveTailJoinerFamilySpec
       emittedPrefix rawTail quoteRest finish
+
+def MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec
+    {ι : Type}
+    (emittedPrefix rawTail quoteRest : ι -> Word Bool)
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall p : ι,
+      finish.HaltsFromTapeWithOutput
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (emittedPrefix p) (rawTail p) (quoteRest p))
+        (Tape.normalizedOutput
+          (mixedOptionCellQuoteLiveTailJoinedTape
+            (emittedPrefix p) (rawTail p) (quoteRest p)))
+
+def MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction
+    {ι : Type}
+    (emittedPrefix rawTail quoteRest : ι -> Word Bool) : Prop :=
+  exists finish : MachineDescription,
+    MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec
+      emittedPrefix rawTail quoteRest finish
+
+theorem MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec_of_exact
+    {ι : Type}
+    {emittedPrefix rawTail quoteRest : ι -> Word Bool}
+    {finish : MachineDescription}
+    (hfinish :
+      MixedOptionCellQuoteLiveTailJoinerFamilySpec
+        emittedPrefix rawTail quoteRest finish) :
+    MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec
+      emittedPrefix rawTail quoteRest finish := by
+  refine ⟨hfinish.left, ?_⟩
+  intro p
+  exact
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape
+      (hfinish.right p)
+
+theorem MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction_of_exact
+    {ι : Type}
+    {emittedPrefix rawTail quoteRest : ι -> Word Bool}
+    (h :
+      MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
+        emittedPrefix rawTail quoteRest) :
+    MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction
+      emittedPrefix rawTail quoteRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec_of_exact
+        hfinish⟩
 
 end SelectedProjectionInputQuoterFiniteLeaf
 

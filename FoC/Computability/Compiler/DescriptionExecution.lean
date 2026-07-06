@@ -370,9 +370,30 @@ def HaltsFromTapeIn (D : MachineDescription)
   let final := D.runConfig n { state := D.start, tape := Tin }
   final.state = D.halt ∧ final.tape = Tout
 
+def HaltsFromTapeWithOutputIn (D : MachineDescription)
+    (n : Nat) (Tin : Tape Bool) (out : Word Bool) : Prop :=
+  let final := D.runConfig n { state := D.start, tape := Tin }
+  final.state = D.halt ∧ Tape.normalizedOutput final.tape = out
+
+instance (D : MachineDescription) (n : Nat)
+    (Tin : Tape Bool) (out : Word Bool) :
+    Decidable (D.HaltsFromTapeWithOutputIn n Tin out) := by
+  dsimp [HaltsFromTapeWithOutputIn]
+  infer_instance
+
 def HaltsFromTape (D : MachineDescription)
     (Tin Tout : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsFromTapeIn n Tin Tout
+
+def HaltsFromTapeWithOutput (D : MachineDescription)
+    (Tin : Tape Bool) (out : Word Bool) : Prop :=
+  exists n : Nat, D.HaltsFromTapeWithOutputIn n Tin out
+
+theorem haltsFromTapeWithOutput_iff_exists_haltsFromTapeWithOutputIn
+    {D : MachineDescription} {Tin : Tape Bool} {out : Word Bool} :
+    D.HaltsFromTapeWithOutput Tin out <->
+      exists fuel : Nat, D.HaltsFromTapeWithOutputIn fuel Tin out := by
+  rfl
 
 -- Internal bridges from semantic halting predicates to exact `runConfig`
 -- equalities.  They keep the public functionality lemmas below short.
@@ -412,6 +433,19 @@ private theorem runConfig_eq_halt_own_tape_of_haltsWithOutputIn
   | mk state tape =>
       have hstate : state = D.halt := by
         simpa [HaltsWithOutputIn, hfinal] using h.left
+      simp [hstate]
+
+private theorem runConfig_eq_halt_own_tape_of_haltsFromTapeWithOutputIn
+    {D : MachineDescription} {n : Nat} {Tin : Tape Bool}
+    {out : Word Bool}
+    (h : D.HaltsFromTapeWithOutputIn n Tin out) :
+    D.runConfig n { state := D.start, tape := Tin } =
+      { state := D.halt
+        tape := (D.runConfig n { state := D.start, tape := Tin }).tape } := by
+  cases hfinal : D.runConfig n { state := D.start, tape := Tin } with
+  | mk state tape =>
+      have hstate : state = D.halt := by
+        simpa [HaltsFromTapeWithOutputIn, hfinal] using h.left
       simp [hstate]
 
 private theorem runConfig_halt_tape_functional_core
@@ -458,6 +492,46 @@ theorem haltsWithOutput_of_haltsWithTape
   rcases h with ⟨n, hn⟩
   rcases hn with ⟨hstate, htape⟩
   exact ⟨n, ⟨hstate, by rw [htape]⟩⟩
+
+theorem haltsFromTapeWithOutput_of_haltsFromTape
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTape Tin Tout) :
+    D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) := by
+  rcases h with ⟨n, hn⟩
+  rcases hn with ⟨hstate, htape⟩
+  exact ⟨n, ⟨hstate, by rw [htape]⟩⟩
+
+theorem haltsFromTapeWithOutputIn_of_haltsFromTapeIn
+    {D : MachineDescription} {n : Nat} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTapeIn n Tin Tout) :
+    D.HaltsFromTapeWithOutputIn n Tin
+      (Tape.normalizedOutput Tout) := by
+  rcases h with ⟨hstate, htape⟩
+  exact ⟨hstate, by rw [htape]⟩
+
+theorem haltsFromTapeWithOutputIn_of_runConfig_eq
+    {D : MachineDescription} {n : Nat} {Tin Tout : Tape Bool}
+    (h :
+      D.runConfig n { state := D.start, tape := Tin } =
+        { state := D.halt, tape := Tout }) :
+    D.HaltsFromTapeWithOutputIn n Tin
+      (Tape.normalizedOutput Tout) := by
+  change
+    (D.runConfig n { state := D.start, tape := Tin }).state =
+        D.halt ∧
+      Tape.normalizedOutput
+          (D.runConfig n { state := D.start, tape := Tin }).tape =
+        Tape.normalizedOutput Tout
+  rw [h]
+  simp
+
+theorem haltsFromTapeWithOutput_of_runConfig_eq
+    {D : MachineDescription} {n : Nat} {Tin Tout : Tape Bool}
+    (h :
+      D.runConfig n { state := D.start, tape := Tin } =
+        { state := D.halt, tape := Tout }) :
+    D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
+  ⟨n, haltsFromTapeWithOutputIn_of_runConfig_eq h⟩
 
 theorem runConfig_eq_halt_of_haltsWithTape
     {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
@@ -683,6 +757,59 @@ theorem haltsFromTape_functional_of_haltTransitionFree
       (D := D) (c := { state := D.start, tape := Tin }) hD
       (runConfig_eq_halt_of_haltsFromTapeIn h₁)
       (runConfig_eq_halt_of_haltsFromTapeIn h₂)
+
+theorem haltsFromTapeWithOutput_functional_of_haltTransitionFree
+    {D : MachineDescription} {Tin : Tape Bool}
+    {out1 out2 : Word Bool}
+    (hD : D.HaltTransitionFree)
+    (h1 : D.HaltsFromTapeWithOutput Tin out1)
+    (h2 : D.HaltsFromTapeWithOutput Tin out2) :
+    out1 = out2 := by
+  rcases h1 with ⟨n1, h1⟩
+  rcases h2 with ⟨n2, h2⟩
+  let c0 : Configuration := { state := D.start, tape := Tin }
+  have htapes :
+      (D.runConfig n1 c0).tape = (D.runConfig n2 c0).tape :=
+    runConfig_halt_tape_functional_core
+      (D := D) (c := c0) hD
+      (runConfig_eq_halt_own_tape_of_haltsFromTapeWithOutputIn h1)
+      (runConfig_eq_halt_own_tape_of_haltsFromTapeWithOutputIn h2)
+  calc
+    out1 = Tape.normalizedOutput (D.runConfig n1 c0).tape := by
+      simpa [HaltsFromTapeWithOutputIn, c0] using h1.right.symm
+    _ = Tape.normalizedOutput (D.runConfig n2 c0).tape := by
+      rw [htapes]
+    _ = out2 := by
+      simpa [HaltsFromTapeWithOutputIn, c0] using h2.right
+
+theorem haltsFromTapeWithOutputIn_functional_of_haltTransitionFree
+    {D : MachineDescription} {Tin : Tape Bool}
+    {out1 out2 : Word Bool} {n1 n2 : Nat}
+    (hD : D.HaltTransitionFree)
+    (h1 : D.HaltsFromTapeWithOutputIn n1 Tin out1)
+    (h2 : D.HaltsFromTapeWithOutputIn n2 Tin out2) :
+    out1 = out2 :=
+  haltsFromTapeWithOutput_functional_of_haltTransitionFree
+    hD ⟨n1, h1⟩ ⟨n2, h2⟩
+
+theorem haltsFromTapeWithOutput_functional_of_subroutineReady
+    {D : MachineDescription} {Tin : Tape Bool}
+    {out1 out2 : Word Bool}
+    (hD : D.SubroutineReady)
+    (h1 : D.HaltsFromTapeWithOutput Tin out1)
+    (h2 : D.HaltsFromTapeWithOutput Tin out2) :
+    out1 = out2 :=
+  haltsFromTapeWithOutput_functional_of_haltTransitionFree hD.right h1 h2
+
+theorem haltsFromTapeWithOutputIn_functional_of_subroutineReady
+    {D : MachineDescription} {Tin : Tape Bool}
+    {out1 out2 : Word Bool} {n1 n2 : Nat}
+    (hD : D.SubroutineReady)
+    (h1 : D.HaltsFromTapeWithOutputIn n1 Tin out1)
+    (h2 : D.HaltsFromTapeWithOutputIn n2 Tin out2) :
+    out1 = out2 :=
+  haltsFromTapeWithOutputIn_functional_of_haltTransitionFree
+    hD.right h1 h2
 
 theorem runConfig_halt_tape_functional_of_haltTransitionFree
     {D : MachineDescription} {c : Configuration}
@@ -1583,6 +1710,15 @@ theorem haltsWithOutput_of_haltsWithTapeEquiv
     D.HaltsWithOutput w (Tape.normalizedOutput T) := by
   rcases h with ⟨Tactual, h_halt, h_equiv⟩
   have h_output := haltsWithOutput_of_haltsWithTape h_halt
+  rw [Tape.Equiv.normalizedOutput_eq h_equiv] at h_output
+  exact h_output
+
+theorem haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTapeEquiv Tin Tout) :
+    D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) := by
+  rcases h with ⟨Tactual, h_halt, h_equiv⟩
+  have h_output := haltsFromTapeWithOutput_of_haltsFromTape h_halt
   rw [Tape.Equiv.normalizedOutput_eq h_equiv] at h_output
   exact h_output
 
