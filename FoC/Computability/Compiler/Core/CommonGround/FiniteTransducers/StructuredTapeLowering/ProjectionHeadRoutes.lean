@@ -1,5 +1,8 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 
 set_option doc.verso true
 
@@ -574,10 +577,33 @@ def selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput
   Tape.blank
 
 /-- Structured three-tape output for the raw selected-head decoder backend. -/
+def selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
+  let guarded := guardLogicalTape target
+  tapeAtEncodedSplit
+    (List.append encodedPrefix
+      (List.append tapeSeparatorCells
+        (logicalCellListCode guarded.left.reverse)))
+    (List.append headMarkerCells
+      (List.append (logicalCellCode guarded.head)
+        (List.append (logicalCellListCode guarded.right)
+          (encodedStructuredTapeCells rest))))
+
+/--
+Structured three-tape output for the raw selected-head decoder backend.
+
+Tape 0 is allowed to stop at the selected head marker.  Forcing it to become
+blank would incorrectly require erasing arbitrary source prefix cells.  The
+egress bridge projects tape 2, so preserving a precise tape-0 scan position is
+the useful exact endpoint.
+-/
 def selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape
-    (target : Tape Bool) : Tape Bool :=
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
   encodedGuardedStructured3Tapes
-    Tape.blank
+    (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
+      target rest encodedPrefix)
     Tape.blank
     (guardLogicalTape target)
 
@@ -650,7 +676,8 @@ def SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerSpec
       normalizer.HaltsFromTapeEquiv
         (selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape
           target rest encodedPrefix)
-        (selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape target)
+        (selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape
+          target rest encodedPrefix)
 
 /-- Existence wrapper for the raw selected-head three-tape normalizer. -/
 def SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction :
@@ -662,9 +689,11 @@ def SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction :
 def SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeSpec
     (egress : MachineDescription) : Prop :=
   egress.SubroutineReady ∧
-    forall target : Tape Bool,
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
       egress.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape target)
+        (selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape
+          target rest encodedPrefix)
         target
 
 /-- Existence wrapper for the raw selected-head egress bridge. -/
@@ -679,9 +708,13 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeSpec_of_tape2Project
     SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeSpec projector := by
   constructor
   · exact hprojector.left
-  · intro target
+  · intro target rest encodedPrefix
     rcases
-        hprojector.right Tape.blank Tape.blank (guardLogicalTape target) with
+        hprojector.right
+          (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
+            target rest encodedPrefix)
+          Tape.blank
+          (guardLogicalTape target) with
       ⟨actual, hhalts, hequiv⟩
     exact
       ⟨actual, by
@@ -738,7 +771,7 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeDescription_spec
         hingress.left hnormalizer.left hegress.left
         (hingress.right target rest encodedPrefix)
         (hnormalizer.right target rest encodedPrefix)
-        (hegress.right target)
+        (hegress.right target rest encodedPrefix)
 
 theorem structuredSelectedHeadSegmentDecoderConstruction_of_rawHeadThreeTapeBridgeConstruction
     (hbridge :
@@ -751,6 +784,256 @@ theorem structuredSelectedHeadSegmentDecoderConstruction_of_rawHeadThreeTapeBrid
         ingress normalizer egress,
       selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeDescription_spec
         hingress hnormalizer hegress⟩
+
+namespace SelectedSegmentLogicalTapeDecoderRawHeadNormalizer
+
+def startState : Nat := 0
+
+def haltState : Nat := 99
+
+/--
+Lowerer-facing row table for the raw selected-head normalizer.
+
+The machine starts with tape 0 on the selected segment separator.  It copies
+decoded cells before the raw {lit}`[true, true]` marker to tape 2's left side,
+skips the marker, copies the head/right cells to tape 2, then scans tape 0
+backwards to the marker while rewinding tape 2 to the decoded head cell.
+Tape 1 is deliberately unused so the endpoint can keep it exactly blank.
+-/
+def rows : List Transition :=
+  [ ThreeTape.row 0 none none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 1
+
+  , ThreeTape.row 1 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 2
+  , ThreeTape.row 1 (some true) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 3
+  , ThreeTape.row 2 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepR 1
+  , ThreeTape.row 2 (some true) none none
+      ThreeTape.keepR ThreeTape.keepS (ThreeTape.writeR (some false)) 1
+  , ThreeTape.row 3 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS (ThreeTape.writeR (some true)) 1
+  , ThreeTape.row 3 (some true) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 4
+
+  , ThreeTape.row 4 none none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 4 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 5
+  , ThreeTape.row 4 (some true) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepS 6
+  , ThreeTape.row 5 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS ThreeTape.keepR 4
+  , ThreeTape.row 5 (some true) none none
+      ThreeTape.keepR ThreeTape.keepS (ThreeTape.writeR (some false)) 4
+  , ThreeTape.row 6 (some false) none none
+      ThreeTape.keepR ThreeTape.keepS (ThreeTape.writeR (some true)) 4
+
+  , ThreeTape.row 10 (some false) none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 12
+  , ThreeTape.row 10 (some false) none (some false)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 12
+  , ThreeTape.row 10 (some false) none (some true)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 12
+  , ThreeTape.row 10 (some true) none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 11
+  , ThreeTape.row 10 (some true) none (some false)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 11
+  , ThreeTape.row 10 (some true) none (some true)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 11
+  , ThreeTape.row 11 (some false) none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 10
+  , ThreeTape.row 11 (some false) none (some false)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 10
+  , ThreeTape.row 11 (some false) none (some true)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepL 10
+  , ThreeTape.row 11 (some true) none none
+      ThreeTape.keepS ThreeTape.keepS ThreeTape.keepS haltState
+  , ThreeTape.row 11 (some true) none (some false)
+      ThreeTape.keepS ThreeTape.keepS ThreeTape.keepS haltState
+  , ThreeTape.row 11 (some true) none (some true)
+      ThreeTape.keepS ThreeTape.keepS ThreeTape.keepS haltState
+  , ThreeTape.row 12 (some false) none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 12 (some false) none (some false)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 12 (some false) none (some true)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 12 (some true) none none
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 12 (some true) none (some false)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10
+  , ThreeTape.row 12 (some true) none (some true)
+      ThreeTape.keepL ThreeTape.keepS ThreeTape.keepS 10 ]
+
+def description : Description :=
+  ThreeTape.description 100 startState haltState rows
+
+theorem description_wellFormed :
+    description.WellFormed :=
+  structuredDescription_wellFormed_of_bool description (by decide)
+
+theorem description_haltTransitionFree :
+    description.HaltTransitionFree :=
+  structuredDescription_haltTransitionFree_of_bool description (by decide)
+
+theorem description_supportsReadWriteRows3 :
+    SupportsReadWriteRows3 description :=
+  supportedReadWriteRows3_of_supports_eq_true (by decide)
+
+def loweredDescription : MachineDescription :=
+  lowerStructured3Description description
+
+theorem loweredDescription_subroutineReady :
+    loweredDescription.SubroutineReady := by
+  simpa [loweredDescription] using
+    lowerStructured3Description_subroutineReady
+      description_wellFormed
+      description_supportsReadWriteRows3
+
+def initialConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  ThreeTape.config startState
+    (selectedSegmentLogicalTapeDecoderRawHeadSourceTape
+      target rest encodedPrefix)
+    Tape.blank
+    Tape.blank
+
+def finalConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  ThreeTape.config haltState
+    (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
+      target rest encodedPrefix)
+    Tape.blank
+    (guardLogicalTape target)
+
+def targetCells (target : Tape Bool) : List (Option Bool) :=
+  let guarded := guardLogicalTape target
+  List.append guarded.left.reverse
+    (guarded.head :: guarded.right)
+
+def rightEdgeOutputTape (target : Tape Bool) : Tape Bool :=
+  tapeAtCells (targetCells target).reverse []
+
+def afterLeftCopyConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  let guarded := guardLogicalTape target
+  ThreeTape.config 4
+    (tapeAtEncodedSplit
+      (List.append encodedPrefix
+        (List.append tapeSeparatorCells
+          (List.append (logicalCellListCode guarded.left.reverse)
+            headMarkerCells)))
+      (List.append (logicalCellCode guarded.head)
+        (List.append (logicalCellListCode guarded.right)
+          (encodedStructuredTapeCells rest))))
+    Tape.blank
+    (tapeAtCells guarded.left [])
+
+def afterRightCopyConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  let guarded := guardLogicalTape target
+  ThreeTape.config 4
+    (tapeAtEncodedSplit
+      (List.append encodedPrefix
+        (List.append tapeSeparatorCells
+          (logicalTapeCode guarded)))
+      (encodedStructuredTapeCells rest))
+    Tape.blank
+    (rightEdgeOutputTape target)
+
+theorem description_reaches_afterLeftCopyConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    exists steps : Nat,
+      description.runConfig steps
+        (initialConfig target rest encodedPrefix) =
+        afterLeftCopyConfig target rest encodedPrefix := by
+  -- Copies the guarded left cells and consumes the raw head marker.
+  sorry
+
+theorem description_reaches_afterRightCopyConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    exists steps : Nat,
+      description.runConfig steps
+        (afterLeftCopyConfig target rest encodedPrefix) =
+        afterRightCopyConfig target rest encodedPrefix := by
+  -- Copies the decoded head and right cells, stopping on the next separator.
+  sorry
+
+theorem description_reaches_finalConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    exists steps : Nat,
+      description.runConfig steps
+        (afterRightCopyConfig target rest encodedPrefix) =
+        finalConfig target rest encodedPrefix := by
+  -- Rewinds tape 0 to the raw marker while rewinding tape 2 to the logical head.
+  sorry
+
+theorem description_haltsWithTapes
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    description.HaltsWithTapes
+      (initialConfig target rest encodedPrefix)
+      (finalConfig target rest encodedPrefix).tapes := by
+  rcases
+    description_reaches_afterLeftCopyConfig target rest encodedPrefix with
+    ⟨leftSteps, hleft⟩
+  rcases
+    description_reaches_afterRightCopyConfig target rest encodedPrefix with
+    ⟨rightSteps, hright⟩
+  rcases
+    description_reaches_finalConfig target rest encodedPrefix with
+    ⟨rewindSteps, hrewind⟩
+  refine ⟨(leftSteps + rightSteps) + rewindSteps, ?_⟩
+  simpa [finalConfig] using
+    ThreeTape.runConfig_chain3 hleft hright hrewind
+
+theorem loweredDescription_haltsFromTapeEquiv
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    loweredDescription.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape
+        target rest encodedPrefix)
+      (selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape
+        target rest encodedPrefix) := by
+  simpa [
+    loweredDescription,
+    initialConfig,
+    finalConfig,
+    selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape,
+    selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape,
+    encodedGuardedStructured3Tapes] using
+    lowerStructured3Description_haltsFromConfigWithTapes
+      description_wellFormed
+      description_haltTransitionFree
+      description_supportsReadWriteRows3
+      (c := initialConfig target rest encodedPrefix)
+      (tapes := (finalConfig target rest encodedPrefix).tapes)
+      (by rfl)
+      (by rfl)
+      (description_haltsWithTapes target rest encodedPrefix)
+
+theorem loweredDescription_spec :
+    SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerSpec
+      loweredDescription := by
+  constructor
+  · exact loweredDescription_subroutineReady
+  · intro target rest encodedPrefix
+    exact loweredDescription_haltsFromTapeEquiv target rest encodedPrefix
+
+theorem construction :
+    SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction :=
+  ⟨loweredDescription, loweredDescription_spec⟩
+
+end SelectedSegmentLogicalTapeDecoderRawHeadNormalizer
 
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec
     (cleanup : MachineDescription) : Prop :=
@@ -1034,10 +1317,7 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction := by
-  -- Main structured backend: parse the raw logical-tape code on tape 0 while
-  -- `[true, true]` still identifies the selected head, use tape 1 as
-  -- workspace, and rebuild a guarded representative on tape 2.
-  sorry
+  exact SelectedSegmentLogicalTapeDecoderRawHeadNormalizer.construction
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction := by
