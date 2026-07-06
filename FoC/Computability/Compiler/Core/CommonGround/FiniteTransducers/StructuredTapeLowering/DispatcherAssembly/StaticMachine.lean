@@ -585,17 +585,6 @@ theorem returnedNoRowItemTransitions_wellFormed
         returnedNoRowBranchTransitions_wellFormed
           D item.2 (noRowJumpItems_mem_state_lt hitem)
 
-theorem returnedNoRowAllTransitions_wellFormed
-    (D : Description) (rowBlockSize : Nat) :
-    TransitionListWellFormed
-      (noRowReturnLimit D rowBlockSize)
-      (returnedNoRowAllTransitions D rowBlockSize) := by
-  unfold returnedNoRowAllTransitions
-  apply transitionListWellFormed_bind
-  intro item hitem
-  exact returnedNoRowItemTransitions_wellFormed
-    D rowBlockSize hitem
-
 theorem returnedNoRowJumpDescription_sources_below_returnOffset
     (D : Description) {rowBlockSize state : Nat} (reads : ReadTuple3)
     (hstate : state < D.stateCount) :
@@ -623,30 +612,6 @@ theorem returnedNoRowJumpDescription_sources_below_returnOffset
     exact Nat.lt_of_lt_of_le hscratchSelected
       (selectedRowBranchLimit_le_noRowReturnOffset
         D rowBlockSize state reads)
-
-theorem retargetedNoRowReturnDescription_sources_atLeast_offset
-    (offset target : Nat) :
-    TransitionSourcesAtLeast offset
-      (retargetedNoRowReturnDescription offset target).transitions := by
-  intro u hu
-  exact
-    (retargetedNoRowReturnDescription_sources_in_offset_block
-      offset target u hu).left
-
-theorem returnedNoRowJump_return_sourceDisjoint
-    (D : Description) {rowBlockSize state : Nat} (reads : ReadTuple3)
-    (hstate : state < D.stateCount) :
-    TransitionSourceDisjoint
-      (returnedNoRowJumpDescription D rowBlockSize state reads).transitions
-      (retargetedNoRowReturnDescription
-        (noRowReturnOffset D rowBlockSize state reads)
-        (StaticDispatcherState.ready state)).transitions :=
-  transitionSourceDisjoint_of_below_atLeast
-    (returnedNoRowJumpDescription_sources_below_returnOffset
-      D reads hstate)
-    (retargetedNoRowReturnDescription_sources_atLeast_offset
-      (noRowReturnOffset D rowBlockSize state reads)
-      (StaticDispatcherState.ready state))
 
 theorem returnedNoRowBranchTransitions_source_region
     {D : Description} {rowBlockSize state : Nat} {reads : ReadTuple3}
@@ -696,8 +661,15 @@ theorem returnedNoRowBranchTransitions_deterministic
   simpa [returnedNoRowBranchTransitions] using
     transitionListDeterministic_append_of_sourceDisjoint
       hjumpDet hreturnDet
-      (returnedNoRowJump_return_sourceDisjoint
-        D reads hstate)
+      (transitionSourceDisjoint_of_below_atLeast
+        (returnedNoRowJumpDescription_sources_below_returnOffset
+          D reads hstate)
+        (by
+          intro u hu
+          exact
+            (retargetedNoRowReturnDescription_sources_in_offset_block
+              (noRowReturnOffset D rowBlockSize state reads)
+              (StaticDispatcherState.ready state) u hu).left))
 
 theorem returnedNoRowItemTransitions_deterministic
     (D : Description) (rowBlockSize : Nat)
@@ -926,19 +898,6 @@ theorem returnedNoRowItemTransitions_sourceDisjoint_of_ne
                         (Nat.le_trans hblock hleftReturn.left)
                     exact (Nat.ne_of_lt hltLeft).symm hsource
 
-theorem returnedNoRowAllTransitions_deterministic
-    (D : Description) (rowBlockSize : Nat) :
-    TransitionListDeterministic
-      (returnedNoRowAllTransitions D rowBlockSize) := by
-  unfold returnedNoRowAllTransitions
-  apply transitionListDeterministic_flatMap
-  · intro item hitem
-    exact returnedNoRowItemTransitions_deterministic
-      D rowBlockSize hitem
-  · intro item₀ hitem₀ item₁ hitem₁ hne
-    exact returnedNoRowItemTransitions_sourceDisjoint_of_ne
-      D rowBlockSize hitem₀ hitem₁ hne
-
 theorem threeHeadReaderStateLimit_le_noRowReturnLimit
     (D : Description) (rowBlockSize : Nat) :
     threeHeadReaderStateLimit D ≤
@@ -1000,18 +959,6 @@ theorem threeHeadReaderTransitions_returnedNoRowItemTransitions_sourceDisjoint
                 hrightReturn.left)
           lia
 
-theorem threeHeadReaderTransitions_returnedNoRowAllTransitions_sourceDisjoint
-    (D : Description) (rowBlockSize : Nat) :
-    TransitionSourceDisjoint
-      (threeHeadReaderTransitions D)
-      (returnedNoRowAllTransitions D rowBlockSize) := by
-  unfold returnedNoRowAllTransitions
-  apply transitionSourceDisjoint_flatMap_right
-  intro item hitem
-  exact
-    threeHeadReaderTransitions_returnedNoRowItemTransitions_sourceDisjoint
-      D rowBlockSize hitem
-
 theorem threeHeadReaderReturnedNoRowTransitions_deterministic
     (D : Description) (rowBlockSize : Nat) :
     TransitionListDeterministic
@@ -1019,22 +966,22 @@ theorem threeHeadReaderReturnedNoRowTransitions_deterministic
   simpa [threeHeadReaderReturnedNoRowTransitions] using
     transitionListDeterministic_append_of_sourceDisjoint
       (threeHeadReaderTransitions_deterministic D)
-      (returnedNoRowAllTransitions_deterministic D rowBlockSize)
-      (threeHeadReaderTransitions_returnedNoRowAllTransitions_sourceDisjoint
-        D rowBlockSize)
-
-theorem threeHeadReaderReturnedNoRowTransitions_wellFormed
-    (D : Description) (rowBlockSize : Nat) :
-    TransitionListWellFormed
-      (noRowReturnLimit D rowBlockSize)
-      (threeHeadReaderReturnedNoRowTransitions D rowBlockSize) := by
-  simpa [threeHeadReaderReturnedNoRowTransitions] using
-    transitionListWellFormed_append
-      (transitionListWellFormed_mono
-        (threeHeadReaderTransitions_wellFormed D)
-        (threeHeadReaderStateLimit_le_noRowReturnLimit
-          D rowBlockSize))
-      (returnedNoRowAllTransitions_wellFormed D rowBlockSize)
+      (by
+        unfold returnedNoRowAllTransitions
+        apply transitionListDeterministic_flatMap
+        · intro item hitem
+          exact returnedNoRowItemTransitions_deterministic
+            D rowBlockSize hitem
+        · intro item₀ hitem₀ item₁ hitem₁ hne
+          exact returnedNoRowItemTransitions_sourceDisjoint_of_ne
+            D rowBlockSize hitem₀ hitem₁ hne)
+      (by
+        unfold returnedNoRowAllTransitions
+        apply transitionSourceDisjoint_flatMap_right
+        intro item hitem
+        exact
+          threeHeadReaderTransitions_returnedNoRowItemTransitions_sourceDisjoint
+            D rowBlockSize hitem)
 
 theorem selectedRowItemTransitions_sources_below_branchLimit
     {D : Description}
@@ -1098,28 +1045,6 @@ theorem selectedRowItemTransitions_sources_below_branchLimit
           exact Nat.lt_of_lt_of_le hrowLtBlock
             (selectedRowBranchRowOffset_add_blockSize_le_limit
               D item.2 (noRowJumpItems_mem_state_lt hitem))
-
-theorem selectedRowAllTransitions_sources_below_branchLimit
-    {D : Description}
-    (hrows : SupportsReadWriteRows3 D)
-    {refresh : MachineDescription}
-    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
-    (rowBlockSize : Nat)
-    (hrowFits :
-      forall item : Nat × ReadTuple3,
-        item ∈ noRowJumpItems D ->
-          forall t : Transition,
-            lookupTransitionFromReadTuple3 D item.1 item.2 = some t ->
-              (selectedRowSeparatorDescription t refresh).stateCount ≤
-                rowBlockSize) :
-    TransitionSourcesBelow
-      (selectedRowBranchLimit D rowBlockSize)
-      (selectedRowAllTransitions D refresh rowBlockSize) := by
-  unfold selectedRowAllTransitions
-  apply transitionSourcesBelow_bind
-  intro item hitem
-  exact selectedRowItemTransitions_sources_below_branchLimit
-    hrows hrefresh rowBlockSize hrowFits hitem
 
 theorem returnedNoRowItemTransitions_selectedRowItemTransitions_sourceDisjoint
     {D : Description}
@@ -1300,53 +1225,6 @@ theorem returnedNoRowItemTransitions_selectedRowItemTransitions_sourceDisjoint
                   (Nat.lt_of_lt_of_le hrightBelow hleftGe)).symm
                   hsource
 
-theorem returnedNoRowAllTransitions_selectedRowAllTransitions_sourceDisjoint
-    {D : Description}
-    (hrows : SupportsReadWriteRows3 D)
-    {refresh : MachineDescription}
-    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
-    (rowBlockSize : Nat)
-    (hrowFits :
-      forall item : Nat × ReadTuple3,
-        item ∈ noRowJumpItems D ->
-          forall t : Transition,
-            lookupTransitionFromReadTuple3 D item.1 item.2 = some t ->
-              (selectedRowSeparatorDescription t refresh).stateCount ≤
-                rowBlockSize) :
-    TransitionSourceDisjoint
-      (returnedNoRowAllTransitions D rowBlockSize)
-      (selectedRowAllTransitions D refresh rowBlockSize) := by
-  unfold returnedNoRowAllTransitions selectedRowAllTransitions
-  apply transitionSourceDisjoint_flatMap_left
-  intro noItem hnoItem
-  apply transitionSourceDisjoint_flatMap_right
-  intro selectedItem hselectedItem
-  exact
-    returnedNoRowItemTransitions_selectedRowItemTransitions_sourceDisjoint
-      hrows hrefresh rowBlockSize hrowFits hnoItem hselectedItem
-
-theorem threeHeadReaderReturnedNoRowTransitions_selectedRowAllTransitions_sourceDisjoint
-    {D : Description} (hrows : SupportsReadWriteRows3 D)
-    {refresh : MachineDescription}
-    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
-    (rowBlockSize : Nat)
-    (hrowFits :
-      forall item : Nat × ReadTuple3,
-        item ∈ noRowJumpItems D ->
-          forall t : Transition,
-            lookupTransitionFromReadTuple3 D item.1 item.2 = some t ->
-              (selectedRowSeparatorDescription t refresh).stateCount ≤
-                rowBlockSize) :
-    TransitionSourceDisjoint
-      (threeHeadReaderReturnedNoRowTransitions D rowBlockSize)
-      (selectedRowAllTransitions D refresh rowBlockSize) := by
-  simpa [threeHeadReaderReturnedNoRowTransitions] using
-    transitionSourceDisjoint_append_left
-      (threeHeadReaderTransitions_selectedRowAllTransitions_sourceDisjoint
-        hrows hrefresh rowBlockSize)
-      (returnedNoRowAllTransitions_selectedRowAllTransitions_sourceDisjoint
-        hrows hrefresh rowBlockSize hrowFits)
-
 theorem threeHeadReaderReturnedNoRowSelectedTransitions_deterministic
     {D : Description} (hDwf : D.WellFormed)
     (hrows : SupportsReadWriteRows3 D)
@@ -1369,8 +1247,21 @@ theorem threeHeadReaderReturnedNoRowSelectedTransitions_deterministic
         D rowBlockSize)
       (selectedRowAllTransitions_deterministic
         hDwf hrows hrefresh rowBlockSize hrowFits)
-      (threeHeadReaderReturnedNoRowTransitions_selectedRowAllTransitions_sourceDisjoint
-        hrows hrefresh rowBlockSize hrowFits)
+      (by
+        simpa [threeHeadReaderReturnedNoRowTransitions] using
+          transitionSourceDisjoint_append_left
+            (threeHeadReaderTransitions_selectedRowAllTransitions_sourceDisjoint
+              hrows hrefresh rowBlockSize)
+            (by
+              unfold returnedNoRowAllTransitions selectedRowAllTransitions
+              apply transitionSourceDisjoint_flatMap_left
+              intro noItem hnoItem
+              apply transitionSourceDisjoint_flatMap_right
+              intro selectedItem hselectedItem
+              exact
+                returnedNoRowItemTransitions_selectedRowItemTransitions_sourceDisjoint
+                  hrows hrefresh rowBlockSize hrowFits hnoItem
+                  hselectedItem))
 
 theorem threeHeadReaderReturnedNoRowSelectedTransitions_wellFormed
     {D : Description} (hDwf : D.WellFormed)
@@ -1391,8 +1282,19 @@ theorem threeHeadReaderReturnedNoRowSelectedTransitions_wellFormed
         D refresh rowBlockSize) := by
   simpa [threeHeadReaderReturnedNoRowSelectedTransitions] using
     transitionListWellFormed_append
-      (threeHeadReaderReturnedNoRowTransitions_wellFormed
-        D rowBlockSize)
+      (by
+        simpa [threeHeadReaderReturnedNoRowTransitions] using
+          transitionListWellFormed_append
+            (transitionListWellFormed_mono
+              (threeHeadReaderTransitions_wellFormed D)
+              (threeHeadReaderStateLimit_le_noRowReturnLimit
+                D rowBlockSize))
+            (by
+              unfold returnedNoRowAllTransitions
+              apply transitionListWellFormed_bind
+              intro item hitem
+              exact returnedNoRowItemTransitions_wellFormed
+                D rowBlockSize hitem))
       (transitionListWellFormed_mono
         (selectedRowAllTransitions_wellFormed
           hDwf hrows hrefresh rowBlockSize hrowFits)
