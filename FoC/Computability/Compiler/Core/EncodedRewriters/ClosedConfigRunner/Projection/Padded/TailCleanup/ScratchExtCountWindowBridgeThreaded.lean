@@ -1374,6 +1374,76 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction
     SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
       compactor
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorNilPadSymbolCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] []) ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (none :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (none :: padding))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorConsPadSymbolCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) [])
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (none :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderFootprintCompactorNilPadSymbolCaseSpec
+      compactor ∧
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorConsPadSymbolCaseSpec
+      compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseSpec
+      compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction := by
+  rcases hsplit with ⟨compactor, hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  exact
+    ⟨compactor, hready, hnilNil, hnilNone, hnilSome,
+      hconsNil, hconsNone, hconsSome⟩
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_of_padSymbolCases
     (hcases :
       SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction) :
@@ -1395,9 +1465,15 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstru
     | some padBit =>
         exact hconsSome bit rest padBit padding
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
+      selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
