@@ -1339,6 +1339,134 @@ private theorem description_rewinds_cellStackConfig
       rw [rewindOutputCurrentCells_logicalCellListCode_singleton_append]
       simp [rewindCellStackDoneConfig, List.reverse_cons, List.append_assoc]
 
+private def leftCopyConfig
+    (baseLeft processed remaining suffix :
+      List (Option Bool)) : Configuration :=
+  ThreeTape.config 1
+    (tapeAtEncodedSplit
+      (List.append baseLeft (logicalCellListCode processed))
+      (List.append (logicalCellListCode remaining)
+        (List.append headMarkerCells suffix)))
+    Tape.blank
+    (tapeAtCells processed.reverse [])
+
+private theorem description_enters_leftCopyConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    description.runConfig 1
+        (initialConfig target rest encodedPrefix) =
+      leftCopyConfig
+        (List.append encodedPrefix tapeSeparatorCells)
+        []
+        (guardLogicalTape target).left.reverse
+        (List.append (logicalCellCode (guardLogicalTape target).head)
+          (List.append (logicalCellListCode (guardLogicalTape target).right)
+            (encodedStructuredTapeCells rest))) := by
+  cases target with
+  | mk left head right =>
+      cases head with
+      | none =>
+          three_tape_step [
+            description, rows, initialConfig, leftCopyConfig,
+            selectedSegmentLogicalTapeDecoderRawHeadSourceTape,
+            guardLogicalTape, logicalTapeCode, logicalCellListCode,
+            logicalCellCode, logicalCellListBits, logicalCellBits,
+            encodedStructuredTapeCells, tapeAtEncodedSplit,
+            tapeSeparatorCells, headMarkerCells, startState, haltState,
+            List.map_append, List.append_assoc]
+      | some bit =>
+          cases bit <;>
+            three_tape_step [
+              description, rows, initialConfig, leftCopyConfig,
+              selectedSegmentLogicalTapeDecoderRawHeadSourceTape,
+              guardLogicalTape, logicalTapeCode, logicalCellListCode,
+              logicalCellCode, logicalCellListBits, logicalCellBits,
+              encodedStructuredTapeCells, tapeAtEncodedSplit,
+              tapeSeparatorCells, headMarkerCells, startState, haltState,
+              List.map_append, List.append_assoc]
+
+private theorem description_leftCopy_cell
+    (baseLeft processed remaining suffix : List (Option Bool))
+    (cell : Option Bool) :
+    description.runConfig 2
+        (leftCopyConfig baseLeft processed (cell :: remaining) suffix) =
+      leftCopyConfig baseLeft (List.append processed [cell])
+        remaining suffix := by
+  cases cell with
+  | none =>
+      three_tape_step [
+        description, rows, leftCopyConfig, logicalCellListCode,
+        logicalCellCode, logicalCellListBits, logicalCellBits,
+        tapeAtEncodedSplit, tapeAtCells, List.map_append,
+        List.reverse_append, List.append_assoc]
+      cases
+          (List.map some (logicalCellListBits remaining) ++
+            (headMarkerCells ++ suffix)) <;>
+        rfl
+  | some bit =>
+      cases bit <;>
+        three_tape_step [
+          description, rows, leftCopyConfig, logicalCellListCode,
+          logicalCellCode, logicalCellListBits, logicalCellBits,
+          tapeAtEncodedSplit, tapeAtCells, List.map_append,
+          List.reverse_append, List.append_assoc]
+      all_goals
+        cases
+            (List.map some (logicalCellListBits remaining) ++
+              (headMarkerCells ++ suffix)) <;>
+          rfl
+
+private theorem description_leftCopy_cells
+    (baseLeft processed remaining suffix : List (Option Bool)) :
+    description.runConfig (2 * remaining.length)
+        (leftCopyConfig baseLeft processed remaining suffix) =
+      leftCopyConfig baseLeft (List.append processed remaining)
+        [] suffix := by
+  induction remaining generalizing processed with
+  | nil =>
+      simp [leftCopyConfig, Structured.Description.runConfig]
+  | cons cell remaining ih =>
+      rw [show 2 * (cell :: remaining).length =
+        2 + 2 * remaining.length by
+        simp
+        lia]
+      rw [Description.runConfig_add]
+      rw [description_leftCopy_cell]
+      rw [ih (List.append processed [cell])]
+      simp [List.append_assoc]
+
+private theorem description_leftCopy_headMarker
+    (baseLeft processed suffix : List (Option Bool)) :
+    description.runConfig 2
+        (leftCopyConfig baseLeft processed [] suffix) =
+      ThreeTape.config 4
+        (tapeAtEncodedSplit
+          (List.append
+            (List.append baseLeft (logicalCellListCode processed))
+            headMarkerCells)
+          suffix)
+        Tape.blank
+        (tapeAtCells processed.reverse []) := by
+  cases suffix with
+  | nil =>
+      three_tape_step [
+        description, rows, leftCopyConfig, logicalCellListCode,
+        logicalCellCode, tapeAtEncodedSplit, tapeAtCells,
+        headMarkerCells, List.reverse_append, List.append_assoc]
+  | cons sourceHead sourceTail =>
+      cases sourceHead with
+      | none =>
+          three_tape_step [
+            description, rows, leftCopyConfig, logicalCellListCode,
+            logicalCellCode, tapeAtEncodedSplit, tapeAtCells,
+            headMarkerCells, List.reverse_append, List.append_assoc]
+      | some sourceBit =>
+          cases sourceBit <;>
+            three_tape_step [
+              description, rows, leftCopyConfig, logicalCellListCode,
+              logicalCellCode, tapeAtEncodedSplit, tapeAtCells,
+              headMarkerCells, List.reverse_append, List.append_assoc]
+
 theorem description_reaches_afterLeftCopyConfig
     (target : Tape Bool) (rest : List (Tape Bool))
     (encodedPrefix : List (Option Bool)) :
@@ -1346,8 +1474,25 @@ theorem description_reaches_afterLeftCopyConfig
       description.runConfig steps
         (initialConfig target rest encodedPrefix) =
         afterLeftCopyConfig target rest encodedPrefix := by
-  -- Copies the guarded left cells and consumes the raw head marker.
-  sorry
+  let guarded : Tape Bool := guardLogicalTape target
+  let baseLeft : List (Option Bool) :=
+    List.append encodedPrefix tapeSeparatorCells
+  let suffix : List (Option Bool) :=
+    List.append (logicalCellCode guarded.head)
+      (List.append (logicalCellListCode guarded.right)
+        (encodedStructuredTapeCells rest))
+  refine ⟨1 + (2 * guarded.left.reverse.length + 2), ?_⟩
+  rw [Description.runConfig_add]
+  rw [description_enters_leftCopyConfig]
+  change
+    description.runConfig (2 * guarded.left.reverse.length + 2)
+        (leftCopyConfig baseLeft [] guarded.left.reverse suffix) =
+      afterLeftCopyConfig target rest encodedPrefix
+  rw [Description.runConfig_add]
+  rw [description_leftCopy_cells]
+  rw [description_leftCopy_headMarker]
+  simp [guarded, baseLeft, suffix, afterLeftCopyConfig, tapeAtEncodedSplit,
+    List.append_assoc]
 
 theorem description_reaches_afterRightCopyConfig
     (target : Tape Bool) (rest : List (Tape Bool))
