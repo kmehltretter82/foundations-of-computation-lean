@@ -203,36 +203,6 @@ theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_aft
           ((assemblySourceRestFinishSourcePrefixBits p.w p.stage).length +
             p.sourceRestBits.length)))
 
--- Prefix-only quoting is useful only after a separate phase has isolated the
--- parsed prefix. The assembly rewind phase leaves the full counted source word,
--- so the composable post-rewind theorem is the target-prefix theorem above.
-theorem structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind_isolatedAssemblyPrefix
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription.runConfig
-        (4 *
-            (assemblySourceRestFinishSourcePrefixBits p.w p.stage).length +
-          1)
-        (structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
-          0 [] (assemblySourceRestFinishSourcePrefixBits p.w p.stage)
-          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
-          (assemblySourceRestFinishLengthHeaderBits
-            p.w p.sourceRestBits p.stage)) =
-      structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig
-        structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription.halt
-        (assemblySourceRestFinishSourcePrefixBits p.w p.stage).reverse
-        []
-        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
-        (assemblySourceRestLiveTailEmitterEmittedPrefix p) := by
-  rw [assemblySourceRestLiveTailEmitterEmittedPrefix,
-    assemblySourceRestFinishPrefixQuoteOutputBits,
-    assemblySourceRestFinishQuotedPrefixBits]
-  exact
-    structuredMixedOptionCellQuoteLiveTailCellPassEmitterDescription_run_afterRewind
-      (assemblySourceRestFinishSourcePrefixBits p.w p.stage)
-      (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
-      (assemblySourceRestFinishLengthHeaderBits
-        p.w p.sourceRestBits p.stage)
-
 theorem structuredMixedOptionCellQuoteLiveTailRewindConfig_eq_cellPassAfterRewindConfig
     (bits outputBits : Word Bool) :
     structuredMixedOptionCellQuoteLiveTailRewindConfig
@@ -1228,23 +1198,6 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind
       structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind_loop
         bits.reverse [] outputBits 0
 
-theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind_assembly
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
-        (structuredMixedOptionCellQuoteLiveTailEmitterRewindSteps p)
-        (structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthStaticConfig
-          p) =
-      structuredMixedOptionCellQuoteLiveTailEmitterAfterRewindStaticConfig p := by
-  simpa [structuredMixedOptionCellQuoteLiveTailEmitterRewindSteps,
-    structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthStaticConfig,
-    structuredMixedOptionCellQuoteLiveTailEmitterAfterRewindStaticConfig,
-    structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig,
-    structuredMixedOptionCellQuoteLiveTailLengthPhaseTape] using
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind
-      (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p)
-      (assemblySourceRestFinishLengthHeaderBits
-        p.w p.sourceRestBits p.stage)
-
 theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote_bit
     (bit : Bool) (processedRev rest : Word Bool) (markers : Nat)
     (outputBits : Word Bool) :
@@ -1383,135 +1336,6 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote
     structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote_loop
       [] bits markers outputBits
 
-theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote_assembly
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
-        (structuredMixedOptionCellQuoteLiveTailEmitterQuoteSteps p)
-        (structuredMixedOptionCellQuoteLiveTailEmitterQuoteStartStaticConfig
-          p) =
-      structuredMixedOptionCellQuoteLiveTailEmitterFinalStaticConfig p := by
-  rw [structuredMixedOptionCellQuoteLiveTailEmitterQuoteStartStaticConfig,
-    structuredMixedOptionCellQuoteLiveTailEmitterFinalStaticConfig,
-    structuredMixedOptionCellQuoteLiveTailEmitterQuoteSteps]
-  rw [structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits]
-  rw [assemblySourceRestFinishTargetPrefixBits_eq_headerQuote,
-    assemblySourceRestFinishLengthHeaderBits]
-  simpa [assemblySourceRestFinishSourceBits_length_eq_prefix_add,
-    List.append_assoc] using
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote
-      (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage)
-      (assemblySourceRestFinishSourceBits p.w p.sourceRestBits p.stage).length
-      (List.append
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-          ((assemblySourceRestFinishSourcePrefixBits p.w p.stage).length +
-            p.sourceRestBits.length)))
-
-theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_countLength_assembly
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
-        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps p)
-        (structuredMixedOptionCellQuoteLiveTailEmitterInitialConfig p) =
-      structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthStaticConfig
-        p := by
-  refine
-    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
-      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
-      (n :=
-        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length +
-          1)
-      (m :=
-        4 *
-            (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
-              p).length +
-          8)
-      (c1 :=
-        structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
-          100
-          (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
-            (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
-              p).reverse [])
-          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
-            p).length
-          0 [])
-      (htotal := rfl)
-      ?_
-      ?_
-  · rw [structuredMixedOptionCellQuoteLiveTailEmitterInitialConfig,
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count]
-    exact
-      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig_eq_lengthHeaderConfig
-        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).reverse
-        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
-        []
-  · simpa [structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthStaticConfig,
-      assemblySourceRestFinishLengthHeaderBits,
-      structuredMixedOptionCellQuoteLiveTailHeaderBits_eq,
-      structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits_length] using
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_length
-        (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits p).length
-        (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
-          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
-            p).reverse [])
-        []
-
-theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_countLengthRewind_assembly
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
-        (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
-          p)
-        (structuredMixedOptionCellQuoteLiveTailEmitterInitialConfig p) =
-      structuredMixedOptionCellQuoteLiveTailEmitterAfterRewindStaticConfig
-        p := by
-  refine
-    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
-      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
-      (n :=
-        structuredMixedOptionCellQuoteLiveTailEmitterCountLengthSteps p)
-      (m :=
-        structuredMixedOptionCellQuoteLiveTailEmitterRewindSteps p)
-      (c1 :=
-        structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthStaticConfig
-          p)
-      (htotal := rfl)
-      ?_
-      ?_
-  · exact
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_countLength_assembly
-        p
-  · exact
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_rewind_assembly
-        p
-
-theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_assembly
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    structuredMixedOptionCellQuoteLiveTailEmitterDescription.runConfig
-        (structuredMixedOptionCellQuoteLiveTailEmitterSteps p)
-        (structuredMixedOptionCellQuoteLiveTailEmitterInitialConfig p) =
-      structuredMixedOptionCellQuoteLiveTailEmitterFinalStaticConfig p := by
-  refine
-    Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
-      (D := structuredMixedOptionCellQuoteLiveTailEmitterDescription)
-      (n :=
-        structuredMixedOptionCellQuoteLiveTailEmitterCountLengthRewindSteps
-          p)
-      (m :=
-        structuredMixedOptionCellQuoteLiveTailEmitterQuoteSteps p)
-      (c1 :=
-        structuredMixedOptionCellQuoteLiveTailEmitterQuoteStartStaticConfig
-          p)
-      (htotal := rfl)
-      ?_
-      ?_
-  · simpa
-      [structuredMixedOptionCellQuoteLiveTailEmitterAfterRewindStaticConfig_eq_quoteStartStaticConfig
-        p] using
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_countLengthRewind_assembly
-        p
-  · exact
-      structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote_assembly
-        p
-
 /--
 Separated structured phase run for the assembly live-tail emitter prefix.
 
@@ -1535,9 +1359,50 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterSeparatedPhases_run
         (structuredMixedOptionCellQuoteLiveTailEmitterQuoteStartConfig p) =
       structuredMixedOptionCellQuoteLiveTailEmitterFinalConfig p := by
   refine ⟨?_, ?_, ?_⟩
-  · exact
-      structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_assembly
-        p
+  · refine
+      Structured.MultiTapeLowering.ThreeTape.runConfig_chain2_of_eq
+        (D := structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription)
+        (n :=
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+            p).length + 1)
+        (m :=
+          4 *
+              (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+                p).length +
+            8)
+        (c1 :=
+          structuredMixedOptionCellQuoteLiveTailLengthHeaderConfig
+            100
+            (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+              (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+                p).reverse [])
+            (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+              p).length
+            0 [])
+        (htotal := ?_)
+        ?_
+        ?_
+    · rfl
+    · rw [structuredMixedOptionCellQuoteLiveTailEmitterInitialConfig,
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count]
+      exact
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig_eq_lengthHeaderConfig
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+            p).reverse
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+            p).length
+          []
+    · simpa [structuredMixedOptionCellQuoteLiveTailEmitterAfterCountLengthConfig,
+        assemblySourceRestFinishLengthHeaderBits,
+        structuredMixedOptionCellQuoteLiveTailHeaderBits_eq,
+        structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits_length] using
+        structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_length
+          (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+            p).length
+          (structuredMixedOptionCellQuoteLiveTailCellPassSourceTape
+            (structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
+              p).reverse [])
+          []
   · rw [structuredMixedOptionCellQuoteLiveTailEmitterRewindStartConfig_eq]
     exact
       structuredMixedOptionCellQuoteLiveTailRewindDescription_run
