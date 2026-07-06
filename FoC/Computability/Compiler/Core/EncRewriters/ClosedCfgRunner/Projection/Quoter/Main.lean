@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.RawCells
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.RawCellsOutput
 
 set_option doc.verso true
 
