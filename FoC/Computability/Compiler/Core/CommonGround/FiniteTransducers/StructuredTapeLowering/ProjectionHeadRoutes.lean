@@ -356,6 +356,13 @@ theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_iff_split :
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
 
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction := by
+  -- Remaining reusable finite-machine cleanup for the selected-head scanner
+  -- target.  The split separates the singleton selected segment from the case
+  -- with a structured suffix to the right.
+  sorry
+
 /-!
 ## Pipeline route
 

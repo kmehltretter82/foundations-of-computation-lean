@@ -174,6 +174,196 @@ theorem markerTapeAt_succ (used n : Nat) :
 def outputTape (out : List (Option Bool)) : Tape Bool :=
   tapeAtCells out.reverse []
 
+/-!
+## Split-target separator focus route
+
+The compactor output tape is right-positioned after the full target payload.
+For payloads of the form {lit}`bits.map some ++ none :: padding`, downstream
+selected-footprint endpoints need the output logical tape focused back at the
+semantic separator.  This route keeps the full structured source and marker
+tapes available, so it is not the ambiguous tape-2-only rewind.
+-/
+
+def splitTargetPayloadCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append (bits.map some) (none :: padding)
+
+def splitSourcePayloadCells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append (splitTargetPayloadCells bits padding) [none]
+
+theorem splitSourcePayloadCells_eq_target_append_boundary
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    splitSourcePayloadCells bits padding =
+      List.append (splitTargetPayloadCells bits padding) [none] := by
+  rfl
+
+def splitTargetOutput0
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  sourceTapeAt (splitSourcePayloadCells bits padding) []
+
+def splitTargetOutput1
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  markerTapeAt (splitSourcePayloadCells bits padding).length 0
+
+def splitTargetOutput2
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  outputTape (splitTargetPayloadCells bits padding)
+
+def splitTargetFocusedOutput2
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  tapeAtCells (bits.reverse.map some) (none :: padding)
+
+def splitTargetOutputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (splitTargetOutput0 bits padding)
+    (splitTargetOutput1 bits padding)
+    (splitTargetOutput2 bits padding)
+
+def splitTargetFocusedOutputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (splitTargetOutput0 bits padding)
+    (splitTargetOutput1 bits padding)
+    (splitTargetFocusedOutput2 bits padding)
+
+def SplitTargetSeparatorFocusSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape bits padding)
+        (splitTargetFocusedOutputTape bits padding)
+
+def SplitTargetSeparatorFocusConstruction : Prop :=
+  exists focus : MachineDescription,
+    SplitTargetSeparatorFocusSpec focus
+
+def SplitTargetSeparatorFocusNilPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    focus.HaltsFromTapeEquiv
+      (splitTargetOutputTape [] [])
+      (splitTargetFocusedOutputTape [] []) ∧
+    (forall padding : List (Option Bool),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape [] (none :: padding))
+        (splitTargetFocusedOutputTape [] (none :: padding))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape [] (some padBit :: padding))
+        (splitTargetFocusedOutputTape [] (some padBit :: padding))
+
+def SplitTargetSeparatorFocusConsPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) [])
+        (splitTargetFocusedOutputTape (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) (none :: padding))
+        (splitTargetFocusedOutputTape (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape (bit :: rest) (some padBit :: padding))
+        (splitTargetFocusedOutputTape
+          (bit :: rest) (some padBit :: padding))
+
+def SplitTargetSeparatorFocusSplitPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  SplitTargetSeparatorFocusNilPadSymbolCaseSpec focus ∧
+    SplitTargetSeparatorFocusConsPadSymbolCaseSpec focus
+
+def SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction : Prop :=
+  exists focus : MachineDescription,
+    SplitTargetSeparatorFocusSplitPadSymbolCaseSpec focus
+
+theorem splitTargetSeparatorFocusSplitPadSymbolCaseSpec_of_spec
+    {focus : MachineDescription}
+    (hfocus : SplitTargetSeparatorFocusSpec focus) :
+    SplitTargetSeparatorFocusSplitPadSymbolCaseSpec focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem splitTargetSeparatorFocusSpec_of_splitPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hsplit : SplitTargetSeparatorFocusSplitPadSymbolCaseSpec focus) :
+    SplitTargetSeparatorFocusSpec focus := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone padding
+          | some padBit =>
+              exact hnilSome padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone bit rest padding
+          | some padBit =>
+              exact hconsSome bit rest padBit padding
+
+theorem splitTargetSeparatorFocusConstruction_of_splitPadSymbolCases
+    (hsplit : SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction) :
+    SplitTargetSeparatorFocusConstruction := by
+  rcases hsplit with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetSeparatorFocusSpec_of_splitPadSymbolCaseSpec hspec⟩
+
+theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core :
+    SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction := by
+  -- Reusable finite-machine egress: use the pair-encoded source/marker
+  -- structure to focus tape 2 at the semantic separator of
+  -- bits.map some ++ none :: padding.
+  sorry
+
+theorem splitTargetSeparatorFocusConstruction_core :
+    SplitTargetSeparatorFocusConstruction := by
+  exact
+    splitTargetSeparatorFocusConstruction_of_splitPadSymbolCases
+      splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core
+
 def pendingState : Option Bool -> Nat
   | none => 10
   | some false => 11
