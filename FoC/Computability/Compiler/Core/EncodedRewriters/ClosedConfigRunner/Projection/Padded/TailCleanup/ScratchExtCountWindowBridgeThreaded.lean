@@ -2085,6 +2085,17 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape
       (bit :: rest) (some padBit :: padding)
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_rightEndCompactionSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        bits padding =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          bits padding) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape]
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
