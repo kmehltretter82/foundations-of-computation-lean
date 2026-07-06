@@ -657,6 +657,80 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filt
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap,
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap]
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_nil_nil :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] [])).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] [])).filterMap (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_nil_none
+    (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (none :: padding))).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (none :: padding))).filterMap (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (some padBit :: padding))).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (some padBit :: padding))).filterMap (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) [])).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) [])).filterMap (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (none :: padding))).filterMap (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (none :: padding))).filterMap (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (some padBit :: padding))).filterMap
+        (fun cell => cell) =
+      (Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (some padBit :: padding))).filterMap
+        (fun cell => cell) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap_eq_targetTape_cells_filterMap
+      (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_nil_nil :
     Tape.normalizedOutput
         (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
