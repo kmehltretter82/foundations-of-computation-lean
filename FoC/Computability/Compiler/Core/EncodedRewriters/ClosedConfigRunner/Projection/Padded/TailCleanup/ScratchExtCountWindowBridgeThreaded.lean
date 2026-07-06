@@ -459,6 +459,72 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons_cons
       bit rest (some padBit) padding
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_nil :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [] =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_none
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (none :: padding) =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] (none :: padding)) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (some padBit :: padding) =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] (some padBit :: padding)) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) [] =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          (bit :: rest) []) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) (none :: padding) =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          (bit :: rest) (none :: padding)) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        (bit :: rest) (some padBit :: padding) =
+      rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          (bit :: rest) (some padBit :: padding)) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
+      (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.cells
