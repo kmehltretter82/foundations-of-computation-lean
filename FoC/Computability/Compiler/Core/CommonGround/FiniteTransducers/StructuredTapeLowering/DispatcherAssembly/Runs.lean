@@ -1235,27 +1235,16 @@ theorem
           branchingSeparatorReadHeadCellTarget,
           BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
     | some bit =>
-        cases bit with
-        | false =>
-            simpa [tape0ReaderDescription, tape0ReaderStart,
-              retargetedBranchingTape0ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape0ReaderTargets,
-              StaticDispatcherState.tape0ReaderTarget,
-              branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
-        | true =>
-            simpa [tape0ReaderDescription, tape0ReaderStart,
-              retargetedBranchingTape0ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape0ReaderTargets,
-              StaticDispatcherState.tape0ReaderTarget,
-              branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+        cases bit <;>
+          simpa [tape0ReaderDescription, tape0ReaderStart,
+            retargetedBranchingTape0ReadHeadCellAllExitsDescription,
+            MachineDescription.readExitRetargetConfiguration,
+            MachineDescription.retargetReadExitState,
+            StaticDispatcherState.tape0ReaderTargets,
+            StaticDispatcherState.tape0ReaderTarget,
+            branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
+            branchingSeparatorReadHeadCellTarget,
+            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape0ReaderOffset D state ≤
@@ -1424,27 +1413,16 @@ theorem
           branchingSeparatorReadHeadCellTarget,
           BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
     | some bit =>
-        cases bit with
-        | false =>
-            simpa [tape1ReaderDescription, tape1ReaderStart,
-              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape1ReaderTargets,
-              StaticDispatcherState.tape1ReaderTarget,
-              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
-        | true =>
-            simpa [tape1ReaderDescription, tape1ReaderStart,
-              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape1ReaderTargets,
-              StaticDispatcherState.tape1ReaderTarget,
-              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+        cases bit <;>
+          simpa [tape1ReaderDescription, tape1ReaderStart,
+            retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+            MachineDescription.readExitRetargetConfiguration,
+            MachineDescription.retargetReadExitState,
+            StaticDispatcherState.tape1ReaderTargets,
+            StaticDispatcherState.tape1ReaderTarget,
+            branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+            branchingSeparatorReadHeadCellTarget,
+            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape1ReaderOffset D state read0 ≤
@@ -1680,29 +1658,17 @@ theorem tape1ReaderDescription_runsFromExistingBlockStart
               branchingSeparatorReadHeadCellTarget,
               BranchingHeadCellReturn.targetForRead, hread] using hcopy
       | some bit =>
-          cases bit with
-          | false =>
-              simpa
-                [tape1ReaderDescription, tape1ReaderStart,
-                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-                  MachineDescription.offsetReadExitRetargetDescription,
-                  MachineDescription.retargetReadExitState,
-                  StaticDispatcherState.tape1ReaderTargets,
-                  StaticDispatcherState.tape1ReaderTarget,
-                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-                  branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
-          | true =>
-              simpa
-                [tape1ReaderDescription, tape1ReaderStart,
-                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-                  MachineDescription.offsetReadExitRetargetDescription,
-                  MachineDescription.retargetReadExitState,
-                  StaticDispatcherState.tape1ReaderTargets,
-                  StaticDispatcherState.tape1ReaderTarget,
-                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-                  branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+          cases bit <;>
+            simpa
+              [tape1ReaderDescription, tape1ReaderStart,
+                retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+                MachineDescription.offsetReadExitRetargetDescription,
+                MachineDescription.retargetReadExitState,
+                StaticDispatcherState.tape1ReaderTargets,
+                StaticDispatcherState.tape1ReaderTarget,
+                branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+                branchingSeparatorReadHeadCellTarget,
+                BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
 theorem branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromSeparator
     {logical : List (Tape Bool)} {tapeIndex : Nat}
@@ -1818,29 +1784,17 @@ theorem tape2ReaderDescription_runsFromExistingTape1Separator
               branchingSeparatorReadHeadCellTarget,
               BranchingHeadCellReturn.targetForRead, hread] using hcopy
       | some bit =>
-          cases bit with
-          | false =>
-              simpa
-                [tape2ReaderDescription, tape2ReaderStart,
-                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-                  MachineDescription.offsetReadExitRetargetDescription,
-                  MachineDescription.retargetReadExitState,
-                  StaticDispatcherState.tape2ReaderTargets,
-                  StaticDispatcherState.tape2ReaderTarget,
-                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-                  branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
-          | true =>
-              simpa
-                [tape2ReaderDescription, tape2ReaderStart,
-                  retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-                  MachineDescription.offsetReadExitRetargetDescription,
-                  MachineDescription.retargetReadExitState,
-                  StaticDispatcherState.tape2ReaderTargets,
-                  StaticDispatcherState.tape2ReaderTarget,
-                  branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-                  branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+          cases bit <;>
+            simpa
+              [tape2ReaderDescription, tape2ReaderStart,
+                retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+                MachineDescription.offsetReadExitRetargetDescription,
+                MachineDescription.retargetReadExitState,
+                StaticDispatcherState.tape2ReaderTargets,
+                StaticDispatcherState.tape2ReaderTarget,
+                branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+                branchingSeparatorReadHeadCellTarget,
+                BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
 
 theorem
     tape2ReaderDescription_runsFromExistingTape1Separator_in_afterRead1JumpTape2ReaderTransitions
@@ -1932,27 +1886,16 @@ theorem
           branchingSeparatorReadHeadCellTarget,
           BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
     | some bit =>
-        cases bit with
-        | false =>
-            simpa [tape2ReaderDescription, tape2ReaderStart,
-              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape2ReaderTargets,
-              StaticDispatcherState.tape2ReaderTarget,
-              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
-        | true =>
-            simpa [tape2ReaderDescription, tape2ReaderStart,
-              retargetedBranchingTape1ReadHeadCellAllExitsDescription,
-              MachineDescription.readExitRetargetConfiguration,
-              MachineDescription.retargetReadExitState,
-              StaticDispatcherState.tape2ReaderTargets,
-              StaticDispatcherState.tape2ReaderTarget,
-              branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
-              branchingSeparatorReadHeadCellTarget,
-              BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+        cases bit <;>
+          simpa [tape2ReaderDescription, tape2ReaderStart,
+            retargetedBranchingTape1ReadHeadCellAllExitsDescription,
+            MachineDescription.readExitRetargetConfiguration,
+            MachineDescription.retargetReadExitState,
+            StaticDispatcherState.tape2ReaderTargets,
+            StaticDispatcherState.tape2ReaderTarget,
+            branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
+            branchingSeparatorReadHeadCellTarget,
+            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape2ReaderOffset D state read0 read1 ≤
