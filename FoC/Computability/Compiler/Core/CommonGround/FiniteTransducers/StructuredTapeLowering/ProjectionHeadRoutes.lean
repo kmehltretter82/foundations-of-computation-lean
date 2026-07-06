@@ -591,6 +591,29 @@ def selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
         (List.append (logicalCellListCode guarded.right)
           (encodedStructuredTapeCells rest))))
 
+def selectedSegmentLogicalTapeDecoderRawHeadOutputTape
+    (target : Tape Bool) : Tape Bool :=
+  { left := List.append target.left [none]
+    head := target.head
+    right := List.append target.right [none, none] }
+
+theorem selectedSegmentLogicalTapeDecoderRawHeadOutputTape_equiv
+    (target : Tape Bool) :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderRawHeadOutputTape target)
+      target := by
+  constructor
+  · simp [selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
+      dropTrailingNone_append_none]
+  constructor
+  · rfl
+  · simp [selectedSegmentLogicalTapeDecoderRawHeadOutputTape]
+    change
+      Tape.dropTrailingNone (target.right ++ ([none] ++ [none])) =
+        Tape.dropTrailingNone target.right
+    rw [← List.append_assoc]
+    rw [dropTrailingNone_append_none, dropTrailingNone_append_none]
+
 /--
 Structured three-tape output for the raw selected-head decoder backend.
 
@@ -606,7 +629,7 @@ def selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape
     (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
       target rest encodedPrefix)
     Tape.blank
-    (guardLogicalTape target)
+    (selectedSegmentLogicalTapeDecoderRawHeadOutputTape target)
 
 /--
 Ingress bridge from the old raw selected-head one-tape endpoint into the
@@ -715,14 +738,16 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeSpec_of_tape2Project
           (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
             target rest encodedPrefix)
           Tape.blank
-          (guardLogicalTape target) with
+          (selectedSegmentLogicalTapeDecoderRawHeadOutputTape target) with
       ⟨actual, hhalts, hequiv⟩
     exact
       ⟨actual, by
         simpa [
           selectedSegmentLogicalTapeDecoderRawHeadStructuredOutputTape] using
           hhalts,
-        Tape.Equiv.trans hequiv (guardLogicalTape_equiv target)⟩
+        Tape.Equiv.trans hequiv
+          (selectedSegmentLogicalTapeDecoderRawHeadOutputTape_equiv
+            target)⟩
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_of_tape2ProjectorConstruction
     (hprojector : StructuredTape2ProjectorConstruction) :
@@ -909,7 +934,7 @@ def finalConfig
     (selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
       target rest encodedPrefix)
     Tape.blank
-    (guardLogicalTape target)
+    (selectedSegmentLogicalTapeDecoderRawHeadOutputTape target)
 
 def targetCells (target : Tape Bool) : List (Option Bool) :=
   let guarded := guardLogicalTape target
@@ -978,7 +1003,297 @@ def rewindMarkerSecondConfig
           (List.append (logicalCellListCode guarded.right)
             (encodedStructuredTapeCells rest)))))
     Tape.blank
-    (guardLogicalTape target)
+        (selectedSegmentLogicalTapeDecoderRawHeadOutputTape target)
+
+private def rewindOutputCurrentCells
+    (cells : List (Option Bool)) : List (Option Bool) :=
+  match cells with
+  | [] => [none]
+  | _ => cells
+
+@[simp] private theorem rewindOutputCurrentCells_cons
+    (cell : Option Bool) (tail : List (Option Bool)) :
+    rewindOutputCurrentCells (cell :: tail) = cell :: tail := by
+  rfl
+
+@[simp] private theorem rewindOutputCurrentCells_logicalCellListCode_singleton_append
+    (cell : Option Bool) (tail : List (Option Bool)) :
+    rewindOutputCurrentCells
+        (List.append (logicalCellListCode [cell]) tail) =
+      List.append (logicalCellListCode [cell]) tail := by
+  cases cell with
+  | none =>
+      simp [rewindOutputCurrentCells, logicalCellListCode, logicalCellCode]
+  | some bit =>
+      cases bit <;>
+        simp [rewindOutputCurrentCells, logicalCellListCode,
+          logicalCellCode]
+
+@[simp] private theorem rewindOutputCurrentCells_logicalCellListBits_singleton_append
+    (cell : Option Bool) (tail : List (Option Bool)) :
+    rewindOutputCurrentCells
+        (List.append (List.map some (logicalCellListBits [cell])) tail) =
+      List.append (List.map some (logicalCellListBits [cell])) tail := by
+  cases cell with
+  | none =>
+      simp [rewindOutputCurrentCells, logicalCellListBits,
+        logicalCellBits]
+  | some bit =>
+      cases bit <;>
+        simp [rewindOutputCurrentCells, logicalCellListBits,
+          logicalCellBits]
+
+@[simp] private theorem rewindOutputCurrentCells_encodedStructuredTapeCells
+    (rest : List (Tape Bool)) :
+    rewindOutputCurrentCells (encodedStructuredTapeCells rest) =
+      encodedStructuredTapeCells rest := by
+  cases rest with
+  | nil =>
+      simp [rewindOutputCurrentCells, encodedStructuredTapeCells,
+        tapeSeparatorCells]
+  | cons T rest =>
+      simp [rewindOutputCurrentCells, encodedStructuredTapeCells,
+        tapeSeparatorCells]
+
+private def rewindCellStackConfig
+    (baseLeft stack sourceRight outputLeft outputRight :
+      List (Option Bool)) : Configuration :=
+  ThreeTape.config 10
+    (ThreeTape.keepL.apply
+      (tapeAtCells
+        (List.append (logicalCellListCode stack.reverse).reverse baseLeft)
+        sourceRight))
+    Tape.blank
+    (tapeAtCells (List.append stack outputLeft) outputRight)
+
+private def rewindCellStackDoneConfig
+    (baseLeft stack sourceRight outputLeft outputRight :
+      List (Option Bool)) : Configuration :=
+  ThreeTape.config 10
+    (ThreeTape.keepL.apply
+      (tapeAtCells baseLeft
+        (List.append (logicalCellListCode stack.reverse)
+          (rewindOutputCurrentCells sourceRight))))
+    Tape.blank
+    (tapeAtCells outputLeft
+      (List.append stack.reverse (rewindOutputCurrentCells outputRight)))
+
+set_option maxHeartbeats 800000 in
+private theorem description_rewinds_cellStackConfig
+    (baseLeft stack sourceRight outputLeft outputRight :
+      List (Option Bool)) :
+    description.runConfig (2 * stack.length)
+      (rewindCellStackConfig
+        baseLeft stack sourceRight outputLeft outputRight) =
+      rewindCellStackDoneConfig
+        baseLeft stack sourceRight outputLeft outputRight := by
+  induction stack generalizing sourceRight outputRight with
+  | nil =>
+      cases sourceRight <;> cases outputRight <;>
+        simp [rewindCellStackConfig, rewindCellStackDoneConfig,
+          rewindOutputCurrentCells, logicalCellListBits,
+          Structured.Description.runConfig, tapeAtCells]
+  | cons cell stack ih =>
+      rw [show 2 * (cell :: stack).length =
+        2 + 2 * stack.length by
+        simp
+        lia]
+      rw [Description.runConfig_add]
+      have hstep :
+          description.runConfig 2
+              (rewindCellStackConfig baseLeft (cell :: stack)
+                sourceRight outputLeft outputRight) =
+            rewindCellStackConfig baseLeft stack
+              (List.append (logicalCellListCode [cell])
+                (rewindOutputCurrentCells sourceRight))
+              outputLeft
+              (cell :: rewindOutputCurrentCells outputRight) := by
+        cases sourceRight with
+        | nil =>
+            cases cell with
+            | none =>
+                cases outputRight with
+                | nil =>
+                    three_tape_step [
+                      description, rows, rewindCellStackConfig,
+                      rewindOutputCurrentCells, logicalCellCode,
+                      logicalCellListCode, logicalCellListBits, logicalCellBits,
+                      tapeAtCells]
+                | cons outHead outTail =>
+                    cases outHead with
+                    | none =>
+                        three_tape_step [
+                          description, rows, rewindCellStackConfig,
+                          rewindOutputCurrentCells, logicalCellCode,
+                          logicalCellListCode, logicalCellListBits,
+                          logicalCellBits,
+                          tapeAtCells]
+                    | some outBit =>
+                        cases outBit <;>
+                          three_tape_step [
+                            description, rows, rewindCellStackConfig,
+                            rewindOutputCurrentCells, logicalCellCode,
+                            logicalCellListCode, logicalCellListBits,
+                            logicalCellBits,
+                            tapeAtCells]
+            | some bit =>
+                cases bit <;>
+                  cases outputRight with
+                  | nil =>
+                      three_tape_step [
+                        description, rows, rewindCellStackConfig,
+                        rewindOutputCurrentCells, logicalCellCode,
+                        logicalCellListCode, logicalCellListBits, logicalCellBits,
+                        tapeAtCells]
+                  | cons outHead outTail =>
+                      cases outHead with
+                      | none =>
+                          three_tape_step [
+                            description, rows, rewindCellStackConfig,
+                            rewindOutputCurrentCells, logicalCellCode,
+                            logicalCellListCode, logicalCellListBits,
+                            logicalCellBits,
+                            tapeAtCells]
+                      | some outBit =>
+                          cases outBit <;>
+                            three_tape_step [
+                              description, rows, rewindCellStackConfig,
+                              rewindOutputCurrentCells, logicalCellCode,
+                              logicalCellListCode, logicalCellListBits,
+                              logicalCellBits,
+                              tapeAtCells]
+        | cons sourceHead sourceTail =>
+            cases sourceHead with
+            | none =>
+                cases cell with
+                | none =>
+                    cases outputRight with
+                    | nil =>
+                        three_tape_step [
+                          description, rows, rewindCellStackConfig,
+                          rewindOutputCurrentCells, logicalCellCode,
+                          logicalCellListCode, logicalCellListBits,
+                          logicalCellBits,
+                          tapeAtCells]
+                    | cons outHead outTail =>
+                        cases outHead with
+                        | none =>
+                            three_tape_step [
+                              description, rows, rewindCellStackConfig,
+                              rewindOutputCurrentCells, logicalCellCode,
+                              logicalCellListCode, logicalCellListBits,
+                              logicalCellBits,
+                              tapeAtCells]
+                        | some outBit =>
+                            cases outBit <;>
+                              three_tape_step [
+                                description, rows, rewindCellStackConfig,
+                                rewindOutputCurrentCells, logicalCellCode,
+                                logicalCellListCode, logicalCellListBits,
+                                logicalCellBits,
+                                tapeAtCells]
+                | some bit =>
+                    cases bit <;>
+                      cases outputRight with
+                      | nil =>
+                          three_tape_step [
+                            description, rows, rewindCellStackConfig,
+                            rewindOutputCurrentCells, logicalCellCode,
+                            logicalCellListCode, logicalCellListBits,
+                            logicalCellBits,
+                            tapeAtCells]
+                      | cons outHead outTail =>
+                          cases outHead with
+                          | none =>
+                              three_tape_step [
+                                description, rows, rewindCellStackConfig,
+                                rewindOutputCurrentCells, logicalCellCode,
+                                logicalCellListCode, logicalCellListBits,
+                                logicalCellBits,
+                                tapeAtCells]
+                          | some outBit =>
+                              cases outBit <;>
+                                three_tape_step [
+                                  description, rows, rewindCellStackConfig,
+                                  rewindOutputCurrentCells, logicalCellCode,
+                                  logicalCellListCode, logicalCellListBits,
+                                  logicalCellBits,
+                                  tapeAtCells]
+            | some sourceBit =>
+                cases sourceBit <;>
+                  cases cell with
+                  | none =>
+                      cases outputRight with
+                      | nil =>
+                          three_tape_step [
+                            description, rows, rewindCellStackConfig,
+                            rewindOutputCurrentCells, logicalCellCode,
+                            logicalCellListCode, logicalCellListBits,
+                            logicalCellBits,
+                            tapeAtCells]
+                      | cons outHead outTail =>
+                          cases outHead with
+                          | none =>
+                              three_tape_step [
+                                description, rows, rewindCellStackConfig,
+                                rewindOutputCurrentCells, logicalCellCode,
+                                logicalCellListCode, logicalCellListBits,
+                                logicalCellBits,
+                                tapeAtCells]
+                          | some outBit =>
+                              cases outBit <;>
+                                three_tape_step [
+                                  description, rows, rewindCellStackConfig,
+                                  rewindOutputCurrentCells, logicalCellCode,
+                                  logicalCellListCode, logicalCellListBits,
+                                  logicalCellBits,
+                                  tapeAtCells]
+                  | some bit =>
+                      cases bit <;>
+                        cases outputRight with
+                        | nil =>
+                            three_tape_step [
+                              description, rows, rewindCellStackConfig,
+                              rewindOutputCurrentCells, logicalCellCode,
+                              logicalCellListCode, logicalCellListBits,
+                              logicalCellBits,
+                              tapeAtCells]
+                        | cons outHead outTail =>
+                            cases outHead with
+                            | none =>
+                                three_tape_step [
+                                  description, rows, rewindCellStackConfig,
+                                  rewindOutputCurrentCells, logicalCellCode,
+                                  logicalCellListCode, logicalCellListBits,
+                                  logicalCellBits,
+                                  tapeAtCells]
+                            | some outBit =>
+                                cases outBit <;>
+                                  three_tape_step [
+                                    description, rows, rewindCellStackConfig,
+                                    rewindOutputCurrentCells, logicalCellCode,
+                                    logicalCellListCode, logicalCellListBits,
+                                    logicalCellBits,
+                                    tapeAtCells]
+      rw [hstep]
+      rw [ih (List.append (logicalCellListCode [cell])
+          (rewindOutputCurrentCells sourceRight))
+        (cell :: rewindOutputCurrentCells outputRight)]
+      change
+        ThreeTape.config 10
+          (ThreeTape.keepL.apply
+            (tapeAtCells baseLeft
+              (List.append (logicalCellListCode stack.reverse)
+                (rewindOutputCurrentCells
+                  (List.append (logicalCellListCode [cell])
+                    (rewindOutputCurrentCells sourceRight))))))
+          Tape.blank
+          (tapeAtCells outputLeft
+            (List.append stack.reverse
+              (rewindOutputCurrentCells
+                (cell :: rewindOutputCurrentCells outputRight)))) = _
+      rw [rewindOutputCurrentCells_logicalCellListCode_singleton_append]
+      simp [rewindCellStackDoneConfig, List.reverse_cons, List.append_assoc]
 
 theorem description_reaches_afterLeftCopyConfig
     (target : Tape Bool) (rest : List (Tape Bool))
@@ -1029,8 +1344,81 @@ theorem description_rewinds_to_markerSecondConfig
       description.runConfig steps
         (rewindStartConfig target rest encodedPrefix) =
         rewindMarkerSecondConfig target rest encodedPrefix := by
-  -- Recursive scanner over the encoded head/right logical cells.
-  sorry
+  cases target with
+  | mk left head right =>
+      let guarded : Tape Bool :=
+        guardLogicalTape { left := left, head := head, right := right }
+      let stack : List (Option Bool) :=
+        (guarded.head :: guarded.right).reverse
+      let baseLeft : List (Option Bool) :=
+        List.append [some true, some true]
+          (List.append encodedPrefix
+            (List.append tapeSeparatorCells
+              (logicalCellListCode guarded.left.reverse))).reverse
+      refine ⟨2 * stack.length, ?_⟩
+      have h :=
+        description_rewinds_cellStackConfig
+          baseLeft stack (encodedStructuredTapeCells rest)
+          guarded.left []
+      cases rest with
+      | nil =>
+          cases head with
+          | none =>
+              simpa [guarded, stack, baseLeft, rewindStartConfig,
+                rewindMarkerSecondConfig, rewindCellStackConfig,
+                rewindCellStackDoneConfig,
+                selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
+                rightEdgeOutputTape, targetCells, guardLogicalTape,
+                logicalTapeCode, tapeAtEncodedSplit, tapeSeparatorCells,
+                headMarkerCells, rewindOutputCurrentCells,
+                logicalCellListBits, logicalCellBits, List.map_append,
+                ThreeTape.keepL, Structured.TapeAction.apply,
+                Structured.HeadMove.apply,
+                Tape.move, Tape.moveLeft, tapeAtCells,
+                List.reverse_append, List.append_assoc] using h
+          | some bit =>
+              cases bit <;>
+                simpa [guarded, stack, baseLeft, rewindStartConfig,
+                  rewindMarkerSecondConfig, rewindCellStackConfig,
+                  rewindCellStackDoneConfig,
+                  selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
+                  rightEdgeOutputTape, targetCells, guardLogicalTape,
+                  logicalTapeCode, tapeAtEncodedSplit, tapeSeparatorCells,
+                  headMarkerCells, rewindOutputCurrentCells,
+                  logicalCellListBits, logicalCellBits, List.map_append,
+                  ThreeTape.keepL, Structured.TapeAction.apply,
+                  Structured.HeadMove.apply,
+                  Tape.move, Tape.moveLeft, tapeAtCells,
+                  List.reverse_append, List.append_assoc] using h
+      | cons next restTail =>
+          cases head with
+          | none =>
+              simpa [guarded, stack, baseLeft, rewindStartConfig,
+                rewindMarkerSecondConfig, rewindCellStackConfig,
+                rewindCellStackDoneConfig,
+                selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
+                rightEdgeOutputTape, targetCells, guardLogicalTape,
+                logicalTapeCode, tapeAtEncodedSplit, tapeSeparatorCells,
+                headMarkerCells, rewindOutputCurrentCells,
+                logicalCellListBits, logicalCellBits, List.map_append,
+                ThreeTape.keepL, Structured.TapeAction.apply,
+                Structured.HeadMove.apply,
+                Tape.move, Tape.moveLeft, tapeAtCells,
+                List.reverse_append, List.append_assoc] using h
+          | some bit =>
+              cases bit <;>
+                simpa [guarded, stack, baseLeft, rewindStartConfig,
+                  rewindMarkerSecondConfig, rewindCellStackConfig,
+                  rewindCellStackDoneConfig,
+                  selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
+                  rightEdgeOutputTape, targetCells, guardLogicalTape,
+                  logicalTapeCode, tapeAtEncodedSplit, tapeSeparatorCells,
+                  headMarkerCells, rewindOutputCurrentCells,
+                  logicalCellListBits, logicalCellBits, List.map_append,
+                  ThreeTape.keepL, Structured.TapeAction.apply,
+                  Structured.HeadMove.apply,
+                  Tape.move, Tape.moveLeft, tapeAtCells,
+                  List.reverse_append, List.append_assoc] using h
 
 theorem description_rewinds_markerSecond_to_finalConfig
     (target : Tape Bool) (rest : List (Tape Bool))
@@ -1044,6 +1432,7 @@ theorem description_rewinds_markerSecond_to_finalConfig
       | none =>
           three_tape_step [
             description, rows, rewindMarkerSecondConfig, finalConfig,
+            selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
             selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape,
             guardLogicalTape, logicalCellListCode, logicalCellCode,
             encodedStructuredTapeCells, tapeAtEncodedSplit,
@@ -1052,6 +1441,7 @@ theorem description_rewinds_markerSecond_to_finalConfig
           cases bit <;>
             three_tape_step [
               description, rows, rewindMarkerSecondConfig, finalConfig,
+              selectedSegmentLogicalTapeDecoderRawHeadOutputTape,
               selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape,
               guardLogicalTape, logicalCellListCode, logicalCellCode,
               encodedStructuredTapeCells, tapeAtEncodedSplit,
