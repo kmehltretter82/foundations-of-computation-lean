@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.DescriptionExecution
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionPaddingSplit
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionPaddingOutput
 
 set_option doc.verso true
 
