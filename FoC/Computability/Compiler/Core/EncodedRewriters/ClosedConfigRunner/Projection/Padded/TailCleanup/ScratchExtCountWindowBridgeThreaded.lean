@@ -375,6 +375,99 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction :
   exists eraser : MachineDescription,
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec eraser
 
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall (T0 T1 : Tape Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] padding)
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] padding)) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) padding)
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) padding)
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall T0 T1 : Tape Bool,
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] [])
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] [])) ∧
+    (forall (T0 T1 : Tape Bool) (pad : Option Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (pad :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] (pad :: padding))) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) [])
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) [])) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (pad : Option Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (pad :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) (pad :: padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseSpec
+      eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_cases
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction := by
+  rcases hcases with ⟨eraser, hready, hnil, hcons⟩
+  refine ⟨eraser, hready, ?_⟩
+  intro T0 T1 bits padding
+  cases bits with
+  | nil =>
+      exact hnil T0 T1 padding
+  | cons bit rest =>
+      exact hcons T0 T1 bit rest padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_of_bitPaddingCases
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction := by
+  rcases hcases with
+    ⟨eraser, hready, hnilNil, hnilCons, hconsNil,
+      hconsCons⟩
+  refine ⟨eraser, hready, ?_, ?_⟩
+  · intro T0 T1 padding
+    cases padding with
+    | nil =>
+        exact hnilNil T0 T1
+    | cons pad padding =>
+        exact hnilCons T0 T1 pad padding
+  · intro T0 T1 bit rest padding
+    cases padding with
+    | nil =>
+        exact hconsNil T0 T1 bit rest
+    | cons pad padding =>
+        exact hconsCons T0 T1 bit rest pad padding
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_twoTapeStructuredPrefixEraser
     (heraser :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
@@ -458,9 +551,21 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (ParsedLayoutBits L)
         (postFieldDecodedPrefixScanPadding false L)
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction := by
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_of_bitPaddingCases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_core
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_cases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
