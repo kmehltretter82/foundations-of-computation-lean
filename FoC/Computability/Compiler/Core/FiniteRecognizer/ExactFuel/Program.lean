@@ -27,8 +27,7 @@ code; the second component runs the protected layout fuel loop with canonical
 empty output.
 -/
 theorem exactOutputPrimitiveComponentFiniteLeaves :
-    InitialLayoutExactOutputPrimitiveFinStateConstruction ∧
-      FinStateLayoutFuelLoopExactOutputPrimitiveConstruction := by
+    ExactOutputPrimitiveComponentFinStateConstruction := by
   sorry
 
 /--
@@ -38,9 +37,8 @@ theorem exactOutputPrimitiveFinStateFiniteLeaf :
     forall stateCount : Nat,
     forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
       ExactOutputPrimitiveConstruction M :=
-  exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuelLoop
-    exactOutputPrimitiveComponentFiniteLeaves.left
-    exactOutputPrimitiveComponentFiniteLeaves.right
+  exactOutputPrimitiveFinStateConstruction_of_components
+    exactOutputPrimitiveComponentFiniteLeaves
 
 theorem codeMachineFinStateFiniteLeaf :
     FinStateCodeMachineConstruction := by

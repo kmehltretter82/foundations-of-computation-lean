@@ -939,6 +939,19 @@ theorem exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuel
     exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
       (hmaterializer stateCount M) (hlayout stateCount M)
 
+def ExactOutputPrimitiveComponentFinStateConstruction : Prop :=
+  InitialLayoutExactOutputPrimitiveFinStateConstruction ∧
+    FinStateLayoutFuelLoopExactOutputPrimitiveConstruction
+
+theorem exactOutputPrimitiveFinStateConstruction_of_components
+    (hcomponents :
+      ExactOutputPrimitiveComponentFinStateConstruction) :
+    forall stateCount : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+      ExactOutputPrimitiveConstruction M :=
+  exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuelLoop
+    hcomponents.left hcomponents.right
+
 theorem codeMachineConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
