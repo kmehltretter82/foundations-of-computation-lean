@@ -2507,6 +2507,78 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseC
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseSpec
       eraser
 
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserNilPadSymbolCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall T0 T1 : Tape Bool,
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] [])
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] [])) ∧
+    (forall (T0 T1 : Tape Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (none :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] (none :: padding))) ∧
+    forall (T0 T1 : Tape Bool) (padBit : Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          [] (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConsPadSymbolCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) [])
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) [])) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (none :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) (none :: padding))) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          (bit :: rest) (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseSpec
+    (eraser : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserNilPadSymbolCaseSpec
+      eraser ∧
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConsPadSymbolCaseSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseSpec
+      eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction := by
+  rcases hsplit with ⟨eraser, hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  exact
+    ⟨eraser, hready, hnilNil, hnilNone, hnilSome,
+      hconsNil, hconsNone, hconsSome⟩
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_of_padSymbolCases
     (hcases :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction) :
@@ -2645,9 +2717,15 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (ParsedLayoutBits L)
         (postFieldDecodedPrefixScanPadding false L)
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_of_split
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction := by
