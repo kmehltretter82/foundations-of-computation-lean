@@ -441,6 +441,36 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
     selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
       [] bits padding
 
+theorem selectedSegmentLogicalTapeDecoderDensifierSourceCells_eq_prefix_append_nil
+    (encodedPrefix : List (Option Bool)) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        encodedPrefix bits padding =
+      List.append encodedPrefix
+        (selectedSegmentLogicalTapeDecoderDensifierSourceCells
+          [] bits padding) := by
+  simp [selectedSegmentLogicalTapeDecoderDensifierSourceCells]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_prefix_append_targetTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding) =
+      List.append
+        (encodedStructuredTapeCellsPrefix
+          [guardLogicalTape T0, guardLogicalTape T1])
+        (Tape.cells
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            bits padding)) := by
+  rw [selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_cells]
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierSourceCells_eq_prefix_append_nil
+      (encodedStructuredTapeCellsPrefix
+        [guardLogicalTape T0, guardLogicalTape T1])
+      bits padding
+
 def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
     (eraser : MachineDescription) : Prop :=
   eraser.SubroutineReady ∧
