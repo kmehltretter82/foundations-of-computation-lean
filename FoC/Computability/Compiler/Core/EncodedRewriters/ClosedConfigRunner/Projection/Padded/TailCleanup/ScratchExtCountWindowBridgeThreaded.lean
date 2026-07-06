@@ -345,9 +345,128 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
           false L (bit :: rest))
 
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderTargetTape
+    (rightEdgeScanSourceTapeFromLeft [none] bits padding)
+    (encodedStructuredTapeCellsPrefix
+      [guardLogicalTape T0, guardLogicalTape T1])
+
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+    (bits : Word Bool) (padding : List (Option Bool)) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderTargetTape
+    (rightEdgeScanSourceTapeFromLeft [none] bits padding)
+    []
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    forall (T0 T1 : Tape Bool) (bits : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding)
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          bits padding)
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec eraser
+
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_twoTapeStructuredPrefixEraser
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
+  rcases heraser with ⟨eraser, hready, hrun⟩
+  refine ⟨eraser, hready, ?_, ?_, ?_, ?_⟩
+  · intro L
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells,
+      postFieldDecodedPrefixScanSourceTape] using
+      hrun
+        (structuredBoolWordRawBitsDecoderSourceTargetTape
+          (ParsedLayoutBits L)
+          (countWindowPostFieldDecodedPrefixStructuredSuffixTail true L)
+          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+            true L []))
+        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+          ((ParsedLayoutBits L).length + 1))
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding true L)
+  · intro L bit rest
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells,
+      postFieldDecodedPrefixScanSourceTape] using
+      hrun
+        (structuredBoolWordRawBitsDecoderSourceTargetTape
+          (ParsedLayoutBits L)
+          (countWindowPostFieldDecodedPrefixStructuredSuffixTail true L)
+          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+            true L (bit :: rest)))
+        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+          ((ParsedLayoutBits L).length + 1))
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding true L)
+  · intro L
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells,
+      postFieldDecodedPrefixScanSourceTape] using
+      hrun
+        (structuredBoolWordRawBitsDecoderSourceTargetTape
+          (ParsedLayoutBits L)
+          (countWindowPostFieldDecodedPrefixStructuredSuffixTail false L)
+          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+            false L []))
+        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+          ((ParsedLayoutBits L).length + 1))
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding false L)
+  · intro L bit rest
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
+      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
+      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells,
+      postFieldDecodedPrefixScanSourceTape] using
+      hrun
+        (structuredBoolWordRawBitsDecoderSourceTargetTape
+          (ParsedLayoutBits L)
+          (countWindowPostFieldDecodedPrefixStructuredSuffixTail false L)
+          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
+            false L (bit :: rest)))
+        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+          ((ParsedLayoutBits L).length + 1))
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding false L)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction := by
+  sorry
+
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  sorry
+  exact
+    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_twoTapeStructuredPrefixEraser
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
