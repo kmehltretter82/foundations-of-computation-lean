@@ -1018,6 +1018,120 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
   rw [rightEdgeScanSourceTapeFromLeft_singleBlank_normalizedOutput]
   simp
 
+theorem encodedStructuredTapeCellsPrefix_two_guarded_filterMap
+    (T0 T1 : Tape Bool) :
+    (encodedStructuredTapeCellsPrefix
+        [guardLogicalTape T0, guardLogicalTape T1]).filterMap
+        (fun cell => cell) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (logicalTapeBits (guardLogicalTape T1)) := by
+  simp [encodedStructuredTapeCellsPrefix, tapeSeparatorCells,
+    logicalTapeCode_eq_map_some,
+    List.filterMap_append, Function.comp_def]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              bits padding))) := by
+  rw [selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_normalizedOutput]
+  rw [encodedStructuredTapeCellsPrefix_two_guarded_filterMap]
+  simp [List.append_assoc]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_nil_nil
+    (T0 T1 : Tape Bool) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] []) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              [] []))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 [] []
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_nil_none
+    (T0 T1 : Tape Bool) (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (none :: padding)) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              [] (none :: padding)))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_nil_some
+    (T0 T1 : Tape Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (some padBit :: padding)) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              [] (some padBit :: padding)))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_cons_nil
+    (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) []) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              (bit :: rest) []))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_cons_none
+    (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (none :: padding)) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              (bit :: rest) (none :: padding)))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput_cons_some
+    (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+    (padBit : Bool) (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (some padBit :: padding)) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append (logicalTapeBits (guardLogicalTape T1))
+          (Tape.normalizedOutput
+            (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+              (bit :: rest) (some padBit :: padding)))) := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+      T0 T1 (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_filterMap
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
@@ -1035,17 +1149,6 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
       (encodedStructuredTapeCellsPrefix
         [guardLogicalTape T0, guardLogicalTape T1])
       bits padding
-
-theorem encodedStructuredTapeCellsPrefix_two_guarded_filterMap
-    (T0 T1 : Tape Bool) :
-    (encodedStructuredTapeCellsPrefix
-        [guardLogicalTape T0, guardLogicalTape T1]).filterMap
-        (fun cell => cell) =
-      List.append (logicalTapeBits (guardLogicalTape T0))
-        (logicalTapeBits (guardLogicalTape T1)) := by
-  simp [encodedStructuredTapeCellsPrefix, tapeSeparatorCells,
-    logicalTapeCode_eq_map_some,
-    List.filterMap_append, Function.comp_def]
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_filterMap_eq_guardedBits
     (T0 T1 : Tape Bool) (bits : Word Bool)
