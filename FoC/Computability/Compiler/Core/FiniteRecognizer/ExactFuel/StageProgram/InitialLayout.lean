@@ -160,6 +160,35 @@ theorem stageCodeToInitialLayoutCode_eq_some_iff {stateCount : Nat}
     simpa [stageCode, GeneratedCode.stageCode] using
       Layout.stageCodeToInitialLayoutCode_stageCode M input fuel
 
+theorem stageCodeToInitialLayoutCode_eq_some_cons_cons
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    {tokens output : Word MachineCodeSymbol}
+    (h : Layout.stageCodeToInitialLayoutCode M tokens = some output) :
+    exists second : MachineCodeSymbol,
+    exists rest : Word MachineCodeSymbol,
+      output = MachineCodeSymbol.header :: second :: rest := by
+  rcases
+      (stageCodeToInitialLayoutCode_eq_some_iff
+        M tokens output).mp h with
+    ⟨input, fuel, _htokens, houtput⟩
+  subst output
+  exact Layout.encode_cons_cons (Layout.initial M input fuel)
+
+theorem outputThenRecognizeHandoffTape_stageCodeToInitialLayoutCode
+    {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    {tokens output : Word MachineCodeSymbol}
+    (h : Layout.stageCodeToInitialLayoutCode M tokens = some output) :
+    outputThenRecognizeHandoffTape (Tape.output output) =
+      Tape.input output := by
+  rcases stageCodeToInitialLayoutCode_eq_some_cons_cons M h with
+    ⟨second, rest, houtput⟩
+  rw [houtput]
+  exact
+    outputThenRecognizeHandoffTape_output_cons_cons
+      MachineCodeSymbol.header second rest
+
 theorem stageCodeToInitialLayoutCode_eq_none_iff {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (tokens : Word MachineCodeSymbol) :

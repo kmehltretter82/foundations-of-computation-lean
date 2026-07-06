@@ -91,6 +91,22 @@ noncomputable def outputThenRecognizePipeline
     OutputThenRecognizeState.finite
       producer.statesFinite recognizer.statesFinite
 
+theorem outputThenRecognizePipeline_haltingTransitionsDisabled
+    {producerState recognizerState : Type}
+    {producer : TuringMachine MachineCodeSymbol producerState}
+    {recognizer : TuringMachine MachineCodeSymbol recognizerState}
+    (hstop : TuringMachine.HaltingTransitionsDisabled recognizer) :
+    TuringMachine.HaltingTransitionsDisabled
+      (outputThenRecognizePipeline producer recognizer) := by
+  intro cell
+  change
+    (match recognizer.transition recognizer.halt cell with
+    | none => none
+    | some (write, dir, nextState) =>
+        some (write, dir,
+          OutputThenRecognizeState.recognizer nextState)) = none
+  rw [hstop cell]
+
 theorem outputThenRecognizePipeline_producer_step
     {producerState recognizerState : Type}
     {producer : TuringMachine MachineCodeSymbol producerState}
@@ -250,6 +266,24 @@ theorem tape_move_left_move_right_equiv
       | cons cell rest =>
           simp [Tape.Equiv, Tape.move, Tape.moveLeft,
             Tape.moveRight]
+
+def outputThenRecognizeHandoffTape
+    (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
+  Tape.move Direction.left
+    (Tape.write
+      (Tape.read
+        (Tape.move Direction.right
+          (Tape.write (Tape.read T) T)))
+      (Tape.move Direction.right
+        (Tape.write (Tape.read T) T)))
+
+theorem outputThenRecognizeHandoffTape_output_cons_cons
+    (first second : MachineCodeSymbol)
+    (rest : Word MachineCodeSymbol) :
+    outputThenRecognizeHandoffTape
+        (Tape.output (first :: second :: rest)) =
+      Tape.input (first :: second :: rest) := by
+  rfl
 
 theorem outputThenRecognizePipeline_handoff_tape_equiv
     (T : Tape MachineCodeSymbol) :

@@ -340,6 +340,19 @@ def encode {stateCount : Nat} (L : Layout stateCount) :
     Word MachineCodeSymbol :=
   encodeAppend L []
 
+theorem encode_cons_cons {stateCount : Nat}
+    (L : Layout stateCount) :
+    exists second : MachineCodeSymbol,
+    exists rest : Word MachineCodeSymbol,
+      encode L = MachineCodeSymbol.header :: second :: rest := by
+  cases L with
+  | mk fuel state left head right =>
+      cases fuel with
+      | zero =>
+          exact ⟨MachineCodeSymbol.done, _, rfl⟩
+      | succ fuel =>
+          exact ⟨MachineCodeSymbol.tick, _, rfl⟩
+
 theorem encode_initial_empty {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (fuel : Nat) :
