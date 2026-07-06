@@ -123,14 +123,14 @@ complete simulator-layout code word and reject malformed code words.
 def FixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruction :
     Prop :=
   exists parser : MachineDescription,
-    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+    EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
       SimulatorLayout.normalizeCodePrimitive parser
 
 theorem fixedDescriptionBoundedSimulatorCodeRightShifted_haltsWithTape_of_transform
     {P : TapeCodePrimitive}
     {D : MachineDescription}
     (hD :
-      EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+      EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
         P D)
     {code out : Word MachineCodeSymbol}
     (htransform : P.transform code = some out) :
@@ -574,7 +574,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShifted_of_spec
     {D runner : MachineDescription}
     (hrunner :
       FixedDescriptionBoundedSimulatorCodeRightShiftedSpec D runner) :
-    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+    EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
       (FixedDescriptionBoundedSimulatorCode D) runner := by
   exact
     CommonGround.CodeWordEmitters.rightShiftedOutputCompiled_of_indexed_tape_spec

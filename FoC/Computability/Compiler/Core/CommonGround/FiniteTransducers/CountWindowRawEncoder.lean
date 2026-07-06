@@ -2,7 +2,7 @@ import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitLayout.BoolWordQuoter.ControllerInitial.CellPass
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
@@ -40,7 +40,7 @@ def countWindowRawSourceEncoderLayoutLengthCells
 
 def countWindowRawSourceEncoderCellFieldCells
     (cells : List (Option Bool)) : List (Option Bool) :=
-  (EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+  (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
     cells).map some
 
 def countWindowRawSourceEncoderEncodedLayoutCells
@@ -193,7 +193,7 @@ private theorem countWindowRawSourceEncoderCellFieldCells_append
         (countWindowRawSourceEncoderCellFieldCells right) := by
   unfold countWindowRawSourceEncoderCellFieldCells
   rw [
-    EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits_append]
+    EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits_append]
   simp [List.map_append]
 
 private theorem countWindowRawSourceEncoderCellFieldCells_map_append
@@ -294,7 +294,7 @@ private theorem countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord
   unfold countWindowRawSourceEncoderCellFieldCells
   simp [encodeCodeWordAsInput, List.map_append]
   rw [
-    EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.boolWordBits_eq_encodeBoolWordAppend
+    EncRewriters.CanonicalLayouts.DovetailLayoutScanner.boolWordBits_eq_encodeBoolWordAppend
       layout []]
   simp [encodeCodeWordAsInput, List.map_append]
 
@@ -309,15 +309,15 @@ private theorem countWindowRawSourceEncoderCellFieldCells_length
   | cons cell rest ih =>
       cases cell with
       | none =>
-        simp [EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
-          EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+        simp [EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+          EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
           encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
           ih, Nat.mul_add, Nat.add_comm] <;>
         lia
       | some bit =>
           cases bit <;>
-            simp [EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
-              EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+            simp [EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+              EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
               encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput,
               ih, Nat.mul_add, Nat.add_comm] <;>
             lia

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Simulator.PaddedEmitter
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
 
 set_option doc.verso true
@@ -26,7 +26,7 @@ theorem fixedDescriptionBoundedSimulatorCanonicalOutputTape_bridge
       (Tape.input (FixedDescriptionBoundedSimulatorOutput attempt L)) := by
   simpa [FixedDescriptionBoundedSimulatorCanonicalOutputTape,
     FixedDescriptionBoundedSimulatorOutput, SimulatorLayout.tape] using
-    EncodedRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
+    EncRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape attempt L)
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_equiv_extractor
@@ -42,7 +42,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
   rcases hsimulatorConstruction attempt with ⟨simulator, hsimulator⟩
   rcases hextractorConstruction attempt with ⟨extractor, hextractor⟩
   let simExtractor :=
-    EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical
+    EncRewriters.BoundedLayoutRunner.SeqViaCanonical
       simulator extractor
   let runner :=
     seqSubroutine parser simExtractor tapeCodePrimitiveCodeWordHandoffMove
@@ -56,7 +56,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
       hextractor
   have hsimExtractorReady : simExtractor.SubroutineReady := by
     simpa [simExtractor] using
-      EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_subroutineReady
+      EncRewriters.BoundedLayoutRunner.SeqViaCanonical_subroutineReady
         hsimulatorReady hextractorReady
   refine ⟨runner, ?_, ?_, ?_⟩
   · simpa [runner] using
@@ -121,7 +121,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
             FixedDescriptionBoundedSimulatorOutput,
             MachineDescription.initial] using hn⟩
     rcases
-        EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
+        EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
           hsimulatorReady hextractorReady
           hsimForward
           (fixedDescriptionBoundedSimulatorCanonicalOutputTape_bridge
@@ -176,7 +176,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         SimulatorLayout.asBoolInput] using
         hsimExtractorHalt
     rcases
-        EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTape_inv
+        EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTape_inv
           hsimulatorReady hextractorReady hsimExtractorFromLayout with
       ⟨Tsimulator, hsimulatorHalt, hextractorHalt⟩
     have hsimulatorWithTape :
@@ -254,7 +254,7 @@ private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForw
     exact
       pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_equiv_extractor
         pairedRecognizerDovetailControllerStageAttemptFuelSimulatorGeneratedInputClosedHandoffConstruction_finite_leaf
-        EncodedRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
+        EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
         pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :

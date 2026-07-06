@@ -2,7 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.Controller
 import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
-import FoC.Computability.Compiler.Core.EncodedRewriters.BoundedLayoutRunner.Basic
+import FoC.Computability.Compiler.Core.EncRewriters.BoundedLayoutRunner.Basic
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 
 set_option doc.verso true
@@ -107,7 +107,7 @@ def FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction : Prop :=
 def FixedDescriptionBoundedSimulatorCodeRightShiftedConstruction : Prop :=
   forall D : MachineDescription,
     exists simulator : MachineDescription,
-      EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+      EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
         (FixedDescriptionBoundedSimulatorCode D) simulator
 
 def FixedDescriptionStepCodeCompilerConstruction : Prop :=
@@ -226,7 +226,7 @@ def PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :
     Prop :=
   forall accept reject : MachineDescription,
     exists runner : MachineDescription,
-      EncodedRewriters.BoundedLayoutRunner.Spec accept reject runner
+      EncRewriters.BoundedLayoutRunner.Spec accept reject runner
 
 def PairedRecognizerDovetailTotalOutputEmitterCompiledSubroutineConstruction :
     Prop :=
@@ -280,7 +280,7 @@ def PairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruct
     TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
       initializer tapeCodePrimitiveCodeWordHandoffMove ->
-    EncodedRewriters.BoundedLayoutRunner.Spec accept reject runner ->
+    EncRewriters.BoundedLayoutRunner.Spec accept reject runner ->
     TapeCodePrimitiveOutputSubroutineRealizedByDescription
       PairedRecognizerDovetailTotalOutputCode
       emitter ->
@@ -525,7 +525,7 @@ def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedC
     Prop :=
   forall attempt : MachineDescription,
     exists parser : MachineDescription,
-      EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+      EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
         (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
           attempt)
         parser
@@ -630,7 +630,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHan
   rcases h attempt with ⟨parser, hparser⟩
   exact
     ⟨parser,
-      EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      EncRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
         hparser
         (by
           intro code out htransform
@@ -789,7 +789,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubrout
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (FixedDescriptionBoundedSimulatorCode attempt)
         simulator tapeCodePrimitiveCodeWordHandoffMove :=
-    EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+    EncRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
       hsimulator
       (by
         intro code out htransform
@@ -1028,7 +1028,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
         (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
           i) := by
   exact
-    EncodedRewriters.tape_normalizedOutput_move_right_input
+    EncRewriters.tape_normalizedOutput_move_right_input
       (encodeCodeWordAsInput
         (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode
           i))
@@ -1431,11 +1431,11 @@ theorem pairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape_handoff
         (PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape
           result) =
       Tape.input (encodeCodeWordAsInput (encodeBoolWord result)) := by
-  rcases EncodedRewriters.encodeBoolWord_cons result with
+  rcases EncRewriters.encodeBoolWord_cons result with
     ⟨symbol, tail, hcode⟩
   simpa [PairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape,
     hcode] using
-    EncodedRewriters.tape_move_left_move_right_input_encodeCodeWordAsInput_cons
+    EncRewriters.tape_move_left_move_right_input_encodeCodeWordAsInput_cons
       symbol tail
 
 theorem pairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape_normalizedOutput
@@ -1445,7 +1445,7 @@ theorem pairedRecognizerDovetailControllerBoolWordRightShiftedOutputTape_normali
           result) =
       encodeCodeWordAsInput (encodeBoolWord result) := by
   exact
-    EncodedRewriters.tape_normalizedOutput_move_right_input
+    EncRewriters.tape_normalizedOutput_move_right_input
       (encodeCodeWordAsInput (encodeBoolWord result))
 
 def PairedRecognizerDovetailControllerBoolWordRightShiftedEnumeratorSpec

@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.FixedSimulatorSkeletons
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.PhaseAdapters
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseAdapters
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers
 import FoC.Computability.Compiler.Core.Closeout
@@ -183,7 +183,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
     MachineDescription.seqSubroutine initializer runner
       tapeCodePrimitiveCodeWordHandoffMove
   let attempt :=
-    EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical initRunner emitter
+    EncRewriters.BoundedLayoutRunner.SeqViaCanonical initRunner emitter
   refine ⟨attempt, ?_⟩
   let firstCode :=
     MachineDescription.TapeCodePrimitive.compose
@@ -206,7 +206,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
       hemitter
   have hattemptReady : attempt.SubroutineReady := by
     exact
-      EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_subroutineReady
+      EncRewriters.BoundedLayoutRunner.SeqViaCanonical_subroutineReady
         hinitRunnerReady hemitterReady
   have hinitHandoff :
       TapeCodePrimitiveHandoffCompiledSubroutineByDescription
@@ -269,8 +269,8 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
               simpa [MachineDescription.HaltsWithTapeIn,
                 MachineDescription.HaltsFromTapeIn,
                 MachineDescription.initial] using hn⟩
-        · simpa [EncodedRewriters.BoundedLayoutRunner.OutputTape,
-            EncodedRewriters.BoundedLayoutRunner.OutputCode,
+        · simpa [EncRewriters.BoundedLayoutRunner.OutputTape,
+            EncRewriters.BoundedLayoutRunner.OutputCode,
             Tape.output] using hRunnerEquiv
   have hinitRunnerClosed :
       forall {code : Word MachineCodeSymbol} {T : Tape Bool},
@@ -338,8 +338,8 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
       exact
         MachineDescription.TapeCodePrimitive.compose_transform_some
           hinitTransform hrunnerTransform
-    · simpa [mid, EncodedRewriters.BoundedLayoutRunner.OutputTape,
-        EncodedRewriters.BoundedLayoutRunner.OutputCode,
+    · simpa [mid, EncRewriters.BoundedLayoutRunner.OutputTape,
+        EncRewriters.BoundedLayoutRunner.OutputCode,
         Tape.output] using hTEquiv
   have hcompiled :
       TapeCodePrimitiveOutputCompiledSubroutineByDescription
@@ -397,13 +397,13 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
                       (MachineDescription.encodeCodeWordAsInput mid))))
                 (Tape.input
                   (MachineDescription.encodeCodeWordAsInput mid)) :=
-            EncodedRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
+            EncRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
               (Tape.input (MachineDescription.encodeCodeWordAsInput mid))
           have hAttemptFrom :
               attempt.HaltsFromTapeEquiv
                 (Tape.input
                   (MachineDescription.encodeCodeWordAsInput code)) Tout :=
-            EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+            EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
               hinitRunnerReady hemitterReady hA hbridge hBEq
           have hAttemptWith :
               attempt.HaltsWithTapeEquiv
@@ -448,7 +448,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
             MachineDescription.encodeCodeWordAsInput out :=
         hn.right
       rcases
-          EncodedRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTape_inv
+          EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTape_inv
             hinitRunnerReady hemitterReady hSeqFrom with
         ⟨Tmid, hFirstFrom, hEmitterFrom⟩
       rcases hinitRunnerClosed hFirstFrom with
@@ -458,7 +458,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
             (Tape.move Direction.left (Tape.move Direction.right Tmid))
             (Tape.input (MachineDescription.encodeCodeWordAsInput mid)) :=
         Tape.Equiv.trans
-          (EncodedRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
+          (EncRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
             Tmid)
           hTmid
       have hEmitterEquiv :
@@ -538,7 +538,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConst
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
     (hprojection :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   PairedRecognizerDovetail.TotalStageAttemptCodeOutputCompiledSubroutineConstruction.of_outputFiniteSourceComponents
     pairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction_scaffold
@@ -549,20 +549,20 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_postErase
     (hpostEraseConstruction :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
       hpostEraseConstruction)
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_prefixAndFootprintCases
     (hprefix :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
     (hcases :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction :=
   pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
       hprefix hcases)
 
 theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold :
@@ -575,7 +575,7 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
     (hprojection :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout where
   totalStageAttemptSubroutine :=
     pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
@@ -585,20 +585,20 @@ def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selecte
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_postErase
     (hpostEraseConstruction :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout :=
   pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
       hpostEraseConstruction)
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_prefixAndFootprintCases
     (hprefix :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
     (hcases :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     PairedRecognizerDovetailFiniteControllerCompilerCloseout :=
   pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
       hprefix hcases)
 
 def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
@@ -787,7 +787,7 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerC
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
     (hprojection :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     (pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
@@ -795,20 +795,20 @@ theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_sel
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_postErase
     (hpostEraseConstruction :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
       hpostEraseConstruction)
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_prefixAndFootprintCases
     (hprefix :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
     (hcases :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
-    (EncodedRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
       hprefix hcases)
 
 theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold :

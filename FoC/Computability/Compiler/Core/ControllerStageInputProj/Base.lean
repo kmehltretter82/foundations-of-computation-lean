@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters
+import FoC.Computability.Compiler.Core.EncRewriters
 import FoC.Computability.Compiler.Core.EncodingLemmas
 import FoC.Computability.Compiler.Core.TransitionTableChecks
 

@@ -1,0 +1,101 @@
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Contracts
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.RunConfigEmitter
+
+set_option doc.verso true
+
+namespace FoC
+namespace Computability
+
+open Languages
+open MachineDescription
+
+namespace EncRewriters
+namespace BoundedLayoutRunner
+
+/-!
+# Padded simulator emitter terminal core wrapper
+
+This wrapper composes the terminal source-shape core with the source-to-field-FST
+run-config leaf and the downstream terminal adapters.
+-/
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_of_sourceFields_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_core_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_of_fields_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_of_FSTSource_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFSTTargetConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_of_source_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalSourceConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_of_FSTTarget_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_of_rightScratch_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_of_afterTerminalRightShiftedSource_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_of_rewind_body_configRunner
+    (hrewind :
+      FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindConstruction_configRunner)
+    (hbody :
+      FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner := by
+  intro D
+  rcases hrewind with ⟨rewind, hrewind⟩
+  rcases hbody D with ⟨body, hbodyD⟩
+  refine ⟨SeqViaCanonical rewind body, ?_⟩
+  constructor
+  · exact SeqViaCanonical_subroutineReady hrewind.left hbodyD.left
+  · intro explicitLeftBlank L
+    exact
+      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        hrewind.left
+        hbodyD.left
+        (hrewind.right explicitLeftBlank L)
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
+          L)
+        (hbodyD.right L)
+
+/--
+Finite-machine leaf for the exact terminal shapes of the padded
+fixed-description simulator emitter.
+
+For a fixed description {lean}`D`, this is the place where the restored
+simulator layout is parsed, {lean}`D` is run for the encoded stage bound, the
+hit bit is updated, and the exact padded scratch output is emitted.
+-/
+theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_of_rewind_body_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindConstruction_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner
+
+end BoundedLayoutRunner
+end EncRewriters
+
+end Computability
+end FoC

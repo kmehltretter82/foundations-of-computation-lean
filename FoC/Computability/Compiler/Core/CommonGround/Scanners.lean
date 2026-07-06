@@ -1,6 +1,6 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefix
 
 set_option doc.verso true
 
@@ -17,7 +17,7 @@ namespace Computability
 namespace CommonGround
 namespace ScannerInversions
 
-export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
+export EncRewriters.CanonicalLayouts.DovetailLayoutScanner
   ( BoolWordSuffixScannerDescription
     CheckedDovetailLayoutScannerDescription
     transitionRemainderBits
@@ -58,7 +58,7 @@ export EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
     checkedDovetailLayoutScannerDescription_haltsWithTape_stageField_inv
     checkedDovetailLayoutScannerDescription_haltsWithTape_finalFlags_inv )
 
-export EncodedRewriters.CanonicalLayouts.DovetailStagePrefix
+export EncRewriters.CanonicalLayouts.DovetailStagePrefix
   ( NatSuffixScannerDescription
     NonemptyNatSuffixScannerDescription
     natBits_eq_encodeNatAppend

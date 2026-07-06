@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.DovetailCode
 import FoC.Computability.Compiler.Core.EncodingLemmas
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Controller
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Controller
 
 set_option doc.verso true
 
@@ -21,7 +21,7 @@ namespace CommonGround
 
 namespace ControllerLayouts
 
-export EncodedRewriters.CanonicalLayouts.Controller
+export EncRewriters.CanonicalLayouts.Controller
   ( Layout
     decode
     encode

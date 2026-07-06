@@ -157,7 +157,7 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
   rcases h accept reject with ⟨runner, hrunner⟩
   exact
     ⟨runner,
-      EncodedRewriters.BoundedLayoutRunner.outputCompiledSubroutineByDescription_of_spec
+      EncRewriters.BoundedLayoutRunner.outputCompiledSubroutineByDescription_of_spec
         hrunner⟩
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_of_encodedRewriter
@@ -199,34 +199,34 @@ theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruct
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_selectedProjection
     (hprojection :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
-  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_selectedProjection
+  EncRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_selectedProjection
     hprojection
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_postErase
     (hpostEraseConstruction :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
-  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
+  EncRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_postErase
     hpostEraseConstruction
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_prefixAndFootprintCases
     (hprefix :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
     (hcases :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
-  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
+  EncRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
     hprefix hcases
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold :
     PairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction :=
-  EncodedRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
+  EncRewriters.BoundedLayoutRunner.finiteDescriptionConstruction_scaffold
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_selectedProjection
     (hprojection :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
   pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
     (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_selectedProjection
@@ -234,7 +234,7 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_postErase
     (hpostEraseConstruction :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
   pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
     (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_postErase
@@ -242,9 +242,9 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
 
 theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_scaffold_of_prefixAndFootprintCases
     (hprefix :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
     (hcases :
-      EncodedRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
+      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     PairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction :=
   pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstruction_of_spec
     (pairedRecognizerDovetailBoundedLayoutRunnerSpecConstruction_scaffold_of_prefixAndFootprintCases
@@ -257,7 +257,7 @@ theorem pairedRecognizerDovetailBoundedLayoutRunnerCompiledSubroutineConstructio
 
 theorem pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold :
     PairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction :=
-  EncodedRewriters.TotalOutputEmitter.outputRealizedSubroutine
+  EncRewriters.TotalOutputEmitter.outputRealizedSubroutine
 
 theorem pairedRecognizerDovetailControllerInputInitializerConstruction_scaffold :
     PairedRecognizerDovetailControllerInputInitializerConstruction :=

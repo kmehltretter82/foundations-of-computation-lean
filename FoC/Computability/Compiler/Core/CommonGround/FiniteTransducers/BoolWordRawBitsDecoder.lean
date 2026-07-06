@@ -4,7 +4,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
 
@@ -21,7 +21,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
-open EncodedRewriters.CanonicalLayouts.DovetailLayoutScanner
+open EncRewriters.CanonicalLayouts.DovetailLayoutScanner
 open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 namespace CommonGround

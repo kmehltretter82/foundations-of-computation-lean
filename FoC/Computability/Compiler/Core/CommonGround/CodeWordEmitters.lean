@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Emitters
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Emitters
 
 set_option doc.verso true
 
@@ -18,11 +18,11 @@ open MachineDescription
 namespace CommonGround
 namespace CodeWordEmitters
 
-export EncodedRewriters
+export EncRewriters
   ( tape_normalizedOutput_move_right_input
     tape_move_left_move_right_input_encodeCodeWordAsInput_cons )
 
-export EncodedRewriters.CanonicalLayouts
+export EncRewriters.CanonicalLayouts
   ( ExactOutputTape
     exactOutputTape_normalizedOutput
     exactOutputTape_cells
@@ -64,7 +64,7 @@ theorem rightShiftedOutputCompiled_of_indexed_tape_spec
       forall code out : Word MachineCodeSymbol,
         P.transform code = some out <->
           exists i : ι, code = inputCode i ∧ out = outputCode i) :
-    EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+    EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
       P runner := by
   constructor
   · exact hwell
@@ -93,7 +93,7 @@ theorem rightShiftedOutputCompiled_of_indexed_tape_spec
             encodeCodeWordAsInput (outputCode i) := by
         rw [hT, houtputTape i]
         exact
-          EncodedRewriters.tape_normalizedOutput_move_right_input
+          EncRewriters.tape_normalizedOutput_move_right_input
             (encodeCodeWordAsInput (outputCode i))
       have houtBits :
           encodeCodeWordAsInput out =
@@ -106,7 +106,7 @@ theorem rightShiftedOutputCompiled_of_indexed_tape_spec
       rcases (htransform code out).mp hP with ⟨i, hcode, hout⟩
       rw [hcode, hout]
       simpa [houtputTape i,
-        EncodedRewriters.tape_normalizedOutput_move_right_input] using
+        EncRewriters.tape_normalizedOutput_move_right_input] using
         haltsWithOutput_of_haltsWithTape
           (hforward i)
   · intro code T hhalt

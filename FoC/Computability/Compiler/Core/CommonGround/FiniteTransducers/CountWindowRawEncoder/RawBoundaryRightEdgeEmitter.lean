@@ -4,8 +4,8 @@ import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.Assembly.Prefix
-import FoC.Computability.Compiler.Core.EncodedRewriters.ClosedConfigRunner.Projection.Quoter.CellPass
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.Prefix
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.CellPass
 
 set_option doc.verso true
 
@@ -40,7 +40,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
-open EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf
+open EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf
 
 namespace CommonGround
 namespace FiniteTransducers
@@ -105,8 +105,8 @@ theorem sourceTape_defaultedCells
                   (tail.map optionBitDefaultFalse)) := by
   rw [sourceTape_cells]
   simp [List.map_append, List.append_assoc,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
 def entryTape
     (skipped count : Word Bool) (tail : List (Option Bool)) :
@@ -227,8 +227,8 @@ theorem rightEdgeTape_defaultedCells
         (tailFirst :: tail.map optionBitDefaultFalse) := by
   rw [rightEdgeTape_cells]
   simp [List.map_append,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
 private theorem encodedLayoutBits_eq_headerQuoteBits
     (layout : Word Bool) :
@@ -238,10 +238,10 @@ private theorem encodedLayoutBits_eq_headerQuoteBits
         (List.append
           (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
             layout.length)
-          (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
+          (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
             layout)) := by
   exact
-    (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
+    (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
       layout).symm
 
 private theorem encodedLayoutBits_eq_header_length_cells
@@ -252,13 +252,13 @@ private theorem encodedLayoutBits_eq_header_length_cells
         (List.append
           (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
             layout.length)
-          (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
+          (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
             layout)) :=
   encodedLayoutBits_eq_headerQuoteBits layout
 
 def rightToLeftEncodedLayoutBits (layout : Word Bool) : Word Bool :=
   List.append
-    (EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
+    (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
       layout).reverse
     (List.append
       (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
@@ -1433,8 +1433,8 @@ theorem rightEdgeTape_rewind_target_defaultedCells
           (tailFirst :: tail.map optionBitDefaultFalse) := by
   rw [rightEdgeTape_rewind_target_cells]
   simp [List.map_append,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
-    FoC.Computability.EncodedRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
+    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
 def rawBoundaryRightEdgeEmitterCoreDescription :
     MachineDescription :=

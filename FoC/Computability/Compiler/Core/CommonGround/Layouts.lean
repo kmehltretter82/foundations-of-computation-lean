@@ -1,7 +1,7 @@
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Basic
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Fields
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Dovetail
-import FoC.Computability.Compiler.Core.EncodedRewriters.CanonicalLayouts.Simulator
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Basic
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Fields
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Dovetail
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Simulator
 
 set_option doc.verso true
 
@@ -22,7 +22,7 @@ namespace CommonGround
 
 namespace LayoutTapes
 
-export EncodedRewriters.CanonicalLayouts
+export EncRewriters.CanonicalLayouts
   ( Bits
     InputTape
     HandoffTape
@@ -33,7 +33,7 @@ end LayoutTapes
 
 namespace FieldInversions
 
-export EncodedRewriters.CanonicalLayouts.Fields
+export EncRewriters.CanonicalLayouts.Fields
   ( decodeNatComplete
     decodeNatComplete_encode
     decodeNatComplete_eq_some_encode
@@ -60,7 +60,7 @@ end FieldInversions
 
 namespace DovetailLayouts
 
-export EncodedRewriters.CanonicalLayouts.Dovetail
+export EncRewriters.CanonicalLayouts.Dovetail
   ( Layout
     decode
     encode
@@ -84,19 +84,19 @@ theorem identityPrimitive_transform_eq_some_cons
     exists symbol : MachineCodeSymbol,
     exists tail : Word MachineCodeSymbol,
       out = symbol :: tail :=
-  EncodedRewriters.CanonicalLayouts.identityPrimitive_transform_eq_some_cons
+  EncRewriters.CanonicalLayouts.identityPrimitive_transform_eq_some_cons
     decode_encode (fun h => decode_eq_some_encode h) encode_cons h
 
 theorem identityClosedHandoffConstruction_of_rightShifted
     (h :
       exists runner : MachineDescription,
-        EncodedRewriters.RightShiftedOutputCompiledSubroutineByDescription
+        EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
           identityPrimitive runner) :
     IdentityClosedHandoffConstruction := by
   rcases h with ⟨runner, hrunner⟩
   exact
     ⟨runner,
-      EncodedRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
+      EncRewriters.closedHandoffCompiled_of_rightShiftedOutputCompiled
         hrunner
         (by
           intro code out htransform
@@ -106,7 +106,7 @@ end DovetailLayouts
 
 namespace SimulatorLayouts
 
-export EncodedRewriters.CanonicalLayouts.Simulator
+export EncRewriters.CanonicalLayouts.Simulator
   ( Layout
     decode
     encode
@@ -172,7 +172,7 @@ theorem runCodePrimitive_transform_eq_some_cons
       simp [hdecode] at h
       cases h
       exact
-        EncodedRewriters.CanonicalLayouts.Simulator.encode_cons
+        EncRewriters.CanonicalLayouts.Simulator.encode_cons
           (SimulatorLayout.run D L.stage L)
 
 end SimulatorLayouts
