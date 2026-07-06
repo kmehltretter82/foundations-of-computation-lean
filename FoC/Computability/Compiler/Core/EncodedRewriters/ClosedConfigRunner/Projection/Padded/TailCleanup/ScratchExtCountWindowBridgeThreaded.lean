@@ -766,6 +766,55 @@ theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDe
       selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_source_equiv_target
         n
 
+theorem optionList_eq_replicate_none_of_filterMap_eq_nil
+    (padding : List (Option Bool))
+    (hpadding : padding.filterMap (fun cell => cell) = []) :
+    exists n : Nat, padding = List.replicate n (none : Option Bool) := by
+  induction padding with
+  | nil =>
+      exact ⟨0, rfl⟩
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          have hrest : rest.filterMap (fun cell => cell) = [] := by
+            simpa using hpadding
+          rcases ih hrest with ⟨n, hn⟩
+          exact ⟨n + 1, by simp [hn, List.replicate_succ]⟩
+      | some _bit =>
+          simp at hpadding
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding_source_equiv_target
+    (padding : List (Option Bool))
+    (hpadding : padding.filterMap (fun cell => cell) = []) :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] padding)
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] padding) := by
+  rcases optionList_eq_replicate_none_of_filterMap_eq_nil
+      padding hpadding with
+    ⟨n, rfl⟩
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_source_equiv_target
+      n
+
+theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding
+    (padding : List (Option Bool))
+    (hpadding : padding.filterMap (fun cell => cell) = []) :
+    ExactIdentityDescription.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] padding)
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] padding) := by
+  refine
+    ⟨selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+      [] padding, ?_, ?_⟩
+  · refine ⟨0, ?_⟩
+    constructor <;> rfl
+  · exact
+      selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding_source_equiv_target
+        padding hpadding
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
