@@ -232,16 +232,31 @@ def selectedSegmentLogicalTapeDecoderPaddedCleanupLeftStack
         (logicalTapeBits (guardLogicalTape target))).reverse
       (none :: encodedPrefix.reverse)
 
-def selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
-    (target : Tape Bool) (padding : List (Option Bool))
+def selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+    (logical : Tape Bool) (padding : List (Option Bool))
     (encodedPrefix : List (Option Bool)) : Tape Bool :=
   FSTStatefulOptionAppendTargetTapeFromLeftWithPadding
     selectedSegmentLogicalTapeDecoderNext
     selectedSegmentLogicalTapeDecoderEmit
     selectedSegmentLogicalTapeDecoderStart
-    (logicalTapeBits (guardLogicalTape target))
+    (logicalTapeBits logical)
     (none :: encodedPrefix.reverse)
     padding
+
+def selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+    (guardLogicalTape target) padding encodedPrefix
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_eq_cellShape
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+        target padding encodedPrefix =
+      selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+        (guardLogicalTape target) padding encodedPrefix := by
+  rfl
 
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_eq_tapeAtCells
     (target : Tape Bool) (padding : List (Option Bool))
@@ -408,6 +423,7 @@ theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_cells_nil
               (logicalTapeBits (guardLogicalTape target)))
             [none, none]) := by
   simp [selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape,
+    selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape,
     FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
     tapeAtCells, Tape.cells, List.reverse_append,
     selectedSegmentLogicalTapeDecoderStart, List.append_assoc]
@@ -427,6 +443,7 @@ theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_cells_cons
               (logicalTapeBits (guardLogicalTape target)))
             (none :: pad :: padding)) := by
   simp [selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape,
+    selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape,
     FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
     tapeAtCells, Tape.cells, List.reverse_append,
     selectedSegmentLogicalTapeDecoderStart, List.append_assoc]
@@ -502,6 +519,20 @@ theorem selectedSegmentLogicalTapeDecoderHeadTargetTape_normalizedOutput
       target (selectedSegmentLogicalTapeDecoderRestPadding rest)
       encodedPrefix
 
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (padding : List (Option Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+          (guardLogicalTape target) padding encodedPrefix)
+        (guardLogicalTape target)
+
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction : Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec cleanup
+
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec
     (cleanup : MachineDescription) : Prop :=
   cleanup.SubroutineReady ∧
@@ -512,9 +543,33 @@ def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec
           target padding encodedPrefix)
         target
 
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_guardedCellShapeSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup := by
+  rcases hcleanup with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro target padding encodedPrefix
+  rcases hrun target padding encodedPrefix with
+    ⟨actual, hhalts, hequiv⟩
+  exact
+    ⟨actual, hhalts,
+      Tape.Equiv.trans hequiv (guardLogicalTape_equiv target)⟩
+
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction : Prop :=
   exists cleanup : MachineDescription,
     SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_guardedCellShape
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction := by
+  rcases hcleanup with ⟨cleanup, hspec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_guardedCellShapeSpec
+        hspec⟩
 
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupNilPaddingSpec
     (cleanup : MachineDescription) : Prop :=
@@ -544,6 +599,20 @@ def SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction : Prop :=
   exists cleanup : MachineDescription,
     SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec cleanup
 
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec_of_spec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec cleanup := by
+  rcases hcleanup with ⟨hready, hrun⟩
+  constructor
+  · exact
+      ⟨hready, fun target encodedPrefix =>
+        hrun target [] encodedPrefix⟩
+  · exact
+      ⟨hready, fun target pad padding encodedPrefix =>
+        hrun target (pad :: padding) encodedPrefix⟩
+
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_splitSpec
     {cleanup : MachineDescription}
     (hsplit :
@@ -569,6 +638,16 @@ theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_split
     ⟨cleanup,
       selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_splitSpec
         hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_of_construction
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction := by
+  rcases hcleanup with ⟨cleanup, hspec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec_of_spec
+        hspec⟩
 
 /-- Cleanup needed after the padded selected-head bit decoder. -/
 def SelectedSegmentLogicalTapeDecoderHeadCleanupSpec
@@ -728,12 +807,20 @@ theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_iff_split :
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
 
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction := by
+  -- Remaining reusable finite-machine cleanup for the guarded logical-tape
+  -- decoder cell shape.  The leaf is independent of selected-footprint
+  -- routing, but it only has to handle inputs produced from
+  -- `guardLogicalTape target`, not arbitrary logical tapes.
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction := by
-  -- Remaining reusable finite-machine cleanup for the padded selected-head
-  -- scanner target.  The split is now over the visible padding after the
-  -- decoded selected segment, independent of structured-tape suffix syntax.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_of_construction
+      (selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_guardedCellShape
+        selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction_core)
 
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_core :
     SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction := by
