@@ -1971,6 +1971,132 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocu
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec
       focus
 
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusNilPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    focus.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+        [] []) ∧
+    (forall padding : List (Option Bool),
+      focus.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          [] (none :: padding))
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+          [] (none :: padding))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          [] (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+          [] (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConsPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      focus.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          (bit :: rest) [])
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+          (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          (bit :: rest) (none :: padding))
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+          (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          (bit :: rest) (some padBit :: padding))
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeFocusedOutputTape
+          (bit :: rest) (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseSpec
+    (focus : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusNilPadSymbolCaseSpec
+      focus ∧
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConsPadSymbolCaseSpec
+      focus
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction :
+    Prop :=
+  exists focus : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseSpec
+      focus
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseSpec_of_spec
+    {focus : MachineDescription}
+    (hfocus :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec
+        focus) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseSpec
+      focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec_of_splitPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseSpec
+        focus) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec
+      focus := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone padding
+          | some padBit =>
+              exact hnilSome padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone bit rest padding
+          | some padBit =>
+              exact hconsSome bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_of_splitPadSymbolCases
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction := by
+  rcases hsplit with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSpec_of_splitPadSymbolCaseSpec
+        hspec⟩
+
 def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectedEgressDescription
     (focus projector : MachineDescription) : MachineDescription :=
   canonicalPrimitiveSeqDescription focus projector
@@ -2361,23 +2487,31 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBr
     selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_of_inputMaterializer
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction := by
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction := by
   -- Remaining finite-machine egress: use the full structured output, especially
   -- tape 0, to reposition tape 2 at the semantic separator while preserving
-  -- the guarded three-tape layout.
+  -- the guarded three-tape layout.  The cases match the existing nil/cons and
+  -- padding-symbol endpoint split.
   sorry
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeHeadCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction := by
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusConstruction_of_splitPadSymbolCases
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeHeadCleanupSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction := by
   -- Remaining reusable selected-head decoder cleanup used by the generic
-  -- structured tape-2 projector route.
+  -- structured tape-2 projector route.  The split separates the singleton
+  -- selected segment from the case with a structured suffix to the right.
   sorry
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectorConstruction_core :
     StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorConstruction_of_headCleanup
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeHeadCleanupConstruction_core
+  structuredTape2ProjectorConstruction_of_headCleanupSplit
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeHeadCleanupSplitConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction := by

@@ -580,6 +580,15 @@ theorem structuredTape2ProjectorConstruction_of_headCleanup
     (structuredTape2SegmentNormalizerConstruction_of_headCleanup
       hcleanup)
 
+/-- Tape-2 projector from branch-split padded selected-head cleanup. -/
+theorem structuredTape2ProjectorConstruction_of_headCleanupSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction) :
+    StructuredTape2ProjectorConstruction :=
+  structuredTape2ProjectorConstruction_of_headCleanup
+    (selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
+      hsplit)
+
 /--
 Bundle of selected-head decoder consequences from one padded cleanup premise.
 
@@ -668,6 +677,20 @@ theorem structuredSelectedHeadDecoderRouteConstruction_of_headCleanup
       tape0Projector := hproject0
       tape1Projector := hproject1
       tape2Projector := hproject2 }
+
+/--
+Build the selected-head route bundle from branch-split cleanup.
+
+This keeps downstream users at the split boundary when the real finite-machine
+cleanup naturally separates the empty-rest and nonempty-rest cases.
+-/
+theorem structuredSelectedHeadDecoderRouteConstruction_of_headCleanupSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction) :
+    StructuredSelectedHeadDecoderRouteConstruction :=
+  structuredSelectedHeadDecoderRouteConstruction_of_headCleanup
+    (selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
+      hsplit)
 
 /-!
 ## Bundle projections
