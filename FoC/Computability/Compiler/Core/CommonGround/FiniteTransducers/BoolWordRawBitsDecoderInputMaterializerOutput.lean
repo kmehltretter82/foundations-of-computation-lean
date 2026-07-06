@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerEndpoint
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerEndpointContracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerOutput
 
 set_option doc.verso true
