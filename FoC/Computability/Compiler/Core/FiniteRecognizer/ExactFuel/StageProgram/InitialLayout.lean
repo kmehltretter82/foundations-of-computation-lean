@@ -97,20 +97,6 @@ theorem initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
       initialLayoutMaterializerCodePrimitive] using hexact
   · simpa [initialLayoutMaterializerCodePrimitive] using hcanonical
 
-/--
-Remaining finite-table leaf for the exact-output initial-layout primitive.
--/
-theorem initialLayoutExactOutputPrimitiveFinStateFiniteLeaf :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      InitialLayoutExactOutputPrimitiveConstruction M := by
-  intro stateCount M
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
-
 theorem initialLayoutMaterializerCodePrimitive_stageCode
     {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
