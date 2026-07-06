@@ -525,23 +525,6 @@ def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
         (selectedProjectionPaddedTailCleanupLayoutScratchSourceTape
           useAccept L)
 
-def SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :
-    Prop :=
-  forall useAccept : Bool,
-    exists materializer : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec
-        useAccept materializer
-
-def SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :
-    Prop :=
-  (exists rejectMaterializer : MachineDescription,
-      SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
-        false rejectMaterializer) ∧
-    forall useAccept : Bool,
-      exists allocator : MachineDescription,
-        SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorSpec
-          useAccept allocator
-
 theorem selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec :
     SelectedProjectionPaddedTailCleanupPostPaddingBaseSourceMaterializerSpec
       true rightEdgeRewindDescription := by
@@ -598,104 +581,6 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_
           useAccept L)
         (hallocator.right L)
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction := by
-  intro useAccept
-  cases useAccept
-  · rcases h.left with ⟨rejectMaterializer, hreject⟩
-    rcases h.right false with ⟨allocator, hallocator⟩
-    exact
-      ⟨canonicalSeqDescription rejectMaterializer allocator,
-        selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
-          hreject hallocator⟩
-  · rcases h.right true with ⟨allocator, hallocator⟩
-    exact
-      ⟨canonicalSeqDescription rightEdgeRewindDescription allocator,
-        selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
-          selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec
-          hallocator⟩
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction := by
-  refine
-    ⟨⟨canonicalSeqDescription
-        selectedHitOtherFlagErasedRejectToRightEndDescription
-        selectedProjectionPaddedTailCleanupRejectRightEndToBaseSourceDescription,
-      selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec⟩,
-      h⟩
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
-    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
-    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintBitPaddingCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
-    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-      heraser hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
-    (h :
-      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_scratchAllocators
-      h)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_prefixAndFootprintBitPaddingCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_baseAndScratch
-    (selectedProjectionPaddedTailCleanupPostPaddingBaseAndScratchConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-      heraser hcases)
-
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
     {useAccept : Bool} {materializer : MachineDescription}
     (hmaterializer :
@@ -726,53 +611,23 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMate
         (selectedProjectionPaddedTailCleanupSourceToEquivOutputDescription_haltsFrom_layoutScratchSource
           useAccept L)
 
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-    (hmaterializers :
-      SelectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction) :
+private theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
+    (h :
+      SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction) :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
   intro useAccept
-  rcases hmaterializers useAccept with
-    ⟨materializer, hmaterializer⟩
-  exact
-    selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
-      hmaterializer
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction := by
-  exact
-    selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-      (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_scratchAllocators
-        selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-    (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-    (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_prefixAndFootprintBitPaddingCases
-      hprefix hcases)
-
-theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializers
-    (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-      heraser hcases)
+  rcases h useAccept with ⟨allocator, hallocator⟩
+  cases useAccept
+  · exact
+      selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
+        (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
+          selectedProjectionPaddedTailCleanupRejectBaseSourceMaterializerSpec
+          hallocator)
+  · exact
+      selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_sourceMaterializer
+        (selectedProjectionPaddedTailCleanupPostPaddingSourceMaterializerSpec_of_baseAndScratch
+          selectedProjectionPaddedTailCleanupAcceptBaseSourceMaterializerSpec
+          hallocator)
 
 def selectedHitOtherFlagErasedPostEraseFromPostPadding
     (useAccept : Bool) (postPadding : MachineDescription) :
@@ -858,7 +713,8 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
 
 theorem selectedProjectionPaddedTailCleanupPostPaddingConstruction :
     SelectedProjectionPaddedTailCleanupPostPaddingConstruction :=
-  selectedProjectionPaddedTailCleanupPostPaddingCoreConstruction
+  selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
+    selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFootprintCases
     (hprefix :
@@ -867,8 +723,9 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFoo
       SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
   selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
-    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintCases
-      hprefix hcases)
+    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
+      (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintCases
+        hprefix hcases))
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFootprintBitPaddingCases
     (hprefix :
@@ -877,8 +734,9 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_prefixAndFoo
       SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
   selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
-    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_prefixAndFootprintBitPaddingCases
-      hprefix hcases)
+    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
+      (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_prefixAndFootprintBitPaddingCases
+        hprefix hcases))
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
     (heraser :
@@ -887,8 +745,9 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_structuredPr
       SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
   selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
-    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
-      heraser hcases)
+    (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
+      (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+        heraser hcases))
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
