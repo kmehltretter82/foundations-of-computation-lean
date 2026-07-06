@@ -444,29 +444,6 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
     selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
       [] bits padding
 
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_nil
-    (padding : List (Option Bool)) :
-    Tape.cells
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-          [] padding) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        [] [] padding := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
-      [] padding
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_cons
-    (bit : Bool) (rest : Word Bool)
-    (padding : List (Option Bool)) :
-    Tape.cells
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-          (bit :: rest) padding) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        [] (bit :: rest) padding := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells
-      (bit :: rest) padding
-
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
     (bits : Word Bool) (padding : List (Option Bool)) :
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
@@ -482,29 +459,6 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEn
     tapeAtCells, selectedSegmentLogicalTapeDecoderStart,
     selectedSegmentLogicalTapeDecoder_cells_guard_rightEdgeScanSourceTapeFromLeft_eq_footprint,
     List.reverse_append]
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil
-    (padding : List (Option Bool)) :
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-        [] padding =
-      rightEndCompactionSourceTape
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
-          [] padding) := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
-      [] padding
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons
-    (bit : Bool) (rest : Word Bool)
-    (padding : List (Option Bool)) :
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-        (bit :: rest) padding =
-      rightEndCompactionSourceTape
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
-          (bit :: rest) padding) := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape
-      (bit :: rest) padding
 
 theorem rightEdgeScanSourceTapeFromLeft_singleBlank_normalizedOutput
     (bits : Word Bool) (padding : List (Option Bool)) :
@@ -525,26 +479,6 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalized
     rightEdgeScanSourceTapeFromLeft_singleBlank_normalizedOutput]
   rfl
 
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput_nil
-    (padding : List (Option Bool)) :
-    Tape.normalizedOutput
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-          [] padding) =
-      padding.filterMap (fun cell => cell) := by
-  rw [
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput]
-  rfl
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput_cons
-    (bit : Bool) (rest : Word Bool)
-    (padding : List (Option Bool)) :
-    Tape.normalizedOutput
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
-          (bit :: rest) padding) =
-      List.append (bit :: rest) (padding.filterMap (fun cell => cell)) := by
-  rw [
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput]
-
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.cells
@@ -556,29 +490,6 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
     selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells]
   exact rightEdgeRewindSourceTape_cells bits padding
 
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_nil
-    (padding : List (Option Bool)) :
-    Tape.cells
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
-          [] padding) =
-      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
-        [] padding := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
-      [] padding
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_cons
-    (bit : Bool) (rest : Word Bool)
-    (padding : List (Option Bool)) :
-    Tape.cells
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
-          (bit :: rest) padding) =
-      selectedSegmentLogicalTapeDecoderDensifierPaddingPreservingCells
-        (bit :: rest) padding := by
-  exact
-    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells
-      (bit :: rest) padding
-
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.normalizedOutput
@@ -587,26 +498,6 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalized
       List.append bits (padding.filterMap (fun cell => cell)) := by
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape]
   exact rightEdgeRewindSourceTape_normalizedOutput bits padding
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput_nil
-    (padding : List (Option Bool)) :
-    Tape.normalizedOutput
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
-          [] padding) =
-      padding.filterMap (fun cell => cell) := by
-  rw [
-    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput]
-  rfl
-
-theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput_cons
-    (bit : Bool) (rest : Word Bool)
-    (padding : List (Option Bool)) :
-    Tape.normalizedOutput
-        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
-          (bit :: rest) padding) =
-      List.append (bit :: rest) (padding.filterMap (fun cell => cell)) := by
-  rw [
-    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput]
 
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
     (bits : Word Bool) (padding : List (Option Bool)) :
@@ -816,28 +707,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_
     countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells
       true L deletedTail
 
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_accept_eq_prefixCells
-    (L : DovetailLayout) (deletedTail : Word Bool) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
-          true L deletedTail) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        (encodedStructuredTapeCellsPrefix
-          [ guardLogicalTape
-              (structuredBoolWordRawBitsDecoderSourceTargetTape
-                (ParsedLayoutBits L)
-                (countWindowPostFieldDecodedPrefixStructuredSuffixTail
-                  true L)
-                (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-                  true L deletedTail))
-          , guardLogicalTape
-              (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-                ((ParsedLayoutBits L).length + 1)) ])
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding true L) := by
-  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_accept]
-  rw [countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells]
-
 theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject
     (L : DovetailLayout) (deletedTail : Word Bool) :
     Tape.cells
@@ -852,98 +721,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_
     countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells
       false L deletedTail
 
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject_eq_prefixCells
-    (L : DovetailLayout) (deletedTail : Word Bool) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
-          false L deletedTail) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        (encodedStructuredTapeCellsPrefix
-          [ guardLogicalTape
-              (structuredBoolWordRawBitsDecoderSourceTargetTape
-                (ParsedLayoutBits L)
-                (countWindowPostFieldDecodedPrefixStructuredSuffixTail
-                  false L)
-                (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-                  false L deletedTail))
-          , guardLogicalTape
-              (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-                ((ParsedLayoutBits L).length + 1)) ])
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding false L) := by
-  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_cells_reject]
-  rw [countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_accept
-    (L : DovetailLayout) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          true L) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        [] (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding true L) := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells
-      true L
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_reject
-    (L : DovetailLayout) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          false L) =
-      selectedSegmentLogicalTapeDecoderDensifierSourceCells
-        [] (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding false L) := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells
-      false L
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout)
-    (deletedTail : Word Bool) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape
-          useAccept L deletedTail) =
-      List.append
-        ((countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          useAccept L deletedTail).filterMap (fun cell => cell))
-        (List.append (ParsedLayoutBits L)
-          ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
-            (fun cell => cell))) := by
-  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-    countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape]
-  rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
-  rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          useAccept L) =
-      List.append (ParsedLayoutBits L)
-        ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
-          (fun cell => cell)) := by
-  rw [countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape]
-  rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
-  rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
-  simp
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout)
-    (deletedTail : Word Bool) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape
-          useAccept L deletedTail) =
-      List.append
-        ((countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          useAccept L deletedTail).filterMap (fun cell => cell))
-        (List.append (ParsedLayoutBits L)
-          ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
-            (fun cell => cell))) := by
-  rw [countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape]
-  rw [selectedSegmentLogicalTapeDecoderTargetTape_normalizedOutput]
-  rw [postFieldDecodedPrefixScanSourceTape_normalizedOutput]
-
 def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   selectedSegmentLogicalTapeDecoderTargetTape
@@ -956,22 +733,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_foo
         useAccept L =
       countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
         useAccept L := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept
-    (L : DovetailLayout) :
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-        true L =
-      countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-        true L := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject
-    (L : DovetailLayout) :
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-        false L =
-      countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-        false L := by
   rfl
 
 theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_genericFootprintSourceTape
@@ -1023,39 +784,6 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
   exact
     selectedSegmentLogicalTapeDecoderTargetTape_cells_postFieldDecodedPrefixScanSourceTape_eq_densifierSource
       useAccept L []
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          useAccept L) =
-      Tape.cells
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          useAccept L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells_accept
-    (L : DovetailLayout) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          true L) =
-      Tape.cells
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          true L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_cells_eq_footprintCompactorSourceTape_cells_reject
-    (L : DovetailLayout) :
-    Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          false L) =
-      Tape.cells
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          false L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject]
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape_eq_rightEndCompactionSourceTape
     (useAccept : Bool) (L : DovetailLayout) :
@@ -1115,39 +843,6 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput
       (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          useAccept L) =
-      Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          useAccept L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput_accept
-    (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          true L) =
-      Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          true L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_accept]
-
-theorem countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_normalizedOutput_eq_footprintCompactorSourceTape_normalizedOutput_reject
-    (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape
-          false L) =
-      Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
-          false L) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape_eq_footprintCompactorSourceTape_reject]
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape_normalizedOutput
     (useAccept : Bool) (L : DovetailLayout) :
