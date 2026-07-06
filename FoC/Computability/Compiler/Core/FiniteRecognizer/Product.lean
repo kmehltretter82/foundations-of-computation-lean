@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
 
 set_option doc.verso true
@@ -18,6 +19,96 @@ open Languages
 namespace FiniteRecognizer
 
 universe uLeft uRight
+
+/--
+Semantic parser/recognizer for one generated product exact-fuel call.  The
+outer unary field is the left-machine fuel; the inner unary field is the
+right-machine fuel, followed by the raw shared input.
+-/
+def generatedProductExactFuelRun
+    {leftN rightN : Nat}
+    (left : TuringMachine MachineCodeSymbol (Fin leftN))
+    (right : TuringMachine MachineCodeSymbol (Fin rightN))
+    (tokens : Word MachineCodeSymbol) :
+    Option (Word MachineCodeSymbol) :=
+  match MachineDescription.decodeNat tokens with
+  | none => none
+  | some (leftFuel, innerCode) =>
+      match MachineDescription.decodeNat innerCode with
+      | none => none
+      | some (rightFuel, input) =>
+          if TuringMachine.HaltsOnInputIn left leftFuel input ∧
+              TuringMachine.HaltsOnInputIn right rightFuel input then
+            some ([] : Word MachineCodeSymbol)
+          else
+            none
+
+theorem generatedProductExactFuelRun_eq_some_empty_of_eq_some
+    {leftN rightN : Nat}
+    (left : TuringMachine MachineCodeSymbol (Fin leftN))
+    (right : TuringMachine MachineCodeSymbol (Fin rightN))
+    {tokens output : Word MachineCodeSymbol}
+    (h :
+      generatedProductExactFuelRun left right tokens =
+        some output) :
+    output = ([] : Word MachineCodeSymbol) := by
+  unfold generatedProductExactFuelRun at h
+  cases houter : MachineDescription.decodeNat tokens with
+  | none =>
+      simp [houter] at h
+  | some outerDecoded =>
+      rcases outerDecoded with ⟨leftFuel, innerCode⟩
+      cases hinner : MachineDescription.decodeNat innerCode with
+      | none =>
+          simp [houter, hinner] at h
+      | some innerDecoded =>
+          rcases innerDecoded with ⟨rightFuel, input⟩
+          by_cases htarget :
+              TuringMachine.HaltsOnInputIn left leftFuel input ∧
+                TuringMachine.HaltsOnInputIn right rightFuel input
+          · simpa [houter, hinner, htarget] using h.symm
+          · simp [houter, hinner, htarget] at h
+
+theorem generatedProductExactFuelRun_nestedStageCode_eq_some_iff
+    {leftN rightN : Nat}
+    (left : TuringMachine MachineCodeSymbol (Fin leftN))
+    (right : TuringMachine MachineCodeSymbol (Fin rightN))
+    (input : Word MachineCodeSymbol)
+    (leftFuel rightFuel : Nat) :
+    generatedProductExactFuelRun left right
+        (GeneratedCode.nestedStageCode input rightFuel leftFuel) =
+        some ([] : Word MachineCodeSymbol) <->
+      TuringMachine.HaltsOnInputIn left leftFuel input ∧
+        TuringMachine.HaltsOnInputIn right rightFuel input := by
+  unfold generatedProductExactFuelRun
+  by_cases htarget :
+      TuringMachine.HaltsOnInputIn left leftFuel input ∧
+        TuringMachine.HaltsOnInputIn right rightFuel input
+  · simp [GeneratedCode.nestedStageCode_decodeNat_outer,
+      GeneratedCode.nestedStageCode_decodeNat_inner, htarget]
+    rfl
+  · simp [GeneratedCode.nestedStageCode_decodeNat_outer,
+      GeneratedCode.nestedStageCode_decodeNat_inner, htarget]
+
+/--
+Exact-output primitive boundary for the generated product parser.  This is the
+concrete backend target for product exact-fuel calls: parse both generated fuel
+fields, preserve the raw input, and accept exactly when both selected machines
+halt within their corresponding exact fuels.
+-/
+def GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
+    {leftN rightN : Nat}
+    (left : TuringMachine MachineCodeSymbol (Fin leftN))
+    (right : TuringMachine MachineCodeSymbol (Fin rightN)) : Prop :=
+  exists selectedState : Type,
+  exists selected : TuringMachine MachineCodeSymbol selectedState,
+    FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
+        selected
+        (generatedProductExactFuelRun left right) ∧
+      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
+        selected
+        (generatedProductExactFuelRun left right) ∧
+      TuringMachine.HaltingTransitionsDisabled selected
 
 /--
 Concrete-state generated exact-fuel product runner target.
@@ -43,6 +134,46 @@ def GeneratedProductExactFuelRunnerConstruction
   exists selected : TuringMachine MachineCodeSymbol selectedState,
     ProductExactFuelRunnerSpec
       selected left right GeneratedCode.nestedStageCode
+
+theorem generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
+    {leftN rightN : Nat}
+    {left : TuringMachine MachineCodeSymbol (Fin leftN)}
+    {right : TuringMachine MachineCodeSymbol (Fin rightN)}
+    (hprimitive :
+      GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
+        left right) :
+    GeneratedProductExactFuelRunnerConstruction left right := by
+  rcases hprimitive with
+    ⟨selectedState, selected, hexact, hcanonical, _hstop⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  have hselected :
+      TuringMachine.HaltsOnInput selected
+          (GeneratedCode.nestedStageCode input rightFuel leftFuel) <->
+        generatedProductExactFuelRun left right
+            (GeneratedCode.nestedStageCode input rightFuel leftFuel) =
+          some ([] : Word MachineCodeSymbol) := by
+    constructor
+    · intro hhalt
+      rcases hhalt with ⟨final, hcomp, hfinal⟩
+      rcases hcanonical
+          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
+          final hcomp hfinal with
+        ⟨output, houtput, _htape⟩
+      have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
+        generatedProductExactFuelRun_eq_some_empty_of_eq_some
+          left right houtput
+      subst output
+      exact houtput
+    · intro hrun
+      rcases (hexact
+          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
+          ([] : Word MachineCodeSymbol)).mpr hrun with
+        ⟨final, hcomp, hfinal, _htape⟩
+      exact ⟨final, hcomp, hfinal⟩
+  exact Iff.trans hselected
+    (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
+      left right input leftFuel rightFuel)
 
 /--
 Generated exact-fuel product runners are stable under replacing both
@@ -134,12 +265,17 @@ theorem generatedProductExactFuelRunnerConstruction_of_finStateConstructionDecid
         (TuringMachine.indexedDecidable right))
 
 /--
-Remaining concrete finite-table leaf for generated product exact-fuel calls.
-It must preserve the raw input while checking the left recognizer for the
-outer generated fuel and the right recognizer for the inner generated fuel.
+Remaining exact-output primitive leaf for generated product exact-fuel calls.
+It must parse the nested generated call, preserve the raw input, run both
+selected recognizers for their parsed exact fuels, and halt with canonical
+empty output exactly when both runs accept.
 -/
-theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
-    GeneratedProductExactFuelRunnerFinStateConstruction := by
+theorem generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf :
+    forall leftN rightN : Nat,
+    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
+    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
+      GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
+        left right := by
   intro leftN rightN left right
   cases leftN with
   | zero =>
@@ -150,6 +286,18 @@ theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
           exact False.elim (Fin.elim0 right.start)
       | succ _ =>
           sorry
+
+/--
+Concrete finite-machine leaf for generated product exact-fuel calls, derived
+from the sharper exact-output primitive boundary above.
+-/
+theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
+    GeneratedProductExactFuelRunnerFinStateConstruction := by
+  intro leftN rightN left right
+  exact
+    generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
+      (generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf
+        leftN rightN left right)
 
 /--
 Finite-machine leaf for generated exact-fuel product runners over arbitrary
