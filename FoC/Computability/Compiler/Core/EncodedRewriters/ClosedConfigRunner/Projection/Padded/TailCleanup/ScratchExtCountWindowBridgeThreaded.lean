@@ -1480,6 +1480,65 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstructio
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
       compactor
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []))
+      (rightEdgeRewindSourceTape [] []) ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (none :: padding)))
+        (rightEdgeRewindSourceTape [] (none :: padding))) ∧
+    forall (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (some padBit :: padding)))
+        (rightEdgeRewindSourceTape [] (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) []))
+        (rightEdgeRewindSourceTape (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (none :: padding)))
+        (rightEdgeRewindSourceTape (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (some padBit :: padding)))
+        (rightEdgeRewindSourceTape
+          (bit :: rest) (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
+    (compactor : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec
+      compactor ∧
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConsSpec
+      compactor
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
+      compactor
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
     (hsplit :
       SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction) :
@@ -1553,9 +1612,27 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseCon
         selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_some] using
         hconsSome bit rest padBit padding
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
+  rcases hsplit with ⟨compactor, hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  exact
+    ⟨compactor, hready, hnilNil, hnilNone, hnilSome,
+      hconsNil, hconsNone, hconsSome⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_split
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
