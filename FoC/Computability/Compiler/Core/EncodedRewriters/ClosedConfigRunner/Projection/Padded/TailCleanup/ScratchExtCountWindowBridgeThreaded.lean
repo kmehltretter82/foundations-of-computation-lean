@@ -691,6 +691,81 @@ theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDe
   · exact
       selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target
 
+theorem selectedSegmentLogicalTapeDecoder_statefulCells_logicalCellListBits_replicate_none_dropTrailingNone
+    (n suffixWidth : Nat) :
+    Tape.dropTrailingNone
+        (List.append
+          (statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+            selectedSegmentLogicalTapeDecoderEmit
+            selectedSegmentLogicalTapeDecoderStart
+            (List.append
+              (logicalCellListBits
+                (List.replicate n (none : Option Bool)))
+              [false, false])).reverse
+          (List.replicate suffixWidth (none : Option Bool))) =
+      [] := by
+  induction n generalizing suffixWidth with
+  | zero =>
+      simpa [statefulOptionCellsFrom, logicalCellListBits,
+        selectedSegmentLogicalTapeDecoderStart,
+        selectedSegmentLogicalTapeDecoderNext,
+        selectedSegmentLogicalTapeDecoderEmit, List.replicate_succ,
+        Nat.add_assoc] using
+        FoC.Computability.dropTrailingNone_replicate_none
+          (suffixWidth + 2)
+  | succ n ih =>
+      simpa [List.replicate_succ, logicalCellListBits, logicalCellBits,
+        statefulOptionCellsFrom, selectedSegmentLogicalTapeDecoderStart,
+        selectedSegmentLogicalTapeDecoderNext,
+        selectedSegmentLogicalTapeDecoderEmit, Nat.add_assoc] using
+        ih (suffixWidth + 2)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_source_equiv_target
+    (n : Nat) :
+    Tape.Equiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (List.replicate n (none : Option Bool)))
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (List.replicate n (none : Option Bool))) := by
+  induction n with
+  | zero =>
+      simpa using
+        selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target
+  | succ n _ih =>
+      simp [Tape.Equiv,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
+        selectedSegmentLogicalTapeDecoderTargetTape,
+        rightEdgeScanSourceTapeFromLeft, rightEdgeRewindSourceTape,
+        FSTStatefulOptionAppendTargetTapeFromLeft,
+        statefulOptionAppendWriteTargetTapeAtBlank, tapeAtCells,
+        statefulOptionCellsFrom, logicalTapeBits, logicalCellListBits,
+        logicalCellBits, guardLogicalTape,
+        selectedSegmentLogicalTapeDecoderStart,
+        selectedSegmentLogicalTapeDecoderNext,
+        selectedSegmentLogicalTapeDecoderEmit,
+        FoC.Computability.dropTrailingNone_replicate_none,
+        Tape.dropTrailingNone]
+      simpa using
+        selectedSegmentLogicalTapeDecoder_statefulCells_logicalCellListBits_replicate_none_dropTrailingNone
+          (n + 1) 9
+
+theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none
+    (n : Nat) :
+    ExactIdentityDescription.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] (List.replicate n (none : Option Bool)))
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (List.replicate n (none : Option Bool))) := by
+  refine
+    ⟨selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+      [] (List.replicate n (none : Option Bool)), ?_, ?_⟩
+  · refine ⟨0, ?_⟩
+    constructor <;> rfl
+  · exact
+      selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_source_equiv_target
+        n
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
