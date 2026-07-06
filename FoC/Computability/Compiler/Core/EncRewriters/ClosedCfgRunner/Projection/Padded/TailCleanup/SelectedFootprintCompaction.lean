@@ -1,4 +1,6 @@
 import FoC.Computability.Compiler.DescriptionExecution
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.PairEncodedOptionCellCompactor
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionPaddingOutput
 
 set_option doc.verso true
@@ -1743,18 +1745,264 @@ theorem selectedFootprintCompactorBridgeConstruction_iff_rightEndBridgeSplitCons
   · exact selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_bridge
   · exact selectedFootprintCompactorBridgeConstruction_of_rightEndBridgeSplit
 
-/--
-Remaining finite-machine leaf for selected-footprint compaction.
+/-!
+## Structured three-tape compactor bridge frontier
 
-The endpoint and padding split expose the smallest exact obligation currently
-available: a single compactor must send each padding-split source branch to its
-exact right-edge target, up to tape equivalence.
+The delayed decoder/compactor is now implemented as a lowered structured
+three-tape component.  The remaining selected-footprint obligation is the
+endpoint bridge between the old one-tape selected footprint and the guarded
+structured three-tape layout used by the lowerer.
 -/
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput0
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.sourceTape
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells
+        bits padding)
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.markerTape
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells
+        bits padding).length
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2
+    (_bits : Word Bool) (_padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.outputTape []
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput0
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.sourceTapeAt
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells
+        bits padding)
+      []
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput1
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.markerTapeAt
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells
+        bits padding).length
+      0
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput2
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  PairEncodedOptionCellCompactor.outputTape
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetPayloadCells
+        bits padding)
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput0
+      bits padding)
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1
+      bits padding)
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2
+      bits padding)
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput0
+      bits padding)
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput1
+      bits padding)
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput2
+      bits padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeCompactor_haltsFromTapeEquiv
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    PairEncodedOptionCellCompactor.loweredDescription.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
+          bits padding)
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          bits padding) := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput0,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput0,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput1,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput2,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells_eq_target_append_boundary] using
+    PairEncodedOptionCellCompactor.loweredDescription_haltsFromTape_append_singleton
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetPayloadCells
+          bits padding)
+        none
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeSpec
+    (initializer projector : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    projector.SubroutineReady ∧
+      forall (bits : Word Bool) (padding : List (Option Bool)),
+        initializer.HaltsFromTapeEquiv
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourceTape
+            bits padding)
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
+            bits padding) ∧
+        projector.HaltsFromTapeEquiv
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+            bits padding)
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+            bits padding)
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction :
+    Prop :=
+  exists initializer projector : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeSpec
+      initializer projector
+
+def selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription
+    (initializer projector : MachineDescription) : MachineDescription :=
+  structured3EndpointBridgeDescription
+    initializer
+    PairEncodedOptionCellCompactor.loweredDescription
+    projector
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+    {initializer projector : MachineDescription}
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeSpec
+        initializer projector)
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription
+        initializer projector).HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourceTape
+        bits padding)
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+        bits padding) := by
+  rcases hbridge with ⟨hinitializerReady, hprojectorReady, hbridgeRun⟩
+  rcases hbridgeRun bits padding with
+    ⟨hinitializerRun, hprojectorRun⟩
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape] using
+    structured3EndpointBridgeDescription_haltsFromTapeEquiv
+      (initializer := initializer)
+      (lowered :=
+        PairEncodedOptionCellCompactor.loweredDescription)
+      (projector := projector)
+      (Tin :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourceTape
+          bits padding)
+      (T0 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput0
+          bits padding)
+      (T1 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1
+          bits padding)
+      (T2 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2
+          bits padding)
+      (U0 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput0
+          bits padding)
+      (U1 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput1
+          bits padding)
+      (U2 :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutput2
+          bits padding)
+      (Tout :=
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+          bits padding)
+      hinitializerReady
+      PairEncodedOptionCellCompactor.loweredDescription_subroutineReady
+      hprojectorReady
+      hinitializerRun
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeCompactor_haltsFromTapeEquiv
+        bits padding)
+      hprojectorRun
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitSpec_of_threeTapeEndpointBridgeSpec
+    {initializer projector : MachineDescription}
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeSpec
+        initializer projector) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitSpec
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription
+        initializer projector) := by
+  rcases hbridge with ⟨hinitializerReady, hprojectorReady, hbridgeRun⟩
+  let hbridgeSpec :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeSpec
+        initializer projector :=
+    ⟨hinitializerReady, hprojectorReady, hbridgeRun⟩
+  have hready :
+      (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription
+        initializer projector).SubroutineReady := by
+    simpa [
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription] using
+      structured3EndpointBridgeDescription_subroutineReady
+        hinitializerReady
+        PairEncodedOptionCellCompactor.loweredDescription_subroutineReady
+        hprojectorReady
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec [] []
+    · intro padding
+      exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec [] (none :: padding)
+    · intro padBit padding
+      exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec (bit :: rest) []
+    · intro bit rest padding
+      exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact
+        selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription_haltsFromTapeEquiv
+          hbridgeSpec (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_of_threeTapeEndpointBridge
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction := by
+  rcases hbridge with ⟨initializer, projector, hspec⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeBridgedDescription
+        initializer projector,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitSpec_of_threeTapeEndpointBridgeSpec
+        hspec⟩
+
+/--
+Remaining endpoint bridge leaf for selected-footprint compaction.
+
+The lowered three-tape compactor is complete.  What remains is materializing
+the old selected-footprint source tape as the guarded three-tape input and
+projecting the guarded three-tape output back to the exact right-edge target.
+-/
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction := by
+  -- Remaining finite-machine bridge: instantiate executable ingress and
+  -- egress machines for the padding-aware selected footprint endpoints.
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction := by
-  -- Remaining finite-machine leaf: instantiate an executable compactor for
-  -- the padding-aware selected footprint endpoints.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_of_threeTapeEndpointBridge
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_paddingSplit
     (hpadding :
