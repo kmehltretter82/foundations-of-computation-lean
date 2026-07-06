@@ -1509,6 +1509,51 @@ def SelectedFootprintCompactorBridgeConstruction : Prop :=
   exists compactor : MachineDescription,
     SelectedFootprintCompactorBridgeSpec compactor
 
+theorem selectedFootprintCompactorBridgeSpec_of_compactorSpec
+    {compactor : MachineDescription}
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
+        compactor) :
+    SelectedFootprintCompactorBridgeSpec compactor := by
+  rcases hcompactor with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    hrun bits padding
+
+theorem selectedFootprintCompactorBridgeConstruction_of_compactor
+    (hcompactor :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
+    SelectedFootprintCompactorBridgeConstruction := by
+  rcases hcompactor with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedFootprintCompactorBridgeSpec_of_compactorSpec hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSpec_of_bridgeSpec
+    {compactor : MachineDescription}
+    (hbridge : SelectedFootprintCompactorBridgeSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorSpec
+      compactor := by
+  rcases hbridge with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    hrun bits padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_bridge
+    (hbridge : SelectedFootprintCompactorBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorSpec_of_bridgeSpec
+        hspec⟩
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec_of_bridgeSpec
     {compactor : MachineDescription}
     (hbridge : SelectedFootprintCompactorBridgeSpec compactor) :
