@@ -31,16 +31,7 @@ def scratchCounterMarkerBlock (markers : Nat) : List (Option Bool) :=
   List.append (List.replicate markers (some false : Option Bool))
     [some true, none]
 
-theorem scratchCounterMarkerBlock_zero :
-    scratchCounterMarkerBlock 0 = [some true, none] := by
-  rfl
-
-theorem scratchCounterMarkerBlock_succ (markers : Nat) :
-    scratchCounterMarkerBlock (markers + 1) =
-      some false :: scratchCounterMarkerBlock markers := by
-  simp [scratchCounterMarkerBlock, List.replicate_succ]
-
-theorem scratchCounter_replicate_false_append_cons
+private theorem scratchCounter_replicate_false_append_cons
     (markers : Nat) (tail : List (Option Bool)) :
     List.append
         (List.replicate markers (some false : Option Bool))
@@ -52,7 +43,7 @@ theorem scratchCounter_replicate_false_append_cons
     list_replicate_append_self
       (some false : Option Bool) markers tail
 
-theorem scratchCounter_replicate_none_append_cons
+private theorem scratchCounter_replicate_none_append_cons
     (markers : Nat) (tail : List (Option Bool)) :
     List.append
         (List.replicate markers (none : Option Bool))
@@ -1288,149 +1279,6 @@ theorem scratchCounterPreservingMarkerAppendDescription_haltsFrom_word_withRight
             (some true :: suffix))
   constructor <;>
     rw [scratchCounterPreservingMarkerAppendDescription_run_word_withRight]
-
-/--
-Erase a temporary counter-marker block after it has served as exact scratch
-width evidence.  The pass turns all {lit}`false` markers and the final
-{lit}`true` sentinel into blanks, preserving arbitrary right padding.
--/
-def scratchCounterMarkerEraseDescription : MachineDescription where
-  stateCount := 3
-  start := 0
-  halt := 2
-  transitions :=
-    [ transition 0 (some false) none Direction.right 0
-    , transition 0 (some true) none Direction.right 2
-    ]
-
-private abbrev SCME := scratchCounterMarkerEraseDescription
-
-theorem scratchCounterMarkerEraseDescription_wellFormed :
-    SCME.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := SCME.transitions)
-      (stateCount := SCME.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := SCME.transitions)
-      (by decide)
-
-theorem scratchCounterMarkerEraseDescription_haltTransitionFree :
-    SCME.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := SCME.transitions)
-    (state := SCME.halt)
-    (by decide)
-
-theorem scratchCounterMarkerEraseDescription_subroutineReady :
-    SCME.SubroutineReady :=
-  ⟨scratchCounterMarkerEraseDescription_wellFormed,
-    scratchCounterMarkerEraseDescription_haltTransitionFree⟩
-
-theorem scratchCounterMarkerEraseDescription_run_markers_withRight
-    (leftRev : List (Option Bool)) (markers : Nat)
-    (suffix : List (Option Bool)) :
-    SCME.runConfig (markers + 1)
-        { state := SCME.start
-          tape :=
-            tapeAtCells leftRev
-              (List.append
-                (List.replicate markers (some false : Option Bool))
-                (some true :: suffix)) } =
-      { state := SCME.halt
-        tape :=
-          tapeAtCells
-            (List.append
-              (List.replicate (markers + 1)
-                (none : Option Bool))
-              leftRev)
-            suffix } := by
-  induction markers generalizing leftRev with
-  | zero =>
-      cases suffix <;>
-        simp [SCME, scratchCounterMarkerEraseDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
-  | succ markers ih =>
-      rw [show markers + 1 + 1 = 1 + (markers + 1) by lia]
-      rw [runConfig_add]
-      have hstep :
-          SCME.runConfig 1
-              { state := SCME.start
-                tape :=
-                  tapeAtCells leftRev
-                    (List.append
-                      (List.replicate (markers + 1)
-                        (some false : Option Bool))
-                      (some true :: suffix)) } =
-            { state := SCME.start
-              tape :=
-                tapeAtCells (none :: leftRev)
-                  (List.append
-                    (List.replicate markers
-                      (some false : Option Bool))
-                    (some true :: suffix)) } := by
-        rw [show
-            List.replicate (markers + 1)
-                (some false : Option Bool) =
-              some false ::
-                List.replicate markers
-                  (some false : Option Bool) by
-          simp [List.replicate_succ]]
-        simp [SCME, scratchCounterMarkerEraseDescription,
-          runConfig, stepConfig, lookupTransition, Matches, transition,
-          tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
-        split <;> simp_all
-      rw [hstep]
-      calc
-        SCME.runConfig (markers + 1)
-            { state := SCME.start
-              tape :=
-                tapeAtCells (none :: leftRev)
-                  (List.append
-                    (List.replicate markers
-                      (some false : Option Bool))
-                    (some true :: suffix)) } =
-          { state := SCME.halt
-            tape :=
-              tapeAtCells
-                (List.append
-                  (List.replicate (markers + 1)
-                    (none : Option Bool))
-                  (none :: leftRev))
-                suffix } := by
-            exact ih (none :: leftRev)
-        _ =
-          { state := SCME.halt
-            tape :=
-              tapeAtCells
-                (List.append
-                  (List.replicate (1 + (markers + 1))
-                    (none : Option Bool))
-                  leftRev)
-                suffix } := by
-            rw [show 1 + (markers + 1) = markers + 1 + 1 by lia]
-            rw [scratchCounter_replicate_none_append_cons
-              (markers + 1) leftRev]
-
-theorem scratchCounterMarkerEraseDescription_haltsFrom_markers_withRight
-    (leftRev : List (Option Bool)) (markers : Nat)
-    (suffix : List (Option Bool)) :
-    SCME.HaltsFromTape
-      (tapeAtCells leftRev
-        (List.append
-          (List.replicate markers (some false : Option Bool))
-          (some true :: suffix)))
-      (tapeAtCells
-        (List.append
-          (List.replicate (markers + 1)
-            (none : Option Bool))
-          leftRev)
-        suffix) := by
-  refine ⟨markers + 1, ?_⟩
-  constructor <;>
-    rw [scratchCounterMarkerEraseDescription_run_markers_withRight]
 
 /--
 Initialize the moving {lit}`true` sentinel for the scratch counter.  The machine
