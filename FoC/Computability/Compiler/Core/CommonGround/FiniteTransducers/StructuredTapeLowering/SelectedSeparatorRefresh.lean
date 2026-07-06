@@ -2034,137 +2034,6 @@ theorem tapeAtEncodedSplit_selectedRightBoundary_afterOpening_read
     logicalCellBits, tapeSeparatorCells, tapeAtCells,
     Tape.read, Tape.moveRight]
 
-theorem singletonOpeningProbeDescription_run_selectedCanonical
-    (falseTarget trueTarget : Nat)
-    (encodedPrefix : List (Option Bool))
-    (target actual : Tape Bool) (rest : List (Tape Bool))
-    (hcanonical :
-      encodedStructuredTapes [actual] =
-        encodedGuardedStructuredTapes [target]) :
-    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
-        { state :=
-            (singletonOpeningProbeDescription
-              falseTarget trueTarget).start
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells (actual :: rest)) } =
-      { state := falseTarget
-        tape :=
-          tapeAtEncodedSplit encodedPrefix
-            (encodedStructuredTapeCells (actual :: rest)) } :=
-  singletonOpeningProbeDescription_run_false_of_reads
-    falseTarget trueTarget
-    (tapeAtEncodedSplit encodedPrefix
-      (encodedStructuredTapeCells (actual :: rest)))
-    (tapeAtEncodedSplit_selectedSeparator_read
-      encodedPrefix actual rest)
-    (tapeAtEncodedSplit_selectedCanonical_afterOpening_read
-      encodedPrefix target actual rest hcanonical)
-
-theorem singletonOpeningProbeDescription_run_selectedLeftBoundary
-    (falseTarget trueTarget : Nat)
-    (encodedPrefix : List (Option Bool)) (head : Option Bool)
-    (right : List (Option Bool)) (rest : List (Tape Bool)) :
-    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
-        { state :=
-            (singletonOpeningProbeDescription
-              falseTarget trueTarget).start
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells
-                (({ left := [], head := head,
-                    right := right ++ [none] } : Tape Bool) :: rest)) } =
-      { state := trueTarget
-        tape :=
-          tapeAtEncodedSplit encodedPrefix
-            (encodedStructuredTapeCells
-              (({ left := [], head := head,
-                  right := right ++ [none] } : Tape Bool) :: rest)) } :=
-  singletonOpeningProbeDescription_run_true_of_reads
-    falseTarget trueTarget
-    (tapeAtEncodedSplit encodedPrefix
-      (encodedStructuredTapeCells
-        (({ left := [], head := head,
-            right := right ++ [none] } : Tape Bool) :: rest)))
-    (tapeAtEncodedSplit_selectedSeparator_read
-      encodedPrefix
-      ({ left := [], head := head, right := right ++ [none] } :
-        Tape Bool)
-      rest)
-    (tapeAtEncodedSplit_selectedLeftBoundary_afterOpening_read
-      encodedPrefix head right rest)
-
-theorem singletonOpeningProbeDescription_run_selectedRightBoundary
-    (falseTarget trueTarget : Nat)
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    (singletonOpeningProbeDescription falseTarget trueTarget).runConfig 2
-        { state :=
-            (singletonOpeningProbeDescription
-              falseTarget trueTarget).start
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells
-                (({ left := left ++ [none], head := head,
-                    right := [] } : Tape Bool) :: rest)) } =
-      { state := falseTarget
-        tape :=
-          tapeAtEncodedSplit encodedPrefix
-            (encodedStructuredTapeCells
-              (({ left := left ++ [none], head := head,
-                  right := [] } : Tape Bool) :: rest)) } :=
-  singletonOpeningProbeDescription_run_false_of_reads
-    falseTarget trueTarget
-    (tapeAtEncodedSplit encodedPrefix
-      (encodedStructuredTapeCells
-        (({ left := left ++ [none], head := head,
-            right := [] } : Tape Bool) :: rest)))
-    (tapeAtEncodedSplit_selectedSeparator_read
-      encodedPrefix
-      ({ left := left ++ [none], head := head, right := [] } :
-        Tape Bool)
-      rest)
-    (tapeAtEncodedSplit_selectedRightBoundary_afterOpening_read
-      encodedPrefix left head rest)
-
-
-theorem selectedLeftBoundaryRefreshDescription_leftBoundaryCase
-    {gapCreator : MachineDescription}
-    (hgap : SelectedHeadGapCreatorContract gapCreator)
-    (encodedPrefix : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool))
-    (rest : List (Tape Bool)) :
-    (selectedLeftBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := [], head := head, right := right ++ [none] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := [], head := head, right := right } :
-              Tape Bool) :: rest))) :=
-  hgap.leftBoundaryRefresh encodedPrefix head right rest
-
-theorem selectedRightBoundaryRefreshDescription_rightBoundaryCase
-    {gapCreator : MachineDescription}
-    (hgap : SelectedHeadGapCreatorContract gapCreator)
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    (selectedRightBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := left ++ [none], head := head, right := [] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := left, head := head, right := [] } :
-              Tape Bool) :: rest))) :=
-  hgap.rightBoundaryRefresh encodedPrefix left head rest
-
 def concreteSelectedLeftBoundaryRefreshDescription : MachineDescription :=
   selectedLeftBoundaryRefreshDescription selectedHeadGapCreatorDescription
 
@@ -2180,40 +2049,6 @@ theorem concreteSelectedRightBoundaryRefreshDescription_subroutineReady :
     concreteSelectedRightBoundaryRefreshDescription.SubroutineReady :=
   selectedRightBoundaryRefreshDescription_subroutineReady
     selectedHeadGapCreatorDescription_contract.subroutineReady
-
-theorem concreteSelectedLeftBoundaryRefreshDescription_leftBoundaryCase
-    (encodedPrefix : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool))
-    (rest : List (Tape Bool)) :
-    concreteSelectedLeftBoundaryRefreshDescription.HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := [], head := head, right := right ++ [none] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := [], head := head, right := right } :
-              Tape Bool) :: rest))) :=
-  selectedLeftBoundaryRefreshDescription_leftBoundaryCase
-    selectedHeadGapCreatorDescription_contract encodedPrefix head right rest
-
-theorem concreteSelectedRightBoundaryRefreshDescription_rightBoundaryCase
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    concreteSelectedRightBoundaryRefreshDescription.HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := left ++ [none], head := head, right := [] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := left, head := head, right := [] } :
-              Tape Bool) :: rest))) :=
-  selectedRightBoundaryRefreshDescription_rightBoundaryCase
-    selectedHeadGapCreatorDescription_contract encodedPrefix left head rest
 
 /-!
 ## Selected-shape dispatcher branch layout
@@ -2549,7 +2384,7 @@ theorem selectedShapeLeftRepairDescription_haltsFrom_leftBoundary
             ({ left := [], head := head, right := right } :
               Tape Bool) :: rest))) := by
   rcases
-      concreteSelectedLeftBoundaryRefreshDescription_leftBoundaryCase
+      selectedHeadGapCreatorDescription_contract.leftBoundaryRefresh
         encodedPrefix head right rest with
     ⟨actual, hhalts, hequiv⟩
   refine ⟨actual, ?_, hequiv⟩
@@ -2574,7 +2409,7 @@ theorem selectedShapeRightRepairDescription_haltsFrom_rightBoundary
             ({ left := left, head := head, right := [] } :
               Tape Bool) :: rest))) := by
   rcases
-      concreteSelectedRightBoundaryRefreshDescription_rightBoundaryCase
+      selectedHeadGapCreatorDescription_contract.rightBoundaryRefresh
         encodedPrefix left head rest with
     ⟨actual, hhalts, hequiv⟩
   refine ⟨actual, ?_, hequiv⟩
