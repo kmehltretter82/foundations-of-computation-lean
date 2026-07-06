@@ -133,74 +133,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPost
       cases rest <;>
         simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-theorem selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape
-          useAccept L) =
-      ParsedLayoutBits L := by
-  simpa [selectedProjectionPaddedTailCleanupScratchCountCounterSourceTape,
-    tapeAtCells_normalizedOutput, List.filterMap_append,
-    Function.comp_def, List.append_assoc] using
-      (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-        useAccept L).symm
-
-theorem selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) :
-    Tape.normalizedOutput
-        (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape
-          useAccept L) =
-      ParsedLayoutBits L := by
-  simpa [selectedProjectionPaddedTailCleanupScratchCountCounterTargetTape,
-    tapeAtCells_normalizedOutput, List.filterMap_append,
-    Function.comp_def, List.append_assoc] using
-      (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-        useAccept L).symm
-
-theorem selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
-    Tape.normalizedOutput
-        (selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail
-          useAccept L extraScratch) =
-      List.append (ParsedLayoutBits L)
-        ((selectedProjectionPaddedTailCleanupPostCountTailCells
-          useAccept L extraScratch).filterMap id) := by
-  have hprefix :=
-    (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-      useAccept L).symm
-  simpa [
-    selectedProjectionPaddedTailCleanupScratchCountCounterSourceTapeWithPostCountTail,
-    tapeAtCells_normalizedOutput, List.filterMap_append,
-    Function.comp_def, List.append_assoc] using
-      congrArg
-        (fun pref =>
-          List.append pref
-            ((selectedProjectionPaddedTailCleanupPostCountTailCells
-              useAccept L extraScratch).filterMap id))
-        hprefix
-
-theorem selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
-    Tape.normalizedOutput
-        (selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail
-          useAccept L extraScratch) =
-      List.append (ParsedLayoutBits L)
-        ((selectedProjectionPaddedTailCleanupPostCountTailCells
-          useAccept L extraScratch).filterMap id) := by
-  have hprefix :=
-    (selectedProjectionPaddedTailCleanupParsedLayoutBits_eq_skipped_append_count
-      useAccept L).symm
-  simpa [
-    selectedProjectionPaddedTailCleanupScratchCountCounterTargetTapeWithPostCountTail,
-    tapeAtCells_normalizedOutput, List.filterMap_append,
-    Function.comp_def, List.append_assoc] using
-      congrArg
-        (fun pref =>
-          List.append pref
-            ((selectedProjectionPaddedTailCleanupPostCountTailCells
-              useAccept L extraScratch).filterMap id))
-        hprefix
-
 /--
 Executable core of the post-padding scratch extender after the branch-specific
 navigation has exposed the scratch-count suffix under the head.
@@ -273,19 +205,6 @@ theorem selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceT
   exact
     (selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_countSplit
       useAccept L extraScratch).symm
-
-theorem selectedProjectionPaddedTailCleanupEncodedCountWindowTape_normalizedOutput
-    (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
-    Tape.normalizedOutput
-        (selectedProjectionPaddedTailCleanupEncodedCountWindowTape
-          useAccept L extraScratch) =
-      selectedProjectionPaddedTailCleanupPostPaddingSourceBits
-        useAccept L := by
-  rw [
-    selectedProjectionPaddedTailCleanupEncodedCountWindowTape_eq_baseSourceTapeWithExtraScratch]
-  exact
-    selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_normalizedOutput
-      useAccept L extraScratch
 
 /--
 The materializer/restorer leaf is not a suffix scanner wrapper.  It must bridge
@@ -621,16 +540,6 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstField
         (selectedProjectionPaddedTailCleanupScratchCountAfterFirstFieldEraseTape
           useAccept L 0)
 
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserSpec
-    (eraser : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
-    true eraser
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserSpec
-    (eraser : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
-    false eraser
-
 def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
     (useAccept : Bool) (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
@@ -640,16 +549,6 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldN
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
           useAccept L 0)
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
-    (normalizer : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
-    true normalizer
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
-    (normalizer : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
-    false normalizer
 
 def selectedProjectionPaddedTailCleanupScratchCountPostFieldHandoffTape
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -679,16 +578,6 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldH
           useAccept L 0)
         (selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRewindSourceTape
           useAccept L 0)
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreSpec
-    (normalizer : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
-    true normalizer
-
-def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreSpec
-    (normalizer : MachineDescription) : Prop :=
-  SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
-    false normalizer
 
 theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixRestorerSourceTape_eq
     (useAccept : Bool) (L : DovetailLayout) (extraScratch : Nat) :
@@ -1002,26 +891,26 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixTail
 def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserConstruction :
     Prop :=
   exists eraser : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixFirstFieldEraserSpec
-      eraser
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+      true eraser
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserConstruction :
     Prop :=
   exists eraser : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixFirstFieldEraserSpec
-      eraser
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixFirstFieldEraserSpec
+      false eraser
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerConstruction :
     Prop :=
   exists normalizer : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldNormalizerSpec
-      normalizer
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+      true normalizer
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerConstruction :
     Prop :=
   exists normalizer : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldNormalizerSpec
-      normalizer
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerSpec
+      false normalizer
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldNormalizerConstruction :
     Prop :=
@@ -1033,14 +922,14 @@ def SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldN
 def SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreConstruction :
     Prop :=
   exists normalizer : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowAcceptDecodedPrefixPostFieldHandoffCoreSpec
-      normalizer
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+      true normalizer
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreConstruction :
     Prop :=
   exists normalizer : MachineDescription,
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRejectDecodedPrefixPostFieldHandoffCoreSpec
-      normalizer
+    SelectedProjectionPaddedTailCleanupScratchCountWindowDecodedPrefixPostFieldHandoffCoreSpec
+      false normalizer
 
 def SelectedProjectionPaddedTailCleanupScratchCountWindowPositionerConstruction :
     Prop :=
