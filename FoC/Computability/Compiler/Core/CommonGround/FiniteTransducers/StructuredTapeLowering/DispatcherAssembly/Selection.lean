@@ -127,56 +127,11 @@ theorem ready_lt_noRowJumpLimit
     exact Nat.le_trans hbase (Nat.le_trans hreader (Nat.le_add_right _ _))
   exact Nat.lt_of_lt_of_le hstate hlimit
 
-theorem noRowJumpDescription_wellFormed
-    (D : Description) {state : Nat} (reads : ReadTuple3)
-    (hstate : state < D.stateCount) :
-    (noRowJumpDescription D state reads).WellFormed := by
-  have hsource :=
-    afterRead_lt_noRowJumpLimit D reads hstate
-  have hscratch :=
-    noRowJumpScratch_lt_noRowJumpLimit D reads hstate
-  have htarget :=
-    ready_lt_noRowJumpLimit D hstate
-  have hsourceScratch :
-      StaticDispatcherState.afterRead D state reads ≠
-        noRowJumpScratch D state reads :=
-    Nat.ne_of_lt (afterRead_lt_noRowJumpScratch D reads hstate)
-  simpa [noRowJumpDescription] using
-    blankHeadBounceJumpDescription_wellFormed
-      hsource hscratch htarget hsourceScratch
-
-theorem noRowJumpDescription_subroutineReady
-    (D : Description) {state : Nat} (reads : ReadTuple3)
-    (hstate : state < D.stateCount) :
-    (noRowJumpDescription D state reads).SubroutineReady := by
-  have hsource :=
-    afterRead_lt_noRowJumpLimit D reads hstate
-  have hscratch :=
-    noRowJumpScratch_lt_noRowJumpLimit D reads hstate
-  have htarget :=
-    ready_lt_noRowJumpLimit D hstate
-  have hsourceScratch :
-      StaticDispatcherState.afterRead D state reads ≠
-        noRowJumpScratch D state reads :=
-    Nat.ne_of_lt (afterRead_lt_noRowJumpScratch D reads hstate)
-  have htargetSource :
-      StaticDispatcherState.ready state ≠
-        StaticDispatcherState.afterRead D state reads :=
-    Nat.ne_of_lt (ready_lt_afterRead D reads hstate)
-  have htargetScratch :
-      StaticDispatcherState.ready state ≠
-        noRowJumpScratch D state reads :=
-    Nat.ne_of_lt (ready_lt_noRowJumpScratch D reads hstate)
-  simpa [noRowJumpDescription] using
-    blankHeadBounceJumpDescription_subroutineReady
-      hsource hscratch htarget hsourceScratch
-      htargetSource htargetScratch
-
-theorem noRowJumpDescription_runsFromTapeSeparator
+theorem noRowJumpDescription_runsFromExistingTapeSeparator
     (D : Description) {state : Nat} (reads : ReadTuple3)
     (hstate : state < D.stateCount)
     {logical : List (Tape Bool)} {physical : Tape Bool}
-    (hseparator : AtTapeSeparator logical 2 physical) :
+    (hseparator : AtExistingTapeSeparator logical 2 physical) :
     RunsFromStateTapeEquiv
       (noRowJumpDescription D state reads)
       (StaticDispatcherState.afterRead D state reads)
@@ -189,21 +144,7 @@ theorem noRowJumpDescription_runsFromTapeSeparator
     Nat.ne_of_lt (afterRead_lt_noRowJumpScratch D reads hstate)
   simpa [noRowJumpDescription] using
     blankHeadBounceJumpDescription_runsFromTapeSeparator
-      hsourceScratch hseparator
-
-theorem noRowJumpDescription_runsFromExistingTapeSeparator
-    (D : Description) {state : Nat} (reads : ReadTuple3)
-    (hstate : state < D.stateCount)
-    {logical : List (Tape Bool)} {physical : Tape Bool}
-    (hseparator : AtExistingTapeSeparator logical 2 physical) :
-    RunsFromStateTapeEquiv
-      (noRowJumpDescription D state reads)
-      (StaticDispatcherState.afterRead D state reads)
-      (StaticDispatcherState.ready state)
-      physical
-      physical :=
-  noRowJumpDescription_runsFromTapeSeparator
-    D reads hstate hseparator.left
+      hsourceScratch hseparator.left
 
 theorem stepConfig_eq_none_of_lookupTransitionFromReadTuple3_eq_none
     (D : Description) (hD : D.tapeCount = 3)
@@ -1088,35 +1029,6 @@ def selectedRowSeparatorDescription
     returnFromTape2SeparatorToBlockStartDescription
     (selectedRowCoreDescription t refresh)
 
-theorem runsFromStateTapeEquiv_to_haltsFromTapeEquiv
-    {M : MachineDescription} {Tin Tout : Tape Bool}
-    (hrun :
-      RunsFromStateTapeEquiv M M.start M.halt Tin Tout) :
-    M.HaltsFromTapeEquiv Tin Tout := by
-  rcases hrun with ⟨n, actual, hrun, hequiv⟩
-  exact
-    ⟨actual,
-      ⟨n, by
-        constructor
-        · simpa using
-            congrArg
-              (fun c : MachineDescription.Configuration => c.state)
-              hrun
-        · simpa using
-            congrArg
-              (fun c : MachineDescription.Configuration => c.tape)
-              hrun⟩,
-      hequiv⟩
-
-theorem haltsFromTapeEquiv_to_runsFromStateTapeEquiv
-    {M : MachineDescription} {Tin Tout : Tape Bool}
-    (hhalt : M.HaltsFromTapeEquiv Tin Tout) :
-    RunsFromStateTapeEquiv M M.start M.halt Tin Tout := by
-  rcases hhalt with ⟨actual, hhalts, hequiv⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
-    ⟨n, hrun⟩
-  exact ⟨n, actual, hrun, hequiv⟩
-
 theorem returnFromTape2SeparatorToCanonicalBlockStart_runs
     {logical : List (Tape Bool)} (hlength : logical.length = 3)
     {physical : Tape Bool}
@@ -1203,49 +1115,6 @@ theorem selectedRowSeparatorDescription_subroutineReady
       (selectedRowCoreDescription_subroutineReady
         hD hlookup hrefresh)
 
-theorem selectedRowSeparatorDescription_haltsFromTapeEquiv
-    (D : Description) (hD : D.tapeCount = 3)
-    (hrows : SupportsReadWriteRows3 D)
-    {state : Nat} {logical : List (Tape Bool)} {t : Transition}
-    (hlength : logical.length = 3)
-    (hlookup :
-      lookupTransitionFromReadTuple3 D state
-        (ReadTuple3.ofTapes logical) = some t)
-    {refresh : MachineDescription}
-    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh)
-    {separatorPhysical : Tape Bool}
-    (hseparator :
-      AtExistingTapeSeparator (guardLogicalTapes logical) 2
-        separatorPhysical) :
-    let c : Configuration := { state := state, tapes := logical }
-    let next : Configuration := structuredTransitionTarget D t c
-    D.stepConfig c = some next ∧
-      oneStepOrSelf D c = next ∧
-      next.state = t.target ∧
-      (selectedRowSeparatorDescription t refresh).HaltsFromTapeEquiv
-        separatorPhysical
-        (encodedGuardedStructuredTapes next.tapes) := by
-  intro c next
-  have hreturn :
-      returnFromTape2SeparatorToBlockStartDescription.HaltsFromTapeEquiv
-        separatorPhysical (encodedGuardedStructuredTapes logical) :=
-    runsFromStateTapeEquiv_to_haltsFromTapeEquiv
-      (returnFromTape2SeparatorToCanonicalBlockStart_runs
-        hlength hseparator)
-  have hcore :=
-    selectedRowCoreDescription_realizes_lookupFromReadTuple
-      D hD hrows hlength hlookup hrefresh
-  rcases hcore with ⟨hstep, hone, htarget, hrow⟩
-  have hready :
-      (selectedRowCoreDescription t refresh).SubroutineReady :=
-    selectedRowCoreDescription_subroutineReady
-      hrows hlookup hrefresh
-  exact
-    ⟨hstep, hone, htarget,
-      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
-        returnFromTape2SeparatorToBlockStartDescription_subroutineReady
-        hready hreturn hrow⟩
-
 theorem selectedRowSeparatorDescription_runsFromTape2Separator
     (D : Description) (hD : D.tapeCount = 3)
     (hrows : SupportsReadWriteRows3 D)
@@ -1269,14 +1138,33 @@ theorem selectedRowSeparatorDescription_runsFromTape2Separator
         separatorPhysical
         (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
   intro c
-  have hselected :=
-    selectedRowSeparatorDescription_haltsFromTapeEquiv
-      D hD hrows hlength hlookup hrefresh hseparator
-  rcases hselected with ⟨_hstep, hone, htarget, hhalt⟩
+  have hreturn :
+      returnFromTape2SeparatorToBlockStartDescription.HaltsFromTapeEquiv
+        separatorPhysical (encodedGuardedStructuredTapes logical) :=
+    (returnFromTape2SeparatorToCanonicalBlockStart_runs
+      hlength hseparator).toHaltsFromTapeEquiv rfl rfl
+  have hcore :=
+    selectedRowCoreDescription_realizes_lookupFromReadTuple
+      D hD hrows hlength hlookup hrefresh
+  rcases hcore with ⟨_hstep, hone, htarget, hrow⟩
+  have hready :
+      (selectedRowCoreDescription t refresh).SubroutineReady :=
+    selectedRowCoreDescription_subroutineReady
+      hrows hlookup hrefresh
+  have hhalt :
+      (selectedRowSeparatorDescription t refresh).HaltsFromTapeEquiv
+        separatorPhysical
+        (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
+    simpa [c, hone] using
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        returnFromTape2SeparatorToBlockStartDescription_subroutineReady
+        hready hreturn hrow
   constructor
   · simpa [c, hone] using htarget
-  · simpa [c, hone] using
-      haltsFromTapeEquiv_to_runsFromStateTapeEquiv hhalt
+  · rcases hhalt with ⟨actual, hhalts, hequiv⟩
+    rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
+      ⟨n, hrun⟩
+    exact ⟨n, actual, hrun, hequiv⟩
 
 def retargetedSelectedRowSeparatorDescription
     (offset target : Nat)
@@ -1384,35 +1272,6 @@ def selectedRowBranchTransitions
     (retargetedSelectedRowSeparatorDescription
       offset (StaticDispatcherState.ready t.target) t refresh).transitions
 
-theorem selectedRowBranchJumpDescription_sources_below_offset
-    {branchStateCount offset : Nat} {D : Description}
-    {state scratch target : Nat} {reads : ReadTuple3}
-    (hsourceBelow :
-      StaticDispatcherState.afterRead D state reads < offset)
-    (hscratchBelow : scratch < offset) :
-    TransitionSourcesBelow offset
-      (selectedRowBranchJumpDescription branchStateCount D state reads
-        scratch target).transitions := by
-  simpa [selectedRowBranchJumpDescription] using
-    blankHeadBounceJumpDescription_sources_below
-      hsourceBelow hscratchBelow
-
-theorem retargetedSelectedRowSeparatorDescription_sources_atLeast_offset
-    {offset target : Nat}
-    {D : Description} (hrows : SupportsReadWriteRows3 D)
-    {state : Nat} {reads : ReadTuple3} {t : Transition}
-    (hlookup :
-      lookupTransitionFromReadTuple3 D state reads = some t)
-    {refresh : MachineDescription}
-    (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
-    TransitionSourcesAtLeast offset
-      (retargetedSelectedRowSeparatorDescription
-        offset target t refresh).transitions := by
-  intro u hu
-  exact
-    (retargetedSelectedRowSeparatorDescription_sources_in_offset_block
-      hrows hlookup hrefresh u hu).left
-
 theorem selectedRowBranchTransitions_deterministic
     {branchStateCount offset : Nat} {D : Description}
     {state scratch : Nat} {reads : ReadTuple3} {t : Transition}
@@ -1451,18 +1310,14 @@ theorem selectedRowBranchTransitions_deterministic
         rowMachine.transitions :=
     transitionSourceDisjoint_of_below_atLeast
       (by
-        simpa [jumpMachine] using
-          selectedRowBranchJumpDescription_sources_below_offset
-            (branchStateCount := branchStateCount) (offset := offset)
-            (D := D) (state := state) (reads := reads)
-            (scratch := scratch) (target := rowMachine.start)
+        simpa [jumpMachine, selectedRowBranchJumpDescription] using
+          blankHeadBounceJumpDescription_sources_below
             hsourceBelow hscratchBelow)
       (by
-        simpa [rowMachine] using
-          retargetedSelectedRowSeparatorDescription_sources_atLeast_offset
-            (offset := offset)
-            (target := StaticDispatcherState.ready t.target)
-            hrows hlookup hrefresh)
+        intro u hu
+        exact
+          (retargetedSelectedRowSeparatorDescription_sources_in_offset_block
+            hrows hlookup hrefresh u (by simpa [rowMachine] using hu)).left)
   simpa [selectedRowBranchTransitions, jumpMachine, rowMachine] using
     transitionListDeterministic_append_of_sourceDisjoint
       hjumpDet hrowDet hdisjoint
