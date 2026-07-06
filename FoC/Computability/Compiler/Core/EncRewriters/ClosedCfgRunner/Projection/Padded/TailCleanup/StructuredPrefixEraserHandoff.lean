@@ -1456,6 +1456,42 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSy
         selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_some] using
         hconsSome T0 T1 bit rest padBit padding
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  rcases hsplit with ⟨eraser, hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨eraser, ?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_nil] using
+        hnilNil T0 T1
+    · intro T0 T1 padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_none] using
+        hnilNone T0 T1 padding
+    · intro T0 T1 padBit padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_nil_some] using
+        hnilSome T0 T1 padBit padding
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1 bit rest
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_nil] using
+        hconsNil T0 T1 bit rest
+    · intro T0 T1 bit rest padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_none] using
+        hconsNone T0 T1 bit rest padding
+    · intro T0 T1 bit rest padBit padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape_cons_some] using
+        hconsSome T0 T1 bit rest padBit padding
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_cases
     (hcases :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction) :
@@ -1546,6 +1582,30 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstructi
   simpa [
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
     hrun T0 T1 bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_eraserSpec
+    {eraser : MachineDescription}
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+      eraser := by
+  rcases heraser with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+    hrun T0 T1 bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_eraser
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
+  rcases heraser with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_eraserSpec
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
