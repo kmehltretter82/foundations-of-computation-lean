@@ -220,6 +220,12 @@ def splitTargetFocusedOutput2
     Tape Bool :=
   tapeAtCells (bits.reverse.map some) (none :: padding)
 
+theorem splitTargetFocusedOutput2_eq_rightEdgeRewindSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    splitTargetFocusedOutput2 bits padding =
+      rightEdgeRewindSourceTape bits padding := by
+  rfl
+
 def splitTargetOutputTape
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape Bool :=
@@ -236,6 +242,23 @@ def splitTargetFocusedOutputTape
     (splitTargetOutput1 bits padding)
     (splitTargetFocusedOutput2 bits padding)
 
+def splitTargetRightEdgeRewindOutputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (splitTargetOutput0 bits padding)
+    (splitTargetOutput1 bits padding)
+    (rightEdgeRewindSourceTape bits padding)
+
+theorem splitTargetFocusedOutputTape_eq_rightEdgeRewindOutputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    splitTargetFocusedOutputTape bits padding =
+      splitTargetRightEdgeRewindOutputTape bits padding := by
+  simp [
+    splitTargetFocusedOutputTape,
+    splitTargetRightEdgeRewindOutputTape,
+    splitTargetFocusedOutput2_eq_rightEdgeRewindSourceTape]
+
 def SplitTargetSeparatorFocusSpec
     (focus : MachineDescription) : Prop :=
   focus.SubroutineReady ∧
@@ -247,6 +270,36 @@ def SplitTargetSeparatorFocusSpec
 def SplitTargetSeparatorFocusConstruction : Prop :=
   exists focus : MachineDescription,
     SplitTargetSeparatorFocusSpec focus
+
+def SplitTargetRightEdgeRewindOutputSpec
+    (focus : MachineDescription) : Prop :=
+  focus.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      focus.HaltsFromTapeEquiv
+        (splitTargetOutputTape bits padding)
+        (splitTargetRightEdgeRewindOutputTape bits padding)
+
+def SplitTargetRightEdgeRewindOutputConstruction : Prop :=
+  exists focus : MachineDescription,
+    SplitTargetRightEdgeRewindOutputSpec focus
+
+theorem splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec
+    {focus : MachineDescription}
+    (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
+    SplitTargetSeparatorFocusSpec focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [splitTargetFocusedOutputTape_eq_rightEdgeRewindOutputTape] using
+    hrun bits padding
+
+theorem splitTargetSeparatorFocusConstruction_of_rightEdgeRewindOutput
+    (hfocus : SplitTargetRightEdgeRewindOutputConstruction) :
+    SplitTargetSeparatorFocusConstruction := by
+  rcases hfocus with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec hspec⟩
 
 def SplitTargetSeparatorFocusNilPadSymbolCaseSpec
     (focus : MachineDescription) : Prop :=
@@ -351,18 +404,34 @@ theorem splitTargetSeparatorFocusConstruction_of_splitPadSymbolCases
     ⟨focus,
       splitTargetSeparatorFocusSpec_of_splitPadSymbolCaseSpec hspec⟩
 
-theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core :
+theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutput
+    (hfocus : SplitTargetRightEdgeRewindOutputConstruction) :
     SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction := by
+  rcases hfocus with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetSeparatorFocusSplitPadSymbolCaseSpec_of_spec
+        (splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec
+          hspec)⟩
+
+theorem splitTargetRightEdgeRewindOutputConstruction_core :
+    SplitTargetRightEdgeRewindOutputConstruction := by
   -- Reusable finite-machine egress: use the pair-encoded source/marker
   -- structure to focus tape 2 at the semantic separator of
   -- bits.map some ++ none :: padding.
   sorry
 
+theorem splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core :
+    SplitTargetSeparatorFocusSplitPadSymbolCaseConstruction := by
+  exact
+    splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutput
+      splitTargetRightEdgeRewindOutputConstruction_core
+
 theorem splitTargetSeparatorFocusConstruction_core :
     SplitTargetSeparatorFocusConstruction := by
   exact
-    splitTargetSeparatorFocusConstruction_of_splitPadSymbolCases
-      splitTargetSeparatorFocusSplitPadSymbolCaseConstruction_core
+    splitTargetSeparatorFocusConstruction_of_rightEdgeRewindOutput
+      splitTargetRightEdgeRewindOutputConstruction_core
 
 def pendingState : Option Bool -> Nat
   | none => 10
