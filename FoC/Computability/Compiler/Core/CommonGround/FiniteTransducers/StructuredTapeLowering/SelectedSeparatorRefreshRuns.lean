@@ -195,40 +195,6 @@ theorem selectedShapeRefreshDescription_lookup_terminalProbe
     selectedShapeRefreshDescription, List.find?_append,
     hopening, hleft, hright]
 
-theorem selectedShapeRefreshDescription_stepConfig_opening
-    (c : MachineDescription.Configuration)
-    (hstate : c.state < selectedShapeLeftRepairOffset) :
-    MachineDescription.stepConfig selectedShapeRefreshDescription c =
-      MachineDescription.stepConfig selectedShapeRefreshOpeningDescription c := by
-  unfold MachineDescription.stepConfig
-  rw [selectedShapeRefreshDescription_lookup_opening hstate]
-
-theorem selectedShapeRefreshDescription_stepConfig_leftRepair
-    (c : MachineDescription.Configuration)
-    (hlo : selectedShapeLeftRepairOffset ≤ c.state)
-    (hhi : c.state < selectedShapeLeftRepairLimit) :
-    MachineDescription.stepConfig selectedShapeRefreshDescription c =
-      MachineDescription.stepConfig selectedShapeLeftRepairDescription c := by
-  unfold MachineDescription.stepConfig
-  rw [selectedShapeRefreshDescription_lookup_leftRepair hlo hhi]
-
-theorem selectedShapeRefreshDescription_stepConfig_rightRepair
-    (c : MachineDescription.Configuration)
-    (hlo : selectedShapeRightRepairOffset ≤ c.state)
-    (hhi : c.state < selectedShapeRightRepairLimit) :
-    MachineDescription.stepConfig selectedShapeRefreshDescription c =
-      MachineDescription.stepConfig selectedShapeRightRepairDescription c := by
-  unfold MachineDescription.stepConfig
-  rw [selectedShapeRefreshDescription_lookup_rightRepair hlo hhi]
-
-theorem selectedShapeRefreshDescription_stepConfig_terminalProbe
-    (c : MachineDescription.Configuration)
-    (hstate : selectedShapeTerminalProbeOffset ≤ c.state) :
-    MachineDescription.stepConfig selectedShapeRefreshDescription c =
-      MachineDescription.stepConfig selectedShapeTerminalProbeDescription c := by
-  unfold MachineDescription.stepConfig
-  rw [selectedShapeRefreshDescription_lookup_terminalProbe hstate]
-
 private theorem source_eq_of_lookupTransition
     {D : MachineDescription} {state : Nat} {read : Option Bool}
     {t : TransitionDescription}
@@ -473,190 +439,6 @@ private theorem selectedShapeRefreshDescription_runConfig_eq_until
           simp [hfull]
           exact ih next final hfirstTail htail
 
-theorem selectedShapeRefreshDescription_reaches_terminal_canonical
-    (encodedPrefix : List (Option Bool))
-    (target : Tape Bool) (rest : List (Tape Bool)) :
-    exists steps : Nat,
-      selectedShapeRefreshDescription.runConfig steps
-          { state := selectedShapeTerminalProbeStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (guardLogicalTape target :: rest)) } =
-        { state := selectedShapeRefreshFinalHalt
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells
-                (guardLogicalTape target :: rest)) } := by
-  rcases selectedShapeTerminalProbeDescription_reaches_selectedCanonical
-      encodedPrefix target rest with
-    ⟨steps, hrun⟩
-  exact
-    ⟨steps,
-      selectedShapeRefreshDescription_runConfig_eq_to_halt
-        selectedShapeRefreshDescription_stepConfig_of_terminalProbe_some
-        steps
-        { state := selectedShapeTerminalProbeStart
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells
-                (guardLogicalTape target :: rest)) }
-        (tapeAtEncodedSplit encodedPrefix
-          (encodedStructuredTapeCells
-            (guardLogicalTape target :: rest)))
-        hrun⟩
-
-theorem selectedShapeRefreshDescription_reaches_terminal_rightBoundary
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    exists steps : Nat,
-      selectedShapeRefreshDescription.runConfig steps
-          { state := selectedShapeTerminalProbeStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (({ left := left ++ [none], head := head,
-                      right := [] } : Tape Bool) :: rest)) } =
-        { state := selectedShapeRightRepairStart
-          tape :=
-            tapeAtEncodedSplit encodedPrefix
-              (encodedStructuredTapeCells
-                (({ left := left ++ [none], head := head,
-                    right := [] } : Tape Bool) :: rest)) } := by
-  let startConfig : MachineDescription.Configuration :=
-    { state := selectedShapeTerminalProbeStart
-      tape :=
-        tapeAtEncodedSplit encodedPrefix
-          (encodedStructuredTapeCells
-            (({ left := left ++ [none], head := head,
-                right := [] } : Tape Bool) :: rest)) }
-  let finalConfig : MachineDescription.Configuration :=
-    { state := selectedShapeRightRepairStart
-      tape :=
-        tapeAtEncodedSplit encodedPrefix
-          (encodedStructuredTapeCells
-            (({ left := left ++ [none], head := head,
-                right := [] } : Tape Bool) :: rest)) }
-  rcases selectedShapeTerminalProbeDescription_reaches_selectedRightBoundary
-      encodedPrefix left head rest with
-    ⟨witnessSteps, hwitness⟩
-  have hexists :
-      exists steps : Nat,
-        selectedShapeTerminalProbeDescription.runConfig steps startConfig =
-          finalConfig := by
-    exact ⟨witnessSteps, by
-      simpa [startConfig, finalConfig] using hwitness⟩
-  rcases exists_first_of_exists hexists with
-    ⟨steps, hsteps, hfirst⟩
-  exact
-    ⟨steps,
-      selectedShapeRefreshDescription_runConfig_eq_until
-        selectedShapeRefreshDescription_stepConfig_of_terminalProbe_some
-        steps startConfig finalConfig hfirst hsteps⟩
-
-theorem selectedShapeRefreshDescription_reaches_leftRepair_leftBoundary
-    (encodedPrefix : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool))
-    (rest : List (Tape Bool)) :
-    exists (actual : Tape Bool) (steps : Nat),
-      selectedShapeRefreshDescription.runConfig steps
-          { state := selectedShapeLeftRepairStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (({ left := [], head := head,
-                      right := right ++ [none] } : Tape Bool) :: rest)) } =
-        { state := selectedShapeRefreshFinalHalt, tape := actual } ∧
-      Tape.Equiv actual
-        (tapeAtEncodedSplit encodedPrefix
-          (encodedStructuredTapeCells
-            (guardLogicalTape
-              ({ left := [], head := head, right := right } :
-                Tape Bool) :: rest))) := by
-  rcases selectedShapeLeftRepairDescription_haltsFrom_leftBoundary
-      encodedPrefix head right rest with
-    ⟨actual, hhalts, hequiv⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      hhalts with
-    ⟨steps, hrun⟩
-  refine ⟨actual, steps, ?_, hequiv⟩
-  have hrun' :
-      selectedShapeLeftRepairDescription.runConfig steps
-          { state := selectedShapeLeftRepairStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (({ left := [], head := head,
-                      right := right ++ [none] } : Tape Bool) :: rest)) } =
-        { state := selectedShapeRefreshFinalHalt, tape := actual } := by
-    simpa [selectedShapeLeftRepairStart,
-      selectedShapeLeftRepairDescription,
-      MachineDescription.offsetRetargetDescription] using hrun
-  exact
-    selectedShapeRefreshDescription_runConfig_eq_to_halt
-      selectedShapeRefreshDescription_stepConfig_of_leftRepair_some
-      steps
-      { state := selectedShapeLeftRepairStart
-        tape :=
-          tapeAtEncodedSplit encodedPrefix
-            (encodedStructuredTapeCells
-              (({ left := [], head := head,
-                  right := right ++ [none] } : Tape Bool) :: rest)) }
-      actual
-      hrun'
-
-theorem selectedShapeRefreshDescription_reaches_rightRepair_rightBoundary
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    exists (actual : Tape Bool) (steps : Nat),
-      selectedShapeRefreshDescription.runConfig steps
-          { state := selectedShapeRightRepairStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (({ left := left ++ [none], head := head,
-                      right := [] } : Tape Bool) :: rest)) } =
-        { state := selectedShapeRefreshFinalHalt, tape := actual } ∧
-      Tape.Equiv actual
-        (tapeAtEncodedSplit encodedPrefix
-          (encodedStructuredTapeCells
-            (guardLogicalTape
-              ({ left := left, head := head, right := [] } :
-                Tape Bool) :: rest))) := by
-  rcases selectedShapeRightRepairDescription_haltsFrom_rightBoundary
-      encodedPrefix left head rest with
-    ⟨actual, hhalts, hequiv⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-      hhalts with
-    ⟨steps, hrun⟩
-  refine ⟨actual, steps, ?_, hequiv⟩
-  have hrun' :
-      selectedShapeRightRepairDescription.runConfig steps
-          { state := selectedShapeRightRepairStart
-            tape :=
-              tapeAtEncodedSplit encodedPrefix
-                (encodedStructuredTapeCells
-                  (({ left := left ++ [none], head := head,
-                      right := [] } : Tape Bool) :: rest)) } =
-        { state := selectedShapeRefreshFinalHalt, tape := actual } := by
-    simpa [selectedShapeRightRepairStart,
-      selectedShapeRightRepairDescription,
-      MachineDescription.offsetRetargetDescription] using hrun
-  exact
-    selectedShapeRefreshDescription_runConfig_eq_to_halt
-      selectedShapeRefreshDescription_stepConfig_of_rightRepair_some
-      steps
-      { state := selectedShapeRightRepairStart
-        tape :=
-          tapeAtEncodedSplit encodedPrefix
-            (encodedStructuredTapeCells
-              (({ left := left ++ [none], head := head,
-                  right := [] } : Tape Bool) :: rest)) }
-      actual
-      hrun'
-
 theorem selectedShapeRefreshDescription_haltsFrom_canonical
     (encodedPrefix : List (Option Bool))
     (target actual : Tape Bool) (rest : List (Tape Bool))
@@ -678,9 +460,33 @@ theorem selectedShapeRefreshDescription_haltsFrom_canonical
       encodedStructuredTapeCells (actual :: rest) =
         encodedStructuredTapeCells (guardLogicalTape target :: rest) :=
     encodedStructuredTapeCells_cons_eq_of_singleton_eq hsingleton
-  rcases selectedShapeRefreshDescription_reaches_terminal_canonical
+  rcases selectedShapeTerminalProbeDescription_reaches_selectedCanonical
       encodedPrefix target rest with
-    ⟨steps, hterminal⟩
+    ⟨steps, hterminalLocal⟩
+  have hterminal :
+      selectedShapeRefreshDescription.runConfig steps
+          { state := selectedShapeTerminalProbeStart
+            tape :=
+              tapeAtEncodedSplit encodedPrefix
+                (encodedStructuredTapeCells
+                  (guardLogicalTape target :: rest)) } =
+        { state := selectedShapeRefreshFinalHalt
+          tape :=
+            tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest)) } :=
+    selectedShapeRefreshDescription_runConfig_eq_to_halt
+      selectedShapeRefreshDescription_stepConfig_of_terminalProbe_some
+      steps
+      { state := selectedShapeTerminalProbeStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (guardLogicalTape target :: rest)) }
+      (tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells
+          (guardLogicalTape target :: rest)))
+      hterminalLocal
   refine
     ⟨tapeAtEncodedSplit encodedPrefix
         (encodedStructuredTapeCells
@@ -734,9 +540,44 @@ theorem selectedShapeRefreshDescription_haltsFrom_leftBoundary
           (guardLogicalTape
             ({ left := [], head := head, right := right } :
               Tape Bool) :: rest))) := by
-  rcases selectedShapeRefreshDescription_reaches_leftRepair_leftBoundary
+  rcases selectedShapeLeftRepairDescription_haltsFrom_leftBoundary
       encodedPrefix head right rest with
-    ⟨actual, steps, hrepair, hequiv⟩
+    ⟨actual, hhalts, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      hhalts with
+    ⟨steps, hrunLocal⟩
+  have hrunLocal' :
+      selectedShapeLeftRepairDescription.runConfig steps
+          { state := selectedShapeLeftRepairStart
+            tape :=
+              tapeAtEncodedSplit encodedPrefix
+                (encodedStructuredTapeCells
+                  (({ left := [], head := head,
+                      right := right ++ [none] } : Tape Bool) :: rest)) } =
+        { state := selectedShapeRefreshFinalHalt, tape := actual } := by
+    simpa [selectedShapeLeftRepairStart,
+      selectedShapeLeftRepairDescription,
+      MachineDescription.offsetRetargetDescription] using hrunLocal
+  have hrepair :
+      selectedShapeRefreshDescription.runConfig steps
+          { state := selectedShapeLeftRepairStart
+            tape :=
+              tapeAtEncodedSplit encodedPrefix
+                (encodedStructuredTapeCells
+                  (({ left := [], head := head,
+                      right := right ++ [none] } : Tape Bool) :: rest)) } =
+        { state := selectedShapeRefreshFinalHalt, tape := actual } :=
+    selectedShapeRefreshDescription_runConfig_eq_to_halt
+      selectedShapeRefreshDescription_stepConfig_of_leftRepair_some
+      steps
+      { state := selectedShapeLeftRepairStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := [], head := head,
+                  right := right ++ [none] } : Tape Bool) :: rest)) }
+      actual
+      hrunLocal'
   refine ⟨actual, ?_, hequiv⟩
   refine ⟨2 + steps, ?_⟩
   have hrun :
@@ -786,12 +627,75 @@ theorem selectedShapeRefreshDescription_haltsFrom_rightBoundary
           (guardLogicalTape
             ({ left := left, head := head, right := [] } :
               Tape Bool) :: rest))) := by
-  rcases selectedShapeRefreshDescription_reaches_terminal_rightBoundary
+  let startConfig : MachineDescription.Configuration :=
+    { state := selectedShapeTerminalProbeStart
+      tape :=
+        tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := left ++ [none], head := head,
+                right := [] } : Tape Bool) :: rest)) }
+  let finalConfig : MachineDescription.Configuration :=
+    { state := selectedShapeRightRepairStart
+      tape :=
+        tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := left ++ [none], head := head,
+                right := [] } : Tape Bool) :: rest)) }
+  rcases selectedShapeTerminalProbeDescription_reaches_selectedRightBoundary
       encodedPrefix left head rest with
-    ⟨terminalSteps, hterminal⟩
-  rcases selectedShapeRefreshDescription_reaches_rightRepair_rightBoundary
+    ⟨witnessSteps, hwitness⟩
+  have hexists :
+      exists steps : Nat,
+        selectedShapeTerminalProbeDescription.runConfig steps startConfig =
+          finalConfig := by
+    exact ⟨witnessSteps, by
+      simpa [startConfig, finalConfig] using hwitness⟩
+  rcases exists_first_of_exists hexists with
+    ⟨terminalSteps, hterminalLocal, hfirst⟩
+  have hterminal :
+      selectedShapeRefreshDescription.runConfig terminalSteps startConfig =
+        finalConfig :=
+    selectedShapeRefreshDescription_runConfig_eq_until
+      selectedShapeRefreshDescription_stepConfig_of_terminalProbe_some
+      terminalSteps startConfig finalConfig hfirst hterminalLocal
+  rcases selectedShapeRightRepairDescription_haltsFrom_rightBoundary
       encodedPrefix left head rest with
-    ⟨actual, repairSteps, hrepair, hequiv⟩
+    ⟨actual, hhalts, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
+      hhalts with
+    ⟨repairSteps, hrunLocal⟩
+  have hrunLocal' :
+      selectedShapeRightRepairDescription.runConfig repairSteps
+          { state := selectedShapeRightRepairStart
+            tape :=
+              tapeAtEncodedSplit encodedPrefix
+                (encodedStructuredTapeCells
+                  (({ left := left ++ [none], head := head,
+                      right := [] } : Tape Bool) :: rest)) } =
+        { state := selectedShapeRefreshFinalHalt, tape := actual } := by
+    simpa [selectedShapeRightRepairStart,
+      selectedShapeRightRepairDescription,
+      MachineDescription.offsetRetargetDescription] using hrunLocal
+  have hrepair :
+      selectedShapeRefreshDescription.runConfig repairSteps
+          { state := selectedShapeRightRepairStart
+            tape :=
+              tapeAtEncodedSplit encodedPrefix
+                (encodedStructuredTapeCells
+                  (({ left := left ++ [none], head := head,
+                      right := [] } : Tape Bool) :: rest)) } =
+        { state := selectedShapeRefreshFinalHalt, tape := actual } :=
+    selectedShapeRefreshDescription_runConfig_eq_to_halt
+      selectedShapeRefreshDescription_stepConfig_of_rightRepair_some
+      repairSteps
+      { state := selectedShapeRightRepairStart
+        tape :=
+          tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (({ left := left ++ [none], head := head,
+                  right := [] } : Tape Bool) :: rest)) }
+      actual
+      hrunLocal'
   refine ⟨actual, ?_, hequiv⟩
   refine ⟨2 + terminalSteps + repairSteps, ?_⟩
   have hprefix :
