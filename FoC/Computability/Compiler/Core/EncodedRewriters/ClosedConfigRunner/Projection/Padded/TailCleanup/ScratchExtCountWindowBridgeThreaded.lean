@@ -1194,6 +1194,75 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEd
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
       (bit :: rest) (some padBit :: padding)
 
+theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding))).length =
+      13 + 2 * bits.length + 2 * padding.length := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_length
+      bits padding
+
+theorem rightEdgeRewindSourceTape_cells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells (rightEdgeRewindSourceTape bits padding)).length =
+      bits.length + padding.length + 1 := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_length
+      bits padding
+
+theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding))).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap
+      bits padding
+
+theorem rightEdgeRewindSourceTape_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells (rightEdgeRewindSourceTape bits padding)).filterMap
+        (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap
+      bits padding
+
+theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_filterMap_eq_rightEdgeRewindSourceTape_cells_filterMap
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding))).filterMap (fun cell => cell) =
+      (Tape.cells (rightEdgeRewindSourceTape bits padding)).filterMap
+        (fun cell => cell) := by
+  rw [
+    rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_filterMap,
+    rightEdgeRewindSourceTape_cells_filterMap]
+
+theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_normalizedOutput_eq_rightEdgeRewindSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding)) =
+      Tape.normalizedOutput
+        (rightEdgeRewindSourceTape bits padding) := by
+  simpa [
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape] using
+    selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+      bits padding
+
 theorem rightEdgeRewindDescription_haltsFrom_selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
     (bits : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.HaltsFromTape
@@ -1479,6 +1548,50 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConst
     exact
       exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_none_blank_padding
         padding hpadding
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []))
+      (rightEdgeRewindSourceTape [] []) ∧
+    forall padding : List (Option Bool),
+      padding.filterMap (fun cell => cell) = [] →
+        compactor.HaltsFromTapeEquiv
+          (rightEndCompactionSourceTape
+            (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+              [] (none :: padding)))
+          (rightEdgeRewindSourceTape [] (none :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseSpec
+      compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction_of_blankPaddingCase
+    (hblank :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction := by
+  rcases hblank with ⟨compactor, hready, hnilNil, hnilNone⟩
+  refine ⟨compactor, hready, ?_, ?_⟩
+  · simpa [
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_nil,
+      selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_nil] using
+      hnilNil
+  · intro padding hpadding
+    simpa [
+      selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_none,
+      selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_none] using
+      hnilNone padding hpadding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeBlankPaddingCaseConstruction_of_blankPaddingCase
+      selectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConstruction_core
 
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
