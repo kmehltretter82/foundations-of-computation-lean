@@ -980,6 +980,67 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_
   exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
     (bit :: rest) (some padBit :: padding)
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        bits padding =
+      rightEdgeRewindSourceTape bits padding := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_nil :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] [] =
+      rightEdgeRewindSourceTape [] [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_none
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (none :: padding) =
+      rightEdgeRewindSourceTape [] (none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] (some padBit :: padding) =
+      rightEdgeRewindSourceTape [] (some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        (bit :: rest) [] =
+      rightEdgeRewindSourceTape (bit :: rest) [] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        (bit :: rest) (none :: padding) =
+      rightEdgeRewindSourceTape (bit :: rest) (none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        (bit :: rest) (some padBit :: padding) =
+      rightEdgeRewindSourceTape (bit :: rest) (some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape
+      (bit :: rest) (some padBit :: padding)
+
 theorem rightEdgeRewindDescription_haltsFrom_selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
     (bits : Word Bool) (padding : List (Option Bool)) :
     rightEdgeRewindDescription.HaltsFromTape
