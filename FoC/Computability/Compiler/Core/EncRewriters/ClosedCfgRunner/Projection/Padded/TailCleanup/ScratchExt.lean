@@ -25,6 +25,9 @@ implementation is split by responsibility:
   materializer scaffold.
 - {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput` records
   normalized-output endpoint views for the count-window bridge wrappers.
+- {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeMaterializerOutput` records
+  normalized-output endpoint views for the structured input materializer
+  boundary inside the count-window bridge.
 - {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtOutput` records
   normalized-output endpoint views for the scratch-extension boundary.
 -/
