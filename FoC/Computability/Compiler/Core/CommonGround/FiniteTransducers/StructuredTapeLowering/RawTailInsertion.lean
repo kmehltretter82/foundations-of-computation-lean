@@ -482,6 +482,28 @@ def rewindTailHandoffConfig
     (scratchTape insert)
     (rewindTailHandoffWorkTape tail)
 
+def rewindScratchLoopScratchTape
+    (remainingRev processed : Word Bool) : Tape Bool :=
+  match remainingRev with
+  | [] =>
+      tapeAtCells []
+        (none :: List.append (processed.map some) [none])
+  | bit :: rest =>
+      tapeAtCells (rest.map some)
+        (some bit :: List.append (processed.map some) [none])
+
+def writeInsertScratchTape
+    (insert : Word Bool) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append (insert.map some) [none])
+
+def rewindScratchHandoffConfig
+    (pref tail insert : Word Bool) : Configuration :=
+  config writeInsert
+    (rewindTailHandoffSourceTape pref tail insert)
+    (writeInsertScratchTape insert)
+    (rewindTailHandoffWorkTape tail)
+
 theorem description_lookup_rewindTailEntry
     (source scratch work : Tape Bool) :
     description.lookupTransition
@@ -536,6 +558,61 @@ theorem description_lookup_rewindTailLoop_blank
         allReads2, allReadRows3, allReads3,
         Structured.Description.lookupTransition, config, row,
         keepL, keepR, keepS, h0, h1, hwork]
+
+theorem description_lookup_rewindScratchEntry
+    (source scratch work : Tape Bool) :
+    description.lookupTransition
+        (config rewindScratchEntry source scratch work) =
+      some
+        (row rewindScratchEntry
+          (Tape.read source) (Tape.read scratch) (Tape.read work)
+          keepS keepL keepS rewindScratchLoop) := by
+  cases h0 : Tape.read source <;> (try cases ‹Bool›) <;>
+    cases h1 : Tape.read scratch <;> (try cases ‹Bool›) <;>
+      cases h2 : Tape.read work <;> (try cases ‹Bool›) <;>
+        simp (config := {decide := true}) [description,
+          ThreeTape.description, rows,
+          rowsForSourceRead, rowsForScratchRead, rowsForWorkRead,
+          allReads2, allReadRows3, allReads3,
+          Structured.Description.lookupTransition, config, row,
+          keepL, keepS, h0, h1, h2]
+
+theorem description_lookup_rewindScratchLoop_bit
+    (source scratch work : Tape Bool) (bit : Bool)
+    (hscratch : Tape.read scratch = some bit) :
+    description.lookupTransition
+        (config rewindScratchLoop source scratch work) =
+      some
+        (row rewindScratchLoop
+          (Tape.read source) (some bit) (Tape.read work)
+          keepS keepL keepS rewindScratchLoop) := by
+  cases bit <;>
+    cases h0 : Tape.read source <;> (try cases ‹Bool›) <;>
+      cases h2 : Tape.read work <;> (try cases ‹Bool›) <;>
+        simp (config := {decide := true}) [description,
+          ThreeTape.description, rows,
+          rowsForSourceRead, rowsForScratchRead, rowsForWorkRead,
+          allReads2, allReadRows3, allReads3,
+          Structured.Description.lookupTransition, config, row,
+          keepL, keepS, h0, hscratch, h2]
+
+theorem description_lookup_rewindScratchLoop_blank
+    (source scratch work : Tape Bool)
+    (hscratch : Tape.read scratch = none) :
+    description.lookupTransition
+        (config rewindScratchLoop source scratch work) =
+      some
+        (row rewindScratchLoop
+          (Tape.read source) none (Tape.read work)
+          keepS keepR keepS writeInsert) := by
+  cases h0 : Tape.read source <;> (try cases ‹Bool›) <;>
+    cases h2 : Tape.read work <;> (try cases ‹Bool›) <;>
+      simp (config := {decide := true}) [description,
+        ThreeTape.description, rows,
+        rowsForSourceRead, rowsForScratchRead, rowsForWorkRead,
+        allReads2, allReadRows3, allReads3,
+        Structured.Description.lookupTransition, config, row,
+        keepL, keepR, keepS, h0, hscratch, h2]
 
 theorem rewindTail_entry_step
     (pref tail insert : Word Bool) :
@@ -745,6 +822,181 @@ theorem description_copyRewindTailSpec :
   rw [CopyTailSpec.run description_copyTailSpec]
   exact RewindTailSpec.run description_rewindTailSpec pref tail insert
 
+theorem rewindScratch_entry_step
+    (pref tail insert : Word Bool) :
+    description.runConfig 1
+        (rewindTailHandoffConfig pref tail insert) =
+      config rewindScratchLoop
+        (rewindTailHandoffSourceTape pref tail insert)
+        (rewindScratchLoopScratchTape insert.reverse [])
+        (rewindTailHandoffWorkTape tail) := by
+  simp only [rewindTailHandoffConfig]
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [description_lookup_rewindScratchEntry]
+  unfold description
+  three_tape_step [rewindScratchLoopScratchTape, scratchTape,
+    outputFromBits]
+  all_goals
+    cases hinsert : insert.reverse with
+    | nil =>
+        have hnil : insert = [] := by
+          have hlen : insert.length = 0 := by
+            have hlen := congrArg List.length hinsert
+            simpa [List.length_reverse] using hlen
+          exact List.eq_nil_of_length_eq_zero hlen
+        subst insert
+        constructor <;> rfl
+    | cons bit rest =>
+        have hmap :
+            (insert.map some).reverse = some bit :: rest.map some := by
+          calc
+            (insert.map some).reverse = insert.reverse.map some := by
+              simp
+            _ = some bit :: rest.map some := by
+              rw [hinsert]
+              rfl
+        cases bit <;> simp [hmap]
+
+theorem rewindScratch_loop_step_bit
+    (source work : Tape Bool) (bit : Bool)
+    (rest processed : Word Bool) :
+    description.runConfig 1
+        (config rewindScratchLoop source
+          (rewindScratchLoopScratchTape (bit :: rest) processed)
+          work) =
+      config rewindScratchLoop source
+        (rewindScratchLoopScratchTape rest (bit :: processed))
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [description_lookup_rewindScratchLoop_bit _ _ _ bit (by rfl)]
+  unfold description
+  three_tape_step [rewindScratchLoopScratchTape]
+  all_goals
+    cases rest with
+    | nil =>
+        simp
+    | cons next rest =>
+        cases next <;> simp
+
+theorem rewindScratch_loop_step_blank
+    (source work : Tape Bool) (processed : Word Bool) :
+    description.runConfig 1
+        (config rewindScratchLoop source
+          (rewindScratchLoopScratchTape [] processed)
+          work) =
+      config writeInsert source
+        (writeInsertScratchTape processed)
+        work := by
+  rw [Structured.Description.runConfig]
+  rw [Structured.Description.stepConfig]
+  rw [description_lookup_rewindScratchLoop_blank _ _ _ (by rfl)]
+  unfold description
+  three_tape_step [rewindScratchLoopScratchTape,
+    writeInsertScratchTape]
+  all_goals
+    cases processed <;> constructor <;> rfl
+
+theorem rewindScratch_loop_run
+    (remainingRev processed : Word Bool)
+    (source work : Tape Bool) :
+    description.runConfig (remainingRev.length + 1)
+        (config rewindScratchLoop source
+          (rewindScratchLoopScratchTape remainingRev processed)
+          work) =
+      config writeInsert source
+        (writeInsertScratchTape
+          (List.append remainingRev.reverse processed))
+        work := by
+  induction remainingRev generalizing processed with
+  | nil =>
+      simpa using
+        rewindScratch_loop_step_blank source work processed
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp [Nat.add_comm, Nat.add_left_comm]]
+      rw [Structured.Description.runConfig_add]
+      rw [rewindScratch_loop_step_bit]
+      rw [ih (bit :: processed)]
+      simp [List.reverse_cons, List.append_assoc]
+
+theorem rewindScratch_run
+    (pref tail insert : Word Bool) :
+    description.runConfig (insert.length + 2)
+        (rewindTailHandoffConfig pref tail insert) =
+      rewindScratchHandoffConfig pref tail insert := by
+  rw [show insert.length + 2 = 1 + (insert.reverse.length + 1) by
+    simp [Nat.add_left_comm]]
+  rw [Structured.Description.runConfig_add]
+  rw [rewindScratch_entry_step]
+  rw [rewindScratch_loop_run]
+  simp [rewindScratchHandoffConfig]
+
+def RewindScratchSpec (D : Description) : Prop :=
+  SupportsReadWriteRows3 D ∧
+    forall (pref tail insert : Word Bool),
+      D.runConfig (insert.length + 2)
+          (rewindTailHandoffConfig pref tail insert) =
+        rewindScratchHandoffConfig pref tail insert
+
+theorem RewindScratchSpec.supported
+    {D : Description} (hD : RewindScratchSpec D) :
+    SupportsReadWriteRows3 D :=
+  hD.left
+
+theorem RewindScratchSpec.run
+    {D : Description} (hD : RewindScratchSpec D)
+    (pref tail insert : Word Bool) :
+    D.runConfig (insert.length + 2)
+        (rewindTailHandoffConfig pref tail insert) =
+      rewindScratchHandoffConfig pref tail insert :=
+  hD.right pref tail insert
+
+theorem description_rewindScratchSpec :
+    RewindScratchSpec description := by
+  refine ⟨description_supported, ?_⟩
+  intro pref tail insert
+  exact rewindScratch_run pref tail insert
+
+def CopyRewindScratchSpec (D : Description) : Prop :=
+  CopyRewindTailSpec D ∧ RewindScratchSpec D ∧
+    forall (pref tail insert : Word Bool),
+      D.runConfig (2 * tail.length + insert.length + 5)
+          (initialConfig pref tail insert) =
+        rewindScratchHandoffConfig pref tail insert
+
+theorem CopyRewindScratchSpec.copyRewindTail
+    {D : Description} (hD : CopyRewindScratchSpec D) :
+    CopyRewindTailSpec D :=
+  hD.left
+
+theorem CopyRewindScratchSpec.rewindScratch
+    {D : Description} (hD : CopyRewindScratchSpec D) :
+    RewindScratchSpec D :=
+  hD.right.left
+
+theorem CopyRewindScratchSpec.run
+    {D : Description} (hD : CopyRewindScratchSpec D)
+    (pref tail insert : Word Bool) :
+    D.runConfig (2 * tail.length + insert.length + 5)
+        (initialConfig pref tail insert) =
+      rewindScratchHandoffConfig pref tail insert :=
+  hD.right.right pref tail insert
+
+theorem description_copyRewindScratchSpec :
+    CopyRewindScratchSpec description := by
+  refine ⟨description_copyRewindTailSpec,
+    description_rewindScratchSpec, ?_⟩
+  intro pref tail insert
+  rw [show 2 * tail.length + insert.length + 5 =
+      (2 * tail.length + 3) + (insert.length + 2) by
+    lia]
+  rw [Structured.Description.runConfig_add]
+  rw [CopyRewindTailSpec.run description_copyRewindTailSpec]
+  exact RewindScratchSpec.run
+    description_rewindScratchSpec pref tail insert
+
 theorem rewindTailHandoffSourceTapeFromLeft_normalizedOutput
     (leftBoundary : List (Option Bool)) (tail insert : Word Bool) :
     Tape.normalizedOutput
@@ -804,6 +1056,39 @@ theorem rewindTailHandoffConfig_work_normalizedOutput
           (rewindTailHandoffConfig pref tail insert).tapes 2) =
       tail := by
   simpa [rewindTailHandoffConfig] using
+    rewindTailHandoffWorkTape_normalizedOutput tail
+
+theorem writeInsertScratchTape_normalizedOutput
+    (insert : Word Bool) :
+    Tape.normalizedOutput (writeInsertScratchTape insert) = insert := by
+  simp [writeInsertScratchTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, Function.comp_def]
+
+theorem rewindScratchHandoffConfig_source_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (rewindScratchHandoffConfig pref tail insert).tapes 0) =
+      List.append pref insert := by
+  simpa [rewindScratchHandoffConfig] using
+    rewindTailHandoffSourceTape_normalizedOutput pref tail insert
+
+theorem rewindScratchHandoffConfig_scratch_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (rewindScratchHandoffConfig pref tail insert).tapes 1) =
+      insert := by
+  simpa [rewindScratchHandoffConfig] using
+    writeInsertScratchTape_normalizedOutput insert
+
+theorem rewindScratchHandoffConfig_work_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (rewindScratchHandoffConfig pref tail insert).tapes 2) =
+      tail := by
+  simpa [rewindScratchHandoffConfig] using
     rewindTailHandoffWorkTape_normalizedOutput tail
 
 theorem sourceTape_normalizedOutput
