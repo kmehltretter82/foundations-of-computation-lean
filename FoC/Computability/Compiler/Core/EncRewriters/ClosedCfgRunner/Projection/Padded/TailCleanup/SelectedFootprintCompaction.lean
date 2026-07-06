@@ -1743,11 +1743,35 @@ theorem selectedFootprintCompactorBridgeConstruction_iff_rightEndBridgeSplitCons
   · exact selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_bridge
   · exact selectedFootprintCompactorBridgeConstruction_of_rightEndBridgeSplit
 
+/--
+Remaining finite-machine leaf for selected-footprint compaction.
+
+The endpoint and padding split expose the smallest exact obligation currently
+available: a single compactor must send each padding-split source branch to its
+exact right-edge target, up to tape equivalence.
+-/
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction := by
+  -- Remaining finite-machine leaf: instantiate an executable compactor for
+  -- the padding-aware selected footprint endpoints.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_paddingSplit
+    (hpadding :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_guardedFootprint
+      (guardedLogicalTapeDecoderFootprintCompactorSplitConstruction_of_construction
+        (guardedLogicalTapeDecoderFootprintCompactorConstruction_of_paddingSplit
+          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorConstruction_of_split
+            hpadding)))
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
-  -- Remaining finite-machine leaf: a single compactor must cover the nil/cons
-  -- decoded-payload families over the primitive right-end bridge endpoints.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_paddingSplit
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_core
 
 theorem selectedFootprintCompactorBridgeConstruction_core :
     SelectedFootprintCompactorBridgeConstruction := by
