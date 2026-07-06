@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterOutput
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterStructuredQuote
 
 set_option doc.verso true
@@ -78,6 +79,18 @@ theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction_of_assembl
       (MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec_iff_assemblySpec
         finish).mpr hfinish⟩
 
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputSpec_of_exact
+    {finish : MachineDescription}
+    (hfinish :
+      MixedOptionCellQuoteLiveTailEmitterAssemblyFamilySpec finish) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputSpec finish :=
+  MixedOptionCellQuoteLiveTailEmitterFamilyOutputSpec_of_exact hfinish
+
+theorem MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction_of_exact
+    (h : MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction) :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction :=
+  MixedOptionCellQuoteLiveTailEmitterFamilyOutputConstruction_of_exact h
+
 /--
 Reusable emitter obligation for the specialized assembly parser-prefix grammar.
 It quotes the defaulted mixed option-cell prefix and stage prefix, leaves the
@@ -93,6 +106,16 @@ theorem mixedOptionCellQuoteLiveTailEmitterConstruction_for_assemblySourceRest :
   exact
     MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest_of_family
       mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
+
+theorem mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction :
+    MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction :=
+  MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction_of_exact
+    mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction
+
+theorem mixedOptionCellQuoteLiveTailEmitterOutputConstruction_for_assemblySourceRest :
+    MixedOptionCellQuoteLiveTailEmitterOutputConstructionForAssemblySourceRest :=
+  MixedOptionCellQuoteLiveTailEmitterOutputConstructionForAssemblySourceRest_of_outputFamily
+    mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputConstruction
 
 def MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
     (finish : MachineDescription) : Prop :=
@@ -126,6 +149,11 @@ theorem mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySo
   rw [MixedParserStackRewriterDefaultedInternalMarkerTape_eq_mixedOptionCellQuoteLiveTailEmitterSplitSourceTape]
   rw [MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_mixedOptionCellQuoteLiveTailEmitterTargetTape]
   exact hfinish.right w sourceRestBits stage
+
+theorem mixedParserStackPrefixQuotedSeparatedFinisherOutputConstruction_for_assemblySourceRest :
+    MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest :=
+  MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitterOutput
+    mixedOptionCellQuoteLiveTailEmitterOutputConstruction_for_assemblySourceRest
 
 end SelectedProjectionInputQuoterFiniteLeaf
 
