@@ -857,6 +857,24 @@ theorem returnFromTape1SeparatorToBlockStartDescription_contract :
               hmove hreturn
         · exact atTapeSeparator_zero_self (T :: rest)
 
+private theorem returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+    (f : List (Tape Bool) -> List (Tape Bool)) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 1 physical)
+      (fun logical physical =>
+        AtTapeSeparator (f logical) 0 physical)
+      returnFromTape1SeparatorToBlockStartDescription := by
+  exact
+    { subroutineReady :=
+        returnFromTape1SeparatorToBlockStartDescription_contract
+          |>.subroutineReady
+      realizes := by
+        intro logical Tin hexisting
+        exact
+          returnFromTape1SeparatorToBlockStartDescription_contract
+            |>.realizes (f logical) Tin hexisting.left }
+
 /--
 Same physical routine as
 {name}`returnFromTape1SeparatorToBlockStartDescription`, stated at an arbitrary
@@ -1103,6 +1121,33 @@ private theorem hasAtLeastThreeTapes_of_atHasGuardCells_two
           | cons V' rest' =>
               exact ⟨T, U, V', rest', rfl⟩
 
+private theorem seekTape2Description_contract_existing :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator logical 0 physical ∧
+          HasAtLeastThreeTapes logical)
+      (fun logical physical =>
+        AtExistingTapeSeparator logical 2 physical ∧
+          HasAtLeastThreeTapes logical)
+      seekTape2Description := by
+  exact
+    { subroutineReady := seekTape2Description_contract.subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hstart, hshape⟩
+        rcases hshape with ⟨T, U, V, rest, hlogical⟩
+        rcases seekTape2Description_contract.realizes
+            logical Tin
+            ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
+          ⟨Tout, hhalts, hseparator⟩
+        have hshape' : HasAtLeastThreeTapes logical :=
+          ⟨T, U, V, rest, hlogical⟩
+        exact
+          ⟨Tout, hhalts,
+            ⟨⟨hseparator,
+                hasAtLeastThreeTapes_drop_two hshape'⟩,
+              hshape'⟩⟩ }
+
 /--
 Seek from block start to tape 2, verify the expected head cell, and return to
 the tape-2 separator.
@@ -1136,22 +1181,16 @@ theorem cursorTape2ReadHeadCellAndReturnToSeparatorDescription_contract
   have hseek :
       CursorRoutineContract source middle seekTape2Description := by
     exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
+      { subroutineReady :=
+          seekTape2Description_contract_existing.subroutineReady
         realizes := by
           intro logical Tin hsource
           rcases hsource with ⟨hstart, hshape, hread⟩
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              logical Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
+          rcases
+              seekTape2Description_contract_existing.realizes
+                logical Tin ⟨hstart, hshape⟩ with
             ⟨Tout, hhalts, hseparator⟩
-          have hshape' : HasAtLeastThreeTapes logical :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨hseparator,
-                  hasAtLeastThreeTapes_drop_two hshape'⟩,
-                hshape', hread⟩⟩ }
+          exact ⟨Tout, hhalts, ⟨hseparator.1, hseparator.2, hread⟩⟩ }
   have hreadContract :
       CursorRoutineContract middle
         (fun logical physical =>
@@ -1294,24 +1333,8 @@ theorem cursorTape2NoopAndReturnToBlockStartDescription_contract :
         (fun logical physical =>
           AtExistingTapeSeparator logical 2 physical ∧
             HasAtLeastThreeTapes logical)
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hshape⟩
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              logical Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' : HasAtLeastThreeTapes logical :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨hseparator,
-                  hasAtLeastThreeTapes_drop_two hshape'⟩,
-                hshape'⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_existing
   have hreturnOne :
       CursorRoutineContract
         (fun logical physical =>
@@ -1371,16 +1394,6 @@ private theorem writeHeadCell_two_apply_hasAtLeastThreeTapes
     ⟨T, U, Tape.write cell V, rest, by
       simp [PhysicalPrimitive.apply, Description.tapeAt]⟩
 
-private theorem writeHeadCell_two_apply_drop_one
-    (cell : Option Bool) {logical : List (Tape Bool)}
-    (hshape : HasAtLeastThreeTapes logical) :
-    exists T : Tape Bool, exists rest : List (Tape Bool),
-      ((PhysicalPrimitive.writeHeadCell 2 cell).apply logical).drop 1 =
-        T :: rest := by
-  exact
-    hasAtLeastThreeTapes_drop_one
-      (writeHeadCell_two_apply_hasAtLeastThreeTapes cell hshape)
-
 private theorem moveHead_two_apply_hasAtLeastThreeTapes
     (move : HeadMove) {logical : List (Tape Bool)}
     (hshape : HasAtLeastThreeTapes logical) :
@@ -1426,24 +1439,8 @@ theorem cursorTape2WriteHeadCellAndReturnToSeparatorDescription_contract
         (fun logical physical =>
           AtExistingTapeSeparator logical 2 physical ∧
             HasAtLeastThreeTapes logical)
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hshape⟩
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              logical Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' : HasAtLeastThreeTapes logical :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨hseparator,
-                  hasAtLeastThreeTapes_drop_two hshape'⟩,
-                hshape'⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_existing
   have hwrite :
       CursorRoutineContract
         (fun logical physical =>
@@ -1582,19 +1579,10 @@ theorem cursorTape2WriteHeadCellAndReturnToBlockStartDescription_contract
           AtTapeSeparator
             ((PhysicalPrimitive.writeHeadCell 2 cell).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.writeHeadCell 2 cell).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.writeHeadCell 2 cell).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       (cursorTape2WriteHeadCellAndReturnToTape1SeparatorDescription_contract
@@ -1931,19 +1919,11 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_gu
             ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
               (guardLogicalTapes logical))
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-                  (guardLogicalTapes logical))
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.left).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription_contract_guarded
@@ -1972,19 +1952,10 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_wi
           AtTapeSeparator
             ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription_contract_withGuardCells
@@ -2320,19 +2291,11 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToBlockStartDescription_contract_g
             ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
               (guardLogicalTapes logical))
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-                  (guardLogicalTapes logical))
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.right).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription_contract_guarded
@@ -2361,19 +2324,10 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToBlockStartDescription_contract_w
           AtTapeSeparator
             ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription_contract_withGuardCells
@@ -2425,16 +2379,8 @@ theorem cursorTape1NoopAndReturnToBlockStartDescription_contract :
           AtExistingTapeSeparator logical 1 physical)
         (fun logical physical =>
           AtTapeSeparator logical 0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes logical Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map id
   exact
     cursorRoutineContract_canonicalSeq_self
       hseek hreturn
@@ -2590,19 +2536,10 @@ theorem cursorTape1WriteHeadCellAndReturnToBlockStartDescription_contract
           AtTapeSeparator
             ((PhysicalPrimitive.writeHeadCell 1 cell).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.writeHeadCell 1 cell).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.writeHeadCell 1 cell).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       (cursorTape1WriteHeadCellAndReturnToSeparatorDescription_contract
@@ -2783,19 +2720,11 @@ theorem cursorTape1MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_gu
             ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply
               (guardLogicalTapes logical))
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply
-                  (guardLogicalTapes logical))
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 1 HeadMove.left).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_guarded
@@ -2824,19 +2753,10 @@ theorem cursorTape1MoveHeadLeftLocalAndReturnToBlockStartDescription_contract_wi
           AtTapeSeparator
             ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 1 HeadMove.left).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_withGuardCells
@@ -3016,19 +2936,11 @@ theorem cursorTape1MoveHeadRightLocalAndReturnToBlockStartDescription_contract_g
             ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply
               (guardLogicalTapes logical))
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply
-                  (guardLogicalTapes logical))
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 1 HeadMove.right).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription_contract_guarded
@@ -3057,19 +2969,10 @@ theorem cursorTape1MoveHeadRightLocalAndReturnToBlockStartDescription_contract_w
           AtTapeSeparator
             ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply logical)
             0 physical)
-        returnFromTape1SeparatorToBlockStartDescription := by
-    exact
-      { subroutineReady :=
-          returnFromTape1SeparatorToBlockStartDescription_contract
-            |>.subroutineReady
-        realizes := by
-          intro logical Tin hexisting
-          exact
-            returnFromTape1SeparatorToBlockStartDescription_contract
-              |>.realizes
-                ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply
-                  logical)
-                Tin hexisting.left }
+        returnFromTape1SeparatorToBlockStartDescription :=
+    returnFromTape1SeparatorToBlockStartDescription_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 1 HeadMove.right).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription_contract_withGuardCells
