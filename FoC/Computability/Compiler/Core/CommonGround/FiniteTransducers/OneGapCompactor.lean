@@ -843,6 +843,36 @@ theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_cells
     tapeAtCells, Tape.cells, List.reverse_append,
     List.map_reverse, List.append_assoc]
 
+theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndCompactionSourceTapeWithRightPadding
+    (baseLeft : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) (paddingScratch : Nat)
+    (rightPadding : List (Option Bool)) :
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseLeft current leftRest paddingScratch rightPadding =
+      rightEndCompactionSourceTapeWithRightPadding
+        (List.append baseLeft.reverse
+          (none ::
+            List.append (((current :: leftRest).reverse).map some)
+              (List.replicate paddingScratch (none : Option Bool))))
+        rightPadding := by
+  simp [rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+    rightEndCompactionSourceTapeWithRightPadding, tapeAtCells,
+    List.reverse_append, List.map_reverse, List.append_assoc]
+
+theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndCompactionSourceTape
+    (baseLeft : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) (paddingScratch : Nat) :
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseLeft current leftRest paddingScratch [] =
+      rightEndCompactionSourceTape
+        (List.append baseLeft.reverse
+          (none ::
+            List.append (((current :: leftRest).reverse).map some)
+              (List.replicate paddingScratch (none : Option Bool)))) := by
+  rw [
+    rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_eq_rightEndCompactionSourceTapeWithRightPadding,
+    rightEndCompactionSourceTapeWithRightPadding_nil]
+
 theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_normalizedOutput
     (baseLeft : List (Option Bool)) (current : Bool)
     (leftRest : Word Bool) (paddingScratch : Nat)

@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompaction
 
 set_option doc.verso true
@@ -322,6 +323,231 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
   rw [
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_expandedPrefix_append_footprintCells]
   simp [tapeSeparatorCells, logicalTapeCode_eq_map_some]
+
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft
+    (T0 : Tape Bool) : List (Option Bool) :=
+  List.append ((logicalTapeBits (guardLogicalTape T0)).reverse.map some)
+    [none]
+
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    List (Option Bool) :=
+  List.append
+    (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+      bits padding)
+    [none, none]
+
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail
+    (T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) : List (Option Bool) :=
+  List.append
+    (List.replicate
+      (logicalTapeBits (guardLogicalTape T1)).length
+      (none : Option Bool))
+    (none ::
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+        bits padding)
+
+def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) : List (Option Bool) :=
+  none ::
+    List.append
+      (List.replicate
+        (logicalTapeBits (guardLogicalTape T0)).length
+        (none : Option Bool))
+      (none ::
+        List.append
+          (List.replicate
+            (logicalTapeBits (guardLogicalTape T1)).length
+            (none : Option Bool))
+          (none ::
+            List.append
+              (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+                bits padding)
+              [none]))
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_secondFieldBoundaryEraserSourceTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding) =
+      Tape.cells
+        (leftBoundaryEraserSourceTape
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft
+            T0)
+          (logicalTapeBits (guardLogicalTape T1))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+            bits padding)) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_boundaryFields_append_footprintCells,
+    leftBoundaryEraserSourceTape_cells]
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail,
+    List.reverse_append, List.map_reverse]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserTargetTape
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft
+            T0)
+          (logicalTapeBits (guardLogicalTape T1))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+            bits padding)) =
+      none ::
+        List.append
+          ((logicalTapeBits (guardLogicalTape T0)).map some)
+          (none ::
+            List.append
+              (List.replicate
+                (logicalTapeBits (guardLogicalTape T1)).length
+                (none : Option Bool))
+              (none ::
+                List.append
+                  (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+                    bits padding)
+                  [none, none])) := by
+  rw [leftBoundaryEraserTargetTape_cells]
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail,
+    List.reverse_append, List.map_reverse]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells_filterMap
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    (Tape.cells
+        (leftBoundaryEraserTargetTape
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft
+            T0)
+          (logicalTapeBits (guardLogicalTape T1))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+            bits padding))).filterMap (fun cell => cell) =
+      List.append (logicalTapeBits (guardLogicalTape T0))
+        (List.append bits (padding.filterMap (fun cell => cell))) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    List.filterMap_append, Function.comp_def]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells_eq_firstFieldBoundaryEraserSourceTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserTargetTape
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserBaseLeft
+            T0)
+          (logicalTapeBits (guardLogicalTape T1))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail
+            bits padding)) =
+      Tape.cells
+        (leftBoundaryEraserSourceTape
+          []
+          (logicalTapeBits (guardLogicalTape T0))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail
+            T1 bits padding)) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells,
+    leftBoundaryEraserSourceTape_cells]
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldBoundaryEraserTargetTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserTargetTape
+          []
+          (logicalTapeBits (guardLogicalTape T0))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail
+            T1 bits padding)) =
+      none ::
+        List.append
+          (List.replicate
+            (logicalTapeBits (guardLogicalTape T0)).length
+            (none : Option Bool))
+          (none ::
+            List.append
+              (List.replicate
+                (logicalTapeBits (guardLogicalTape T1)).length
+                (none : Option Bool))
+              (none ::
+                List.append
+                  (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+                    bits padding)
+                  [none, none])) := by
+  rw [leftBoundaryEraserTargetTape_cells]
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldEraserSuffixTail]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldBoundaryEraserTargetTape_cells_eq_erasedFootprintVisibleCells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserTargetTape
+          []
+          (logicalTapeBits (guardLogicalTape T0))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail
+            T1 bits padding)) =
+      rightEndCompactionVisibleCells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells
+          T0 T1 bits padding) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldBoundaryEraserTargetTape_cells]
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells,
+    rightEndCompactionVisibleCells, List.append_assoc]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldBoundaryEraserTargetTape_cells_filterMap
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    (Tape.cells
+        (leftBoundaryEraserTargetTape
+          []
+          (logicalTapeBits (guardLogicalTape T0))
+          none
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldEraserSuffixTail
+            T1 bits padding))).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixFirstFieldBoundaryEraserTargetTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    List.filterMap_append]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells_filterMap
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells
+        T0 T1 bits padding).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simp [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
+    List.filterMap_append]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintVisibleCells_filterMap
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    (rightEndCompactionVisibleCells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells
+          T0 T1 bits padding)).filterMap (fun cell => cell) =
+      List.append bits (padding.filterMap (fun cell => cell)) := by
+  simp [rightEndCompactionVisibleCells,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixErasedFootprintLeftCells_filterMap,
+    List.filterMap_append]
 
 theorem logicalCellCode_length
     (cell : Option Bool) :
@@ -822,12 +1048,15 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHando
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
       eraser
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_handoff
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_handoffSpec
+    {eraser : MachineDescription}
     (hhandoff :
-      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction) :
-    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
-  rcases hhandoff with ⟨eraser, hready, hrun⟩
-  refine ⟨eraser, ?_, ?_⟩
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
+      eraser := by
+  rcases hhandoff with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
   · refine ⟨hready, ?_, ?_, ?_⟩
     · intro T0 T1
       exact hrun T0 T1 [] []
@@ -842,6 +1071,16 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintH
       exact hrun T0 T1 (bit :: rest) (none :: padding)
     · intro T0 T1 bit rest padBit padding
       exact hrun T0 T1 (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_handoff
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  rcases hhandoff with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_handoffSpec
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_footprintHandoff
     (hhandoff :
@@ -878,15 +1117,109 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintH
       selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_eraserSpec
         hspec⟩
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core :
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_iff_eraserSpec
+    (eraser : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+        eraser ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
+        eraser := by
+  constructor
+  · intro hhandoff
+    rcases hhandoff with ⟨hready, hrun⟩
+    refine ⟨hready, ?_⟩
+    intro T0 T1 bits padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hrun T0 T1 bits padding
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_eraserSpec
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_iff_eraserConstruction :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_footprintHandoff
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_splitPadSymbolCaseSpec
+    {eraser : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+      eraser := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil T0 T1
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone T0 T1 padding
+          | some padBit =>
+              exact hnilSome T0 T1 padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil T0 T1 bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone T0 T1 bit rest padding
+          | some padBit =>
+              exact hconsSome T0 T1 bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_splitPadSymbolCases
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction) :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
-  sorry
+  rcases hsplit with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_splitPadSymbolCaseSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_iff_splitPadSymbolCaseSpec
+    (eraser : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+        eraser ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
+        eraser := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_handoffSpec
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_splitPadSymbolCaseSpec
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_iff_splitPadSymbolCaseConstruction :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_handoff
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_splitPadSymbolCases
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  -- Remaining finite-machine leaf: delete the concrete two-tape guarded
+  -- structured prefix for each nil/cons payload and padding-symbol branch.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
   exact
-    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_handoff
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_splitPadSymbolCases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
