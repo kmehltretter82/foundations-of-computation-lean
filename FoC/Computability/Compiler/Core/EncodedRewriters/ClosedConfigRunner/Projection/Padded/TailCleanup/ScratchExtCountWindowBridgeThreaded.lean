@@ -1292,6 +1292,41 @@ theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDe
     exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_blank_padding
       (none :: padding) (by simp [hpadding])
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] []) ∧
+    forall padding : List (Option Bool),
+      padding.filterMap (fun cell => cell) = [] →
+        compactor.HaltsFromTapeEquiv
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            [] (none :: padding))
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+            [] (none :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseSpec
+      compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorBlankPaddingCaseConstruction := by
+  refine
+    ⟨ExactIdentityDescription,
+      CommonGround.Identity.exactIdentityDescription_subroutineReady,
+      ?_, ?_⟩
+  · exact
+      exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil
+  · intro padding hpadding
+    exact
+      exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_none_blank_padding
+        padding hpadding
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
