@@ -1876,6 +1876,41 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridge
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec
       initializer
 
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      initializer.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourceTape
+          bits padding)
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
+          bits padding)
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
+      initializer
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec_of_inputMaterializerSpec
+    {initializer : MachineDescription}
+    (hmaterializer :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
+        initializer) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec
+      initializer :=
+  hmaterializer
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_of_inputMaterializer
+    (hmaterializer :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec_of_inputMaterializerSpec
+        hspec⟩
+
 def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec
     (projector : MachineDescription) : Prop :=
   projector.SubroutineReady ∧
@@ -1891,6 +1926,41 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeC
   exists projector : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec
       projector
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec
+    (projector : MachineDescription) : Prop :=
+  projector.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      projector.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeOutputTape
+          bits padding)
+        (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitTargetTape
+          bits padding)
+
+def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction :
+    Prop :=
+  exists projector : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec
+      projector
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec_of_structuredEgressSpec
+    {projector : MachineDescription}
+    (hpositioner :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec
+        projector) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec
+      projector :=
+  hpositioner
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction_of_structuredEgress
+    (hpositioner :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction := by
+  rcases hpositioner with ⟨projector, hspec⟩
+  exact
+    ⟨projector,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec_of_structuredEgressSpec
+        hspec⟩
 
 def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressNilPadSymbolCaseSpec
     (projector : MachineDescription) : Prop :=
@@ -1949,6 +2019,39 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPa
   exists projector : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseSpec
       projector
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseSpec_of_structuredEgressSpec
+    {projector : MachineDescription}
+    (hpositioner :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec
+        projector) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseSpec
+      projector := by
+  rcases hpositioner with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_of_structuredEgress
+    (hpositioner :
+      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction := by
+  rcases hpositioner with ⟨projector, hspec⟩
+  exact
+    ⟨projector,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseSpec_of_structuredEgressSpec
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeSpec_of_splitPadSymbolCaseSpec
     {projector : MachineDescription}
@@ -2159,17 +2262,29 @@ split by the same nil/cons and padding-symbol cases used by the one-tape
 selected-footprint bridge; this keeps the exact cursor-positioning obligations
 separate from the endpoint composition glue.
 -/
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction := by
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction := by
   -- Remaining finite-machine ingress: encode the old selected footprint as
   -- the guarded three-tape input expected by the structured compactor.
   sorry
 
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_of_inputMaterializer
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction := by
+  -- Remaining finite-machine egress: use the full structured output, especially
+  -- tape 0, to recover the separator-positioned exact target.
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction := by
-  -- Remaining finite-machine egress: use the structured output tapes to
-  -- recover the exact padding-aware target cursor in each branch.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_of_structuredEgress
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction := by

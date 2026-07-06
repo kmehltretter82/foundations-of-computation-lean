@@ -59,6 +59,21 @@ def encodedCells (cells : List (Option Bool)) : List (Option Bool) :=
     encodedCells (cell :: rest) = none :: cell :: encodedCells rest := by
   simp [encodedCells]
 
+theorem encodedCells_append
+    (left right : List (Option Bool)) :
+    encodedCells (left ++ right) = encodedCells left ++ encodedCells right := by
+  induction left with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      simp [ih]
+
+theorem encodedCells_append_singleton
+    (cells : List (Option Bool)) (boundary : Option Bool) :
+    encodedCells (cells ++ [boundary]) =
+      encodedCells cells ++ [none, boundary] := by
+  simp [encodedCells_append]
+
 @[simp] theorem encodedCells_eq_nil_iff
     (cells : List (Option Bool)) :
     encodedCells cells = [] ↔ cells = [] := by
@@ -118,6 +133,13 @@ def sourceTapeAt
 
 def sourceTape (cells : List (Option Bool)) : Tape Bool :=
   sourceTapeAt [] cells
+
+theorem sourceTapeAt_append_singleton
+    (consumed remaining : List (Option Bool)) (boundary : Option Bool) :
+    sourceTapeAt consumed (remaining ++ [boundary]) =
+      tapeAtCells (encodedCells consumed).reverse
+        (encodedCells remaining ++ [none, boundary]) := by
+  simp [sourceTapeAt, encodedCells_append_singleton]
 
 def markerTapeAt (used remaining : Nat) : Tape Bool :=
   tapeAtCells
