@@ -359,6 +359,33 @@ def selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
     (rightEdgeScanSourceTapeFromLeft [none] bits padding)
     []
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        (encodedStructuredTapeCellsPrefix
+          [guardLogicalTape T0, guardLogicalTape T1])
+        bits padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
+      (encodedStructuredTapeCellsPrefix
+        [guardLogicalTape T0, guardLogicalTape T1])
+      bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_cells
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          bits padding) =
+      selectedSegmentLogicalTapeDecoderDensifierSourceCells
+        [] bits padding := by
+  exact
+    selectedSegmentLogicalTapeDecoderTargetTape_cells_rightEdgeScanSourceTapeFromLeft_eq_densifierSource
+      [] bits padding
+
 def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
     (eraser : MachineDescription) : Prop :=
   eraser.SubroutineReady ∧
