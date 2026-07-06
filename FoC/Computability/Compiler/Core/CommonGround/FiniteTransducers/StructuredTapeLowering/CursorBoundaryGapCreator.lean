@@ -468,36 +468,6 @@ theorem headSuffixGapShiftLoopPair_append
   | cons current rest ih =>
       exact ih second current
 
-theorem headSuffixGapShiftLoopWrittenRev_append
-    (first second : Option Bool)
-    (left right : List (Option Bool)) :
-    headSuffixGapShiftLoopWrittenRev first second (List.append left right) =
-      List.append
-        (headSuffixGapShiftLoopWrittenRev
-          (headSuffixGapShiftLoopPair first second left).1
-          (headSuffixGapShiftLoopPair first second left).2
-          right)
-        (headSuffixGapShiftLoopWrittenRev first second left) := by
-  induction left generalizing first second with
-  | nil =>
-      simp [headSuffixGapShiftLoopPair, headSuffixGapShiftLoopWrittenRev]
-  | cons current rest ih =>
-      change
-        List.append
-            (headSuffixGapShiftLoopWrittenRev second current
-              (List.append rest right))
-            [first] =
-          List.append
-            (headSuffixGapShiftLoopWrittenRev
-              (headSuffixGapShiftLoopPair second current rest).1
-              (headSuffixGapShiftLoopPair second current rest).2
-              right)
-            (List.append
-              (headSuffixGapShiftLoopWrittenRev second current rest)
-              [first])
-      rw [ih second current]
-      simp [List.append_assoc]
-
 theorem headSuffixGapShiftLoopActive_append
     (first second : Option Bool)
     (left right : List (Option Bool)) :
@@ -816,16 +786,6 @@ theorem headSuffixGapShiftDescription_run_pairHalt_nil
       MachineDescription.lookupTransition, MachineDescription.Matches,
       transition, tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
-theorem headSuffixGapShiftDescription_run_pairHalt_cons
-    (cell : Option Bool) (left right : List (Option Bool)) :
-    headSuffixGapShiftDescription.runConfig 1
-        { state := headSuffixGapShiftPairState none none
-          tape := tapeAtCells (cell :: left) (none :: right) } =
-      { state := headSuffixGapShiftHalt
-        tape := tapeAtCells left (cell :: none :: right) } := by
-  simpa [Tape.move, Tape.moveLeft, tapeAtCells] using
-    headSuffixGapShiftDescription_run_pairHalt (cell :: left) right
-
 theorem headSuffixGapShiftDescription_run_pairLoop_then_halt_nil
     (cells left : List (Option Bool))
     (first second : Option Bool)
@@ -894,31 +854,6 @@ theorem headSuffixGapShiftDescription_run_pairLoop_then_implicitStep_halt_nil
       ((headSuffixGapShiftLoopPair first second cells).1 ::
         List.append
           (headSuffixGapShiftLoopWrittenRev first second cells) left)
-
-theorem headSuffixGapShiftDescription_run_boundaryLoop_then_halt_nil
-    (current : Option Bool) (cells left : List (Option Bool))
-    (hactive : headSuffixGapShiftLoopActive none current cells)
-    (hfirst :
-      (headSuffixGapShiftLoopPair none current cells).1 = none)
-    (hsecond :
-      (headSuffixGapShiftLoopPair none current cells).2 = none) :
-    headSuffixGapShiftDescription.runConfig (cells.length + 2)
-        { state := 2
-          tape := tapeAtCells left (current :: cells) } =
-      { state := headSuffixGapShiftHalt
-        tape :=
-          Tape.move Direction.left
-            (tapeAtCells
-              (List.append
-                (headSuffixGapShiftLoopWrittenRev none current cells)
-                (none :: left))
-              []) } := by
-  rw [show cells.length + 2 = 1 + (cells.length + 1) by lia]
-  rw [MachineDescription.runConfig_add]
-  rw [headSuffixGapShiftDescription_run_boundaryStep current left cells]
-  exact
-    headSuffixGapShiftDescription_run_pairLoop_then_halt_nil
-      cells (none :: left) none current hactive hfirst hsecond
 
 theorem headSuffixGapShiftDescription_run_boundaryLoop_then_implicitStep_halt_nil
     (current : Option Bool) (cells left : List (Option Bool))
@@ -1137,42 +1072,6 @@ theorem headSuffixGapShiftDescription_payload_emptyRest_cells
     tapeSeparatorCells, tapeAtCells, Tape.cells, Tape.move, Tape.moveLeft,
     List.reverse_append, List.map_reverse, List.append_assoc]
 
-theorem headSuffixGapShiftDescription_run_payload_emptyRest_cells
-    (bits : Word Bool) :
-    Tape.cells
-        ((headSuffixGapShiftDescription.runConfig (bits.length + 4)
-          { state := headSuffixGapShiftDescription.start
-            tape := encodedStructuredHeadPayloadTapes bits [] }).tape) =
-      Tape.cells (encodedStructuredHeadPayloadGapTapes bits []) := by
-  rw [headSuffixGapShiftDescription_run_payload_emptyRest]
-  exact headSuffixGapShiftDescription_payload_emptyRest_cells bits
-
-theorem headSuffixGapShiftDescription_run_payload_cons
-    (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool)) :
-    exists current : Option Bool, exists cells : List (Option Bool),
-      encodedStructuredTapeCellsTail (T :: rest) = current :: cells ∧
-        headSuffixGapShiftDescription.runConfig
-          ((bits.length + 2) + (cells.length + 3))
-          { state := headSuffixGapShiftDescription.start
-            tape := encodedStructuredHeadPayloadTapes bits (T :: rest) } =
-          { state := headSuffixGapShiftHalt
-            tape :=
-              Tape.move Direction.left
-                (tapeAtCells
-                  ((headSuffixGapShiftLoopPair none current cells).1 ::
-                    List.append
-                      (headSuffixGapShiftLoopWrittenRev none current cells)
-                      (none :: none ::
-                        List.append (bits.reverse.map some) [none]))
-                  []) } := by
-  rcases headSuffixGapShiftDescription_run_boundary_encodedTail_cons
-      T rest (none :: List.append (bits.reverse.map some) [none]) with
-    ⟨current, cells, htail, hrunTail⟩
-  refine ⟨current, cells, htail, ?_⟩
-  rw [MachineDescription.runConfig_add]
-  rw [headSuffixGapShiftDescription_run_to_encodedTailBoundary]
-  exact hrunTail
-
 theorem headSuffixGapShiftDescription_payload_cons_cells
     (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool))
     (current : Option Bool) (cells : List (Option Bool))
@@ -1200,48 +1099,6 @@ theorem headSuffixGapShiftDescription_payload_cons_cells
     encodedStructuredTapeCells_eq_cons_tail, tapeSeparatorCells, tapeAtCells,
     Tape.cells, Tape.move, Tape.moveLeft, List.reverse_append,
     List.map_reverse, List.append_assoc] using hsuffix
-
-theorem headSuffixGapShiftDescription_run_payload_cons_cells
-    (bits : Word Bool) (T : Tape Bool) (rest : List (Tape Bool)) :
-    exists current : Option Bool, exists cells : List (Option Bool),
-      encodedStructuredTapeCellsTail (T :: rest) = current :: cells ∧
-        Tape.cells
-          ((headSuffixGapShiftDescription.runConfig
-            ((bits.length + 2) + (cells.length + 3))
-            { state := headSuffixGapShiftDescription.start
-              tape := encodedStructuredHeadPayloadTapes bits (T :: rest) }).tape) =
-          Tape.cells (encodedStructuredHeadPayloadGapTapes bits (T :: rest)) := by
-  rcases headSuffixGapShiftLoopReady_encodedStructuredTapeCellsTail_start
-      T rest with
-    ⟨current, cells, htail, hactive, hfirst, hsecond⟩
-  refine ⟨current, cells, htail, ?_⟩
-  have hrunBoundary :=
-    headSuffixGapShiftDescription_run_boundaryLoop_then_implicitStep_halt_nil
-      current cells (none :: List.append (bits.reverse.map some) [none])
-      hactive hfirst hsecond
-  have hrun :
-      headSuffixGapShiftDescription.runConfig
-          ((bits.length + 2) + (cells.length + 3))
-          { state := headSuffixGapShiftDescription.start
-            tape := encodedStructuredHeadPayloadTapes bits (T :: rest) } =
-        { state := headSuffixGapShiftHalt
-          tape :=
-            Tape.move Direction.left
-              (tapeAtCells
-                ((headSuffixGapShiftLoopPair none current cells).1 ::
-                  List.append
-                    (headSuffixGapShiftLoopWrittenRev none current cells)
-                    (none :: none ::
-                      List.append (bits.reverse.map some) [none]))
-                []) } := by
-    rw [MachineDescription.runConfig_add]
-    rw [headSuffixGapShiftDescription_run_to_encodedTailBoundary]
-    rw [htail]
-    exact hrunBoundary
-  rw [hrun]
-  exact
-    headSuffixGapShiftDescription_payload_cons_cells
-      bits T rest current cells htail hsecond
 
 theorem word_exists_reverse_append_singleton_of_cons
     (head : Bool) (tail : Word Bool) :
@@ -1952,32 +1809,6 @@ theorem headSuffixGapOpeningRewindDescription_run_payloadFinish
     (List.append ((List.append leftStack.reverse [current]).map some)
       rightTail)
 
-theorem headSuffixGapOpeningRewindDescription_haltsFrom_payload
-    (leftStack : Word Bool) (current : Bool)
-    (rightTail : List (Option Bool)) :
-    headSuffixGapOpeningRewindDescription.HaltsFromTapeEquiv
-      (tapeAtCells
-        (List.append (leftStack.map some) [none])
-        (some current :: rightTail))
-      (tapeAtCells []
-        (none ::
-          List.append
-            ((List.append leftStack.reverse [current]).map some)
-            rightTail)) := by
-  refine
-    ⟨tapeAtCells [none, none, none]
-        (none ::
-          List.append
-            ((List.append leftStack.reverse [current]).map some)
-            rightTail),
-      ?_, ?_⟩
-  · refine ⟨leftStack.length + 7, ?_⟩
-    constructor
-    · rw [headSuffixGapOpeningRewindDescription_run_payloadFinish]
-      rfl
-    · rw [headSuffixGapOpeningRewindDescription_run_payloadFinish]
-  · simp [Tape.Equiv, tapeAtCells, Tape.dropTrailingNone]
-
 theorem headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
     (leftStack : Word Bool) (current : Bool)
     (rightTail : List (Option Bool)) :
@@ -2182,33 +2013,6 @@ theorem headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish
   exact
     headSuffixGapOpeningRewindDescription_run_gapPayloadFinish
       leftStack current (none :: none :: none :: rightTail)
-
-theorem headSuffixGapOpeningRewindDescription_haltsFrom_threeBlankGapPayload
-    (leftStack : Word Bool) (current : Bool)
-    (rightTail : List (Option Bool)) :
-    headSuffixGapOpeningRewindDescription.HaltsFromTapeEquiv
-      (tapeAtCells
-        (none :: none :: some current ::
-          List.append (leftStack.map some) [none])
-        (none :: rightTail))
-      (tapeAtCells []
-        (none ::
-          List.append
-            ((List.append leftStack.reverse [current]).map some)
-            (none :: none :: none :: rightTail))) := by
-  refine
-    ⟨tapeAtCells [none, none, none]
-        (none ::
-          List.append
-            ((List.append leftStack.reverse [current]).map some)
-            (none :: none :: none :: rightTail)),
-      ?_, ?_⟩
-  · refine ⟨leftStack.length + 10, ?_⟩
-    constructor
-    · rw [headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
-      rfl
-    · rw [headSuffixGapOpeningRewindDescription_run_threeBlankGapPayloadFinish]
-  · simp [Tape.Equiv, tapeAtCells, Tape.dropTrailingNone]
 
 theorem headSuffixGapOpeningRewindDescription_haltsFrom_shifted_cons
     (first : Bool) (bits : Word Bool)
@@ -2480,19 +2284,6 @@ theorem headSuffixGapCreatorDescription_nonemptyContract :
         exact headSuffixGapCreatorDescription_realizes_cons
           first bits T rest
 
-namespace HeadSuffixGapCreatorContract
-
-theorem toNonempty
-    {gapCreator : MachineDescription}
-    (hgap : HeadSuffixGapCreatorContract gapCreator) :
-    HeadSuffixGapCreatorNonemptyContract gapCreator where
-  subroutineReady := hgap.subroutineReady
-  realizes := by
-    intro first bits rest
-    exact hgap.realizes (first :: bits) rest
-
-end HeadSuffixGapCreatorContract
-
 namespace HeadSuffixGapCreatorNonemptyContract
 
 theorem toSingletonBoundary
@@ -2519,20 +2310,7 @@ theorem toSingletonBoundary
     simpa [T, encodedStructuredHeadPayloadTapes_eq_structuredTapes,
       encodedStructuredHeadPayloadGapTapes_eq_headGap] using hreal
 
-theorem singletonHeadRefreshCaseContract
-    {gapCreator : MachineDescription}
-    (hgap : HeadSuffixGapCreatorNonemptyContract gapCreator) :
-    SingletonHeadGuardSlackRefreshCaseContract
-      (singletonHeadRefreshDescription gapCreator) :=
-  singletonHeadRefreshDescription_caseContract
-    (HeadSuffixGapCreatorNonemptyContract.toSingletonBoundary hgap)
-
 end HeadSuffixGapCreatorNonemptyContract
-
-theorem headSuffixGapCreatorDescription_singletonBoundaryContract :
-    SingletonBoundaryGapCreatorContract headSuffixGapCreatorDescription :=
-  HeadSuffixGapCreatorNonemptyContract.toSingletonBoundary
-    headSuffixGapCreatorDescription_nonemptyContract
 
 /-- Concrete singleton head refresh dispatcher backed by the suffix gap creator. -/
 def concreteSingletonHeadRefreshDescription : MachineDescription :=
@@ -2542,12 +2320,9 @@ theorem concreteSingletonHeadRefreshDescription_caseContract :
     SingletonHeadGuardSlackRefreshCaseContract
       concreteSingletonHeadRefreshDescription := by
   simpa [concreteSingletonHeadRefreshDescription] using
-    HeadSuffixGapCreatorNonemptyContract.singletonHeadRefreshCaseContract
-      headSuffixGapCreatorDescription_nonemptyContract
-
-theorem concreteSingletonHeadRefreshDescription_subroutineReady :
-    concreteSingletonHeadRefreshDescription.SubroutineReady :=
-  concreteSingletonHeadRefreshDescription_caseContract.subroutineReady
+    singletonHeadRefreshDescription_caseContract
+      (HeadSuffixGapCreatorNonemptyContract.toSingletonBoundary
+        headSuffixGapCreatorDescription_nonemptyContract)
 
 end MultiTapeLowering
 end Structured
