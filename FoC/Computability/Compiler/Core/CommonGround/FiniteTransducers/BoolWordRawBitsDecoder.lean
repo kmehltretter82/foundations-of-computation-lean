@@ -1948,6 +1948,36 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction_of
       structuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec_of_structured3InputMaterializerSpec
         hspec⟩
 
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_of_initializerSpec
+    {initializer : MachineDescription}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+        initializer) :
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec
+      initializer := by
+  rcases hinitializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro input
+  rcases input with ⟨bits, suffixTail⟩
+  simpa [
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec,
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSource,
+    structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
+    structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
+    structured3InputMaterializerTargetTape] using
+    hrun bits suffixTail
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_of_initializer
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction) :
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction := by
+  rcases hinitializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_of_initializerSpec
+        hspec⟩
+
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
   Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription

@@ -1697,6 +1697,36 @@ theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_
       countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
         hspec⟩
 
+theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_initializerSpec
+    {useAccept : Bool} {initializer : MachineDescription}
+    (hinitializer :
+      CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
+        useAccept initializer) :
+    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
+      useAccept initializer := by
+  rcases hinitializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro input
+  simpa [
+    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec,
+    countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource,
+    countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape,
+    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
+    structured3InputMaterializerTargetTape] using
+    hrun input.L input.pref input.leftBit input.deletedTail
+      input.hdeleted input.hpayload
+
+theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_of_initializer
+    (hinitializer :
+      CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction := by
+  intro useAccept
+  rcases hinitializer useAccept with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_initializerSpec
+        hspec⟩
+
 theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction := by
   -- This is a count-window specialization of the reusable three-tape input
