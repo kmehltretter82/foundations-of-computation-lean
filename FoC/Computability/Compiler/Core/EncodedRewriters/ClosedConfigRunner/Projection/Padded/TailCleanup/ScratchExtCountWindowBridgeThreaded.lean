@@ -481,6 +481,150 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_p
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells]
   rfl
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_nil_nil :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] []) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells [] [])
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_nil_none
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (none :: padding)) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            [] (none :: padding))
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (some padBit :: padding)) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            [] (some padBit :: padding))
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) []) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            (bit :: rest) [])
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (none :: padding)) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            (bit :: rest) (none :: padding))
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (some padBit :: padding)) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            (bit :: rest) (some padBit :: padding))
+          [none, none] := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+      (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_nil_nil :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] []) =
+      List.append ([].map some) (none :: []) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_nil_none
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (none :: padding)) =
+      List.append ([].map some) (none :: none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (some padBit :: padding)) =
+      List.append ([].map some) (none :: some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) []) =
+      List.append ((bit :: rest).map some) (none :: []) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (none :: padding)) =
+      List.append ((bit :: rest).map some) (none :: none :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (some padBit :: padding)) =
+      List.append ((bit :: rest).map some)
+        (none :: some padBit :: padding) := by
+  exact
+    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_eq_paddingPreserving
+      (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap
     (bits : Word Bool) (padding : List (Option Bool)) :
     (Tape.cells
