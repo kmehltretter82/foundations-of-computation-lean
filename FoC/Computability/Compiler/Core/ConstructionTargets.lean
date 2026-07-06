@@ -622,6 +622,80 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShif
               attempt code out).mpr
               ⟨i.1, i.2.1, i.2.2, hcode, hout⟩)
 
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec_of_compiled
+    {attempt runner : MachineDescription}
+    (hrunner :
+      EncRewriters.RightShiftedOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+          attempt)
+        runner) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
+      attempt runner := by
+  constructor
+  · exact ⟨hrunner.left, hrunner.right.left⟩
+  constructor
+  · intro w limit fuel
+    let code :=
+      PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+        w limit fuel
+    let out :=
+      SimulatorLayout.encode
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+          attempt w limit fuel)
+    have htransform :
+        (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
+            attempt).transform code = some out := by
+      simpa [code, out] using
+        pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_encode
+          attempt w limit fuel
+    have houtput :
+        runner.HaltsWithOutput
+          (encodeCodeWordAsInput code)
+          (encodeCodeWordAsInput out) :=
+      (hrunner.right.right.left code out).mpr htransform
+    rcases houtput with ⟨n, hn⟩
+    let T :=
+      (runner.runConfig n
+        (runner.initial (encodeCodeWordAsInput code))).tape
+    have hTape :
+        runner.HaltsWithTape
+          (encodeCodeWordAsInput code) T := by
+      exact ⟨n, ⟨hn.left, rfl⟩⟩
+    rcases hrunner.right.right.right code T hTape with
+      ⟨actualOut, hactual, hT⟩
+    have hactualEq : actualOut = out := by
+      rw [htransform] at hactual
+      cases hactual
+      rfl
+    subst actualOut
+    rw [hT] at hTape
+    simpa [code, out,
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape]
+      using hTape
+  · intro code T hhalt
+    rcases hrunner.right.right.right code T hhalt with
+      ⟨out, htransform, hT⟩
+    rcases
+        (pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_iff
+          attempt code out).mp htransform with
+      ⟨w, limit, fuel, hcode, hout⟩
+    subst out
+    exact
+      ⟨w, limit, fuel, hcode, by
+        simpa [PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape]
+          using hT⟩
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_of_compiled
+    (h :
+      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction := by
+  intro attempt
+  rcases h attempt with ⟨runner, hrunner⟩
+  exact
+    ⟨runner,
+      pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec_of_compiled
+        hrunner⟩
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction) :

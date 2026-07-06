@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteScaffolds.Basic
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets
 
 set_option doc.verso true
 
@@ -15,6 +16,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
+open StructuredConstructionTargets
 
 /-!
 The last controller-loop leaves are composition machines rather than
@@ -377,9 +379,14 @@ protected/framed/witnessed controller-invocation contracts; it emits the
 controller layout with the simulated boolean-word result installed as
 normalized output.
 -/
+private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_finite_leaf :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :=
+  pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf
+
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData := by
-  sorry
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
+  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_structured
+    pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_finite_leaf
 
 /--
 Finite-machine leaf for witnessed controller stage-attempt invocation.  This is

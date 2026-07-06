@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerOutputLevelSimulator
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets
 
 set_option doc.verso true
 
@@ -14,14 +15,16 @@ namespace Computability
 
 open Languages
 open MachineDescription
+open StructuredConstructionTargets
+
+private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_structuredLeaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
-  intro runner hrunner
-  -- Remaining finite-table obligation: enumerate bounded `(limit, fuel)`
-  -- pairs, invoke the exact-fuel runner, preserve its encoded boolean-word
-  -- output, and halt one cell right of that output for classifier handoff.
-  sorry
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_of_structured
+    pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction :=

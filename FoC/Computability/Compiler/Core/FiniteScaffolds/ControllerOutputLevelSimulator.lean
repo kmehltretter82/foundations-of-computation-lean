@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets
 
 set_option doc.verso true
 
@@ -16,6 +17,7 @@ namespace Computability
 
 open Languages
 open MachineDescription
+open StructuredConstructionTargets
 
 theorem fixedDescriptionBoundedSimulatorCanonicalOutputTape_bridge
     (attempt : MachineDescription) (L : SimulatorLayout) :
@@ -223,30 +225,33 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         attempt w result limit fuel).mp (by
           simpa [L] using houtputTransform)
 
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf
+
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_structured
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_finite_leaf
+
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction := by
-  intro attempt
-  -- Remaining finite-table obligation: parse generated `(w, limit, fuel)`
-  -- inputs into simulator-layout code and halt one cell right of the emitted
-  -- canonical simulator-layout word.
-  sorry
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_of_compiled
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorGeneratedInputClosedHandoffConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction :=
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
-    (pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
-      pairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpecConstruction_finite_leaf)
+    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction := by
-  -- Remaining finite-table obligation: on halted simulator layouts, emit the
-  -- exact normalized code-word output tape and reject all other inputs.
-  sorry
+private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_finite_leaf :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction :=
+  pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_spec
-    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineSpecConstruction_finite_leaf
+  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
+    pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_finite_leaf
 
 private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=
