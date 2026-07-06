@@ -1888,6 +1888,59 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridge
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec
       initializer
 
+def selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape
+    (payload : List (Option Bool)) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (PairEncodedOptionCellCompactor.sourceTape payload)
+    (PairEncodedOptionCellCompactor.markerTape payload.length)
+    (PairEncodedOptionCellCompactor.outputTape [])
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall payload : List (Option Bool),
+      initializer.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload
+          payload)
+        (selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape
+          payload)
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+      initializer
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerNilSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    initializer.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload [])
+      (selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape [])
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConsSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall (cell : Option Bool) (payload : List (Option Bool)),
+      initializer.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload
+          (cell :: payload))
+        (selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape
+          (cell :: payload))
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec
+    (initializer : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerNilSpec
+      initializer ∧
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConsSpec
+      initializer
+
+def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec
+      initializer
+
 def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
     (initializer : MachineDescription) : Prop :=
   initializer.SubroutineReady ∧
@@ -1903,6 +1956,73 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterial
   exists initializer : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
       initializer
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_split
+    {initializer : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec
+        initializer) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+      initializer := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  refine ⟨hready, ?_⟩
+  intro payload
+  cases payload with
+  | nil =>
+      exact hnilRun
+  | cons cell payload =>
+      exact hconsRun cell payload
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction := by
+  rcases hsplit with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_split
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape_eq_payloadInputTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
+        bits padding =
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape
+        (selectedSegmentLogicalTapeDecoderPayloadCells bits padding) := by
+  simp [
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput0,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2,
+    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells_eq]
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec_of_payload
+    {initializer : MachineDescription}
+    (hmaterializer :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+        initializer) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec
+      initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourceTape_eq_fromPayload,
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape_eq_payloadInputTape] using
+    hrun (selectedSegmentLogicalTapeDecoderPayloadCells bits padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_of_payload
+    (hmaterializer :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec_of_payload
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeSpec_of_inputMaterializerSpec
     {initializer : MachineDescription}
@@ -2545,11 +2665,23 @@ split by the same nil/cons and padding-symbol cases used by the one-tape
 selected-footprint bridge; this keeps the exact cursor-positioning obligations
 separate from the endpoint composition glue.
 -/
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
+  -- Remaining finite-machine ingress: encode any old selected footprint payload
+  -- as the guarded three-tape input expected by the structured compactor.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_split
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core
+
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction := by
-  -- Remaining finite-machine ingress: encode the old selected footprint as
-  -- the guarded three-tape input expected by the structured compactor.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_of_payload
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction := by
