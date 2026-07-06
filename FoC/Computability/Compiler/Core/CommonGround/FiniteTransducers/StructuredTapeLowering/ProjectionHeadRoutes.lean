@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 
 set_option doc.verso true
@@ -533,6 +534,230 @@ def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction : Prop 
   exists cleanup : MachineDescription,
     SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec cleanup
 
+/--
+Logical source tape used by the guarded cell-shape cleanup bridge.
+
+The one-tape scanner endpoint is materialized as tape 0 of the structured
+three-tape backend.  Tape 1 is scratch space and tape 2 is the reconstructed
+guarded logical tape.
+-/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredSourceTape
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
+  selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+    (guardLogicalTape target) padding encodedPrefix
+
+/-- Structured three-tape input for the guarded cell-shape cleanup backend. -/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredInputTape
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredSourceTape
+      target padding encodedPrefix)
+    Tape.blank
+    Tape.blank
+
+/-- Index family for materializing guarded cell-shape cleanup inputs. -/
+abbrev SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressIndex :
+    Type :=
+  Tape Bool × (List (Option Bool) × List (Option Bool))
+
+/-- Source family for the generic structured input materializer ingress. -/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerSource
+    (input :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressIndex) :
+    Tape Bool :=
+  selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredSourceTape
+    input.1 input.2.1 input.2.2
+
+/-- Tape-2 output-buffer family for the generic structured input materializer ingress. -/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerOutput
+    (_input :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressIndex) :
+    Tape Bool :=
+  Tape.blank
+
+/-- Structured three-tape output for the guarded cell-shape cleanup backend. -/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredOutputTape
+    (target : Tape Bool) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    Tape.blank
+    Tape.blank
+    (guardLogicalTape target)
+
+/--
+Ingress bridge from the old one-tape scanner endpoint into the structured
+three-tape cleanup input.
+-/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec
+    (ingress : MachineDescription) : Prop :=
+  ingress.SubroutineReady ∧
+    forall (target : Tape Bool) (padding : List (Option Bool))
+      (encodedPrefix : List (Option Bool)),
+      ingress.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape
+          (guardLogicalTape target) padding encodedPrefix)
+        (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredInputTape
+          target padding encodedPrefix)
+
+/-- Existence wrapper for the guarded cell-shape cleanup ingress bridge. -/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction :
+    Prop :=
+  exists ingress : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec
+      ingress
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec_of_structured3InputMaterializerSpec
+    {materializer : MachineDescription}
+    (hmaterializer :
+      Structured3InputMaterializerSpec
+        selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerSource
+        selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerOutput
+        materializer) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec
+      materializer := by
+  constructor
+  · exact hmaterializer.left
+  · intro target padding encodedPrefix
+    have hrun :=
+      hmaterializer.right (target, (padding, encodedPrefix))
+    simpa [
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerSource,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerOutput,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredSourceTape,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredInputTape,
+      structured3InputMaterializerTargetTape] using hrun
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction_of_structured3InputMaterializerConstruction
+    (hmaterializer :
+      Structured3InputMaterializerConstruction
+        selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerSource
+        selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressMaterializerOutput) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  exact
+    ⟨materializer,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec_of_structured3InputMaterializerSpec
+        hmaterializerSpec⟩
+
+/--
+Structured three-tape normalizer for guarded decoder cell-shape streams.
+
+This is the main algorithmic leaf: tape 0 carries the padded decoded cell-shape
+stream, tape 1 is workspace, and tape 2 receives the guarded target tape.
+-/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerSpec
+    (normalizer : MachineDescription) : Prop :=
+  normalizer.SubroutineReady ∧
+    forall (target : Tape Bool) (padding : List (Option Bool))
+      (encodedPrefix : List (Option Bool)),
+      normalizer.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredInputTape
+          target padding encodedPrefix)
+        (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredOutputTape
+          target)
+
+/-- Existence wrapper for the guarded cell-shape cleanup three-tape normalizer. -/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerConstruction :
+    Prop :=
+  exists normalizer : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerSpec
+      normalizer
+
+/-- Egress bridge from the structured cleanup output back to the old target. -/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec
+    (egress : MachineDescription) : Prop :=
+  egress.SubroutineReady ∧
+    forall target : Tape Bool,
+      egress.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredOutputTape
+          target)
+        (guardLogicalTape target)
+
+/-- Existence wrapper for the guarded cell-shape cleanup egress bridge. -/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction :
+    Prop :=
+  exists egress : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec
+      egress
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec_of_tape2ProjectorSpec
+    {projector : MachineDescription}
+    (hprojector : StructuredTape2ProjectorSpec projector) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec
+      projector := by
+  constructor
+  · exact hprojector.left
+  · intro target
+    simpa [
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupStructuredOutputTape] using
+      hprojector.right Tape.blank Tape.blank (guardLogicalTape target)
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction_of_tape2ProjectorConstruction
+    (hprojector : StructuredTape2ProjectorConstruction) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction := by
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  exact
+    ⟨projector,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec_of_tape2ProjectorSpec
+        hprojectorSpec⟩
+
+/-- Bundled existence wrapper for the guarded cell-shape cleanup endpoint bridge. -/
+def SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeConstruction :
+    Prop :=
+  exists ingress normalizer egress : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec
+      ingress ∧
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerSpec
+      normalizer ∧
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec
+      egress
+
+/-- Description assembled from ingress, structured normalizer, and egress. -/
+def selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription
+    (ingress normalizer egress : MachineDescription) :
+    MachineDescription :=
+  structured3EndpointBridgeDescription
+    ingress normalizer egress
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription_spec
+    {ingress normalizer egress : MachineDescription}
+    (hingress :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeSpec
+        ingress)
+    (hnormalizer :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerSpec
+        normalizer)
+    (hegress :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeSpec
+        egress) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec
+      (selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription
+        ingress normalizer egress) := by
+  constructor
+  · exact
+      structured3EndpointBridgeDescription_subroutineReady
+        hingress.left hnormalizer.left hegress.left
+  · intro target padding encodedPrefix
+    simpa [selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription] using
+      structured3EndpointBridgeDescription_haltsFromTapeEquiv
+        hingress.left hnormalizer.left hegress.left
+        (hingress.right target padding encodedPrefix)
+        (hnormalizer.right target padding encodedPrefix)
+        (hegress.right target)
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction_of_threeTapeBridgeConstruction
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction := by
+  rcases hbridge with
+    ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription
+        ingress normalizer egress,
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeDescription_spec
+        hingress hnormalizer hegress⟩
+
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec
     (cleanup : MachineDescription) : Prop :=
   cleanup.SubroutineReady ∧
@@ -807,13 +1032,43 @@ theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_iff_split :
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
 
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction := by
+  -- Materialize the guarded decoder cell-shape scanner endpoint as tape 0 of
+  -- the structured three-tape cleanup input.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerConstruction_core :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerConstruction := by
+  -- Main structured backend: parse the decoded option-cell stream on tape 0,
+  -- use tape 1 as marker/work space, and rebuild `guardLogicalTape target` on
+  -- tape 2 while ignoring stale prefix cells and arbitrary right padding.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction := by
+  -- Project tape 2 from the structured cleanup output back to the one-tape
+  -- guarded endpoint expected by the existing cleanup contract.
+  sorry
+
+theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeConstruction := by
+  rcases
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupIngressBridgeConstruction_core with
+    ⟨ingress, hingress⟩
+  rcases
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeNormalizerConstruction_core with
+    ⟨normalizer, hnormalizer⟩
+  rcases
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupEgressBridgeConstruction_core with
+    ⟨egress, hegress⟩
+  exact ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
+
 theorem selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction_core :
     SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction := by
-  -- Remaining reusable finite-machine cleanup for the guarded logical-tape
-  -- decoder cell shape.  The leaf is independent of selected-footprint
-  -- routing, but it only has to handle inputs produced from
-  -- `guardLogicalTape target`, not arbitrary logical tapes.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction_of_threeTapeBridgeConstruction
+      selectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupThreeTapeBridgeConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction := by
