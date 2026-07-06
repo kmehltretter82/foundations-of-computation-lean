@@ -133,6 +133,63 @@ theorem decodedDescriptionInterpreterRun_eq_some_shape
             exact ⟨fuel, D, input, hdecode⟩
           · simp [hstage, hprefix, hhalts] at h
 
+theorem decodedDescriptionInterpreterRun_eq_some_iff
+    (tokens output : Word MachineCodeSymbol) :
+    decodedDescriptionInterpreterRun tokens = some output <->
+      exists fuel : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+          some (fuel,
+            List.append (MachineDescription.encodeDescription D) input) /\
+          output = ([] : Word MachineCodeSymbol) /\
+          D.HaltsIn fuel
+            (MachineDescription.encodeCodeWordAsInput input) := by
+  constructor
+  · intro h
+    unfold decodedDescriptionInterpreterRun at h
+    cases hstage : MachineDescription.decodeNat tokens with
+    | none =>
+        simp [hstage] at h
+    | some decodedStage =>
+        rcases decodedStage with ⟨fuel, encoded⟩
+        cases hprefix :
+            MachineDescription.decodeDescriptionPrefix encoded with
+        | none =>
+            simp [hstage, hprefix] at h
+        | some decodedPrefix =>
+            rcases decodedPrefix with ⟨D, input⟩
+            by_cases hhalts :
+                D.HaltsIn fuel
+                  (MachineDescription.encodeCodeWordAsInput input)
+            · have houtput :
+                  output = ([] : Word MachineCodeSymbol) :=
+                decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some h
+              have hencoded :
+                  encoded =
+                    List.append
+                      (MachineDescription.encodeDescription D) input :=
+                MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
+                  hprefix
+              have hdecode :
+                  some (fuel, encoded) =
+                    some (fuel,
+                      List.append
+                        (MachineDescription.encodeDescription D) input) := by
+                subst encoded
+                rfl
+              exact ⟨fuel, D, input, hdecode, houtput, hhalts⟩
+            · simp [hstage, hprefix, hhalts] at h
+  · intro h
+    rcases h with
+      ⟨fuel, D, input, hdecode, houtput, hhalts⟩
+    subst output
+    unfold decodedDescriptionInterpreterRun
+    rw [hdecode]
+    simp only
+    rw [MachineDescription.decodeDescriptionPrefix_encodeDescription_append]
+    simp [hhalts]
+
 /--
 Exact-output primitive boundary for the uniform decoded-description
 interpreter.  This is the backend target: one finite machine parses the outer
@@ -164,6 +221,139 @@ theorem decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finStat
     DecodedDescriptionInterpreterExactOutputPrimitiveConstruction := by
   rcases hfin with ⟨n, runner, hexact, hcanonical, hstop⟩
   exact ⟨Fin n, runner, hexact, hcanonical, hstop⟩
+
+def DecodedDescriptionInterpreterDecodedExactOutputForwardSpec
+    (runner : TuringMachine MachineCodeSymbol runnerState) : Prop :=
+  forall D : MachineDescription,
+  forall input : Word MachineCodeSymbol,
+  forall fuel : Nat,
+    TuringMachine.HaltsWithExactOutput runner
+        (GeneratedCode.stageCode
+          (List.append (MachineDescription.encodeDescription D) input)
+          fuel)
+        ([] : Word MachineCodeSymbol) <->
+      D.HaltsIn fuel
+        (MachineDescription.encodeCodeWordAsInput input)
+
+def DecodedDescriptionInterpreterDecodedExactOutputClosedSpec
+    (runner : TuringMachine MachineCodeSymbol runnerState) : Prop :=
+  forall tokens output : Word MachineCodeSymbol,
+    TuringMachine.HaltsWithExactOutput runner tokens output ->
+      exists fuel : Nat,
+      exists D : MachineDescription,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+          some (fuel,
+            List.append (MachineDescription.encodeDescription D) input) /\
+          output = ([] : Word MachineCodeSymbol) /\
+          D.HaltsIn fuel
+            (MachineDescription.encodeCodeWordAsInput input)
+
+def DecodedDescriptionInterpreterDecodedExactOutputSpec
+    (runner : TuringMachine MachineCodeSymbol runnerState) : Prop :=
+  DecodedDescriptionInterpreterDecodedExactOutputForwardSpec runner ∧
+    DecodedDescriptionInterpreterDecodedExactOutputClosedSpec runner
+
+def DecodedDescriptionInterpreterDecodedExactOutputPrimitiveConstruction :
+    Prop :=
+  exists state : Type,
+  exists runner : TuringMachine MachineCodeSymbol state,
+    DecodedDescriptionInterpreterDecodedExactOutputSpec runner ∧
+      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
+        runner decodedDescriptionInterpreterRun ∧
+      TuringMachine.HaltingTransitionsDisabled runner
+
+def DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction :
+    Prop :=
+  exists n : Nat,
+  exists runner : TuringMachine MachineCodeSymbol (Fin n),
+    DecodedDescriptionInterpreterDecodedExactOutputSpec runner ∧
+      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
+        runner decodedDescriptionInterpreterRun ∧
+      TuringMachine.HaltingTransitionsDisabled runner
+
+theorem decodedDescriptionInterpreterExactOutputSpec_iff_decoded
+    (runner : TuringMachine MachineCodeSymbol runnerState) :
+    FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
+        runner decodedDescriptionInterpreterRun <->
+      DecodedDescriptionInterpreterDecodedExactOutputSpec runner := by
+  constructor
+  · intro hexact
+    constructor
+    · intro D input fuel
+      exact Iff.trans
+        (hexact
+          (GeneratedCode.stageCode
+            (List.append (MachineDescription.encodeDescription D) input)
+            fuel)
+          ([] : Word MachineCodeSymbol))
+        (decodedDescriptionInterpreterRun_stageCode_eq_some_iff
+          D input fuel)
+    · intro tokens output hhalt
+      exact
+        (decodedDescriptionInterpreterRun_eq_some_iff
+          tokens output).mp
+          ((hexact tokens output).mp hhalt)
+  · intro hdecoded
+    intro tokens output
+    constructor
+    · intro hhalt
+      exact
+        (decodedDescriptionInterpreterRun_eq_some_iff
+          tokens output).mpr
+          (hdecoded.right tokens output hhalt)
+    · intro hrun
+      rcases
+          (decodedDescriptionInterpreterRun_eq_some_iff
+            tokens output).mp hrun with
+        ⟨fuel, D, input, hdecode, houtput, hhalts⟩
+      have htokens :
+          tokens =
+            GeneratedCode.stageCode
+              (List.append (MachineDescription.encodeDescription D) input)
+              fuel :=
+        GeneratedCode.stageCode_eq_of_decodeNat hdecode
+      subst output
+      rw [htokens]
+      exact (hdecoded.left D input fuel).mpr hhalts
+
+theorem decodedDescriptionInterpreterExactOutputPrimitiveConstruction_iff_decoded :
+    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction <->
+      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveConstruction := by
+  constructor
+  · intro hprimitive
+    rcases hprimitive with
+      ⟨state, runner, hexact, hcanonical, hstop⟩
+    refine ⟨state, runner, ?_, hcanonical, hstop⟩
+    exact
+      (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
+        runner).mp hexact
+  · intro hdecoded
+    rcases hdecoded with
+      ⟨state, runner, hspec, hcanonical, hstop⟩
+    refine ⟨state, runner, ?_, hcanonical, hstop⟩
+    exact
+      (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
+        runner).mpr hspec
+
+theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded :
+    DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction <->
+      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction := by
+  constructor
+  · intro hprimitive
+    rcases hprimitive with
+      ⟨n, runner, hexact, hcanonical, hstop⟩
+    refine ⟨n, runner, ?_, hcanonical, hstop⟩
+    exact
+      (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
+        runner).mp hexact
+  · intro hdecoded
+    rcases hdecoded with
+      ⟨n, runner, hspec, hcanonical, hstop⟩
+    refine ⟨n, runner, ?_, hcanonical, hstop⟩
+    exact
+      (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
+        runner).mpr hspec
 
 /--
 Canonical generated-input behavior for the uniform decoded-description
@@ -438,12 +628,22 @@ theorem decodedDescriptionInterpreterConstruction_iff_finState :
   · exact decodedDescriptionInterpreterConstruction_of_finState
 
 /--
-Remaining concrete finite-state exact-output primitive leaf for the uniform
-decoded-description interpreter.
+Remaining concrete finite-state decoded exact-output primitive leaf for the
+uniform decoded-description interpreter.
+-/
+theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf :
+    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction := by
+  sorry
+
+/--
+Compatibility exact-output primitive leaf for the uniform decoded-description
+interpreter, derived from the decoded exact-output target above.
 -/
 theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf :
     DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction := by
-  sorry
+  exact
+    decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded.mpr
+      decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf
 
 /--
 Exact-output primitive construction for the uniform decoded-description
