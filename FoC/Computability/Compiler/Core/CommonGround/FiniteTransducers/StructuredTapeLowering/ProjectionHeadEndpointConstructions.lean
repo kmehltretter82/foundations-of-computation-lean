@@ -23,17 +23,31 @@ namespace FiniteTransducers
 namespace Structured
 namespace MultiTapeLowering
 
+theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConstruction_core :
+    Structured3InputMaterializerConstruction
+      selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
+      selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput := by
+  -- Generic endpoint materializer: wrap the current one-tape source as tape 0
+  -- of a guarded three-tape encoding, with blank scratch/output tapes.
+  sorry
+
+theorem structuredTape2ProjectorStandaloneConstruction_core :
+    StructuredTape2ProjectorConstruction := by
+  -- Generic endpoint projector: seek the third guarded structured segment and
+  -- decode it back to the represented logical tape.
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
-  -- Materialize the raw selected-head endpoint as tape 0 of the structured
-  -- three-tape decoder input before the FST scanner erases head-marker bits.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_of_structured3InputMaterializerConstruction
+      selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction := by
-  -- Project tape 2 from the structured raw-head output back to the target
-  -- one-tape endpoint.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_of_tape2ProjectorConstruction
+      structuredTape2ProjectorStandaloneConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction := by
@@ -65,8 +79,7 @@ theorem structuredTape2SegmentNormalizerConstruction_core :
 
 theorem structuredTape2ProjectorConstruction_core :
     StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
-    structuredTape2SegmentNormalizerConstruction_core
+  structuredTape2ProjectorStandaloneConstruction_core
 
 end MultiTapeLowering
 end Structured
