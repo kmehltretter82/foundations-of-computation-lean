@@ -1994,6 +1994,349 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_i
   · exact
       structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_of_initializer
 
+/--
+Public source family for an indexed raw-bits decoder materializer.
+
+The index couples the raw bits, the caller suffix, and the physical source
+right padding.  It deliberately does not quantify over arbitrary output padding
+for a fixed source tape.
+-/
+def structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding : ι -> List (Option Bool))
+    (input : ι) : Tape Bool :=
+  boolWordRawBitsDecoderSourceTape
+    (bits input) (suffixTail input) (rightPadding input)
+
+/--
+Tape-2 output-buffer family for an indexed raw-bits decoder materializer.
+-/
+def structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+    {ι : Type}
+    (bits : ι -> Word Bool)
+    (outputPadding : ι -> List (Option Bool))
+    (input : ι) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+    (bits input).length (outputPadding input)
+
+/--
+Named physical structured target for an indexed raw-bits decoder materializer.
+-/
+def structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (input : ι) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderInputInitializerTargetTape
+    (bits input) (suffixTail input)
+    (rightPadding input) (outputPadding input)
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_eq_materializerTargetTape
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (input : ι) :
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+        bits suffixTail rightPadding outputPadding input =
+      structured3InputMaterializerTargetTape
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+          bits suffixTail rightPadding input)
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+          bits outputPadding input) := by
+  rfl
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_read
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (input : ι) :
+    Tape.read
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+          bits suffixTail rightPadding outputPadding input) =
+      none := by
+  rfl
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_cells
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (input : ι) :
+    Tape.cells
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+          bits suffixTail rightPadding outputPadding input) =
+      Tape.cells
+        (structured3InputMaterializerTargetTape
+          (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+            bits suffixTail rightPadding input)
+          (structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+            bits outputPadding input)) := by
+  rw [
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_eq_materializerTargetTape]
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_normalizedOutput
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (input : ι) :
+    Tape.normalizedOutput
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+          bits suffixTail rightPadding outputPadding input) =
+      Tape.normalizedOutput
+        (structured3InputMaterializerTargetTape
+          (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+            bits suffixTail rightPadding input)
+          (structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+            bits outputPadding input)) := by
+  rw [
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape_eq_materializerTargetTape]
+
+/--
+Initializer-style view for an indexed raw-bits decoder materializer.
+-/
+def StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall input : ι,
+      initializer.HaltsFromTapeEquiv
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+          bits suffixTail rightPadding input)
+        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
+          bits suffixTail rightPadding outputPadding input)
+
+def StructuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool)) :
+    Prop :=
+  exists initializer : MachineDescription,
+    StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec
+      bits suffixTail rightPadding outputPadding initializer
+
+/--
+Structured-input-materializer view for the same indexed raw-bits decoder
+target family.
+-/
+def StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (initializer : MachineDescription) : Prop :=
+  Structured3InputMaterializerSpec
+    (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+      bits suffixTail rightPadding)
+    (structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+      bits outputPadding)
+    initializer
+
+def StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool)) :
+    Prop :=
+  Structured3InputMaterializerConstruction
+    (structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
+      bits suffixTail rightPadding)
+    (structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
+      bits outputPadding)
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputInitializerSpec_of_materializerSpec
+    {ι : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+        bits suffixTail rightPadding outputPadding initializer) :
+    StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec
+      bits suffixTail rightPadding outputPadding initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro input
+  simpa [
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec,
+    StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape,
+    structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
+    structured3InputMaterializerTargetTape] using
+    hrun input
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_of_initializerSpec
+    {ι : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec
+        bits suffixTail rightPadding outputPadding initializer) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+      bits suffixTail rightPadding outputPadding initializer := by
+  rcases hinitializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro input
+  simpa [
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec,
+    StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape,
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape,
+    structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
+    structured3InputMaterializerTargetTape] using
+    hrun input
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_iff_initializerSpec
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool))
+    (initializer : MachineDescription) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+        bits suffixTail rightPadding outputPadding initializer ↔
+      StructuredBoolWordRawBitsDecoderIndexedInputInitializerSpec
+        bits suffixTail rightPadding outputPadding initializer := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderIndexedInputInitializerSpec_of_materializerSpec
+  · exact
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_of_initializerSpec
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction_of_materializer
+    {ι : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+        bits suffixTail rightPadding outputPadding) :
+    StructuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction
+      bits suffixTail rightPadding outputPadding := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderIndexedInputInitializerSpec_of_materializerSpec
+        hspec⟩
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_of_initializer
+    {ι : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction
+        bits suffixTail rightPadding outputPadding) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+      bits suffixTail rightPadding outputPadding := by
+  rcases hinitializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_of_initializerSpec
+        hspec⟩
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_iff_initializerConstruction
+    {ι : Type}
+    (bits suffixTail : ι -> Word Bool)
+    (rightPadding outputPadding : ι -> List (Option Bool)) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+        bits suffixTail rightPadding outputPadding ↔
+      StructuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction
+        bits suffixTail rightPadding outputPadding := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderIndexedInputInitializerConstruction_of_materializer
+  · exact
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_of_initializer
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_of_eq
+    {ι : Type}
+    {bits suffixTail bits' suffixTail' : ι -> Word Bool}
+    {rightPadding outputPadding rightPadding' outputPadding' :
+      ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+        bits suffixTail rightPadding outputPadding initializer)
+    (hbits : forall input : ι, bits' input = bits input)
+    (hsuffixTail :
+      forall input : ι, suffixTail' input = suffixTail input)
+    (hrightPadding :
+      forall input : ι, rightPadding' input = rightPadding input)
+    (houtputPadding :
+      forall input : ι, outputPadding' input = outputPadding input) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+      bits' suffixTail' rightPadding' outputPadding' initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro input
+  simpa [
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec,
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape,
+      hbits input, hsuffixTail input, hrightPadding input,
+      houtputPadding input] using
+    hrun input
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_of_eq
+    {ι : Type}
+    {bits suffixTail bits' suffixTail' : ι -> Word Bool}
+    {rightPadding outputPadding rightPadding' outputPadding' :
+      ι -> List (Option Bool)}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+        bits suffixTail rightPadding outputPadding)
+    (hbits : forall input : ι, bits' input = bits input)
+    (hsuffixTail :
+      forall input : ι, suffixTail' input = suffixTail input)
+    (hrightPadding :
+      forall input : ι, rightPadding' input = rightPadding input)
+    (houtputPadding :
+      forall input : ι, outputPadding' input = outputPadding input) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+      bits' suffixTail' rightPadding' outputPadding' := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_of_eq
+        hspec hbits hsuffixTail hrightPadding houtputPadding⟩
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_reindex
+    {ι κ : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+        bits suffixTail rightPadding outputPadding initializer)
+    (index : κ -> ι) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec
+      (fun input : κ => bits (index input))
+      (fun input : κ => suffixTail (index input))
+      (fun input : κ => rightPadding (index input))
+      (fun input : κ => outputPadding (index input))
+      initializer := by
+  rcases hmaterializer with ⟨hready, hrun⟩
+  exact ⟨hready, fun input => hrun (index input)⟩
+
+theorem structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_reindex
+    {ι κ : Type}
+    {bits suffixTail : ι -> Word Bool}
+    {rightPadding outputPadding : ι -> List (Option Bool)}
+    (hmaterializer :
+      StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+        bits suffixTail rightPadding outputPadding)
+    (index : κ -> ι) :
+    StructuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction
+      (fun input : κ => bits (index input))
+      (fun input : κ => suffixTail (index input))
+      (fun input : κ => rightPadding (index input))
+      (fun input : κ => outputPadding (index input)) := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSpec_reindex
+        hspec index⟩
+
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
   Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription
