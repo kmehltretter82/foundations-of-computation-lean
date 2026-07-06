@@ -83,6 +83,68 @@ theorem Structured3EndpointWrapper.machine_subroutineReady
       W.projectorSubroutineReady
 
 /--
+General forward endpoint composition for a packaged structured core, stated up
+to tape equivalence.
+-/
+theorem Structured3EndpointWrapper.haltsFromTapeEquivGeneral
+    (W : Structured3EndpointWrapper)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerRun :
+      W.initializer.HaltsFromTapeEquiv Tin Tinit)
+    (hloweredRun :
+      W.lowered.HaltsFromTapeEquiv Tinit Tlowered)
+    (hprojectorRun :
+      W.projector.HaltsFromTapeEquiv Tlowered Tout) :
+    W.machine.HaltsFromTapeEquiv Tin Tout := by
+  have hfirst :
+      (canonicalPrimitiveSeqDescription W.initializer W.lowered)
+          |>.HaltsFromTapeEquiv Tin Tlowered :=
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      W.initializerSubroutineReady
+      W.lowered_subroutineReady
+      hinitializerRun
+      hloweredRun
+  simpa [Structured3EndpointWrapper.machine] using
+    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        W.initializerSubroutineReady
+        W.lowered_subroutineReady)
+      W.projectorSubroutineReady
+      hfirst
+      hprojectorRun
+
+/--
+General closed endpoint composition for a packaged structured core, stated up
+to tape equivalence.
+-/
+theorem Structured3EndpointWrapper.closedFromTapeEquivGeneral
+    (W : Structured3EndpointWrapper)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerClosed :
+      W.initializer.ClosedFromTapeEquiv Tin Tinit)
+    (hloweredClosed :
+      W.lowered.ClosedFromTapeEquiv Tinit Tlowered)
+    (hprojectorClosed :
+      W.projector.ClosedFromTapeEquiv Tlowered Tout) :
+    W.machine.ClosedFromTapeEquiv Tin Tout := by
+  have hfirst :
+      (canonicalPrimitiveSeqDescription W.initializer W.lowered)
+          |>.ClosedFromTapeEquiv Tin Tlowered :=
+    canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+      W.initializerSubroutineReady
+      W.lowered_subroutineReady
+      hinitializerClosed
+      hloweredClosed
+  simpa [Structured3EndpointWrapper.machine] using
+    canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        W.initializerSubroutineReady
+        W.lowered_subroutineReady)
+      W.projectorSubroutineReady
+      hfirst
+      hprojectorClosed
+
+/--
 Forward endpoint composition for a packaged structured core.
 
 This is the wrapper-level form of
@@ -103,11 +165,8 @@ theorem Structured3EndpointWrapper.haltsFromTapeEquiv
         (encodedGuardedStructured3Tapes U0 U1 U2)
         Tout) :
     W.machine.HaltsFromTapeEquiv Tin Tout := by
-  simpa [Structured3EndpointWrapper.machine] using
-    structured3EndpointBridgeDescription_haltsFromTapeEquiv
-      W.initializerSubroutineReady
-      W.lowered_subroutineReady
-      W.projectorSubroutineReady
+  exact
+    W.haltsFromTapeEquivGeneral
       hinitializerRun
       hloweredRun
       hprojectorRun
@@ -133,14 +192,231 @@ theorem Structured3EndpointWrapper.closedFromTapeEquiv
         (encodedGuardedStructured3Tapes U0 U1 U2)
         Tout) :
     W.machine.ClosedFromTapeEquiv Tin Tout := by
+  exact
+    W.closedFromTapeEquivGeneral
+      hinitializerClosed
+      hloweredClosed
+      hprojectorClosed
+
+/--
+Exact forward endpoint composition for a packaged structured core.
+
+The lowered core and projector hypotheses are stated on the exact bounced
+handoff tapes produced by {name}`canonicalPrimitiveSeqDescription`.
+-/
+theorem Structured3EndpointWrapper.haltsFromTape
+    (W : Structured3EndpointWrapper)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerRun :
+      W.initializer.HaltsFromTape Tin Tinit)
+    (hloweredRun :
+      W.lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape Tinit)
+        Tlowered)
+    (hprojectorRun :
+      W.projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape Tlowered)
+        Tout) :
+    W.machine.HaltsFromTape Tin Tout := by
   simpa [Structured3EndpointWrapper.machine] using
-    structured3EndpointBridgeDescription_closedFromTapeEquiv
+    structured3EndpointBridgeDescription_haltsFromTape
+      W.initializerSubroutineReady
+      W.lowered_subroutineReady
+      W.projectorSubroutineReady
+      hinitializerRun
+      hloweredRun
+      hprojectorRun
+
+/--
+Exact closed endpoint composition for a packaged structured core.
+
+This is the wrapper-level form of
+{name}`structured3EndpointBridgeDescription_exactClosedFromTape`.
+-/
+theorem Structured3EndpointWrapper.exactClosedFromTape
+    (W : Structured3EndpointWrapper)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerClosed :
+      ExactClosedFromTape W.initializer Tin Tinit)
+    (hloweredClosed :
+      ExactClosedFromTape W.lowered
+        (canonicalPrimitiveSeqHandoffTape Tinit)
+        Tlowered)
+    (hprojectorClosed :
+      ExactClosedFromTape W.projector
+        (canonicalPrimitiveSeqHandoffTape Tlowered)
+        Tout) :
+    ExactClosedFromTape W.machine Tin Tout := by
+  simpa [Structured3EndpointWrapper.machine] using
+    structured3EndpointBridgeDescription_exactClosedFromTape
       W.initializerSubroutineReady
       W.lowered_subroutineReady
       W.projectorSubroutineReady
       hinitializerClosed
       hloweredClosed
       hprojectorClosed
+
+/--
+Endpoint-family data for public contracts that are only defined up to
+{name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`.
+
+The middle tapes are the logical endpoint tapes, not the exact bounced handoff
+tapes; the canonical endpoint bridge handles the handoff equivalence.
+-/
+structure Structured3EndpointEquivFamilySpec
+    {ι : Type} (W : Structured3EndpointWrapper)
+    (input initialized lowered output : ι -> Tape Bool) : Prop where
+  initializerForward :
+    forall i : ι,
+      W.initializer.HaltsFromTapeEquiv (input i) (initialized i)
+  loweredForward :
+    forall i : ι,
+      W.lowered.HaltsFromTapeEquiv (initialized i) (lowered i)
+  projectorForward :
+    forall i : ι,
+      W.projector.HaltsFromTapeEquiv (lowered i) (output i)
+  initializerClosed :
+    forall i : ι,
+      W.initializer.ClosedFromTapeEquiv (input i) (initialized i)
+  loweredClosed :
+    forall i : ι,
+      W.lowered.ClosedFromTapeEquiv (initialized i) (lowered i)
+  projectorClosed :
+    forall i : ι,
+      W.projector.ClosedFromTapeEquiv (lowered i) (output i)
+
+namespace Structured3EndpointEquivFamilySpec
+
+theorem forward
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.HaltsFromTapeEquiv (input i) (output i) :=
+  W.haltsFromTapeEquivGeneral
+    (hspec.initializerForward i)
+    (hspec.loweredForward i)
+    (hspec.projectorForward i)
+
+theorem closed
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.ClosedFromTapeEquiv (input i) (output i) :=
+  W.closedFromTapeEquivGeneral
+    (hspec.initializerClosed i)
+    (hspec.loweredClosed i)
+    (hspec.projectorClosed i)
+
+theorem haltsFromTapeWithOutput
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.HaltsFromTapeWithOutput
+      (input i) (Tape.normalizedOutput (output i)) :=
+  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+    (forward hspec i)
+
+end Structured3EndpointEquivFamilySpec
+
+/--
+Endpoint-family data for public contracts that require exact final tapes.
+
+The lowered core and projector are specified on
+{name}`canonicalPrimitiveSeqHandoffTape`, because that is the literal tape
+passed by the canonical wrapper.
+-/
+structure Structured3EndpointExactFamilySpec
+    {ι : Type} (W : Structured3EndpointWrapper)
+    (input initialized lowered output : ι -> Tape Bool) : Prop where
+  initializerForward :
+    forall i : ι,
+      W.initializer.HaltsFromTape (input i) (initialized i)
+  loweredForward :
+    forall i : ι,
+      W.lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape (initialized i))
+        (lowered i)
+  projectorForward :
+    forall i : ι,
+      W.projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape (lowered i))
+        (output i)
+  initializerClosed :
+    forall i : ι,
+      ExactClosedFromTape W.initializer
+        (input i) (initialized i)
+  loweredClosed :
+    forall i : ι,
+      ExactClosedFromTape W.lowered
+        (canonicalPrimitiveSeqHandoffTape (initialized i))
+        (lowered i)
+  projectorClosed :
+    forall i : ι,
+      ExactClosedFromTape W.projector
+        (canonicalPrimitiveSeqHandoffTape (lowered i))
+        (output i)
+
+namespace Structured3EndpointExactFamilySpec
+
+theorem forward
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.HaltsFromTape (input i) (output i) :=
+  W.haltsFromTape
+    (hspec.initializerForward i)
+    (hspec.loweredForward i)
+    (hspec.projectorForward i)
+
+theorem closed
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    ExactClosedFromTape W.machine (input i) (output i) :=
+  W.exactClosedFromTape
+    (hspec.initializerClosed i)
+    (hspec.loweredClosed i)
+    (hspec.projectorClosed i)
+
+theorem closed_eq
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactFamilySpec
+        W input initialized lowered output)
+    (i : ι) {T : Tape Bool}
+    (hhalt : W.machine.HaltsFromTape (input i) T) :
+    T = output i :=
+  closed hspec i T hhalt
+
+theorem closed_equiv
+    {ι : Type} {W : Structured3EndpointWrapper}
+    {input initialized lowered output : ι -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactFamilySpec
+        W input initialized lowered output)
+    (i : ι) :
+    W.machine.ClosedFromTapeEquiv (input i) (output i) := by
+  intro T hhalt
+  rw [closed_eq hspec i hhalt]
+  exact Tape.Equiv.refl (output i)
+
+end Structured3EndpointExactFamilySpec
 
 /--
 Generic public target shape for structured-core endpoint wrappers.

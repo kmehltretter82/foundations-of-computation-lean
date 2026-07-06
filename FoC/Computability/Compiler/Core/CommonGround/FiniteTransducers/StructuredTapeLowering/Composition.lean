@@ -88,6 +88,30 @@ private theorem moveLeft_moveRight_equiv_self
       simp [Tape.Equiv, Tape.move, Tape.moveLeft, Tape.moveRight]
       cases right <;> simp [Tape.dropTrailingNone]
 
+/--
+The exact tape handed to the next component by
+{name}`canonicalPrimitiveSeqDescription`.
+
+It is equivalent to the previous component's output, but not generally equal
+to it; exact-output contracts must specify the receiving component on this
+tape, not merely on the equivalent unbounced tape.
+-/
+def canonicalPrimitiveSeqHandoffTape (T : Tape Bool) : Tape Bool :=
+  Tape.move Direction.left (Tape.move Direction.right T)
+
+/--
+Exact closedness from a concrete input tape to a concrete output tape.
+
+This is stronger than
+{name (full := FoC.Computability.MachineDescription.ClosedFromTapeEquiv)}`MachineDescription.ClosedFromTapeEquiv`
+and is only suitable when the final tape shape, including trailing blanks and
+head position, is part of the public contract.
+-/
+def ExactClosedFromTape
+    (D : MachineDescription) (Tin Tout : Tape Bool) : Prop :=
+  forall T : Tape Bool,
+    D.HaltsFromTape Tin T -> T = Tout
+
 theorem canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -111,6 +135,20 @@ theorem canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
       CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
       (seqSubroutine_subroutineReady hA hid)
       hB hAid rfl hBhalts
+
+theorem canonicalPrimitiveSeqDescription_haltsFromTape_exact
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hBhalts :
+      B.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape Tmid)
+        Tout) :
+    (canonicalPrimitiveSeqDescription A B).HaltsFromTape Tin Tout := by
+  simpa [canonicalPrimitiveSeqHandoffTape] using
+    canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
+      hA hB hAhalts hBhalts
 
 /--
 Run a canonical primitive sequence whose right-hand component reaches an
@@ -247,6 +285,28 @@ theorem canonicalPrimitiveSeqDescription_haltsFromTape_inv
     ⟨Tmid, hARun, by
       simpa [hTafterId] using hBRun⟩
 
+theorem canonicalPrimitiveSeqDescription_exactClosedFromTape
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tout : Tape Bool}
+    (hAclosed : ExactClosedFromTape A Tin Tmid)
+    (hBclosed :
+      ExactClosedFromTape B
+        (canonicalPrimitiveSeqHandoffTape Tmid)
+        Tout) :
+    ExactClosedFromTape
+      (canonicalPrimitiveSeqDescription A B) Tin Tout := by
+  intro T hhalt
+  rcases
+      canonicalPrimitiveSeqDescription_haltsFromTape_inv
+        hA hB hhalt with
+    ⟨TmidActual, hAactual, hBactual⟩
+  have hmid : TmidActual = Tmid :=
+    hAclosed TmidActual hAactual
+  subst TmidActual
+  exact hBclosed T (by
+    simpa [canonicalPrimitiveSeqHandoffTape] using hBactual)
+
 theorem canonicalPrimitiveSeqDescription_closedFromTapeEquiv
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -357,6 +417,42 @@ theorem structured3EndpointBridgeDescription_haltsFromTapeEquiv
       hfirst hprojectorRun
 
 /--
+Exact forward endpoint composition for a lowered structured core.
+
+The middle and final components are stated on the exact handoff tapes produced
+by the canonical sequence.
+-/
+theorem structured3EndpointBridgeDescription_haltsFromTape
+    {initializer lowered projector : MachineDescription}
+    (hinitializer : initializer.SubroutineReady)
+    (hlowered : lowered.SubroutineReady)
+    (hprojector : projector.SubroutineReady)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerRun :
+      initializer.HaltsFromTape Tin Tinit)
+    (hloweredRun :
+      lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape Tinit)
+        Tlowered)
+    (hprojectorRun :
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape Tlowered)
+        Tout) :
+    (structured3EndpointBridgeDescription
+      initializer lowered projector).HaltsFromTape Tin Tout := by
+  have hfirst :
+      (canonicalPrimitiveSeqDescription initializer lowered)
+          |>.HaltsFromTape Tin Tlowered :=
+    canonicalPrimitiveSeqDescription_haltsFromTape_exact
+      hinitializer hlowered hinitializerRun hloweredRun
+  exact
+    canonicalPrimitiveSeqDescription_haltsFromTape_exact
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        hinitializer hlowered)
+      hprojector
+      hfirst hprojectorRun
+
+/--
 Closed-side endpoint composition for a lowered structured core.
 
 Any public halt of the wrapper must pass through the initializer, lowered core,
@@ -390,6 +486,45 @@ theorem structured3EndpointBridgeDescription_closedFromTapeEquiv
       hinitializer hlowered hinitializerClosed hloweredClosed
   exact
     canonicalPrimitiveSeqDescription_closedFromTapeEquiv
+      (canonicalPrimitiveSeqDescription_subroutineReady
+        hinitializer hlowered)
+      hprojector
+      hfirst hprojectorClosed
+
+/--
+Exact closed-side endpoint composition for a lowered structured core.
+
+Use this only for public contracts that require a literal final tape, such as
+right-shifted handoff specs.  Equivalence-based contracts should use
+{name}`structured3EndpointBridgeDescription_closedFromTapeEquiv`.
+-/
+theorem structured3EndpointBridgeDescription_exactClosedFromTape
+    {initializer lowered projector : MachineDescription}
+    (hinitializer : initializer.SubroutineReady)
+    (hlowered : lowered.SubroutineReady)
+    (hprojector : projector.SubroutineReady)
+    {Tin Tinit Tlowered Tout : Tape Bool}
+    (hinitializerClosed :
+      ExactClosedFromTape initializer Tin Tinit)
+    (hloweredClosed :
+      ExactClosedFromTape lowered
+        (canonicalPrimitiveSeqHandoffTape Tinit)
+        Tlowered)
+    (hprojectorClosed :
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape Tlowered)
+        Tout) :
+    ExactClosedFromTape
+      (structured3EndpointBridgeDescription
+        initializer lowered projector) Tin Tout := by
+  have hfirst :
+      ExactClosedFromTape
+        (canonicalPrimitiveSeqDescription initializer lowered)
+        Tin Tlowered :=
+    canonicalPrimitiveSeqDescription_exactClosedFromTape
+      hinitializer hlowered hinitializerClosed hloweredClosed
+  exact
+    canonicalPrimitiveSeqDescription_exactClosedFromTape
       (canonicalPrimitiveSeqDescription_subroutineReady
         hinitializer hlowered)
       hprojector
