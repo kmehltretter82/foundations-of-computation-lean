@@ -249,43 +249,6 @@ theorem selectedProjectionPaddedTailCleanupRejectFixedGapScratchWidth_eq_parsed
   simp [selectedProjectionPaddedTailCleanupSentinelBaseScratch] at hbase
   lia
 
-theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTarget
-    (L : DovetailLayout) :
-    sentinelRightEndGapCompactorDescription.HaltsFromTape
-      (rightEndCompactionSourceTape
-        (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L))
-      (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape L) := by
-  simpa [selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape] using
-    selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_sentinelCompactor_haltsFrom
-      L
-
-theorem selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_to_acceptSentinelTargetWithRightPadding
-    (L : DovetailLayout)
-    (rightPadding : List (Option Bool)) :
-    sentinelRightEndGapCompactorDescription.HaltsFromTape
-      (rightEndCompactionSourceTapeWithRightPadding
-        (selectedProjectionPaddedTailCleanupDeletedAcceptRightEndLeftCells L)
-        rightPadding)
-      (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding
-        L rightPadding) := by
-  simpa [
-    selectedProjectionPaddedTailCleanupAcceptSentinelTargetTapeWithRightPadding]
-    using
-      selectedProjectionPaddedTailCleanupDeletedAcceptRightEnd_sentinelCompactor_haltsFrom_withRightPadding
-        L rightPadding
-
-theorem selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_to_rejectSentinelTarget
-    (L : DovetailLayout) :
-    sentinelRightEndGapCompactorDescription.HaltsFromTape
-      (rightEndCompactionSourceTapeWithRightPadding
-        (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosedLeftCells
-          L)
-        (List.replicate 3 (none : Option Bool)))
-      (selectedProjectionPaddedTailCleanupRejectSentinelTargetTape L) := by
-  simpa [selectedProjectionPaddedTailCleanupRejectSentinelTargetTape] using
-    selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_sentinelCompactor_haltsFrom
-      L
-
 theorem selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -1641,43 +1604,6 @@ theorem FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells
         (List.append (input.map some) (none :: padding)) := by
   rfl
 
-theorem FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
-    (input : Word Bool) (padding : List (Option Bool)) :
-    FSTStatefulOptionAppendSourceTapeWithPadding input 1 padding =
-      tapeAtCells [none]
-        (List.append (input.map some) (none :: padding)) := by
-  simp [FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells]
-
-theorem postPaddingAcceptSourceWithPadding_eq_tapeAtCells
-    (L : DovetailLayout) (padding : List (Option Bool)) :
-    FSTStatefulOptionAppendSourceTapeWithPadding
-        (selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L)
-        1 padding =
-      tapeAtCells [none]
-        (List.append
-          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
-            true L).map some)
-          (none :: padding)) := by
-  exact
-    FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
-      (selectedProjectionPaddedTailCleanupPostPaddingSourceBits true L)
-      padding
-
-theorem postPaddingRejectSourceWithPadding_eq_tapeAtCells
-    (L : DovetailLayout) (padding : List (Option Bool)) :
-    FSTStatefulOptionAppendSourceTapeWithPadding
-        (selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L)
-        1 padding =
-      tapeAtCells [none]
-        (List.append
-          ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
-            false L).map some)
-          (none :: padding)) := by
-  exact
-    FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells
-      (selectedProjectionPaddedTailCleanupPostPaddingSourceBits false L)
-      padding
-
 theorem postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells
     (useAccept : Bool) (L : DovetailLayout)
     (padding : List (Option Bool)) :
@@ -1696,7 +1622,7 @@ theorem postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells
               ((selectedProjectionPaddedTailCleanupKeptSuffixBits
                 useAccept L).map some)
               (none :: padding)))) := by
-  rw [FSTStatefulOptionAppendSourceTapeWithPadding_one_eq_tapeAtCells]
+  rw [FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells]
   rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_eq_deleteBlock]
   simp [List.map_append, List.append_assoc]
 
@@ -1754,10 +1680,9 @@ theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
           ((selectedProjectionPaddedTailCleanupPostPaddingSourceBits
             true L).map some)
           (none :: List.replicate 5 (none : Option Bool)))) := by
-  rw [←
-    postPaddingAcceptSourceWithPadding_eq_tapeAtCells
-      L (List.replicate 5 (none : Option Bool))]
-  exact rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
+  simpa [FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells,
+    List.replicate] using
+    rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
 
 theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_splitKeptPrefix
     (L : DovetailLayout) :
@@ -2021,8 +1946,11 @@ theorem selectedProjectionPaddedTailCleanupDeletedRejectToSentinelDescription_ha
           L)
         none
         (List.replicate 2 (none : Option Bool)))
-      (selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_to_rejectSentinelTarget
-        L)
+      (by
+        simpa [selectedProjectionPaddedTailCleanupRejectSentinelTargetTape]
+          using
+            selectedProjectionPaddedTailCleanupDeletedRejectFixedGapClosed_sentinelCompactor_haltsFrom
+              L)
 
 end SelectedProjectionPaddedTailCleanup
 
