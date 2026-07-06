@@ -59,6 +59,23 @@ theorem codePrefixNestedPairEnumeratorConstruction_of_hiddenFuel
         hsearcher⟩
 
 /--
+Finite-machine leaf for unbounded hidden-fuel generated-pair search, adapted
+from the core generated-code convention to the public code-prefix names.
+-/
+theorem codePrefixNestedHiddenFuelPairEnumeratorFiniteLeaf
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixNestedHiddenFuelPairEnumeratorConstruction selected := by
+  rcases
+      FiniteRecognizer.TupleSearch.generatedUnboundedHiddenFuelPairFiniteLeaf
+        selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  simpa [FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hsearcher input
+
+/--
 Concrete-state generated-pair enumerator target.  Proving this for all
 {lit}`Fin n` selected recognizers is enough for the public arbitrary-state
 leaf.
@@ -174,16 +191,15 @@ theorem codePrefixNestedPairEnumeratorFiniteLeaf
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixNestedPairEnumeratorConstruction selected := by
   exact
-    codePrefixNestedPairEnumeratorConstruction_of_finStateConstruction
-      selected codePrefixNestedPairEnumeratorFinStateFiniteLeaf
+    codePrefixNestedPairEnumeratorConstruction_of_hiddenFuel
+      (codePrefixNestedHiddenFuelPairEnumeratorFiniteLeaf selected)
 
 theorem codePrefixNestedPairEnumeratorFiniteLeafDecidable
     {selectedState : Type u} [DecidableEq selectedState]
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixNestedPairEnumeratorConstruction selected := by
   exact
-    codePrefixNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
-      selected codePrefixNestedPairEnumeratorFinStateFiniteLeaf
+    codePrefixNestedPairEnumeratorFiniteLeaf selected
 
 /--
 Composition of the exact-fuel runner and unbounded generated-pair enumerator.
@@ -259,6 +275,25 @@ theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_hiddenFuel
     ⟨searcherState, searcher,
       FiniteRecognizer.TupleSearch.boundedNestedPairEnumeratorSpec_of_hiddenFuel
         hsearcher⟩
+
+/--
+Finite-machine leaf for bounded hidden-fuel generated-pair search, adapted
+from the core generated-code convention to the public code-prefix names.
+-/
+theorem codePrefixBoundedNestedHiddenFuelPairEnumeratorFiniteLeaf
+    {selectedState : Type u}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    CodePrefixBoundedNestedHiddenFuelPairEnumeratorConstruction
+      selected := by
+  rcases
+      FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFiniteLeaf
+        selected with
+    ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq,
+    FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hsearcher input budget
 
 /--
 Concrete-state bounded generated-pair enumerator target.  The public arbitrary
@@ -449,16 +484,15 @@ theorem codePrefixBoundedNestedPairEnumeratorFiniteLeaf
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
   exact
-    codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
-      selected codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf
+    codePrefixBoundedNestedPairEnumeratorConstruction_of_hiddenFuel
+      (codePrefixBoundedNestedHiddenFuelPairEnumeratorFiniteLeaf selected)
 
 theorem codePrefixBoundedNestedPairEnumeratorFiniteLeafDecidable
     {selectedState : Type u} [DecidableEq selectedState]
     (selected : TuringMachine MachineCodeSymbol selectedState) :
     CodePrefixBoundedNestedPairEnumeratorConstruction selected := by
   exact
-    codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstructionDecidable
-      selected codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf
+    codePrefixBoundedNestedPairEnumeratorFiniteLeaf selected
 
 /--
 Composition of the exact-fuel runner and bounded generated-pair enumerator.

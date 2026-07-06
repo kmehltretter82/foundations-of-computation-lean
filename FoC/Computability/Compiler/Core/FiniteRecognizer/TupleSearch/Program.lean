@@ -68,6 +68,28 @@ def GeneratedBoundedNestedPairEnumeratorFinStateConstruction : Prop :=
           GeneratedCode.stageCode GeneratedCode.nestedStageCode
 
 /--
+Generated unbounded pair search with hidden selected-machine fuel for an
+arbitrary finite selected recognizer state type.
+-/
+def GeneratedUnboundedHiddenFuelPairConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    GeneratedUnboundedHiddenFuelPairSpec searcher selected
+
+/--
+Generated bounded pair search with hidden selected-machine fuel for an
+arbitrary finite selected recognizer state type.
+-/
+def GeneratedBoundedHiddenFuelPairConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) : Prop :=
+  exists searcherState : Type,
+  exists searcher : TuringMachine MachineCodeSymbol searcherState,
+    GeneratedBoundedHiddenFuelPairSpec searcher selected
+
+/--
 Generated unbounded pair enumerator for an arbitrary finite selected
 recognizer state type.
 -/
@@ -91,6 +113,134 @@ def GeneratedBoundedNestedPairEnumeratorConstruction
     BoundedNestedPairEnumeratorSpec
       searcher selected
       GeneratedCode.stageCode GeneratedCode.nestedStageCode
+
+/--
+Unbounded hidden-fuel generated-pair search is stable under replacing the
+selected recognizer by its indexed copy.
+-/
+theorem generatedUnboundedHiddenFuelPairConstruction_of_indexed
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      GeneratedUnboundedHiddenFuelPairConstruction
+        (TuringMachine.indexed selected)) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, selectedFuel, hindexedHalt⟩
+    exact
+      ⟨inner, outer, selectedFuel,
+        (TuringMachine.indexed_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with
+      ⟨inner, outer, selectedFuel, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer, selectedFuel,
+        (TuringMachine.indexed_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mpr
+          hhalt⟩
+
+theorem generatedUnboundedHiddenFuelPairConstruction_of_indexedDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      GeneratedUnboundedHiddenFuelPairConstruction
+        (TuringMachine.indexedDecidable selected)) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input
+  constructor
+  · intro hhalt
+    rcases (hsearcher input).mp hhalt with
+      ⟨inner, outer, selectedFuel, hindexedHalt⟩
+    exact
+      ⟨inner, outer, selectedFuel,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with
+      ⟨inner, outer, selectedFuel, hhalt⟩
+    exact (hsearcher input).mpr
+      ⟨inner, outer, selectedFuel,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mpr
+          hhalt⟩
+
+/--
+Bounded hidden-fuel generated-pair search is stable under replacing the
+selected recognizer by its indexed copy.
+-/
+theorem generatedBoundedHiddenFuelPairConstruction_of_indexed
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      GeneratedBoundedHiddenFuelPairConstruction
+        (TuringMachine.indexed selected)) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, selectedFuel, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, selectedFuel, hinner, houter,
+        (TuringMachine.indexed_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with
+      ⟨inner, outer, selectedFuel, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, selectedFuel, hinner, houter,
+        (TuringMachine.indexed_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mpr
+          hhalt⟩
+
+theorem generatedBoundedHiddenFuelPairConstruction_of_indexedDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hindexed :
+      GeneratedBoundedHiddenFuelPairConstruction
+        (TuringMachine.indexedDecidable selected)) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  rcases hindexed with ⟨searcherState, searcher, hsearcher⟩
+  refine ⟨searcherState, searcher, ?_⟩
+  intro input budget
+  constructor
+  · intro hhalt
+    rcases (hsearcher input budget).mp hhalt with
+      ⟨inner, outer, selectedFuel, hinner, houter, hindexedHalt⟩
+    exact
+      ⟨inner, outer, selectedFuel, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mp
+          hindexedHalt⟩
+  · intro htarget
+    rcases htarget with
+      ⟨inner, outer, selectedFuel, hinner, houter, hhalt⟩
+    exact (hsearcher input budget).mpr
+      ⟨inner, outer, selectedFuel, hinner, houter,
+        (TuringMachine.indexedDecidable_haltsOnInputIn_iff selected
+          selectedFuel
+          (GeneratedCode.nestedStageCode input inner outer)).mpr
+          hhalt⟩
 
 /--
 Unbounded generated-pair enumeration is stable under replacing the selected
@@ -208,6 +358,48 @@ theorem generatedBoundedNestedPairEnumeratorConstruction_of_indexedDecidable
           (GeneratedCode.nestedStageCode input inner outer)).mpr
           hhalt⟩
 
+theorem generatedUnboundedHiddenFuelPairConstruction_of_finStateConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedUnboundedHiddenFuelPairFinStateConstruction) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedUnboundedHiddenFuelPairConstruction_of_indexed selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexed selected))
+
+theorem generatedUnboundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedUnboundedHiddenFuelPairFinStateConstruction) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedUnboundedHiddenFuelPairConstruction_of_indexedDecidable
+      selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexedDecidable selected))
+
+theorem generatedBoundedHiddenFuelPairConstruction_of_finStateConstruction
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedBoundedHiddenFuelPairFinStateConstruction) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedBoundedHiddenFuelPairConstruction_of_indexed selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexed selected))
+
+theorem generatedBoundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState)
+    (hFin : GeneratedBoundedHiddenFuelPairFinStateConstruction) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedBoundedHiddenFuelPairConstruction_of_indexedDecidable
+      selected
+      (hFin selected.statesFinite.elems.length
+        (TuringMachine.indexedDecidable selected))
+
 theorem generatedNestedPairEnumeratorConstruction_of_finStateConstruction
     {selectedState : Type uSelected}
     (selected : TuringMachine MachineCodeSymbol selectedState)
@@ -276,6 +468,38 @@ theorem generatedBoundedHiddenFuelPairFinStateFiniteLeaf :
       exact False.elim (Fin.elim0 selected.start)
   | succ _ =>
       sorry
+
+theorem generatedUnboundedHiddenFuelPairFiniteLeaf
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedUnboundedHiddenFuelPairConstruction_of_finStateConstruction
+      selected generatedUnboundedHiddenFuelPairFinStateFiniteLeaf
+
+theorem generatedUnboundedHiddenFuelPairFiniteLeafDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedUnboundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedUnboundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+      selected generatedUnboundedHiddenFuelPairFinStateFiniteLeaf
+
+theorem generatedBoundedHiddenFuelPairFiniteLeaf
+    {selectedState : Type uSelected}
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedBoundedHiddenFuelPairConstruction_of_finStateConstruction
+      selected generatedBoundedHiddenFuelPairFinStateFiniteLeaf
+
+theorem generatedBoundedHiddenFuelPairFiniteLeafDecidable
+    {selectedState : Type uSelected} [DecidableEq selectedState]
+    (selected : TuringMachine MachineCodeSymbol selectedState) :
+    GeneratedBoundedHiddenFuelPairConstruction selected := by
+  exact
+    generatedBoundedHiddenFuelPairConstruction_of_finStateConstructionDecidable
+      selected generatedBoundedHiddenFuelPairFinStateFiniteLeaf
 
 theorem generatedNestedPairEnumeratorFinStateFiniteLeaf :
     GeneratedNestedPairEnumeratorFinStateConstruction := by
