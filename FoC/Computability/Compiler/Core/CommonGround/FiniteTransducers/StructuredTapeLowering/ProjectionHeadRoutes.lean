@@ -2073,51 +2073,6 @@ theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_iff_split :
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
   · exact selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
 
-theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
-  -- Materialize the raw selected-head endpoint as tape 0 of the structured
-  -- three-tape decoder input before the FST scanner erases head-marker bits.
-  sorry
-
-theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction := by
-  exact SelectedSegmentLogicalTapeDecoderRawHeadNormalizer.construction
-
-theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction := by
-  -- Project tape 2 from the structured raw-head output back to the target
-  -- one-tape endpoint.
-  sorry
-
-theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction := by
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core with
-    ⟨ingress, hingress⟩
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core with
-    ⟨normalizer, hnormalizer⟩
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core with
-    ⟨egress, hegress⟩
-  exact ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
-
-theorem structuredSelectedHeadSegmentDecoderConstruction_core :
-    StructuredSelectedHeadSegmentDecoderConstruction := by
-  exact
-    structuredSelectedHeadSegmentDecoderConstruction_of_rawHeadThreeTapeBridgeConstruction
-      selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core
-
-theorem structuredTape2SegmentNormalizerConstruction_core :
-    StructuredTape2SegmentNormalizerConstruction :=
-  structuredTape2SegmentNormalizerConstruction_of_selectedHeadDecoder
-    structuredSelectedHeadSegmentDecoderConstruction_core
-
-theorem structuredTape2ProjectorConstruction_core :
-    StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
-    structuredTape2SegmentNormalizerConstruction_core
-
 /-!
 ## Pipeline route
 
