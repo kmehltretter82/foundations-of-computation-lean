@@ -148,6 +148,23 @@ def DecodedDescriptionInterpreterExactOutputPrimitiveConstruction : Prop :=
         runner decodedDescriptionInterpreterRun ∧
       TuringMachine.HaltingTransitionsDisabled runner
 
+def DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction :
+    Prop :=
+  exists n : Nat,
+  exists runner : TuringMachine MachineCodeSymbol (Fin n),
+    FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
+        runner decodedDescriptionInterpreterRun ∧
+      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
+        runner decodedDescriptionInterpreterRun ∧
+      TuringMachine.HaltingTransitionsDisabled runner
+
+theorem decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
+    (hfin :
+      DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction) :
+    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction := by
+  rcases hfin with ⟨n, runner, hexact, hcanonical, hstop⟩
+  exact ⟨Fin n, runner, hexact, hcanonical, hstop⟩
+
 /--
 Canonical generated-input behavior for the uniform decoded-description
 interpreter.  On a canonical description prefix plus an outer fuel field, the
@@ -421,12 +438,22 @@ theorem decodedDescriptionInterpreterConstruction_iff_finState :
   · exact decodedDescriptionInterpreterConstruction_of_finState
 
 /--
-Remaining exact-output primitive leaf for the uniform decoded-description
-interpreter.
+Remaining concrete finite-state exact-output primitive leaf for the uniform
+decoded-description interpreter.
+-/
+theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf :
+    DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction := by
+  sorry
+
+/--
+Exact-output primitive construction for the uniform decoded-description
+interpreter, derived from the concrete finite-state primitive leaf above.
 -/
 theorem decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf :
     DecodedDescriptionInterpreterExactOutputPrimitiveConstruction := by
-  sorry
+  exact
+    decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
+      decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf
 
 /--
 Concrete component construction for the uniform decoded-description
