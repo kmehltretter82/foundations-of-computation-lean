@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerSearchDriver
+import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocationRouteContracts
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerFuelPairSearchRouteContracts
 
 set_option doc.verso true
