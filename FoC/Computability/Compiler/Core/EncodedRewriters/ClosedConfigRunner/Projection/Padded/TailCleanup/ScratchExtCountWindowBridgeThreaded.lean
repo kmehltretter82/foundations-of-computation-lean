@@ -657,6 +657,72 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filt
   rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_filterMap,
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap]
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_nil_nil :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] []) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] []) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    [] []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_nil_none
+    (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (none :: padding)) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (none :: padding)) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    [] (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_nil_some
+    (padBit : Bool) (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          [] (some padBit :: padding)) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          [] (some padBit :: padding)) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    [] (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_cons_nil
+    (bit : Bool) (rest : Word Bool) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) []) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) []) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    (bit :: rest) []
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_cons_none
+    (bit : Bool) (rest : Word Bool) (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (none :: padding)) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (none :: padding)) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    (bit :: rest) (none :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq_cons_some
+    (bit : Bool) (rest : Word Bool) (padBit : Bool)
+    (padding : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          (bit :: rest) (some padBit :: padding)) =
+      Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+          (bit :: rest) (some padBit :: padding)) := by
+  exact selectedSegmentLogicalTapeDecoderDensifierFootprint_normalizedOutput_eq
+    (bit :: rest) (some padBit :: padding)
+
 theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target :
     Tape.Equiv
       (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
