@@ -1340,32 +1340,6 @@ theorem selectedProjectionPaddedTailCleanupSentinelRewindDescription_haltsFrom
         (rightEdgeRewindDescription_haltsFromTape
           bits (none :: none :: padding)))
 
-theorem selectedProjectionPaddedTailCleanupAcceptSentinelTarget_to_rewindTarget
-    (L : DovetailLayout) :
-    selectedProjectionPaddedTailCleanupSentinelRewindDescription.HaltsFromTape
-      (selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape L)
-      (selectedProjectionPaddedTailCleanupAcceptRewindTargetTape L) := by
-  simpa [selectedProjectionPaddedTailCleanupAcceptSentinelTargetTape] using
-    selectedProjectionPaddedTailCleanupSentinelRewindDescription_haltsFrom
-      (selectedProjectionPaddedTailCleanupTargetBits true L)
-      (sentinelGapCompactorFinalPadding
-        (selectedProjectionPaddedTailCleanupUnselectedConfigBits
-          true L).length.pred
-        5 [])
-
-theorem selectedProjectionPaddedTailCleanupRejectSentinelTarget_to_rewindTarget
-    (L : DovetailLayout) :
-    selectedProjectionPaddedTailCleanupSentinelRewindDescription.HaltsFromTape
-      (selectedProjectionPaddedTailCleanupRejectSentinelTargetTape L)
-      (selectedProjectionPaddedTailCleanupRejectRewindTargetTape L) := by
-  simpa [selectedProjectionPaddedTailCleanupRejectSentinelTargetTape] using
-    selectedProjectionPaddedTailCleanupSentinelRewindDescription_haltsFrom
-      (selectedProjectionPaddedTailCleanupTargetBits false L)
-      (sentinelGapCompactorFinalPadding
-        (selectedProjectionPaddedTailCleanupUnselectedConfigBits
-          false L).length.pred
-        2 (List.replicate 3 (none : Option Bool)))
-
 theorem selectedProjectionPaddedTailCleanupAcceptRewindTargetTape_normalizedOutput
     (L : DovetailLayout) :
     Tape.normalizedOutput
@@ -1626,51 +1600,6 @@ theorem postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells
   rw [selectedProjectionPaddedTailCleanupPostPaddingSourceBits_eq_deleteBlock]
   simp [List.map_append, List.append_assoc]
 
-theorem postPaddingAcceptSourceWithFivePadding_splitKeptPrefix
-    (L : DovetailLayout) :
-    exists hitTail : Word Bool,
-    exists pref : Word Bool,
-    exists leftBit : Bool,
-      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
-          List.append pref [leftBit] ∧
-      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
-          L.acceptHit [] =
-        false :: hitTail ∧
-      FSTStatefulOptionAppendSourceTapeWithPadding
-          (selectedProjectionPaddedTailCleanupPostPaddingSourceBits
-            true L)
-          1 (List.replicate 5 (none : Option Bool)) =
-        tapeAtCells [none]
-          (List.append (pref.map some)
-            (some leftBit ::
-              List.append
-                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
-                  L.rejectConfig []).map some)
-                (List.append ((false :: hitTail).map some)
-                  (none ::
-                    List.replicate 5 (none : Option Bool))))) := by
-  rcases selectedProjectionPaddedTailCleanupKeptPrefix_true_append_last
-      L with
-    ⟨pref, leftBit, hpref⟩
-  rcases
-      CanonicalLayouts.DovetailLayoutScanner.cellFieldBits_cons_false
-        (some L.acceptHit) [] with
-    ⟨hitTail, hhitTail⟩
-  refine ⟨hitTail, pref, leftBit, hpref, ?_, ?_⟩
-  · simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
-      hhitTail
-  · rw [postPaddingSourceWithPadding_eq_deleteBlock_tapeAtCells, hpref]
-    have hhit :
-        CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
-            L.acceptHit [] =
-          false :: hitTail := by
-      simpa [CanonicalLayouts.DovetailLayoutScanner.boolFieldBits] using
-        hhitTail
-    simp [selectedProjectionPaddedTailCleanupUnselectedConfigBits,
-      selectedProjectionPaddedTailCleanupKeptSuffixBits,
-      selectedProjectionPaddedTailCleanupSelectedHitBits, hhit,
-      List.map_append, List.append_assoc]
-
 theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
     (L : DovetailLayout) :
     rightEdgeRewindDescription.HaltsFromTape
@@ -1683,33 +1612,6 @@ theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_tapeAtCells
   simpa [FSTStatefulOptionAppendSourceTapeWithPadding_eq_tapeAtCells,
     List.replicate] using
     rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
-
-theorem rightEdgeRewindDescription_haltsFrom_acceptAfterPadding_splitKeptPrefix
-    (L : DovetailLayout) :
-    exists hitTail : Word Bool,
-    exists pref : Word Bool,
-    exists leftBit : Bool,
-      selectedProjectionPaddedTailCleanupKeptPrefixBits true L =
-          List.append pref [leftBit] ∧
-      CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
-          L.acceptHit [] =
-        false :: hitTail ∧
-      rightEdgeRewindDescription.HaltsFromTape
-        (selectedHitOtherFlagErasedAfterPaddingTape true L)
-        (tapeAtCells [none]
-          (List.append (pref.map some)
-            (some leftBit ::
-              List.append
-                ((CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
-                  L.rejectConfig []).map some)
-                (List.append ((false :: hitTail).map some)
-                  (none ::
-                    List.replicate 5 (none : Option Bool)))))) := by
-  rcases postPaddingAcceptSourceWithFivePadding_splitKeptPrefix L with
-    ⟨hitTail, pref, leftBit, hpref, hhit, htape⟩
-  refine ⟨hitTail, pref, leftBit, hpref, hhit, ?_⟩
-  rw [← htape]
-  exact rightEdgeRewindDescription_haltsFrom_acceptAfterPadding L
 
 theorem rightEndCompactionSourceTape_move_left_move_right_eq_withRightPadding
     (leftCells : List (Option Bool)) :
