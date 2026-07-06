@@ -3,6 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
 
 set_option doc.verso true
 
@@ -947,6 +948,38 @@ def afterRightCopyConfig
     Tape.blank
     (rightEdgeOutputTape target)
 
+def rewindStartConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  let guarded := guardLogicalTape target
+  ThreeTape.config 10
+    (ThreeTape.keepL.apply
+      (tapeAtEncodedSplit
+        (List.append encodedPrefix
+          (List.append tapeSeparatorCells
+            (logicalTapeCode guarded)))
+        (encodedStructuredTapeCells rest)))
+    Tape.blank
+    (rightEdgeOutputTape target)
+
+def rewindMarkerSecondConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Configuration :=
+  let guarded := guardLogicalTape target
+  ThreeTape.config 10
+    (tapeAtEncodedSplit
+      (List.append
+        (List.append encodedPrefix
+          (List.append tapeSeparatorCells
+            (logicalCellListCode guarded.left.reverse)))
+        [some true])
+      (List.append [some true]
+        (List.append (logicalCellCode guarded.head)
+          (List.append (logicalCellListCode guarded.right)
+            (encodedStructuredTapeCells rest)))))
+    Tape.blank
+    (guardLogicalTape target)
+
 theorem description_reaches_afterLeftCopyConfig
     (target : Tape Bool) (rest : List (Tape Bool))
     (encodedPrefix : List (Option Bool)) :
@@ -967,6 +1000,78 @@ theorem description_reaches_afterRightCopyConfig
   -- Copies the decoded head and right cells, stopping on the next separator.
   sorry
 
+theorem description_enters_rewind
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    description.runConfig 1
+      (afterRightCopyConfig target rest encodedPrefix) =
+      rewindStartConfig target rest encodedPrefix := by
+  cases target with
+  | mk left head right =>
+      cases rest with
+      | nil =>
+          three_tape_step [
+            description, rows, afterRightCopyConfig, rewindStartConfig,
+            rightEdgeOutputTape, targetCells, guardLogicalTape,
+            logicalTapeCode, encodedStructuredTapeCells, tapeAtEncodedSplit,
+            tapeSeparatorCells]
+      | cons next rest =>
+          three_tape_step [
+            description, rows, afterRightCopyConfig, rewindStartConfig,
+            rightEdgeOutputTape, targetCells, guardLogicalTape,
+            logicalTapeCode, encodedStructuredTapeCells, tapeAtEncodedSplit,
+            tapeSeparatorCells]
+
+theorem description_rewinds_to_markerSecondConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    exists steps : Nat,
+      description.runConfig steps
+        (rewindStartConfig target rest encodedPrefix) =
+        rewindMarkerSecondConfig target rest encodedPrefix := by
+  -- Recursive scanner over the encoded head/right logical cells.
+  sorry
+
+theorem description_rewinds_markerSecond_to_finalConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    description.runConfig 2
+      (rewindMarkerSecondConfig target rest encodedPrefix) =
+      finalConfig target rest encodedPrefix := by
+  cases target with
+  | mk left head right =>
+      cases head with
+      | none =>
+          three_tape_step [
+            description, rows, rewindMarkerSecondConfig, finalConfig,
+            selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape,
+            guardLogicalTape, logicalCellListCode, logicalCellCode,
+            encodedStructuredTapeCells, tapeAtEncodedSplit,
+            tapeSeparatorCells, headMarkerCells]
+      | some bit =>
+          cases bit <;>
+            three_tape_step [
+              description, rows, rewindMarkerSecondConfig, finalConfig,
+              selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape,
+              guardLogicalTape, logicalCellListCode, logicalCellCode,
+              encodedStructuredTapeCells, tapeAtEncodedSplit,
+              tapeSeparatorCells, headMarkerCells]
+
+theorem description_rewinds_to_finalConfig
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    exists steps : Nat,
+      description.runConfig steps
+        (rewindStartConfig target rest encodedPrefix) =
+        finalConfig target rest encodedPrefix := by
+  rcases description_rewinds_to_markerSecondConfig target rest encodedPrefix with
+    ⟨steps, hsteps⟩
+  refine ⟨steps + 2, ?_⟩
+  rw [Description.runConfig_add]
+  rw [hsteps]
+  exact description_rewinds_markerSecond_to_finalConfig
+    target rest encodedPrefix
+
 theorem description_reaches_finalConfig
     (target : Tape Bool) (rest : List (Tape Bool))
     (encodedPrefix : List (Option Bool)) :
@@ -974,8 +1079,12 @@ theorem description_reaches_finalConfig
       description.runConfig steps
         (afterRightCopyConfig target rest encodedPrefix) =
         finalConfig target rest encodedPrefix := by
-  -- Rewinds tape 0 to the raw marker while rewinding tape 2 to the logical head.
-  sorry
+  rcases description_rewinds_to_finalConfig target rest encodedPrefix with
+    ⟨steps, hsteps⟩
+  refine ⟨1 + steps, ?_⟩
+  rw [Description.runConfig_add]
+  rw [description_enters_rewind target rest encodedPrefix]
+  exact hsteps
 
 theorem description_haltsWithTapes
     (target : Tape Bool) (rest : List (Tape Bool))
