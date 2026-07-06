@@ -33,6 +33,24 @@ def CodePrefixExactFuelProductRunnerConstruction
         NestedCodePrefixRecognizerStageCode input inner outer)
 
 /--
+Adapt the core generated-code exact-fuel product runner to the historical
+code-prefix builder names.
+-/
+theorem codePrefixExactFuelProductRunnerConstruction_of_generated
+    {leftState : Type uStage} {rightState : Type uDescription}
+    {left : TuringMachine MachineCodeSymbol leftState}
+    {right : TuringMachine MachineCodeSymbol rightState}
+    (h :
+      FiniteRecognizer.GeneratedProductExactFuelRunnerConstruction
+        left right) :
+    CodePrefixExactFuelProductRunnerConstruction left right := by
+  rcases h with ⟨selectedState, selected, hselected⟩
+  refine ⟨selectedState, selected, ?_⟩
+  intro input leftFuel rightFuel
+  simpa [FiniteRecognizer.GeneratedCode.nestedStageCode_eq_codePrefix]
+    using hselected input leftFuel rightFuel
+
+/--
 Concrete-state product exact-fuel runner target.  This is the remaining
 finite-table target after both recognizers have been reindexed to {lit}`Fin`
 state spaces.
@@ -161,8 +179,9 @@ theorem codePrefixExactFuelProductRunnerFiniteLeaf
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductRunnerConstruction left right := by
   exact
-    codePrefixExactFuelProductRunnerConstruction_of_finStateConstruction
-      left right codePrefixExactFuelProductRunnerFinStateFiniteLeaf
+    codePrefixExactFuelProductRunnerConstruction_of_generated
+      (FiniteRecognizer.generatedProductExactFuelRunnerFiniteLeaf
+        left right)
 
 theorem codePrefixExactFuelProductRunnerFiniteLeafDecidable
     {leftState : Type uStage} {rightState : Type uDescription}
@@ -171,8 +190,9 @@ theorem codePrefixExactFuelProductRunnerFiniteLeafDecidable
     (right : TuringMachine MachineCodeSymbol rightState) :
     CodePrefixExactFuelProductRunnerConstruction left right := by
   exact
-    codePrefixExactFuelProductRunnerConstruction_of_finStateConstructionDecidable
-      left right codePrefixExactFuelProductRunnerFinStateFiniteLeaf
+    codePrefixExactFuelProductRunnerConstruction_of_generated
+      (FiniteRecognizer.generatedProductExactFuelRunnerFiniteLeafDecidable
+        left right)
 
 /--
 Unbounded product search over exact left/right fuel witnesses for a preserved
