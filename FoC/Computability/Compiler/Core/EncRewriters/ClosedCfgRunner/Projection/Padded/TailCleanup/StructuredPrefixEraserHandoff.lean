@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompaction
 
@@ -1047,6 +1048,635 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHando
   exists eraser : MachineDescription,
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
       eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    forall (T0 T1 : Tape Bool) (bits : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding)
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            bits padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall (T0 T1 : Tape Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] padding)
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] padding))) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) padding)
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall T0 T1 : Tape Bool,
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] []))) ∧
+    (forall (T0 T1 : Tape Bool) (pad : Option Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (pad :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] (pad :: padding)))) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) []))) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (pad : Option Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (pad :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) (pad :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall T0 T1 : Tape Bool,
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] []))) ∧
+    (forall (T0 T1 : Tape Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (none :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] (none :: padding)))) ∧
+    (forall (T0 T1 : Tape Bool) (padBit : Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (some padBit :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            [] (some padBit :: padding)))) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) []))) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (none :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) (none :: padding)))) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (some padBit :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+            (bit :: rest) (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputSpec
+      eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec_of_outputSpec
+    {eraser : MachineDescription}
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec
+      eraser := by
+  rcases heraser with ⟨hready, hrun⟩
+  refine ⟨hready, ?_, ?_⟩
+  · intro T0 T1 padding
+    exact hrun T0 T1 [] padding
+  · intro T0 T1 bit rest padding
+    exact hrun T0 T1 (bit :: rest) padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction_of_output
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction := by
+  rcases heraser with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec_of_outputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_caseOutputSpec
+    {eraser : MachineDescription}
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+      eraser := by
+  rcases hcases with ⟨hready, hnil, hcons⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  cases bits with
+  | nil =>
+      exact hnil T0 T1 padding
+  | cons bit rest =>
+      exact hcons T0 T1 bit rest padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_caseOutput
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction := by
+  rcases hcases with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_caseOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec_of_bitPaddingCaseOutputSpec
+    {eraser : MachineDescription}
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec
+      eraser := by
+  rcases hcases with
+    ⟨hready, hnilNil, hnilCons, hconsNil, hconsCons⟩
+  refine ⟨hready, ?_, ?_⟩
+  · intro T0 T1 padding
+    cases padding with
+    | nil =>
+        exact hnilNil T0 T1
+    | cons pad padding =>
+        exact hnilCons T0 T1 pad padding
+  · intro T0 T1 bit rest padding
+    cases padding with
+    | nil =>
+        exact hconsNil T0 T1 bit rest
+    | cons pad padding =>
+        exact hconsCons T0 T1 bit rest pad padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction_of_bitPaddingCasesOutput
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction := by
+  rcases hcases with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputSpec_of_bitPaddingCaseOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec_of_padSymbolCaseOutputSpec
+    {eraser : MachineDescription}
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec
+      eraser := by
+  rcases hcases with
+    ⟨hready, hnilNil, hnilNone, hnilSome, hconsNil,
+      hconsNone, hconsSome⟩
+  refine ⟨hready, hnilNil, ?_, hconsNil, ?_⟩
+  · intro T0 T1 pad padding
+    cases pad with
+    | none =>
+        exact hnilNone T0 T1 padding
+    | some padBit =>
+        exact hnilSome T0 T1 padBit padding
+  · intro T0 T1 bit rest pad padding
+    cases pad with
+    | none =>
+        exact hconsNone T0 T1 bit rest padding
+    | some padBit =>
+        exact hconsSome T0 T1 bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputConstruction_of_padSymbolCasesOutput
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputConstruction := by
+  rcases hcases with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputSpec_of_padSymbolCaseOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction_of_padSymbolCasesOutput
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction :=
+  selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction_of_bitPaddingCasesOutput
+    (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseOutputConstruction_of_padSymbolCasesOutput
+      hcases)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_padSymbolCasesOutput
+    (hcases :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction :=
+  selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_caseOutput
+    (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseOutputConstruction_of_padSymbolCasesOutput
+      hcases)
+
+/--
+Normalized-output version of the structured-prefix footprint handoff.
+This is the endpoint needed by callers that only consume the decoded selected
+payload and padding, not the exact physical cursor left by the eraser.
+-/
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    forall (T0 T1 : Tape Bool) (bits : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding)
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            bits padding))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+      eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_exact
+    {eraser : MachineDescription}
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+      eraser := by
+  rcases heraser with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  rcases hrun T0 T1 bits padding with ⟨actual, hhalt, hequiv⟩
+  have houtput :=
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+  rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+  exact houtput
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_exact
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction := by
+  rcases heraser with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_exact
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_exact
+    {eraser : MachineDescription}
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+      eraser := by
+  rcases hhandoff with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  rcases hrun T0 T1 bits padding with ⟨actual, hhalt, hequiv⟩
+  have houtput :=
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+  rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+  exact houtput
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_exact
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction := by
+  rcases hhandoff with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_exact
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_eraserOutputSpec
+    {eraser : MachineDescription}
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+      eraser := by
+  rcases heraser with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+    hrun T0 T1 bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_eraserOutput
+    (heraser :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction := by
+  rcases heraser with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_eraserOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_footprintHandoffOutputSpec
+    {eraser : MachineDescription}
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+      eraser := by
+  rcases hhandoff with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+    hrun T0 T1 bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_footprintHandoffOutput
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction := by
+  rcases hhandoff with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_footprintHandoffOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_iff_footprintHandoffOutputSpec
+    (eraser : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
+        eraser ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+        eraser := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_eraserOutputSpec
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec_of_footprintHandoffOutputSpec
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_iff_footprintHandoffOutputConstruction :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_eraserOutput
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction_of_footprintHandoffOutput
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffNilPadSymbolCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall T0 T1 : Tape Bool,
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            [] []))) ∧
+    (forall (T0 T1 : Tape Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (none :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            [] (none :: padding)))) ∧
+    forall (T0 T1 : Tape Bool) (padBit : Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 [] (some padBit :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            [] (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  eraser.SubroutineReady ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) [])
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            (bit :: rest) []))) ∧
+    (forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (none :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            (bit :: rest) (none :: padding)))) ∧
+    forall (T0 T1 : Tape Bool) (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      eraser.HaltsFromTapeWithOutput
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 (bit :: rest) (some padBit :: padding))
+        (Tape.normalizedOutput
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+            (bit :: rest) (some padBit :: padding)))
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+    (eraser : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffNilPadSymbolCaseOutputSpec
+      eraser ∧
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseOutputSpec
+      eraser
+
+def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction :
+    Prop :=
+  exists eraser : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+      eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec_of_handoffOutputSpec
+    {eraser : MachineDescription}
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+      eraser := by
+  rcases hhandoff with ⟨hready, hrun⟩
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1
+      exact hrun T0 T1 [] []
+    · intro T0 T1 padding
+      exact hrun T0 T1 [] (none :: padding)
+    · intro T0 T1 padBit padding
+      exact hrun T0 T1 [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1 bit rest
+      exact hrun T0 T1 (bit :: rest) []
+    · intro T0 T1 bit rest padding
+      exact hrun T0 T1 (bit :: rest) (none :: padding)
+    · intro T0 T1 bit rest padBit padding
+      exact hrun T0 T1 (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction_of_handoffOutput
+    (hhandoff :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction := by
+  rcases hhandoff with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec_of_handoffOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_splitPadSymbolCaseOutputSpec
+    {eraser : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+      eraser := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  cases bits with
+  | nil =>
+      cases padding with
+      | nil =>
+          exact hnilNil T0 T1
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hnilNone T0 T1 padding
+          | some padBit =>
+              exact hnilSome T0 T1 padBit padding
+  | cons bit rest =>
+      cases padding with
+      | nil =>
+          exact hconsNil T0 T1 bit rest
+      | cons pad padding =>
+          cases pad with
+          | none =>
+              exact hconsNone T0 T1 bit rest padding
+          | some padBit =>
+              exact hconsSome T0 T1 bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_splitPadSymbolCaseOutput
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction := by
+  rcases hsplit with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_splitPadSymbolCaseOutputSpec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_iff_splitPadSymbolCaseOutputSpec
+    (eraser : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec
+        eraser ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+        eraser := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec_of_handoffOutputSpec
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_splitPadSymbolCaseOutputSpec
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_iff_splitPadSymbolCaseOutputConstruction :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction ↔
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction_of_handoffOutput
+  · exact
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_splitPadSymbolCaseOutput
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec_of_exact
+    {eraser : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec
+      eraser := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  rcases hcons with
+    ⟨_hreadyCons, hconsNil, hconsNone, hconsSome⟩
+  have toOutput :
+      forall {Tin Tout : Tape Bool},
+        eraser.HaltsFromTapeEquiv Tin Tout ->
+          eraser.HaltsFromTapeWithOutput Tin
+            (Tape.normalizedOutput Tout) := by
+    intro Tin Tout hhaltEquiv
+    rcases hhaltEquiv with ⟨actual, hhalt, hequiv⟩
+    have houtput :=
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape hhalt
+    rw [Tape.Equiv.normalizedOutput_eq hequiv] at houtput
+    exact houtput
+  refine ⟨?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1
+      exact toOutput (hnilNil T0 T1)
+    · intro T0 T1 padding
+      exact toOutput (hnilNone T0 T1 padding)
+    · intro T0 T1 padBit padding
+      exact toOutput (hnilSome T0 T1 padBit padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro T0 T1 bit rest
+      exact toOutput (hconsNil T0 T1 bit rest)
+    · intro T0 T1 bit rest padding
+      exact toOutput (hconsNone T0 T1 bit rest padding)
+    · intro T0 T1 bit rest padBit padding
+      exact toOutput (hconsSome T0 T1 bit rest padBit padding)
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction_of_exact
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction := by
+  rcases hsplit with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputSpec_of_exact
+        hspec⟩
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_handoffSpec
     {eraser : MachineDescription}
