@@ -1840,6 +1840,67 @@ def structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
     input.1.length
     (boolWordRawBitsDecoderPreservedPadding input.2 [])
 
+theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_eq_materializerTargetTape
+    (bits suffixTail : Word Bool) :
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+        bits suffixTail =
+      structured3InputMaterializerTargetTape
+        (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+          bits suffixTail)
+        (structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+          (bits, suffixTail)) := by
+  rfl
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerTargetTape_cells
+    (bits suffixTail : Word Bool) :
+    Tape.cells
+        (structured3InputMaterializerTargetTape
+          (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+            bits suffixTail)
+          (structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+            (bits, suffixTail))) =
+      Tape.cells
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail) := by
+  rw [
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_eq_materializerTargetTape]
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_read
+    (bits suffixTail : Word Bool) :
+    Tape.read
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail) =
+      none := by
+  rfl
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerTargetTape_read
+    (bits suffixTail : Word Bool) :
+    Tape.read
+        (structured3InputMaterializerTargetTape
+          (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+            bits suffixTail)
+          (structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+            (bits, suffixTail))) =
+      Tape.read
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail) := by
+  rw [
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_eq_materializerTargetTape]
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerTargetTape_normalizedOutput
+    (bits suffixTail : Word Bool) :
+    Tape.normalizedOutput
+        (structured3InputMaterializerTargetTape
+          (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+            bits suffixTail)
+          (structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape
+            (bits, suffixTail))) =
+      Tape.normalizedOutput
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail) := by
+  rw [
+    structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape_eq_materializerTargetTape]
+
 def StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec
     (initializer : MachineDescription) : Prop :=
   Structured3InputMaterializerSpec
@@ -1911,6 +1972,27 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_o
     ⟨initializer,
       structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_of_initializerSpec
         hspec⟩
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_iff_initializerSpec
+    (initializer : MachineDescription) :
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec
+        initializer ↔
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+        initializer := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec_of_structured3InputMaterializerSpec
+  · exact
+      structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_of_initializerSpec
+
+theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_iff_initializerConstruction :
+    StructuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction ↔
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction_of_structured3InputMaterializer
+  · exact
+      structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_of_initializer
 
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
