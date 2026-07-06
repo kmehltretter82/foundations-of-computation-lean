@@ -1487,6 +1487,56 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstructio
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
       compactor
 
+/--
+Generic selected-footprint bridge contract.
+
+This is the reusable spine behind the nil/cons and padding split contracts
+below: a single machine compacts every selected logical-tape decoder footprint
+from the right-end compaction source shape to the selected rewind source shape,
+up to tape equivalence.
+-/
+def SelectedFootprintCompactorBridgeSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (bits : Word Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            bits padding))
+        (rightEdgeRewindSourceTape bits padding)
+
+def SelectedFootprintCompactorBridgeConstruction : Prop :=
+  exists compactor : MachineDescription,
+    SelectedFootprintCompactorBridgeSpec compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec_of_bridgeSpec
+    {compactor : MachineDescription}
+    (hbridge : SelectedFootprintCompactorBridgeSpec compactor) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
+      compactor := by
+  rcases hbridge with ⟨hready, hrun⟩
+  refine ⟨hready, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hrun [] []
+  · intro padding
+    exact hrun [] (none :: padding)
+  · intro padBit padding
+    exact hrun [] (some padBit :: padding)
+  · intro bit rest
+    exact hrun (bit :: rest) []
+  · intro bit rest padding
+    exact hrun (bit :: rest) (none :: padding)
+  · intro bit rest padBit padding
+    exact hrun (bit :: rest) (some padBit :: padding)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_bridge
+    (hbridge : SelectedFootprintCompactorBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
+  rcases hbridge with ⟨compactor, hspec⟩
+  exact
+    ⟨compactor,
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec_of_bridgeSpec
+        hspec⟩
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeNilSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
@@ -1545,6 +1595,25 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstr
   exists compactor : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitSpec
       compactor
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_bridge
+    (hbridge : SelectedFootprintCompactorBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
+  rcases hbridge with ⟨compactor, hready, hrun⟩
+  refine ⟨compactor, ?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · exact hrun [] []
+    · intro padding
+      exact hrun [] (none :: padding)
+    · intro padBit padding
+      exact hrun [] (some padBit :: padding)
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      exact hrun (bit :: rest) []
+    · intro bit rest padding
+      exact hrun (bit :: rest) (none :: padding)
+    · intro bit rest padBit padding
+      exact hrun (bit :: rest) (some padBit :: padding)
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
     (hsplit :
@@ -1631,15 +1700,21 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstru
     ⟨compactor, hready, hnilNil, hnilNone, hnilSome,
       hconsNil, hconsNone, hconsSome⟩
 
+theorem selectedFootprintCompactorBridgeConstruction_core :
+    SelectedFootprintCompactorBridgeConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_bridge
+      selectedFootprintCompactorBridgeConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
   exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_split
-      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core
+    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_bridge
+      selectedFootprintCompactorBridgeConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
