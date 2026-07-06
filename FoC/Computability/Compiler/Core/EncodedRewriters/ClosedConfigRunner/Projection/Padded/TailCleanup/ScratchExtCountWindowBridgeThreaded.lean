@@ -1432,6 +1432,54 @@ def SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstru
     SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseSpec
       compactor
 
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    compactor.HaltsFromTapeEquiv
+      (rightEndCompactionSourceTape
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+          [] []))
+      (rightEdgeRewindSourceTape [] []) ∧
+    (forall padding : List (Option Bool),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (none :: padding)))
+        (rightEdgeRewindSourceTape [] (none :: padding))) ∧
+    (forall (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            [] (some padBit :: padding)))
+        (rightEdgeRewindSourceTape [] (some padBit :: padding))) ∧
+    (forall (bit : Bool) (rest : Word Bool),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) []))
+        (rightEdgeRewindSourceTape (bit :: rest) [])) ∧
+    (forall (bit : Bool) (rest : Word Bool)
+      (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (none :: padding)))
+        (rightEdgeRewindSourceTape (bit :: rest) (none :: padding))) ∧
+    forall (bit : Bool) (rest : Word Bool)
+      (padBit : Bool) (padding : List (Option Bool)),
+      compactor.HaltsFromTapeEquiv
+        (rightEndCompactionSourceTape
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells
+            (bit :: rest) (some padBit :: padding)))
+        (rightEdgeRewindSourceTape
+          (bit :: rest) (some padBit :: padding))
+
+def SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSpec
+      compactor
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
     (hsplit :
       SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction) :
@@ -1465,9 +1513,55 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstru
     | some padBit =>
         exact hconsSome bit rest padBit padding
 
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_of_rightEndBridge
+    (hbridge :
+      SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
+  rcases hbridge with
+    ⟨compactor, hready, hnilNil, hnilNone, hnilSome, hconsNil,
+      hconsNone, hconsSome⟩
+  refine ⟨compactor, ?_, ?_⟩
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_nil,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_nil] using
+        hnilNil
+    · intro padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_none,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_none] using
+        hnilNone padding
+    · intro padBit padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_nil_some,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_nil_some] using
+        hnilSome padBit padding
+  · refine ⟨hready, ?_, ?_, ?_⟩
+    · intro bit rest
+      simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_nil,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_nil] using
+        hconsNil bit rest
+    · intro bit rest padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_none,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_none] using
+        hconsNone bit rest padding
+    · intro bit rest padBit padding
+      simpa [
+        selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape_cons_some,
+        selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_eq_rightEdgeRewindSourceTape_cons_some] using
+        hconsSome bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
+  sorry
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_of_rightEndBridge
+      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction := by
