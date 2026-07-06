@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompaction
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserShape
 
 set_option doc.verso true
 
@@ -84,6 +85,25 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
   rw [
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape,
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_eq_rightEndCompactionSourceTape]
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+        T0 T1 bits padding =
+      guardedTwoTapeStructuredPrefixEraserSourceTape
+        T0 T1 bits padding := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_guardedTwoTapeStructuredPrefixEraserTargetTape
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+        bits padding =
+      guardedTwoTapeStructuredPrefixEraserTargetTape
+        bits padding := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape,
+    guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape]
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput
     (T0 T1 : Tape Bool) (bits : Word Bool)
@@ -885,6 +905,80 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHando
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
       eraser
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffNilPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+    {eraser : MachineDescription}
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserNilPadSymbolCaseSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffNilPadSymbolCaseSpec
+      eraser := by
+  rcases hguard with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · intro T0 T1
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hnilNil T0 T1
+  · intro T0 T1 padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hnilNone T0 T1 padding
+  · intro T0 T1 padBit padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hnilSome T0 T1 padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+    {eraser : MachineDescription}
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserConsPadSymbolCaseSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseSpec
+      eraser := by
+  rcases hguard with ⟨hready, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · intro T0 T1 bit rest
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hconsNil T0 T1 bit rest
+  · intro T0 T1 bit rest padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hconsNone T0 T1 bit rest padding
+  · intro T0 T1 bit rest padBit padding
+    simpa [
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+      guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+      hconsSome T0 T1 bit rest padBit padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+    {eraser : MachineDescription}
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseSpec
+        eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec
+      eraser := by
+  rcases hguard with ⟨hnil, hcons⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffNilPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+        hnil,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+        hcons⟩
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_guardedPrefixEraser
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  rcases hguard with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseSpec_of_guardedPrefixEraserSpec
+        hspec⟩
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_of_split
     (hsplit :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction) :
@@ -1048,6 +1142,30 @@ def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHando
   exists eraser : MachineDescription,
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
       eraser
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_guardedPrefixEraserSpec
+    {eraser : MachineDescription}
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserSpec eraser) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec
+      eraser := by
+  rcases hguard with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro T0 T1 bits padding
+  simpa [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_eq_guardedTwoTapeStructuredPrefixEraserSourceTape,
+    guardedTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape] using
+    hrun T0 T1 bits padding
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_guardedPrefixEraser
+    (hguard :
+      GuardedTwoTapeStructuredPrefixEraserConstruction) :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
+  rcases hguard with ⟨eraser, hspec⟩
+  exact
+    ⟨eraser,
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSpec_of_guardedPrefixEraserSpec
+        hspec⟩
 
 def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
     (eraser : MachineDescription) : Prop :=
