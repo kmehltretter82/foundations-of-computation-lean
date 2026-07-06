@@ -388,6 +388,129 @@ theorem copyTail_run
   simpa [initialConfig, sourceTape, erasedTailSourceTape] using
     copyTail_run_loop tail [] insert (pref.reverse.map some)
 
+def copyTailHandoffConfig
+    (pref tail insert : Word Bool) : Configuration :=
+  config rewindTailEntry
+    (erasedTailSourceTape pref tail insert)
+    (scratchTape insert)
+    (outputFromBits tail)
+
+def CopyTailSpec (D : Description) : Prop :=
+  SupportsReadWriteRows3 D ∧
+    forall (pref tail insert : Word Bool),
+      D.runConfig (tail.length + 1)
+          (initialConfig pref tail insert) =
+        copyTailHandoffConfig pref tail insert
+
+theorem CopyTailSpec.supported
+    {D : Description} (hD : CopyTailSpec D) :
+    SupportsReadWriteRows3 D :=
+  hD.left
+
+theorem CopyTailSpec.run
+    {D : Description} (hD : CopyTailSpec D)
+    (pref tail insert : Word Bool) :
+    D.runConfig (tail.length + 1)
+        (initialConfig pref tail insert) =
+      copyTailHandoffConfig pref tail insert :=
+  hD.right pref tail insert
+
+theorem description_copyTailSpec :
+    CopyTailSpec description := by
+  refine ⟨description_supported, ?_⟩
+  intro pref tail insert
+  simpa [copyTailHandoffConfig] using
+    copyTail_run pref tail insert
+
+theorem sourceTape_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput (sourceTape pref tail insert) =
+      List.append pref (List.append tail insert) := by
+  simp [sourceTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, List.map_reverse, Function.comp_def]
+
+theorem erasedTailSourceTape_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput (erasedTailSourceTape pref tail insert) =
+      List.append pref insert := by
+  simp [erasedTailSourceTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, List.map_reverse, List.append_assoc,
+    Function.comp_def]
+
+theorem insertionBoundarySourceTape_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput (insertionBoundarySourceTape pref tail insert) =
+      List.append pref insert := by
+  simp [insertionBoundarySourceTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, List.map_reverse, Function.comp_def]
+
+theorem scratchTape_normalizedOutput
+    (insert : Word Bool) :
+    Tape.normalizedOutput (scratchTape insert) = insert :=
+  outputFromBits_normalizedOutput insert
+
+theorem workTape_normalizedOutput
+    (tail : Word Bool) :
+    Tape.normalizedOutput (workTape tail) = tail :=
+  outputFromBits_normalizedOutput tail
+
+theorem finalScratchTape_normalizedOutput
+    (insert : Word Bool) :
+    Tape.normalizedOutput (finalScratchTape insert) = insert := by
+  simp [finalScratchTape, tapeAtCells_normalizedOutput,
+    List.filterMap_append, List.map_reverse, Function.comp_def]
+
+theorem initialConfig_source_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt (initialConfig pref tail insert).tapes 0) =
+      List.append pref (List.append tail insert) := by
+  simpa [initialConfig] using
+    sourceTape_normalizedOutput pref tail insert
+
+theorem initialConfig_scratch_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt (initialConfig pref tail insert).tapes 1) =
+      insert := by
+  simpa [initialConfig] using
+    scratchTape_normalizedOutput insert
+
+theorem initialConfig_work_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt (initialConfig pref tail insert).tapes 2) =
+      [] := by
+  change Tape.normalizedOutput (outputFromBits []) = []
+  exact outputFromBits_normalizedOutput []
+
+theorem copyTailHandoffConfig_source_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (copyTailHandoffConfig pref tail insert).tapes 0) =
+      List.append pref insert := by
+  simpa [copyTailHandoffConfig] using
+    erasedTailSourceTape_normalizedOutput pref tail insert
+
+theorem copyTailHandoffConfig_scratch_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (copyTailHandoffConfig pref tail insert).tapes 1) =
+      insert := by
+  simpa [copyTailHandoffConfig] using
+    scratchTape_normalizedOutput insert
+
+theorem copyTailHandoffConfig_work_normalizedOutput
+    (pref tail insert : Word Bool) :
+    Tape.normalizedOutput
+        (Description.tapeAt
+          (copyTailHandoffConfig pref tail insert).tapes 2) =
+      tail := by
+  simpa [copyTailHandoffConfig] using
+    outputFromBits_normalizedOutput tail
+
 theorem restoredSourceTape_normalizedOutput
     (pref tail insert : Word Bool) :
     Tape.normalizedOutput (restoredSourceTape pref tail insert) =
