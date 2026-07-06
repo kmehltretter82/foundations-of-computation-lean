@@ -1857,117 +1857,6 @@ def selectedRightBoundaryRefreshDescription
   canonicalPrimitiveSeqDescription gapCreator
     rightBoundaryGuardSlackRefreshDescription
 
-theorem selectedLeftBoundaryRefreshDescription_subroutineReady
-    {gapCreator : MachineDescription}
-    (hgap : gapCreator.SubroutineReady) :
-    (selectedLeftBoundaryRefreshDescription gapCreator).SubroutineReady :=
-  canonicalPrimitiveSeqDescription_subroutineReady hgap
-    leftBoundaryGuardSlackRefreshDescription_subroutineReady
-
-theorem selectedRightBoundaryRefreshDescription_subroutineReady
-    {gapCreator : MachineDescription}
-    (hgap : gapCreator.SubroutineReady) :
-    (selectedRightBoundaryRefreshDescription gapCreator).SubroutineReady :=
-  canonicalPrimitiveSeqDescription_subroutineReady hgap
-    rightBoundaryGuardSlackRefreshDescription_subroutineReady
-
-namespace SelectedHeadGapCreatorContract
-
-theorem leftBoundaryRefresh
-    {gapCreator : MachineDescription}
-    (hgap : SelectedHeadGapCreatorContract gapCreator)
-    (encodedPrefix : List (Option Bool))
-    (head : Option Bool) (right : List (Option Bool))
-    (rest : List (Tape Bool)) :
-    (selectedLeftBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := [], head := head, right := right ++ [none] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := [], head := head, right := right } :
-              Tape Bool) :: rest))) := by
-  have hcreate :=
-    hgap.realizes encodedPrefix
-      ({ left := [], head := head, right := right ++ [none] } :
-        Tape Bool)
-      rest
-  have hrepair :=
-    leftBoundaryGuardSlackRefreshDescription_haltsFrom_selectedHeadGap
-      encodedPrefix head (right ++ [none]) rest
-  simpa [selectedLeftBoundaryRefreshDescription, guardLogicalTape,
-    List.append_assoc] using
-    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
-      hgap.subroutineReady
-      leftBoundaryGuardSlackRefreshDescription_subroutineReady
-      hcreate hrepair
-
-theorem rightBoundaryRefresh
-    {gapCreator : MachineDescription}
-    (hgap : SelectedHeadGapCreatorContract gapCreator)
-    (encodedPrefix : List (Option Bool))
-    (left : List (Option Bool)) (head : Option Bool)
-    (rest : List (Tape Bool)) :
-    (selectedRightBoundaryRefreshDescription gapCreator).HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (({ left := left ++ [none], head := head, right := [] } :
-            Tape Bool) :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape
-            ({ left := left, head := head, right := [] } :
-              Tape Bool) :: rest))) := by
-  have hcreate :=
-    hgap.realizes encodedPrefix
-      ({ left := left ++ [none], head := head, right := [] } :
-        Tape Bool)
-      rest
-  have hrepair :=
-    rightBoundaryGuardSlackRefreshDescription_haltsFrom_selectedHeadGap
-      encodedPrefix (left ++ [none]) head rest
-  simpa [selectedRightBoundaryRefreshDescription, guardLogicalTape,
-    List.append_assoc] using
-    canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
-      hgap.subroutineReady
-      rightBoundaryGuardSlackRefreshDescription_subroutineReady
-      hcreate hrepair
-
-end SelectedHeadGapCreatorContract
-
-theorem selectedCanonicalRefreshDescription_haltsFrom
-    (encodedPrefix : List (Option Bool))
-    (target actual : Tape Bool) (rest : List (Tape Bool))
-    (hcanonical :
-      encodedStructuredTapes [actual] =
-        encodedGuardedStructuredTapes [target]) :
-    cursorNoopDescription.HaltsFromTapeEquiv
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells (actual :: rest)))
-      (tapeAtEncodedSplit encodedPrefix
-        (encodedStructuredTapeCells
-          (guardLogicalTape target :: rest))) := by
-  have hcode :
-      logicalTapeCode actual =
-        logicalTapeCode (guardLogicalTape target) := by
-    have hsingleton :
-        encodedStructuredTapes [actual] =
-          encodedStructuredTapes [guardLogicalTape target] := by
-      simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
-        hcanonical
-    exact logicalTapeCode_eq_of_encodedStructuredTapes_singleton_eq
-      hsingleton
-  have hcells :
-      encodedStructuredTapeCells (actual :: rest) =
-        encodedStructuredTapeCells (guardLogicalTape target :: rest) := by
-    simp [encodedStructuredTapeCells, hcode]
-  rw [hcells]
-  exact
-    MachineDescription.HaltsFromTape.toEquiv
-      (cursorNoopDescription_haltsFromTape _)
-
 theorem tapeAtEncodedSplit_selectedSeparator_read
     (encodedPrefix : List (Option Bool)) (head : Tape Bool)
     (rest : List (Tape Bool)) :
@@ -2042,13 +1931,15 @@ def concreteSelectedRightBoundaryRefreshDescription : MachineDescription :=
 
 theorem concreteSelectedLeftBoundaryRefreshDescription_subroutineReady :
     concreteSelectedLeftBoundaryRefreshDescription.SubroutineReady :=
-  selectedLeftBoundaryRefreshDescription_subroutineReady
+  canonicalPrimitiveSeqDescription_subroutineReady
     selectedHeadGapCreatorDescription_contract.subroutineReady
+    leftBoundaryGuardSlackRefreshDescription_subroutineReady
 
 theorem concreteSelectedRightBoundaryRefreshDescription_subroutineReady :
     concreteSelectedRightBoundaryRefreshDescription.SubroutineReady :=
-  selectedRightBoundaryRefreshDescription_subroutineReady
+  canonicalPrimitiveSeqDescription_subroutineReady
     selectedHeadGapCreatorDescription_contract.subroutineReady
+    rightBoundaryGuardSlackRefreshDescription_subroutineReady
 
 /-!
 ## Selected-shape dispatcher branch layout
@@ -2383,9 +2274,34 @@ theorem selectedShapeLeftRepairDescription_haltsFrom_leftBoundary
           (guardLogicalTape
             ({ left := [], head := head, right := right } :
               Tape Bool) :: rest))) := by
+  have hcreate :=
+    selectedHeadGapCreatorDescription_contract.realizes encodedPrefix
+      ({ left := [], head := head, right := right ++ [none] } :
+        Tape Bool)
+      rest
+  have hrepair :=
+    leftBoundaryGuardSlackRefreshDescription_haltsFrom_selectedHeadGap
+      encodedPrefix head (right ++ [none]) rest
+  have hseq :
+      concreteSelectedLeftBoundaryRefreshDescription.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := [], head := head, right := right ++ [none] } :
+              Tape Bool) :: rest)))
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape
+              ({ left := [], head := head, right := right } :
+                Tape Bool) :: rest))) := by
+    simpa [concreteSelectedLeftBoundaryRefreshDescription,
+      selectedLeftBoundaryRefreshDescription, guardLogicalTape,
+      List.append_assoc] using
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        selectedHeadGapCreatorDescription_contract.subroutineReady
+        leftBoundaryGuardSlackRefreshDescription_subroutineReady
+        hcreate hrepair
   rcases
-      selectedHeadGapCreatorDescription_contract.leftBoundaryRefresh
-        encodedPrefix head right rest with
+      hseq with
     ⟨actual, hhalts, hequiv⟩
   refine ⟨actual, ?_, hequiv⟩
   simpa [selectedShapeLeftRepairDescription] using
@@ -2408,9 +2324,34 @@ theorem selectedShapeRightRepairDescription_haltsFrom_rightBoundary
           (guardLogicalTape
             ({ left := left, head := head, right := [] } :
               Tape Bool) :: rest))) := by
+  have hcreate :=
+    selectedHeadGapCreatorDescription_contract.realizes encodedPrefix
+      ({ left := left ++ [none], head := head, right := [] } :
+        Tape Bool)
+      rest
+  have hrepair :=
+    rightBoundaryGuardSlackRefreshDescription_haltsFrom_selectedHeadGap
+      encodedPrefix (left ++ [none]) head rest
+  have hseq :
+      concreteSelectedRightBoundaryRefreshDescription.HaltsFromTapeEquiv
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (({ left := left ++ [none], head := head, right := [] } :
+              Tape Bool) :: rest)))
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape
+              ({ left := left, head := head, right := [] } :
+                Tape Bool) :: rest))) := by
+    simpa [concreteSelectedRightBoundaryRefreshDescription,
+      selectedRightBoundaryRefreshDescription, guardLogicalTape,
+      List.append_assoc] using
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        selectedHeadGapCreatorDescription_contract.subroutineReady
+        rightBoundaryGuardSlackRefreshDescription_subroutineReady
+        hcreate hrepair
   rcases
-      selectedHeadGapCreatorDescription_contract.rightBoundaryRefresh
-        encodedPrefix left head rest with
+      hseq with
     ⟨actual, hhalts, hequiv⟩
   refine ⟨actual, ?_, hequiv⟩
   simpa [selectedShapeRightRepairDescription] using
