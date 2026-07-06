@@ -1,0 +1,740 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
+
+set_option doc.verso true
+
+/-!
+# Structured selected-head projection routes
+
+The base projection module proves the selected singleton decoder route: the
+selected logical tape is the last encoded structured tape segment, so the
+generated bit scanner halts on the blank separator immediately after that
+segment.
+
+This module records the matching selected-head route.  The selected logical
+tape may have additional encoded structured segments to its right.  The
+scanner proof is still the same generated finite-control scanner, but its
+target carries a padding tail made from the remaining structured block.  A
+cleanup machine over this padded target is therefore enough to build the full
+selected-head decoder spec, and from there the tape
+0/1/2 segment normalizers and projectors.
+-/
+
+namespace FoC
+namespace Computability
+
+open Languages
+open MachineDescription
+
+namespace CommonGround
+namespace FiniteTransducers
+namespace Structured
+namespace MultiTapeLowering
+
+/-!
+## Padded selected-head scanner target
+
+The scanner starts one cell to the right of the selected segment separator.
+For a singleton selected segment, the scanner consumes the encoded logical tape
+and sees the final separator blank.  For a selected head, the same separator is
+followed by the remaining encoded structured segments.  The definitions below
+name the tail after that separator so later routes can avoid unfolding the
+whole structured encoding.
+-/
+
+/--
+Cells that remain to the right of the first separator in an encoded structured
+block.
+
+For the empty block this is empty: the block itself is just the separator.
+For a nonempty block it is the selected tape code followed by the rest of the
+encoded structured block.
+-/
+def selectedSegmentLogicalTapeDecoderRestPadding :
+    List (Tape Bool) -> List (Option Bool)
+  | [] => []
+  | T :: rest =>
+      List.append (logicalTapeCode T) (encodedStructuredTapeCells rest)
+
+/-- The empty structured rest contributes no padding after its separator. -/
+theorem selectedSegmentLogicalTapeDecoderRestPadding_nil :
+    selectedSegmentLogicalTapeDecoderRestPadding [] = [] := by
+  rfl
+
+/--
+The nonempty structured rest contributes the next tape code plus the remaining
+structured block after its opening separator.
+-/
+theorem selectedSegmentLogicalTapeDecoderRestPadding_cons
+    (T : Tape Bool) (rest : List (Tape Bool)) :
+    selectedSegmentLogicalTapeDecoderRestPadding (T :: rest) =
+      List.append (logicalTapeCode T) (encodedStructuredTapeCells rest) := by
+  rfl
+
+/--
+Every encoded structured block starts with the separator blank, and
+{name}`selectedSegmentLogicalTapeDecoderRestPadding` names the remaining tail.
+-/
+theorem encodedStructuredTapeCells_eq_none_cons_restPadding
+    (rest : List (Tape Bool)) :
+    encodedStructuredTapeCells rest =
+      none :: selectedSegmentLogicalTapeDecoderRestPadding rest := by
+  cases rest with
+  | nil =>
+      rfl
+  | cons T rest =>
+      rfl
+
+/--
+Equivalent append-shaped view of the rest block, useful when a later proof is
+already stated in terms of {name}`tapeSeparatorCells`.
+-/
+theorem encodedStructuredTapeCells_eq_separator_append_restPadding
+    (rest : List (Tape Bool)) :
+    encodedStructuredTapeCells rest =
+      List.append tapeSeparatorCells
+        (selectedSegmentLogicalTapeDecoderRestPadding rest) := by
+  rw [encodedStructuredTapeCells_eq_none_cons_restPadding]
+  rfl
+
+/-- The rest padding for a singleton specialization is empty. -/
+theorem selectedSegmentLogicalTapeDecoderRestPadding_singleton :
+    selectedSegmentLogicalTapeDecoderRestPadding [] = [] := by
+  rfl
+
+/--
+Target tape produced by the selected-segment scanner when the selected segment
+has an encoded structured suffix to its right.
+
+The generated scanner preserves the right-hand suffix as padding; only the
+selected logical tape code is decoded into optional output cells.
+-/
+def selectedSegmentLogicalTapeDecoderHeadTargetTape
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) : Tape Bool :=
+  FSTStatefulOptionAppendTargetTapeFromLeftWithPadding
+    selectedSegmentLogicalTapeDecoderNext
+    selectedSegmentLogicalTapeDecoderEmit
+    selectedSegmentLogicalTapeDecoderStart
+    (logicalTapeBits (guardLogicalTape target))
+    (none :: encodedPrefix.reverse)
+    (selectedSegmentLogicalTapeDecoderRestPadding rest)
+
+/-- The selected-head target is definitionally the singleton target when no rest remains. -/
+theorem selectedSegmentLogicalTapeDecoderHeadTargetTape_nil
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target [] encodedPrefix =
+      selectedSegmentLogicalTapeDecoderTargetTape target encodedPrefix := by
+  simp [selectedSegmentLogicalTapeDecoderHeadTargetTape,
+    selectedSegmentLogicalTapeDecoderTargetTape,
+    selectedSegmentLogicalTapeDecoderRestPadding,
+    FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
+    FSTStatefulOptionAppendTargetTapeFromLeft,
+    statefulOptionAppendWriteTargetTapeAtBlank,
+    tapeAtCells]
+
+/--
+Left stack of the padded selected-head scanner target.
+
+It is the same left stack as the singleton scanner target: the separator just
+crossed, the reversed physical decoder footprint, and the encoded prefix.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadTargetTape_left
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target rest encodedPrefix).left =
+      none ::
+        List.append
+          (statefulOptionCellsFrom selectedSegmentLogicalTapeDecoderNext
+            selectedSegmentLogicalTapeDecoderEmit
+            selectedSegmentLogicalTapeDecoderStart
+            (logicalTapeBits (guardLogicalTape target))).reverse
+          (none :: encodedPrefix.reverse) := by
+  rw [selectedSegmentLogicalTapeDecoderHeadTargetTape,
+    FSTStatefulOptionAppendTargetTapeFromLeftWithPadding]
+  cases selectedSegmentLogicalTapeDecoderRestPadding rest <;> rfl
+
+/-- Source shape after moving right from the selected segment separator. -/
+theorem selectedSegmentLogicalTapeDecoderHead_source_after_move
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    Tape.move Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest))) =
+      tapeAtCells (none :: encodedPrefix.reverse)
+        (List.append
+          ((logicalTapeBits (guardLogicalTape target)).map some)
+          (none :: selectedSegmentLogicalTapeDecoderRestPadding rest)) := by
+  simp [tapeAtEncodedSplit, encodedStructuredTapeCells,
+    tapeSeparatorCells, logicalTapeCode_eq_map_some, Tape.move,
+    Tape.moveRight, tapeAtCells]
+  rw [encodedStructuredTapeCells_eq_none_cons_restPadding rest]
+  cases (List.map some (logicalTapeBits (guardLogicalTape target)) ++
+      none :: selectedSegmentLogicalTapeDecoderRestPadding rest) <;> rfl
+
+/--
+The generated selected-segment scanner works unchanged for a selected head:
+the remaining structured block is just padding after the separator blank.
+-/
+theorem selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedHeadPayload
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+      (Tape.move Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest))))
+      (selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target rest encodedPrefix) := by
+  rw [selectedSegmentLogicalTapeDecoderHead_source_after_move]
+  change
+    (generatedStatefulOptionAppendDescription
+        selectedSegmentLogicalTapeDecoderStateCount
+        selectedSegmentLogicalTapeDecoderStart
+        selectedSegmentLogicalTapeDecoderNext
+        selectedSegmentLogicalTapeDecoderEmit
+        []).HaltsFromTape
+      (tapeAtCells (none :: encodedPrefix.reverse)
+        (List.append
+          ((logicalTapeBits (guardLogicalTape target)).map some)
+          (none :: selectedSegmentLogicalTapeDecoderRestPadding rest)))
+      (selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target rest encodedPrefix)
+  exact
+    generatedStatefulOptionAppendDescription_haltsFrom_tapeAtCells_nil_withPadding
+      selectedSegmentLogicalTapeDecoderStateCount
+      selectedSegmentLogicalTapeDecoderStart
+      selectedSegmentLogicalTapeDecoderNext
+      selectedSegmentLogicalTapeDecoderEmit
+      (logicalTapeBits (guardLogicalTape target))
+      (none :: encodedPrefix.reverse)
+      (selectedSegmentLogicalTapeDecoderRestPadding rest)
+      selectedSegmentLogicalTapeDecoderStart_lt
+      selectedSegmentLogicalTapeDecoderNext_lt
+
+/-!
+## Cleanup contracts
+
+The scanner target still contains blanks from skipped physical code bits and
+the untouched encoded suffix.  A cleanup machine for this padded target is the
+right reusable premise for tape 0 and tape 1 projection.  The older singleton
+cleanup is exactly the specialization where the structured suffix is empty.
+-/
+
+/-- Cleanup needed after the padded selected-head bit decoder. -/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderHeadTargetTape
+          target rest encodedPrefix)
+        target
+
+/-- Existence wrapper for the padded selected-head cleanup phase. -/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction : Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup
+
+/-- Singleton cleanup follows from padded selected-head cleanup. -/
+theorem selectedSegmentLogicalTapeDecoderCleanupSpec_of_headCleanupSpec
+    {cleanup : MachineDescription}
+    (hcleanup : SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderCleanupSpec cleanup := by
+  constructor
+  · exact hcleanup.left
+  · intro target encodedPrefix
+    simpa [selectedSegmentLogicalTapeDecoderHeadTargetTape_nil] using
+      hcleanup.right target [] encodedPrefix
+
+/-- Construction-level singleton cleanup adapter. -/
+theorem selectedSegmentLogicalTapeDecoderCleanupConstruction_of_headCleanup
+    (hcleanup : SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderCleanupConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderCleanupSpec_of_headCleanupSpec
+        hcleanupSpec⟩
+
+/--
+The converse is intentionally absent.  Singleton cleanup does not know how to
+discard or preserve arbitrary encoded structured suffixes after the selected
+segment.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupNilRestSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderHeadTargetTape
+          target [] encodedPrefix)
+        target
+
+/--
+Cleanup branch where the selected segment is followed by at least one encoded
+structured tape.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupConsRestSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target next : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTapeEquiv
+        (selectedSegmentLogicalTapeDecoderHeadTargetTape
+          target (next :: rest) encodedPrefix)
+        target
+
+/-- Branch split for padded selected-head cleanup. -/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec
+    (cleanup : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderHeadCleanupNilRestSpec cleanup ∧
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConsRestSpec cleanup
+
+/-- Construction wrapper for the branch-split cleanup view. -/
+def SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction : Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec cleanup
+
+/-- Split padded selected-head cleanup into nil-rest and cons-rest branches. -/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec_of_spec
+    {cleanup : MachineDescription}
+    (hcleanup : SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec cleanup := by
+  constructor
+  · constructor
+    · exact hcleanup.left
+    · intro target encodedPrefix
+      exact hcleanup.right target [] encodedPrefix
+  · constructor
+    · exact hcleanup.left
+    · intro target next rest encodedPrefix
+      exact hcleanup.right target (next :: rest) encodedPrefix
+
+/-- Reassemble padded selected-head cleanup from nil-rest and cons-rest branches. -/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupSpec_of_splitSpec
+    {cleanup : MachineDescription}
+    (hsplit : SelectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  refine ⟨hready, ?_⟩
+  intro target rest encodedPrefix
+  cases rest with
+  | nil =>
+      exact hnilRun target encodedPrefix
+  | cons next rest =>
+      exact hconsRun target next rest encodedPrefix
+
+/-- Construction-level split adapter from the full cleanup view. -/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
+    (hcleanup : SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderHeadCleanupSplitSpec_of_spec
+        hcleanupSpec⟩
+
+/-- Construction-level full cleanup adapter from the branch-split view. -/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
+    (hsplit : SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderHeadCleanupSpec_of_splitSpec
+        hsplitSpec⟩
+
+/-- Full cleanup and branch-split cleanup are equivalent route boundaries. -/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_iff_split :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction ↔
+      SelectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction := by
+  constructor
+  · exact selectedSegmentLogicalTapeDecoderHeadCleanupSplitConstruction_of_cleanup
+  · exact selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_split
+
+/-!
+## Pipeline route
+
+The physical machine assembled here is the same three-phase pipeline as the
+singleton decoder: move right from the separator, run the generated scanner,
+then run the cleanup.  The only difference is the scanner target used by the
+cleanup specification.
+-/
+
+/-- Alias for the selected-head pipeline assembled from the cleanup phase. -/
+def selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+    (cleanup : MachineDescription) : MachineDescription :=
+  selectedSegmentLogicalTapeDecoderPipelineDescription cleanup
+
+/-- Subroutine readiness for the padded selected-head decoder pipeline. -/
+theorem selectedSegmentLogicalTapeDecoderHeadPipelineDescription_subroutineReady
+    {cleanup : MachineDescription}
+    (hcleanup : cleanup.SubroutineReady) :
+    (selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+      cleanup).SubroutineReady := by
+  exact
+    selectedSegmentLogicalTapeDecoderPipelineDescription_subroutineReady
+      hcleanup
+
+/--
+The move-right and generated-scanner phases turn the selected-head source into
+the padded scanner target expected by
+{name}`SelectedSegmentLogicalTapeDecoderHeadCleanupSpec`.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadPipelineSpec_of_cleanupSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup) :
+    StructuredSelectedHeadSegmentDecoderSpec
+      (selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+        cleanup) := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderHeadPipelineDescription_subroutineReady
+        hcleanup.left
+  · intro target rest encodedPrefix
+    have hmove :
+        (cursorMoveOnceDescription Direction.right).HaltsFromTapeEquiv
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest)))) :=
+      (cursorMoveOnceDescription_haltsFromTape Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape target :: rest)))).toEquiv
+    have hscan :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTapeEquiv
+          (Tape.move Direction.right
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest))))
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix) :=
+      (selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedHeadPayload
+        target rest encodedPrefix).toEquiv
+    have hpipelineScan :
+        (canonicalPrimitiveSeqDescription
+          (cursorMoveOnceDescription Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription).HaltsFromTapeEquiv
+            (tapeAtEncodedSplit encodedPrefix
+              (encodedStructuredTapeCells
+                (guardLogicalTape target :: rest)))
+            (selectedSegmentLogicalTapeDecoderHeadTargetTape
+              target rest encodedPrefix) :=
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady
+        hmove
+        hscan
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        (canonicalPrimitiveSeqDescription_subroutineReady
+          (cursorMoveOnceDescription_subroutineReady Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+        hcleanup.left
+        hpipelineScan
+        (hcleanup.right target rest encodedPrefix)
+
+/-- Build a selected-head decoder from a padded selected-head cleanup. -/
+theorem structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredSelectedHeadSegmentDecoderConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderHeadPipelineDescription cleanup,
+      selectedSegmentLogicalTapeDecoderHeadPipelineSpec_of_cleanupSpec
+        hcleanupSpec⟩
+
+/-- The selected-head cleanup route also supplies the selected singleton decoder. -/
+theorem structuredSelectedSingletonSegmentDecoderConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredSelectedSingletonSegmentDecoderConstruction :=
+  structuredSelectedSingletonSegmentDecoderConstruction_of_headDecoder
+    (structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup hcleanup)
+
+/-!
+## Output route
+
+Many downstream routes only need the normalized public word recovered from the
+selected logical tape.  The output route is weaker than the exact
+{name}`MachineDescription.HaltsFromTapeEquiv` route but follows immediately
+from it.
+-/
+
+/-- Normalized-output view of a selected-head decoder. -/
+def StructuredSelectedHeadSegmentDecoderOutputSpec
+    (decoder : MachineDescription) : Prop :=
+  decoder.SubroutineReady ∧
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      decoder.HaltsFromTapeWithOutput
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+        (Tape.normalizedOutput target)
+
+/-- Existence wrapper for the selected-head output route. -/
+def StructuredSelectedHeadSegmentDecoderOutputConstruction : Prop :=
+  exists decoder : MachineDescription,
+    StructuredSelectedHeadSegmentDecoderOutputSpec decoder
+
+/-- Exact selected-head decoding implies the normalized-output route. -/
+theorem structuredSelectedHeadSegmentDecoderOutputSpec_of_spec
+    {decoder : MachineDescription}
+    (hdecoder : StructuredSelectedHeadSegmentDecoderSpec decoder) :
+    StructuredSelectedHeadSegmentDecoderOutputSpec decoder := by
+  constructor
+  · exact hdecoder.left
+  · intro target rest encodedPrefix
+    exact
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+        (hdecoder.right target rest encodedPrefix)
+
+/-- Construction-level exact-to-output adapter for selected-head decoders. -/
+theorem structuredSelectedHeadSegmentDecoderOutputConstruction_of_exact
+    (hdecoder : StructuredSelectedHeadSegmentDecoderConstruction) :
+    StructuredSelectedHeadSegmentDecoderOutputConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderSpec⟩
+  exact
+    ⟨decoder,
+      structuredSelectedHeadSegmentDecoderOutputSpec_of_spec
+        hdecoderSpec⟩
+
+/-- Build the selected-head output route directly from padded cleanup. -/
+theorem structuredSelectedHeadSegmentDecoderOutputConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredSelectedHeadSegmentDecoderOutputConstruction :=
+  structuredSelectedHeadSegmentDecoderOutputConstruction_of_exact
+    (structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+      hcleanup)
+
+/-!
+## Projector consequences
+
+Once a selected-head decoder exists, the generic projection module already
+knows how to turn it into the tape 0, tape 1, and tape 2 segment normalizers.
+This section packages those consequences so downstream code can depend on one
+route bundle rather than rebuilding the same adapters.
+-/
+
+/-- Tape-0 segment normalizer from padded selected-head cleanup. -/
+theorem structuredTape0SegmentNormalizerConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape0SegmentNormalizerConstruction :=
+  structuredTape0SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+      hcleanup)
+
+/-- Tape-1 segment normalizer from padded selected-head cleanup. -/
+theorem structuredTape1SegmentNormalizerConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape1SegmentNormalizerConstruction :=
+  structuredTape1SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+      hcleanup)
+
+/-- Tape-2 segment normalizer from padded selected-head cleanup. -/
+theorem structuredTape2SegmentNormalizerConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape2SegmentNormalizerConstruction :=
+  structuredTape2SegmentNormalizerConstruction_of_selectedHeadDecoder
+    (structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+      hcleanup)
+
+/-- Tape-0 projector from padded selected-head cleanup. -/
+theorem structuredTape0ProjectorConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape0ProjectorConstruction :=
+  structuredTape0ProjectorConstruction_of_segmentNormalizerConstruction
+    (structuredTape0SegmentNormalizerConstruction_of_headCleanup
+      hcleanup)
+
+/-- Tape-1 projector from padded selected-head cleanup. -/
+theorem structuredTape1ProjectorConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape1ProjectorConstruction :=
+  structuredTape1ProjectorConstruction_of_segmentNormalizerConstruction
+    (structuredTape1SegmentNormalizerConstruction_of_headCleanup
+      hcleanup)
+
+/-- Tape-2 projector from padded selected-head cleanup. -/
+theorem structuredTape2ProjectorConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredTape2ProjectorConstruction :=
+  structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
+    (structuredTape2SegmentNormalizerConstruction_of_headCleanup
+      hcleanup)
+
+/--
+Bundle of selected-head decoder consequences from one padded cleanup premise.
+
+The fields are deliberately redundant.  Later bridge modules commonly need a
+specific projection of this route; making each consequence a field avoids
+re-deriving local lets through large endpoint proofs.
+-/
+structure StructuredSelectedHeadDecoderRouteConstruction : Prop where
+  headCleanup :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction
+  singletonCleanup :
+    SelectedSegmentLogicalTapeDecoderCleanupConstruction
+  headDecoder :
+    StructuredSelectedHeadSegmentDecoderConstruction
+  singletonDecoder :
+    StructuredSelectedSingletonSegmentDecoderConstruction
+  headOutput :
+    StructuredSelectedHeadSegmentDecoderOutputConstruction
+  tape0SegmentNormalizer :
+    StructuredTape0SegmentNormalizerConstruction
+  tape1SegmentNormalizer :
+    StructuredTape1SegmentNormalizerConstruction
+  tape2SegmentNormalizer :
+    StructuredTape2SegmentNormalizerConstruction
+  tape0Projector :
+    StructuredTape0ProjectorConstruction
+  tape1Projector :
+    StructuredTape1ProjectorConstruction
+  tape2Projector :
+    StructuredTape2ProjectorConstruction
+
+/-- Build the selected-head route bundle from the padded cleanup premise. -/
+theorem structuredSelectedHeadDecoderRouteConstruction_of_headCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction) :
+    StructuredSelectedHeadDecoderRouteConstruction := by
+  let hhead :
+      StructuredSelectedHeadSegmentDecoderConstruction :=
+    structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
+      hcleanup
+  let hsingletonCleanup :
+      SelectedSegmentLogicalTapeDecoderCleanupConstruction :=
+    selectedSegmentLogicalTapeDecoderCleanupConstruction_of_headCleanup
+      hcleanup
+  let hsingleton :
+      StructuredSelectedSingletonSegmentDecoderConstruction :=
+    structuredSelectedSingletonSegmentDecoderConstruction_of_headDecoder
+      hhead
+  let houtput :
+      StructuredSelectedHeadSegmentDecoderOutputConstruction :=
+    structuredSelectedHeadSegmentDecoderOutputConstruction_of_exact
+      hhead
+  let htape0 :
+      StructuredTape0SegmentNormalizerConstruction :=
+    structuredTape0SegmentNormalizerConstruction_of_selectedHeadDecoder
+      hhead
+  let htape1 :
+      StructuredTape1SegmentNormalizerConstruction :=
+    structuredTape1SegmentNormalizerConstruction_of_selectedHeadDecoder
+      hhead
+  let htape2 :
+      StructuredTape2SegmentNormalizerConstruction :=
+    structuredTape2SegmentNormalizerConstruction_of_selectedHeadDecoder
+      hhead
+  let hproject0 :
+      StructuredTape0ProjectorConstruction :=
+    structuredTape0ProjectorConstruction_of_segmentNormalizerConstruction
+      htape0
+  let hproject1 :
+      StructuredTape1ProjectorConstruction :=
+    structuredTape1ProjectorConstruction_of_segmentNormalizerConstruction
+      htape1
+  let hproject2 :
+      StructuredTape2ProjectorConstruction :=
+    structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
+      htape2
+  exact
+    { headCleanup := hcleanup
+      singletonCleanup := hsingletonCleanup
+      headDecoder := hhead
+      singletonDecoder := hsingleton
+      headOutput := houtput
+      tape0SegmentNormalizer := htape0
+      tape1SegmentNormalizer := htape1
+      tape2SegmentNormalizer := htape2
+      tape0Projector := hproject0
+      tape1Projector := hproject1
+      tape2Projector := hproject2 }
+
+/-!
+## Bundle projections
+
+These small projection lemmas keep downstream modules independent from the
+internal field names if the route bundle is expanded later.
+-/
+
+theorem selectedHeadRoute_headCleanup
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction :=
+  hroute.headCleanup
+
+theorem selectedHeadRoute_singletonCleanup
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    SelectedSegmentLogicalTapeDecoderCleanupConstruction :=
+  hroute.singletonCleanup
+
+theorem selectedHeadRoute_headDecoder
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredSelectedHeadSegmentDecoderConstruction :=
+  hroute.headDecoder
+
+theorem selectedHeadRoute_singletonDecoder
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredSelectedSingletonSegmentDecoderConstruction :=
+  hroute.singletonDecoder
+
+theorem selectedHeadRoute_headOutput
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredSelectedHeadSegmentDecoderOutputConstruction :=
+  hroute.headOutput
+
+theorem selectedHeadRoute_tape0SegmentNormalizer
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape0SegmentNormalizerConstruction :=
+  hroute.tape0SegmentNormalizer
+
+theorem selectedHeadRoute_tape1SegmentNormalizer
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape1SegmentNormalizerConstruction :=
+  hroute.tape1SegmentNormalizer
+
+theorem selectedHeadRoute_tape2SegmentNormalizer
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape2SegmentNormalizerConstruction :=
+  hroute.tape2SegmentNormalizer
+
+theorem selectedHeadRoute_tape0Projector
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape0ProjectorConstruction :=
+  hroute.tape0Projector
+
+theorem selectedHeadRoute_tape1Projector
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape1ProjectorConstruction :=
+  hroute.tape1Projector
+
+theorem selectedHeadRoute_tape2Projector
+    (hroute : StructuredSelectedHeadDecoderRouteConstruction) :
+    StructuredTape2ProjectorConstruction :=
+  hroute.tape2Projector
+
+end MultiTapeLowering
+end Structured
+end FiniteTransducers
+end CommonGround
+
+end Computability
+end FoC
