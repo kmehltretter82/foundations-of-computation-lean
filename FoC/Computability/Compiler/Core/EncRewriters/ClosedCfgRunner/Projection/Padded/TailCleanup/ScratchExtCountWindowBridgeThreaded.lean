@@ -26,168 +26,6 @@ namespace SelectedProjectionPaddedTailCleanup
 
 open CanonicalLayouts.DovetailLayoutScanner
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction :=
-  ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_prefixEraser
-      hprefix,
-    hfootprint⟩
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_components
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndFootprint
-        hprefix hfootprint)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_densifier
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndFootprint
-        hprefix hfootprint)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_cleanup
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndFootprint
-        hprefix hfootprint)
-
-theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixSelectedSegmentDecoder
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndFootprint
-        hprefix hfootprint)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndGenericFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndFootprint
-      hprefix
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-        hgeneric)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndGenericFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndFootprint
-      hprefix
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-        hgeneric)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndGenericFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndFootprint
-      hprefix
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-        hgeneric)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndGenericFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndFootprint
-      hprefix
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-        hgeneric)
-
-theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndGenericFootprint
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprint
-      hprefix
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-        hgeneric)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_prefixAndGenericFootprint
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-        hcases)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_prefixAndGenericFootprint
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-        hcases)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_prefixAndGenericFootprint
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-        hcases)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndFootprintCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_prefixAndGenericFootprint
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-        hcases)
-
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintCases
     (hprefix :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
@@ -195,10 +33,15 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
   exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndGenericFootprint
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-        hcases)
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixSelectedSegmentDecoder
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_cleanup
+        (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_densifier
+          (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_components
+            ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_prefixEraser
+                hprefix,
+              countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+                (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
+                  hcases)⟩)))
 
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
     (hprefix :
@@ -212,65 +55,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
         hcases)
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_structuredPrefixBranchCasesAndFootprint
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hfootprint :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction :=
-  ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
-        heraser),
-    hfootprint⟩
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_structuredPrefixBranchCasesAndGenericFootprint
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_components
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction_of_structuredPrefixBranchCasesAndFootprint
-        heraser
-        (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-          hgeneric))
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_densifier
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_structuredPrefixBranchCasesAndGenericFootprint
-        heraser
-        (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-          hcases))
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_cleanup
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-        heraser hcases)
-
-theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-    (heraser :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixSelectedSegmentDecoder
-      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-        heraser hcases)
-
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
     (heraser :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
@@ -278,10 +62,17 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
       SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
   exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixBranchCasesAndFootprintCases
-      heraser
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
-        hcases)
+    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_structuredPrefixSelectedSegmentDecoder
+      (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_of_cleanup
+        (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_of_densifier
+          (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_of_components
+            ⟨countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
+                (countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
+                  heraser),
+              countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+                (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
+                  (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
+                    hcases))⟩)))
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
