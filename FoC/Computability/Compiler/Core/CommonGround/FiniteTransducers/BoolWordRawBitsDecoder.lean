@@ -5,6 +5,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true
@@ -27,6 +28,8 @@ open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 namespace CommonGround
 namespace FiniteTransducers
+
+open Structured.MultiTapeLowering.ThreeTape
 
 /--
 The encoded Boolean-word field as raw tape bits, without any surrounding code
@@ -125,35 +128,6 @@ real counter on a second logical tape, writes raw bits on a third logical tape,
 and proves the full structured run.
 -/
 
-private def structuredBoolWordRawBitsDecoderStay :
-    Structured.TapeAction :=
-  Structured.TapeAction.preserveMove Structured.HeadMove.stay
-
-private def structuredBoolWordRawBitsDecoderMoveRight :
-    Structured.TapeAction :=
-  Structured.TapeAction.preserveMove Structured.HeadMove.right
-
-private def structuredBoolWordRawBitsDecoderMoveLeft :
-    Structured.TapeAction :=
-  Structured.TapeAction.preserveMove Structured.HeadMove.left
-
-private def structuredBoolWordRawBitsDecoderWriteRight
-    (cell : Option Bool) : Structured.TapeAction :=
-  Structured.TapeAction.writeMove cell Structured.HeadMove.right
-
-private def structuredBoolWordRawBitsDecoderEraseLeft :
-    Structured.TapeAction :=
-  Structured.TapeAction.writeMove none Structured.HeadMove.left
-
-private def structuredBoolWordRawBitsDecoderRow
-    (source : Nat) (sourceRead counterRead outputRead : Option Bool)
-    (sourceAction counterAction outputAction : Structured.TapeAction)
-    (target : Nat) : Structured.Transition where
-  source := source
-  reads := [sourceRead, counterRead, outputRead]
-  actions := [sourceAction, counterAction, outputAction]
-  target := target
-
 private def structuredTransitionWellFormedBool
     (stateCount tapeCount : Nat) (t : Structured.Transition) : Bool :=
   decide (t.source < stateCount) &&
@@ -231,89 +205,49 @@ def structuredBoolWordRawBitsDecoderDescription :
   start := 80
   halt := 99
   transitions :=
-    [ structuredBoolWordRawBitsDecoderRow 80 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 81
-    , structuredBoolWordRawBitsDecoderRow 81 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 82
-    , structuredBoolWordRawBitsDecoderRow 82 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 83
-    , structuredBoolWordRawBitsDecoderRow 83 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 0
+    [ row 80
+        (some false) none none keepR keepS keepS 81
+    , row 81
+        (some false) none none keepR keepS keepS 82
+    , row 82
+        (some false) none none keepR keepS keepS 83
+    , row 83
+        (some false) none none keepR keepS keepS 0
 
-    , structuredBoolWordRawBitsDecoderRow 0 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 1
-    , structuredBoolWordRawBitsDecoderRow 1 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 2
-    , structuredBoolWordRawBitsDecoderRow 2 (some true) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 3
-    , structuredBoolWordRawBitsDecoderRow 3 (some false) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        (structuredBoolWordRawBitsDecoderWriteRight (some true))
-        structuredBoolWordRawBitsDecoderStay 0
-    , structuredBoolWordRawBitsDecoderRow 3 (some true) none none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderMoveLeft
-        structuredBoolWordRawBitsDecoderStay 10
+    , row 0
+        (some false) none none keepR keepS keepS 1
+    , row 1
+        (some false) none none keepR keepS keepS 2
+    , row 2
+        (some true) none none keepR keepS keepS 3
+    , row 3
+        (some false) none none keepR (writeR (some true)) keepS 0
+    , row 3
+        (some true) none none keepR keepL keepS 10
 
-    , structuredBoolWordRawBitsDecoderRow 10 (some false) none none
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 49
-    , structuredBoolWordRawBitsDecoderRow 10 (some false) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 11
-    , structuredBoolWordRawBitsDecoderRow 11 (some true) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 12
-    , structuredBoolWordRawBitsDecoderRow 12 (some false) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 20
-    , structuredBoolWordRawBitsDecoderRow 12 (some true) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay 30
-    , structuredBoolWordRawBitsDecoderRow 20 (some true) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderEraseLeft
-        (structuredBoolWordRawBitsDecoderWriteRight (some false)) 10
-    , structuredBoolWordRawBitsDecoderRow 30 (some false) (some true) none
-        structuredBoolWordRawBitsDecoderMoveRight
-        structuredBoolWordRawBitsDecoderEraseLeft
-        (structuredBoolWordRawBitsDecoderWriteRight (some true)) 10
+    , row 10
+        (some false) none none keepS keepS keepS 49
+    , row 10
+        (some false) (some true) none keepR keepS keepS 11
+    , row 11
+        (some true) (some true) none keepR keepS keepS 12
+    , row 12
+        (some false) (some true) none keepR keepS keepS 20
+    , row 12
+        (some true) (some true) none keepR keepS keepS 30
+    , row 20
+        (some true) (some true) none keepR eraseL (writeR (some false)) 10
+    , row 30
+        (some false) (some true) none keepR eraseL (writeR (some true)) 10
 
-    , structuredBoolWordRawBitsDecoderRow 49 (some false) none none
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderMoveLeft 50
-    , structuredBoolWordRawBitsDecoderRow 50 (some false) none (some false)
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderMoveLeft 50
-    , structuredBoolWordRawBitsDecoderRow 50 (some false) none (some true)
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderMoveLeft 50
-    , structuredBoolWordRawBitsDecoderRow 50 (some false) none none
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderStay
-        structuredBoolWordRawBitsDecoderMoveRight 99 ]
+    , row 49
+        (some false) none none keepS keepS keepL 50
+    , row 50
+        (some false) none (some false) keepS keepS keepL 50
+    , row 50
+        (some false) none (some true) keepS keepS keepL 50
+    , row 50
+        (some false) none none keepS keepS keepR 99 ]
 
 theorem structuredBoolWordRawBitsDecoderDescription_wellFormed :
     structuredBoolWordRawBitsDecoderDescription.WellFormed := by
@@ -512,9 +446,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_header
           , Tape.blank
           , structuredBoolWordRawBitsDecoderInitialOutputTape ] } := by
   simp [structuredBoolWordRawBitsDecoderDescription,
-    structuredBoolWordRawBitsDecoderRow,
-    structuredBoolWordRawBitsDecoderMoveRight,
-    structuredBoolWordRawBitsDecoderStay,
+    row,
+    keepR,
+    keepS, Structured.TapeAction.stay,
     boolWordRawBitsDecoderSourceTape,
     structuredBoolWordRawBitsDecoderAfterHeaderTape,
     boolWordRawBitsDecoderHeaderBits, rightEdgeRewindTargetTape,
@@ -558,10 +492,10 @@ private theorem structuredBoolWordRawBitsDecoder_run_prefix
   | zero =>
       cases markers <;>
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveRight,
-          structuredBoolWordRawBitsDecoderMoveLeft,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepR,
+          keepL,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterWriteTape,
           structuredBoolWordRawBitsDecoderCounterDecodeTape,
           structuredBoolWordRawBitsDecoderInitialOutputTape,
@@ -597,10 +531,10 @@ private theorem structuredBoolWordRawBitsDecoder_run_prefix
                   (markers + 1)
               , structuredBoolWordRawBitsDecoderInitialOutputTape ] } := by
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveRight,
-          structuredBoolWordRawBitsDecoderWriteRight,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepR,
+          writeR,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterWriteTape,
           structuredBoolWordRawBitsDecoderInitialOutputTape,
           stageNatBits_succ, tickBits, encodeCodeSymbolAsInput,
@@ -648,10 +582,10 @@ private theorem structuredBoolWordRawBitsDecoder_run_prefix_withOutput
   | zero =>
       cases markers <;>
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveRight,
-          structuredBoolWordRawBitsDecoderMoveLeft,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepR,
+          keepL,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterWriteTape,
           structuredBoolWordRawBitsDecoderCounterDecodeTape,
           stageNatBits_zero,
@@ -686,10 +620,10 @@ private theorem structuredBoolWordRawBitsDecoder_run_prefix_withOutput
                   (markers + 1)
               , output ] } := by
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveRight,
-          structuredBoolWordRawBitsDecoderWriteRight,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepR,
+          writeR,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterWriteTape,
           stageNatBits_succ, tickBits, encodeCodeSymbolAsInput,
           tapeAtCells, Structured.Description.runConfig,
@@ -745,8 +679,8 @@ private theorem structuredBoolWordRawBitsDecoder_run_decode_loop
   induction remaining generalizing processed sourceLeft with
   | nil =>
       simp [structuredBoolWordRawBitsDecoderDescription,
-        structuredBoolWordRawBitsDecoderRow,
-        structuredBoolWordRawBitsDecoderStay,
+        row,
+        keepS, Structured.TapeAction.stay,
         structuredBoolWordRawBitsDecoderCounterDecodeTape,
         structuredBoolWordRawBitsDecoderOutputRightBlankTape,
         cellsCodeBits, tapeAtCells,
@@ -793,11 +727,11 @@ private theorem structuredBoolWordRawBitsDecoder_run_decode_loop
                   (List.append processed [bit]) ] } := by
         cases bit <;>
           simp [structuredBoolWordRawBitsDecoderDescription,
-            structuredBoolWordRawBitsDecoderRow,
-            structuredBoolWordRawBitsDecoderMoveRight,
-            structuredBoolWordRawBitsDecoderStay,
-            structuredBoolWordRawBitsDecoderEraseLeft,
-            structuredBoolWordRawBitsDecoderWriteRight,
+            row,
+            keepR,
+            keepS, Structured.TapeAction.stay,
+            eraseL,
+            writeR,
             structuredBoolWordRawBitsDecoderCounterDecodeTape,
             structuredBoolWordRawBitsDecoderOutputRightBlankTape,
             cellsCodeBits, cellCodeBits, encodeCell,
@@ -861,8 +795,8 @@ private theorem structuredBoolWordRawBitsDecoder_run_decode_loop_withPadding
   induction remaining generalizing processed sourceLeft with
   | nil =>
       simp [structuredBoolWordRawBitsDecoderDescription,
-        structuredBoolWordRawBitsDecoderRow,
-        structuredBoolWordRawBitsDecoderStay,
+        row,
+        keepS, Structured.TapeAction.stay,
         structuredBoolWordRawBitsDecoderCounterDecodeTape,
         structuredBoolWordRawBitsDecoderOutputBufferTape,
         structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
@@ -911,11 +845,11 @@ private theorem structuredBoolWordRawBitsDecoder_run_decode_loop_withPadding
                   outputPadding ] } := by
         cases bit <;>
           simp [structuredBoolWordRawBitsDecoderDescription,
-            structuredBoolWordRawBitsDecoderRow,
-            structuredBoolWordRawBitsDecoderMoveRight,
-            structuredBoolWordRawBitsDecoderStay,
-            structuredBoolWordRawBitsDecoderEraseLeft,
-            structuredBoolWordRawBitsDecoderWriteRight,
+            row,
+            keepR,
+            keepS, Structured.TapeAction.stay,
+            eraseL,
+            writeR,
             structuredBoolWordRawBitsDecoderCounterDecodeTape,
             structuredBoolWordRawBitsDecoderOutputBufferTape,
             cellsCodeBits, cellCodeBits, encodeCell,
@@ -969,9 +903,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind_loop
   induction revRemaining generalizing right with
   | nil =>
       simp [structuredBoolWordRawBitsDecoderDescription,
-        structuredBoolWordRawBitsDecoderRow,
-        structuredBoolWordRawBitsDecoderMoveRight,
-        structuredBoolWordRawBitsDecoderStay,
+        row,
+        keepR,
+        keepS, Structured.TapeAction.stay,
         structuredBoolWordRawBitsDecoderCounterDecodeTape,
         structuredBoolWordRawBitsDecoderOutputRewindTape,
         tapeAtCells, Structured.Description.runConfig,
@@ -1006,9 +940,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind_loop
                   rest (some bit :: right) ] } := by
         cases bit <;>
           simp [structuredBoolWordRawBitsDecoderDescription,
-            structuredBoolWordRawBitsDecoderRow,
-            structuredBoolWordRawBitsDecoderMoveLeft,
-            structuredBoolWordRawBitsDecoderStay,
+            row,
+            keepL,
+            keepS, Structured.TapeAction.stay,
             structuredBoolWordRawBitsDecoderCounterDecodeTape,
             structuredBoolWordRawBitsDecoderOutputRewindTape,
             tapeAtCells, Structured.Description.runConfig,
@@ -1062,9 +996,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind
     cases hrev : bits.reverse with
     | nil =>
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveLeft,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepL,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterDecodeTape,
           structuredBoolWordRawBitsDecoderOutputRightBlankTape,
           structuredBoolWordRawBitsDecoderOutputRewindTape,
@@ -1078,9 +1012,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind
     | cons bit rest =>
         cases bit <;>
           simp [structuredBoolWordRawBitsDecoderDescription,
-            structuredBoolWordRawBitsDecoderRow,
-            structuredBoolWordRawBitsDecoderMoveLeft,
-            structuredBoolWordRawBitsDecoderStay,
+            row,
+            keepL,
+            keepS, Structured.TapeAction.stay,
             structuredBoolWordRawBitsDecoderCounterDecodeTape,
             structuredBoolWordRawBitsDecoderOutputRightBlankTape,
             structuredBoolWordRawBitsDecoderOutputRewindTape,
@@ -1138,9 +1072,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind_withPadding
     cases hrev : bits.reverse with
     | nil =>
         simp [structuredBoolWordRawBitsDecoderDescription,
-          structuredBoolWordRawBitsDecoderRow,
-          structuredBoolWordRawBitsDecoderMoveLeft,
-          structuredBoolWordRawBitsDecoderStay,
+          row,
+          keepL,
+          keepS, Structured.TapeAction.stay,
           structuredBoolWordRawBitsDecoderCounterDecodeTape,
           structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
           structuredBoolWordRawBitsDecoderOutputBufferTape,
@@ -1155,9 +1089,9 @@ private theorem structuredBoolWordRawBitsDecoder_run_output_rewind_withPadding
     | cons bit rest =>
         cases bit <;>
           simp [structuredBoolWordRawBitsDecoderDescription,
-            structuredBoolWordRawBitsDecoderRow,
-            structuredBoolWordRawBitsDecoderMoveLeft,
-            structuredBoolWordRawBitsDecoderStay,
+            row,
+            keepL,
+            keepS, Structured.TapeAction.stay,
             structuredBoolWordRawBitsDecoderCounterDecodeTape,
             structuredBoolWordRawBitsDecoderOutputRightBlankTapeWithPadding,
             structuredBoolWordRawBitsDecoderOutputBufferTape,
@@ -1389,9 +1323,9 @@ theorem structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
             , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
                 bits.length outputPadding ] } := by
     simp [structuredBoolWordRawBitsDecoderDescription,
-      structuredBoolWordRawBitsDecoderRow,
-      structuredBoolWordRawBitsDecoderMoveRight,
-      structuredBoolWordRawBitsDecoderStay,
+      row,
+      keepR,
+      keepS, Structured.TapeAction.stay,
       boolWordRawBitsDecoderSourceTape,
       structuredBoolWordRawBitsDecoderAfterHeaderTape,
       boolWordRawBitsDecoderHeaderBits, rightEdgeRewindTargetTape,
