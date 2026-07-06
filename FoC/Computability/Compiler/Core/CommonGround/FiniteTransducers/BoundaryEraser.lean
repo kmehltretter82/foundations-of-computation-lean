@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 
 set_option doc.verso true
 
@@ -48,6 +48,36 @@ def leftBoundaryEraserTargetTape
     (List.append
       (List.replicate field.length (none : Option Bool))
       (suffixHead :: suffixTail))
+
+theorem leftBoundaryEraserSourceTape_cells
+    (baseLeft : List (Option Bool)) (field : Word Bool)
+    (suffixHead : Option Bool) (suffixTail : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserSourceTape
+          baseLeft field suffixHead suffixTail) =
+      List.append baseLeft.reverse
+        (none ::
+          List.append (field.map some)
+            (suffixHead :: suffixTail)) := by
+  rw [leftBoundaryEraserSourceTape]
+  rw [tapeAtCells_move_left_cells_append_cons_right_cons
+    (field.reverse.map some) baseLeft suffixTail none suffixHead]
+  simp [List.map_reverse]
+
+theorem leftBoundaryEraserTargetTape_cells
+    (baseLeft : List (Option Bool)) (field : Word Bool)
+    (suffixHead : Option Bool) (suffixTail : List (Option Bool)) :
+    Tape.cells
+        (leftBoundaryEraserTargetTape
+          baseLeft field suffixHead suffixTail) =
+      List.append baseLeft.reverse
+        (none ::
+          List.append
+            (List.replicate field.length (none : Option Bool))
+            (suffixHead :: suffixTail)) := by
+  cases field <;>
+    simp [leftBoundaryEraserTargetTape, tapeAtCells, Tape.cells,
+      List.replicate_succ, List.append_assoc]
 
 theorem leftBoundaryEraserSourceTape_move_left_move_right
     (baseLeft : List (Option Bool)) (field : Word Bool)

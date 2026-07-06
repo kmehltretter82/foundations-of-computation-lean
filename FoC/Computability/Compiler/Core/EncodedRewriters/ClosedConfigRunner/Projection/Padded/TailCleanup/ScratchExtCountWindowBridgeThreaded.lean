@@ -2781,6 +2781,27 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_expandedPrefix_append_footprintSourceTape_cells,
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint]
 
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_boundaryFields_append_footprintCells
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding) =
+      none ::
+        List.append
+          ((logicalTapeBits (guardLogicalTape T0)).map some)
+          (none ::
+            List.append
+              ((logicalTapeBits (guardLogicalTape T1)).map some)
+              (none ::
+                List.append
+                  (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+                    bits padding)
+                  [none, none])) := by
+  rw [
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_expandedPrefix_append_footprintCells]
+  simp [tapeSeparatorCells, logicalTapeCode_eq_map_some]
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_prefix_append_footprintSourceTape_cells_nil_nil
     (T0 T1 : Tape Bool) :
     Tape.cells
