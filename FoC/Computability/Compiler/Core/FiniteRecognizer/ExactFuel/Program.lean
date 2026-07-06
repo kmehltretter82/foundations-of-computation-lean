@@ -21,18 +21,26 @@ namespace ExactFuel
 namespace StageProgram
 
 /--
+Remaining component leaves for the normalized exact-fuel staged program.  The
+first component materializes the protected initial layout from generated stage
+code; the second component runs the protected layout fuel loop with canonical
+empty output.
+-/
+theorem exactOutputPrimitiveComponentFiniteLeaves :
+    InitialLayoutExactOutputPrimitiveFinStateConstruction ∧
+      FinStateLayoutFuelLoopExactOutputPrimitiveConstruction := by
+  sorry
+
+/--
 Finite-state construction for the normalized exact-fuel staged program.
 -/
 theorem exactOutputPrimitiveFinStateFiniteLeaf :
     forall stateCount : Nat,
     forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      ExactOutputPrimitiveConstruction M := by
-  intro stateCount M
-  cases stateCount with
-  | zero =>
-      exact False.elim (Fin.elim0 M.start)
-  | succ _ =>
-      sorry
+      ExactOutputPrimitiveConstruction M :=
+  exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuelLoop
+    exactOutputPrimitiveComponentFiniteLeaves.left
+    exactOutputPrimitiveComponentFiniteLeaves.right
 
 theorem codeMachineFinStateFiniteLeaf :
     FinStateCodeMachineConstruction := by
