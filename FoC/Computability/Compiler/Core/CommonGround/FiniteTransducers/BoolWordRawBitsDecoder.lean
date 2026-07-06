@@ -410,11 +410,11 @@ theorem structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding_cells
 def structuredBoolWordRawBitsDecoderInputInitializerTargetTape
     (bits suffixTail : Word Bool)
     (rightPadding outputPadding : List (Option Bool)) : Tape Bool :=
-  Structured.MultiTapeLowering.encodedGuardedStructuredTapes
-    [ boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding
-    , Tape.blank
-    , structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
-        bits.length outputPadding ]
+  Structured.MultiTapeLowering.encodedGuardedStructured3Tapes
+    (boolWordRawBitsDecoderSourceTape bits suffixTail rightPadding)
+    Tape.blank
+    (structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding
+      bits.length outputPadding)
 
 theorem structuredBoolWordRawBitsDecoderInputInitializerTargetTape_cells
     (bits suffixTail : Word Bool)
@@ -441,6 +441,7 @@ theorem structuredBoolWordRawBitsDecoderInputInitializerTargetTape_cells
                         bits.length outputPadding)))
                   Structured.MultiTapeLowering.tapeSeparatorCells))))) := by
   simp [structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
+    Structured.MultiTapeLowering.encodedGuardedStructured3Tapes,
     Structured.MultiTapeLowering.encodedGuardedStructuredTapes,
     Structured.MultiTapeLowering.encodedStructuredTapes,
     Structured.MultiTapeLowering.guardLogicalTapes,
@@ -1594,6 +1595,16 @@ must first be materialized as a guarded structured encoding before the lowered
 structured decoder is composed with it.
 -/
 
+/--
+Legacy over-general input-initializer contract.
+
+This contract is intentionally kept only as a guardrail target: it quantifies
+over arbitrary physical source right padding and arbitrary output padding, and
+{lit}`structuredBoolWordRawBitsDecoderInputInitializerConstruction_impossible`
+proves that no deterministic initializer can satisfy it.  New construction
+work should use
+{lit}`StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec`.
+-/
 def StructuredBoolWordRawBitsDecoderInputInitializerSpec
     (initializer : MachineDescription) : Prop :=
   initializer.SubroutineReady ∧
@@ -1794,6 +1805,39 @@ theorem structuredBoolWordRawBitsDecoderPreservedPaddingInputInitializerConstruc
     decide
   exact hne hnorm
 
+def structuredBoolWordRawBitsDecoderCanonicalSourceTape
+    (bits suffixTail : Word Bool) : Tape Bool :=
+  boolWordRawBitsDecoderSourceTape bits suffixTail []
+
+def structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+    (bits suffixTail : Word Bool) : Tape Bool :=
+  structuredBoolWordRawBitsDecoderInputInitializerTargetTape
+    bits suffixTail []
+    (boolWordRawBitsDecoderPreservedPadding suffixTail [])
+
+/--
+Primary bool-word input-initializer contract for future construction work.
+
+Unlike the legacy contracts above, this one has a functional target: public
+source right padding is canonicalized to {lit}`[]`, and the tape-2 padding is the
+deterministic suffix that is visible in the source payload.
+-/
+def StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+    (initializer : MachineDescription) : Prop :=
+  initializer.SubroutineReady ∧
+    forall bits suffixTail : Word Bool,
+      initializer.HaltsFromTapeEquiv
+        (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+          bits suffixTail)
+        (structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape
+          bits suffixTail)
+
+def StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction :
+    Prop :=
+  exists initializer : MachineDescription,
+    StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+      initializer
+
 def structuredBoolWordRawBitsDecoderEndpointDescription
     (initializer : MachineDescription) : MachineDescription :=
   Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription
@@ -1808,6 +1852,13 @@ theorem structuredBoolWordRawBitsDecoderEndpointDescription_subroutineReady
     hinitializer
     loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady
 
+/--
+Legacy over-general structured-output endpoint.
+
+This is the endpoint analogue of
+{name}`StructuredBoolWordRawBitsDecoderInputInitializerSpec`; it is kept for
+the proved impossibility guardrail, not as a construction target.
+-/
 def StructuredBoolWordRawBitsDecoderEndpointSpec
     (endpoint : MachineDescription) : Prop :=
   endpoint.SubroutineReady ∧
@@ -1904,6 +1955,67 @@ def StructuredBoolWordRawBitsDecoderPreservedPaddingEndpointConstruction :
     Prop :=
   exists endpoint : MachineDescription,
     StructuredBoolWordRawBitsDecoderPreservedPaddingEndpointSpec endpoint
+
+def structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape
+    (bits suffixTail : Word Bool) : Tape Bool :=
+  Structured.MultiTapeLowering.encodedGuardedStructured3Tapes
+    (structuredBoolWordRawBitsDecoderSourceTargetTape
+      bits suffixTail [])
+    (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
+      (bits.length + 1))
+    (rightEdgeScanSourceTapeFromLeft [none] bits
+      (boolWordRawBitsDecoderPreservedPadding suffixTail []))
+
+def StructuredBoolWordRawBitsDecoderCanonicalEndpointSpec
+    (endpoint : MachineDescription) : Prop :=
+  endpoint.SubroutineReady ∧
+    forall bits suffixTail : Word Bool,
+      endpoint.HaltsFromTapeEquiv
+        (structuredBoolWordRawBitsDecoderCanonicalSourceTape
+          bits suffixTail)
+        (structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape
+          bits suffixTail)
+
+def StructuredBoolWordRawBitsDecoderCanonicalEndpointConstruction :
+    Prop :=
+  exists endpoint : MachineDescription,
+    StructuredBoolWordRawBitsDecoderCanonicalEndpointSpec endpoint
+
+theorem structuredBoolWordRawBitsDecoderCanonicalEndpointSpec_of_inputInitializerSpec
+    {initializer : MachineDescription}
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec
+        initializer) :
+    StructuredBoolWordRawBitsDecoderCanonicalEndpointSpec
+      (structuredBoolWordRawBitsDecoderEndpointDescription initializer) := by
+  constructor
+  · exact
+      structuredBoolWordRawBitsDecoderEndpointDescription_subroutineReady
+        hinitializer.left
+  · intro bits suffixTail
+    exact
+      Structured.MultiTapeLowering.canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
+        hinitializer.left
+        loweredStructuredBoolWordRawBitsDecoderDescription_subroutineReady
+        (hinitializer.right bits suffixTail)
+        (by
+          simpa [structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
+            structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape,
+            structuredBoolWordRawBitsDecoderCanonicalSourceTape,
+            Structured.MultiTapeLowering.encodedGuardedStructured3Tapes] using
+            loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
+              bits suffixTail []
+              (boolWordRawBitsDecoderPreservedPadding suffixTail []))
+
+theorem structuredBoolWordRawBitsDecoderCanonicalEndpointConstruction_of_inputInitializer
+    (hinitializer :
+      StructuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction) :
+    StructuredBoolWordRawBitsDecoderCanonicalEndpointConstruction := by
+  rcases hinitializer with ⟨initializer, hinitializerSpec⟩
+  exact
+    ⟨structuredBoolWordRawBitsDecoderEndpointDescription initializer,
+      structuredBoolWordRawBitsDecoderCanonicalEndpointSpec_of_inputInitializerSpec
+        hinitializerSpec⟩
 
 theorem structuredBoolWordRawBitsDecoderFixedOutputPaddingEndpointSpec_of_inputInitializerSpec
     {outputPadding : List (Option Bool)}
