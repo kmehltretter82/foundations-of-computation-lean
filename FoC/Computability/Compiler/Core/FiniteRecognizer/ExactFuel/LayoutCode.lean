@@ -671,27 +671,15 @@ theorem layoutFuelLoopCodeMachineConstruction_of_exactOutputPrimitive
     ⟨runnerState, runner, hexact, hcanonical, _hstop⟩
   refine ⟨runnerState, runner, ?_⟩
   intro tokens
-  constructor
-  · intro hhalt
-    rcases hhalt with ⟨final, hcomp, hfinalHalt⟩
-    rcases hcanonical tokens final hcomp hfinalHalt with
-      ⟨output, houtput, _htape⟩
-    have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
-      layoutFuelLoopCode_eq_some_empty_of_eq_some
-        M (by
-          simpa [layoutFuelLoopCodePrimitive] using houtput)
-    subst output
-    simpa [layoutFuelLoopCodePrimitive] using houtput
-  · intro hcode
-    have hexactOutput :
-        TuringMachine.HaltsWithExactOutput runner
-          tokens ([] : Word MachineCodeSymbol) :=
-      (hexact tokens ([] : Word MachineCodeSymbol)).mpr
-        (by
-          simpa [layoutFuelLoopCodePrimitive] using hcode)
-    rcases hexactOutput with
-      ⟨final, hcomp, hfinalHalt, _htape⟩
-    exact ⟨final, hcomp, hfinalHalt⟩
+  simpa [layoutFuelLoopCodePrimitive] using
+    (StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
+      hexact hcanonical
+      (by
+        intro tokens output houtput
+        exact layoutFuelLoopCode_eq_some_empty_of_eq_some
+          M (by
+            simpa [layoutFuelLoopCodePrimitive] using houtput))
+      tokens)
 
 def FinStateLayoutCodeMachineConstruction : Prop :=
   forall stateCount : Nat,
@@ -894,28 +882,15 @@ theorem codeMachineConstruction_of_exactOutputPrimitive
     ⟨runnerState, runner, hexact, hcanonical, _hstop⟩
   refine ⟨runnerState, runner, ?_⟩
   intro tokens
-  constructor
-  · intro hhalt
-    rcases hhalt with ⟨final, hcomp, hfinalHalt⟩
-    rcases hcanonical tokens final hcomp hfinalHalt with
-      ⟨output, houtput, _htape⟩
-    have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
-      stageProgramFuelLoopCodePrimitive_eq_some_empty_of_eq_some
-        M houtput
-    subst output
-    exact
-      (stageProgramFuelLoopCodePrimitive_emptySpec M tokens).mp
-        houtput
-  · intro hrun
-    have hprimitiveOutput :
-        (stageProgramFuelLoopCodePrimitive M).transform tokens =
-          some ([] : Word MachineCodeSymbol) :=
-      (stageProgramFuelLoopCodePrimitive_emptySpec M tokens).mpr hrun
-    rcases
-        (hexact tokens ([] : Word MachineCodeSymbol)).mpr
-          hprimitiveOutput with
-      ⟨final, hcomp, hfinalHalt, _htape⟩
-    exact ⟨final, hcomp, hfinalHalt⟩
+  exact Iff.trans
+    (haltsOnInput_iff_some_empty_of_exactOutput
+      hexact hcanonical
+      (by
+        intro tokens output houtput
+        exact stageProgramFuelLoopCodePrimitive_eq_some_empty_of_eq_some
+          M houtput)
+      tokens)
+    (stageProgramFuelLoopCodePrimitive_emptySpec M tokens)
 
 theorem codeMachineConstruction_of_materializer_layoutRunner_compose
     {stateCount : Nat}

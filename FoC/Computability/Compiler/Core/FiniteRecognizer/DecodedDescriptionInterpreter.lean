@@ -365,22 +365,13 @@ theorem decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimit
       forall tokens : Word MachineCodeSymbol,
         TuringMachine.HaltsOnInput runner tokens <->
           decodedDescriptionInterpreterRun tokens =
-            some ([] : Word MachineCodeSymbol) := by
-    intro tokens
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨final, hcomp, hfinal⟩
-      rcases hcanonical tokens final hcomp hfinal with
-        ⟨output, houtput, _htape⟩
-      have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
-        decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
-          houtput
-      subst output
-      exact houtput
-    · intro hrun
-      rcases (hexact tokens ([] : Word MachineCodeSymbol)).mpr hrun with
-        ⟨final, hcomp, hfinal, _htape⟩
-      exact ⟨final, hcomp, hfinal⟩
+            some ([] : Word MachineCodeSymbol) :=
+    ExactFuel.StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
+      hexact hcanonical
+      (by
+        intro tokens output houtput
+        exact decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
+          houtput)
   refine ⟨state, runner, ?_, ?_⟩
   · intro D input fuel
     exact Iff.trans (hrunnerEmpty

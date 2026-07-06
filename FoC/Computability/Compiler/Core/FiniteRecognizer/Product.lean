@@ -151,26 +151,15 @@ theorem generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
       TuringMachine.HaltsOnInput selected
           (GeneratedCode.nestedStageCode input rightFuel leftFuel) <->
         generatedProductExactFuelRun left right
-            (GeneratedCode.nestedStageCode input rightFuel leftFuel) =
-          some ([] : Word MachineCodeSymbol) := by
-    constructor
-    · intro hhalt
-      rcases hhalt with ⟨final, hcomp, hfinal⟩
-      rcases hcanonical
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-          final hcomp hfinal with
-        ⟨output, houtput, _htape⟩
-      have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
-        generatedProductExactFuelRun_eq_some_empty_of_eq_some
-          left right houtput
-      subst output
-      exact houtput
-    · intro hrun
-      rcases (hexact
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-          ([] : Word MachineCodeSymbol)).mpr hrun with
-        ⟨final, hcomp, hfinal, _htape⟩
-      exact ⟨final, hcomp, hfinal⟩
+          (GeneratedCode.nestedStageCode input rightFuel leftFuel) =
+          some ([] : Word MachineCodeSymbol) :=
+    ExactFuel.StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
+      hexact hcanonical
+      (by
+        intro tokens output houtput
+        exact generatedProductExactFuelRun_eq_some_empty_of_eq_some
+          left right houtput)
+      (GeneratedCode.nestedStageCode input rightFuel leftFuel)
   exact Iff.trans hselected
     (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
       left right input leftFuel rightFuel)

@@ -470,6 +470,31 @@ theorem outputSpec_of_exactOutput_canonical
       TuringMachine.halts_with_exact_output_to_halts_with_output
         ((hexact input output).mpr hf)
 
+theorem haltsOnInput_iff_some_empty_of_exactOutput
+    {machine : TuringMachine MachineCodeSymbol producerState}
+    {f : Word MachineCodeSymbol -> Option (Word MachineCodeSymbol)}
+    (hexact : ExactOutputSpec machine f)
+    (hcanonical : ExactOutputCanonicalSpec machine f)
+    (hempty :
+      forall {input output : Word MachineCodeSymbol},
+        f input = some output -> output = ([] : Word MachineCodeSymbol))
+    (input : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInput machine input <->
+      f input = some ([] : Word MachineCodeSymbol) := by
+  constructor
+  · intro hhalt
+    rcases hhalt with ⟨final, hcomp, hfinalHalt⟩
+    rcases hcanonical input final hcomp hfinalHalt with
+      ⟨output, houtput, _htape⟩
+    have houtputEmpty : output = ([] : Word MachineCodeSymbol) :=
+      hempty houtput
+    subst output
+    exact houtput
+  · intro houtput
+    rcases (hexact input ([] : Word MachineCodeSymbol)).mpr houtput with
+      ⟨final, hcomp, hfinalHalt, _htape⟩
+    exact ⟨final, hcomp, hfinalHalt⟩
+
 theorem outputThenRecognizePipeline_haltsOnInput_of_exactOutput
     {producerState recognizerState : Type}
     {producer : TuringMachine MachineCodeSymbol producerState}
