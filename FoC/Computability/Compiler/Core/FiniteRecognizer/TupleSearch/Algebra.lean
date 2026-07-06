@@ -222,6 +222,55 @@ theorem exists_pair_haltsOnInputIn_and_iff_haltsOnInput_and
     exact ⟨leftFuel, rightFuel, hleftFuel, hrightFuel⟩
 
 /--
+Generated nested-code search over two public indices and a hidden exact fuel
+is equivalent to ordinary selected-machine halting on some generated nested
+call.
+-/
+theorem generatedNested_exists_hiddenFuel_iff_exists_pair_haltsOnInput
+    {state : Type uState}
+    (M : TuringMachine MachineCodeSymbol state)
+    (input : Word MachineCodeSymbol) :
+    (exists inner : Nat,
+      exists outer : Nat,
+      exists fuel : Nat,
+        TuringMachine.HaltsOnInputIn M fuel
+          (GeneratedCode.nestedStageCode input inner outer)) <->
+      exists inner : Nat,
+      exists outer : Nat,
+        TuringMachine.HaltsOnInput M
+          (GeneratedCode.nestedStageCode input inner outer) := by
+  exact
+    exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
+      M (fun inner outer =>
+        GeneratedCode.nestedStageCode input inner outer)
+
+/--
+For a fixed generated-search budget, hiding selected exact fuel is equivalent
+to ordinary selected-machine halting on a bounded generated nested call.
+-/
+theorem generatedNested_exists_bounded_hiddenFuel_iff_exists_bounded_pair_haltsOnInput
+    {state : Type uState}
+    (M : TuringMachine MachineCodeSymbol state)
+    (input : Word MachineCodeSymbol) (budget : Nat) :
+    (exists inner : Nat,
+      exists outer : Nat,
+      exists fuel : Nat,
+        inner <= budget /\
+          outer <= budget /\
+          TuringMachine.HaltsOnInputIn M fuel
+            (GeneratedCode.nestedStageCode input inner outer)) <->
+      exists inner : Nat,
+      exists outer : Nat,
+        inner <= budget /\
+          outer <= budget /\
+          TuringMachine.HaltsOnInput M
+            (GeneratedCode.nestedStageCode input inner outer) := by
+  exact
+    exists_bounded_pair_haltsOnInputIn_iff_exists_bounded_pair_haltsOnInput
+      M (fun inner outer =>
+        GeneratedCode.nestedStageCode input inner outer) budget
+
+/--
 Bounded dovetailing over two exact-fuel witnesses is equivalent to ordinary
 halting of both machines on the preserved input.
 -/

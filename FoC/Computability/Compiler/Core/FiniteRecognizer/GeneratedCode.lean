@@ -58,6 +58,23 @@ theorem stageCode_decodeNat_eq_some_iff
     rw [h]
     exact stageCode_decodeNat input fuel
 
+theorem stageCode_exists_iff_decodeNat
+    (tokens : Word MachineCodeSymbol) :
+    (exists input : Word MachineCodeSymbol,
+      exists fuel : Nat,
+        tokens = stageCode input fuel) <->
+      exists fuel : Nat,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens = some (fuel, input) := by
+  constructor
+  · intro h
+    rcases h with ⟨input, fuel, htokens⟩
+    subst tokens
+    exact ⟨fuel, input, stageCode_decodeNat input fuel⟩
+  · intro h
+    rcases h with ⟨fuel, input, hdecode⟩
+    exact ⟨input, fuel, stageCode_eq_of_decodeNat hdecode⟩
+
 theorem stageCode_input_cells
     (input : Word MachineCodeSymbol) (fuel : Nat) :
     Tape.cells (Tape.input (stageCode input fuel)) =
@@ -212,6 +229,35 @@ theorem nestedStageCode_decodeNat_pair_iff
       ⟨stageCode input inner,
         nestedStageCode_decodeNat_outer input inner outer,
         nestedStageCode_decodeNat_inner input inner⟩
+
+theorem nestedStageCode_exists_iff_decodeNat_pair
+    (tokens : Word MachineCodeSymbol) :
+    (exists input : Word MachineCodeSymbol,
+      exists inner : Nat,
+      exists outer : Nat,
+        tokens = nestedStageCode input inner outer) <->
+      exists outer : Nat,
+      exists innerCode : Word MachineCodeSymbol,
+      exists inner : Nat,
+      exists input : Word MachineCodeSymbol,
+        MachineDescription.decodeNat tokens =
+            some (outer, innerCode) /\
+          MachineDescription.decodeNat innerCode =
+            some (inner, input) := by
+  constructor
+  · intro h
+    rcases h with ⟨input, inner, outer, htokens⟩
+    subst tokens
+    exact
+      ⟨outer, stageCode input inner, inner, input,
+        nestedStageCode_decodeNat_outer input inner outer,
+        nestedStageCode_decodeNat_inner input inner⟩
+  · intro h
+    rcases h with
+      ⟨outer, innerCode, inner, input, houter, hinner⟩
+    exact
+      ⟨input, inner, outer,
+        nestedStageCode_eq_of_decodeNat_outer_inner houter hinner⟩
 
 theorem nestedStageCode_injective
     {input1 input2 : Word MachineCodeSymbol}
