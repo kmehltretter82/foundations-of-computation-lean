@@ -1148,6 +1148,91 @@ private theorem seekTape2Description_contract_existing :
                 hasAtLeastThreeTapes_drop_two hshape'⟩,
               hshape'⟩⟩ }
 
+private theorem returnFromTape2SeparatorToTape1Description_contract_existing_map
+    (f : List (Tape Bool) -> List (Tape Bool)) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 2 physical ∧
+          HasAtLeastThreeTapes (f logical))
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 1 physical)
+      returnFromNextSeparatorToCurrentSeparatorDescription := by
+  exact
+    { subroutineReady :=
+        (returnFromNextSeparatorToCurrentSeparatorDescription_contract
+          1).subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hexisting, hshape⟩
+        rcases
+            (returnFromNextSeparatorToCurrentSeparatorDescription_contract
+              1).realizes (f logical) Tin
+              ⟨hexisting.left,
+                hasAtLeastThreeTapes_drop_one hshape⟩ with
+          ⟨Tout, hhalts, hseparator⟩
+        exact
+          ⟨Tout, hhalts,
+            ⟨hseparator, hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+
+private theorem seekTape2Description_contract_existing_map
+    (f : List (Tape Bool) -> List (Tape Bool)) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 0 physical ∧
+          HasAtLeastThreeTapes (f logical))
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 2 physical ∧
+          HasAtLeastThreeTapes (f logical))
+      seekTape2Description := by
+  exact
+    { subroutineReady := seekTape2Description_contract.subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hstart, hshape⟩
+        rcases hshape with ⟨T, U, V, rest, hlogical⟩
+        rcases seekTape2Description_contract.realizes
+            (f logical) Tin
+            ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
+          ⟨Tout, hhalts, hseparator⟩
+        have hshape' : HasAtLeastThreeTapes (f logical) :=
+          ⟨T, U, V, rest, hlogical⟩
+        exact
+          ⟨Tout, hhalts,
+            ⟨⟨hseparator,
+                hasAtLeastThreeTapes_drop_two hshape'⟩,
+              hshape'⟩⟩ }
+
+private theorem seekTape2Description_contract_guardCells :
+    CursorRoutineContract
+      (fun logical physical =>
+        LogicalTapeAtHasGuardCells logical 2 ∧
+          AtExistingTapeSeparator logical 0 physical)
+      (fun logical physical =>
+        LogicalTapeAtHasGuardCells logical 2 ∧
+          AtExistingTapeSeparator logical 2 physical ∧
+          HasAtLeastThreeTapes logical)
+      seekTape2Description := by
+  exact
+    { subroutineReady := seekTape2Description_contract.subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hguards, hstart⟩
+        have hshape : HasAtLeastThreeTapes logical :=
+          hasAtLeastThreeTapes_of_atHasGuardCells_two hguards
+        rcases hshape with ⟨T, U, V, rest, hlogical⟩
+        rcases seekTape2Description_contract.realizes
+            logical Tin
+            ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
+          ⟨Tout, hhalts, hseparator⟩
+        have hshape' : HasAtLeastThreeTapes logical :=
+          ⟨T, U, V, rest, hlogical⟩
+        exact
+          ⟨Tout, hhalts,
+            ⟨hguards,
+              ⟨⟨hseparator,
+                  hasAtLeastThreeTapes_drop_two hshape'⟩,
+                hshape'⟩⟩⟩ }
+
 /--
 Seek from block start to tape 2, verify the expected head cell, and return to
 the tape-2 separator.
@@ -1241,30 +1326,8 @@ theorem cursorTape2ReadHeadCellAndReturnToTape1SeparatorDescription_contract
         AtExistingTapeSeparator logical 1 physical)
       (cursorTape2ReadHeadCellAndReturnToTape1SeparatorDescription
         expected) := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator logical 2 physical ∧
-            HasAtLeastThreeTapes logical)
-        (fun logical physical =>
-          AtExistingTapeSeparator logical 1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes logical Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator, hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map id
   exact
     cursorRoutineContract_canonicalSeq_self
       (cursorTape2ReadHeadCellAndReturnToSeparatorDescription_contract
@@ -1340,25 +1403,11 @@ theorem cursorTape2NoopAndReturnToBlockStartDescription_contract :
         (fun logical physical =>
           AtExistingTapeSeparator logical 2 physical ∧
             HasAtLeastThreeTapes logical)
-        (fun logical physical =>
-          AtExistingTapeSeparator logical 1 physical)
+      (fun logical physical =>
+        AtExistingTapeSeparator logical 1 physical)
         returnFromNextSeparatorToCurrentSeparatorDescription := by
     exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes logical Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator, hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+      returnFromTape2SeparatorToTape1Description_contract_existing_map id
   have hfirst :
       CursorRoutineContract
         (fun logical physical =>
@@ -1504,39 +1553,10 @@ theorem cursorTape2WriteHeadCellAndReturnToTape1SeparatorDescription_contract
           1 physical)
       (cursorTape2WriteHeadCellAndReturnToTape1SeparatorDescription
         cell) := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.writeHeadCell 2 cell).apply logical)
-            2 physical ∧
-            HasAtLeastThreeTapes
-              ((PhysicalPrimitive.writeHeadCell 2 cell).apply logical))
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.writeHeadCell 2 cell).apply logical)
-            1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes
-                ((PhysicalPrimitive.writeHeadCell 2 cell).apply
-                  logical)
-                Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator,
-                hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.writeHeadCell 2 cell).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       (cursorTape2WriteHeadCellAndReturnToSeparatorDescription_contract
@@ -1624,25 +1644,8 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_gua
         (fun logical physical =>
           AtExistingTapeSeparator (guardLogicalTapes logical) 2 physical ∧
             HasAtLeastThreeTapes (guardLogicalTapes logical))
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hshape⟩
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              (guardLogicalTapes logical) Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' :
-              HasAtLeastThreeTapes (guardLogicalTapes logical) :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨hseparator,
-                  hasAtLeastThreeTapes_drop_two hshape'⟩,
-                hshape'⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_existing_map guardLogicalTapes
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -1707,27 +1710,8 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_wit
           LogicalTapeAtHasGuardCells logical 2 ∧
             AtExistingTapeSeparator logical 2 physical ∧
             HasAtLeastThreeTapes logical)
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hguards, hstart⟩
-          have hshape : HasAtLeastThreeTapes logical :=
-            hasAtLeastThreeTapes_of_atHasGuardCells_two hguards
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              logical Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' : HasAtLeastThreeTapes logical :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hguards,
-                ⟨⟨hseparator,
-                    hasAtLeastThreeTapes_drop_two hshape'⟩,
-                  hshape'⟩⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_guardCells
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -1791,42 +1775,11 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription_contrac
             (guardLogicalTapes logical))
           1 physical)
       cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-              (guardLogicalTapes logical))
-            2 physical ∧
-            HasAtLeastThreeTapes
-              ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-                (guardLogicalTapes logical)))
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-              (guardLogicalTapes logical))
-            1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-                  (guardLogicalTapes logical))
-                Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator,
-                hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.left).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_guarded
@@ -1845,39 +1798,10 @@ theorem cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription_contrac
           ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
           1 physical)
       cursorTape2MoveHeadLeftLocalAndReturnToTape1SeparatorDescription := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
-            2 physical ∧
-            HasAtLeastThreeTapes
-              ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical))
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
-            1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.left).apply
-                  logical)
-                Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator,
-                hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.left).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_withGuardCells
@@ -1996,25 +1920,8 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToSeparatorDescription_contract_gu
         (fun logical physical =>
           AtExistingTapeSeparator (guardLogicalTapes logical) 2 physical ∧
             HasAtLeastThreeTapes (guardLogicalTapes logical))
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hshape⟩
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              (guardLogicalTapes logical) Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' :
-              HasAtLeastThreeTapes (guardLogicalTapes logical) :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨hseparator,
-                  hasAtLeastThreeTapes_drop_two hshape'⟩,
-                hshape'⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_existing_map guardLogicalTapes
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -2079,27 +1986,8 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToSeparatorDescription_contract_wi
           LogicalTapeAtHasGuardCells logical 2 ∧
             AtExistingTapeSeparator logical 2 physical ∧
             HasAtLeastThreeTapes logical)
-        seekTape2Description := by
-    exact
-      { subroutineReady := seekTape2Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hguards, hstart⟩
-          have hshape : HasAtLeastThreeTapes logical :=
-            hasAtLeastThreeTapes_of_atHasGuardCells_two hguards
-          rcases hshape with ⟨T, U, V, rest, hlogical⟩
-          rcases seekTape2Description_contract.realizes
-              logical Tin
-              ⟨T, U, V :: rest, hlogical, hstart.left⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          have hshape' : HasAtLeastThreeTapes logical :=
-            ⟨T, U, V, rest, hlogical⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hguards,
-                ⟨⟨hseparator,
-                    hasAtLeastThreeTapes_drop_two hshape'⟩,
-                  hshape'⟩⟩⟩ }
+        seekTape2Description :=
+    seekTape2Description_contract_guardCells
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -2163,42 +2051,11 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription_contra
             (guardLogicalTapes logical))
           1 physical)
       cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-              (guardLogicalTapes logical))
-            2 physical ∧
-            HasAtLeastThreeTapes
-              ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-                (guardLogicalTapes logical)))
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-              (guardLogicalTapes logical))
-            1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-                  (guardLogicalTapes logical))
-                Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator,
-                hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.right).apply
+          (guardLogicalTapes logical))
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadRightLocalAndReturnToSeparatorDescription_contract_guarded
@@ -2217,39 +2074,10 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription_contra
           ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
           1 physical)
       cursorTape2MoveHeadRightLocalAndReturnToTape1SeparatorDescription := by
-  have hreturn :
-      CursorRoutineContract
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
-            2 physical ∧
-            HasAtLeastThreeTapes
-              ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical))
-        (fun logical physical =>
-          AtExistingTapeSeparator
-            ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
-            1 physical)
-        returnFromNextSeparatorToCurrentSeparatorDescription := by
-    exact
-      { subroutineReady :=
-          (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-            1).subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hexisting, hshape⟩
-          rcases
-              (returnFromNextSeparatorToCurrentSeparatorDescription_contract
-                1).realizes
-                ((PhysicalPrimitive.moveHead 2 HeadMove.right).apply
-                  logical)
-                Tin
-                ⟨hexisting.left,
-                  hasAtLeastThreeTapes_drop_one hshape⟩ with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨hseparator,
-                hasAtLeastThreeTapes_drop_one hshape⟩⟩ }
+  let hreturn :=
+    returnFromTape2SeparatorToTape1Description_contract_existing_map
+      (fun logical =>
+        (PhysicalPrimitive.moveHead 2 HeadMove.right).apply logical)
   exact
     cursorRoutineContract_canonicalSeq_self
       cursorTape2MoveHeadRightLocalAndReturnToSeparatorDescription_contract_withGuardCells
@@ -2336,6 +2164,49 @@ theorem cursorTape2MoveHeadRightLocalAndReturnToBlockStartDescription_contract_w
         intro logical physical hexisting
         exact atExistingTapeSeparator_moveLeft_moveRight hexisting)
 
+private theorem seekTape1Description_contract_existing_map
+    (f : List (Tape Bool) -> List (Tape Bool)) :
+    CursorRoutineContract
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 0 physical ∧
+          (exists T : Tape Bool, exists rest : List (Tape Bool),
+            (f logical).drop 1 = T :: rest))
+      (fun logical physical =>
+        AtExistingTapeSeparator (f logical) 1 physical)
+      seekTape1Description := by
+  exact
+    { subroutineReady := seekTape1Description_contract.subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hstart, hexists⟩
+        rcases seekTape1Description_contract.realizes
+            (f logical) Tin hstart with
+          ⟨Tout, hhalts, hseparator⟩
+        exact ⟨Tout, hhalts, ⟨hseparator, hexists⟩⟩ }
+
+private theorem seekTape1Description_contract_guardCells :
+    CursorRoutineContract
+      (fun logical physical =>
+        LogicalTapeAtHasGuardCells logical 1 ∧
+          AtExistingTapeSeparator logical 0 physical)
+      (fun logical physical =>
+        LogicalTapeAtHasGuardCells logical 1 ∧
+          AtExistingTapeSeparator logical 1 physical)
+      seekTape1Description := by
+  exact
+    { subroutineReady := seekTape1Description_contract.subroutineReady
+      realizes := by
+        intro logical Tin hsource
+        rcases hsource with ⟨hguards, hstart⟩
+        rcases hguards with ⟨T, rest, hdrop, hguard⟩
+        rcases seekTape1Description_contract.realizes
+            logical Tin hstart with
+          ⟨Tout, hhalts, hseparator⟩
+        exact
+          ⟨Tout, hhalts,
+            ⟨⟨T, rest, hdrop, hguard⟩,
+              ⟨hseparator, ⟨T, rest, hdrop⟩⟩⟩⟩ }
+
 /--
 Seek from block start to tape 1 and return to block start without inspecting or
 mutating the selected tape.
@@ -2355,24 +2226,16 @@ theorem cursorTape1NoopAndReturnToBlockStartDescription_contract :
       (fun logical physical =>
         AtTapeSeparator logical 0 physical)
       cursorTape1NoopAndReturnToBlockStartDescription := by
-  let source := fun logical physical =>
-    AtExistingTapeSeparator logical 0 physical ∧
-      (exists T : Tape Bool, exists rest : List (Tape Bool),
-        logical.drop 1 = T :: rest)
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          AtExistingTapeSeparator logical 0 physical ∧
+            (exists T : Tape Bool, exists rest : List (Tape Bool),
+              logical.drop 1 = T :: rest))
         (fun logical physical =>
           AtExistingTapeSeparator logical 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hexists⟩
-          rcases seekTape1Description_contract.realizes
-              logical Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact ⟨Tout, hhalts, ⟨hseparator, hexists⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_existing_map id
   have hreturn :
       CursorRoutineContract
         (fun logical physical =>
@@ -2453,24 +2316,16 @@ theorem cursorTape1WriteHeadCellAndReturnToSeparatorDescription_contract
           1 physical)
       (cursorTape1WriteHeadCellAndReturnToSeparatorDescription
         cell) := by
-  let source := fun logical physical =>
-    AtExistingTapeSeparator logical 0 physical ∧
-      (exists T : Tape Bool, exists rest : List (Tape Bool),
-        logical.drop 1 = T :: rest)
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          AtExistingTapeSeparator logical 0 physical ∧
+            (exists T : Tape Bool, exists rest : List (Tape Bool),
+              logical.drop 1 = T :: rest))
         (fun logical physical =>
           AtExistingTapeSeparator logical 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hexists⟩
-          rcases seekTape1Description_contract.realizes
-              logical Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact ⟨Tout, hhalts, ⟨hseparator, hexists⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_existing_map id
   have hwrite :
       CursorRoutineContract
         (fun logical physical =>
@@ -2571,24 +2426,16 @@ theorem cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_gua
             (guardLogicalTapes logical))
           1 physical)
       cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription := by
-  let source := fun logical physical =>
-    AtExistingTapeSeparator (guardLogicalTapes logical) 0 physical ∧
-      (exists T : Tape Bool, exists rest : List (Tape Bool),
-        (guardLogicalTapes logical).drop 1 = T :: rest)
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          AtExistingTapeSeparator (guardLogicalTapes logical) 0 physical ∧
+            (exists T : Tape Bool, exists rest : List (Tape Bool),
+              (guardLogicalTapes logical).drop 1 = T :: rest))
         (fun logical physical =>
           AtExistingTapeSeparator (guardLogicalTapes logical) 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hexists⟩
-          rcases seekTape1Description_contract.realizes
-              (guardLogicalTapes logical) Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact ⟨Tout, hhalts, ⟨hseparator, hexists⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_existing_map guardLogicalTapes
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -2631,28 +2478,16 @@ theorem cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription_contract_wit
           ((PhysicalPrimitive.moveHead 1 HeadMove.left).apply logical)
           1 physical)
       cursorTape1MoveHeadLeftLocalAndReturnToSeparatorDescription := by
-  let source := fun logical physical =>
-    LogicalTapeAtHasGuardCells logical 1 ∧
-      AtExistingTapeSeparator logical 0 physical
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          LogicalTapeAtHasGuardCells logical 1 ∧
+            AtExistingTapeSeparator logical 0 physical)
         (fun logical physical =>
           LogicalTapeAtHasGuardCells logical 1 ∧
             AtExistingTapeSeparator logical 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hguards, hstart⟩
-          rcases hguards with ⟨T, rest, hdrop, hguard⟩
-          rcases seekTape1Description_contract.realizes
-              logical Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨T, rest, hdrop, hguard⟩,
-                ⟨hseparator, ⟨T, rest, hdrop⟩⟩⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_guardCells
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -2787,24 +2622,16 @@ theorem cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription_contract_gu
             (guardLogicalTapes logical))
           1 physical)
       cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription := by
-  let source := fun logical physical =>
-    AtExistingTapeSeparator (guardLogicalTapes logical) 0 physical ∧
-      (exists T : Tape Bool, exists rest : List (Tape Bool),
-        (guardLogicalTapes logical).drop 1 = T :: rest)
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          AtExistingTapeSeparator (guardLogicalTapes logical) 0 physical ∧
+            (exists T : Tape Bool, exists rest : List (Tape Bool),
+              (guardLogicalTapes logical).drop 1 = T :: rest))
         (fun logical physical =>
           AtExistingTapeSeparator (guardLogicalTapes logical) 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hstart, hexists⟩
-          rcases seekTape1Description_contract.realizes
-              (guardLogicalTapes logical) Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact ⟨Tout, hhalts, ⟨hseparator, hexists⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_existing_map guardLogicalTapes
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
@@ -2847,28 +2674,16 @@ theorem cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription_contract_wi
           ((PhysicalPrimitive.moveHead 1 HeadMove.right).apply logical)
           1 physical)
       cursorTape1MoveHeadRightLocalAndReturnToSeparatorDescription := by
-  let source := fun logical physical =>
-    LogicalTapeAtHasGuardCells logical 1 ∧
-      AtExistingTapeSeparator logical 0 physical
   have hseek :
-      CursorRoutineContract source
+      CursorRoutineContract
+        (fun logical physical =>
+          LogicalTapeAtHasGuardCells logical 1 ∧
+            AtExistingTapeSeparator logical 0 physical)
         (fun logical physical =>
           LogicalTapeAtHasGuardCells logical 1 ∧
             AtExistingTapeSeparator logical 1 physical)
-        seekTape1Description := by
-    exact
-      { subroutineReady := seekTape1Description_contract.subroutineReady
-        realizes := by
-          intro logical Tin hsource
-          rcases hsource with ⟨hguards, hstart⟩
-          rcases hguards with ⟨T, rest, hdrop, hguard⟩
-          rcases seekTape1Description_contract.realizes
-              logical Tin hstart with
-            ⟨Tout, hhalts, hseparator⟩
-          exact
-            ⟨Tout, hhalts,
-              ⟨⟨T, rest, hdrop, hguard⟩,
-                ⟨hseparator, ⟨T, rest, hdrop⟩⟩⟩⟩ }
+        seekTape1Description :=
+    seekTape1Description_contract_guardCells
   have hmove :
       CursorRoutineContract
         (fun logical physical =>
