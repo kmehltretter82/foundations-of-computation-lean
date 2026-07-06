@@ -1962,6 +1962,97 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_prefix_append_targetTape_cells_cons_cons
       T0 T1 bit rest (some padBit) padding
 
+theorem logicalCellCode_length
+    (cell : Option Bool) :
+    (logicalCellCode cell).length = 2 := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
+theorem logicalCellBits_length
+    (cell : Option Bool) :
+    (logicalCellBits cell).length = 2 := by
+  cases cell with
+  | none =>
+      rfl
+  | some bit =>
+      cases bit <;> rfl
+
+theorem logicalCellListBits_length
+    (cells : List (Option Bool)) :
+    (logicalCellListBits cells).length = 2 * cells.length := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      simp [logicalCellListBits, logicalCellBits_length, ih]
+      lia
+
+theorem logicalCellListCode_length
+    (cells : List (Option Bool)) :
+    (logicalCellListCode cells).length = 2 * cells.length := by
+  rw [logicalCellListCode_eq_map_some]
+  simp [logicalCellListBits_length]
+
+theorem logicalTapeBits_length
+    (T : Tape Bool) :
+    (logicalTapeBits T).length =
+      2 * T.left.length + 2 * T.right.length + 4 := by
+  simp [logicalTapeBits, logicalCellListBits_length,
+    logicalCellBits_length]
+  lia
+
+theorem logicalTapeCode_length
+    (T : Tape Bool) :
+    (logicalTapeCode T).length =
+      2 * T.left.length + 2 * T.right.length + 4 := by
+  rw [logicalTapeCode_eq_map_some]
+  simp [logicalTapeBits_length]
+
+theorem logicalTapeCode_guardLogicalTape_length
+    (T : Tape Bool) :
+    (logicalTapeCode (guardLogicalTape T)).length =
+      2 * T.left.length + 2 * T.right.length + 8 := by
+  simp [guardLogicalTape, logicalTapeCode_length]
+  lia
+
+theorem encodedStructuredTapeCellsPrefix_two_guarded_length
+    (T0 T1 : Tape Bool) :
+    (encodedStructuredTapeCellsPrefix
+        [guardLogicalTape T0, guardLogicalTape T1]).length =
+      2 * T0.left.length + 2 * T0.right.length +
+        (2 * T1.left.length + 2 * T1.right.length) + 18 := by
+  rw [encodedStructuredTapeCellsPrefix_two_guarded_eq]
+  simp [logicalTapeCode_guardLogicalTape_length]
+  lia
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_cells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
+          bits padding)).length =
+      13 + 2 * bits.length + 2 * padding.length := by
+  rw [selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderDensifierSourceCells,
+    selectedSegmentLogicalTapeDecoderDensifierFootprintCells_length]
+  lia
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_length
+    (T0 T1 : Tape Bool) (bits : Word Bool)
+    (padding : List (Option Bool)) :
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
+          T0 T1 bits padding)).length =
+      2 * T0.left.length + 2 * T0.right.length +
+        (2 * T1.left.length + 2 * T1.right.length) +
+          (31 + 2 * bits.length + 2 * padding.length) := by
+  rw [selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_prefix_append_targetTape_cells]
+  simp [logicalTapeCode_guardLogicalTape_length,
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_cells_length]
+  lia
+
 def SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSpec
     (eraser : MachineDescription) : Prop :=
   eraser.SubroutineReady ∧
