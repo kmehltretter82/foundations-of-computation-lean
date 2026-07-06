@@ -1494,6 +1494,67 @@ theorem description_reaches_afterLeftCopyConfig
   simp [guarded, baseLeft, suffix, afterLeftCopyConfig, tapeAtEncodedSplit,
     List.append_assoc]
 
+private def rightCopyConfig
+    (baseLeft outputBaseLeft processed remaining suffix :
+      List (Option Bool)) : Configuration :=
+  ThreeTape.config 4
+    (tapeAtEncodedSplit
+      (List.append baseLeft (logicalCellListCode processed))
+      (List.append (logicalCellListCode remaining) suffix))
+    Tape.blank
+    (tapeAtCells (List.append processed.reverse outputBaseLeft) [])
+
+private theorem description_rightCopy_cell
+    (baseLeft outputBaseLeft processed remaining suffix :
+      List (Option Bool)) (cell : Option Bool) :
+    description.runConfig 2
+        (rightCopyConfig baseLeft outputBaseLeft processed
+          (cell :: remaining) suffix) =
+      rightCopyConfig baseLeft outputBaseLeft
+        (List.append processed [cell]) remaining suffix := by
+  cases cell with
+  | none =>
+      three_tape_step [
+        description, rows, rightCopyConfig, logicalCellListCode,
+        logicalCellCode, logicalCellListBits, logicalCellBits,
+        tapeAtEncodedSplit, tapeAtCells, List.map_append,
+        List.reverse_append, List.append_assoc]
+      cases
+          (List.map some (logicalCellListBits remaining) ++ suffix) <;>
+        rfl
+  | some bit =>
+      cases bit <;>
+        three_tape_step [
+          description, rows, rightCopyConfig, logicalCellListCode,
+          logicalCellCode, logicalCellListBits, logicalCellBits,
+          tapeAtEncodedSplit, tapeAtCells, List.map_append,
+          List.reverse_append, List.append_assoc]
+      all_goals
+        cases
+            (List.map some (logicalCellListBits remaining) ++ suffix) <;>
+          rfl
+
+private theorem description_rightCopy_cells
+    (baseLeft outputBaseLeft processed remaining suffix :
+      List (Option Bool)) :
+    description.runConfig (2 * remaining.length)
+        (rightCopyConfig baseLeft outputBaseLeft processed
+          remaining suffix) =
+      rightCopyConfig baseLeft outputBaseLeft
+        (List.append processed remaining) [] suffix := by
+  induction remaining generalizing processed with
+  | nil =>
+      simp [rightCopyConfig, Structured.Description.runConfig]
+  | cons cell remaining ih =>
+      rw [show 2 * (cell :: remaining).length =
+        2 + 2 * remaining.length by
+        simp
+        lia]
+      rw [Description.runConfig_add]
+      rw [description_rightCopy_cell]
+      rw [ih (List.append processed [cell])]
+      simp [List.append_assoc]
+
 theorem description_reaches_afterRightCopyConfig
     (target : Tape Bool) (rest : List (Tape Bool))
     (encodedPrefix : List (Option Bool)) :
@@ -1501,8 +1562,23 @@ theorem description_reaches_afterRightCopyConfig
       description.runConfig steps
         (afterLeftCopyConfig target rest encodedPrefix) =
         afterRightCopyConfig target rest encodedPrefix := by
-  -- Copies the decoded head and right cells, stopping on the next separator.
-  sorry
+  let guarded : Tape Bool := guardLogicalTape target
+  let baseLeft : List (Option Bool) :=
+    List.append encodedPrefix
+      (List.append tapeSeparatorCells
+        (List.append (logicalCellListCode guarded.left.reverse)
+          headMarkerCells))
+  let cells : List (Option Bool) :=
+    guarded.head :: guarded.right
+  let suffix : List (Option Bool) := encodedStructuredTapeCells rest
+  refine ⟨2 * cells.length, ?_⟩
+  have h :=
+    description_rightCopy_cells baseLeft guarded.left [] cells suffix
+  simpa [guarded, baseLeft, cells, suffix, rightCopyConfig,
+    afterLeftCopyConfig, afterRightCopyConfig, rightEdgeOutputTape,
+    targetCells, logicalTapeCode, logicalCellListCode,
+    logicalCellListBits, tapeAtEncodedSplit, List.map_append,
+    List.reverse_append, List.append_assoc] using h
 
 theorem description_enters_rewind
     (target : Tape Bool) (rest : List (Tape Bool))
