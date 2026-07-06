@@ -943,6 +943,19 @@ def ExactOutputPrimitiveComponentFinStateConstruction : Prop :=
   InitialLayoutExactOutputPrimitiveFinStateConstruction ∧
     FinStateLayoutFuelLoopExactOutputPrimitiveConstruction
 
+def ExactOutputPrimitiveDecodedComponentFinStateConstruction : Prop :=
+  InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction ∧
+    FinStateLayoutFuelLoopExactOutputPrimitiveConstruction
+
+theorem exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
+    (hcomponents :
+      ExactOutputPrimitiveDecodedComponentFinStateConstruction) :
+    ExactOutputPrimitiveComponentFinStateConstruction := by
+  exact
+    ⟨initialLayoutExactOutputPrimitiveFinStateConstruction_iff_decoded.mpr
+        hcomponents.left,
+      hcomponents.right⟩
+
 theorem exactOutputPrimitiveFinStateConstruction_of_components
     (hcomponents :
       ExactOutputPrimitiveComponentFinStateConstruction) :
@@ -951,6 +964,16 @@ theorem exactOutputPrimitiveFinStateConstruction_of_components
       ExactOutputPrimitiveConstruction M :=
   exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuelLoop
     hcomponents.left hcomponents.right
+
+theorem exactOutputPrimitiveFinStateConstruction_of_decodedComponents
+    (hcomponents :
+      ExactOutputPrimitiveDecodedComponentFinStateConstruction) :
+    forall stateCount : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+      ExactOutputPrimitiveConstruction M :=
+  exactOutputPrimitiveFinStateConstruction_of_components
+    (exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
+      hcomponents)
 
 theorem codeMachineConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
