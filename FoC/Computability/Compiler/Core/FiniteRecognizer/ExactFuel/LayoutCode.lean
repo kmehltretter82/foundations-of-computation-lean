@@ -634,6 +634,11 @@ def LayoutFuelLoopExactOutputPrimitiveConstruction {stateCount : Nat}
         (layoutFuelLoopCodePrimitive M).transform ∧
       TuringMachine.HaltingTransitionsDisabled runner
 
+def FinStateLayoutFuelLoopExactOutputPrimitiveConstruction : Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    LayoutFuelLoopExactOutputPrimitiveConstruction M
+
 theorem layoutFuelLoopCode_eq_some_empty_of_eq_some
     {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -920,6 +925,19 @@ theorem exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
   · exact
       outputThenRecognizePipeline_haltingTransitionsDisabled
         (producer := materializer) hlayoutStop
+
+theorem exactOutputPrimitiveFinStateConstruction_of_exactMaterializer_layoutFuelLoop
+    (hmaterializer :
+      InitialLayoutExactOutputPrimitiveFinStateConstruction)
+    (hlayout :
+      FinStateLayoutFuelLoopExactOutputPrimitiveConstruction) :
+    forall stateCount : Nat,
+    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+      ExactOutputPrimitiveConstruction M := by
+  intro stateCount M
+  exact
+    exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
+      (hmaterializer stateCount M) (hlayout stateCount M)
 
 theorem codeMachineConstruction_of_exactOutputPrimitive
     {stateCount : Nat}

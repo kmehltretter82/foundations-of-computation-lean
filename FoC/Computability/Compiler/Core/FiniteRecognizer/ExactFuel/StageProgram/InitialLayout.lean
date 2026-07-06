@@ -83,6 +83,11 @@ def InitialLayoutExactOutputPrimitiveConstruction {stateCount : Nat}
         (initialLayoutMaterializerCodePrimitive M).transform ∧
       TuringMachine.HaltingTransitionsDisabled materializer
 
+def InitialLayoutExactOutputPrimitiveFinStateConstruction : Prop :=
+  forall stateCount : Nat,
+  forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
+    InitialLayoutExactOutputPrimitiveConstruction M
+
 theorem initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
     {stateCount : Nat}
     {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
