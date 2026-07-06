@@ -110,6 +110,14 @@ def GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
         (generatedProductExactFuelRun left right) ∧
       TuringMachine.HaltingTransitionsDisabled selected
 
+def GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :
+    Prop :=
+  forall leftN rightN : Nat,
+    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
+    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
+      GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
+        left right
+
 /--
 Concrete-state generated exact-fuel product runner target.
 -/
@@ -163,6 +171,15 @@ theorem generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
   exact Iff.trans hselected
     (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
       left right input leftFuel rightFuel)
+
+theorem generatedProductExactFuelRunnerFinStateConstruction_of_exactOutputPrimitive
+    (hprimitive :
+      GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction) :
+    GeneratedProductExactFuelRunnerFinStateConstruction := by
+  intro leftN rightN left right
+  exact
+    generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
+      (hprimitive leftN rightN left right)
 
 /--
 Generated exact-fuel product runners are stable under replacing both
@@ -282,11 +299,9 @@ from the sharper exact-output primitive boundary above.
 -/
 theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
     GeneratedProductExactFuelRunnerFinStateConstruction := by
-  intro leftN rightN left right
   exact
-    generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
-      (generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf
-        leftN rightN left right)
+    generatedProductExactFuelRunnerFinStateConstruction_of_exactOutputPrimitive
+      generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf
 
 /--
 Finite-machine leaf for generated exact-fuel product runners over arbitrary
