@@ -677,6 +677,20 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv
     selectedSegmentLogicalTapeDecoderEmit,
     Tape.dropTrailingNone]
 
+theorem exactIdentityDescription_haltsFromTapeEquiv_selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil :
+    ExactIdentityDescription.HaltsFromTapeEquiv
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+        [] [])
+      (selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape
+        [] []) := by
+  refine
+    ⟨selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+      [] [], ?_, ?_⟩
+  · refine ⟨0, ?_⟩
+    constructor <;> rfl
+  · exact
+      selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target
+
 def SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧
