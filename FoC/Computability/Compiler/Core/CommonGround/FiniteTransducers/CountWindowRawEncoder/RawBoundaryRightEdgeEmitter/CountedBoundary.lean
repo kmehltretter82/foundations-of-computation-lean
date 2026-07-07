@@ -853,7 +853,7 @@ theorem markerAwarePullNearestRawBitDescription_haltsFrom_leftMarkedTailHeadEmit
                 (some true :: some true :: some false ::
                   some tailFirst :: tail)
 
-theorem markerAwarePullEmitAndMoveRawBitCellLeftEdgeDescription_haltsFrom_leftMarkedTailHeadEmittedNearestRawBitCellLeftEdge_of_count_length
+theorem pullEmitMoveRawBit_haltsFrom_leftMarkedTail_countLength
     (pref count : Word Bool) (scratchTail : Nat)
     (nextRawBit emittedRawBit tailFirst : Bool)
     (tail : List (Option Bool))
@@ -1195,10 +1195,10 @@ theorem rawBoundarySourceFirstTwoRawBitCellsLeftEdgeEmissionViaLeftMarkedBoundar
       tailFirst tail hlayout)
     (rawBoundaryLeftMarkedTailHeadEmittedNearestRawBitCellLeftEdgeTape_moveLeftRight
       (List.append pref [nextRawBit]) count emittedRawBit tailFirst tail)
-    (markerAwarePullEmitAndMoveRawBitCellLeftEdgeDescription_haltsFrom_leftMarkedTailHeadEmittedNearestRawBitCellLeftEdge_of_count_length
+    (pullEmitMoveRawBit_haltsFrom_leftMarkedTail_countLength
       pref count scratchTail nextRawBit emittedRawBit tailFirst tail hcount)
 
-theorem rawBoundarySourceFirstTwoRawBitCellsLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_three_le_count_length
+theorem firstTwoRawBitCells_haltsFrom_sourceTape_ofThreeLeCount
     (skipped count pref : Word Bool)
     (nextRawBit emittedRawBit tailFirst : Bool)
     (tail : List (Option Bool))
@@ -1219,7 +1219,7 @@ theorem rawBoundarySourceFirstTwoRawBitCellsLeftEdgeEmissionViaLeftMarkedBoundar
         skipped count pref scratchTail nextRawBit emittedRawBit tailFirst
         tail hlayout hscratch⟩
 
-theorem rawBoundarySourceFirstTwoRawBitCellsLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_two_le_layout_length_three_le_count_length
+theorem firstTwoRawBitCells_haltsFrom_sourceTape_ofLayoutAndCount
     (skipped count : Word Bool)
     (hlayoutLength : 2 <= (List.append skipped count).length)
     (hcount : 3 <= count.length)

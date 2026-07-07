@@ -421,7 +421,7 @@ theorem selectedProjectionCheckedEquivEmitterOutputConstruction_hybrid_scaffold_
     (selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
-theorem selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+theorem checkedHybridOutputConstruction_scaffold_ofBranchFootprintCases
     (heraser :
       SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
     (hcases :
@@ -431,7 +431,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_scaf
     (selectedProjectionPaddedTailEmitterOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
       heraser hcases)
 
-theorem selectedProjectionCheckedEquivPaddedEmitterOutputConstruction_hybrid_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+theorem checkedOutputConstruction_hybrid_scaffold_ofBranchFootprintCases
     (heraser :
       SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
     (hcases :
@@ -441,14 +441,14 @@ theorem selectedProjectionCheckedEquivPaddedEmitterOutputConstruction_hybrid_sca
     (selectedProjectionPaddedTailEmitterOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
       heraser hcases)
 
-theorem selectedProjectionCheckedEquivEmitterOutputConstruction_hybrid_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+theorem emitterOutputConstruction_hybrid_scaffold_ofBranchFootprintCases
     (heraser :
       SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
     (hcases :
       SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionCheckedEquivEmitterOutputConstruction :=
   selectedProjectionCheckedEquivEmitterOutputConstruction_of_hybridOutputConstruction
-    (selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (checkedHybridOutputConstruction_scaffold_ofBranchFootprintCases
       heraser hcases)
 
 theorem selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_of_postPadding

@@ -1136,7 +1136,7 @@ theorem rawBoundarySourceFirstTwoThenFixedRemainingRawBitsToRightEdgeDescription
         skipped count remaining scratchAfterTwo finalScratch nextRawBit
         emittedRawBit tailFirst tail hlayout hcount hremainingScratch⟩
 
-theorem rawBoundarySourceFirstTwoThenFixedRemainingRawBitsToRightEdgeDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+theorem firstTwoThenFixedRemaining_toRightEdge_exists_ofLayoutCount
     (skipped count : Word Bool)
     (tailFirst : Bool) (tail : List (Option Bool))
     (hlayoutLength : 2 <= (List.append skipped count).length)
@@ -1212,7 +1212,7 @@ theorem fixedSourceBranchRouteDescription_exists_haltsFrom_sourceTape_equiv
         rw [hlenTwo]
         simpa using hcount
       rcases
-          rawBoundarySourceFirstTwoThenFixedRemainingRawBitsToRightEdgeDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+          firstTwoThenFixedRemaining_toRightEdge_exists_ofLayoutCount
             skipped count tailFirst tail htwo hcountEnough with
         ⟨remaining, nextRawBit, emittedRawBit, _scratchAfterTwo,
           _finalScratch, _hlayout, _hcount, _hscratch, hroute⟩
@@ -1233,7 +1233,7 @@ theorem fixedSourceBranchRouteDescription_exists_haltsFrom_sourceTape_equiv
         rw [heq]
         exact hcountEnough
       rcases
-          rawBoundarySourceFirstTwoThenFixedRemainingRawBitsToRightEdgeDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+          firstTwoThenFixedRemaining_toRightEdge_exists_ofLayoutCount
             skipped count tailFirst tail
             (Nat.le_trans (by decide) hlayoutLength)
             hcountEnough' with

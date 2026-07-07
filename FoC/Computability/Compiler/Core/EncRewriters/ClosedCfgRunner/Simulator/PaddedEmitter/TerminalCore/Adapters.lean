@@ -229,7 +229,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetCo
           L)
         (hrightBody.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_of_sourceFields_configRunner
+theorem fieldTargetFromTerminalConstruction_ofSourceFieldsRunner
     (hsource :
       FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner := by

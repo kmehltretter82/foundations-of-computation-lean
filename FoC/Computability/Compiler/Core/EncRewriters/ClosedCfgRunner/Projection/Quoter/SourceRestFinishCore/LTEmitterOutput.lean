@@ -549,7 +549,7 @@ theorem MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestOutputSpe
           w sourceRestBits stage)) :=
   hfinish.right w sourceRestBits stage
 
-theorem MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitterOutput
+theorem assemblySourceRestOutputConstruction_ofLiveTailEmitterOutput
     (h :
       MixedOptionCellQuoteLiveTailEmitterOutputConstructionForAssemblySourceRest) :
     MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest := by
@@ -566,7 +566,7 @@ theorem MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemb
     (h :
       MixedOptionCellQuoteLiveTailEmitterConstructionForAssemblySourceRest) :
     MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest :=
-  MixedParserStackPrefixQuotedSeparatedFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailEmitterOutput
+  assemblySourceRestOutputConstruction_ofLiveTailEmitterOutput
     (MixedOptionCellQuoteLiveTailEmitterOutputConstructionForAssemblySourceRest_of_exact
       h)
 

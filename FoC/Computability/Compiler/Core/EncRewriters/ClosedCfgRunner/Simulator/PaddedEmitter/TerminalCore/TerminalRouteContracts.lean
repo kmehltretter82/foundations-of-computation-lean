@@ -661,7 +661,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOu
       FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOutputSpec_of_exact_configRunner
         hspec⟩
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceOutputConstruction_of_exact_configRunner
+theorem fieldTargetFromTerminalOutput_ofExactRunner
     (hright :
       FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceOutputConstruction_configRunner := by
@@ -827,7 +827,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShi
           L)
         (hbody.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceOutputConstruction_of_sourceOutput_configRunner
+theorem scratchFromTerminalOutput_ofSourceOutputRunner
     (hbody :
       FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceOutputConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceOutputConstruction_configRunner := by
@@ -876,7 +876,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOu
           L)
         (hright.right L)
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOutputConstruction_of_rightShiftedFieldsOutput_configRunner
+theorem fstSourceToFieldTargetOutput_ofRightShiftedFieldsRunner
     (hright :
       FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceOutputConstruction_configRunner) :
     FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOutputConstruction_configRunner := by
@@ -1760,7 +1760,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceOu
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceOutputConstruction_core_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceOutputConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceOutputConstruction_of_sourceOutput_configRunner
+  scratchFromTerminalOutput_ofSourceOutputRunner
     fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceOutputConstruction_core_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetOutputConstruction_core_configRunner :

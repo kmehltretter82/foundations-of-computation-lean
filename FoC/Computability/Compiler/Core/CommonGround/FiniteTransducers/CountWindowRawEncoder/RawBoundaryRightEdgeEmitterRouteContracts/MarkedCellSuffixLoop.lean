@@ -233,7 +233,7 @@ theorem rawBoundarySourceFirstTwoThenRemainingMarkedCellSuffixRoute
       rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_ready
         remaining
     routeHalts :=
-      rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_lengths
+      remainingCellSuffix_haltsFrom_sourceTape_ofCountLengths
         skipped count remaining scratchAfterTwo finalScratch nextRawBit
         emittedRawBit tailFirst tail hlayout hcount hremainingScratch
     outputShape :=
@@ -286,7 +286,7 @@ theorem rawBoundary_sourceFirstTwoThenRemainingMarkedCellSuffix_exists_of_two_le
                     ([] : Word Bool) finalScratch
                     (List.append remaining [nextRawBit, emittedRawBit])
                     tailFirst tail) :=
-  rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+  remainingCellSuffix_exists_ofLayoutCountEnough
     skipped count tailFirst tail hlayoutLength hcountEnough
 
 structure RawBoundaryMarkedCellSuffixCleanupRoute
@@ -432,7 +432,7 @@ theorem rawBoundary_sourceFirstTwoThenRemainingMarkedRightEdge_exists_of_two_le_
                   (sourceTape skipped count (some tailFirst :: tail))
                   (rightEdgeTape skipped count tailFirst tail) := by
   rcases
-      rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+      remainingCellSuffix_exists_ofLayoutCountEnough
         skipped count tailFirst tail hlayoutLength hcountEnough with
     ⟨remaining, nextRawBit, emittedRawBit, scratchAfterTwo,
       finalScratch, hlayout, hcount, hscratch, _hroute⟩
@@ -464,7 +464,7 @@ theorem rawBoundary_sourceFirstTwoThenMarkedRemainingRightEdge_exists_of_two_le_
                   (sourceTape skipped count (some tailFirst :: tail))
                   (rightEdgeTape skipped count tailFirst tail) := by
   rcases
-      rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+      remainingCellSuffix_exists_ofLayoutCountEnough
         skipped count tailFirst tail hlayoutLength hcountEnough with
     ⟨remaining, nextRawBit, emittedRawBit, scratchAfterTwo,
       finalScratch, hlayout, hcount, hscratch, _hroute⟩

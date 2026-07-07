@@ -539,7 +539,7 @@ theorem rawBoundaryLeftMarkedTailHeadNextRawBitPullEmitMoveRoute
   { combinedReady :=
       markerAwarePullEmitAndMoveRawBitCellLeftEdgeDescription_subroutineReady
     combinedHalts :=
-      markerAwarePullEmitAndMoveRawBitCellLeftEdgeDescription_haltsFrom_leftMarkedTailHeadEmittedNearestRawBitCellLeftEdge_of_count_length
+      pullEmitMoveRawBit_haltsFrom_leftMarkedTail_countLength
         pref count scratchTail nextRawBit emittedRawBit tailFirst tail hcount
     outputCells :=
       rawBoundaryLeftMarkedTailHeadEmittedNextRawBitCellBeforeEmittedCellLeftEdgeTape_cells
@@ -661,7 +661,7 @@ theorem rawBoundary_sourceFirstTwoRawBitCellsLeftEdgeViaLeftMarkedBoundary_halts
               (sourceTape skipped count (some tailFirst :: tail))
               (rawBoundaryLeftMarkedTailHeadEmittedNextRawBitCellBeforeEmittedCellLeftEdgeTape
                 pref scratchTail nextRawBit emittedRawBit tailFirst tail) :=
-  rawBoundarySourceFirstTwoRawBitCellsLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_two_le_layout_length_three_le_count_length
+  firstTwoRawBitCells_haltsFrom_sourceTape_ofLayoutAndCount
     skipped count hlayoutLength hcount tailFirst tail
 
 structure RawBoundaryCountWindowStartRoute

@@ -506,24 +506,24 @@ theorem selectedProjectionFiniteDescriptionForwardOutputConstruction_scaffold_of
     (selectedProjectionCheckedEquivEmitterOutputConstruction_hybrid_scaffold_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
-theorem selectedProjectionFiniteDescriptionForwardOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases_direct
+theorem forwardOutputConstruction_scaffold_ofBranchFootprintCases_direct
     (heraser :
       SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
     (hcases :
       SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionFiniteDescriptionForwardOutputConstruction :=
   selectedProjectionFiniteDescriptionForwardOutputConstruction_of_hybridOutput
-    (selectedProjectionCheckedEquivPaddedEmitterHybridOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (checkedHybridOutputConstruction_scaffold_ofBranchFootprintCases
       heraser hcases)
 
-theorem selectedProjectionFiniteDescriptionForwardOutputConstruction_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases_checked
+theorem forwardOutputConstruction_scaffold_ofBranchFootprintCases_checked
     (heraser :
       SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
     (hcases :
       SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionFiniteDescriptionForwardOutputConstruction :=
   selectedProjectionFiniteDescriptionForwardOutputConstruction_of_checkedEmitterOutput
-    (selectedProjectionCheckedEquivEmitterOutputConstruction_hybrid_scaffold_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (emitterOutputConstruction_hybrid_scaffold_ofBranchFootprintCases
       heraser hcases)
 
 /-! ## Non-scaffold branch wrappers -/

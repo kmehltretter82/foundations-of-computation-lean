@@ -357,7 +357,7 @@ theorem rawBoundary_sourceFirstTwoThenFixedRemainingRightEdge_halts_exists
                   remaining nextRawBit emittedRawBit).HaltsFromTapeEquiv
                   (sourceTape skipped count (some tailFirst :: tail))
                   (rightEdgeTape skipped count tailFirst tail) :=
-  rawBoundarySourceFirstTwoThenFixedRemainingRawBitsToRightEdgeDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+  firstTwoThenFixedRemaining_toRightEdge_exists_ofLayoutCount
     skipped count tailFirst tail hlayoutLength hcountEnough
 
 def RawBoundaryFixedSourceBranchRoute

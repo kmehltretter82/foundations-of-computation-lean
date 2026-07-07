@@ -340,7 +340,7 @@ theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionV
     (markerAwarePullRemainingRawBitsCellSuffixLeftEdgeDescription_subroutineReady
       remaining)
 
-theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_lengths
+theorem remainingCellSuffix_haltsFrom_sourceTape_ofCountLengths
     (skipped count remaining : Word Bool)
     (scratchAfterTwo finalScratch : Nat)
     (nextRawBit emittedRawBit tailFirst : Bool)
@@ -393,7 +393,7 @@ theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionV
             ([] : Word Bool) remaining [nextRawBit, emittedRawBit]
             scratchAfterTwo finalScratch tailFirst tail hremainingScratch)
 
-theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_enough
+theorem remainingCellSuffix_haltsFrom_sourceTape_ofCountEnough
     (skipped count remaining : Word Bool)
     (nextRawBit emittedRawBit tailFirst : Bool)
     (tail : List (Option Bool))
@@ -422,11 +422,11 @@ theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionV
       scratchAfterTwo = finalScratch + 3 * remaining.length := rfl
   exact
     ⟨scratchAfterTwo, finalScratch, hcount, hremainingScratch,
-      rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_lengths
+      remainingCellSuffix_haltsFrom_sourceTape_ofCountLengths
         skipped count remaining scratchAfterTwo finalScratch nextRawBit
         emittedRawBit tailFirst tail hlayout hcount hremainingScratch⟩
 
-theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_exists_of_two_le_layout_length_count_enough
+theorem remainingCellSuffix_exists_ofLayoutCountEnough
     (skipped count : Word Bool)
     (tailFirst : Bool) (tail : List (Option Bool))
     (hlayoutLength : 2 <= (List.append skipped count).length)
@@ -467,7 +467,7 @@ theorem rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionV
     rw [← hremainingLength]
     exact hcountEnough
   rcases
-      rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_enough
+      remainingCellSuffix_haltsFrom_sourceTape_ofCountEnough
         skipped count remaining nextRawBit emittedRawBit tailFirst tail
         hlayout hcountRemaining with
     ⟨scratchAfterTwo, finalScratch, hcount, hscratch, hroute⟩
@@ -1826,7 +1826,7 @@ theorem rawBoundarySourceFirstTwoThenRemainingRawBitsToRightEdgeViaLeftMarkedBou
         (rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_ready
           remaining)
         rawBoundaryMarkedCellSuffixLeftEdgeToUnmarkedDescription_subroutineReady
-        (rawBoundarySourceFirstTwoThenRemainingRawBitsCellSuffixLeftEdgeEmissionViaLeftMarkedBoundaryDescription_haltsFrom_sourceTape_of_count_lengths
+        (remainingCellSuffix_haltsFrom_sourceTape_ofCountLengths
           skipped count remaining scratchAfterTwo finalScratch nextRawBit
           emittedRawBit tailFirst tail hlayout hcount hremainingScratch)
         (rawBoundaryLeftMarkedTailHeadEmittedCellSuffixLeftEdgeScratchTape_moveLeftRight
