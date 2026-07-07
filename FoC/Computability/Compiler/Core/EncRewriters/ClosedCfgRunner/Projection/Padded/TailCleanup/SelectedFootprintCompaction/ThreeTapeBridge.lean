@@ -253,6 +253,32 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMateriali
   | cons cell payload =>
       exact hconsRun cell payload
 
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec_of_spec
+    {initializer : MachineDescription}
+    (hspec :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+        initializer) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec
+      initializer := by
+  rcases hspec with ⟨hready, hrun⟩
+  constructor
+  · exact ⟨hready, hrun []⟩
+  · exact
+      ⟨hready, fun cell payload =>
+        hrun (cell :: payload)⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_iff_split
+    (initializer : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+        initializer ↔
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec
+        initializer := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec_of_spec
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_split
+
 theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_split
     (hsplit :
       SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction) :
@@ -262,6 +288,25 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMateriali
     ⟨initializer,
       selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_split
         hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_of_construction
+    (hmaterializer :
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitSpec_of_spec
+        hspec⟩
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_iff_split :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction ↔
+      SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_of_construction
+  · exact
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_split
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape_eq_payloadInputTape
     (bits : Word Bool) (padding : List (Option Bool)) :
