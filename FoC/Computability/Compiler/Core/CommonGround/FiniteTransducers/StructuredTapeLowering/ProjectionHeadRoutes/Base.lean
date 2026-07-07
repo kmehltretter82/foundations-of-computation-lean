@@ -311,6 +311,45 @@ theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_right_cons
         target (pad :: padding) encodedPrefix).right = padding := by
   rfl
 
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_handoff_nil
+    (target : Tape Bool) (encodedPrefix : List (Option Bool)) :
+    canonicalPrimitiveSeqHandoffTape
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+          target [] encodedPrefix) =
+      tapeAtCells
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupLeftStack
+          target encodedPrefix)
+        [none, none] := by
+  simp [canonicalPrimitiveSeqHandoffTape,
+    selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_eq_tapeAtCells,
+    tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_handoff_singleton
+    (target : Tape Bool) (pad : Option Bool)
+    (encodedPrefix : List (Option Bool)) :
+    canonicalPrimitiveSeqHandoffTape
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+          target [pad] encodedPrefix) =
+      tapeAtCells
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupLeftStack
+          target encodedPrefix)
+        [pad, none] := by
+  simp [canonicalPrimitiveSeqHandoffTape,
+    selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_eq_tapeAtCells,
+    tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_handoff_cons_cons
+    (target : Tape Bool) (pad next : Option Bool)
+    (padding encodedPrefix : List (Option Bool)) :
+    canonicalPrimitiveSeqHandoffTape
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+          target (pad :: next :: padding) encodedPrefix) =
+      selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+        target (pad :: next :: padding) encodedPrefix := by
+  simp [canonicalPrimitiveSeqHandoffTape,
+    selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape_eq_tapeAtCells,
+    tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 theorem selectedSegmentLogicalTapeDecoderCellCells_flatten_filterMap
     (cells : List (Option Bool)) :
     ((cells.map selectedSegmentLogicalTapeDecoderCellCells).flatten).filterMap
