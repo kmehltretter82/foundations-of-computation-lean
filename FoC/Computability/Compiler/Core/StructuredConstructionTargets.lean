@@ -622,6 +622,155 @@ theorem structured3CanonicalExactIndexedEndpointConstruction_of_components
       Structured3CanonicalExactEndpointComponents.spec C⟩
 
 /--
+Exact shared tape-2 projector route for canonical three-tape endpoints.
+
+This is the stronger version of the current equivalence-based tape-2
+projector contract: it must project the third guarded logical tape to the
+literal represented tape, after the standard canonical-sequence handoff bounce.
+-/
+structure Structured3EndpointExactTape2ProjectorSpec
+    (projector : MachineDescription) : Prop where
+  subroutineReady : projector.SubroutineReady
+  forward :
+    forall T0 T1 T2 : Tape Bool,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (encodedGuardedStructured3Tapes T0 T1 T2))
+        T2
+  closed :
+    forall T0 T1 T2 : Tape Bool,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (encodedGuardedStructured3Tapes T0 T1 T2))
+        T2
+
+/--
+Existence wrapper for the exact shared tape-2 projector route.
+-/
+def Structured3EndpointExactTape2ProjectorConstruction : Prop :=
+  exists projector : MachineDescription,
+    Structured3EndpointExactTape2ProjectorSpec projector
+
+namespace Structured3EndpointExactTape2ProjectorSpec
+
+/--
+Specialize the shared exact tape-2 projector route to one indexed endpoint
+family.
+-/
+theorem toEndpointProjectorSpec
+    {ι : Type}
+    {lowered output tape0 tape1 : ι -> Tape Bool}
+    {projector : MachineDescription}
+    (hprojector :
+      Structured3EndpointExactTape2ProjectorSpec projector)
+    (hlowered :
+      forall i : ι,
+        lowered i =
+          encodedGuardedStructured3Tapes
+            (tape0 i) (tape1 i) (output i)) :
+    Structured3EndpointExactProjectorSpec
+      lowered output projector where
+  forward := by
+    intro i
+    simpa [hlowered i] using
+      hprojector.forward (tape0 i) (tape1 i) (output i)
+  closed := by
+    intro i
+    simpa [hlowered i] using
+      hprojector.closed (tape0 i) (tape1 i) (output i)
+
+end Structured3EndpointExactTape2ProjectorSpec
+
+/--
+Concrete endpoint components where the output projector is supplied by one
+shared exact tape-2 projector route.
+
+The {lit}`loweredShape` field records that the lowered structured core leaves the
+public output on logical tape 2.  This lets all four leaves share the same
+projector obligation while keeping their materializers and structured cores
+target-specific.
+-/
+structure Structured3CanonicalExactEndpointSharedProjectorComponents
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  initializer : MachineDescription
+  projector : MachineDescription
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  initializerSubroutineReady : initializer.SubroutineReady
+  projectorSubroutineReady : projector.SubroutineReady
+  loweredShape :
+    forall i : ι,
+      lowered i =
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (output i)
+  materializer :
+    Structured3EndpointExactMaterializerSpec
+      input initialized initializer
+  loweredCore :
+    Structured3EndpointExactLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+  projectorRoute :
+    Structured3EndpointExactTape2ProjectorSpec projector
+
+/--
+Existence wrapper for endpoint components that share an exact tape-2 projector
+route.
+-/
+def Structured3CanonicalExactEndpointSharedProjectorConstruction
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) : Prop :=
+  Nonempty
+    (Structured3CanonicalExactEndpointSharedProjectorComponents
+      input initialized lowered output tape0 tape1)
+
+namespace Structured3CanonicalExactEndpointSharedProjectorComponents
+
+/--
+Forget the shared-projector view back to the concrete component record.
+-/
+def toComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointSharedProjectorComponents
+        input initialized lowered output tape0 tape1) :
+    Structured3CanonicalExactEndpointComponents
+      input initialized lowered output where
+  core := C.core
+  initializer := C.initializer
+  projector := C.projector
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := C.initializerSubroutineReady
+  projectorSubroutineReady := C.projectorSubroutineReady
+  materializer := C.materializer
+  loweredCore := C.loweredCore
+  projectorSpec :=
+    C.projectorRoute.toEndpointProjectorSpec C.loweredShape
+
+end Structured3CanonicalExactEndpointSharedProjectorComponents
+
+/--
+Shared-projector components imply ordinary concrete endpoint components.
+-/
+theorem structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (h :
+      Structured3CanonicalExactEndpointSharedProjectorConstruction
+        input initialized lowered output tape0 tape1) :
+    Structured3CanonicalExactEndpointComponentConstruction
+      input initialized lowered output := by
+  rcases h with ⟨C⟩
+  exact
+    ⟨Structured3CanonicalExactEndpointSharedProjectorComponents.toComponents
+      C⟩
+
+/--
 Equivalence indexed closedness for a component.
 
 This is the indexed analogue of
@@ -1109,6 +1258,51 @@ theorem fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
     structured3CanonicalExactIndexedEndpointConstruction_of_components
       hcomponents
 
+/--
+Fuel-simulator component data with the output projector factored through the
+shared exact tape-2 projector route.
+-/
+def FuelSimulatorStructuredCanonicalEndpointSharedProjectorComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointSharedProjectorComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Existence form of the shared-projector fuel-simulator endpoint components.
+-/
+def FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointSharedProjectorConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Shared-projector fuel-simulator components imply ordinary concrete endpoint
+components.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+    {attempt : MachineDescription}
+    (hcomponents :
+      FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
+        attempt) :
+    FuelSimulatorStructuredCanonicalEndpointComponentConstruction
+      attempt := by
+  simpa [FuelSimulatorStructuredCanonicalEndpointComponentConstruction,
+    FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction] using
+    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
+      hcomponents
+
 theorem fuelSimulatorStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
     {W : Structured3EndpointWrapper}
@@ -1261,12 +1455,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCod
           intro attempt
           exact
             fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
-              (by
-                -- Remaining structured finite-table obligation: build the
-                -- concrete parser/core/projector components whose wrapped
-                -- machine maps generated fuel inputs to the exact
-                -- simulator-layout output tape.
-                sorry)))
+              (fuelSimulatorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+                (by
+                  -- Remaining structured finite-table obligation: build the
+                  -- concrete parser/core components and supply the shared
+                  -- exact tape-2 projector route whose wrapped machine maps
+                  -- generated fuel inputs to the exact simulator-layout
+                  -- output tape.
+                  sorry))))
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :
     Prop :=
@@ -1454,6 +1650,51 @@ theorem stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
     StageAttemptFramedStructuredCanonicalEndpointSpec,
     StageAttemptFramedStructuredCanonicalEndpointComponentConstruction] using
     structured3CanonicalExactIndexedEndpointConstruction_of_components
+      hcomponents
+
+/--
+Framed-invocation component data with the output projector factored through
+the shared exact tape-2 projector route.
+-/
+def StageAttemptFramedStructuredCanonicalEndpointSharedProjectorComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointSharedProjectorComponents
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+    (fun i => stageAttemptFramedStructuredInputTape i)
+    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+/--
+Existence form of the shared-projector framed-invocation endpoint components.
+-/
+def StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointSharedProjectorConstruction
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+    (fun i => stageAttemptFramedStructuredInputTape i)
+    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+/--
+Shared-projector framed-invocation components imply ordinary concrete
+endpoint components.
+-/
+theorem stageAttemptFramedStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+    {attempt : MachineDescription}
+    (hcomponents :
+      StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction
+        attempt) :
+    StageAttemptFramedStructuredCanonicalEndpointComponentConstruction
+      attempt := by
+  simpa [StageAttemptFramedStructuredCanonicalEndpointComponentConstruction,
+    StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction] using
+    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
       hcomponents
 
 theorem stageAttemptFramedStructuredExactIndexedSpec_of_canonical
@@ -1689,12 +1930,14 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstru
           intro attempt hattempt
           exact
             stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
-              (by
-                -- Remaining structured finite-table obligation: build the
-                -- concrete parser/core/projector components whose wrapped
-                -- machine installs the simulated boolean-word result in the
-                -- controller layout.
-                sorry)))
+              (stageAttemptFramedStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+                (by
+                  -- Remaining structured finite-table obligation: build the
+                  -- concrete parser/core components and supply the shared
+                  -- exact tape-2 projector route whose wrapped machine
+                  -- installs the simulated boolean-word result in the
+                  -- controller layout.
+                  sorry))))
 
 def fuelOutputStructuredInputTape
     {attempt : MachineDescription}
@@ -1886,6 +2129,63 @@ theorem fuelOutputStructuredCanonicalEndpointConstruction_of_components
     structured3CanonicalExactIndexedEndpointConstruction_of_components
       hcomponents
 
+/--
+Fuel-output component data with the output projector factored through the
+shared exact tape-2 projector route.
+-/
+def FuelOutputStructuredCanonicalEndpointSharedProjectorComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointSharedProjectorComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+    (fun i => fuelOutputStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      Tape.blank)
+
+/--
+Existence form of the shared-projector fuel-output endpoint components.
+-/
+def FuelOutputStructuredCanonicalEndpointSharedProjectorConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointSharedProjectorConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+    (fun i => fuelOutputStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      Tape.blank)
+
+/--
+Shared-projector fuel-output components imply ordinary concrete endpoint
+components.
+-/
+theorem fuelOutputStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+    {attempt : MachineDescription}
+    (hcomponents :
+      FuelOutputStructuredCanonicalEndpointSharedProjectorConstruction
+        attempt) :
+    FuelOutputStructuredCanonicalEndpointComponentConstruction
+      attempt := by
+  simpa [FuelOutputStructuredCanonicalEndpointComponentConstruction,
+    FuelOutputStructuredCanonicalEndpointSharedProjectorConstruction] using
+    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
+      hcomponents
+
 theorem fuelOutputStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
     {W : Structured3EndpointWrapper}
@@ -2043,12 +2343,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSu
           intro attempt
           exact
             fuelOutputStructuredCanonicalEndpointConstruction_of_components
-              (by
-                -- Remaining structured finite-table obligation: build the
-                -- concrete parser/core/projector components whose wrapped
-                -- machine emits the normalized boolean-word result code on
-                -- halted simulator layouts.
-                sorry)))
+              (fuelOutputStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+                (by
+                  -- Remaining structured finite-table obligation: build the
+                  -- concrete parser/core components and supply the shared
+                  -- exact tape-2 projector route whose wrapped machine emits
+                  -- the normalized boolean-word result code on halted
+                  -- simulator layouts.
+                  sorry))))
 
 def boundedFuelPairEnumeratorStructuredInputTape
     {runner : MachineDescription}
@@ -2239,6 +2541,67 @@ theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_comp
     structured3CanonicalExactIndexedEndpointConstruction_of_components
       hcomponents
 
+/--
+Bounded fuel-pair enumerator component data with the output projector factored
+through the shared exact tape-2 projector route.
+-/
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorComponents
+    (runner : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointSharedProjectorComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+    (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      Tape.blank)
+
+/--
+Existence form of the shared-projector bounded fuel-pair enumerator endpoint
+components.
+-/
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction
+    (runner : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointSharedProjectorConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+    (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      Tape.blank)
+
+/--
+Shared-projector bounded fuel-pair enumerator components imply ordinary
+concrete endpoint components.
+-/
+theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+    {runner : MachineDescription}
+    (hcomponents :
+      BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction
+        runner) :
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction
+      runner := by
+  simpa [
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction,
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction] using
+    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
+      hcomponents
+
 theorem boundedFuelPairEnumeratorStructuredExactIndexedSpec_of_canonical
     {runner : MachineDescription}
     {W : Structured3EndpointWrapper}
@@ -2399,12 +2762,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorS
           intro runner hrunner
           exact
             boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_components
-              (by
-                -- Remaining structured finite-table obligation: build the
-                -- concrete parser/core/projector components that enumerate
-                -- bounded fuel pairs, invoke the exact-fuel runner endpoint,
-                -- and expose the right-shifted classifier handoff tape.
-                sorry)))
+              (boundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+                (by
+                  -- Remaining structured finite-table obligation: build the
+                  -- concrete parser/core components and supply the shared
+                  -- exact tape-2 projector route that enumerates bounded fuel
+                  -- pairs, invokes the exact-fuel runner endpoint, and exposes
+                  -- the right-shifted classifier handoff tape.
+                  sorry))))
 
 end StructuredConstructionTargets
 
