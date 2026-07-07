@@ -281,6 +281,108 @@ def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction 
   exists cleanup : MachineDescription,
     SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec cleanup
 
+def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupSingletonPaddingSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (pad : Option Bool)
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+            target [pad] encodedPrefix))
+        target
+
+def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupConsConsPaddingSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (pad next : Option Bool)
+      (padding encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+            target (pad :: next :: padding) encodedPrefix))
+        target
+
+def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec
+    (cleanup : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderPaddedExactCleanupNilPaddingSpec cleanup ∧
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupSingletonPaddingSpec
+      cleanup ∧
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupConsConsPaddingSpec
+      cleanup
+
+def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction :
+    Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec cleanup
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec_of_handoffSplitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hsingle, hlong⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hsingle with ⟨_hreadySingle, hsingleRun⟩
+  rcases hlong with ⟨_hreadyLong, hlongRun⟩
+  constructor
+  · exact ⟨hready, hnilRun⟩
+  · refine ⟨hready, ?_⟩
+    intro target pad padding encodedPrefix
+    cases padding with
+    | nil =>
+        exact hsingleRun target pad encodedPrefix
+    | cons next padding =>
+        exact hlongRun target pad next padding encodedPrefix
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec_of_forwardSplitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  exact
+    ⟨⟨hready, hnilRun⟩,
+      ⟨hready, fun target pad encodedPrefix =>
+        hconsRun target pad [] encodedPrefix⟩,
+      ⟨hready, fun target pad next padding encodedPrefix =>
+        hconsRun target pad (next :: padding) encodedPrefix⟩⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_of_handoffSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec_of_handoffSplitSpec
+        hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitSpec_of_forwardSplitSpec
+        hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_iff_handoffSplit :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction <->
+      SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_of_forwardSplit
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_of_handoffSplit
+
 theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitSpec_of_spec
     {cleanup : MachineDescription}
     (hcleanup :

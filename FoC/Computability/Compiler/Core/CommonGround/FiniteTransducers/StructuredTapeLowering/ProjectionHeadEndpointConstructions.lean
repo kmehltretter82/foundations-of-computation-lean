@@ -34,12 +34,17 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConst
     structured3BlankOutputInputMaterializerConstruction_core
       selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
 
-theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction := by
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction := by
   -- Remaining finite-table obligation for exact padded cleanup after the
-  -- generated scanner.  The selected-head cleanup/projector route specializes
-  -- this to the padding produced by the encoded structured suffix.
+  -- generated scanner.  The handoff split follows the endpoint bounce shape:
+  -- nil padding, singleton padding, and padding with an existing right cell.
   sorry
+
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction :=
+  selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_of_handoffSplit
+    selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction :=
