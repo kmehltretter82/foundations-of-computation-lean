@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindowConstructions
 
 set_option doc.verso true
 
@@ -11,7 +11,7 @@ set_option doc.verso true
 This module records the lowered three-tape route for the count-window
 decoded-prefix materializer.  The existing one-tape materializer contract
 remains in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowConstructions`;
+{module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindowConstructions`;
 the bridge isolates the shared decoded-prefix extraction and the remaining
 adapter obligation from the structured three-tape layout back to that one-tape
 contract.

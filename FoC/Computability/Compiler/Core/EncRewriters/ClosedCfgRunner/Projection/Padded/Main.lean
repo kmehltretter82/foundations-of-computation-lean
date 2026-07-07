@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Main
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup
+import FoC.Computability.Compiler.ClosedCfg.ProjTail
 
 set_option doc.verso true
 

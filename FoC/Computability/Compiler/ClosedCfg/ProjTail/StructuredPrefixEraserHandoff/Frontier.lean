@@ -1,0 +1,84 @@
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHandoff.Base
+
+set_option doc.verso true
+
+/-!
+# Structured prefix eraser handoff frontier
+
+This module contains the remaining concrete finite-machine construction leaf
+for the two-tape structured-prefix eraser handoff, plus the thin public core
+wrappers that depend on it.
+-/
+
+namespace FoC
+namespace Computability
+
+open Languages
+open MachineDescription
+open CommonGround.FiniteTransducers
+open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
+
+namespace EncRewriters
+namespace BoundedLayoutRunner
+namespace SelectedProjectionPaddedTailCleanup
+
+theorem guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
+    GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
+  -- Remaining reusable finite-machine obligation: erase the guarded encodings
+  -- of the first two structured logical tapes, split by payload and padding
+  -- shape.
+  sorry
+
+theorem guardedTwoTapeStructuredPrefixEraserConstruction_core :
+    GuardedTwoTapeStructuredPrefixEraserConstruction := by
+  exact
+    guardedTwoTapeStructuredPrefixEraserConstruction_of_splitPadSymbolCases
+      guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_guardedPrefixEraser
+      guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_of_splitPadSymbolCases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_of_footprintHandoff
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_of_split
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_of_padSymbolCases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserPadSymbolCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserCaseConstruction_of_bitPaddingCases
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserBitPaddingCaseConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_core :
+    SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_of_footprintHandoff
+      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core
+
+end SelectedProjectionPaddedTailCleanup
+end BoundedLayoutRunner
+end EncRewriters
+end Computability
+end FoC

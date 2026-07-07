@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionBridgeOutput
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompactionBridgeOutput
 
 set_option doc.verso true
 

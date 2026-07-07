@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserHandoff
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHandoff
 
 set_option doc.verso true
 

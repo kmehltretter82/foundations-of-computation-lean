@@ -117,321 +117,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/Erase.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/Hit.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostErase.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPadCore.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPadPrefixErase.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingCloseout.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingConstruction.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingFieldEraser.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingFramework.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingPrefixScanner.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingRejectRoute.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingRouteBridges.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingScratchCounter.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingScratchWindow.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/Scaffold.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScaffoldOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExt.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtAdapters.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindow.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowConstructions.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowPositioner.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtRawSourceBridge.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtSpecs.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtTapes.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/Base.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/EndpointFrontier.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionBridgeOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionEndpoint.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionPaddingOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionPaddingSplit.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionShape.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/Source.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/Spec.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserBoundaryPhases.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserEndpoint.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Frontier.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserShape.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/Finish.lean",
         "value": 6
       },
@@ -1407,265 +1092,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPadPrefixErase.lean",
-        "value": 87
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingCloseout.lean",
-        "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingConstruction.lean",
-        "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingFieldEraser.lean",
-        "value": 91
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingFramework.lean",
-        "value": 89
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingOutput.lean",
-        "value": 86
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingPrefixScanner.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingRejectRoute.lean",
-        "value": 91
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingRouteBridges.lean",
-        "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingScratchCounter.lean",
-        "value": 94
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/PostPaddingScratchWindow.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScaffoldOutput.lean",
-        "value": 83
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtAdapters.lean",
-        "value": 87
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindow.lean",
-        "value": 90
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowConstructions.lean",
-        "value": 103
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowPositioner.lean",
-        "value": 100
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtRawSourceBridge.lean",
-        "value": 94
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtSpecs.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtTapes.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/Base.lean",
-        "value": 101
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 107
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/EndpointFrontier.lean",
-        "value": 113
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 112
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction.lean",
-        "value": 96
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionBridgeOutput.lean",
-        "value": 108
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionEndpoint.lean",
-        "value": 104
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionPaddingOutput.lean",
-        "value": 109
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionPaddingSplit.lean",
-        "value": 108
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionShape.lean",
-        "value": 101
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserBoundaryPhases.lean",
-        "value": 105
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserEndpoint.lean",
-        "value": 99
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 103
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Frontier.lean",
-        "value": 107
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff.lean",
-        "value": 98
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserOutput.lean",
-        "value": 97
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserShape.lean",
-        "value": 96
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/SourceRestFinishCore/Construction.lean",
         "value": 90
       },
@@ -2059,6 +1485,139 @@
       {
         "key": "decl_name",
         "limit": 128,
+        "line": 563,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+        "value": 142
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 598,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+        "value": 132
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 608,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+        "value": 163
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 633,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+        "value": 142
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 694,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+        "value": 138
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 271,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/BridgeCore.lean",
+        "value": 150
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 283,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/BridgeCore.lean",
+        "value": 135
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 631,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
+        "value": 134
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 826,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
+        "value": 133
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 882,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
+        "value": 136
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 890,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
+        "value": 155
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 997,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
+        "value": 130
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 145,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 139
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 203,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 137
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 291,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 129
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 461,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 141
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 972,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 131
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 1675,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 131
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 1742,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+        "value": 137
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
         "line": 856,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/CountWindowRawEncoder/RawBoundaryRightEdgeEmitter/CountedBoundary.lean",
         "value": 132
@@ -2139,139 +1698,6 @@
         "line": 444,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/OutputHybrid.lean",
         "value": 129
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 563,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 142
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 598,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 132
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 608,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 163
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 633,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 142
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 694,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtOutput.lean",
-        "value": 138
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 271,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 150
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 283,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 135
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 631,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 134
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 826,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 133
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 882,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 136
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 890,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 155
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 997,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 130
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 145,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 139
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 203,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 137
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 291,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 129
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 461,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 141
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 972,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 131
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 1675,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 131
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 1742,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 137
       },
       {
         "key": "decl_name",
