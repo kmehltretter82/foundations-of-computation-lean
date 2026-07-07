@@ -7,10 +7,10 @@ set_option doc.verso true
 
 This module packages the selected two-logical-tape structured-prefix eraser
 frontier into route-level exact and output contracts.  The finite-machine leaf
-is still the footprint-handoff nil/cons and padding-symbol split construction
-in {lit}`StructuredPrefixEraserHandoff.lean`; the contracts below make the
-same leaf available through the selected handoff, public eraser, generic
-guarded eraser, branch-split, and normalized-output views.
+is the reusable guarded two-tape split construction in
+{lit}`StructuredPrefixEraserHandoff/Frontier.lean`; the contracts below make
+that leaf available through the selected handoff, public eraser, branch-split,
+and normalized-output views.
 -/
 
 namespace FoC
@@ -30,10 +30,10 @@ namespace StructuredPrefixEraserRouteContracts
 /-!
 ## Reverse guarded and selected-branch adapters
 
-The handoff module already adapts the guarded eraser interface to the
-selected-specific handoff surface.  These reverse adapters let later proofs
-start from the current selected split leaf and recover the generic guarded
-view without reopening the tape-shape equalities.
+The handoff module adapts the guarded eraser interface to the selected-specific
+handoff surface.  These reverse adapters let later proofs start from selected
+routes and recover the generic guarded view without reopening the tape-shape
+equalities.
 -/
 
 theorem guardedTwoTapeStructuredPrefixEraserSpec_of_footprintHandoffSpec
