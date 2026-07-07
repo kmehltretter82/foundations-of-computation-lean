@@ -335,6 +335,21 @@ structure StructuredRawBoundaryEmitterRoute : Prop where
   emitterSupported :
     Structured.MultiTapeLowering.SupportsReadWriteRows3
       structuredRawBoundaryRightEdgeEmitterDescription
+  emitterWellFormed :
+    structuredRawBoundaryRightEdgeEmitterDescription.WellFormed
+  emitterHaltTransitionFree :
+    structuredRawBoundaryRightEdgeEmitterDescription.HaltTransitionFree
+  loweredEmitterReady :
+    MachineDescription.SubroutineReady
+      loweredStructuredRawBoundaryRightEdgeEmitterDescription
+  loweredEmitterRun :
+    forall layout : Word Bool,
+      MachineDescription.HaltsFromTapeEquiv
+        loweredStructuredRawBoundaryRightEdgeEmitterDescription
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          (structuredRawBoundaryRightEdgeEmitterSourceTapes layout))
+        (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+          (structuredRawBoundaryRightEdgeEmitterFinalTapes layout))
   sourceTapesEmpty :
     structuredRawBoundaryRightEdgeEmitterSourceTapes [] =
       [ Tape.input ([] : Word Bool), Tape.blank, Tape.blank ]
@@ -381,6 +396,14 @@ theorem structuredRawBoundaryEmitterRoute :
       structuredRawBoundaryRightEdgeCellEmitterDescription_supported
     emitterSupported :=
       structuredRawBoundaryRightEdgeEmitterDescription_supported
+    emitterWellFormed :=
+      structuredRawBoundaryRightEdgeEmitterDescription_wellFormed
+    emitterHaltTransitionFree :=
+      structuredRawBoundaryRightEdgeEmitterDescription_haltTransitionFree
+    loweredEmitterReady :=
+      loweredStructuredRawBoundaryRightEdgeEmitterDescription_subroutineReady
+    loweredEmitterRun :=
+      loweredStructuredRawBoundaryRightEdgeEmitterDescription_haltsFrom_structuredTapes
     sourceTapesEmpty := rfl
     runEmptyHalts :=
       structuredRawBoundaryRightEdgeEmitterDescription_run_empty_halts
@@ -400,8 +423,6 @@ theorem structuredRawBoundaryEmitterRoute :
 -/
 
 structure RawBoundaryRightEdgeEmitterCoreRoute : Prop where
-  coreDescription :
-    rawBoundaryRightEdgeEmitterCoreDescription = entryDescription
   coreReady :
     rawBoundaryRightEdgeEmitterCoreDescription.SubroutineReady
   wrapperReady :
@@ -430,8 +451,7 @@ def RawBoundaryRightEdgeEmitterCoreRouteConstruction : Prop :=
 
 theorem rawBoundaryRightEdgeEmitterCoreRoute :
     RawBoundaryRightEdgeEmitterCoreRoute :=
-  { coreDescription := rfl
-    coreReady :=
+  { coreReady :=
       rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
     wrapperReady :=
       rawBoundaryRightEdgeEmitterDescription_subroutineReady
