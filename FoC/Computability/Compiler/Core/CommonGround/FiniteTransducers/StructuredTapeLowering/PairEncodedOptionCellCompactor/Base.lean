@@ -1,3 +1,5 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
@@ -173,6 +175,79 @@ theorem markerTapeAt_succ (used n : Nat) :
 
 def outputTape (out : List (Option Bool)) : Tape Bool :=
   tapeAtCells out.reverse []
+
+/-!
+## Pair-encoded payload ingress
+
+These names isolate the shared one-tape-to-guarded-three-tape ingress shape for
+payloads encoded as pairs of physical cells.  The source tape has a fixed
+left-side prefix followed by pair-encoded payload cells and a right boundary;
+the guarded target exposes the payload as the compactor's source tape, a marker
+tape with one marker per payload cell, and an initially blank output tape.
+-/
+
+def fixedPrefixPayloadIngressSourceTape
+    (fixedPrefix payload : List (Option Bool)) : Tape Bool :=
+  rightEndCompactionSourceTape
+    (none ::
+      List.append (List.append fixedPrefix (encodedCells payload)) [none])
+
+def payloadIngressTargetTape
+    (payload : List (Option Bool)) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (sourceTape payload)
+    (markerTape payload.length)
+    (outputTape [])
+
+def PayloadIngressTargetFamilySpec {ι : Type}
+    (source : ι -> Tape Bool)
+    (payload : ι -> List (Option Bool))
+    (initializer : MachineDescription) : Prop :=
+  Structured3InputTargetFamilySpec
+    source
+    (fun input => payloadIngressTargetTape (payload input))
+    initializer
+
+def PayloadIngressTargetFamilyConstruction {ι : Type}
+    (source : ι -> Tape Bool)
+    (payload : ι -> List (Option Bool)) : Prop :=
+  exists initializer : MachineDescription,
+    PayloadIngressTargetFamilySpec source payload initializer
+
+def FixedPrefixPayloadIngressTargetFamilyConstruction
+    (fixedPrefix : List (Option Bool)) : Prop :=
+  PayloadIngressTargetFamilyConstruction
+    (fixedPrefixPayloadIngressSourceTape fixedPrefix)
+    (fun payload : List (Option Bool) => payload)
+
+theorem payloadIngressTargetFamilySpec_subroutineReady
+    {ι : Type} {source : ι -> Tape Bool}
+    {payload : ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hspec :
+      PayloadIngressTargetFamilySpec source payload initializer) :
+    initializer.SubroutineReady :=
+  hspec.left
+
+theorem payloadIngressTargetFamilySpec_haltsFromTapeEquiv
+    {ι : Type} {source : ι -> Tape Bool}
+    {payload : ι -> List (Option Bool)}
+    {initializer : MachineDescription}
+    (hspec :
+      PayloadIngressTargetFamilySpec source payload initializer)
+    (input : ι) :
+    initializer.HaltsFromTapeEquiv
+      (source input)
+      (payloadIngressTargetTape (payload input)) :=
+  hspec.right input
+
+theorem fixedPrefixPayloadIngressTargetFamilyConstruction_core
+    (fixedPrefix : List (Option Bool)) :
+    FixedPrefixPayloadIngressTargetFamilyConstruction fixedPrefix := by
+  -- Remaining shared finite-machine ingress: skip the fixed prefix, decode
+  -- pair-encoded payload cells into tape 0, emit one marker per payload cell
+  -- on tape 1, and leave tape 2 at the blank compactor output buffer.
+  sorry
 
 /-!
 ## Split-target separator focus route

@@ -25,17 +25,18 @@ split by the same nil/cons and padding-symbol cases used by the one-tape
 selected-footprint bridge; this keeps the exact cursor-positioning obligations
 separate from the endpoint composition glue.
 -/
-theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
-  -- Remaining finite-machine ingress: encode any old selected footprint payload
-  -- as the guarded three-tape input expected by the structured compactor.
-  sorry
-
 theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction := by
   exact
-    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_split
-      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core
+    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_pairEncoded
+      (PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core
+        selectedSegmentLogicalTapeDecoderGuardPrefixCells)
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
+  exact
+    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_of_construction
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction := by

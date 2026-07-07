@@ -275,6 +275,17 @@ def FuelSimulatorStructuredEquivIndexedMaterializerConstruction :
     (fun i => fuelSimulatorStructuredInitializedTape i)
 
 /--
+Fuel-simulator materializer through the reusable CommonGround structured-input
+contract, plus the indexed closedness required by endpoint wrappers.
+-/
+def FuelSimulatorStructuredEquivInputMaterializerConstruction :
+    Prop :=
+  Structured3EndpointEquivInputMaterializerConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredOutputBuffer i)
+
+/--
 The existing exact indexed materializer obligation feeds the equivalence-facing
 materializer contract.
 -/
@@ -286,6 +297,29 @@ theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_indexed
     FuelSimulatorStructuredEquivIndexedMaterializerConstruction] using
     structured3EndpointEquivIndexedMaterializerConstruction_of_exact
       hmaterializer
+
+theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_inputMaterializer
+    (hmaterializer :
+      FuelSimulatorStructuredEquivInputMaterializerConstruction) :
+    FuelSimulatorStructuredEquivIndexedMaterializerConstruction := by
+  simpa [
+    FuelSimulatorStructuredEquivInputMaterializerConstruction,
+    FuelSimulatorStructuredEquivIndexedMaterializerConstruction,
+    Structured3EndpointEquivInputMaterializerInitialized,
+    fuelSimulatorStructuredInitializedTape] using
+    structured3EndpointEquivIndexedMaterializerConstruction_of_inputMaterializer
+      hmaterializer
+
+theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
+    (hmaterializer :
+      FuelSimulatorStructuredIndexedMaterializerConstruction) :
+    FuelSimulatorStructuredEquivInputMaterializerConstruction := by
+  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
+    FuelSimulatorStructuredEquivInputMaterializerConstruction,
+    Structured3EndpointEquivInputMaterializerInitialized,
+    fuelSimulatorStructuredInitializedTape] using
+    structured3EndpointEquivInputMaterializerConstruction_of_indexed
+      hmaterializer (fun _i => rfl)
 
 /--
 Fuel-simulator lowered structured core data after input materialization.
@@ -402,6 +436,19 @@ theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_o
     structured3CanonicalEquivEndpointCoreComponentConstruction_of_materializer_loweredCore
       hmaterializer hcore
 
+theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_inputMaterializer_loweredCore
+    {attempt : MachineDescription}
+    (hmaterializer :
+      FuelSimulatorStructuredEquivInputMaterializerConstruction)
+    (hcore :
+      FuelSimulatorStructuredEquivLoweredCoreConstruction attempt) :
+    FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
+      attempt :=
+  fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_materializer_loweredCore
+    (fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_inputMaterializer
+      hmaterializer)
+    hcore
+
 /--
 Combine the fuel-simulator parser/materializer and lowered core into the
 no-projector endpoint component obligation.
@@ -439,6 +486,11 @@ theorem fuelSimulatorStructuredLoweredCoreConstruction_core
   -- the exact simulator-layout output on logical tape 2.
   sorry
 
+theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_core :
+    FuelSimulatorStructuredEquivInputMaterializerConstruction :=
+  fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
+    fuelSimulatorStructuredIndexedMaterializerConstruction_core
+
 /--
 Target-local parser/core obligation for the fuel-simulator target.  The
 public endpoint theorem below only composes this with a shared tape-2
@@ -460,9 +512,8 @@ theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_c
     (attempt : MachineDescription) :
     FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
       attempt :=
-  fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_materializer_loweredCore
-    (fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_indexed
-      fuelSimulatorStructuredIndexedMaterializerConstruction_core)
+  fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_inputMaterializer_loweredCore
+    fuelSimulatorStructuredEquivInputMaterializerConstruction_core
     (fuelSimulatorStructuredEquivLoweredCoreConstruction_of_loweredCore
       (fuelSimulatorStructuredLoweredCoreConstruction_core attempt))
 

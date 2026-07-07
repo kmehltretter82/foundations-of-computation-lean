@@ -168,10 +168,20 @@ def SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridge
 
 def selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape
     (payload : List (Option Bool)) : Tape Bool :=
-  encodedGuardedStructured3Tapes
-    (PairEncodedOptionCellCompactor.sourceTape payload)
-    (PairEncodedOptionCellCompactor.markerTape payload.length)
-    (PairEncodedOptionCellCompactor.outputTape [])
+  PairEncodedOptionCellCompactor.payloadIngressTargetTape payload
+
+theorem selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload_eq_pairEncodedIngressSource
+    (payload : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload
+        payload =
+      PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressSourceTape
+        selectedSegmentLogicalTapeDecoderGuardPrefixCells payload := by
+  simp [
+    selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload,
+    selectedSegmentLogicalTapeDecoderFootprintLeftCellsFromPayload,
+    selectedSegmentLogicalTapeDecoderFootprintCellsFromPayload,
+    PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressSourceTape,
+    PairEncodedOptionCellCompactor.encodedCells]
 
 def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
     (initializer : MachineDescription) : Prop :=
@@ -188,6 +198,39 @@ def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerC
   exists initializer : MachineDescription,
     SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
       initializer
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_pairEncoded
+    {initializer : MachineDescription}
+    (hmaterializer :
+      PairEncodedOptionCellCompactor.PayloadIngressTargetFamilySpec
+        (PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressSourceTape
+          selectedSegmentLogicalTapeDecoderGuardPrefixCells)
+        (fun payload : List (Option Bool) => payload)
+        initializer) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec
+      initializer := by
+  refine
+    ⟨PairEncodedOptionCellCompactor.payloadIngressTargetFamilySpec_subroutineReady
+        hmaterializer, ?_⟩
+  intro payload
+  have hrun :=
+    PairEncodedOptionCellCompactor.payloadIngressTargetFamilySpec_haltsFromTapeEquiv
+      hmaterializer payload
+  simpa [
+    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape,
+    selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload_eq_pairEncodedIngressSource] using
+    hrun
+
+theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_pairEncoded
+    (hmaterializer :
+      PairEncodedOptionCellCompactor.FixedPrefixPayloadIngressTargetFamilyConstruction
+        selectedSegmentLogicalTapeDecoderGuardPrefixCells) :
+    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction := by
+  rcases hmaterializer with ⟨initializer, hspec⟩
+  exact
+    ⟨initializer,
+      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSpec_of_pairEncoded
+        hspec⟩
 
 def SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerNilSpec
     (initializer : MachineDescription) : Prop :=
@@ -320,6 +363,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputTape
     selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput1,
     selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInput2,
     selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputTape,
+    PairEncodedOptionCellCompactor.payloadIngressTargetTape,
     selectedSegmentLogicalTapeDecoderFootprintPaddingSplitSourcePayloadCells_eq]
 
 theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerSpec_of_payload

@@ -1055,6 +1055,42 @@ def Structured3EndpointEquivIndexedMaterializerConstruction {ι : Type}
       Structured3EndpointEquivIndexedMaterializerSpec
         input initialized materializer
 
+def Structured3EndpointEquivInputMaterializerInitialized
+    {ι : Type}
+    (input output : ι -> Tape Bool) : ι -> Tape Bool :=
+  fun i =>
+    CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+      (input i) (output i)
+
+/--
+Endpoint-facing view of the reusable CommonGround structured-input
+materializer.
+
+The CommonGround spec supplies the forward {lit}`HaltsFromTapeEquiv` behavior into
+the canonical guarded three-tape input.  Endpoint components still require the
+indexed closedness/inversion fact, so this adapter keeps that proof as an
+explicit field instead of hiding it in target-specific wrappers.
+-/
+structure Structured3EndpointEquivInputMaterializerSpec {ι : Type}
+    (input output : ι -> Tape Bool)
+    (materializer : MachineDescription) : Prop where
+  inputSpec :
+    CommonGround.FiniteTransducers.Structured3InputMaterializerSpec
+      input output materializer
+  closedIndex :
+    EquivClosedIndexedFromTape materializer input
+      (Structured3EndpointEquivInputMaterializerInitialized input output)
+
+/--
+Existence wrapper for endpoint materializers built through the reusable
+CommonGround structured-input materializer contract.
+-/
+def Structured3EndpointEquivInputMaterializerConstruction {ι : Type}
+    (input output : ι -> Tape Bool) : Prop :=
+  exists materializer : MachineDescription,
+    Structured3EndpointEquivInputMaterializerSpec
+      input output materializer
+
 namespace Structured3EndpointEquivIndexedMaterializerSpec
 
 /--
@@ -1075,6 +1111,36 @@ theorem closed
     hready (hspec.forward i)
 
 end Structured3EndpointEquivIndexedMaterializerSpec
+
+namespace Structured3EndpointEquivInputMaterializerSpec
+
+theorem subroutineReady
+    {ι : Type}
+    {input output : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointEquivInputMaterializerSpec
+        input output materializer) :
+    materializer.SubroutineReady :=
+  hspec.inputSpec.left
+
+theorem toEquivIndexedMaterializerSpec
+    {ι : Type}
+    {input output : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointEquivInputMaterializerSpec
+        input output materializer) :
+    Structured3EndpointEquivIndexedMaterializerSpec
+      input
+      (Structured3EndpointEquivInputMaterializerInitialized input output)
+      materializer where
+  forward := fun i =>
+    CommonGround.FiniteTransducers.structured3InputMaterializerSpec_haltsFromTapeEquiv
+      hspec.inputSpec i
+  closedIndex := hspec.closedIndex
+
+end Structured3EndpointEquivInputMaterializerSpec
 
 namespace Structured3EndpointIndexedMaterializerSpec
 
@@ -1117,6 +1183,70 @@ theorem structured3EndpointEquivIndexedMaterializerConstruction_of_exact
   exact
     ⟨materializer, hready,
       hspec.toEquivIndexedMaterializerSpec⟩
+
+theorem structured3EndpointEquivIndexedMaterializerConstruction_of_inputMaterializer
+    {ι : Type}
+    {input output : ι -> Tape Bool}
+    (hmaterializer :
+      Structured3EndpointEquivInputMaterializerConstruction input output) :
+    Structured3EndpointEquivIndexedMaterializerConstruction
+      input
+      (Structured3EndpointEquivInputMaterializerInitialized input output) := by
+  rcases hmaterializer with ⟨materializer, hspec⟩
+  exact
+    ⟨materializer,
+      hspec.subroutineReady,
+      hspec.toEquivIndexedMaterializerSpec⟩
+
+theorem structured3EndpointEquivInputMaterializerSpec_of_indexed
+    {ι : Type}
+    {input initialized output : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hready : materializer.SubroutineReady)
+    (hspec :
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized materializer)
+    (hinitialized :
+      forall i : ι,
+        initialized i =
+          Structured3EndpointEquivInputMaterializerInitialized
+            input output i) :
+    Structured3EndpointEquivInputMaterializerSpec
+      input output materializer where
+  inputSpec := by
+    constructor
+    · exact hready
+    · intro i
+      simpa [Structured3EndpointEquivInputMaterializerInitialized,
+        hinitialized i] using
+        (hspec.forward i).toEquiv
+  closedIndex := by
+    intro Tin T hhalt
+    rcases hspec.closedIndex Tin T hhalt with
+      ⟨i, hTin, hT⟩
+    refine ⟨i, hTin, ?_⟩
+    rw [hT, hinitialized i]
+    exact Tape.Equiv.refl _
+
+theorem structured3EndpointEquivInputMaterializerConstruction_of_indexed
+    {ι : Type}
+    {input initialized output : ι -> Tape Bool}
+    (hmaterializer :
+      Structured3EndpointIndexedMaterializerConstruction
+        input initialized)
+    (hinitialized :
+      forall i : ι,
+        initialized i =
+          Structured3EndpointEquivInputMaterializerInitialized
+            input output i) :
+    Structured3EndpointEquivInputMaterializerConstruction
+      input output := by
+  rcases hmaterializer with
+    ⟨materializer, hready, hspec⟩
+  exact
+    ⟨materializer,
+      structured3EndpointEquivInputMaterializerSpec_of_indexed
+        hready hspec hinitialized⟩
 
 /--
 Equivalence-forward lowered-core behavior for canonical endpoint leaves.
