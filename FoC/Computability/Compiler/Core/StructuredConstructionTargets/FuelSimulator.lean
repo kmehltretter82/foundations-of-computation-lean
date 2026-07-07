@@ -261,6 +261,33 @@ def FuelSimulatorStructuredIndexedMaterializerConstruction : Prop :=
     (fun i => fuelSimulatorStructuredInitializedTape i)
 
 /--
+Equivalence-facing fuel-simulator input parser/materializer construction.
+
+This is the Phase 3 prototype contract for the public-input materializer: it
+keeps indexed closedness, but allows the initialized guarded tape to be reached
+up to tape equivalence.
+-/
+def FuelSimulatorStructuredEquivIndexedMaterializerConstruction :
+    Prop :=
+  Structured3EndpointEquivIndexedMaterializerConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+
+/--
+The existing exact indexed materializer obligation feeds the equivalence-facing
+materializer contract.
+-/
+theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_indexed
+    (hmaterializer :
+      FuelSimulatorStructuredIndexedMaterializerConstruction) :
+    FuelSimulatorStructuredEquivIndexedMaterializerConstruction := by
+  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
+    FuelSimulatorStructuredEquivIndexedMaterializerConstruction] using
+    structured3EndpointEquivIndexedMaterializerConstruction_of_exact
+      hmaterializer
+
+/--
 Fuel-simulator lowered structured core data after input materialization.
 -/
 def FuelSimulatorStructuredLoweredCoreComponents
@@ -285,6 +312,95 @@ def FuelSimulatorStructuredLoweredCoreConstruction
     (fun i => fuelSimulatorStructuredOutputTape attempt i)
     (fun i => fuelSimulatorStructuredInputTape i)
     (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Equivalence-facing fuel-simulator lowered structured core data after input
+materialization.
+-/
+def FuelSimulatorStructuredEquivLoweredCoreComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalEquivEndpointLoweredCoreComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Existence form for the equivalence-facing fuel-simulator lowered structured
+core.
+-/
+def FuelSimulatorStructuredEquivLoweredCoreConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalEquivEndpointLoweredCoreConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+The existing exact lowered-core obligation feeds the equivalence-facing lowered
+core contract.
+-/
+theorem fuelSimulatorStructuredEquivLoweredCoreConstruction_of_loweredCore
+    {attempt : MachineDescription}
+    (hcore :
+      FuelSimulatorStructuredLoweredCoreConstruction attempt) :
+    FuelSimulatorStructuredEquivLoweredCoreConstruction attempt := by
+  simpa [FuelSimulatorStructuredLoweredCoreConstruction,
+    FuelSimulatorStructuredEquivLoweredCoreConstruction] using
+    structured3CanonicalEquivEndpointLoweredCoreConstruction_of_exact
+      hcore
+
+/--
+Fuel-simulator parser/core components for the equivalence-facing endpoint,
+before installing the shared tape-2 projector.
+-/
+def FuelSimulatorStructuredCanonicalEndpointEquivCoreComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalEquivEndpointCoreComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Existence form for fuel-simulator equivalence-facing parser/core components.
+-/
+def FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalEquivEndpointCoreComponentConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Combine the fuel-simulator equivalence-facing materializer and lowered core
+into the no-projector endpoint component obligation.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_materializer_loweredCore
+    {attempt : MachineDescription}
+    (hmaterializer :
+      FuelSimulatorStructuredEquivIndexedMaterializerConstruction)
+    (hcore :
+      FuelSimulatorStructuredEquivLoweredCoreConstruction attempt) :
+    FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
+      attempt := by
+  simpa [FuelSimulatorStructuredEquivIndexedMaterializerConstruction,
+    FuelSimulatorStructuredEquivLoweredCoreConstruction,
+    FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction] using
+    structured3CanonicalEquivEndpointCoreComponentConstruction_of_materializer_loweredCore
+      hmaterializer hcore
 
 /--
 Combine the fuel-simulator parser/materializer and lowered core into the
@@ -337,6 +453,84 @@ theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
     (fuelSimulatorStructuredLoweredCoreConstruction_core attempt)
 
 /--
+Target-local equivalence-facing parser/core obligation for the fuel-simulator
+target.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_core
+    (attempt : MachineDescription) :
+    FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
+      attempt :=
+  fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_materializer_loweredCore
+    (fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_indexed
+      fuelSimulatorStructuredIndexedMaterializerConstruction_core)
+    (fuelSimulatorStructuredEquivLoweredCoreConstruction_of_loweredCore
+      (fuelSimulatorStructuredLoweredCoreConstruction_core attempt))
+
+/--
+Fuel-simulator endpoint components for the equivalence-facing prototype path,
+including the shared tape-2 projector.
+-/
+def FuelSimulatorStructuredCanonicalEndpointEquivComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalEquivEndpointComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Existence form for the fuel-simulator equivalence-facing endpoint components.
+-/
+def FuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalEquivEndpointComponentConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Install the shared equivalence tape-2 projector into equivalence-facing
+fuel-simulator core components.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction_of_equivCoreComponents
+    {attempt : MachineDescription}
+    (hcore :
+      FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
+        attempt)
+    (hprojector :
+      Structured3EndpointTape2ProjectorConstruction) :
+    FuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction
+      attempt := by
+  simpa [FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction,
+    FuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction] using
+    structured3CanonicalEquivEndpointComponentConstruction_of_coreComponents
+      hcore hprojector
+
+/--
+Equivalence-facing fuel-simulator components imply the equivalence indexed
+endpoint family.
+-/
+theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivComponents
+    {attempt : MachineDescription}
+    (hcomponents :
+      FuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction
+        attempt) :
+    FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt := by
+  rcases hcomponents with ⟨C⟩
+  exact
+    ⟨C.wrapper,
+      fuelSimulatorStructuredInitializedTape,
+      fuelSimulatorStructuredLoweredTape attempt,
+      C.equivIndexedFamilySpec⟩
+
+/--
 Install the shared equivalence tape-2 projector into fuel-simulator core
 components.
 -/
@@ -378,9 +572,9 @@ components and the shared equivalence tape-2 projector.
 theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_core
     (attempt : MachineDescription) :
     FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt :=
-  fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
-    (fuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
-      (fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
+  fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivComponents
+    (fuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction_of_equivCoreComponents
+      (fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_core
         attempt)
       structured3EndpointTape2ProjectorConstruction_core)
 

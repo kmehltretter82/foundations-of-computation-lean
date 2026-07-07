@@ -1029,6 +1029,157 @@ def EquivClosedIndexedFromTape {ι : Type}
       exists i : ι, Tin = source i ∧ Tape.Equiv T (target i)
 
 /--
+Equivalence-forward indexed materializer data for endpoint leaves.
+
+This is the Phase-3-facing variant of
+{name}`Structured3EndpointIndexedMaterializerSpec`: valid inputs only have to
+reach an equivalent initialized tape, while the closed-index clause still
+inverts arbitrary halts back to the target input family.
+-/
+structure Structured3EndpointEquivIndexedMaterializerSpec {ι : Type}
+    (input initialized : ι -> Tape Bool)
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i : ι,
+      materializer.HaltsFromTapeEquiv (input i) (initialized i)
+  closedIndex :
+    EquivClosedIndexedFromTape materializer input initialized
+
+/--
+Existence wrapper for equivalence-forward indexed input materializers.
+-/
+def Structured3EndpointEquivIndexedMaterializerConstruction {ι : Type}
+    (input initialized : ι -> Tape Bool) : Prop :=
+  exists materializer : MachineDescription,
+    materializer.SubroutineReady ∧
+      Structured3EndpointEquivIndexedMaterializerSpec
+        input initialized materializer
+
+namespace Structured3EndpointEquivIndexedMaterializerSpec
+
+/--
+Derive per-index equivalence closedness from equivalence-forward behavior and
+subroutine determinism.
+-/
+theorem closed
+    {ι : Type}
+    {input initialized : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointEquivIndexedMaterializerSpec
+        input initialized materializer)
+    (hready : materializer.SubroutineReady)
+    (i : ι) :
+    materializer.ClosedFromTapeEquiv (input i) (initialized i) :=
+  closedFromTapeEquiv_of_haltsFromTapeEquiv_of_subroutineReady
+    hready (hspec.forward i)
+
+end Structured3EndpointEquivIndexedMaterializerSpec
+
+namespace Structured3EndpointIndexedMaterializerSpec
+
+/--
+View exact indexed materializer data as equivalence-forward indexed
+materializer data.
+-/
+theorem toEquivIndexedMaterializerSpec
+    {ι : Type}
+    {input initialized : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized materializer) :
+    Structured3EndpointEquivIndexedMaterializerSpec
+      input initialized materializer where
+  forward := fun i => (hspec.forward i).toEquiv
+  closedIndex := by
+    intro Tin T hhalt
+    rcases hspec.closedIndex Tin T hhalt with
+      ⟨i, hTin, hT⟩
+    exact ⟨i, hTin, by rw [hT]; exact Tape.Equiv.refl _⟩
+
+end Structured3EndpointIndexedMaterializerSpec
+
+/--
+Exact indexed materializer construction implies the equivalence-forward
+indexed materializer construction.
+-/
+theorem structured3EndpointEquivIndexedMaterializerConstruction_of_exact
+    {ι : Type}
+    {input initialized : ι -> Tape Bool}
+    (hmaterializer :
+      Structured3EndpointIndexedMaterializerConstruction
+        input initialized) :
+    Structured3EndpointEquivIndexedMaterializerConstruction
+      input initialized := by
+  rcases hmaterializer with
+    ⟨materializer, hready, hspec⟩
+  exact
+    ⟨materializer, hready,
+      hspec.toEquivIndexedMaterializerSpec⟩
+
+/--
+Equivalence-forward lowered-core behavior for canonical endpoint leaves.
+
+Unlike {name}`Structured3EndpointExactLoweredCoreSpec`, this spec is stated on
+the logical initialized tape.  The endpoint sequencer absorbs the physical
+handoff move through {name}`Tape.Equiv`.
+-/
+structure Structured3EndpointEquivLoweredCoreSpec {ι : Type}
+    (initialized lowered : ι -> Tape Bool)
+    (core : MachineDescription) : Prop where
+  forward :
+    forall i : ι,
+      core.HaltsFromTapeEquiv (initialized i) (lowered i)
+  closed :
+    forall i : ι,
+      core.ClosedFromTapeEquiv (initialized i) (lowered i)
+
+namespace Structured3EndpointExactLoweredCoreSpec
+
+/--
+View exact lowered-core data on the physical sequencer handoff tape as
+equivalence-forward data on the logical initialized tape.
+-/
+theorem toEquivLoweredCoreSpec
+    {ι : Type}
+    {initialized lowered : ι -> Tape Bool}
+    {core : MachineDescription}
+    (hspec :
+      Structured3EndpointExactLoweredCoreSpec
+        initialized lowered core) :
+    Structured3EndpointEquivLoweredCoreSpec
+      initialized lowered core where
+  forward := by
+    intro i
+    exact
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := core)
+        (Tin := canonicalPrimitiveSeqHandoffTape (initialized i))
+        (Tin' := initialized i)
+        (Tout := lowered i)
+        (canonicalPrimitiveSeqHandoffTape_equiv (initialized i))
+        (hspec.forward i)
+  closed := by
+    intro i T hhalt
+    rcases
+        HaltsFromTapeEquiv_of_input_equiv
+          (D := core)
+          (Tin := initialized i)
+          (Tin' := canonicalPrimitiveSeqHandoffTape (initialized i))
+          (Tout := T)
+          (Tape.Equiv.symm
+            (canonicalPrimitiveSeqHandoffTape_equiv (initialized i)))
+          hhalt with
+      ⟨actual, hactual, hequiv⟩
+    have hactualEq : actual = lowered i :=
+      hspec.closed i actual hactual
+    rw [hactualEq] at hequiv
+    exact Tape.Equiv.symm hequiv
+
+end Structured3EndpointExactLoweredCoreSpec
+
+/--
 Exact indexed endpoint data for the wrapped
 materializer/lowered-core/projector pipeline.
 
@@ -1305,6 +1456,354 @@ theorem closedIndex_equiv
   closedIndex hspec Tin T hhalt
 
 end Structured3EndpointEquivIndexedFamilySpec
+
+/--
+Target-specific parser/core components for an equivalence-facing canonical
+endpoint, before installing the shared tape-2 projector.
+
+This is the prototype component shape for Phase 3: materializer and lowered
+core obligations may be proved up to {name}`Tape.Equiv`, while arbitrary
+initializer halts still carry an indexed inversion fact.
+-/
+structure Structured3CanonicalEquivEndpointCoreComponents
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  initializer : MachineDescription
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  initializerSubroutineReady : initializer.SubroutineReady
+  loweredShape :
+    forall i : ι,
+      lowered i =
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (output i)
+  materializer :
+    Structured3EndpointEquivIndexedMaterializerSpec
+      input initialized initializer
+  loweredCore :
+    Structured3EndpointEquivLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+
+/--
+Existence wrapper for equivalence-facing parser/core endpoint components.
+-/
+def Structured3CanonicalEquivEndpointCoreComponentConstruction
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) :
+    Prop :=
+  Nonempty
+    (Structured3CanonicalEquivEndpointCoreComponents
+      input initialized lowered output tape0 tape1)
+
+/--
+Target-specific lowered structured core data for an equivalence-facing
+endpoint, before installing an input materializer.
+-/
+structure Structured3CanonicalEquivEndpointLoweredCoreComponents
+    {ι : Type}
+    (initialized lowered output tape0 tape1 : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  loweredShape :
+    forall i : ι,
+      lowered i =
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (output i)
+  loweredCore :
+    Structured3EndpointEquivLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+
+/--
+Existence wrapper for equivalence-facing lowered structured core data.
+-/
+def Structured3CanonicalEquivEndpointLoweredCoreConstruction
+    {ι : Type}
+    (initialized lowered output tape0 tape1 : ι -> Tape Bool) : Prop :=
+  Nonempty
+    (Structured3CanonicalEquivEndpointLoweredCoreComponents
+      initialized lowered output tape0 tape1)
+
+namespace Structured3CanonicalEquivEndpointLoweredCoreComponents
+
+/--
+Install an equivalence-forward indexed materializer in front of equivalence
+lowered structured core data.
+-/
+def toCoreComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalEquivEndpointLoweredCoreComponents
+        initialized lowered output tape0 tape1)
+    {initializer : MachineDescription}
+    (hinitializerReady : initializer.SubroutineReady)
+    (hmaterializer :
+      Structured3EndpointEquivIndexedMaterializerSpec
+        input initialized initializer) :
+    Structured3CanonicalEquivEndpointCoreComponents
+      input initialized lowered output tape0 tape1 where
+  core := C.core
+  initializer := initializer
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := hinitializerReady
+  loweredShape := C.loweredShape
+  materializer := hmaterializer
+  loweredCore := C.loweredCore
+
+end Structured3CanonicalEquivEndpointLoweredCoreComponents
+
+/--
+Equivalence-forward indexed materializer construction plus equivalence
+lowered structured core construction give equivalence endpoint-core
+components.
+-/
+theorem structured3CanonicalEquivEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (hmaterializer :
+      Structured3EndpointEquivIndexedMaterializerConstruction
+        input initialized)
+    (hcore :
+      Structured3CanonicalEquivEndpointLoweredCoreConstruction
+        initialized lowered output tape0 tape1) :
+    Structured3CanonicalEquivEndpointCoreComponentConstruction
+      input initialized lowered output tape0 tape1 := by
+  rcases hmaterializer with
+    ⟨initializer, hinitializerReady, hmaterializerSpec⟩
+  rcases hcore with ⟨C⟩
+  exact
+    ⟨C.toCoreComponents hinitializerReady hmaterializerSpec⟩
+
+namespace Structured3CanonicalExactEndpointLoweredCoreComponents
+
+/--
+Forget exact handoff-core behavior to the equivalence-facing lowered-core
+component shape.
+-/
+def toEquivLoweredCoreComponents
+    {ι : Type}
+    {initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointLoweredCoreComponents
+        initialized lowered output tape0 tape1) :
+    Structured3CanonicalEquivEndpointLoweredCoreComponents
+      initialized lowered output tape0 tape1 where
+  core := C.core
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  loweredShape := C.loweredShape
+  loweredCore := by
+    simpa using C.loweredCore.toEquivLoweredCoreSpec
+
+end Structured3CanonicalExactEndpointLoweredCoreComponents
+
+/--
+Exact lowered-core components imply equivalence-facing lowered-core
+components.
+-/
+theorem structured3CanonicalEquivEndpointLoweredCoreConstruction_of_exact
+    {ι : Type}
+    {initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (hcore :
+      Structured3CanonicalExactEndpointLoweredCoreConstruction
+        initialized lowered output tape0 tape1) :
+    Structured3CanonicalEquivEndpointLoweredCoreConstruction
+      initialized lowered output tape0 tape1 := by
+  rcases hcore with ⟨C⟩
+  exact ⟨C.toEquivLoweredCoreComponents⟩
+
+namespace Structured3CanonicalExactEndpointCoreComponents
+
+/--
+Forget exact materializer and handoff-core behavior to the equivalence-facing
+endpoint-core component shape.
+-/
+def toEquivEndpointCoreComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointCoreComponents
+        input initialized lowered output tape0 tape1) :
+    Structured3CanonicalEquivEndpointCoreComponents
+      input initialized lowered output tape0 tape1 where
+  core := C.core
+  initializer := C.initializer
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := C.initializerSubroutineReady
+  loweredShape := C.loweredShape
+  materializer :=
+    C.materializer.toEquivIndexedMaterializerSpec
+  loweredCore := by
+    simpa using C.loweredCore.toEquivLoweredCoreSpec
+
+end Structured3CanonicalExactEndpointCoreComponents
+
+/--
+Exact parser/core endpoint components imply the equivalence-facing component
+construction.
+-/
+theorem structured3CanonicalEquivEndpointCoreComponentConstruction_of_exact
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (hcore :
+      Structured3CanonicalExactEndpointCoreComponentConstruction
+        input initialized lowered output tape0 tape1) :
+    Structured3CanonicalEquivEndpointCoreComponentConstruction
+      input initialized lowered output tape0 tape1 := by
+  rcases hcore with ⟨C⟩
+  exact ⟨C.toEquivEndpointCoreComponents⟩
+
+/--
+Full equivalence-facing canonical endpoint components, including the shared
+tape-2 projector route.
+-/
+structure Structured3CanonicalEquivEndpointComponents
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  initializer : MachineDescription
+  projector : MachineDescription
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  initializerSubroutineReady : initializer.SubroutineReady
+  projectorSubroutineReady : projector.SubroutineReady
+  loweredShape :
+    forall i : ι,
+      lowered i =
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (output i)
+  materializer :
+    Structured3EndpointEquivIndexedMaterializerSpec
+      input initialized initializer
+  loweredCore :
+    Structured3EndpointEquivLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+  projectorRoute :
+    Structured3EndpointTape2ProjectorSpec projector
+
+/--
+Existence wrapper for full equivalence-facing canonical endpoint components.
+-/
+def Structured3CanonicalEquivEndpointComponentConstruction
+    {ι : Type}
+    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) :
+    Prop :=
+  Nonempty
+    (Structured3CanonicalEquivEndpointComponents
+      input initialized lowered output tape0 tape1)
+
+namespace Structured3CanonicalEquivEndpointCoreComponents
+
+/--
+Install an equivalence-facing shared projector into equivalence-facing
+parser/core endpoint components.
+-/
+def toEndpointComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalEquivEndpointCoreComponents
+        input initialized lowered output tape0 tape1)
+    {projector : MachineDescription}
+    (hprojector :
+      Structured3EndpointTape2ProjectorSpec projector) :
+    Structured3CanonicalEquivEndpointComponents
+      input initialized lowered output tape0 tape1 where
+  core := C.core
+  initializer := C.initializer
+  projector := projector
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := C.initializerSubroutineReady
+  projectorSubroutineReady := hprojector.subroutineReady
+  loweredShape := C.loweredShape
+  materializer := C.materializer
+  loweredCore := C.loweredCore
+  projectorRoute := hprojector
+
+end Structured3CanonicalEquivEndpointCoreComponents
+
+/--
+Equivalence-facing parser/core components plus the shared tape-2 projector
+give full equivalence-facing endpoint components.
+-/
+theorem structured3CanonicalEquivEndpointComponentConstruction_of_coreComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (hcore :
+      Structured3CanonicalEquivEndpointCoreComponentConstruction
+        input initialized lowered output tape0 tape1)
+    (hprojector :
+      Structured3EndpointTape2ProjectorConstruction) :
+    Structured3CanonicalEquivEndpointComponentConstruction
+      input initialized lowered output tape0 tape1 := by
+  rcases hcore with ⟨C⟩
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  exact ⟨C.toEndpointComponents hprojectorSpec⟩
+
+namespace Structured3CanonicalEquivEndpointComponents
+
+/--
+Package equivalence-facing endpoint components as the reusable wrapper record.
+-/
+def wrapper
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalEquivEndpointComponents
+        input initialized lowered output tape0 tape1) :
+    Structured3EndpointWrapper where
+  core := C.core
+  initializer := C.initializer
+  projector := C.projector
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := C.initializerSubroutineReady
+  projectorSubroutineReady := C.projectorSubroutineReady
+
+/--
+The equivalence-indexed endpoint family induced by equivalence-facing
+components.
+-/
+theorem equivIndexedFamilySpec
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalEquivEndpointComponents
+        input initialized lowered output tape0 tape1) :
+    Structured3EndpointEquivIndexedFamilySpec
+      C.wrapper input initialized lowered output where
+  family := by
+    constructor
+    · exact C.materializer.forward
+    · exact C.loweredCore.forward
+    · intro i
+      rw [C.loweredShape i]
+      exact C.projectorRoute.forward (tape0 i) (tape1 i) (output i)
+    · intro i
+      exact
+        C.materializer.closed C.initializerSubroutineReady i
+    · exact C.loweredCore.closed
+    · intro i T hhalt
+      rw [C.loweredShape i] at hhalt
+      exact
+        C.projectorRoute.closed
+          (tape0 i) (tape1 i) (output i) T hhalt
+  initializerClosedIndex := C.materializer.closedIndex
+
+end Structured3CanonicalEquivEndpointComponents
 
 namespace Structured3CanonicalEquivEndpointSharedProjectorComponents
 
