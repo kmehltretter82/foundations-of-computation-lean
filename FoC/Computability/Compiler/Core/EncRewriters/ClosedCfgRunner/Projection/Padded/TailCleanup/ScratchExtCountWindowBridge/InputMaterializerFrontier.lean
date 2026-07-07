@@ -24,10 +24,17 @@ open CanonicalLayouts.DovetailLayoutScanner
 
 theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  -- Remaining finite-machine leaf: materialize the bool-word raw-bits source
-  -- family into the guarded three-tape decoder input with the output padding
-  -- indexed by the same count-window source.
-  sorry
+  intro useAccept
+  exact
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_core
+      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
+        useAccept)
+      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
+        useAccept)
+      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
+        useAccept)
+      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
+        useAccept)
 
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by
