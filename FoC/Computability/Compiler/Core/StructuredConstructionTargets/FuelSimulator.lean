@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.InputMaterializerFrontier
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
 
 set_option doc.verso true
 
@@ -309,12 +309,9 @@ Finite-table leaf for the fuel-simulator public-input materializer.
 -/
 theorem fuelSimulatorStructuredIndexedMaterializerConstruction_core :
     FuelSimulatorStructuredIndexedMaterializerConstruction := by
-  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
-    fuelSimulatorStructuredInitializedTape,
-    fuelSimulatorStructuredOutputBuffer,
-    Structured3EndpointBlankOutputMaterializerConstruction] using
-    structured3EndpointBlankOutputMaterializerConstruction_core
-      fuelSimulatorStructuredInputTape
+  -- Remaining parser/materializer obligation: recognize generated fuel-input
+  -- codes and materialize the guarded three-logical-tape input.
+  sorry
 
 /--
 Finite-table leaf for the lowered fuel-simulator structured core.

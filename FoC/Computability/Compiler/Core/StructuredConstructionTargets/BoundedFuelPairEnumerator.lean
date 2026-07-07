@@ -387,16 +387,9 @@ theorem boundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction_core
     (runner : MachineDescription) :
     BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction
       runner := by
-  simpa [
-    BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction,
-    boundedFuelPairEnumeratorStructuredInitializedTape,
-    boundedFuelPairEnumeratorStructuredOutputBuffer,
-    Structured3EndpointBlankOutputMaterializerConstruction] using
-    structured3EndpointBlankOutputMaterializerConstruction_core
-      (fun i :
-        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-          runner =>
-        boundedFuelPairEnumeratorStructuredInputTape i)
+  -- Remaining parser/materializer obligation: recognize bounded enumerator
+  -- inputs and materialize the guarded three-logical-tape input.
+  sorry
 
 /--
 Finite-table leaf for the lowered bounded fuel-pair enumerator structured
