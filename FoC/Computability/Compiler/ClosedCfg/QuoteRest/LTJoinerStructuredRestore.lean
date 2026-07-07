@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerStructured
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerStructured
 
 set_option doc.verso true
 

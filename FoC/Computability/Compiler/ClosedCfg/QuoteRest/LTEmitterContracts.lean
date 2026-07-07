@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredEndpointRouteContracts
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEndpointContracts
 
 set_option doc.verso true
 
@@ -8,7 +8,7 @@ set_option doc.verso true
 
 This module packages the assembly-specific live-tail emitter construction
 surface.  The finite-machine leaf remains in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterConstruction`,
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterConstruction`,
 but the exact/output route and structured-endpoint output route now expose the
 same assembly source, target, and normalized-output shape.
 -/

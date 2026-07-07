@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerRuns
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers

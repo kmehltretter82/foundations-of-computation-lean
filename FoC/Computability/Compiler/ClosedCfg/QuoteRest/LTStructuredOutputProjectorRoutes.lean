@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseOutputAdapters
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredLowererReadiness
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredLowererReadiness
 
 set_option doc.verso true
 

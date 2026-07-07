@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.Views
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Views
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true

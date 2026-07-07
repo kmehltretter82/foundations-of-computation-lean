@@ -1,11 +1,11 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTGapOutput
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTOutputRoute
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredEndpointRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredLowererReadiness
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredOutputProjectorRoutes
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredOutputBridge
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTGapOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTOutputRoute
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEndpointContracts
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredLowererReadiness
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputProjectorRoutes
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputBridge
 
 set_option doc.verso true
 

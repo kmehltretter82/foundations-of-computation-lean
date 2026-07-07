@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredEndpointRouteContracts
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEndpointContracts
 
 set_option doc.verso true
 

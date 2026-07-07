@@ -1,7 +1,7 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterOutput
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerOutput
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterStructuredQuote
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerStructuredRestore
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterStructuredQuote
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerStructuredRestore
 
 set_option doc.verso true
 

@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterOutput
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerRuns
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerRuns
 
 set_option doc.verso true
 

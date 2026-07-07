@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.Construction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.JoinerBridge
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Construction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.JoinerBridge
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 

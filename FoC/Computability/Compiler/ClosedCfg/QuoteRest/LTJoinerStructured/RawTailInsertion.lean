@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerStructured.LiftedOneTape
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerStructured.LiftedOneTape
 
 set_option doc.verso true
 

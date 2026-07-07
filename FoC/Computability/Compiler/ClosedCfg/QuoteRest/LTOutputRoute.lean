@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseOutputAdapters
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTGapOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTGapOutput
 
 set_option doc.verso true
 

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.ConstructionBoundaryCore
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.ConstructionBoundaryCore
 
 set_option doc.verso true
 
@@ -48,7 +48,7 @@ def AssemblySourceRestFinishBoundaryConstruction : Prop :=
 /-!
 **Mixed parser-stack finisher target.**  The low-level boundary mechanics are
 provided by
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.ConstructionBoundaryCore`.
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.ConstructionBoundaryCore`.
 The remaining concrete leaf should prove the mixed parser-stack finisher
 construction below; the adapter then turns it into the public left-boundary
 core without inspecting the transition table.

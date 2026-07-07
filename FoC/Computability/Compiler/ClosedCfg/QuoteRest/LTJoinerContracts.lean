@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerConstruction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTStructuredOutputBridge
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerConstruction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputBridge
 
 set_option doc.verso true
 
@@ -9,7 +9,7 @@ set_option doc.verso true
 This module packages the assembly-specific live-tail joiner route.  The
 structured raw-tail insertion joiner already proves the output-level run facts,
 while the ordinary executable construction remains the finite-machine leaf in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerConstruction`.
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerConstruction`.
 The contracts below keep those two views connected at the assembly source-rest
 endpoint used by the mixed parser-stack finisher.
 -/

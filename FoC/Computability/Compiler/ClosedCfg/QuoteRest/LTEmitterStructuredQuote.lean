@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterStructured
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterStructured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
 
 set_option doc.verso true
@@ -8,7 +8,7 @@ set_option doc.verso true
 
 This module continues the three-logical-tape live-tail emitter construction
 after the count, length-header, and rewind phases proved in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterStructured`.
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterStructured`.
 -/
 
 namespace FoC

@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest
 
 set_option doc.verso true
 

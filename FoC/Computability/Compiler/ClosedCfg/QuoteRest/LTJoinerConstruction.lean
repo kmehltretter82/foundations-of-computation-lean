@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerOutput
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerOutput
 
 set_option doc.verso true
 
@@ -10,7 +10,7 @@ The separated tape does not carry enough structure to support the arbitrary
 stage/source joiner route, so this construction remains tied to the assembly
 source-rest family whose prefix and raw-tail boundary are known.  The reusable
 tape-shape facts and the impossibility guardrail live in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTJoinerRuns`.
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerRuns`.
 -/
 
 namespace FoC

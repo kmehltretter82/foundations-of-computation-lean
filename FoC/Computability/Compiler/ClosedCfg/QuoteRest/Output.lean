@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseOutputAdapters
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.Construction
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTOutputRoute
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Construction
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTOutputRoute
 
 set_option doc.verso true
 

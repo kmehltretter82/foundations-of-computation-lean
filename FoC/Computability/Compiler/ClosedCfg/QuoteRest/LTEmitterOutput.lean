@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterRuns
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterRuns
 
 set_option doc.verso true
 
@@ -7,7 +7,7 @@ set_option doc.verso true
 
 This module records normalized-output views for the live-tail emitter.  The
 exact cursor-position contract in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.SourceRestFinishCore.LTEmitterRuns`
+{module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterRuns`
 remains the executable boundary.  These output contracts are the weaker
 interfaces needed by downstream routes that only inspect the emitted word and
 do not depend on the final head position beside the live raw tail.
