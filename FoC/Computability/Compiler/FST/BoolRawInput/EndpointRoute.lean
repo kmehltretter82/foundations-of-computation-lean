@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerRouteContracts
+import FoC.Computability.Compiler.FST.BoolRawInput.Contracts
 
 set_option doc.verso true
 

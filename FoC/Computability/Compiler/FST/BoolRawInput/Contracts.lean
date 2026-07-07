@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerOutput
+import FoC.Computability.Compiler.FST.BoolRawInput.Output
 
 set_option doc.verso true
 

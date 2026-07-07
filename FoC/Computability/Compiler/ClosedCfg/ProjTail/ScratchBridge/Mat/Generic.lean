@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerEndpointContracts
+import FoC.Computability.Compiler.FST.BoolRawInput.EndpointContracts
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.EndpointSpec
 
 set_option doc.verso true

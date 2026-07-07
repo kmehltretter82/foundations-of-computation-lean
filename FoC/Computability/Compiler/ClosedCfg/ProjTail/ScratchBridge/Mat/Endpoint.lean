@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerEndpoint
+import FoC.Computability.Compiler.FST.BoolRawInput.Endpoint
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge
 
 set_option doc.verso true

@@ -13,41 +13,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerEndpoint.lean",
-        "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerEndpointContracts.lean",
-        "value": 97
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerEndpointRoute.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerOutput.lean",
-        "value": 86
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerRouteContracts.lean",
-        "value": 94
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredInputMaterializerRouteContracts.lean",
         "value": 82
       },
@@ -370,13 +335,6 @@
     "decl_name": [],
     "formal_lean_path": [],
     "route_contracts_file": [
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/BoolWordRawBitsDecoderInputMaterializerRouteContracts.lean",
-        "value": "BoolWordRawBitsDecoderInputMaterializerRouteContracts.lean"
-      },
       {
         "key": "route_contracts_file",
         "limit": "no *RouteContracts.lean files",
