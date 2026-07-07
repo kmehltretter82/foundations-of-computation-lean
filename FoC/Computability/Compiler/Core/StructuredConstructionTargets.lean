@@ -523,6 +523,105 @@ def Structured3CanonicalExactIndexedEndpointConstruction
       W input initialized lowered output
 
 /--
+Concrete component data for a canonical exact endpoint.
+
+This is the construction-facing form of
+{name}`Structured3CanonicalExactIndexedEndpointConstruction`: it separates the
+structured core, input parser/materializer, lowered-core contract, and output
+projector.  The input component is intentionally indexed and closed over the
+target family; for the current leaves it is not just the generic "copy any
+public tape into tape 0" materializer, because invalid public inputs must not
+enter the endpoint.
+-/
+structure Structured3CanonicalExactEndpointComponents
+    {ι : Type}
+    (input initialized lowered output : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  initializer : MachineDescription
+  projector : MachineDescription
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  initializerSubroutineReady : initializer.SubroutineReady
+  projectorSubroutineReady : projector.SubroutineReady
+  materializer :
+    Structured3EndpointExactMaterializerSpec
+      input initialized initializer
+  loweredCore :
+    Structured3EndpointExactLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+  projectorSpec :
+    Structured3EndpointExactProjectorSpec
+      lowered output projector
+
+/--
+Existence wrapper for concrete canonical exact endpoint components.
+-/
+def Structured3CanonicalExactEndpointComponentConstruction
+    {ι : Type}
+    (input initialized lowered output : ι -> Tape Bool) : Prop :=
+  Nonempty
+    (Structured3CanonicalExactEndpointComponents
+      input initialized lowered output)
+
+namespace Structured3CanonicalExactEndpointComponents
+
+/--
+Package concrete endpoint components as the reusable wrapper record.
+-/
+def wrapper
+    {ι : Type}
+    {input initialized lowered output : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointComponents
+        input initialized lowered output) :
+    Structured3EndpointWrapper where
+  core := C.core
+  initializer := C.initializer
+  projector := C.projector
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := C.initializerSubroutineReady
+  projectorSubroutineReady := C.projectorSubroutineReady
+
+/--
+The generic exact endpoint spec induced by concrete endpoint components.
+-/
+theorem spec
+    {ι : Type}
+    {input initialized lowered output : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointComponents
+        input initialized lowered output) :
+    Structured3CanonicalExactIndexedEndpointSpec
+      C.wrapper input initialized lowered output where
+  materializer := C.materializer
+  core := by
+    simpa [wrapper, Structured3EndpointWrapper.lowered] using
+      C.loweredCore
+  projector := C.projectorSpec
+
+end Structured3CanonicalExactEndpointComponents
+
+/--
+Concrete endpoint components imply the existential canonical endpoint
+construction used by the four leaf adapters.
+-/
+theorem structured3CanonicalExactIndexedEndpointConstruction_of_components
+    {ι : Type}
+    {input initialized lowered output : ι -> Tape Bool}
+    (h :
+      Structured3CanonicalExactEndpointComponentConstruction
+        input initialized lowered output) :
+    Structured3CanonicalExactIndexedEndpointConstruction
+      input initialized lowered output := by
+  rcases h with ⟨C⟩
+  exact
+    ⟨C.wrapper,
+      Structured3CanonicalExactEndpointComponents.spec C⟩
+
+/--
 Equivalence indexed closedness for a component.
 
 This is the indexed analogue of
@@ -967,6 +1066,49 @@ def FuelSimulatorStructuredCanonicalEndpointConstruction
   exists W : Structured3EndpointWrapper,
     FuelSimulatorStructuredCanonicalEndpointSpec attempt W
 
+/--
+Concrete component data for the canonical fuel-simulator endpoint.
+
+This is the finite-table construction target: an indexed public-input parser,
+one three-tape structured core, and an exact tape-2 projector.
+-/
+def FuelSimulatorStructuredCanonicalEndpointComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+
+/--
+Existence form of the concrete fuel-simulator endpoint components.
+-/
+def FuelSimulatorStructuredCanonicalEndpointComponentConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointComponentConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+
+/--
+Concrete fuel-simulator components imply the canonical wrapper endpoint
+construction consumed by the public scaffold adapter.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
+    {attempt : MachineDescription}
+    (hcomponents :
+      FuelSimulatorStructuredCanonicalEndpointComponentConstruction
+        attempt) :
+    FuelSimulatorStructuredCanonicalEndpointConstruction attempt := by
+  simpa [FuelSimulatorStructuredCanonicalEndpointConstruction,
+    FuelSimulatorStructuredCanonicalEndpointSpec,
+    FuelSimulatorStructuredCanonicalEndpointComponentConstruction] using
+    structured3CanonicalExactIndexedEndpointConstruction_of_components
+      hcomponents
+
 theorem fuelSimulatorStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
     {W : Structured3EndpointWrapper}
@@ -1117,11 +1259,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCod
       (fuelSimulatorStructuredCoreEndpointConstruction_of_canonical
         (by
           intro attempt
-          -- Remaining structured finite-table obligation: build the
-          -- canonical materializer/core/projector endpoint whose wrapped
-          -- machine maps generated fuel inputs to the exact
-          -- simulator-layout output tape.
-          sorry))
+          exact
+            fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
+              (by
+                -- Remaining structured finite-table obligation: build the
+                -- concrete parser/core/projector components whose wrapped
+                -- machine maps generated fuel inputs to the exact
+                -- simulator-layout output tape.
+                sorry)))
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :
     Prop :=
@@ -1265,6 +1410,51 @@ def StageAttemptFramedStructuredCanonicalEndpointConstruction
     (attempt : MachineDescription) : Prop :=
   exists W : Structured3EndpointWrapper,
     StageAttemptFramedStructuredCanonicalEndpointSpec attempt W
+
+/--
+Concrete component data for the canonical framed-invocation endpoint.
+
+The indexed input family includes the proof that the delegated attempt halts
+with the boolean-word result, so the structured core only has to handle the
+closed framed wrapper contract at that witnessed endpoint.
+-/
+def StageAttemptFramedStructuredCanonicalEndpointComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointComponents
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+
+/--
+Existence form of the concrete framed-invocation endpoint components.
+-/
+def StageAttemptFramedStructuredCanonicalEndpointComponentConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointComponentConstruction
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+
+/--
+Concrete framed-invocation components imply the canonical wrapper endpoint
+construction consumed by the public scaffold adapter.
+-/
+theorem stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
+    {attempt : MachineDescription}
+    (hcomponents :
+      StageAttemptFramedStructuredCanonicalEndpointComponentConstruction
+        attempt) :
+    StageAttemptFramedStructuredCanonicalEndpointConstruction
+      attempt := by
+  simpa [StageAttemptFramedStructuredCanonicalEndpointConstruction,
+    StageAttemptFramedStructuredCanonicalEndpointSpec,
+    StageAttemptFramedStructuredCanonicalEndpointComponentConstruction] using
+    structured3CanonicalExactIndexedEndpointConstruction_of_components
+      hcomponents
 
 theorem stageAttemptFramedStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
@@ -1497,11 +1687,14 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstru
       (stageAttemptFramedStructuredCoreEndpointConstruction_of_canonical
         (by
           intro attempt hattempt
-          -- Remaining structured finite-table obligation: build the
-          -- canonical materializer/core/projector endpoint whose wrapped
-          -- machine installs the simulated boolean-word result in the
-          -- controller layout.
-          sorry))
+          exact
+            stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
+              (by
+                -- Remaining structured finite-table obligation: build the
+                -- concrete parser/core/projector components whose wrapped
+                -- machine installs the simulated boolean-word result in the
+                -- controller layout.
+                sorry)))
 
 def fuelOutputStructuredInputTape
     {attempt : MachineDescription}
@@ -1641,6 +1834,57 @@ def FuelOutputStructuredCanonicalEndpointConstruction
     (attempt : MachineDescription) : Prop :=
   exists W : Structured3EndpointWrapper,
     FuelOutputStructuredCanonicalEndpointSpec attempt W
+
+/--
+Concrete component data for the canonical fuel-output endpoint.
+
+This is the current first real extractor target from the middle-path plan:
+the parser validates a public halted simulator layout, the three-tape core
+extracts the result code onto logical tape 2, and the projector exposes that
+exact tape as the public output.
+-/
+def FuelOutputStructuredCanonicalEndpointComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+
+/--
+Existence form of the concrete fuel-output endpoint components.
+-/
+def FuelOutputStructuredCanonicalEndpointComponentConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointComponentConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+
+/--
+Concrete fuel-output components imply the canonical wrapper endpoint
+construction consumed by the public scaffold adapter.
+-/
+theorem fuelOutputStructuredCanonicalEndpointConstruction_of_components
+    {attempt : MachineDescription}
+    (hcomponents :
+      FuelOutputStructuredCanonicalEndpointComponentConstruction
+        attempt) :
+    FuelOutputStructuredCanonicalEndpointConstruction attempt := by
+  simpa [FuelOutputStructuredCanonicalEndpointConstruction,
+    FuelOutputStructuredCanonicalEndpointSpec,
+    FuelOutputStructuredCanonicalEndpointComponentConstruction] using
+    structured3CanonicalExactIndexedEndpointConstruction_of_components
+      hcomponents
 
 theorem fuelOutputStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
@@ -1797,11 +2041,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSu
       (fuelOutputStructuredCoreEndpointConstruction_of_canonical
         (by
           intro attempt
-          -- Remaining structured finite-table obligation: build the
-          -- canonical materializer/core/projector endpoint whose wrapped
-          -- machine emits the normalized boolean-word result code on halted
-          -- simulator layouts.
-          sorry))
+          exact
+            fuelOutputStructuredCanonicalEndpointConstruction_of_components
+              (by
+                -- Remaining structured finite-table obligation: build the
+                -- concrete parser/core/projector components whose wrapped
+                -- machine emits the normalized boolean-word result code on
+                -- halted simulator layouts.
+                sorry)))
 
 def boundedFuelPairEnumeratorStructuredInputTape
     {runner : MachineDescription}
@@ -1936,6 +2183,61 @@ def BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction
     (runner : MachineDescription) : Prop :=
   exists W : Structured3EndpointWrapper,
     BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec runner W
+
+/--
+Concrete component data for the canonical bounded fuel-pair enumerator
+endpoint.
+
+The structured core is allowed to use the ready exact-fuel runner supplied by
+the surrounding leaf obligation, but the public wrapper still has one fixed
+parser/core/projector endpoint shape.
+-/
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponents
+    (runner : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+
+/--
+Existence form of the concrete bounded fuel-pair enumerator endpoint
+components.
+-/
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction
+    (runner : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointComponentConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+
+/--
+Concrete bounded fuel-pair enumerator components imply the canonical wrapper
+endpoint construction consumed by the public scaffold adapter.
+-/
+theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_components
+    {runner : MachineDescription}
+    (hcomponents :
+      BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction
+        runner) :
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction
+      runner := by
+  simpa [BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction,
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec,
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction] using
+    structured3CanonicalExactIndexedEndpointConstruction_of_components
+      hcomponents
 
 theorem boundedFuelPairEnumeratorStructuredExactIndexedSpec_of_canonical
     {runner : MachineDescription}
@@ -2095,11 +2397,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorS
       (boundedFuelPairEnumeratorStructuredCoreEndpointConstruction_of_canonical
         (by
           intro runner hrunner
-          -- Remaining structured finite-table obligation: build the
-          -- canonical materializer/core/projector endpoint that enumerates
-          -- bounded fuel pairs, invokes the exact-fuel runner endpoint, and
-          -- exposes the right-shifted classifier handoff tape.
-          sorry))
+          exact
+            boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_components
+              (by
+                -- Remaining structured finite-table obligation: build the
+                -- concrete parser/core/projector components that enumerate
+                -- bounded fuel pairs, invoke the exact-fuel runner endpoint,
+                -- and expose the right-shifted classifier handoff tape.
+                sorry)))
 
 end StructuredConstructionTargets
 
