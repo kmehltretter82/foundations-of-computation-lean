@@ -779,7 +779,7 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
       countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputSpec_of_prefixEraserOutput
         hspec⟩
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputSpec_of_twoTapeStructuredPrefixEraserOutput
+theorem prefixEraserBranchCaseOutputSpec_ofTwoTapeEraser
     {eraser : MachineDescription}
     (heraser :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputSpec
@@ -865,14 +865,14 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (ParsedLayoutBits L)
         (postFieldDecodedPrefixScanPadding false L)
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputConstruction_of_twoTapeStructuredPrefixEraserOutput
+theorem prefixEraserBranchCaseOutputConstruction_ofTwoTapeEraser
     (heraser :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserOutputConstruction) :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputConstruction := by
   rcases heraser with ⟨eraser, hspec⟩
   exact
     ⟨eraser,
-      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputSpec_of_twoTapeStructuredPrefixEraserOutput
+      prefixEraserBranchCaseOutputSpec_ofTwoTapeEraser
         hspec⟩
 
 end SelectedProjectionPaddedTailCleanup

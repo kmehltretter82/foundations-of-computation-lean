@@ -461,7 +461,7 @@ theorem selectedProjectionPaddedTailCleanupPostPaddingOutputConstruction_of_stru
       SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionPaddedTailCleanupPostPaddingOutputConstruction :=
   selectedProjectionPaddedTailCleanupPostPaddingOutputConstruction_of_scratchAllocators
-    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (scratchAllocatorConstruction_ofBranchFootprintCases
       heraser hcases)
 
 theorem selectedProjectionPaddedTailCleanupPostEraseOutputConstruction :
@@ -496,7 +496,7 @@ theorem selectedProjectionPaddedTailCleanupPostEraseOutputConstruction_of_struct
       SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
     SelectedProjectionPaddedTailCleanupPostEraseOutputConstruction :=
   selectedProjectionPaddedTailCleanupPostEraseOutputConstruction_of_scratchAllocators
-    (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+    (scratchAllocatorConstruction_ofBranchFootprintCases
       heraser hcases)
 
 theorem selectedProjectionPaddedTailCleanupExactShapeOutputConstruction :

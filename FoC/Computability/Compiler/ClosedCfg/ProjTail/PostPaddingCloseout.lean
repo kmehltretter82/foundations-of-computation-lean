@@ -746,7 +746,7 @@ theorem selectedProjectionPaddedTailCleanupPostEraseConstruction_of_structuredPr
     SelectedProjectionPaddedTailCleanupPostEraseConstruction :=
   selectedProjectionPaddedTailCleanupPostEraseConstruction_of_postPadding
     (selectedProjectionPaddedTailCleanupPostPaddingConstruction_of_scratchAllocators
-      (selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
+      (scratchAllocatorConstruction_ofBranchFootprintCases
         heraser hcases))
 
 theorem selectedProjectionPaddedTailCleanupPostEraseConstruction :

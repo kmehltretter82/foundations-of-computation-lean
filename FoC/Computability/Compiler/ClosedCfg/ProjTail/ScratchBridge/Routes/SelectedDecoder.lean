@@ -121,7 +121,7 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
         (ParsedLayoutBits L)
         (postFieldDecodedPrefixScanPadding false L)
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_twoTapeStructuredPrefixEraser
+theorem prefixEraserBranchCaseConstruction_ofTwoTapeEraser
     (heraser :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
@@ -392,7 +392,7 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixE
       StructuredPrefixEraserRouteContracts.OutputRouteSpec eraser) :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputSpec
       eraser :=
-  countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseOutputSpec_of_twoTapeStructuredPrefixEraserOutput
+  prefixEraserBranchCaseOutputSpec_ofTwoTapeEraser
     hroute.eraserOutput
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserOutputSpec_of_structuredPrefixOutputRoute
