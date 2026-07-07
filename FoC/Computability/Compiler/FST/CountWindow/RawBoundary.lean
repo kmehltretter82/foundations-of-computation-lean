@@ -28,9 +28,9 @@ import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
+import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
 import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.Prefix
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.CellPass
 

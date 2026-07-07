@@ -1,9 +1,9 @@
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGapCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.RawTailInsertion
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
+import FoC.Computability.Compiler.Structured.Lowering.RawTailInsertion
 
 set_option doc.verso true
 

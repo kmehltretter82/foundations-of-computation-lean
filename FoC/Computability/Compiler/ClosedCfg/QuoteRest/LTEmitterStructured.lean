@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterRuns
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
 
 set_option doc.verso true
 

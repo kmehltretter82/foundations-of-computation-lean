@@ -1,10 +1,10 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
+import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
+import FoC.Computability.Compiler.Structured.Lowering.Composition
+import FoC.Computability.Compiler.Structured.Lowering.Projection
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
 
 set_option doc.verso true
 

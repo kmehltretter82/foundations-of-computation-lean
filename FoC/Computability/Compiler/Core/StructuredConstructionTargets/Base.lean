@@ -2,8 +2,8 @@ import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Basic
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
+import FoC.Computability.Compiler.Structured.Lowering.Composition
+import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
 import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
 import FoC.Computability.Compiler.Structured.HeadRoutes
 

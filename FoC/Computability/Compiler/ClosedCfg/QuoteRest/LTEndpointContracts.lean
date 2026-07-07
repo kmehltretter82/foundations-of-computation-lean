@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
+import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
+import FoC.Computability.Compiler.Structured.Lowering.Composition
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputBridge
 
 set_option doc.verso true

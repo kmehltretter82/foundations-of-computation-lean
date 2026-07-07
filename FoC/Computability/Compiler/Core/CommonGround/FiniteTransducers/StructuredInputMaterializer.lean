@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Layout
+import FoC.Computability.Compiler.Structured.Lowering.Layout
 
 set_option doc.verso true
 

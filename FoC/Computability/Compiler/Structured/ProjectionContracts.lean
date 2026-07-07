@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
+import FoC.Computability.Compiler.Structured.Lowering.Projection
 
 set_option doc.verso true
 

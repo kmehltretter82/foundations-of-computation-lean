@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
+import FoC.Computability.Compiler.Structured.Lowering.Composition
+import FoC.Computability.Compiler.Structured.Lowering.Projection
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindowConstructions
 
 set_option doc.verso true

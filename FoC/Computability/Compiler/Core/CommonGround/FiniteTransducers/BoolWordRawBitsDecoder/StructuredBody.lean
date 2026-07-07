@@ -3,9 +3,9 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapComp
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerEndpoint
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
+import FoC.Computability.Compiler.Structured.Lowering.Composition
+import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
+import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
 
 set_option doc.verso true

@@ -2,7 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEr
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CellSuffixLoop
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CountedBoundary
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.EndpointSupport
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.Runs
+import FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly.Runs
 
 set_option doc.verso true
 

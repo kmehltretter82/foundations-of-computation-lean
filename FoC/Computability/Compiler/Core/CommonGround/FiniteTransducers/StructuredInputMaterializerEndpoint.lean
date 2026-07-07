@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.CursorBasic
+import FoC.Computability.Compiler.Structured.Lowering.CursorBasic
 
 set_option doc.verso true
 

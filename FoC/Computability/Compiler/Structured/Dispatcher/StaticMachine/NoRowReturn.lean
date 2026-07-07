@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.SelectedRuns
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Runs
+import FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly.SelectedRuns
+import FoC.Computability.Compiler.Structured.Lowering.Runs
 
 set_option doc.verso true
 
