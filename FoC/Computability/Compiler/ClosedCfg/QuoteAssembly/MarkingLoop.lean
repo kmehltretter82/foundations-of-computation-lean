@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.MarkedTail
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.MarkedTail
 
 set_option doc.verso true
 

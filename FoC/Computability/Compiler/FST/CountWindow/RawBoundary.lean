@@ -31,7 +31,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.Prefix
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.Prefix
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.CellPass
 
 set_option doc.verso true

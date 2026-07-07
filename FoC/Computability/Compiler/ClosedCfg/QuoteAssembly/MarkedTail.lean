@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.Prefix
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.Prefix
 
 set_option doc.verso true
 

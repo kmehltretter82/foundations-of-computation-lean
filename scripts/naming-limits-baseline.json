@@ -40,34 +40,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/Finish.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/MarkedTail.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/MarkingLoop.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/Prefix.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/RunLoop/SourceShape.lean",
         "value": 6
       }

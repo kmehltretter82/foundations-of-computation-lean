@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly
 
 set_option doc.verso true
 

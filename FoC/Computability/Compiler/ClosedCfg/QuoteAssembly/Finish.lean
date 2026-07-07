@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.MarkingLoop
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.MarkingLoop
 
 set_option doc.verso true
 

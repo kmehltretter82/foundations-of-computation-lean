@@ -13,7 +13,7 @@ import FoC.Computability.Compiler.Core.CommonGround.SameHeadComposition
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.Prefix
+import FoC.Computability.Compiler.ClosedCfg.QuoteAssembly.Prefix
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.CellPass
 
 set_option doc.verso true
