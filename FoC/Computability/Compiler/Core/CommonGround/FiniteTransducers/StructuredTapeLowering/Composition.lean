@@ -118,6 +118,32 @@ def ExactClosedFromTape
   forall T : Tape Bool,
     D.HaltsFromTape Tin T -> T = Tout
 
+/--
+A deterministic finite-control subroutine that has one exact halt from an
+input is exactly closed from that input to the same output.
+-/
+theorem exactClosedFromTape_of_haltsFromTape_of_haltTransitionFree
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (hD : D.HaltTransitionFree)
+    (hforward : D.HaltsFromTape Tin Tout) :
+    ExactClosedFromTape D Tin Tout := by
+  intro T hhalt
+  exact
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hD hhalt hforward
+
+/--
+Subroutine-ready wrapper for
+{name}`exactClosedFromTape_of_haltsFromTape_of_haltTransitionFree`.
+-/
+theorem exactClosedFromTape_of_haltsFromTape_of_subroutineReady
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (hD : D.SubroutineReady)
+    (hforward : D.HaltsFromTape Tin Tout) :
+    ExactClosedFromTape D Tin Tout :=
+  exactClosedFromTape_of_haltsFromTape_of_haltTransitionFree
+    hD.right hforward
+
 theorem canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Projection
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
@@ -2290,6 +2291,306 @@ theorem structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
         (by
           rw [hphysical] at hhalt
           simpa [encodedSuffixFromTape, guardLogicalTapes] using hhalt)
+
+/--
+The endpoint handoff bounce is exact on the canonical guarded three-tape
+encoding. The encoded block starts with a separator and has a nonempty right
+side, so moving right and then left restores the same physical tape literally.
+-/
+theorem canonicalPrimitiveSeqHandoffTape_encodedGuardedStructured3Tapes
+    (T0 T1 T2 : Tape Bool) :
+    canonicalPrimitiveSeqHandoffTape
+        (encodedGuardedStructured3Tapes T0 T1 T2) =
+      encodedGuardedStructured3Tapes T0 T1 T2 := by
+  simp [canonicalPrimitiveSeqHandoffTape,
+    encodedGuardedStructured3Tapes, encodedGuardedStructuredTapes,
+    encodedStructuredTapes, encodedStructuredTapeCells, guardLogicalTapes,
+    guardLogicalTape, tapeAtCells, tapeSeparatorCells, logicalTapeCode,
+    logicalCellListBits, logicalCellBits, logicalCellCode, headMarkerCells,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
+/--
+The projector-internal handoff bounce is exact at the selected tape-2
+separator of a guarded three-tape block.
+-/
+theorem canonicalPrimitiveSeqHandoffTape_eq_self_of_atTape2Separator
+    {T0 T1 T2 physical : Tape Bool}
+    (hseparator :
+      AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical) :
+    canonicalPrimitiveSeqHandoffTape physical = physical := by
+  rcases hseparator with ⟨_hindex, hphysical⟩
+  rw [hphysical]
+  simp [canonicalPrimitiveSeqHandoffTape, tapeAtEncodedSplit,
+    encodedSuffixFromTape, guardLogicalTapes, guardLogicalTape,
+    encodedStructuredTapeCells, tapeAtCells, tapeSeparatorCells,
+    logicalTapeCode, logicalCellListBits, logicalCellBits, logicalCellCode,
+    headMarkerCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
+/--
+Exact segment-normalizer behavior as a right-hand component of the canonical
+tape-2 projector sequence.
+
+The normalizer input is the canonical sequence handoff tape for the separator,
+not merely the separator tape itself. This is the exact contract needed by
+{name}`canonicalPrimitiveSeqDescription_exactClosedFromTape`.
+-/
+structure StructuredTape2ExactHandoffSegmentNormalizerSpec
+    (normalizer : MachineDescription) : Prop where
+  subroutineReady : normalizer.SubroutineReady
+  forward :
+    forall (T0 T1 T2 : Tape Bool) (physical : Tape Bool),
+      AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical ->
+        normalizer.HaltsFromTape
+          (canonicalPrimitiveSeqHandoffTape physical)
+          T2
+  closed :
+    forall (T0 T1 T2 : Tape Bool) (physical : Tape Bool),
+      AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical ->
+        ExactClosedFromTape normalizer
+          (canonicalPrimitiveSeqHandoffTape physical)
+          T2
+
+/-- Existence wrapper for the exact handoff-facing tape-2 normalizer. -/
+def StructuredTape2ExactHandoffSegmentNormalizerConstruction : Prop :=
+  exists normalizer : MachineDescription,
+    StructuredTape2ExactHandoffSegmentNormalizerSpec normalizer
+
+namespace StructuredTape2ExactHandoffSegmentNormalizerSpec
+
+/--
+The handoff-facing exact normalizer still implies the existing equivalence
+segment-normalizer contract.
+-/
+theorem toSegmentNormalizerSpec
+    {normalizer : MachineDescription}
+    (hnormalizer :
+      StructuredTape2ExactHandoffSegmentNormalizerSpec normalizer) :
+    StructuredTape2SegmentNormalizerSpec normalizer := by
+  constructor
+  · exact hnormalizer.subroutineReady
+  · intro T0 T1 T2 physical hseparator
+    exact
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := normalizer)
+        (Tin := canonicalPrimitiveSeqHandoffTape physical)
+        (Tin' := physical)
+        (Tout := T2)
+        (canonicalPrimitiveSeqHandoffTape_equiv physical)
+        (hnormalizer.forward T0 T1 T2 physical hseparator)
+
+end StructuredTape2ExactHandoffSegmentNormalizerSpec
+
+/--
+At the concrete tape-2 separator shape, a direct exact normalizer can be used
+as the right-hand component of the canonical projector sequence.
+-/
+theorem structuredTape2ExactHandoffSegmentNormalizerSpec_of_exact
+    {normalizer : MachineDescription}
+    (hnormalizer :
+      StructuredTape2ExactSegmentNormalizerSpec normalizer) :
+    StructuredTape2ExactHandoffSegmentNormalizerSpec normalizer := by
+  constructor
+  · exact hnormalizer.subroutineReady
+  · intro T0 T1 T2 physical hseparator
+    rw [canonicalPrimitiveSeqHandoffTape_eq_self_of_atTape2Separator
+      hseparator]
+    exact hnormalizer.forward T0 T1 T2 physical hseparator
+  · intro T0 T1 T2 physical hseparator
+    intro T hhalt
+    exact
+      hnormalizer.closed T0 T1 T2 physical hseparator T
+        (by
+          simpa [canonicalPrimitiveSeqHandoffTape_eq_self_of_atTape2Separator
+            hseparator] using hhalt)
+
+/--
+Construction-level adapter from direct exact tape-2 segment normalization to
+the handoff-facing exact segment-normalizer contract.
+-/
+theorem structuredTape2ExactHandoffSegmentNormalizerConstruction_of_exact
+    (hnormalizer :
+      StructuredTape2ExactSegmentNormalizerConstruction) :
+    StructuredTape2ExactHandoffSegmentNormalizerConstruction := by
+  rcases hnormalizer with ⟨normalizer, hnormalizerSpec⟩
+  exact
+    ⟨normalizer,
+      structuredTape2ExactHandoffSegmentNormalizerSpec_of_exact
+        hnormalizerSpec⟩
+
+/--
+Exact selected-head decoding supplies the handoff-facing tape-2 segment
+normalizer needed by the exact projector route.
+-/
+theorem structuredTape2ExactHandoffSegmentNormalizerConstruction_of_exactHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactConstruction) :
+    StructuredTape2ExactHandoffSegmentNormalizerConstruction :=
+  structuredTape2ExactHandoffSegmentNormalizerConstruction_of_exact
+    (structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
+      hdecoder)
+
+/--
+Exact run of the tape-2 seeker from the endpoint-bounced guarded three-tape
+encoding.
+-/
+theorem seekTape2Description_haltsFrom_endpointHandoff
+    (T0 T1 T2 : Tape Bool) :
+    exists physical : Tape Bool,
+      seekTape2Description.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (encodedGuardedStructured3Tapes T0 T1 T2))
+        physical ∧
+        AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical := by
+  have hsource :
+      exists A : Tape Bool, exists B : Tape Bool, exists C : Tape Bool,
+        guardLogicalTapes [T0, T1, T2] = [A, B, C] ∧
+          AtEncodedBlockStart (guardLogicalTapes [T0, T1, T2])
+            (encodedGuardedStructured3Tapes T0 T1 T2) := by
+    refine
+      ⟨guardLogicalTape T0, guardLogicalTape T1,
+        guardLogicalTape T2, ?_, ?_⟩
+    · simp [guardLogicalTapes]
+    · exact atEncodedBlockStart_self (guardLogicalTapes [T0, T1, T2])
+  rcases
+      seekTape2Description_contract_three.realizes
+        (guardLogicalTapes [T0, T1, T2])
+        (encodedGuardedStructured3Tapes T0 T1 T2)
+        hsource with
+    ⟨physical, hseek, hseparator⟩
+  refine ⟨physical, ?_, hseparator⟩
+  simpa [canonicalPrimitiveSeqHandoffTape_encodedGuardedStructured3Tapes]
+    using hseek
+
+/--
+Exact tape-2 projector contract for endpoint use.
+
+The input is the endpoint handoff tape because the projector is itself the
+right-hand component of the three-part endpoint wrapper.
+-/
+structure StructuredTape2ExactProjectorSpec
+    (projector : MachineDescription) : Prop where
+  subroutineReady : projector.SubroutineReady
+  forward :
+    forall T0 T1 T2 : Tape Bool,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (encodedGuardedStructured3Tapes T0 T1 T2))
+        T2
+  closed :
+    forall T0 T1 T2 : Tape Bool,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (encodedGuardedStructured3Tapes T0 T1 T2))
+        T2
+
+/-- Existence wrapper for {name}`StructuredTape2ExactProjectorSpec`. -/
+def StructuredTape2ExactProjectorConstruction : Prop :=
+  exists projector : MachineDescription,
+    StructuredTape2ExactProjectorSpec projector
+
+namespace StructuredTape2ExactProjectorSpec
+
+/-- Exact tape-2 projection implies the existing equivalence projector route. -/
+theorem toProjectorSpec
+    {projector : MachineDescription}
+    (hprojector :
+      StructuredTape2ExactProjectorSpec projector) :
+    StructuredTape2ProjectorSpec projector := by
+  constructor
+  · exact hprojector.subroutineReady
+  · intro T0 T1 T2
+    have hforward := hprojector.forward T0 T1 T2
+    rw [canonicalPrimitiveSeqHandoffTape_encodedGuardedStructured3Tapes]
+      at hforward
+    exact hforward.toEquiv
+
+end StructuredTape2ExactProjectorSpec
+
+/--
+Lift a handoff-facing exact tape-2 segment normalizer through the tape-2
+seeker to obtain the endpoint-facing exact tape-2 projector.
+-/
+theorem structuredTape2ExactProjectorSpec_of_handoffSegmentNormalizerSpec
+    {normalizer : MachineDescription}
+    (hnormalizer :
+      StructuredTape2ExactHandoffSegmentNormalizerSpec normalizer) :
+    StructuredTape2ExactProjectorSpec
+      (structuredTape2ProjectorDescription normalizer) := by
+  constructor
+  · exact
+      structuredTape2ProjectorDescription_subroutineReady
+        hnormalizer.subroutineReady
+  · intro T0 T1 T2
+    rcases seekTape2Description_haltsFrom_endpointHandoff T0 T1 T2 with
+      ⟨physical, hseek, hseparator⟩
+    exact
+      canonicalPrimitiveSeqDescription_haltsFromTape_exact
+        seekTape2Description_subroutineReady
+        hnormalizer.subroutineReady
+        hseek
+        (hnormalizer.forward T0 T1 T2 physical hseparator)
+  · intro T0 T1 T2
+    rcases seekTape2Description_haltsFrom_endpointHandoff T0 T1 T2 with
+      ⟨physical, hseek, hseparator⟩
+    exact
+      canonicalPrimitiveSeqDescription_exactClosedFromTape
+        seekTape2Description_subroutineReady
+        hnormalizer.subroutineReady
+        (by
+          intro T hhalt
+          exact
+            MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+              seekTape2Description_subroutineReady.right hhalt hseek)
+        (hnormalizer.closed T0 T1 T2 physical hseparator)
+
+/--
+Construction-level exact tape-2 projector from a handoff-facing exact segment
+normalizer.
+-/
+theorem structuredTape2ExactProjectorConstruction_of_handoffSegmentNormalizerConstruction
+    (hnormalizer :
+      StructuredTape2ExactHandoffSegmentNormalizerConstruction) :
+    StructuredTape2ExactProjectorConstruction := by
+  rcases hnormalizer with ⟨normalizer, hnormalizerSpec⟩
+  exact
+    ⟨structuredTape2ProjectorDescription normalizer,
+      structuredTape2ExactProjectorSpec_of_handoffSegmentNormalizerSpec
+        hnormalizerSpec⟩
+
+/--
+Construction-level exact tape-2 projector from a direct exact segment
+normalizer.
+-/
+theorem structuredTape2ExactProjectorConstruction_of_exactSegmentNormalizerConstruction
+    (hnormalizer :
+      StructuredTape2ExactSegmentNormalizerConstruction) :
+    StructuredTape2ExactProjectorConstruction :=
+  structuredTape2ExactProjectorConstruction_of_handoffSegmentNormalizerConstruction
+    (structuredTape2ExactHandoffSegmentNormalizerConstruction_of_exact
+      hnormalizer)
+
+/--
+Exact selected-head decoding supplies the endpoint-facing exact tape-2
+projector.
+-/
+theorem structuredTape2ExactProjectorConstruction_of_exactHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactConstruction) :
+    StructuredTape2ExactProjectorConstruction :=
+  structuredTape2ExactProjectorConstruction_of_exactSegmentNormalizerConstruction
+    (structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
+      hdecoder)
+
+/--
+Construction-level adapter from the exact tape-2 projector to the existing
+equivalence projector route.
+-/
+theorem structuredTape2ProjectorConstruction_of_exact
+    (hprojector :
+      StructuredTape2ExactProjectorConstruction) :
+    StructuredTape2ProjectorConstruction := by
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  exact ⟨projector, hprojectorSpec.toProjectorSpec⟩
 
 theorem selectedSegmentLogicalTapeDecoderHeadCleanupSpec_of_paddedCleanupSpec
     {cleanup : MachineDescription}

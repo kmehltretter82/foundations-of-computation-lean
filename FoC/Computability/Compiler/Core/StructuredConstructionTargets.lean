@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
 
 set_option doc.verso true
 
@@ -650,6 +651,44 @@ Existence wrapper for the exact shared tape-2 projector route.
 def Structured3EndpointExactTape2ProjectorConstruction : Prop :=
   exists projector : MachineDescription,
     Structured3EndpointExactTape2ProjectorSpec projector
+
+/--
+The lower tape-2 exact projector route is the shared endpoint projector route
+expected by canonical three-tape endpoint components.
+-/
+theorem structured3EndpointExactTape2ProjectorSpec_of_tape2ExactProjectorSpec
+    {projector : MachineDescription}
+    (hprojector :
+      StructuredTape2ExactProjectorSpec projector) :
+    Structured3EndpointExactTape2ProjectorSpec projector where
+  subroutineReady := hprojector.subroutineReady
+  forward := hprojector.forward
+  closed := hprojector.closed
+
+/--
+Construction-level adapter from the lower exact tape-2 projector construction
+to the shared endpoint projector construction.
+-/
+theorem structured3EndpointExactTape2ProjectorConstruction_of_tape2ExactProjectorConstruction
+    (hprojector :
+      StructuredTape2ExactProjectorConstruction) :
+    Structured3EndpointExactTape2ProjectorConstruction := by
+  rcases hprojector with ⟨projector, hprojectorSpec⟩
+  exact
+    ⟨projector,
+      structured3EndpointExactTape2ProjectorSpec_of_tape2ExactProjectorSpec
+        hprojectorSpec⟩
+
+/--
+Exact selected-head decoding supplies the shared endpoint tape-2 projector.
+-/
+theorem structured3EndpointExactTape2ProjectorConstruction_of_exactHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactConstruction) :
+    Structured3EndpointExactTape2ProjectorConstruction :=
+  structured3EndpointExactTape2ProjectorConstruction_of_tape2ExactProjectorConstruction
+    (structuredTape2ExactProjectorConstruction_of_exactHeadDecoder
+      hdecoder)
 
 namespace Structured3EndpointExactTape2ProjectorSpec
 
