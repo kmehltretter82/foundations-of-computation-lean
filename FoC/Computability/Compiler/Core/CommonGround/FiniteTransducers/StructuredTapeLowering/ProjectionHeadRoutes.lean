@@ -1931,6 +1931,366 @@ def SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction : Prop :=
   exists cleanup : MachineDescription,
     SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup
 
+/--
+Exact cleanup for a padded selected-head scanner target.
+
+The input is the canonical primitive-sequence handoff tape for the scanner
+target, because this cleanup runs as the right-hand component of
+{lit}`selectedSegmentLogicalTapeDecoderHeadPipelineDescription`.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix))
+        target
+
+/--
+Closed exact cleanup for padded selected-head scanner targets.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupClosedSpec
+    (cleanup : MachineDescription) : Prop :=
+  forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+    ExactClosedFromTape cleanup
+      (canonicalPrimitiveSeqHandoffTape
+        (selectedSegmentLogicalTapeDecoderHeadTargetTape
+          target rest encodedPrefix))
+      target
+
+/--
+Exact cleanup boundary for selected-head projection.
+
+This is the construction target needed by literal endpoint projectors; the
+older cleanup route below remains the equivalence-facing compatibility layer.
+-/
+structure SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec
+    (cleanup : MachineDescription) : Prop where
+  subroutineReady : cleanup.SubroutineReady
+  forward :
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix))
+        target
+  closed :
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      ExactClosedFromTape cleanup
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix))
+        target
+
+/-- Existence wrapper for the exact selected-head cleanup route. -/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction :
+    Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup
+
+namespace SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec
+
+/-- Exact selected-head cleanup implies the older equivalence cleanup route. -/
+theorem toCleanupSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup := by
+  constructor
+  · exact hcleanup.subroutineReady
+  · intro target rest encodedPrefix
+    exact
+      HaltsFromTapeEquiv_of_input_equiv
+        (D := cleanup)
+        (Tin :=
+          canonicalPrimitiveSeqHandoffTape
+            (selectedSegmentLogicalTapeDecoderHeadTargetTape
+              target rest encodedPrefix))
+        (Tin' :=
+          selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix)
+        (Tout := target)
+        (canonicalPrimitiveSeqHandoffTape_equiv
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target rest encodedPrefix))
+        (hcleanup.forward target rest encodedPrefix)
+
+/-- Forward-only view of an exact selected-head cleanup. -/
+theorem forwardSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+      cleanup := by
+  exact ⟨hcleanup.subroutineReady, hcleanup.forward⟩
+
+/-- Closed-only view of an exact selected-head cleanup. -/
+theorem closedSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupClosedSpec
+      cleanup :=
+  hcleanup.closed
+
+end SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec
+
+/--
+Construction-level adapter from exact selected-head cleanup to the existing
+equivalence cleanup construction.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_exact
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      hcleanupSpec.toCleanupSpec⟩
+
+/--
+Exact cleanup branch where there is no encoded structured suffix after the
+selected segment.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupNilRestSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target [] encodedPrefix))
+        target
+
+/--
+Exact cleanup branch where the selected segment is followed by at least one
+encoded structured tape.
+-/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupConsRestSpec
+    (cleanup : MachineDescription) : Prop :=
+  cleanup.SubroutineReady ∧
+    forall (target next : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      cleanup.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderHeadTargetTape
+            target (next :: rest) encodedPrefix))
+        target
+
+/-- Branch split for exact selected-head cleanup forward behavior. -/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec
+    (cleanup : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderHeadExactCleanupNilRestSpec cleanup ∧
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConsRestSpec cleanup
+
+/-- Construction wrapper for the exact forward branch split. -/
+def SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction :
+    Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec cleanup
+
+/-- Split exact cleanup forward behavior into nil-rest and cons-rest branches. -/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec_of_spec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec
+      cleanup := by
+  constructor
+  · constructor
+    · exact hcleanup.left
+    · intro target encodedPrefix
+      exact hcleanup.right target [] encodedPrefix
+  · constructor
+    · exact hcleanup.left
+    · intro target next rest encodedPrefix
+      exact hcleanup.right target (next :: rest) encodedPrefix
+
+/-- Reassemble exact cleanup forward behavior from branch cases. -/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec_of_splitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  refine ⟨hready, ?_⟩
+  intro target rest encodedPrefix
+  cases rest with
+  | nil =>
+      exact hnilRun target encodedPrefix
+  | cons next rest =>
+      exact hconsRun target next rest encodedPrefix
+
+/-- Construction-level split adapter from exact cleanup forward behavior. -/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_of_cleanup
+    (hcleanup :
+      exists cleanup : MachineDescription,
+        SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+          cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec_of_spec
+        hcleanupSpec⟩
+
+/-- Construction-level exact cleanup forward behavior from branch cases. -/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardConstruction_of_split
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    exists cleanup : MachineDescription,
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+        cleanup := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec_of_splitSpec
+        hsplitSpec⟩
+
+/--
+Literal selected-head decoder behavior.
+
+This is stronger than {name}`StructuredSelectedHeadSegmentDecoderSpec`: it
+requires exact final tape equality, and its closed side records that any halt
+from the selected-head source has that literal target.
+-/
+structure StructuredSelectedHeadSegmentDecoderExactSpec
+    (decoder : MachineDescription) : Prop where
+  subroutineReady : decoder.SubroutineReady
+  forward :
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      decoder.HaltsFromTape
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+        target
+  closed :
+    forall (target : Tape Bool) (rest : List (Tape Bool))
+      (encodedPrefix : List (Option Bool)),
+      ExactClosedFromTape decoder
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells (guardLogicalTape target :: rest)))
+        target
+
+/-- Existence wrapper for literal selected-head decoder behavior. -/
+def StructuredSelectedHeadSegmentDecoderExactConstruction : Prop :=
+  exists decoder : MachineDescription,
+    StructuredSelectedHeadSegmentDecoderExactSpec decoder
+
+namespace StructuredSelectedHeadSegmentDecoderExactSpec
+
+/-- Literal selected-head decoding implies the existing equivalence route. -/
+theorem toSpec
+    {decoder : MachineDescription}
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactSpec decoder) :
+    StructuredSelectedHeadSegmentDecoderSpec decoder := by
+  constructor
+  · exact hdecoder.subroutineReady
+  · intro target rest encodedPrefix
+    exact (hdecoder.forward target rest encodedPrefix).toEquiv
+
+end StructuredSelectedHeadSegmentDecoderExactSpec
+
+/--
+Construction-level adapter from literal selected-head decoding to the existing
+equivalence selected-head decoder construction.
+-/
+theorem structuredSelectedHeadSegmentDecoderConstruction_of_exact
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactConstruction) :
+    StructuredSelectedHeadSegmentDecoderConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderSpec⟩
+  exact
+    ⟨decoder,
+      hdecoderSpec.toSpec⟩
+
+/--
+Literal tape-2 segment normalizer behavior at an already-selected segment.
+-/
+structure StructuredTape2ExactSegmentNormalizerSpec
+    (normalizer : MachineDescription) : Prop where
+  subroutineReady : normalizer.SubroutineReady
+  forward :
+    forall (T0 T1 T2 : Tape Bool) (physical : Tape Bool),
+      AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical ->
+        normalizer.HaltsFromTape physical T2
+  closed :
+    forall (T0 T1 T2 : Tape Bool) (physical : Tape Bool),
+      AtTapeSeparator (guardLogicalTapes [T0, T1, T2]) 2 physical ->
+        ExactClosedFromTape normalizer physical T2
+
+/-- Existence wrapper for literal tape-2 segment normalization. -/
+def StructuredTape2ExactSegmentNormalizerConstruction : Prop :=
+  exists normalizer : MachineDescription,
+    StructuredTape2ExactSegmentNormalizerSpec normalizer
+
+namespace StructuredTape2ExactSegmentNormalizerSpec
+
+/-- Literal tape-2 segment normalization implies the equivalence normalizer. -/
+theorem toSegmentNormalizerSpec
+    {normalizer : MachineDescription}
+    (hnormalizer :
+      StructuredTape2ExactSegmentNormalizerSpec normalizer) :
+    StructuredTape2SegmentNormalizerSpec normalizer := by
+  constructor
+  · exact hnormalizer.subroutineReady
+  · intro T0 T1 T2 physical hseparator
+    exact (hnormalizer.forward T0 T1 T2 physical hseparator).toEquiv
+
+end StructuredTape2ExactSegmentNormalizerSpec
+
+/--
+Construction-level adapter from literal tape-2 segment normalization to the
+existing equivalence segment-normalizer construction.
+-/
+theorem structuredTape2SegmentNormalizerConstruction_of_exact
+    (hnormalizer :
+      StructuredTape2ExactSegmentNormalizerConstruction) :
+    StructuredTape2SegmentNormalizerConstruction := by
+  rcases hnormalizer with ⟨normalizer, hnormalizerSpec⟩
+  exact
+    ⟨normalizer,
+      hnormalizerSpec.toSegmentNormalizerSpec⟩
+
+/--
+Literal selected-head decoding gives literal tape-2 segment normalization.
+-/
+theorem structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
+    (hdecoder :
+      StructuredSelectedHeadSegmentDecoderExactConstruction) :
+    StructuredTape2ExactSegmentNormalizerConstruction := by
+  rcases hdecoder with ⟨decoder, hdecoderSpec⟩
+  refine ⟨decoder, ?_⟩
+  constructor
+  · exact hdecoderSpec.subroutineReady
+  · intro T0 T1 T2 physical hseparator
+    rcases hseparator with ⟨_hindex, hphysical⟩
+    rw [hphysical]
+    simpa [encodedSuffixFromTape, guardLogicalTapes] using
+      hdecoderSpec.forward T2 []
+        (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
+  · intro T0 T1 T2 physical hseparator
+    rcases hseparator with ⟨_hindex, hphysical⟩
+    intro T hhalt
+    exact
+      hdecoderSpec.closed T2 []
+        (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
+        T
+        (by
+          rw [hphysical] at hhalt
+          simpa [encodedSuffixFromTape, guardLogicalTapes] using hhalt)
+
 theorem selectedSegmentLogicalTapeDecoderHeadCleanupSpec_of_paddedCleanupSpec
     {cleanup : MachineDescription}
     (hcleanup :
