@@ -533,6 +533,127 @@ theorem splitTargetProjectableRightEdgeRewindOutputConstruction_of_splitPadSymbo
       splitTargetProjectableRightEdgeRewindOutputSpec_of_splitPadSymbolCaseSpec
         hspec⟩
 
+theorem splitTargetProjectableRightEdgeRewindOutputSpec_of_rightEdgeRewindOutputSpec
+    {focus : MachineDescription}
+    (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputSpec focus := by
+  rcases hfocus with ⟨hready, hrun⟩
+  refine ⟨hready, ?_⟩
+  intro bits padding
+  refine
+    ⟨splitTargetOutput0 bits padding,
+      splitTargetOutput1 bits padding, ?_⟩
+  simpa [splitTargetRightEdgeRewindOutputTape] using hrun bits padding
+
+theorem splitTargetProjectableRightEdgeRewindOutputConstruction_of_rightEdgeRewindOutput
+    (hfocus : SplitTargetRightEdgeRewindOutputConstruction) :
+    SplitTargetProjectableRightEdgeRewindOutputConstruction := by
+  rcases hfocus with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetProjectableRightEdgeRewindOutputSpec_of_rightEdgeRewindOutputSpec
+        hspec⟩
+
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_rightEdgeRewindOutputSpec
+    {focus : MachineDescription}
+    (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec
+      focus :=
+  splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_spec
+    (splitTargetProjectableRightEdgeRewindOutputSpec_of_rightEdgeRewindOutputSpec
+      hfocus)
+
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutput
+    (hfocus : SplitTargetRightEdgeRewindOutputConstruction) :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction := by
+  rcases hfocus with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_rightEdgeRewindOutputSpec
+        hspec⟩
+
+theorem splitTargetProjectableRightEdgeRewindOutputNilPadSymbolCaseSpec_of_rightEdgeRewindOutputNilPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hfocus :
+      SplitTargetRightEdgeRewindOutputNilPadSymbolCaseSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputNilPadSymbolCaseSpec
+      focus := by
+  rcases hfocus with ⟨hready, hnilNil, hnilNone, hnilSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · refine
+      ⟨splitTargetOutput0 [] [],
+        splitTargetOutput1 [] [], ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using hnilNil
+  · intro padding
+    refine
+      ⟨splitTargetOutput0 [] (none :: padding),
+        splitTargetOutput1 [] (none :: padding), ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using
+      hnilNone padding
+  · intro padBit padding
+    refine
+      ⟨splitTargetOutput0 [] (some padBit :: padding),
+        splitTargetOutput1 [] (some padBit :: padding), ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using
+      hnilSome padBit padding
+
+theorem splitTargetProjectableRightEdgeRewindOutputConsPadSymbolCaseSpec_of_rightEdgeRewindOutputConsPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hfocus :
+      SplitTargetRightEdgeRewindOutputConsPadSymbolCaseSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputConsPadSymbolCaseSpec
+      focus := by
+  rcases hfocus with ⟨hready, hconsNil, hconsNone, hconsSome⟩
+  refine ⟨hready, ?_, ?_, ?_⟩
+  · intro bit rest
+    refine
+      ⟨splitTargetOutput0 (bit :: rest) [],
+        splitTargetOutput1 (bit :: rest) [], ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using
+      hconsNil bit rest
+  · intro bit rest padding
+    refine
+      ⟨splitTargetOutput0 (bit :: rest) (none :: padding),
+        splitTargetOutput1 (bit :: rest) (none :: padding), ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using
+      hconsNone bit rest padding
+  · intro bit rest padBit padding
+    refine
+      ⟨splitTargetOutput0 (bit :: rest) (some padBit :: padding),
+        splitTargetOutput1 (bit :: rest) (some padBit :: padding), ?_⟩
+    simpa [splitTargetRightEdgeRewindOutputTape] using
+      hconsSome bit rest padBit padding
+
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_rightEdgeRewindOutputSplitPadSymbolCaseSpec
+    {focus : MachineDescription}
+    (hsplit :
+      SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseSpec focus) :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec
+      focus := by
+  exact
+    ⟨splitTargetProjectableRightEdgeRewindOutputNilPadSymbolCaseSpec_of_rightEdgeRewindOutputNilPadSymbolCaseSpec
+        hsplit.left,
+      splitTargetProjectableRightEdgeRewindOutputConsPadSymbolCaseSpec_of_rightEdgeRewindOutputConsPadSymbolCaseSpec
+        hsplit.right⟩
+
+theorem splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutputSplitPadSymbolCases
+    (hsplit :
+      SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseConstruction) :
+    SplitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction := by
+  rcases hsplit with ⟨focus, hspec⟩
+  exact
+    ⟨focus,
+      splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseSpec_of_rightEdgeRewindOutputSplitPadSymbolCaseSpec
+        hspec⟩
+
+theorem splitTargetProjectableRightEdgeRewindOutputConstruction_of_rightEdgeRewindOutputSplitPadSymbolCases
+    (hsplit :
+      SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseConstruction) :
+    SplitTargetProjectableRightEdgeRewindOutputConstruction :=
+  splitTargetProjectableRightEdgeRewindOutputConstruction_of_splitPadSymbolCases
+    (splitTargetProjectableRightEdgeRewindOutputSplitPadSymbolCaseConstruction_of_rightEdgeRewindOutputSplitPadSymbolCases
+      hsplit)
+
 theorem splitTargetSeparatorFocusSpec_of_rightEdgeRewindOutputSpec
     {focus : MachineDescription}
     (hfocus : SplitTargetRightEdgeRewindOutputSpec focus) :
