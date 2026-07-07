@@ -763,6 +763,14 @@ def FuelSimulatorStructuredEndpointExactIndexedConstruction
       lowered
       (fuelSimulatorStructuredOutputTape attempt)
 
+/--
+Remaining structured-core endpoint obligation for the fuel-simulator parser.
+The proof must build the wrapped endpoint for every compiled attempt machine.
+-/
+def FuelSimulatorStructuredCoreEndpointConstruction : Prop :=
+  forall attempt : MachineDescription,
+    FuelSimulatorStructuredEndpointExactIndexedConstruction attempt
+
 theorem fuelSimulatorStructuredInputCode_eq_of_inputTape_eq
     {code : Word MachineCodeSymbol}
     {i : FuelSimulatorStructuredIndex}
@@ -842,6 +850,11 @@ theorem fuelSimulatorStructuredConstruction_of_endpointExactIndexed
         (lowered := lowered)
         hspec⟩
 
+theorem fuelSimulatorStructuredConstruction_of_coreEndpoint
+    (h : FuelSimulatorStructuredCoreEndpointConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction :=
+  fuelSimulatorStructuredConstruction_of_endpointExactIndexed h
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction) :
@@ -855,12 +868,15 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShif
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
-  intro attempt
-  -- Remaining structured finite-table obligation: give a three-logical-tape
-  -- parser description whose lowered machine maps generated `(w, limit, fuel)`
-  -- inputs to the canonical simulator-layout code word and halts one cell
-  -- right of it.
-  sorry
+  exact
+    fuelSimulatorStructuredConstruction_of_coreEndpoint
+      (by
+        intro attempt
+        -- Remaining structured finite-table obligation: give a
+        -- three-logical-tape parser endpoint whose wrapped machine maps
+        -- generated `(w, limit, fuel)` inputs to the canonical
+        -- simulator-layout code word and halts one cell right of it.
+        sorry)
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :
     Prop :=
@@ -869,6 +885,216 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructio
       Structured3EndpointWrappedConstruction
         (CommonGround.ControllerInvocation.StageAttemptFramedExactSpec
           attempt)
+
+/--
+Index for framed invocation endpoint runs: a controller layout, a boolean-word
+result, and a concrete fuel witness for the underlying attempt run.
+-/
+structure StageAttemptFramedStructuredIndex
+    (attempt : MachineDescription) where
+  C : DovetailControllerLayout
+  result : Word Bool
+  fuel : Nat
+  attempt_halts :
+    attempt.HaltsWithOutputIn fuel
+      (encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageInputCode C))
+      (encodeCodeWordAsInput (encodeBoolWord result))
+
+def stageAttemptFramedStructuredInputTape
+    {attempt : MachineDescription}
+    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  Tape.input
+    (encodeCodeWordAsInput
+      (DovetailControllerLayout.encode i.C))
+
+def stageAttemptFramedStructuredOutputTape
+    {attempt : MachineDescription}
+    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  CommonGround.ControllerInvocation.StageAttemptFramedOutputTape
+    i.C i.result
+
+def StageAttemptFramedStructuredEndpointExactIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered :
+      StageAttemptFramedStructuredIndex attempt -> Tape Bool,
+    Structured3EndpointExactIndexedFamilySpec
+      W
+      stageAttemptFramedStructuredInputTape
+      initialized
+      lowered
+      stageAttemptFramedStructuredOutputTape
+
+/--
+Remaining structured-core endpoint obligation for framed stage-attempt
+invocation.  The attempt readiness hypothesis is part of the target contract.
+-/
+def StageAttemptFramedStructuredCoreEndpointConstruction : Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      StageAttemptFramedStructuredEndpointExactIndexedConstruction attempt
+
+theorem stageAttemptFramedInput_layout_eq_of_inputTape_eq
+    {attempt : MachineDescription}
+    {C : DovetailControllerLayout}
+    {i : StageAttemptFramedStructuredIndex attempt}
+    (h :
+      Tape.input
+          (encodeCodeWordAsInput
+            (DovetailControllerLayout.encode C)) =
+        stageAttemptFramedStructuredInputTape i) :
+    C = i.C := by
+  apply DovetailControllerLayout.encode_injective
+  apply encodeCodeWordAsInput_injective
+  exact
+    Tape.input_injective
+      (by
+        simpa [stageAttemptFramedStructuredInputTape] using h)
+
+theorem stageAttemptFramedOutput_result_eq_of_tape_eq
+    {attempt : MachineDescription}
+    {C : DovetailControllerLayout}
+    {result : Word Bool}
+    {i : StageAttemptFramedStructuredIndex attempt}
+    {T : Tape Bool}
+    (hT : T = stageAttemptFramedStructuredOutputTape i)
+    (houtput :
+      Tape.normalizedOutput T =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result)))
+    (hC : C = i.C) :
+    i.result = result := by
+  have hout :
+      Tape.normalizedOutput
+          (stageAttemptFramedStructuredOutputTape i) =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C i.result)) := by
+    simpa [stageAttemptFramedStructuredOutputTape] using
+      CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput
+        i.C i.result
+  have hbits :
+      encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C i.result)) =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C result)) := by
+    rw [← hout, ← hT, houtput, hC]
+  have hcode :
+      DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult i.C i.result) =
+        DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult i.C result) :=
+    encodeCodeWordAsInput_injective hbits
+  have hlayout :
+      DovetailControllerLayout.withResult i.C i.result =
+        DovetailControllerLayout.withResult i.C result :=
+    DovetailControllerLayout.encode_injective hcode
+  have hresult := congrArg DovetailControllerLayout.result hlayout
+  simpa [DovetailControllerLayout.withResult] using hresult
+
+theorem stageAttemptFramedExactSpec_of_endpointExactIndexed
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered :
+      StageAttemptFramedStructuredIndex attempt -> Tape Bool}
+    (hspec :
+      Structured3EndpointExactIndexedFamilySpec
+        W
+        stageAttemptFramedStructuredInputTape
+        initialized
+        lowered
+        stageAttemptFramedStructuredOutputTape) :
+    CommonGround.ControllerInvocation.StageAttemptFramedExactSpec
+      attempt W.machine := by
+  constructor
+  · exact W.machine_subroutineReady
+  constructor
+  · intro C result fuel hattempt
+    let i : StageAttemptFramedStructuredIndex attempt :=
+      { C := C
+        result := result
+        fuel := fuel
+        attempt_halts := hattempt }
+    simpa [stageAttemptFramedStructuredInputTape,
+      stageAttemptFramedStructuredOutputTape, i] using
+      haltsWithTape_of_haltsFromTape_input
+        (Structured3EndpointExactIndexedFamilySpec.forward hspec i)
+  · intro C result hhalt
+    let inputBits :=
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C)
+    let outputBits :=
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result))
+    rcases hhalt with ⟨fuel, hhaltFuel⟩
+    let T :=
+      (W.machine.runConfig fuel (W.machine.initial inputBits)).tape
+    have hfrom :
+        W.machine.HaltsFromTape (Tape.input inputBits) T := by
+      exact
+        ⟨fuel,
+          by
+            rcases hhaltFuel with ⟨hstate, _houtput⟩
+            exact ⟨hstate, rfl⟩⟩
+    rcases
+        Structured3EndpointExactIndexedFamilySpec.closedIndex
+          hspec (Tape.input inputBits) T hfrom with
+      ⟨i, hinput, hT⟩
+    have hC : C = i.C := by
+      exact
+        stageAttemptFramedInput_layout_eq_of_inputTape_eq
+          (attempt := attempt)
+          (C := C)
+          (i := i)
+          (by
+            simpa [inputBits] using hinput)
+    have houtput :
+        Tape.normalizedOutput T =
+          encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.withResult C result)) := by
+      rcases hhaltFuel with ⟨_hstate, hnormalized⟩
+      simpa [T, outputBits] using hnormalized
+    have hresult : i.result = result :=
+      stageAttemptFramedOutput_result_eq_of_tape_eq
+        (attempt := attempt)
+        (C := C)
+        (result := result)
+        (i := i)
+        (T := T)
+        hT houtput hC
+    exact
+      ⟨i.fuel,
+        by
+          simpa [hC, hresult] using i.attempt_halts⟩
+
+theorem stageAttemptFramedStructuredConstruction_of_endpointExactIndexed
+    (h :
+      forall attempt : MachineDescription,
+        attempt.SubroutineReady ->
+          StageAttemptFramedStructuredEndpointExactIndexedConstruction
+            attempt) :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
+  intro attempt hattempt
+  rcases h attempt hattempt with ⟨W, initialized, lowered, hspec⟩
+  exact
+    ⟨W,
+      stageAttemptFramedExactSpec_of_endpointExactIndexed
+        (attempt := attempt)
+        (W := W)
+        (initialized := initialized)
+        (lowered := lowered)
+        hspec⟩
+
+theorem stageAttemptFramedStructuredConstruction_of_coreEndpoint
+    (h : StageAttemptFramedStructuredCoreEndpointConstruction) :
+    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :=
+  stageAttemptFramedStructuredConstruction_of_endpointExactIndexed h
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_structured
     (h :
@@ -883,11 +1109,15 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
-  intro attempt hattempt
-  -- Remaining structured finite-table obligation: give a three-logical-tape
-  -- framed invoker whose lowered machine installs the simulated boolean-word
-  -- result in the controller layout and is closed over framed outputs.
-  sorry
+  exact
+    stageAttemptFramedStructuredConstruction_of_coreEndpoint
+      (by
+        intro attempt hattempt
+        -- Remaining structured finite-table obligation: give a
+        -- three-logical-tape framed invoker endpoint whose wrapped machine
+        -- installs the simulated boolean-word result in the controller layout
+        -- and is closed over framed outputs.
+        sorry)
 
 def fuelOutputStructuredInputTape
     {attempt : MachineDescription}
@@ -911,6 +1141,14 @@ def FuelOutputStructuredEndpointExactIndexedConstruction
       initialized
       lowered
       PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+
+/--
+Remaining structured-core endpoint obligation for the simulator-output
+extractor, indexed by halted simulator layouts and their exact output code.
+-/
+def FuelOutputStructuredCoreEndpointConstruction : Prop :=
+  forall attempt : MachineDescription,
+    FuelOutputStructuredEndpointExactIndexedConstruction attempt
 
 theorem fuelOutputInputCode_eq_of_inputTape_eq
     {attempt : MachineDescription}
@@ -993,6 +1231,11 @@ theorem fuelOutputStructuredConstruction_of_endpointExactIndexed
         (lowered := lowered)
         hspec⟩
 
+theorem fuelOutputStructuredConstruction_of_coreEndpoint
+    (h : FuelOutputStructuredCoreEndpointConstruction) :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction :=
+  fuelOutputStructuredConstruction_of_endpointExactIndexed h
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction) :
@@ -1006,11 +1249,15 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineCo
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
-  intro attempt
-  -- Remaining structured finite-table obligation: give a three-logical-tape
-  -- extractor whose lowered machine emits the normalized boolean-word result
-  -- code on halted simulator layouts and rejects all other inputs.
-  sorry
+  exact
+    fuelOutputStructuredConstruction_of_coreEndpoint
+      (by
+        intro attempt
+        -- Remaining structured finite-table obligation: give a
+        -- three-logical-tape extractor endpoint whose wrapped machine emits
+        -- the normalized boolean-word result code on halted simulator layouts
+        -- and rejects all other inputs.
+        sorry)
 
 def boundedFuelPairEnumeratorStructuredInputTape
     {runner : MachineDescription}
@@ -1031,6 +1278,16 @@ def BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
       initialized
       lowered
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+
+/--
+Remaining structured-core endpoint obligation for bounded {lit}`(limit, fuel)`
+enumeration against a ready exact-fuel runner.
+-/
+def BoundedFuelPairEnumeratorStructuredCoreEndpointConstruction
+    (runner : MachineDescription) : Prop :=
+  runner.SubroutineReady ->
+    BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
+      runner
 
 theorem boundedFuelPairEnumeratorInput_eq_of_inputTape_eq
     {runner : MachineDescription}
@@ -1107,6 +1364,14 @@ theorem boundedFuelPairEnumeratorStructuredConstruction_of_endpointExactIndexed
         (lowered := lowered)
         hspec⟩
 
+theorem boundedFuelPairEnumeratorStructuredConstruction_of_coreEndpoint
+    (h :
+      forall runner : MachineDescription,
+        BoundedFuelPairEnumeratorStructuredCoreEndpointConstruction
+          runner) :
+    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction :=
+  boundedFuelPairEnumeratorStructuredConstruction_of_endpointExactIndexed h
+
 theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction) :
@@ -1117,12 +1382,15 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
 
 theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
-  intro runner hrunner
-  -- Remaining structured finite-table obligation: enumerate bounded
-  -- `(limit, fuel)` pairs, invoke the exact-fuel runner, preserve its encoded
-  -- boolean-word output, and halt one cell right of that output for classifier
-  -- handoff.
-  sorry
+  exact
+    boundedFuelPairEnumeratorStructuredConstruction_of_coreEndpoint
+      (by
+        intro runner hrunner
+        -- Remaining structured finite-table obligation: enumerate bounded
+        -- `(limit, fuel)` pairs, invoke the exact-fuel runner endpoint,
+        -- preserve its encoded boolean-word output, and halt one cell right
+        -- of that output for classifier handoff.
+        sorry)
 
 end StructuredConstructionTargets
 
