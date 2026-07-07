@@ -2,6 +2,8 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ThreeTapeTactic
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.Assembly.Prefix
@@ -541,6 +543,28 @@ theorem structuredRawBoundaryRightEdgeEmitterDescription_supported :
       structuredRawBoundaryRightEdgeEmitterDescription :=
   Structured.MultiTapeLowering.supportedReadWriteRows3_of_supports_eq_true
     structuredRawBoundaryRightEdgeEmitterDescription_supportsReadWriteRows3
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_wellFormed :
+    structuredRawBoundaryRightEdgeEmitterDescription.WellFormed :=
+  structuredDescription_wellFormed_of_bool
+    structuredRawBoundaryRightEdgeEmitterDescription (by decide)
+
+theorem structuredRawBoundaryRightEdgeEmitterDescription_haltTransitionFree :
+    structuredRawBoundaryRightEdgeEmitterDescription.HaltTransitionFree :=
+  structuredDescription_haltTransitionFree_of_bool
+    structuredRawBoundaryRightEdgeEmitterDescription (by decide)
+
+def loweredStructuredRawBoundaryRightEdgeEmitterDescription :
+    MachineDescription :=
+  Structured.MultiTapeLowering.lowerStructured3Description
+    structuredRawBoundaryRightEdgeEmitterDescription
+
+theorem loweredStructuredRawBoundaryRightEdgeEmitterDescription_subroutineReady :
+    loweredStructuredRawBoundaryRightEdgeEmitterDescription.SubroutineReady := by
+  simpa [loweredStructuredRawBoundaryRightEdgeEmitterDescription] using
+    Structured.MultiTapeLowering.lowerStructured3Description_subroutineReady
+      structuredRawBoundaryRightEdgeEmitterDescription_wellFormed
+      structuredRawBoundaryRightEdgeEmitterDescription_supported
 
 def structuredRawBoundaryRightEdgeEmitterSourceTapes
     (layout : Word Bool) : List (Tape Bool) :=
@@ -1266,6 +1290,38 @@ theorem structuredRawBoundaryRightEdgeEmitterDescription_run
   simp [structuredRawBoundaryRightEdgeEmitterOutputTape,
     encodedLayoutBits_eq_header_length_cells,
     encodeCodeSymbolAsInput]
+
+def structuredRawBoundaryRightEdgeEmitterFinalTapes
+    (layout : Word Bool) : List (Tape Bool) :=
+  [ structuredRawBoundaryCellLoopTape layout.reverse []
+  , structuredRawBoundaryLengthDoneCounterTape layout.length
+  , structuredRawBoundaryRightEdgeEmitterOutputTape layout ]
+
+theorem loweredStructuredRawBoundaryRightEdgeEmitterDescription_haltsFrom_structuredTapes
+    (layout : Word Bool) :
+    loweredStructuredRawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        (structuredRawBoundaryRightEdgeEmitterSourceTapes layout))
+      (Structured.MultiTapeLowering.encodedGuardedStructuredTapes
+        (structuredRawBoundaryRightEdgeEmitterFinalTapes layout)) := by
+  simpa [loweredStructuredRawBoundaryRightEdgeEmitterDescription,
+    structuredRawBoundaryRightEdgeEmitterFinalTapes] using
+    Structured.MultiTapeLowering.lowerStructured3Description_haltsFromConfigWithTapes
+      structuredRawBoundaryRightEdgeEmitterDescription_wellFormed
+      structuredRawBoundaryRightEdgeEmitterDescription_haltTransitionFree
+      structuredRawBoundaryRightEdgeEmitterDescription_supported
+      (c :=
+        { state := structuredRawBoundaryRightEdgeEmitterDescription.start
+          tapes := structuredRawBoundaryRightEdgeEmitterSourceTapes layout })
+      (tapes := structuredRawBoundaryRightEdgeEmitterFinalTapes layout)
+      rfl
+      (by
+        simp [structuredRawBoundaryRightEdgeEmitterSourceTapes,
+          structuredRawBoundaryRightEdgeEmitterDescription])
+      ⟨10 * layout.length + 11,
+        by
+          simpa [structuredRawBoundaryRightEdgeEmitterFinalTapes] using
+            structuredRawBoundaryRightEdgeEmitterDescription_run layout⟩
 
 theorem structuredRawBoundaryRightEdgeEmitterDescription_run_empty_halts :
     (structuredRawBoundaryRightEdgeEmitterDescription.runConfig 11
