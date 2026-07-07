@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed.BoolSuffix
+import FoC.Computability.Compiler.Dovetail.BoolSuffix
 
 set_option doc.verso true
 
