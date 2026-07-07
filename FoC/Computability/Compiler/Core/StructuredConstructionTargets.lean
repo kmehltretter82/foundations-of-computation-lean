@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.ConstructionTargets
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
 
@@ -764,12 +765,174 @@ def FuelSimulatorStructuredEndpointExactIndexedConstruction
       (fuelSimulatorStructuredOutputTape attempt)
 
 /--
+Canonical blank output buffer used when materializing public fuel-simulator
+parser inputs into the three-logical-tape core.
+-/
+def fuelSimulatorStructuredOutputBuffer
+    (_i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  Tape.blank
+
+/--
+Canonical endpoint input to the lowered fuel-simulator structured core.
+
+Tape 0 contains the public generated fuel-input code, tape 1 is blank scratch,
+and tape 2 starts as a blank output buffer.
+-/
+def fuelSimulatorStructuredInitializedTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (fuelSimulatorStructuredInputTape i)
+    (fuelSimulatorStructuredOutputBuffer i)
+
+/--
+Canonical endpoint output of the lowered fuel-simulator structured core.
+
+The core preserves the public source on logical tape 0, keeps tape 1 blank, and
+writes the exact simulator-layout output tape on logical tape 2.
+-/
+def fuelSimulatorStructuredLoweredTape
+    (attempt : MachineDescription)
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (fuelSimulatorStructuredInputTape i)
+    Tape.blank
+    (fuelSimulatorStructuredOutputTape attempt i)
+
+/--
+Exact materializer behavior needed by the canonical fuel-simulator endpoint.
+-/
+structure FuelSimulatorStructuredExactMaterializerSpec
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i : FuelSimulatorStructuredIndex,
+      materializer.HaltsFromTape
+        (fuelSimulatorStructuredInputTape i)
+        (fuelSimulatorStructuredInitializedTape i)
+  closed :
+    forall i : FuelSimulatorStructuredIndex,
+      ExactClosedFromTape materializer
+        (fuelSimulatorStructuredInputTape i)
+        (fuelSimulatorStructuredInitializedTape i)
+  closedIndex :
+    ExactClosedIndexedFromTape
+      (ι := FuelSimulatorStructuredIndex)
+      materializer
+      (fun i => fuelSimulatorStructuredInputTape i)
+      (fun i => fuelSimulatorStructuredInitializedTape i)
+
+/--
+Exact lowered-core behavior for the canonical fuel-simulator endpoint.
+-/
+structure FuelSimulatorStructuredExactLoweredCoreSpec
+    (attempt : MachineDescription)
+    (lowered : MachineDescription) : Prop where
+  forward :
+    forall i : FuelSimulatorStructuredIndex,
+      lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelSimulatorStructuredInitializedTape i))
+        (fuelSimulatorStructuredLoweredTape attempt i)
+  closed :
+    forall i : FuelSimulatorStructuredIndex,
+      ExactClosedFromTape lowered
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelSimulatorStructuredInitializedTape i))
+        (fuelSimulatorStructuredLoweredTape attempt i)
+
+/--
+Exact projector behavior for the canonical fuel-simulator endpoint.
+-/
+structure FuelSimulatorStructuredExactProjectorSpec
+    (attempt : MachineDescription)
+    (projector : MachineDescription) : Prop where
+  forward :
+    forall i : FuelSimulatorStructuredIndex,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelSimulatorStructuredLoweredTape attempt i))
+        (fuelSimulatorStructuredOutputTape attempt i)
+  closed :
+    forall i : FuelSimulatorStructuredIndex,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelSimulatorStructuredLoweredTape attempt i))
+        (fuelSimulatorStructuredOutputTape attempt i)
+
+/--
+Canonical component-level fuel-simulator endpoint spec.
+-/
+structure FuelSimulatorStructuredCanonicalEndpointSpec
+    (attempt : MachineDescription)
+    (W : Structured3EndpointWrapper) : Prop where
+  materializer :
+    FuelSimulatorStructuredExactMaterializerSpec W.initializer
+  core :
+    FuelSimulatorStructuredExactLoweredCoreSpec attempt W.lowered
+  projector :
+    FuelSimulatorStructuredExactProjectorSpec attempt W.projector
+
+/--
+Canonical fuel-simulator endpoint construction with fixed materializer/core/
+projector handoff tapes.
+-/
+def FuelSimulatorStructuredCanonicalEndpointConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+    FuelSimulatorStructuredCanonicalEndpointSpec attempt W
+
+theorem fuelSimulatorStructuredExactIndexedSpec_of_canonical
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    (hspec :
+      FuelSimulatorStructuredCanonicalEndpointSpec attempt W) :
+    Structured3EndpointExactIndexedFamilySpec
+      (ι := FuelSimulatorStructuredIndex)
+      W
+      (fun i => fuelSimulatorStructuredInputTape i)
+      (fun i => fuelSimulatorStructuredInitializedTape i)
+      (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+      (fun i => fuelSimulatorStructuredOutputTape attempt i) where
+  initializerForward := hspec.materializer.forward
+  loweredForward := hspec.core.forward
+  projectorForward := hspec.projector.forward
+  initializerClosed := hspec.materializer.closed
+  loweredClosed := hspec.core.closed
+  projectorClosed := hspec.projector.closed
+  initializerClosedIndex := hspec.materializer.closedIndex
+
+theorem fuelSimulatorStructuredEndpointExactIndexedConstruction_of_canonical
+    {attempt : MachineDescription}
+    (hcanonical :
+      FuelSimulatorStructuredCanonicalEndpointConstruction attempt) :
+    FuelSimulatorStructuredEndpointExactIndexedConstruction attempt := by
+  rcases hcanonical with ⟨W, hspec⟩
+  exact
+    ⟨W,
+      fuelSimulatorStructuredInitializedTape,
+      fuelSimulatorStructuredLoweredTape attempt,
+      fuelSimulatorStructuredExactIndexedSpec_of_canonical hspec⟩
+
+/--
 Remaining structured-core endpoint obligation for the fuel-simulator parser.
 The proof must build the wrapped endpoint for every compiled attempt machine.
 -/
 def FuelSimulatorStructuredCoreEndpointConstruction : Prop :=
   forall attempt : MachineDescription,
     FuelSimulatorStructuredEndpointExactIndexedConstruction attempt
+
+/--
+Canonical fuel-simulator endpoint obligations imply the existing flexible
+exact-indexed core endpoint obligation.
+-/
+theorem fuelSimulatorStructuredCoreEndpointConstruction_of_canonical
+    (hcanonical :
+      forall attempt : MachineDescription,
+        FuelSimulatorStructuredCanonicalEndpointConstruction attempt) :
+    FuelSimulatorStructuredCoreEndpointConstruction := by
+  intro attempt
+  exact
+    fuelSimulatorStructuredEndpointExactIndexedConstruction_of_canonical
+      (hcanonical attempt)
 
 theorem fuelSimulatorStructuredInputCode_eq_of_inputTape_eq
     {code : Word MachineCodeSymbol}
@@ -870,13 +1033,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCod
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
   exact
     fuelSimulatorStructuredConstruction_of_coreEndpoint
-      (by
-        intro attempt
-        -- Remaining structured finite-table obligation: give a
-        -- three-logical-tape parser endpoint whose wrapped machine maps
-        -- generated `(w, limit, fuel)` inputs to the canonical
-        -- simulator-layout code word and halts one cell right of it.
-        sorry)
+      (fuelSimulatorStructuredCoreEndpointConstruction_of_canonical
+        (by
+          intro attempt
+          -- Remaining structured finite-table obligation: build the
+          -- canonical materializer/core/projector endpoint whose wrapped
+          -- machine maps generated fuel inputs to the exact
+          -- simulator-layout output tape.
+          sorry))
 
 def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :
     Prop :=
@@ -927,6 +1091,159 @@ def StageAttemptFramedStructuredEndpointExactIndexedConstruction
       stageAttemptFramedStructuredOutputTape
 
 /--
+Canonical blank output buffer used when materializing framed-invocation public
+inputs into the three-logical-tape core.
+-/
+def stageAttemptFramedStructuredOutputBuffer
+    {attempt : MachineDescription}
+    (_i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  Tape.blank
+
+/--
+Canonical endpoint input to the lowered framed-invocation structured core.
+
+Tape 0 contains the public controller-layout input, tape 1 is blank scratch,
+and tape 2 starts as a blank output buffer.
+-/
+def stageAttemptFramedStructuredInitializedTape
+    {attempt : MachineDescription}
+    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (stageAttemptFramedStructuredInputTape i)
+    (stageAttemptFramedStructuredOutputBuffer i)
+
+/--
+Canonical endpoint output of the lowered framed-invocation structured core.
+
+The core preserves the source layout on logical tape 0, keeps tape 1 blank, and
+writes the exact framed controller-output tape on logical tape 2.
+-/
+def stageAttemptFramedStructuredLoweredTape
+    {attempt : MachineDescription}
+    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (stageAttemptFramedStructuredInputTape i)
+    Tape.blank
+    (stageAttemptFramedStructuredOutputTape i)
+
+/--
+Exact materializer behavior needed by the canonical framed-invocation endpoint.
+-/
+structure StageAttemptFramedStructuredExactMaterializerSpec
+    (attempt : MachineDescription)
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      materializer.HaltsFromTape
+        (stageAttemptFramedStructuredInputTape i)
+        (stageAttemptFramedStructuredInitializedTape i)
+  closed :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      ExactClosedFromTape materializer
+        (stageAttemptFramedStructuredInputTape i)
+        (stageAttemptFramedStructuredInitializedTape i)
+  closedIndex :
+    ExactClosedIndexedFromTape
+      (ι := StageAttemptFramedStructuredIndex attempt)
+      materializer
+      (fun i => stageAttemptFramedStructuredInputTape i)
+      (fun i => stageAttemptFramedStructuredInitializedTape i)
+
+/--
+Exact lowered-core behavior for the canonical framed-invocation endpoint.
+-/
+structure StageAttemptFramedStructuredExactLoweredCoreSpec
+    (attempt : MachineDescription)
+    (lowered : MachineDescription) : Prop where
+  forward :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (stageAttemptFramedStructuredInitializedTape i))
+        (stageAttemptFramedStructuredLoweredTape i)
+  closed :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      ExactClosedFromTape lowered
+        (canonicalPrimitiveSeqHandoffTape
+          (stageAttemptFramedStructuredInitializedTape i))
+        (stageAttemptFramedStructuredLoweredTape i)
+
+/--
+Exact projector behavior for the canonical framed-invocation endpoint.
+-/
+structure StageAttemptFramedStructuredExactProjectorSpec
+    (attempt : MachineDescription)
+    (projector : MachineDescription) : Prop where
+  forward :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (stageAttemptFramedStructuredLoweredTape i))
+        (stageAttemptFramedStructuredOutputTape i)
+  closed :
+    forall i : StageAttemptFramedStructuredIndex attempt,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (stageAttemptFramedStructuredLoweredTape i))
+        (stageAttemptFramedStructuredOutputTape i)
+
+/--
+Canonical component-level framed-invocation endpoint spec.
+-/
+structure StageAttemptFramedStructuredCanonicalEndpointSpec
+    (attempt : MachineDescription)
+    (W : Structured3EndpointWrapper) : Prop where
+  materializer :
+    StageAttemptFramedStructuredExactMaterializerSpec
+      attempt W.initializer
+  core :
+    StageAttemptFramedStructuredExactLoweredCoreSpec attempt W.lowered
+  projector :
+    StageAttemptFramedStructuredExactProjectorSpec attempt W.projector
+
+/--
+Canonical framed-invocation endpoint construction with fixed
+materializer/core/projector handoff tapes.
+-/
+def StageAttemptFramedStructuredCanonicalEndpointConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+    StageAttemptFramedStructuredCanonicalEndpointSpec attempt W
+
+theorem stageAttemptFramedStructuredExactIndexedSpec_of_canonical
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    (hspec :
+      StageAttemptFramedStructuredCanonicalEndpointSpec attempt W) :
+    Structured3EndpointExactIndexedFamilySpec
+      (ι := StageAttemptFramedStructuredIndex attempt)
+      W
+      (fun i => stageAttemptFramedStructuredInputTape i)
+      (fun i => stageAttemptFramedStructuredInitializedTape i)
+      (fun i => stageAttemptFramedStructuredLoweredTape i)
+      (fun i => stageAttemptFramedStructuredOutputTape i) where
+  initializerForward := hspec.materializer.forward
+  loweredForward := hspec.core.forward
+  projectorForward := hspec.projector.forward
+  initializerClosed := hspec.materializer.closed
+  loweredClosed := hspec.core.closed
+  projectorClosed := hspec.projector.closed
+  initializerClosedIndex := hspec.materializer.closedIndex
+
+theorem stageAttemptFramedStructuredEndpointExactIndexedConstruction_of_canonical
+    {attempt : MachineDescription}
+    (hcanonical :
+      StageAttemptFramedStructuredCanonicalEndpointConstruction attempt) :
+    StageAttemptFramedStructuredEndpointExactIndexedConstruction
+      attempt := by
+  rcases hcanonical with ⟨W, hspec⟩
+  exact
+    ⟨W,
+      stageAttemptFramedStructuredInitializedTape,
+      stageAttemptFramedStructuredLoweredTape,
+      stageAttemptFramedStructuredExactIndexedSpec_of_canonical hspec⟩
+
+/--
 Remaining structured-core endpoint obligation for framed stage-attempt
 invocation.  The attempt readiness hypothesis is part of the target contract.
 -/
@@ -934,6 +1251,22 @@ def StageAttemptFramedStructuredCoreEndpointConstruction : Prop :=
   forall attempt : MachineDescription,
     attempt.SubroutineReady ->
       StageAttemptFramedStructuredEndpointExactIndexedConstruction attempt
+
+/--
+Canonical framed-invocation endpoint obligations imply the existing flexible
+exact-indexed core endpoint obligation.
+-/
+theorem stageAttemptFramedStructuredCoreEndpointConstruction_of_canonical
+    (hcanonical :
+      forall attempt : MachineDescription,
+        attempt.SubroutineReady ->
+          StageAttemptFramedStructuredCanonicalEndpointConstruction
+            attempt) :
+    StageAttemptFramedStructuredCoreEndpointConstruction := by
+  intro attempt hattempt
+  exact
+    stageAttemptFramedStructuredEndpointExactIndexedConstruction_of_canonical
+      (hcanonical attempt hattempt)
 
 theorem stageAttemptFramedInput_layout_eq_of_inputTape_eq
     {attempt : MachineDescription}
@@ -1111,13 +1444,14 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstru
     PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
   exact
     stageAttemptFramedStructuredConstruction_of_coreEndpoint
-      (by
-        intro attempt hattempt
-        -- Remaining structured finite-table obligation: give a
-        -- three-logical-tape framed invoker endpoint whose wrapped machine
-        -- installs the simulated boolean-word result in the controller layout
-        -- and is closed over framed outputs.
-        sorry)
+      (stageAttemptFramedStructuredCoreEndpointConstruction_of_canonical
+        (by
+          intro attempt hattempt
+          -- Remaining structured finite-table obligation: build the
+          -- canonical materializer/core/projector endpoint whose wrapped
+          -- machine installs the simulated boolean-word result in the
+          -- controller layout.
+          sorry))
 
 def fuelOutputStructuredInputTape
     {attempt : MachineDescription}
@@ -1143,12 +1477,206 @@ def FuelOutputStructuredEndpointExactIndexedConstruction
       PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
 
 /--
+Canonical blank output buffer used when materializing a public simulator-layout
+input into the three-logical-tape fuel-output extractor core.
+-/
+def fuelOutputStructuredOutputBuffer
+    {attempt : MachineDescription}
+    (_i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) : Tape Bool :=
+  Tape.blank
+
+/--
+Canonical endpoint input to the lowered fuel-output structured core.
+
+Tape 0 contains the public simulator-layout code, tape 1 is blank scratch, and
+tape 2 starts as a blank output buffer.
+-/
+def fuelOutputStructuredInitializedTape
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (fuelOutputStructuredInputTape i)
+    (fuelOutputStructuredOutputBuffer i)
+
+/--
+Canonical endpoint output of the lowered fuel-output structured core.
+
+The structured core preserves the source code on tape 0 for debugging and
+closedness accounting, keeps tape 1 blank, and writes the exact public output
+tape on logical tape 2.  The endpoint projector then exposes tape 2 as the
+public final tape.
+-/
+def fuelOutputStructuredLoweredTape
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (fuelOutputStructuredInputTape i)
+    Tape.blank
+    (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+
+/--
+Exact materializer behavior needed by the canonical fuel-output endpoint.
+-/
+structure FuelOutputStructuredExactMaterializerSpec
+    (attempt : MachineDescription)
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      materializer.HaltsFromTape
+        (fuelOutputStructuredInputTape i)
+        (fuelOutputStructuredInitializedTape i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      ExactClosedFromTape materializer
+        (fuelOutputStructuredInputTape i)
+        (fuelOutputStructuredInitializedTape i)
+  closedIndex :
+    ExactClosedIndexedFromTape
+      (ι :=
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+          attempt)
+      materializer
+      (fun i => fuelOutputStructuredInputTape i)
+      (fun i => fuelOutputStructuredInitializedTape i)
+
+/--
+Exact lowered-core behavior for the canonical fuel-output endpoint.
+-/
+structure FuelOutputStructuredExactLoweredCoreSpec
+    (attempt : MachineDescription)
+    (lowered : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelOutputStructuredInitializedTape i))
+        (fuelOutputStructuredLoweredTape i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      ExactClosedFromTape lowered
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelOutputStructuredInitializedTape i))
+        (fuelOutputStructuredLoweredTape i)
+
+/--
+Exact projector behavior for the canonical fuel-output endpoint.
+-/
+structure FuelOutputStructuredExactProjectorSpec
+    (attempt : MachineDescription)
+    (projector : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelOutputStructuredLoweredTape i))
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (fuelOutputStructuredLoweredTape i))
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+
+/--
+Canonical component-level fuel-output endpoint spec.
+
+This fixes the endpoint tapes that the remaining structured finite-table proof
+must target, while still exposing the reusable exact-indexed endpoint API to
+the public scaffold adapters.
+-/
+structure FuelOutputStructuredCanonicalEndpointSpec
+    (attempt : MachineDescription)
+    (W : Structured3EndpointWrapper) : Prop where
+  materializer :
+    FuelOutputStructuredExactMaterializerSpec attempt W.initializer
+  core :
+    FuelOutputStructuredExactLoweredCoreSpec attempt W.lowered
+  projector :
+    FuelOutputStructuredExactProjectorSpec attempt W.projector
+
+/--
+Canonical fuel-output endpoint construction with fixed materializer/core/
+projector handoff tapes.
+-/
+def FuelOutputStructuredCanonicalEndpointConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+    FuelOutputStructuredCanonicalEndpointSpec attempt W
+
+theorem fuelOutputStructuredExactIndexedSpec_of_canonical
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    (hspec :
+      FuelOutputStructuredCanonicalEndpointSpec attempt W) :
+    Structured3EndpointExactIndexedFamilySpec
+      (ι :=
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+          attempt)
+      W
+      (fun i => fuelOutputStructuredInputTape i)
+      (fun i => fuelOutputStructuredInitializedTape i)
+      (fun i => fuelOutputStructuredLoweredTape i)
+      (fun i =>
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i) where
+  initializerForward := hspec.materializer.forward
+  loweredForward := hspec.core.forward
+  projectorForward := hspec.projector.forward
+  initializerClosed := hspec.materializer.closed
+  loweredClosed := hspec.core.closed
+  projectorClosed := hspec.projector.closed
+  initializerClosedIndex := hspec.materializer.closedIndex
+
+theorem fuelOutputStructuredEndpointExactIndexedConstruction_of_canonical
+    {attempt : MachineDescription}
+    (hcanonical :
+      FuelOutputStructuredCanonicalEndpointConstruction attempt) :
+    FuelOutputStructuredEndpointExactIndexedConstruction attempt := by
+  rcases hcanonical with ⟨W, hspec⟩
+  exact
+    ⟨W,
+      fuelOutputStructuredInitializedTape,
+      fuelOutputStructuredLoweredTape,
+      fuelOutputStructuredExactIndexedSpec_of_canonical hspec⟩
+
+/--
 Remaining structured-core endpoint obligation for the simulator-output
 extractor, indexed by halted simulator layouts and their exact output code.
 -/
 def FuelOutputStructuredCoreEndpointConstruction : Prop :=
   forall attempt : MachineDescription,
     FuelOutputStructuredEndpointExactIndexedConstruction attempt
+
+/--
+Canonical fuel-output endpoint obligations imply the existing flexible
+exact-indexed core endpoint obligation.
+-/
+theorem fuelOutputStructuredCoreEndpointConstruction_of_canonical
+    (hcanonical :
+      forall attempt : MachineDescription,
+        FuelOutputStructuredCanonicalEndpointConstruction attempt) :
+    FuelOutputStructuredCoreEndpointConstruction := by
+  intro attempt
+  exact
+    fuelOutputStructuredEndpointExactIndexedConstruction_of_canonical
+      (hcanonical attempt)
 
 theorem fuelOutputInputCode_eq_of_inputTape_eq
     {attempt : MachineDescription}
@@ -1251,13 +1779,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSu
     PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
   exact
     fuelOutputStructuredConstruction_of_coreEndpoint
-      (by
-        intro attempt
-        -- Remaining structured finite-table obligation: give a
-        -- three-logical-tape extractor endpoint whose wrapped machine emits
-        -- the normalized boolean-word result code on halted simulator layouts
-        -- and rejects all other inputs.
-        sorry)
+      (fuelOutputStructuredCoreEndpointConstruction_of_canonical
+        (by
+          intro attempt
+          -- Remaining structured finite-table obligation: build the
+          -- canonical materializer/core/projector endpoint whose wrapped
+          -- machine emits the normalized boolean-word result code on halted
+          -- simulator layouts.
+          sorry))
 
 def boundedFuelPairEnumeratorStructuredInputTape
     {runner : MachineDescription}
@@ -1280,14 +1809,215 @@ def BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
 
 /--
+Canonical blank output buffer used when materializing bounded fuel-pair
+enumerator inputs into the three-logical-tape core.
+-/
+def boundedFuelPairEnumeratorStructuredOutputBuffer
+    {runner : MachineDescription}
+    (_i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) : Tape Bool :=
+  Tape.blank
+
+/--
+Canonical endpoint input to the lowered bounded fuel-pair enumerator core.
+
+Tape 0 contains the public right-shifted enumerator input, tape 1 is blank
+scratch, and tape 2 starts as a blank output buffer.
+-/
+def boundedFuelPairEnumeratorStructuredInitializedTape
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (boundedFuelPairEnumeratorStructuredInputTape i)
+    (boundedFuelPairEnumeratorStructuredOutputBuffer i)
+
+/--
+Canonical endpoint output of the lowered bounded fuel-pair enumerator core.
+
+The core preserves the public source on logical tape 0, keeps tape 1 blank, and
+writes the exact right-shifted enumerator output tape on logical tape 2.
+-/
+def boundedFuelPairEnumeratorStructuredLoweredTape
+    {runner : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (boundedFuelPairEnumeratorStructuredInputTape i)
+    Tape.blank
+    (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+      i)
+
+/--
+Exact materializer behavior needed by the canonical bounded enumerator endpoint.
+-/
+structure BoundedFuelPairEnumeratorStructuredExactMaterializerSpec
+    (runner : MachineDescription)
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      materializer.HaltsFromTape
+        (boundedFuelPairEnumeratorStructuredInputTape i)
+        (boundedFuelPairEnumeratorStructuredInitializedTape i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      ExactClosedFromTape materializer
+        (boundedFuelPairEnumeratorStructuredInputTape i)
+        (boundedFuelPairEnumeratorStructuredInitializedTape i)
+  closedIndex :
+    ExactClosedIndexedFromTape
+      (ι :=
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+          runner)
+      materializer
+      (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+      (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+
+/--
+Exact lowered-core behavior for the canonical bounded enumerator endpoint.
+-/
+structure BoundedFuelPairEnumeratorStructuredExactLoweredCoreSpec
+    (runner : MachineDescription)
+    (lowered : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      lowered.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (boundedFuelPairEnumeratorStructuredInitializedTape i))
+        (boundedFuelPairEnumeratorStructuredLoweredTape i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      ExactClosedFromTape lowered
+        (canonicalPrimitiveSeqHandoffTape
+          (boundedFuelPairEnumeratorStructuredInitializedTape i))
+        (boundedFuelPairEnumeratorStructuredLoweredTape i)
+
+/--
+Exact projector behavior for the canonical bounded enumerator endpoint.
+-/
+structure BoundedFuelPairEnumeratorStructuredExactProjectorSpec
+    (runner : MachineDescription)
+    (projector : MachineDescription) : Prop where
+  forward :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      projector.HaltsFromTape
+        (canonicalPrimitiveSeqHandoffTape
+          (boundedFuelPairEnumeratorStructuredLoweredTape i))
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+          i)
+  closed :
+    forall i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner,
+      ExactClosedFromTape projector
+        (canonicalPrimitiveSeqHandoffTape
+          (boundedFuelPairEnumeratorStructuredLoweredTape i))
+        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+          i)
+
+/--
+Canonical component-level bounded fuel-pair enumerator endpoint spec.
+-/
+structure BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec
+    (runner : MachineDescription)
+    (W : Structured3EndpointWrapper) : Prop where
+  materializer :
+    BoundedFuelPairEnumeratorStructuredExactMaterializerSpec
+      runner W.initializer
+  core :
+    BoundedFuelPairEnumeratorStructuredExactLoweredCoreSpec
+      runner W.lowered
+  projector :
+    BoundedFuelPairEnumeratorStructuredExactProjectorSpec
+      runner W.projector
+
+/--
+Canonical bounded fuel-pair enumerator endpoint construction with fixed
+materializer/core/projector handoff tapes.
+-/
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction
+    (runner : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec runner W
+
+theorem boundedFuelPairEnumeratorStructuredExactIndexedSpec_of_canonical
+    {runner : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    (hspec :
+      BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec runner W) :
+    Structured3EndpointExactIndexedFamilySpec
+      (ι :=
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+          runner)
+      W
+      (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+      (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+      (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+      (fun i =>
+        PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+          i) where
+  initializerForward := hspec.materializer.forward
+  loweredForward := hspec.core.forward
+  projectorForward := hspec.projector.forward
+  initializerClosed := hspec.materializer.closed
+  loweredClosed := hspec.core.closed
+  projectorClosed := hspec.projector.closed
+  initializerClosedIndex := hspec.materializer.closedIndex
+
+theorem boundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction_of_canonical
+    {runner : MachineDescription}
+    (hcanonical :
+      BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction
+        runner) :
+    BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
+      runner := by
+  rcases hcanonical with ⟨W, hspec⟩
+  exact
+    ⟨W,
+      boundedFuelPairEnumeratorStructuredInitializedTape,
+      boundedFuelPairEnumeratorStructuredLoweredTape,
+      boundedFuelPairEnumeratorStructuredExactIndexedSpec_of_canonical
+        hspec⟩
+
+/--
 Remaining structured-core endpoint obligation for bounded {lit}`(limit, fuel)`
 enumeration against a ready exact-fuel runner.
 -/
 def BoundedFuelPairEnumeratorStructuredCoreEndpointConstruction
     (runner : MachineDescription) : Prop :=
-  runner.SubroutineReady ->
+    runner.SubroutineReady ->
     BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
       runner
+
+/--
+Canonical bounded fuel-pair enumerator endpoint obligations imply the existing
+flexible exact-indexed core endpoint obligation.
+-/
+theorem boundedFuelPairEnumeratorStructuredCoreEndpointConstruction_of_canonical
+    (hcanonical :
+      forall runner : MachineDescription,
+        runner.SubroutineReady ->
+          BoundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction
+            runner) :
+    forall runner : MachineDescription,
+      BoundedFuelPairEnumeratorStructuredCoreEndpointConstruction runner := by
+  intro runner hrunner
+  exact
+    boundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction_of_canonical
+      (hcanonical runner hrunner)
 
 theorem boundedFuelPairEnumeratorInput_eq_of_inputTape_eq
     {runner : MachineDescription}
@@ -1384,13 +2114,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorS
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
   exact
     boundedFuelPairEnumeratorStructuredConstruction_of_coreEndpoint
-      (by
-        intro runner hrunner
-        -- Remaining structured finite-table obligation: enumerate bounded
-        -- `(limit, fuel)` pairs, invoke the exact-fuel runner endpoint,
-        -- preserve its encoded boolean-word output, and halt one cell right
-        -- of that output for classifier handoff.
-        sorry)
+      (boundedFuelPairEnumeratorStructuredCoreEndpointConstruction_of_canonical
+        (by
+          intro runner hrunner
+          -- Remaining structured finite-table obligation: build the
+          -- canonical materializer/core/projector endpoint that enumerates
+          -- bounded fuel pairs, invokes the exact-fuel runner endpoint, and
+          -- exposes the right-shifted classifier handoff tape.
+          sorry))
 
 end StructuredConstructionTargets
 
