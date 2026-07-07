@@ -24,7 +24,7 @@ open CanonicalLayouts.DovetailLayoutScanner
 
 theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  -- Concrete narrowed finite-machine leaf: unlike the removed generic
+  -- Concrete narrowed finite-machine obligation: unlike the removed generic
   -- raw-bits materializer, this family fixes the output buffer from the same
   -- count-window input index as the source tape.
   sorry

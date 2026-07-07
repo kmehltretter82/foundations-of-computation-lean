@@ -628,8 +628,8 @@ theorem decodedDescriptionInterpreterConstruction_iff_finState :
   · exact decodedDescriptionInterpreterConstruction_of_finState
 
 /--
-Remaining concrete finite-state decoded exact-output primitive leaf for the
-uniform decoded-description interpreter.
+Remaining concrete finite-state decoded exact-output primitive obligation for
+the uniform decoded-description interpreter.
 -/
 theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf :
     DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction := by

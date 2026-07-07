@@ -24,8 +24,9 @@ namespace SelectedProjectionPaddedTailCleanup
 
 theorem guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
     GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
-  -- Remaining reusable finite-machine leaf: erase the guarded encodings of
-  -- the first two structured logical tapes, split by payload and padding shape.
+  -- Remaining reusable finite-machine obligation: erase the guarded encodings
+  -- of the first two structured logical tapes, split by payload and padding
+  -- shape.
   sorry
 
 theorem guardedTwoTapeStructuredPrefixEraserConstruction_core :

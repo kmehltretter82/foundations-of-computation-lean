@@ -21,8 +21,8 @@ merge field order for either padded branch.
 -/
 
 /--
-Branch-parametric finite-machine leaf that transports the restored source
-fields after the parsed inner prefix gap has been closed.
+Branch-parametric finite-machine obligation that transports the restored
+source fields after the parsed inner prefix gap has been closed.
 -/
 theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstruction
     (useAccept : Bool) :

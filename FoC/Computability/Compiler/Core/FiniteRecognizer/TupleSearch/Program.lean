@@ -504,9 +504,10 @@ theorem generatedBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
         (TuringMachine.indexedDecidable selected))
 
 /--
-Remaining concrete finite-table leaf for generated unbounded pair search.  It
-must enumerate {lit}`(inner, outer, selectedFuel)`, rebuild the nested generated
-call, and run the selected recognizer for exactly {lit}`selectedFuel`.
+Remaining concrete finite-table obligation for generated unbounded pair search.
+It must enumerate {lit}`(inner, outer, selectedFuel)`, rebuild the nested
+generated call, and run the selected recognizer for exactly
+{lit}`selectedFuel`.
 -/
 theorem generatedUnboundedHiddenFuelPairFinStateFiniteLeaf :
     GeneratedUnboundedHiddenFuelPairFinStateConstruction := by
@@ -518,8 +519,8 @@ theorem generatedUnboundedHiddenFuelPairFinStateFiniteLeaf :
       sorry
 
 /--
-Remaining concrete finite-table leaf for generated bounded pair search.  It
-must parse the public budget, enumerate bounded {lit}`(inner, outer)` pairs,
+Remaining concrete finite-table obligation for generated bounded pair search.
+It must parse the public budget, enumerate bounded {lit}`(inner, outer)` pairs,
 and dovetail the selected recognizer over hidden exact fuel.
 -/
 theorem generatedBoundedHiddenFuelPairFinStateFiniteLeaf :

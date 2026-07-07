@@ -168,6 +168,8 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSou
 
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+  -- Remaining obligation: construct the assembly-specific live-tail joiner
+  -- without using the refuted arbitrary stage/source joiner route.
   sorry
 
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :

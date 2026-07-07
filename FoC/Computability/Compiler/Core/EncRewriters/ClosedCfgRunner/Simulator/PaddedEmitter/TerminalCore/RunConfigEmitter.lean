@@ -289,6 +289,8 @@ scratch-padded output.
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner :
     FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_configRunner := by
   intro D
+  -- Remaining obligation: decode the padded layout, run the fixed description
+  -- for the encoded stage count, and emit the scratch-padded result.
   sorry
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceSpec_configRunner

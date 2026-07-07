@@ -1333,6 +1333,8 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail) := by
+  -- Remaining obligation: prove the nonempty raw-layout loop reaches the
+  -- right-edge handoff tape.
   sorry
 
 theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge

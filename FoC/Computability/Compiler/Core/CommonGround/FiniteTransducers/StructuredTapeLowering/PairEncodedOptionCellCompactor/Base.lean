@@ -244,9 +244,10 @@ theorem payloadIngressTargetFamilySpec_haltsFromTapeEquiv
 theorem fixedPrefixPayloadIngressTargetFamilyConstruction_core
     (fixedPrefix : List (Option Bool)) :
     FixedPrefixPayloadIngressTargetFamilyConstruction fixedPrefix := by
-  -- Remaining shared finite-machine ingress: skip the fixed prefix, decode
-  -- pair-encoded payload cells into tape 0, emit one marker per payload cell
-  -- on tape 1, and leave tape 2 at the blank compactor output buffer.
+  -- Remaining shared finite-machine ingress obligation: skip the fixed
+  -- prefix, decode pair-encoded payload cells into tape 0, emit one marker per
+  -- payload cell on tape 1, and leave tape 2 at the blank compactor output
+  -- buffer.
   sorry
 
 /-!

@@ -467,10 +467,10 @@ theorem generatedProductExactFuelRunnerConstruction_of_finStateConstructionDecid
         (TuringMachine.indexedDecidable right))
 
 /--
-Remaining decoded exact-output primitive leaf for generated product exact-fuel
-calls. It must parse the nested generated call, preserve the raw input, run
-both selected recognizers for their parsed exact fuels, and halt with canonical
-empty output exactly when both runs accept.
+Remaining decoded exact-output primitive obligation for generated product
+exact-fuel calls. It must parse the nested generated call, preserve the raw
+input, run both selected recognizers for their parsed exact fuels, and halt
+with canonical empty output exactly when both runs accept.
 -/
 theorem generatedProductDecodedExactOutputPrimitiveFiniteLeaf :
     GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction := by

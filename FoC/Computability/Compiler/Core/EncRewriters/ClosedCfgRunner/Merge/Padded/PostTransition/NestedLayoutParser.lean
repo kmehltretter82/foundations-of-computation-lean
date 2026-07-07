@@ -467,15 +467,15 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConst
       hscannerSpec, hrestorerSpec⟩
 
 /--
-Finite-machine leaf that exposes the nested raw layout field from the restored
-outer source fields.
+Finite-machine obligation that exposes the nested raw layout field from the
+restored outer source fields.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction := by
   sorry
 
 /--
-Finite-machine leaf that scans the contextual nested layout window while
+Finite-machine obligation that scans the contextual nested layout window while
 preserving the outer simulator suffix.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction :
@@ -483,8 +483,8 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction :
   sorry
 
 /--
-Finite-machine leaf that restores the checked scanner result to the parsed
-source-fields shape.
+Finite-machine obligation that restores the checked scanner result to the
+parsed source-fields shape.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction := by

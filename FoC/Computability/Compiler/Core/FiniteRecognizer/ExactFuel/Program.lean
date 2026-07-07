@@ -21,9 +21,9 @@ namespace ExactFuel
 namespace StageProgram
 
 /--
-Remaining fully decoded component leaves for the normalized exact-fuel staged
-program.  The first component materializes the protected initial layout from
-decoded generated stage code; the second component recognizes decoded
+Remaining fully decoded component obligations for the normalized exact-fuel
+staged program.  The first component materializes the protected initial layout
+from decoded generated stage code; the second component recognizes decoded
 protected layouts with canonical empty output.
 -/
 theorem exactOutputPrimitiveFullyDecodedComponentFiniteLeaves :
