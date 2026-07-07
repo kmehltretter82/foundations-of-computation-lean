@@ -44,6 +44,17 @@ def FuelSimulatorStructuredEndpointExactIndexedConstruction
       lowered
       (fuelSimulatorStructuredOutputTape attempt)
 
+def FuelSimulatorStructuredEndpointEquivIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered : FuelSimulatorStructuredIndex -> Tape Bool,
+    Structured3EndpointEquivIndexedFamilySpec
+      W
+      fuelSimulatorStructuredInputTape
+      initialized
+      lowered
+      (fuelSimulatorStructuredOutputTape attempt)
+
 /--
 Canonical blank output buffer used when materializing public fuel-simulator
 parser inputs into the three-logical-tape core.
@@ -114,18 +125,6 @@ def FuelSimulatorStructuredExactLoweredCoreSpec
     lowered
 
 /--
-Exact projector behavior for the canonical fuel-simulator endpoint.
--/
-def FuelSimulatorStructuredExactProjectorSpec
-    (attempt : MachineDescription)
-    (projector : MachineDescription) : Prop :=
-  Structured3EndpointExactProjectorSpec
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredLoweredTape attempt i)
-    (fun i => fuelSimulatorStructuredOutputTape attempt i)
-    projector
-
-/--
 Canonical component-level fuel-simulator endpoint spec.
 -/
 def FuelSimulatorStructuredCanonicalEndpointSpec
@@ -193,11 +192,11 @@ theorem fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
 
 /--
 Fuel-simulator component data with the output projector factored through the
-shared exact tape-2 projector route.
+shared equivalence tape-2 projector route.
 -/
-def FuelSimulatorStructuredCanonicalEndpointSharedProjectorComponents
+def FuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorComponents
     (attempt : MachineDescription) : Type :=
-  Structured3CanonicalExactEndpointSharedProjectorComponents
+  Structured3CanonicalEquivEndpointSharedProjectorComponents
     (fun i : FuelSimulatorStructuredIndex =>
       fuelSimulatorStructuredInputTape i)
     (fun i => fuelSimulatorStructuredInitializedTape i)
@@ -207,11 +206,12 @@ def FuelSimulatorStructuredCanonicalEndpointSharedProjectorComponents
     (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
 
 /--
-Existence form of the shared-projector fuel-simulator endpoint components.
+Existence form of the equivalence shared-projector fuel-simulator endpoint
+components.
 -/
-def FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
+def FuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction
     (attempt : MachineDescription) : Prop :=
-  Structured3CanonicalExactEndpointSharedProjectorConstruction
+  Structured3CanonicalEquivEndpointSharedProjectorConstruction
     (fun i : FuelSimulatorStructuredIndex =>
       fuelSimulatorStructuredInputTape i)
     (fun i => fuelSimulatorStructuredInitializedTape i)
@@ -221,7 +221,7 @@ def FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
     (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
 
 /--
-Fuel-simulator parser/core components before installing the shared exact
+Fuel-simulator parser/core components before installing the shared
 tape-2 projector.
 -/
 def FuelSimulatorStructuredCanonicalEndpointCoreComponents
@@ -325,7 +325,7 @@ theorem fuelSimulatorStructuredLoweredCoreConstruction_core
 
 /--
 Target-local parser/core obligation for the fuel-simulator target.  The
-public endpoint theorem below only composes this with the shared exact tape-2
+public endpoint theorem below only composes this with a shared tape-2
 projector.
 -/
 theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
@@ -337,37 +337,52 @@ theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
     (fuelSimulatorStructuredLoweredCoreConstruction_core attempt)
 
 /--
-Install the shared exact tape-2 projector into fuel-simulator core components.
+Install the shared equivalence tape-2 projector into fuel-simulator core
+components.
 -/
-theorem fuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
+theorem fuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
     {attempt : MachineDescription}
     (hcore :
       FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction
         attempt)
     (hprojector :
-      Structured3EndpointExactTape2ProjectorConstruction) :
-    FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
+      Structured3EndpointTape2ProjectorConstruction) :
+    FuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction
       attempt := by
   simpa [FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction,
-    FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointSharedProjectorConstruction_of_coreComponents
+    FuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction] using
+    structured3CanonicalEquivEndpointSharedProjectorConstruction_of_coreComponents
       hcore hprojector
 
 /--
-Shared-projector fuel-simulator components imply ordinary concrete endpoint
-components.
+Equivalence shared-projector fuel-simulator components imply the equivalence
+indexed endpoint family.
 -/
-theorem fuelSimulatorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
     {attempt : MachineDescription}
     (hcomponents :
-      FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction
+      FuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction
         attempt) :
-    FuelSimulatorStructuredCanonicalEndpointComponentConstruction
-      attempt := by
-  simpa [FuelSimulatorStructuredCanonicalEndpointComponentConstruction,
-    FuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
-      hcomponents
+    FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt := by
+  rcases hcomponents with ⟨C⟩
+  exact
+    ⟨C.wrapper,
+      fuelSimulatorStructuredInitializedTape,
+      fuelSimulatorStructuredLoweredTape attempt,
+      C.equivIndexedFamilySpec⟩
+
+/--
+Equivalence-facing fuel-simulator endpoint assembled from the parser/core
+components and the shared equivalence tape-2 projector.
+-/
+theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_core
+    (attempt : MachineDescription) :
+    FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt :=
+  fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
+    (fuelSimulatorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
+      (fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
+        attempt)
+      structured3EndpointTape2ProjectorConstruction_core)
 
 theorem fuelSimulatorStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
@@ -514,9 +529,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShif
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
-  -- Pending migration: rebuild this public exact-output leaf through the
-  -- equivalence-facing shared tape-2 projector route instead of the refuted
-  -- exact shared projector core.
+  -- Legacy exact-output public leaf.  The cleanup route now has
+  -- `fuelSimulatorStructuredEndpointEquivIndexedConstruction_core`; closing
+  -- this equality-based public contract needs either a restricted exact
+  -- projector for this target family or a public contract migration.
   sorry
 
 

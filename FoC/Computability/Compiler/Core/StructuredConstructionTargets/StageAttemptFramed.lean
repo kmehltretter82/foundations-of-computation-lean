@@ -61,6 +61,18 @@ def StageAttemptFramedStructuredEndpointExactIndexedConstruction
       lowered
       stageAttemptFramedStructuredOutputTape
 
+def StageAttemptFramedStructuredEndpointEquivIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered :
+      StageAttemptFramedStructuredIndex attempt -> Tape Bool,
+    Structured3EndpointEquivIndexedFamilySpec
+      W
+      stageAttemptFramedStructuredInputTape
+      initialized
+      lowered
+      stageAttemptFramedStructuredOutputTape
+
 /--
 Canonical blank output buffer used when materializing framed-invocation public
 inputs into the three-logical-tape core.
@@ -135,18 +147,6 @@ def StageAttemptFramedStructuredExactLoweredCoreSpec
     lowered
 
 /--
-Exact projector behavior for the canonical framed-invocation endpoint.
--/
-def StageAttemptFramedStructuredExactProjectorSpec
-    (attempt : MachineDescription)
-    (projector : MachineDescription) : Prop :=
-  Structured3EndpointExactProjectorSpec
-    (fun i : StageAttemptFramedStructuredIndex attempt =>
-      stageAttemptFramedStructuredLoweredTape i)
-    (fun i => stageAttemptFramedStructuredOutputTape i)
-    projector
-
-/--
 Canonical component-level framed-invocation endpoint spec.
 -/
 def StageAttemptFramedStructuredCanonicalEndpointSpec
@@ -216,11 +216,11 @@ theorem stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
 
 /--
 Framed-invocation component data with the output projector factored through
-the shared exact tape-2 projector route.
+the shared equivalence tape-2 projector route.
 -/
-def StageAttemptFramedStructuredCanonicalEndpointSharedProjectorComponents
+def StageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorComponents
     (attempt : MachineDescription) : Type :=
-  Structured3CanonicalExactEndpointSharedProjectorComponents
+  Structured3CanonicalEquivEndpointSharedProjectorComponents
     (fun i : StageAttemptFramedStructuredIndex attempt =>
       stageAttemptFramedStructuredInputTape i)
     (fun i => stageAttemptFramedStructuredInitializedTape i)
@@ -230,11 +230,12 @@ def StageAttemptFramedStructuredCanonicalEndpointSharedProjectorComponents
     (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
 
 /--
-Existence form of the shared-projector framed-invocation endpoint components.
+Existence form of the equivalence shared-projector framed-invocation endpoint
+components.
 -/
-def StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction
+def StageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction
     (attempt : MachineDescription) : Prop :=
-  Structured3CanonicalExactEndpointSharedProjectorConstruction
+  Structured3CanonicalEquivEndpointSharedProjectorConstruction
     (fun i : StageAttemptFramedStructuredIndex attempt =>
       stageAttemptFramedStructuredInputTape i)
     (fun i => stageAttemptFramedStructuredInitializedTape i)
@@ -353,7 +354,7 @@ theorem stageAttemptFramedStructuredLoweredCoreConstruction_core
 
 /--
 Target-local parser/core obligation for the framed-invocation target.  The
-public endpoint theorem below only composes this with the shared exact tape-2
+public endpoint theorem below only composes this with a shared tape-2
 projector.
 -/
 theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
@@ -368,39 +369,56 @@ theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_c
       attempt hattempt)
 
 /--
-Install the shared exact tape-2 projector into framed-invocation core
+Install the shared equivalence tape-2 projector into framed-invocation core
 components.
 -/
-theorem stageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
+theorem stageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
     {attempt : MachineDescription}
     (hcore :
       StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
         attempt)
     (hprojector :
-      Structured3EndpointExactTape2ProjectorConstruction) :
-    StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction
+      Structured3EndpointTape2ProjectorConstruction) :
+    StageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction
       attempt := by
   simpa [
     StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction,
-    StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointSharedProjectorConstruction_of_coreComponents
+    StageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction] using
+    structured3CanonicalEquivEndpointSharedProjectorConstruction_of_coreComponents
       hcore hprojector
 
 /--
-Shared-projector framed-invocation components imply ordinary concrete
-endpoint components.
+Equivalence shared-projector framed-invocation components imply the
+equivalence indexed endpoint family.
 -/
-theorem stageAttemptFramedStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
     {attempt : MachineDescription}
     (hcomponents :
-      StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction
+      StageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction
         attempt) :
-    StageAttemptFramedStructuredCanonicalEndpointComponentConstruction
+    StageAttemptFramedStructuredEndpointEquivIndexedConstruction
       attempt := by
-  simpa [StageAttemptFramedStructuredCanonicalEndpointComponentConstruction,
-    StageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
-      hcomponents
+  rcases hcomponents with ⟨C⟩
+  exact
+    ⟨C.wrapper,
+      stageAttemptFramedStructuredInitializedTape,
+      stageAttemptFramedStructuredLoweredTape,
+      C.equivIndexedFamilySpec⟩
+
+/--
+Equivalence-facing framed-invocation endpoint assembled from the parser/core
+components and the shared equivalence tape-2 projector.
+-/
+theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
+    (attempt : MachineDescription)
+    (hattempt : attempt.SubroutineReady) :
+    StageAttemptFramedStructuredEndpointEquivIndexedConstruction
+      attempt :=
+  stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
+    (stageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
+      (stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
+        attempt hattempt)
+      structured3EndpointTape2ProjectorConstruction_core)
 
 theorem stageAttemptFramedStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}
@@ -628,9 +646,10 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
-  -- Pending migration: rebuild this public exact-output leaf through the
-  -- equivalence-facing shared tape-2 projector route instead of the refuted
-  -- exact shared projector core.
+  -- Legacy exact-output public leaf.  The cleanup route now has
+  -- `stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core`;
+  -- closing this equality-based public contract needs either a restricted
+  -- exact projector for this target family or a public contract migration.
   sorry
 
 

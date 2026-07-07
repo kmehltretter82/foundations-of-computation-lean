@@ -695,78 +695,7 @@ theorem structured3CanonicalExactIndexedEndpointConstruction_of_components
       Structured3CanonicalExactEndpointComponents.spec C⟩
 
 /--
-Exact shared tape-2 projector route for canonical three-tape endpoints.
-
-This is the stronger version of the current equivalence-based tape-2
-projector contract: it must project the third guarded logical tape to the
-literal represented tape, after the standard canonical-sequence handoff bounce.
--/
-structure Structured3EndpointExactTape2ProjectorSpec
-    (projector : MachineDescription) : Prop where
-  subroutineReady : projector.SubroutineReady
-  forward :
-    forall T0 T1 T2 : Tape Bool,
-      projector.HaltsFromTape
-        (canonicalPrimitiveSeqHandoffTape
-          (encodedGuardedStructured3Tapes T0 T1 T2))
-        T2
-  closed :
-    forall T0 T1 T2 : Tape Bool,
-      ExactClosedFromTape projector
-        (canonicalPrimitiveSeqHandoffTape
-          (encodedGuardedStructured3Tapes T0 T1 T2))
-        T2
-
-/--
-Existence wrapper for the exact shared tape-2 projector route.
--/
-def Structured3EndpointExactTape2ProjectorConstruction : Prop :=
-  exists projector : MachineDescription,
-    Structured3EndpointExactTape2ProjectorSpec projector
-
-/--
-The lower tape-2 exact projector route is the shared endpoint projector route
-expected by canonical three-tape endpoint components.
--/
-theorem structured3EndpointExactTape2ProjectorSpec_of_tape2ExactProjectorSpec
-    {projector : MachineDescription}
-    (hprojector :
-      StructuredTape2ExactProjectorSpec projector) :
-    Structured3EndpointExactTape2ProjectorSpec projector where
-  subroutineReady := hprojector.subroutineReady
-  forward := hprojector.forward
-  closed := hprojector.closed
-
-/--
-Construction-level adapter from the lower exact tape-2 projector construction
-to the shared endpoint projector construction.
--/
-theorem structured3EndpointExactTape2ProjectorConstruction_of_tape2ExactProjectorConstruction
-    (hprojector :
-      StructuredTape2ExactProjectorConstruction) :
-    Structured3EndpointExactTape2ProjectorConstruction := by
-  rcases hprojector with ⟨projector, hprojectorSpec⟩
-  exact
-    ⟨projector,
-      structured3EndpointExactTape2ProjectorSpec_of_tape2ExactProjectorSpec
-        hprojectorSpec⟩
-
-/--
-Exact selected-head decoding supplies the shared endpoint tape-2 projector.
--/
-theorem structured3EndpointExactTape2ProjectorConstruction_of_exactHeadDecoder
-    (hdecoder :
-      StructuredSelectedHeadSegmentDecoderExactConstruction) :
-    Structured3EndpointExactTape2ProjectorConstruction :=
-  structured3EndpointExactTape2ProjectorConstruction_of_tape2ExactProjectorConstruction
-    (structuredTape2ExactProjectorConstruction_of_exactHeadDecoder
-      hdecoder)
-
-/--
-The exact shared tape-2 projector route is legacy and over-strong for public
-selected-head endpoints.  New endpoint wrappers should use the
-equivalence-facing shared projector route, which exposes the same projector
-through {name}`Tape.Equiv`.
+Closedness derived from an equivalence-forward deterministic subroutine.
 -/
 theorem closedFromTapeEquiv_of_haltsFromTapeEquiv_of_subroutineReady
     {D : MachineDescription} {Tin Tout : Tape Bool}
@@ -835,81 +764,6 @@ theorem structured3EndpointTape2ProjectorConstruction_core :
     Structured3EndpointTape2ProjectorConstruction :=
   structured3EndpointTape2ProjectorConstruction_of_tape2ProjectorConstruction
     structuredTape2ProjectorConstruction_core
-
-namespace Structured3EndpointExactTape2ProjectorSpec
-
-/--
-Specialize the shared exact tape-2 projector route to one indexed endpoint
-family.
--/
-theorem toEndpointProjectorSpec
-    {ι : Type}
-    {lowered output tape0 tape1 : ι -> Tape Bool}
-    {projector : MachineDescription}
-    (hprojector :
-      Structured3EndpointExactTape2ProjectorSpec projector)
-    (hlowered :
-      forall i : ι,
-        lowered i =
-          encodedGuardedStructured3Tapes
-            (tape0 i) (tape1 i) (output i)) :
-    Structured3EndpointExactProjectorSpec
-      lowered output projector where
-  forward := by
-    intro i
-    simpa [hlowered i] using
-      hprojector.forward (tape0 i) (tape1 i) (output i)
-  closed := by
-    intro i
-    simpa [hlowered i] using
-      hprojector.closed (tape0 i) (tape1 i) (output i)
-
-end Structured3EndpointExactTape2ProjectorSpec
-
-/--
-Concrete endpoint components where the output projector is supplied by one
-shared exact tape-2 projector route.
-
-The {lit}`loweredShape` field records that the lowered structured core leaves the
-public output on logical tape 2.  This lets all four leaves share the same
-projector obligation while keeping their materializers and structured cores
-target-specific.
--/
-structure Structured3CanonicalExactEndpointSharedProjectorComponents
-    {ι : Type}
-    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) where
-  core : CommonGround.FiniteTransducers.Structured.Description
-  initializer : MachineDescription
-  projector : MachineDescription
-  coreWellFormed : core.WellFormed
-  coreHaltTransitionFree : core.HaltTransitionFree
-  coreSupportsRows : SupportsReadWriteRows3 core
-  initializerSubroutineReady : initializer.SubroutineReady
-  projectorSubroutineReady : projector.SubroutineReady
-  loweredShape :
-    forall i : ι,
-      lowered i =
-        encodedGuardedStructured3Tapes
-          (tape0 i) (tape1 i) (output i)
-  materializer :
-    Structured3EndpointExactMaterializerSpec
-      input initialized initializer
-  loweredCore :
-    Structured3EndpointExactLoweredCoreSpec
-      initialized lowered (lowerStructured3Description core)
-  projectorRoute :
-    Structured3EndpointExactTape2ProjectorSpec projector
-
-/--
-Existence wrapper for endpoint components that share an exact tape-2 projector
-route.
--/
-def Structured3CanonicalExactEndpointSharedProjectorConstruction
-    {ι : Type}
-    (input initialized lowered output tape0 tape1 : ι -> Tape Bool) : Prop :=
-  Nonempty
-    (Structured3CanonicalExactEndpointSharedProjectorComponents
-      input initialized lowered output tape0 tape1)
 
 /--
 Canonical endpoint components that share an equivalence-facing tape-2
@@ -1088,36 +942,6 @@ theorem structured3CanonicalExactEndpointCoreComponentConstruction_of_materializ
 namespace Structured3CanonicalExactEndpointCoreComponents
 
 /--
-Install a concrete shared projector into target-specific endpoint core
-components.
--/
-def toSharedProjectorComponents
-    {ι : Type}
-    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
-    (C :
-      Structured3CanonicalExactEndpointCoreComponents
-        input initialized lowered output tape0 tape1)
-    {projector : MachineDescription}
-    (hprojector :
-      Structured3EndpointExactTape2ProjectorSpec projector) :
-    Structured3CanonicalExactEndpointSharedProjectorComponents
-      input initialized lowered output tape0 tape1 where
-  core := C.core
-  initializer := C.initializer
-  projector := projector
-  coreWellFormed := C.coreWellFormed
-  coreHaltTransitionFree := C.coreHaltTransitionFree
-  coreSupportsRows := C.coreSupportsRows
-  initializerSubroutineReady := C.initializerSubroutineReady
-  projectorSubroutineReady := hprojector.subroutineReady
-  loweredShape := C.loweredShape
-  materializer :=
-    C.materializer.toExactMaterializerSpec
-      C.initializerSubroutineReady
-  loweredCore := C.loweredCore
-  projectorRoute := hprojector
-
-/--
 Install an equivalence-facing shared projector into target-specific endpoint
 core components.
 -/
@@ -1150,25 +974,6 @@ def toEquivSharedProjectorComponents
 end Structured3CanonicalExactEndpointCoreComponents
 
 /--
-Target-specific core components plus the shared exact tape-2 projector give
-the shared-projector endpoint component package.
--/
-theorem structured3CanonicalExactEndpointSharedProjectorConstruction_of_coreComponents
-    {ι : Type}
-    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
-    (hcore :
-      Structured3CanonicalExactEndpointCoreComponentConstruction
-        input initialized lowered output tape0 tape1)
-    (hprojector :
-      Structured3EndpointExactTape2ProjectorConstruction) :
-    Structured3CanonicalExactEndpointSharedProjectorConstruction
-      input initialized lowered output tape0 tape1 := by
-  rcases hcore with ⟨C⟩
-  rcases hprojector with ⟨projector, hprojectorSpec⟩
-  exact
-    ⟨C.toSharedProjectorComponents hprojectorSpec⟩
-
-/--
 Target-specific core components plus the shared equivalence tape-2 projector
 give the equivalence shared-projector endpoint component package.
 -/
@@ -1186,50 +991,6 @@ theorem structured3CanonicalEquivEndpointSharedProjectorConstruction_of_coreComp
   rcases hprojector with ⟨projector, hprojectorSpec⟩
   exact
     ⟨C.toEquivSharedProjectorComponents hprojectorSpec⟩
-
-namespace Structured3CanonicalExactEndpointSharedProjectorComponents
-
-/--
-Forget the shared-projector view back to the concrete component record.
--/
-def toComponents
-    {ι : Type}
-    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
-    (C :
-      Structured3CanonicalExactEndpointSharedProjectorComponents
-        input initialized lowered output tape0 tape1) :
-    Structured3CanonicalExactEndpointComponents
-      input initialized lowered output where
-  core := C.core
-  initializer := C.initializer
-  projector := C.projector
-  coreWellFormed := C.coreWellFormed
-  coreHaltTransitionFree := C.coreHaltTransitionFree
-  coreSupportsRows := C.coreSupportsRows
-  initializerSubroutineReady := C.initializerSubroutineReady
-  projectorSubroutineReady := C.projectorSubroutineReady
-  materializer := C.materializer
-  loweredCore := C.loweredCore
-  projectorSpec :=
-    C.projectorRoute.toEndpointProjectorSpec C.loweredShape
-
-end Structured3CanonicalExactEndpointSharedProjectorComponents
-
-/--
-Shared-projector components imply ordinary concrete endpoint components.
--/
-theorem structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
-    {ι : Type}
-    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
-    (h :
-      Structured3CanonicalExactEndpointSharedProjectorConstruction
-        input initialized lowered output tape0 tape1) :
-    Structured3CanonicalExactEndpointComponentConstruction
-      input initialized lowered output := by
-  rcases h with ⟨C⟩
-  exact
-    ⟨Structured3CanonicalExactEndpointSharedProjectorComponents.toComponents
-      C⟩
 
 namespace Structured3CanonicalEquivEndpointSharedProjectorComponents
 

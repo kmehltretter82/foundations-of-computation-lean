@@ -33,6 +33,19 @@ def BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
       lowered
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
 
+def BoundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction
+    (runner : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+  exists initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner -> Tape Bool,
+    Structured3EndpointEquivIndexedFamilySpec
+      W
+      boundedFuelPairEnumeratorStructuredInputTape
+      initialized
+      lowered
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+
 /--
 Canonical blank output buffer used when materializing bounded fuel-pair
 enumerator inputs into the three-logical-tape core.
@@ -120,22 +133,6 @@ def BoundedFuelPairEnumeratorStructuredExactLoweredCoreSpec
     lowered
 
 /--
-Exact projector behavior for the canonical bounded enumerator endpoint.
--/
-def BoundedFuelPairEnumeratorStructuredExactProjectorSpec
-    (runner : MachineDescription)
-    (projector : MachineDescription) : Prop :=
-  Structured3EndpointExactProjectorSpec
-    (fun i :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner =>
-      boundedFuelPairEnumeratorStructuredLoweredTape i)
-    (fun i =>
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-        i)
-    projector
-
-/--
 Canonical component-level bounded fuel-pair enumerator endpoint spec.
 -/
 def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSpec
@@ -219,11 +216,11 @@ theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_comp
 
 /--
 Bounded fuel-pair enumerator component data with the output projector factored
-through the shared exact tape-2 projector route.
+through the shared equivalence tape-2 projector route.
 -/
-def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorComponents
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorComponents
     (runner : MachineDescription) : Type :=
-  Structured3CanonicalExactEndpointSharedProjectorComponents
+  Structured3CanonicalEquivEndpointSharedProjectorComponents
     (fun i :
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
         runner =>
@@ -240,12 +237,12 @@ def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorComponent
       Tape.blank)
 
 /--
-Existence form of the shared-projector bounded fuel-pair enumerator endpoint
-components.
+Existence form of the equivalence shared-projector bounded fuel-pair
+enumerator endpoint components.
 -/
-def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction
+def BoundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction
     (runner : MachineDescription) : Prop :=
-  Structured3CanonicalExactEndpointSharedProjectorConstruction
+  Structured3CanonicalEquivEndpointSharedProjectorConstruction
     (fun i :
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
         runner =>
@@ -263,7 +260,7 @@ def BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruct
 
 /--
 Bounded fuel-pair enumerator parser/core components before installing the
-shared exact tape-2 projector.
+shared tape-2 projector.
 -/
 def BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponents
     (runner : MachineDescription) : Type :=
@@ -422,40 +419,56 @@ theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstru
       runner hrunner)
 
 /--
-Install the shared exact tape-2 projector into bounded fuel-pair enumerator
+Install the shared equivalence tape-2 projector into bounded fuel-pair enumerator
 core components.
 -/
-theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
+theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
     {runner : MachineDescription}
     (hcore :
       BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction
         runner)
     (hprojector :
-      Structured3EndpointExactTape2ProjectorConstruction) :
-    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction
+      Structured3EndpointTape2ProjectorConstruction) :
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction
       runner := by
   simpa [
     BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction,
-    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointSharedProjectorConstruction_of_coreComponents
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction] using
+    structured3CanonicalEquivEndpointSharedProjectorConstruction_of_coreComponents
       hcore hprojector
 
 /--
-Shared-projector bounded fuel-pair enumerator components imply ordinary
-concrete endpoint components.
+Equivalence shared-projector bounded fuel-pair enumerator components imply the
+equivalence indexed endpoint family.
 -/
-theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
+theorem boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
     {runner : MachineDescription}
     (hcomponents :
-      BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction
+      BoundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction
         runner) :
-    BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction
+    BoundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction
       runner := by
-  simpa [
-    BoundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction,
-    BoundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction] using
-    structured3CanonicalExactEndpointComponentConstruction_of_sharedProjector
-      hcomponents
+  rcases hcomponents with ⟨C⟩
+  exact
+    ⟨C.wrapper,
+      boundedFuelPairEnumeratorStructuredInitializedTape,
+      boundedFuelPairEnumeratorStructuredLoweredTape,
+      C.equivIndexedFamilySpec⟩
+
+/--
+Equivalence-facing bounded fuel-pair enumerator endpoint assembled from the
+parser/core components and the shared equivalence tape-2 projector.
+-/
+theorem boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_core
+    (runner : MachineDescription)
+    (hrunner : runner.SubroutineReady) :
+    BoundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction
+      runner :=
+  boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
+    (boundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
+      (boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
+        runner hrunner)
+      structured3EndpointTape2ProjectorConstruction_core)
 
 theorem boundedFuelPairEnumeratorStructuredExactIndexedSpec_of_canonical
     {runner : MachineDescription}
@@ -610,9 +623,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
 
 theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
-  -- Pending migration: rebuild this public exact-output leaf through the
-  -- equivalence-facing shared tape-2 projector route instead of the refuted
-  -- exact shared projector core.
+  -- Legacy exact-output public leaf.  The cleanup route now has
+  -- `boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_core`;
+  -- closing this equality-based public contract needs either a restricted
+  -- exact projector for this target family or a public contract migration.
   sorry
 
 
