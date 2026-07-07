@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeMaterializerEndpoint
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Endpoint
 
 set_option doc.verso true
 

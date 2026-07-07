@@ -6,7 +6,7 @@ set_option doc.verso true
 # Count-window bridge output endpoints
 
 This module keeps normalized-output endpoint contracts for the structured
-count-window bridge out of `ScratchExtCountWindowBridge.lean`, which is already
+count-window bridge out of `ScratchBridge.lean`, which is already
 past the repository's large-file threshold.  The contracts here are weaker
 views of the existing exact/equivalence selected-segment bridge specs and are
 intended for downstream routes that only consume decoded output words.

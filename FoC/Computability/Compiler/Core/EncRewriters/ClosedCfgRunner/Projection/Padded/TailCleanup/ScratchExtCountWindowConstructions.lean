@@ -1285,7 +1285,7 @@ The one-tape materializer contract is kept as a composition boundary up to tape
 equivalence, but this module no longer exports an unproved concrete
 construction for it.  The proved replacement for the decoded-prefix extractor
 is the lowered structured three-tape construction in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge`.
+{module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge`.
 -/
 
 /--

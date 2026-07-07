@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserHandoff
 
 set_option doc.verso true
@@ -9,7 +10,7 @@ This module carries the structured count-window bridge through the output
 projector, scan-source materializer, scratch-count materializer, and
 post-padding scratch-extension construction wrappers.  The lower-level endpoint
 facts and remaining finite-machine leaves stay in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge`.
+{module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge`.
 -/
 
 namespace FoC
