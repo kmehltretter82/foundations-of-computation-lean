@@ -514,18 +514,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShif
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
-  exact
-    fuelSimulatorStructuredConstruction_of_coreEndpoint
-      (fuelSimulatorStructuredCoreEndpointConstruction_of_canonical
-        (by
-          intro attempt
-          exact
-            fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
-              (fuelSimulatorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
-                (fuelSimulatorStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
-                    attempt)
-                  structured3EndpointExactTape2ProjectorConstruction_core))))
+  -- Pending migration: rebuild this public exact-output leaf through the
+  -- equivalence-facing shared tape-2 projector route instead of the refuted
+  -- exact shared projector core.
+  sorry
 
 
 end StructuredConstructionTargets

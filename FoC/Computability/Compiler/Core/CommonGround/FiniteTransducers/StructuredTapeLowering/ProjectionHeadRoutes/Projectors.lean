@@ -14,11 +14,12 @@ namespace Structured
 namespace MultiTapeLowering
 
 /--
-Literal selected-head decoder behavior.
+Legacy literal selected-head decoder behavior.
 
-This is stronger than {name}`StructuredSelectedHeadSegmentDecoderSpec`: it
-requires exact final tape equality, and its closed side records that any halt
-from the selected-head source has that literal target.
+This is stronger than {name}`StructuredSelectedHeadSegmentDecoderSpec` and is
+over-strong for arbitrary public targets.  Public endpoint code should use the
+representative/equivalence-facing selected-head route instead of depending on
+this as a construction target.
 -/
 structure StructuredSelectedHeadSegmentDecoderExactSpec
     (decoder : MachineDescription) : Prop where
@@ -72,7 +73,8 @@ theorem structuredSelectedHeadSegmentDecoderConstruction_of_exact
       hdecoderSpec.toSpec⟩
 
 /--
-Literal tape-2 segment normalizer behavior at an already-selected segment.
+Legacy literal tape-2 segment normalizer behavior at an already-selected
+segment.
 -/
 structure StructuredTape2ExactSegmentNormalizerSpec
     (normalizer : MachineDescription) : Prop where
@@ -317,10 +319,12 @@ theorem seekTape2Description_haltsFrom_endpointHandoff
     using hseek
 
 /--
-Exact tape-2 projector contract for endpoint use.
+Legacy exact tape-2 projector contract.
 
 The input is the endpoint handoff tape because the projector is itself the
-right-hand component of the three-part endpoint wrapper.
+right-hand component of the three-part endpoint wrapper.  This literal target
+shape is over-strong for the public selected-head route; endpoint code should
+use {name}`StructuredTape2ProjectorSpec` or representative wrappers.
 -/
 structure StructuredTape2ExactProjectorSpec
     (projector : MachineDescription) : Prop where

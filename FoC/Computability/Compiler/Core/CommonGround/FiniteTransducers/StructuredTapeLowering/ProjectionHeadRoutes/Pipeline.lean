@@ -329,13 +329,12 @@ theorem structuredTape2ProjectorConstruction_of_exactHeadCleanupForwardSplit
       hsplit)
 
 /--
-Bundle of exact selected-head consequences from one forward-split cleanup
-construction.
+Legacy bundle of exact selected-head consequences from one forward-split
+cleanup construction.
 
-The split premise is the finite-table shape expected for the real cleanup:
-empty rest and nonempty rest are independent finite-control branches.  The
-closed exact facts are derived by functionality once the forward branch runs
-are available.
+This bundle is over-strong for arbitrary public selected-head targets.  The
+public endpoint route should use the equivalence-facing selected-head route
+construction, normally obtained from representative cleanup.
 -/
 structure StructuredSelectedHeadExactDecoderRouteConstruction : Prop where
   exactCleanupForwardSplit :

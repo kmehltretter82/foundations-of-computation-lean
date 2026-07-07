@@ -628,18 +628,10 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_
 
 theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
-  exact
-    stageAttemptFramedStructuredConstruction_of_coreEndpoint
-      (stageAttemptFramedStructuredCoreEndpointConstruction_of_canonical
-        (by
-          intro attempt hattempt
-          exact
-            stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
-              (stageAttemptFramedStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
-                (stageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
-                    attempt hattempt)
-                  structured3EndpointExactTape2ProjectorConstruction_core))))
+  -- Pending migration: rebuild this public exact-output leaf through the
+  -- equivalence-facing shared tape-2 projector route instead of the refuted
+  -- exact shared projector core.
+  sorry
 
 
 end StructuredConstructionTargets

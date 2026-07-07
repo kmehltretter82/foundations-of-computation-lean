@@ -3,10 +3,13 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 set_option doc.verso true
 
 /-!
-# Exact selected-head cleanup contracts
+# Legacy exact selected-head cleanup contracts
 
-This module contains the exact padded-cleanup and selected-head cleanup
-contracts used by the shared tape-2 projector route.
+This module contains legacy literal exact padded-cleanup and selected-head
+cleanup contracts.  The public selected-head endpoint route should use the
+representative/equivalence-facing contracts instead; these literal contracts
+are over-strong for arbitrary public targets whose visible context is smaller
+than the scanner handoff source.
 -/
 
 namespace FoC
@@ -137,13 +140,12 @@ theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_of_const
         hspec⟩
 
 /-!
-## Exact padded cleanup
+## Legacy exact padded cleanup
 
-The equivalence-facing padded cleanup above is enough for normalized-output
-projection, but exact endpoint projectors need the cleanup phase to start from
-the canonical sequence handoff tape and halt on the literal target tape.  The
-selected-head exact route below is just the specialization where the padding is
-the encoded rest block after the selected logical tape.
+The equivalence-facing padded cleanup above is enough for public projection.
+The literal exact route below is retained only as a legacy over-strong
+contract.  It must not be used as a construction target for arbitrary public
+selected-head endpoints.
 -/
 
 def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSpec
@@ -168,10 +170,10 @@ def SelectedSegmentLogicalTapeDecoderPaddedExactCleanupClosedSpec
       target
 
 /--
-Exact cleanup for a padded scanner target.
+Legacy exact cleanup for a padded scanner target.
 
-This is the reusable exact boundary below the selected-head route.  The
-selected-head exact cleanup specializes {lit}`padding` to
+This over-strong boundary specializes selected-head cleanup by literal target
+equality.  The representative cleanup route specializes {lit}`padding` to
 {name}`selectedSegmentLogicalTapeDecoderRestPadding`.
 -/
 structure SelectedSegmentLogicalTapeDecoderPaddedExactCleanupSpec
@@ -529,10 +531,10 @@ def SelectedSegmentLogicalTapeDecoderHeadExactCleanupClosedSpec
       target
 
 /--
-Exact cleanup boundary for selected-head projection.
+Legacy exact cleanup boundary for selected-head projection.
 
-This is the construction target needed by literal endpoint projectors; the
-older cleanup route below remains the equivalence-facing compatibility layer.
+This boundary is over-strong for arbitrary public targets and is not an active
+construction target for public selected-head endpoints.
 -/
 structure SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec
     (cleanup : MachineDescription) : Prop where

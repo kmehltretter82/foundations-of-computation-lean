@@ -24,17 +24,10 @@ open CanonicalLayouts.DovetailLayoutScanner
 
 theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  intro useAccept
-  exact
-    structuredBoolWordRawBitsDecoderIndexedInputMaterializerConstruction_core
-      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-        useAccept)
-      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-        useAccept)
-      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-        useAccept)
-      (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-        useAccept)
+  -- Pending migration: this route cannot use the refuted generic indexed
+  -- raw-bits materializer.  It needs a narrowed materializer whose output
+  -- buffer is functional in the source family.
+  sorry
 
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by

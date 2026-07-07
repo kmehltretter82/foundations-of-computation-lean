@@ -610,18 +610,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorR
 
 theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
-  exact
-    boundedFuelPairEnumeratorStructuredConstruction_of_coreEndpoint
-      (boundedFuelPairEnumeratorStructuredCoreEndpointConstruction_of_canonical
-        (by
-          intro runner hrunner
-          exact
-            boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_components
-              (boundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
-                (boundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
-                    runner hrunner)
-                  structured3EndpointExactTape2ProjectorConstruction_core))))
+  -- Pending migration: rebuild this public exact-output leaf through the
+  -- equivalence-facing shared tape-2 projector route instead of the refuted
+  -- exact shared projector core.
+  sorry
 
 
 end StructuredConstructionTargets

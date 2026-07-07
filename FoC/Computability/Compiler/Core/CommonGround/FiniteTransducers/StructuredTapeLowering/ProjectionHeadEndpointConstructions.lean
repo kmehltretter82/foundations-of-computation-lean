@@ -34,48 +34,37 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConst
     structured3BlankOutputInputMaterializerConstruction_core
       selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
 
-theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction := by
-  -- Remaining finite-table obligation for exact padded cleanup after the
-  -- generated scanner.  The handoff split follows the endpoint bounce shape:
-  -- nil padding, singleton padding, and padding with an existing right cell.
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction := by
+  -- Remaining finite-table obligation for representative cleanup after the
+  -- generated scanner.  The three branches target the canonical padded
+  -- representative, not an arbitrary public target literally.
   sorry
 
-theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction :=
-  selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_of_handoffSplit
-    selectedSegmentLogicalTapeDecoderPaddedExactCleanupHandoffSplitConstruction_core
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_handoffSplit
+    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_core
 
-theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction :=
-  selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_of_paddedExactCleanupForwardSplit
-    selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_representative
+    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
 
-theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction :=
-  selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
-    selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core
+theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_representative
+    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
 
-theorem structuredSelectedHeadExactDecoderRouteConstruction_core :
-    StructuredSelectedHeadExactDecoderRouteConstruction :=
-  structuredSelectedHeadExactDecoderRouteConstruction_of_forwardSplit
-    selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core
-
-theorem structuredSelectedHeadSegmentDecoderExactConstruction_core :
-    StructuredSelectedHeadSegmentDecoderExactConstruction :=
-  structuredSelectedHeadExactDecoderRouteConstruction_core.exactHeadDecoder
-
-theorem structuredTape2ExactProjectorConstruction_core :
-    StructuredTape2ExactProjectorConstruction :=
-  structuredSelectedHeadExactDecoderRouteConstruction_core.exactTape2Projector
-
-theorem structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core :
-    StructuredTape2ProjectorConstruction :=
-  structuredSelectedHeadExactDecoderRouteConstruction_core.tape2Projector
+theorem structuredSelectedHeadDecoderRouteConstruction_core :
+    StructuredSelectedHeadDecoderRouteConstruction :=
+  structuredSelectedHeadDecoderRouteConstruction_of_representativeCleanup
+    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
 
 theorem structuredTape2ProjectorStandaloneConstruction_core :
     StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core
+  selectedHeadRoute_tape2Projector
+    structuredSelectedHeadDecoderRouteConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
@@ -108,17 +97,18 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core
 
 theorem structuredSelectedHeadSegmentDecoderConstruction_core :
     StructuredSelectedHeadSegmentDecoderConstruction :=
-  structuredSelectedHeadExactDecoderRouteConstruction_core.headDecoder
+  selectedHeadRoute_headDecoder
+    structuredSelectedHeadDecoderRouteConstruction_core
 
 theorem structuredTape2SegmentNormalizerConstruction_core :
     StructuredTape2SegmentNormalizerConstruction :=
-  structuredTape2SegmentNormalizerConstruction_of_exact
-    (structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
-      structuredSelectedHeadSegmentDecoderExactConstruction_core)
+  selectedHeadRoute_tape2SegmentNormalizer
+    structuredSelectedHeadDecoderRouteConstruction_core
 
 theorem structuredTape2ProjectorConstruction_core :
     StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core
+  selectedHeadRoute_tape2Projector
+    structuredSelectedHeadDecoderRouteConstruction_core
 
 end MultiTapeLowering
 end Structured

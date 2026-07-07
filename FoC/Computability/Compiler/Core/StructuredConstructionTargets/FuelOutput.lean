@@ -588,18 +588,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineCo
 
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
-  exact
-    fuelOutputStructuredConstruction_of_coreEndpoint
-      (fuelOutputStructuredCoreEndpointConstruction_of_canonical
-        (by
-          intro attempt
-          exact
-            fuelOutputStructuredCanonicalEndpointConstruction_of_components
-              (fuelOutputStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
-                (fuelOutputStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (fuelOutputStructuredCanonicalEndpointCoreComponentConstruction_core
-                    attempt)
-                  structured3EndpointExactTape2ProjectorConstruction_core))))
+  -- Pending migration: rebuild this public exact-output leaf through the
+  -- equivalence-facing shared tape-2 projector route instead of the refuted
+  -- exact shared projector core.
+  sorry
 
 
 end StructuredConstructionTargets
