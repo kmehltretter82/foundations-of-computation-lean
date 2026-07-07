@@ -330,19 +330,42 @@ theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_o
       hmaterializer hcore
 
 /--
-Finite-table leaf for the framed-invocation target.  This is the only
-target-local parser/core obligation; the public endpoint theorem below only
-composes it with the shared exact tape-2 projector.
+Finite-table leaf for the framed-invocation public-input materializer.
+-/
+theorem stageAttemptFramedStructuredIndexedMaterializerConstruction_core
+    (attempt : MachineDescription) :
+    StageAttemptFramedStructuredIndexedMaterializerConstruction
+      attempt := by
+  -- Remaining parser/materializer obligation: recognize controller layout
+  -- inputs and materialize the guarded three-logical-tape input.
+  sorry
+
+/--
+Finite-table leaf for the lowered framed-invocation structured core.
+-/
+theorem stageAttemptFramedStructuredLoweredCoreConstruction_core
+    (attempt : MachineDescription)
+    (_hattempt : attempt.SubroutineReady) :
+    StageAttemptFramedStructuredLoweredCoreConstruction attempt := by
+  -- Remaining structured-core obligation: install the witnessed
+  -- boolean-word result on logical tape 2.
+  sorry
+
+/--
+Target-local parser/core obligation for the framed-invocation target.  The
+public endpoint theorem below only composes this with the shared exact tape-2
+projector.
 -/
 theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
     (attempt : MachineDescription)
-    (_hattempt : attempt.SubroutineReady) :
+    (hattempt : attempt.SubroutineReady) :
     StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
-      attempt := by
-  -- Remaining structured finite-table obligation: build the framed-invocation
-  -- parser/materializer and structured core that installs the simulated
-  -- boolean-word result on logical tape 2.
-  sorry
+      attempt :=
+  stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    (stageAttemptFramedStructuredIndexedMaterializerConstruction_core
+      attempt)
+    (stageAttemptFramedStructuredLoweredCoreConstruction_core
+      attempt hattempt)
 
 /--
 Install the shared exact tape-2 projector into framed-invocation core

@@ -372,18 +372,38 @@ theorem fuelOutputStructuredCanonicalEndpointCoreComponentConstruction_of_materi
       hmaterializer hcore
 
 /--
-Finite-table leaf for the fuel-output target.  This is the only target-local
-parser/core obligation; the public endpoint theorem below only composes it
-with the shared exact tape-2 projector.
+Finite-table leaf for the fuel-output public-input materializer.
+-/
+theorem fuelOutputStructuredIndexedMaterializerConstruction_core
+    (attempt : MachineDescription) :
+    FuelOutputStructuredIndexedMaterializerConstruction
+      attempt := by
+  -- Remaining parser/materializer obligation: recognize halted simulator
+  -- layouts and materialize the guarded three-logical-tape input.
+  sorry
+
+/--
+Finite-table leaf for the lowered fuel-output structured core.
+-/
+theorem fuelOutputStructuredLoweredCoreConstruction_core
+    (attempt : MachineDescription) :
+    FuelOutputStructuredLoweredCoreConstruction attempt := by
+  -- Remaining structured-core obligation: extract the normalized
+  -- boolean-word result code onto logical tape 2.
+  sorry
+
+/--
+Target-local parser/core obligation for the fuel-output target.  The public
+endpoint theorem below only composes this with the shared exact tape-2
+projector.
 -/
 theorem fuelOutputStructuredCanonicalEndpointCoreComponentConstruction_core
     (attempt : MachineDescription) :
     FuelOutputStructuredCanonicalEndpointCoreComponentConstruction
-      attempt := by
-  -- Remaining structured finite-table obligation: build the fuel-output
-  -- parser/materializer and structured core whose logical tape 2 is the
-  -- normalized boolean-word result code for halted simulator layouts.
-  sorry
+      attempt :=
+  fuelOutputStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    (fuelOutputStructuredIndexedMaterializerConstruction_core attempt)
+    (fuelOutputStructuredLoweredCoreConstruction_core attempt)
 
 /--
 Install the shared exact tape-2 projector into fuel-output core components.

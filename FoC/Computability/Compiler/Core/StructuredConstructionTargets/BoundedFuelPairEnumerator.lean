@@ -380,20 +380,46 @@ theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstru
       hmaterializer hcore
 
 /--
-Finite-table leaf for the bounded fuel-pair enumerator target.  This is the
-only target-local parser/core obligation; the public endpoint theorem below
-only composes it with the shared exact tape-2 projector.
+Finite-table leaf for the bounded fuel-pair enumerator public-input
+materializer.
+-/
+theorem boundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction_core
+    (runner : MachineDescription) :
+    BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction
+      runner := by
+  -- Remaining parser/materializer obligation: recognize bounded enumerator
+  -- inputs and materialize the guarded three-logical-tape input.
+  sorry
+
+/--
+Finite-table leaf for the lowered bounded fuel-pair enumerator structured
+core.
+-/
+theorem boundedFuelPairEnumeratorStructuredLoweredCoreConstruction_core
+    (runner : MachineDescription)
+    (_hrunner : runner.SubroutineReady) :
+    BoundedFuelPairEnumeratorStructuredLoweredCoreConstruction
+      runner := by
+  -- Remaining structured-core obligation: enumerate bounded fuel pairs,
+  -- invoke the exact-fuel runner endpoint, and leave the right-shifted
+  -- classifier handoff tape on logical tape 2.
+  sorry
+
+/--
+Target-local parser/core obligation for the bounded fuel-pair enumerator
+target.  The public endpoint theorem below only composes this with the shared
+exact tape-2 projector.
 -/
 theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
     (runner : MachineDescription)
-    (_hrunner : runner.SubroutineReady) :
+    (hrunner : runner.SubroutineReady) :
     BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction
-      runner := by
-  -- Remaining structured finite-table obligation: build the bounded fuel-pair
-  -- parser/materializer and structured core that enumerates bounded fuel
-  -- pairs, invokes the exact-fuel runner endpoint, and leaves the
-  -- right-shifted classifier handoff tape on logical tape 2.
-  sorry
+      runner :=
+  boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    (boundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction_core
+      runner)
+    (boundedFuelPairEnumeratorStructuredLoweredCoreConstruction_core
+      runner hrunner)
 
 /--
 Install the shared exact tape-2 projector into bounded fuel-pair enumerator
