@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.RouteContracts
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Contracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
 
 set_option doc.verso true

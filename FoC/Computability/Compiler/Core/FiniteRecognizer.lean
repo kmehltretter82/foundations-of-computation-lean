@@ -5,16 +5,16 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.C
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.InitialLayout
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
-import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.RouteContracts
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Contracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
-import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.RouteContracts
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Contracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
-import FoC.Computability.Compiler.Core.FiniteRecognizer.ProductRouteContracts
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ProductContracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter
-import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreterRouteContracts
+import FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreterContracts
 
 set_option doc.verso true
 

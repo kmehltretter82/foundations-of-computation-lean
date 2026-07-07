@@ -11,63 +11,6 @@
     "compiler_rel_path": [],
     "decl_name": [],
     "formal_lean_path": [],
-    "route_contracts_file": [
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreterRouteContracts.lean",
-        "value": "DecodedDescriptionInterpreterRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/RouteContracts.lean",
-        "value": "RouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteRecognizer/ProductRouteContracts.lean",
-        "value": "ProductRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/RouteContracts.lean",
-        "value": "RouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerFuelPairSearchRouteContracts.lean",
-        "value": "ControllerFuelPairSearchRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerInvocationRouteContracts.lean",
-        "value": "ControllerInvocationRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerOutputLevelSimulatorRouteContracts.lean",
-        "value": "ControllerOutputLevelSimulatorRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerSearchDriverRouteContracts.lean",
-        "value": "ControllerSearchDriverRouteContracts.lean"
-      }
-    ]
+    "route_contracts_file": []
   }
 }
