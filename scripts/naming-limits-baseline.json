@@ -35,13 +35,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix/Primitive.lean",
         "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/RunLoop/SourceShape.lean",
-        "value": 6
       }
     ],
     "compiler_rel_path": [
@@ -380,13 +373,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/CellSuffix.lean",
         "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/RunLoop/SourceShape.lean",
-        "value": 82
       },
       {
         "key": "compiler_rel_path",

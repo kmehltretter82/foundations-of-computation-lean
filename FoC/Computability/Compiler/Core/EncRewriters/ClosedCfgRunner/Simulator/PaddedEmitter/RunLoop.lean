@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.RunLoop.SourceShape
+import FoC.Computability.Compiler.ClosedCfg.RunLoop.SourceShape
 
 set_option doc.verso true
 
