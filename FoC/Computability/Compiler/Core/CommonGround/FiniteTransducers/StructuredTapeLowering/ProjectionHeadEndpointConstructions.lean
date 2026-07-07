@@ -31,11 +31,43 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConst
   -- of a guarded three-tape encoding, with blank scratch/output tapes.
   sorry
 
-theorem structuredTape2ProjectorStandaloneConstruction_core :
-    StructuredTape2ProjectorConstruction := by
-  -- Generic endpoint projector: seek the third guarded structured segment and
-  -- decode it back to the represented logical tape.
+theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction := by
+  -- Remaining finite-table obligation for exact padded cleanup after the
+  -- generated scanner.  The selected-head cleanup/projector route specializes
+  -- this to the padding produced by the encoded structured suffix.
   sorry
+
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction :=
+  selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_of_paddedExactCleanupForwardSplit
+    selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core
+
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_core :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+    selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core
+
+theorem structuredSelectedHeadExactDecoderRouteConstruction_core :
+    StructuredSelectedHeadExactDecoderRouteConstruction :=
+  structuredSelectedHeadExactDecoderRouteConstruction_of_forwardSplit
+    selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction_core
+
+theorem structuredSelectedHeadSegmentDecoderExactConstruction_core :
+    StructuredSelectedHeadSegmentDecoderExactConstruction :=
+  structuredSelectedHeadExactDecoderRouteConstruction_core.exactHeadDecoder
+
+theorem structuredTape2ExactProjectorConstruction_core :
+    StructuredTape2ExactProjectorConstruction :=
+  structuredSelectedHeadExactDecoderRouteConstruction_core.exactTape2Projector
+
+theorem structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core :
+    StructuredTape2ProjectorConstruction :=
+  structuredSelectedHeadExactDecoderRouteConstruction_core.tape2Projector
+
+theorem structuredTape2ProjectorStandaloneConstruction_core :
+    StructuredTape2ProjectorConstruction :=
+  structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
@@ -67,19 +99,18 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core
   exact ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
 
 theorem structuredSelectedHeadSegmentDecoderConstruction_core :
-    StructuredSelectedHeadSegmentDecoderConstruction := by
-  exact
-    structuredSelectedHeadSegmentDecoderConstruction_of_rawHeadThreeTapeBridgeConstruction
-      selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core
+    StructuredSelectedHeadSegmentDecoderConstruction :=
+  structuredSelectedHeadExactDecoderRouteConstruction_core.headDecoder
 
 theorem structuredTape2SegmentNormalizerConstruction_core :
     StructuredTape2SegmentNormalizerConstruction :=
-  structuredTape2SegmentNormalizerConstruction_of_selectedHeadDecoder
-    structuredSelectedHeadSegmentDecoderConstruction_core
+  structuredTape2SegmentNormalizerConstruction_of_exact
+    (structuredTape2ExactSegmentNormalizerConstruction_of_exactHeadDecoder
+      structuredSelectedHeadSegmentDecoderExactConstruction_core)
 
 theorem structuredTape2ProjectorConstruction_core :
     StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorStandaloneConstruction_core
+  structuredTape2ProjectorStandaloneConstruction_from_exactCleanup_core
 
 end MultiTapeLowering
 end Structured
