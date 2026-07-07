@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadLocalCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder
+import FoC.Computability.Compiler.FST.CountWindow
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindow
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtRawSourceBridge
 

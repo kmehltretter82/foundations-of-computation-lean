@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder
+import FoC.Computability.Compiler.FST.CountWindow
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindow
 
 set_option doc.verso true
@@ -10,7 +10,7 @@ This projection-side module adapts the common count-window raw-source encoder
 construction to the selected-projection scratch-count window shape.  Keeping
 this bridge here avoids importing selected-projection layout machinery into the
 lower-level
-{module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder`.
+{module}`FoC.Computability.Compiler.FST.CountWindow`.
 -/
 
 namespace FoC

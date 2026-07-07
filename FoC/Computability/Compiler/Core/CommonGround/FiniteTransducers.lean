@@ -1,7 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Basic
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerRouteContracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerEndpointRoute
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoderRouteContracts
+import FoC.Computability.Compiler.FST.CountWindow.Contracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AppendWord
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AlternatingOptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
