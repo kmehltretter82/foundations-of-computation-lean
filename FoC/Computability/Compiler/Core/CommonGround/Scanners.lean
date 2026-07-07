@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ShapeClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ConfigurationClosed
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefix
 
 set_option doc.verso true

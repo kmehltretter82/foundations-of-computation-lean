@@ -2,8 +2,8 @@ import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Basic
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Configuration
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Controller
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Dovetail
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ShapeClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ConfigurationClosed
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefix
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Emitters
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Fields

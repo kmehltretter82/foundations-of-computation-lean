@@ -1,8 +1,8 @@
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseAdapters
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.Basic
+import FoC.Computability.Compiler.Dovetail.Scanner.Composition
+import FoC.Computability.Compiler.Dovetail.Scanner.ConfigurationClosed
 import FoC.Computability.Compiler.Core.FixedDescBoundedSim.CodeRightShifted
 
 set_option doc.verso true

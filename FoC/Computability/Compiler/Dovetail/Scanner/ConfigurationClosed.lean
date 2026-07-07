@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed.CellSuffix
+import FoC.Computability.Compiler.Dovetail.Scanner.PrimitiveClosed.CellSuffix
 
 set_option doc.verso true
 

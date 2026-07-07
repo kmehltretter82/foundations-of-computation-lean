@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWord
+import FoC.Computability.Compiler.Dovetail.Scanner.BoolWord
 
 set_option doc.verso true
 

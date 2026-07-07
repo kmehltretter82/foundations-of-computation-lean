@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed.Basic
+import FoC.Computability.Compiler.Dovetail.Scanner.PrimitiveClosed.Basic
 
 set_option doc.verso true
 

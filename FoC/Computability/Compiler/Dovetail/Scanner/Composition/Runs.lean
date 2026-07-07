@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition.Definitions
+import FoC.Computability.Compiler.Dovetail.Scanner.Composition.Definitions
 
 set_option doc.verso true
 

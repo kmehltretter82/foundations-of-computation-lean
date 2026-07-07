@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitLayout.BoolWordQuoter.ControllerInitial.CellPass
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
+import FoC.Computability.Compiler.Dovetail.Scanner.Basic
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind

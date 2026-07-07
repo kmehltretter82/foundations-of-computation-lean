@@ -4,8 +4,8 @@ import FoC.Computability.Compiler.Core.CommonGround.Identity
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.Scanners
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Dovetail
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ShapeClosed
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.ConfigurationClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ShapeClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.ConfigurationClosed
 import FoC.Computability.Compiler.Core.EncRewriters.BoundedLayoutRunner.Parser.Basic
 
 set_option doc.verso true

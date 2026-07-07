@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.PrimitiveClosed
 
 set_option doc.verso true
 
@@ -8,7 +8,7 @@ set_option doc.verso true
 The bool-word scanner is the first length-prefixed payload in a checked
 dovetail-layout scan.  This module keeps the code-origin closed inversions for
 that scanner separate from the primitive field facts in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.PrimitiveClosed`.
+{module}`FoC.Computability.Compiler.Dovetail.Scanner.PrimitiveClosed`.
 -/
 
 namespace FoC

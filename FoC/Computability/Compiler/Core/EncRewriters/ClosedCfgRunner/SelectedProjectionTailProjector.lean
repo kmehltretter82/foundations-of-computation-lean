@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Primitives
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Composition
+import FoC.Computability.Compiler.Dovetail.Scanner.Composition
 
 set_option doc.verso true
 

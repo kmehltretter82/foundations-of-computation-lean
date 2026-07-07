@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.BoolWordClosed
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.CellListClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.BoolWordClosed
+import FoC.Computability.Compiler.Dovetail.Scanner.CellListClosed
 
 set_option doc.verso true
 

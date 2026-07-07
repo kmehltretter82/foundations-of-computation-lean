@@ -13,34 +13,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/Composition/Definitions.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/ConfigurationClosed.lean",
-        "value": 81
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/Basic.lean",
-        "value": 83
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/CellSuffix.lean",
-        "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator/NormalizedRunner/Constructions.lean",
         "value": 91
       },
