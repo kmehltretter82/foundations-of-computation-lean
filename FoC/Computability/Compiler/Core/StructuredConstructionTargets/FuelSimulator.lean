@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorInputMaterializer
 
 set_option doc.verso true
 
@@ -12,20 +12,6 @@ namespace StructuredConstructionTargets
 
 open CommonGround.FiniteTransducers.Structured
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
-
-def FuelSimulatorStructuredIndex : Type :=
-  Sigma (fun _w : Word Bool => Nat × Nat)
-
-def fuelSimulatorStructuredInputCode
-    (i : FuelSimulatorStructuredIndex) : Word MachineCodeSymbol :=
-  PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-    i.1 i.2.1 i.2.2
-
-def fuelSimulatorStructuredInputTape
-    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
-  Tape.input
-    (encodeCodeWordAsInput
-      (fuelSimulatorStructuredInputCode i))
 
 def fuelSimulatorStructuredOutputTape
     (attempt : MachineDescription)
@@ -56,26 +42,6 @@ def FuelSimulatorStructuredEndpointEquivIndexedConstruction
       (fuelSimulatorStructuredOutputTape attempt)
 
 /--
-Canonical blank output buffer used when materializing public fuel-simulator
-parser inputs into the three-logical-tape core.
--/
-def fuelSimulatorStructuredOutputBuffer
-    (_i : FuelSimulatorStructuredIndex) : Tape Bool :=
-  Tape.blank
-
-/--
-Canonical endpoint input to the lowered fuel-simulator structured core.
-
-Tape 0 contains the public generated fuel-input code, tape 1 is blank scratch,
-and tape 2 starts as a blank output buffer.
--/
-def fuelSimulatorStructuredInitializedTape
-    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
-  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
-    (fuelSimulatorStructuredInputTape i)
-    (fuelSimulatorStructuredOutputBuffer i)
-
-/--
 Canonical endpoint output of the lowered fuel-simulator structured core.
 
 The core preserves the public source on logical tape 0, keeps tape 1 blank, and
@@ -88,29 +54,6 @@ def fuelSimulatorStructuredLoweredTape
     (fuelSimulatorStructuredInputTape i)
     Tape.blank
     (fuelSimulatorStructuredOutputTape attempt i)
-
-/--
-Exact materializer behavior needed by the canonical fuel-simulator endpoint.
--/
-def FuelSimulatorStructuredExactMaterializerSpec
-    (materializer : MachineDescription) : Prop :=
-  Structured3EndpointExactMaterializerSpec
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
-    materializer
-
-/--
-Target-specific fuel-simulator materializer obligation before deterministic
-per-input exact closedness is installed by the shared endpoint infrastructure.
--/
-def FuelSimulatorStructuredIndexedMaterializerSpec
-    (materializer : MachineDescription) : Prop :=
-  Structured3EndpointIndexedMaterializerSpec
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
-    materializer
 
 /--
 Exact lowered-core behavior for the canonical fuel-simulator endpoint.
@@ -249,77 +192,6 @@ def FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction
     (fun i => fuelSimulatorStructuredOutputTape attempt i)
     (fun i => fuelSimulatorStructuredInputTape i)
     (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
-
-/--
-Fuel-simulator input parser/materializer construction, separated from the
-lowered structured simulator core.
--/
-def FuelSimulatorStructuredIndexedMaterializerConstruction : Prop :=
-  Structured3EndpointIndexedMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
-
-/--
-Equivalence-facing fuel-simulator input parser/materializer construction.
-
-This is the Phase 3 prototype contract for the public-input materializer: it
-keeps indexed closedness, but allows the initialized guarded tape to be reached
-up to tape equivalence.
--/
-def FuelSimulatorStructuredEquivIndexedMaterializerConstruction :
-    Prop :=
-  Structured3EndpointEquivIndexedMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
-
-/--
-Fuel-simulator materializer through the reusable CommonGround structured-input
-contract, plus the indexed closedness required by endpoint wrappers.
--/
-def FuelSimulatorStructuredEquivInputMaterializerConstruction :
-    Prop :=
-  Structured3EndpointEquivInputMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredOutputBuffer i)
-
-/--
-The existing exact indexed materializer obligation feeds the equivalence-facing
-materializer contract.
--/
-theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_indexed
-    (hmaterializer :
-      FuelSimulatorStructuredIndexedMaterializerConstruction) :
-    FuelSimulatorStructuredEquivIndexedMaterializerConstruction := by
-  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
-    FuelSimulatorStructuredEquivIndexedMaterializerConstruction] using
-    structured3EndpointEquivIndexedMaterializerConstruction_of_exact
-      hmaterializer
-
-theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_inputMaterializer
-    (hmaterializer :
-      FuelSimulatorStructuredEquivInputMaterializerConstruction) :
-    FuelSimulatorStructuredEquivIndexedMaterializerConstruction := by
-  simpa [
-    FuelSimulatorStructuredEquivInputMaterializerConstruction,
-    FuelSimulatorStructuredEquivIndexedMaterializerConstruction,
-    Structured3EndpointEquivInputMaterializerInitialized,
-    fuelSimulatorStructuredInitializedTape] using
-    structured3EndpointEquivIndexedMaterializerConstruction_of_inputMaterializer
-      hmaterializer
-
-theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
-    (hmaterializer :
-      FuelSimulatorStructuredIndexedMaterializerConstruction) :
-    FuelSimulatorStructuredEquivInputMaterializerConstruction := by
-  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
-    FuelSimulatorStructuredEquivInputMaterializerConstruction,
-    Structured3EndpointEquivInputMaterializerInitialized,
-    fuelSimulatorStructuredInitializedTape] using
-    structured3EndpointEquivInputMaterializerConstruction_of_indexed
-      hmaterializer (fun _i => rfl)
 
 /--
 Fuel-simulator lowered structured core data after input materialization.
@@ -475,18 +347,6 @@ theorem fuelSimulatorStructuredLoweredCoreConstruction_core
     FuelSimulatorStructuredLoweredCoreConstruction attempt := by
   -- Remaining structured-core obligation: run the simulator core and leave
   -- the exact simulator-layout output on logical tape 2.
-  sorry
-
-/--
-Finite-table leaf for the fuel-simulator public-input materializer on the
-equivalence-facing endpoint route.
--/
-theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_core :
-    FuelSimulatorStructuredEquivInputMaterializerConstruction := by
-  -- Remaining parser/materializer obligation: recognize generated fuel-input
-  -- codes, materialize the canonical guarded three-logical-tape input through
-  -- the reusable CommonGround structured-input contract, and prove indexed
-  -- closedness for valid fuel-input codes.
   sorry
 
 /--
@@ -661,19 +521,6 @@ theorem fuelSimulatorStructuredCoreEndpointConstruction_of_canonical
   exact
     fuelSimulatorStructuredEndpointExactIndexedConstruction_of_canonical
       (hcanonical attempt)
-
-theorem fuelSimulatorStructuredInputCode_eq_of_inputTape_eq
-    {code : Word MachineCodeSymbol}
-    {i : FuelSimulatorStructuredIndex}
-    (h :
-      Tape.input (encodeCodeWordAsInput code) =
-        fuelSimulatorStructuredInputTape i) :
-    code = fuelSimulatorStructuredInputCode i := by
-  apply encodeCodeWordAsInput_injective
-  exact
-    Tape.input_injective
-      (by
-        simpa [fuelSimulatorStructuredInputTape] using h)
 
 theorem fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
     {attempt : MachineDescription}
