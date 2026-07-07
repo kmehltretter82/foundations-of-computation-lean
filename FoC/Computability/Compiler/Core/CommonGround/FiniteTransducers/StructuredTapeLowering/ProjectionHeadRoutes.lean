@@ -2159,6 +2159,70 @@ theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardConstruction_of_
         hsplitSpec⟩
 
 /--
+Forward exact selected-head cleanup already gives exact closedness.
+
+The cleanup machine is subroutine-ready, so finite-control execution from the
+same input tape is deterministic.  Any public halt from one of these cleanup
+inputs therefore has the same literal target as the forward run.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupSpec_of_forwardSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup where
+  subroutineReady := hcleanup.left
+  forward := hcleanup.right
+  closed := by
+    intro target rest encodedPrefix
+    exact
+      exactClosedFromTape_of_haltsFromTape_of_subroutineReady
+        hcleanup.left
+        (hcleanup.right target rest encodedPrefix)
+
+/--
+Construction-level exact selected-head cleanup from forward exact cleanup.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forward
+    (hcleanup :
+      exists cleanup : MachineDescription,
+        SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSpec
+          cleanup) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderHeadExactCleanupSpec_of_forwardSpec
+        hcleanupSpec⟩
+
+/--
+Construction-level exact selected-head cleanup from the forward branch split.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forward
+    (selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardConstruction_of_split
+      hsplit)
+
+/--
+The forward split and full exact selected-head cleanup constructions are
+equivalent construction targets.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_iff_forwardSplit :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction <->
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction := by
+  constructor
+  · intro hcleanup
+    rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+    exact
+      ⟨cleanup,
+        selectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitSpec_of_spec
+          hcleanupSpec.forwardSpec⟩
+  · exact
+      selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+
+/--
 Literal selected-head decoder behavior.
 
 This is stronger than {name}`StructuredSelectedHeadSegmentDecoderSpec`: it
@@ -2819,6 +2883,284 @@ theorem selectedSegmentLogicalTapeDecoderHeadPipelineSpec_of_cleanupSpec
         hcleanup.left
         hpipelineScan
         (hcleanup.right target rest encodedPrefix)
+
+/--
+The canonical sequence handoff after moving right from a selected-head
+separator is literally the same tape.
+
+After crossing the separator, the physical head is on the first encoded guard
+cell of the selected logical tape, and that encoded guard cell has a second
+physical bit to its right.
+-/
+theorem canonicalPrimitiveSeqHandoffTape_selectedHeadAfterMove
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    canonicalPrimitiveSeqHandoffTape
+        (Tape.move Direction.right
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells
+              (guardLogicalTape target :: rest)))) =
+      Tape.move Direction.right
+        (tapeAtEncodedSplit encodedPrefix
+          (encodedStructuredTapeCells
+            (guardLogicalTape target :: rest))) := by
+  simp [canonicalPrimitiveSeqHandoffTape, tapeAtEncodedSplit,
+    encodedStructuredTapeCells, guardLogicalTape, tapeAtCells,
+    tapeSeparatorCells, logicalTapeCode, logicalCellListBits,
+    logicalCellBits, logicalCellCode, headMarkerCells, Tape.move,
+    Tape.moveLeft, Tape.moveRight]
+
+/--
+Exact selected-head decoder pipeline from an exact cleanup phase.
+
+This is the literal-tape version of
+{name}`selectedSegmentLogicalTapeDecoderHeadPipelineSpec_of_cleanupSpec`.
+The closed side uses deterministic exact halting for the generated move and
+scanner phases, then delegates the final target shape to the exact cleanup
+contract.
+-/
+theorem selectedSegmentLogicalTapeDecoderHeadPipelineExactSpec_of_exactCleanupSpec
+    {cleanup : MachineDescription}
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupSpec cleanup) :
+    StructuredSelectedHeadSegmentDecoderExactSpec
+      (selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+        cleanup) := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderHeadPipelineDescription_subroutineReady
+        hcleanup.subroutineReady
+  · intro target rest encodedPrefix
+    let source :=
+      tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells (guardLogicalTape target :: rest))
+    let moved := Tape.move Direction.right source
+    let scanned :=
+      selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target rest encodedPrefix
+    have hmove :
+        (cursorMoveOnceDescription Direction.right).HaltsFromTape
+          source moved := by
+      exact cursorMoveOnceDescription_haltsFromTape Direction.right source
+    have hscanMoved :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+          moved scanned := by
+      simpa [source, moved, scanned] using
+        selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedHeadPayload
+          target rest encodedPrefix
+    have hmoved :
+        canonicalPrimitiveSeqHandoffTape moved = moved := by
+      simpa [source, moved] using
+        canonicalPrimitiveSeqHandoffTape_selectedHeadAfterMove
+          target rest encodedPrefix
+    have hscan :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+          (canonicalPrimitiveSeqHandoffTape moved)
+          scanned := by
+      rw [hmoved]
+      exact hscanMoved
+    have hpipelineScan :
+        (canonicalPrimitiveSeqDescription
+          (cursorMoveOnceDescription Direction.right)
+          selectedSegmentLogicalTapeDecoderDescription).HaltsFromTape
+            source scanned :=
+      canonicalPrimitiveSeqDescription_haltsFromTape_exact
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady
+        hmove hscan
+    have hpipeline :
+        (selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+          cleanup).HaltsFromTape source target :=
+      by
+        simpa [selectedSegmentLogicalTapeDecoderHeadPipelineDescription,
+          selectedSegmentLogicalTapeDecoderPipelineDescription, source,
+          scanned] using
+          canonicalPrimitiveSeqDescription_haltsFromTape_exact
+            (canonicalPrimitiveSeqDescription_subroutineReady
+              (cursorMoveOnceDescription_subroutineReady Direction.right)
+              selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+            hcleanup.subroutineReady
+            hpipelineScan
+            (hcleanup.forward target rest encodedPrefix)
+    simpa [source] using hpipeline
+  · intro target rest encodedPrefix
+    let source :=
+      tapeAtEncodedSplit encodedPrefix
+        (encodedStructuredTapeCells (guardLogicalTape target :: rest))
+    let moved := Tape.move Direction.right source
+    let scanned :=
+      selectedSegmentLogicalTapeDecoderHeadTargetTape
+        target rest encodedPrefix
+    have hmove :
+        (cursorMoveOnceDescription Direction.right).HaltsFromTape
+          source moved := by
+      exact cursorMoveOnceDescription_haltsFromTape Direction.right source
+    have hscanMoved :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+          moved scanned := by
+      simpa [source, moved, scanned] using
+        selectedSegmentLogicalTapeDecoderDescription_haltsFrom_selectedHeadPayload
+          target rest encodedPrefix
+    have hmoved :
+        canonicalPrimitiveSeqHandoffTape moved = moved := by
+      simpa [source, moved] using
+        canonicalPrimitiveSeqHandoffTape_selectedHeadAfterMove
+          target rest encodedPrefix
+    have hscan :
+        selectedSegmentLogicalTapeDecoderDescription.HaltsFromTape
+          (canonicalPrimitiveSeqHandoffTape moved)
+          scanned := by
+      rw [hmoved]
+      exact hscanMoved
+    have hpipelineScanClosed :
+        ExactClosedFromTape
+          (canonicalPrimitiveSeqDescription
+            (cursorMoveOnceDescription Direction.right)
+            selectedSegmentLogicalTapeDecoderDescription)
+          source scanned :=
+      canonicalPrimitiveSeqDescription_exactClosedFromTape
+        (cursorMoveOnceDescription_subroutineReady Direction.right)
+        selectedSegmentLogicalTapeDecoderDescription_subroutineReady
+        (by
+          intro T hhalt
+          exact
+            MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+              (cursorMoveOnceDescription_subroutineReady
+                Direction.right).right hhalt hmove)
+        (by
+          intro T hhalt
+          exact
+            MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+              selectedSegmentLogicalTapeDecoderDescription_subroutineReady.right
+              hhalt hscan)
+    have hpipelineClosed :
+        ExactClosedFromTape
+          (selectedSegmentLogicalTapeDecoderHeadPipelineDescription
+            cleanup)
+          source target :=
+      by
+        simpa [selectedSegmentLogicalTapeDecoderHeadPipelineDescription,
+          selectedSegmentLogicalTapeDecoderPipelineDescription, source,
+          scanned] using
+          canonicalPrimitiveSeqDescription_exactClosedFromTape
+            (canonicalPrimitiveSeqDescription_subroutineReady
+              (cursorMoveOnceDescription_subroutineReady Direction.right)
+              selectedSegmentLogicalTapeDecoderDescription_subroutineReady)
+            hcleanup.subroutineReady
+            hpipelineScanClosed
+            (hcleanup.closed target rest encodedPrefix)
+    simpa [source] using hpipelineClosed
+
+/-- Build an exact selected-head decoder from an exact cleanup phase. -/
+theorem structuredSelectedHeadSegmentDecoderExactConstruction_of_exactHeadCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction) :
+    StructuredSelectedHeadSegmentDecoderExactConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨selectedSegmentLogicalTapeDecoderHeadPipelineDescription cleanup,
+      selectedSegmentLogicalTapeDecoderHeadPipelineExactSpec_of_exactCleanupSpec
+        hcleanupSpec⟩
+
+/-- Exact tape-2 projector from exact selected-head cleanup. -/
+theorem structuredTape2ExactProjectorConstruction_of_exactHeadCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction) :
+    StructuredTape2ExactProjectorConstruction :=
+  structuredTape2ExactProjectorConstruction_of_exactHeadDecoder
+    (structuredSelectedHeadSegmentDecoderExactConstruction_of_exactHeadCleanup
+      hcleanup)
+
+/-- Equivalence tape-2 projector from exact selected-head cleanup. -/
+theorem structuredTape2ProjectorConstruction_of_exactHeadCleanup
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction) :
+    StructuredTape2ProjectorConstruction :=
+  structuredTape2ProjectorConstruction_of_exact
+    (structuredTape2ExactProjectorConstruction_of_exactHeadCleanup hcleanup)
+
+/-- Exact selected-head decoder from forward-split exact cleanup. -/
+theorem structuredSelectedHeadSegmentDecoderExactConstruction_of_exactHeadCleanupForwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    StructuredSelectedHeadSegmentDecoderExactConstruction :=
+  structuredSelectedHeadSegmentDecoderExactConstruction_of_exactHeadCleanup
+    (selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+      hsplit)
+
+/-- Exact tape-2 projector from forward-split exact cleanup. -/
+theorem structuredTape2ExactProjectorConstruction_of_exactHeadCleanupForwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    StructuredTape2ExactProjectorConstruction :=
+  structuredTape2ExactProjectorConstruction_of_exactHeadCleanup
+    (selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+      hsplit)
+
+/-- Equivalence tape-2 projector from forward-split exact cleanup. -/
+theorem structuredTape2ProjectorConstruction_of_exactHeadCleanupForwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    StructuredTape2ProjectorConstruction :=
+  structuredTape2ProjectorConstruction_of_exact
+    (structuredTape2ExactProjectorConstruction_of_exactHeadCleanupForwardSplit
+      hsplit)
+
+/--
+Bundle of exact selected-head consequences from one forward-split cleanup
+construction.
+
+The split premise is the finite-table shape expected for the real cleanup:
+empty rest and nonempty rest are independent finite-control branches.  The
+closed exact facts are derived by functionality once the forward branch runs
+are available.
+-/
+structure StructuredSelectedHeadExactDecoderRouteConstruction : Prop where
+  exactCleanupForwardSplit :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction
+  exactCleanup :
+    SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction
+  exactHeadDecoder :
+    StructuredSelectedHeadSegmentDecoderExactConstruction
+  headDecoder :
+    StructuredSelectedHeadSegmentDecoderConstruction
+  exactTape2Projector :
+    StructuredTape2ExactProjectorConstruction
+  tape2Projector :
+    StructuredTape2ProjectorConstruction
+
+/-- Build the exact selected-head route bundle from forward-split cleanup. -/
+theorem structuredSelectedHeadExactDecoderRouteConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupForwardSplitConstruction) :
+    StructuredSelectedHeadExactDecoderRouteConstruction := by
+  let hcleanup :
+      SelectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction :=
+    selectedSegmentLogicalTapeDecoderHeadExactCleanupConstruction_of_forwardSplit
+      hsplit
+  let hexactHead :
+      StructuredSelectedHeadSegmentDecoderExactConstruction :=
+    structuredSelectedHeadSegmentDecoderExactConstruction_of_exactHeadCleanup
+      hcleanup
+  let hhead :
+      StructuredSelectedHeadSegmentDecoderConstruction :=
+    structuredSelectedHeadSegmentDecoderConstruction_of_exact
+      hexactHead
+  let hexactProjector :
+      StructuredTape2ExactProjectorConstruction :=
+    structuredTape2ExactProjectorConstruction_of_exactHeadDecoder
+      hexactHead
+  let hprojector :
+      StructuredTape2ProjectorConstruction :=
+    structuredTape2ProjectorConstruction_of_exact
+      hexactProjector
+  exact
+    { exactCleanupForwardSplit := hsplit
+      exactCleanup := hcleanup
+      exactHeadDecoder := hexactHead
+      headDecoder := hhead
+      exactTape2Projector := hexactProjector
+      tape2Projector := hprojector }
 
 /-- Build a selected-head decoder from a padded selected-head cleanup. -/
 theorem structuredSelectedHeadSegmentDecoderConstruction_of_headCleanup
