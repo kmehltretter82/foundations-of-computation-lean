@@ -5,7 +5,7 @@ set_option doc.verso true
 /-!
 # Structured input materializer frontier
 
-Reusable weak input-materializer leaf for routes that only need
+Reusable blank-output input-materializer aliases for routes that only need
 {lit}`HaltsFromTapeEquiv` into a guarded three-tape encoding with blank output.
 -/
 
@@ -29,16 +29,13 @@ def Structured3BlankOutputInputMaterializerConstruction
     source
     (fun _input => Tape.blank)
 
-theorem structured3BlankOutputInputMaterializerConstruction_core
+theorem structured3BlankOutputInputMaterializerConstruction_iff
     {ι : Type}
     (source : ι -> Tape Bool) :
-    Structured3BlankOutputInputMaterializerConstruction source := by
-  -- WARNING: This arbitrary-source frontier is too strong as stated. The
-  -- target encodes the literal `Tape` representation, so equivalent inputs
-  -- such as `Tape.blank` and `{ left := [none], head := none, right := [] }`
-  -- can require non-equivalent encoded targets. Specialize this to a canonical
-  -- source family or canonicalize the source before encoding.
-  sorry
+    Structured3BlankOutputInputMaterializerConstruction source <->
+      Structured3InputMaterializerConstruction
+        source (fun _input => Tape.blank) := by
+  rfl
 
 end FiniteTransducers
 end CommonGround

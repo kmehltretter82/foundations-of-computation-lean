@@ -1067,6 +1067,23 @@ theorem leadingBlankLeftShiftTargetTapeWithPadding_move_left_move_right_padding_
     simp [leadingBlankLeftShiftTargetTapeWithPadding, tapeAtCells,
       Tape.move, Tape.moveLeft, Tape.moveRight]
 
+theorem rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_move_left_move_right_cons
+    (baseLeft : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) (paddingScratch : Nat)
+    (pad : Option Bool) (rightPadding : List (Option Bool)) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+            baseLeft current leftRest paddingScratch
+            (pad :: rightPadding))) =
+      rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseLeft current leftRest paddingScratch
+        (pad :: rightPadding) := by
+  cases current <;> cases leftRest <;> cases baseLeft <;>
+    cases paddingScratch <;> cases pad <;> cases rightPadding <;>
+      simp [rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
+        tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
+
 def twoRightBlankLocalGapCompactorDescription : MachineDescription :=
   canonicalSeqDescription
     rightBlankLocalGapCompactorDescription
@@ -1089,6 +1106,120 @@ theorem repeatedRightBlankLocalGapCompactorDescription_subroutineReady
   | succ passes ih =>
       exact canonicalSeqDescription_subroutineReady
         rightBlankLocalGapCompactorDescription_subroutineReady ih
+
+theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replicate
+    (passes rightPaddingScratch : Nat)
+    (baseTail : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) :
+    (repeatedRightBlankLocalGapCompactorDescription passes).HaltsFromTape
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (rightBlankLocalGapBaseLeft passes baseTail)
+        current leftRest 2
+        (List.replicate (rightPaddingScratch + passes)
+          (none : Option Bool)))
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseTail current leftRest 2
+        (List.replicate (rightPaddingScratch + 2 * passes)
+          (none : Option Bool))) := by
+  induction passes generalizing rightPaddingScratch with
+  | zero =>
+      simpa [repeatedRightBlankLocalGapCompactorDescription,
+        rightBlankLocalGapBaseLeft] using
+        CommonGround.Identity.exactIdentityDescription_haltsFromTape
+          (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+            baseTail current leftRest 2
+            (List.replicate rightPaddingScratch (none : Option Bool)))
+  | succ passes ih =>
+      rw [repeatedRightBlankLocalGapCompactorDescription]
+      exact
+        canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+          rightBlankLocalGapCompactorDescription_subroutineReady
+          (repeatedRightBlankLocalGapCompactorDescription_subroutineReady
+            passes)
+          (by
+            simpa [rightBlankLocalGapBaseLeft, List.replicate_succ,
+              Nat.add_assoc, List.append_assoc] using
+              rightBlankLocalGapCompactorDescription_haltsFrom_gapBase_succ_to_nextSource
+                passes baseTail current leftRest 2
+                (List.replicate (rightPaddingScratch + passes)
+                  (none : Option Bool)))
+          (by
+            simpa [List.replicate_succ, Nat.add_assoc, Nat.add_comm,
+              Nat.add_left_comm] using
+              rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_move_left_move_right_cons
+                (rightBlankLocalGapBaseLeft passes baseTail)
+                current leftRest 2 (none : Option Bool)
+                (none ::
+                  List.replicate (rightPaddingScratch + passes)
+                    (none : Option Bool)))
+          (by
+            have hrest :=
+              ih (rightPaddingScratch + 2)
+            simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
+              Nat.mul_succ, Nat.succ_eq_add_one]
+              using hrest)
+
+theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replicate_append
+    (passes rightPaddingScratch : Nat)
+    (baseTail : List (Option Bool)) (current : Bool)
+    (leftRest : Word Bool) (rightPadding : List (Option Bool)) :
+    (repeatedRightBlankLocalGapCompactorDescription passes).HaltsFromTape
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        (rightBlankLocalGapBaseLeft passes baseTail)
+        current leftRest 2
+        (List.append
+          (List.replicate (rightPaddingScratch + passes)
+            (none : Option Bool))
+          rightPadding))
+      (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+        baseTail current leftRest 2
+        (List.append
+          (List.replicate (rightPaddingScratch + 2 * passes)
+            (none : Option Bool))
+          rightPadding)) := by
+  induction passes generalizing rightPaddingScratch with
+  | zero =>
+      simpa [repeatedRightBlankLocalGapCompactorDescription,
+        rightBlankLocalGapBaseLeft] using
+        CommonGround.Identity.exactIdentityDescription_haltsFromTape
+          (rightBlankLocalGapCompactorSourceTapeWithBaseAndRight
+            baseTail current leftRest 2
+            (List.append
+              (List.replicate rightPaddingScratch (none : Option Bool))
+              rightPadding))
+  | succ passes ih =>
+      rw [repeatedRightBlankLocalGapCompactorDescription]
+      exact
+        canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+          rightBlankLocalGapCompactorDescription_subroutineReady
+          (repeatedRightBlankLocalGapCompactorDescription_subroutineReady
+            passes)
+          (by
+            simpa [rightBlankLocalGapBaseLeft, List.replicate_succ,
+              Nat.add_assoc, List.append_assoc] using
+              rightBlankLocalGapCompactorDescription_haltsFrom_gapBase_succ_to_nextSource
+                passes baseTail current leftRest 2
+                (List.append
+                  (List.replicate (rightPaddingScratch + passes)
+                    (none : Option Bool))
+                  rightPadding))
+          (by
+            simpa [List.replicate_succ, Nat.add_assoc, Nat.add_comm,
+              Nat.add_left_comm, List.append_assoc] using
+              rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_move_left_move_right_cons
+                (rightBlankLocalGapBaseLeft passes baseTail)
+                current leftRest 2 (none : Option Bool)
+                (none ::
+                  List.append
+                    (List.replicate (rightPaddingScratch + passes)
+                      (none : Option Bool))
+                    rightPadding))
+          (by
+            have hrest :=
+              ih (rightPaddingScratch + 2)
+            simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
+              Nat.mul_succ, Nat.succ_eq_add_one, List.append_assoc]
+              using hrest)
 
 theorem twoRightBlankLocalGapCompactorDescription_subroutineReady :
     twoRightBlankLocalGapCompactorDescription.SubroutineReady :=

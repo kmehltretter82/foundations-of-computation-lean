@@ -56,6 +56,76 @@ def selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
             target padding encodedPrefix)
           (none : Option Bool) }
 
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_left
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+      target padding encodedPrefix).left =
+      target.left := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_head
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+      target padding encodedPrefix).head =
+      target.head := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_right
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+      target padding encodedPrefix).right =
+      target.right ++
+        List.replicate
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputPaddingLength
+            target padding encodedPrefix)
+          (none : Option Bool) := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_cells
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+          target padding encodedPrefix) =
+      Tape.cells target ++
+        List.replicate
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputPaddingLength
+            target padding encodedPrefix)
+          (none : Option Bool) := by
+  simp [selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape,
+    Tape.cells, List.append_assoc]
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_normalizedOutput
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    Tape.normalizedOutput
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+          target padding encodedPrefix) =
+      Tape.normalizedOutput target := by
+  change
+    (Tape.cells
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+          target padding encodedPrefix)).filterMap (fun cell => cell) =
+      (Tape.cells target).filterMap (fun cell => cell)
+  rw [selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_cells]
+  simp [List.filterMap_append]
+
+theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_contextLength
+    (target : Tape Bool) (padding : List (Option Bool))
+    (encodedPrefix : List (Option Bool)) :
+    Tape.contextLength
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+          target padding encodedPrefix) =
+      Tape.contextLength target +
+        selectedSegmentLogicalTapeDecoderPaddedCleanupOutputPaddingLength
+          target padding encodedPrefix := by
+  simp [selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape,
+    Tape.contextLength, List.length_append]
+  lia
+
 theorem selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_equiv
     (target : Tape Bool) (padding : List (Option Bool))
     (encodedPrefix : List (Option Bool)) :
@@ -324,6 +394,93 @@ def SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitCons
     SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitSpec
       cleanup
 
+def SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+    (cleanup : MachineDescription) : Prop :=
+  SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupNilPaddingSpec
+      cleanup ∧
+    (cleanup.SubroutineReady ∧
+      forall (target : Tape Bool) (pad : Option Bool)
+        (padding encodedPrefix : List (Option Bool)),
+        cleanup.HaltsFromTape
+          (canonicalPrimitiveSeqHandoffTape
+            (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+              target (pad :: padding) encodedPrefix))
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+            target (pad :: padding) encodedPrefix))
+
+def SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction :
+    Prop :=
+  exists cleanup : MachineDescription,
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+      cleanup
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec_of_handoffSplitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hsingle, hlong⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hsingle with ⟨_hreadySingle, hsingleRun⟩
+  rcases hlong with ⟨_hreadyLong, hlongRun⟩
+  constructor
+  · exact ⟨hready, hnilRun⟩
+  · refine ⟨hready, ?_⟩
+    intro target pad padding encodedPrefix
+    cases padding with
+    | nil =>
+        exact hsingleRun target pad encodedPrefix
+    | cons next padding =>
+        exact hlongRun target pad next padding encodedPrefix
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitSpec_of_forwardSplitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  exact
+    ⟨⟨hready, hnilRun⟩,
+      ⟨hready, fun target pad encodedPrefix =>
+        hconsRun target pad [] encodedPrefix⟩,
+      ⟨hready, fun target pad next padding encodedPrefix =>
+        hconsRun target pad (next :: padding) encodedPrefix⟩⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_handoffSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec_of_handoffSplitSpec
+        hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitSpec_of_forwardSplitSpec
+        hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_iff_handoffSplit :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction <->
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_of_forwardSplit
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_handoffSplit
+
 theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_of_handoffSplitSpec
     {cleanup : MachineDescription}
     (hsplit :
@@ -347,6 +504,50 @@ theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_
       | cons next padding =>
           exact hlongRun target pad next padding encodedPrefix
 
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_of_forwardSplitSpec
+    {cleanup : MachineDescription}
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec
+      cleanup := by
+  rcases hsplit with ⟨hnil, hcons⟩
+  rcases hnil with ⟨hready, hnilRun⟩
+  rcases hcons with ⟨_hreadyCons, hconsRun⟩
+  refine ⟨hready, ?_⟩
+  intro target padding encodedPrefix
+  cases padding with
+  | nil =>
+      exact hnilRun target encodedPrefix
+  | cons pad padding =>
+      exact hconsRun target pad padding encodedPrefix
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec_of_forwardSpec
+    {cleanup : MachineDescription}
+    (hforward :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec
+        cleanup) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+      cleanup := by
+  rcases hforward with ⟨hready, hrun⟩
+  exact
+    ⟨⟨hready, fun target encodedPrefix =>
+        hrun target [] encodedPrefix⟩,
+      ⟨hready, fun target pad padding encodedPrefix =>
+        hrun target (pad :: padding) encodedPrefix⟩⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_iff_forwardSplitSpec
+    (cleanup : MachineDescription) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec
+        cleanup <->
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec
+        cleanup := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec_of_forwardSpec
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_of_forwardSplitSpec
+
 theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_handoffSplit
     (hsplit :
       SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction) :
@@ -357,6 +558,35 @@ theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConst
       selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_of_handoffSplitSpec
         hsplitSpec⟩
 
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction := by
+  rcases hsplit with ⟨cleanup, hsplitSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSpec_of_forwardSplitSpec
+        hsplitSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_forward
+    (hforward :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction := by
+  rcases hforward with ⟨cleanup, hforwardSpec⟩
+  exact
+    ⟨cleanup,
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitSpec_of_forwardSpec
+        hforwardSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_iff_forwardSplit :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction <->
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_forward
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_forwardSplit
+
 theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_handoffSplit
     (hsplit :
       SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction) :
@@ -364,6 +594,49 @@ theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction
   selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forward
     (selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_handoffSplit
       hsplit)
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forwardSplit
+    (hsplit :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction :=
+  selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forward
+    (selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_forwardSplit
+      hsplit)
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_construction
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction := by
+  rcases hcleanup with ⟨cleanup, hcleanupSpec⟩
+  exact
+    ⟨cleanup,
+      ⟨hcleanupSpec.subroutineReady, hcleanupSpec.forward⟩⟩
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_construction
+    (hcleanup :
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction) :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction :=
+  selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_forward
+    (selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_construction
+      hcleanup)
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_iff_forward :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction <->
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardConstruction_of_construction
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forward
+
+theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_iff_forwardSplit :
+    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction <->
+      SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction := by
+  constructor
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_of_construction
+  · exact
+      selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forwardSplit
 
 end MultiTapeLowering
 end Structured

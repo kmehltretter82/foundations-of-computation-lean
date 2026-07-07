@@ -96,6 +96,34 @@ theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
         hA hB hAhalts hmove hBactual,
       hTequiv⟩
 
+theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTapeEquiv Tin Tmid)
+    (hmove : Tape.move handoffMove Tmid = Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (seqSubroutine A B handoffMove).HaltsFromTapeEquiv Tin Tout := by
+  rcases hAhalts with ⟨TmidActual, hAactual, hTmidActualEquiv⟩
+  let TnextActual := Tape.move handoffMove TmidActual
+  have hTnextEquiv : Tape.Equiv Tnext TnextActual := by
+    rw [← hmove]
+    exact Tape.Equiv.symm (Tape.Equiv.move hTmidActualEquiv handoffMove)
+  rcases hBhalts with ⟨ToutBActual, hBactual, hToutBActualEquiv⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := B)
+        (Tin := Tnext)
+        (Tin' := TnextActual)
+        (Tout := ToutBActual)
+        hTnextEquiv hBactual with
+    ⟨ToutActual, hBactualFromActual, hToutActualEquiv⟩
+  exact
+    ⟨ToutActual,
+      seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        hA hB hAactual rfl hBactualFromActual,
+      Tape.Equiv.trans hToutActualEquiv hToutBActualEquiv⟩
+
 theorem seqSubroutine_haltsWithTape_of_haltsWithTape_eq
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

@@ -617,6 +617,38 @@ def selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput
     Tape Bool :=
   Tape.blank
 
+/-- Named target family for the raw selected-head materializer ingress. -/
+def selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget
+    (input : SelectedSegmentLogicalTapeDecoderRawHeadIngressIndex) :
+    Tape Bool :=
+  selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape
+    input.1 input.2.1 input.2.2
+
+theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape_eq_materializerTarget
+    (target : Tape Bool) (rest : List (Tape Bool))
+    (encodedPrefix : List (Option Bool)) :
+    selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape
+        target rest encodedPrefix =
+      structured3InputMaterializerTargetTape
+        (selectedSegmentLogicalTapeDecoderRawHeadSourceTape
+          target rest encodedPrefix)
+        Tape.blank := by
+  rfl
+
+theorem selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget_eq
+    (input : SelectedSegmentLogicalTapeDecoderRawHeadIngressIndex) :
+    selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget input =
+      structured3InputMaterializerTargetTape
+        (selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
+          input)
+        (selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput
+          input) := by
+  cases input with
+  | mk target restAndPrefix =>
+      cases restAndPrefix with
+      | mk rest encodedPrefix =>
+          rfl
+
 /-- Structured three-tape output for the raw selected-head decoder backend. -/
 def selectedSegmentLogicalTapeDecoderRawHeadFinalSourceTape
     (target : Tape Bool) (rest : List (Tape Bool))
@@ -713,6 +745,25 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeSpec_of_structured3
       selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTape,
       structured3InputMaterializerTargetTape] using hrun
 
+theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeSpec_of_targetFamilySpec
+    {materializer : MachineDescription}
+    (hmaterializer :
+      Structured3InputTargetFamilySpec
+        selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
+        selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget
+        materializer) :
+    SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeSpec
+      materializer := by
+  constructor
+  · exact hmaterializer.left
+  · intro target rest encodedPrefix
+    have hrun :=
+      hmaterializer.right (target, (rest, encodedPrefix))
+    simpa [
+      selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource,
+      selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget,
+      selectedSegmentLogicalTapeDecoderRawHeadSourceTape] using hrun
+
 theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_of_structured3InputMaterializerConstruction
     (hmaterializer :
       Structured3InputMaterializerConstruction
@@ -723,6 +774,18 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_of_str
   exact
     ⟨materializer,
       selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeSpec_of_structured3InputMaterializerSpec
+        hmaterializerSpec⟩
+
+theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_of_targetFamilyConstruction
+    (hmaterializer :
+      Structured3InputTargetFamilyConstruction
+        selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
+        selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget) :
+    SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
+  rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
+  exact
+    ⟨materializer,
+      selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeSpec_of_targetFamilySpec
         hmaterializerSpec⟩
 
 /--

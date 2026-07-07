@@ -1,5 +1,6 @@
 import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanner.Basic
 import FoC.Computability.Compiler.Core.DovetailInitLayout.BoolWordQuoter.ControllerInitial.CellPass
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailLayoutScanner.Basic
@@ -370,6 +371,22 @@ theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_headerBoolWord
   rw [
     countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_encodedLayoutCells]
   rw [countWindowRawSourceEncoderEncodedLayoutCells_eq_headerBoolWord]
+
+theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_normalizedOutput
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    Tape.normalizedOutput
+        (countWindowRawSourceEncoderTargetTapeNoCountPadding
+          skipped count (some tailFirst :: tail)) =
+      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeOutputWord
+        skipped count tailFirst tail := by
+  rw [countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_headerBoolWord]
+  rw [tapeAtCells_normalizedOutput]
+  simp [
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeOutputWord,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits,
+    List.filterMap_append,
+    Function.comp_def]
 
 theorem countWindowRawSourceEncoder_tapeAtCells_moveRight_moveLeft_append_headerBits
     (pref right : List (Option Bool)) :
@@ -795,67 +812,6 @@ theorem countWindowRawSourceEncoderRawBoundaryTape_rewind_haltsFromTape
           (List.replicate count.length (none : Option Bool))
           tail)
 
-def rightMoveAcrossThreeBlanksDescription : MachineDescription where
-  stateCount := 4
-  start := 0
-  halt := 3
-  transitions :=
-    [ transition 0 none none Direction.right 1
-    , transition 1 none none Direction.right 2
-    , transition 2 none none Direction.right 3 ]
-
-theorem rightMoveAcrossThreeBlanksDescription_wellFormed :
-    rightMoveAcrossThreeBlanksDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := rightMoveAcrossThreeBlanksDescription.transitions)
-      (stateCount := rightMoveAcrossThreeBlanksDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := rightMoveAcrossThreeBlanksDescription.transitions)
-      (by decide)
-
-theorem rightMoveAcrossThreeBlanksDescription_haltTransitionFree :
-    rightMoveAcrossThreeBlanksDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := rightMoveAcrossThreeBlanksDescription.transitions)
-    (state := rightMoveAcrossThreeBlanksDescription.halt)
-    (by decide)
-
-theorem rightMoveAcrossThreeBlanksDescription_subroutineReady :
-    rightMoveAcrossThreeBlanksDescription.SubroutineReady :=
-  ⟨rightMoveAcrossThreeBlanksDescription_wellFormed,
-    rightMoveAcrossThreeBlanksDescription_haltTransitionFree⟩
-
-theorem rightMoveAcrossThreeBlanksDescription_run
-    (left right : List (Option Bool)) :
-    rightMoveAcrossThreeBlanksDescription.runConfig 3
-        { state := rightMoveAcrossThreeBlanksDescription.start
-          tape :=
-            tapeAtCells left
-              (none :: none :: none :: right) } =
-      { state := rightMoveAcrossThreeBlanksDescription.halt
-        tape :=
-          tapeAtCells
-            (none :: none :: none :: left)
-            right } := by
-  cases right <;>
-    simp [rightMoveAcrossThreeBlanksDescription, runConfig,
-      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight]
-
-theorem rightMoveAcrossThreeBlanksDescription_haltsFromTape
-    (left right : List (Option Bool)) :
-    rightMoveAcrossThreeBlanksDescription.HaltsFromTape
-      (tapeAtCells left
-        (none :: none :: none :: right))
-      (tapeAtCells
-        (none :: none :: none :: left)
-        right) := by
-  refine ⟨3, ?_⟩
-  constructor <;>
-    rw [rightMoveAcrossThreeBlanksDescription_run]
-
 def countWindowRawSourceEncoderScanToCountWindowStartDescription :
     MachineDescription :=
   seqSubroutine rightEdgeScanDescription
@@ -938,58 +894,6 @@ theorem countWindowRawSourceEncoderScanToCountWindowStartDescription_haltsFromTa
             (List.append
               (List.replicate count.length (none : Option Bool))
               tail))
-
-def rightMoveAcrossTwoBlanksDescription : MachineDescription where
-  stateCount := 3
-  start := 0
-  halt := 2
-  transitions :=
-    [ transition 0 none none Direction.right 1
-    , transition 1 none none Direction.right 2 ]
-
-theorem rightMoveAcrossTwoBlanksDescription_wellFormed :
-    rightMoveAcrossTwoBlanksDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := rightMoveAcrossTwoBlanksDescription.transitions)
-      (stateCount := rightMoveAcrossTwoBlanksDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := rightMoveAcrossTwoBlanksDescription.transitions)
-      (by decide)
-
-theorem rightMoveAcrossTwoBlanksDescription_haltTransitionFree :
-    rightMoveAcrossTwoBlanksDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := rightMoveAcrossTwoBlanksDescription.transitions)
-    (state := rightMoveAcrossTwoBlanksDescription.halt)
-    (by decide)
-
-theorem rightMoveAcrossTwoBlanksDescription_subroutineReady :
-    rightMoveAcrossTwoBlanksDescription.SubroutineReady :=
-  ⟨rightMoveAcrossTwoBlanksDescription_wellFormed,
-    rightMoveAcrossTwoBlanksDescription_haltTransitionFree⟩
-
-theorem rightMoveAcrossTwoBlanksDescription_run
-    (left right : List (Option Bool)) :
-    rightMoveAcrossTwoBlanksDescription.runConfig 2
-        { state := rightMoveAcrossTwoBlanksDescription.start
-          tape := tapeAtCells left (none :: none :: right) } =
-      { state := rightMoveAcrossTwoBlanksDescription.halt
-        tape := tapeAtCells (none :: none :: left) right } := by
-  cases right <;>
-    simp [rightMoveAcrossTwoBlanksDescription, runConfig,
-      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
-      Tape.read, Tape.write, Tape.move, Tape.moveRight]
-
-theorem rightMoveAcrossTwoBlanksDescription_haltsFromTape
-    (left right : List (Option Bool)) :
-    rightMoveAcrossTwoBlanksDescription.HaltsFromTape
-      (tapeAtCells left (none :: none :: right))
-      (tapeAtCells (none :: none :: left) right) := by
-  refine ⟨2, ?_⟩
-  constructor <;>
-    rw [rightMoveAcrossTwoBlanksDescription_run]
 
 def countWindowRawSourceEncoderScanToBeforeCountWindowDescription :
     MachineDescription :=
@@ -1471,6 +1375,84 @@ def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction :
     Prop :=
   exists emitter : MachineDescription,
     CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec emitter
+
+def CountWindowRawSourceEncoderRawBoundaryOutputRouteFamily : Prop :=
+  forall (skipped count : Word Bool)
+    (tailFirst : Bool) (tail : List (Option Bool)),
+    exists emitter : MachineDescription,
+      emitter.SubroutineReady ∧
+        emitter.HaltsFromTapeWithOutput
+          (countWindowRawSourceEncoderRawBoundaryTape
+            skipped count (some tailFirst :: tail))
+          (Tape.normalizedOutput
+            (countWindowRawSourceEncoderTargetTapeNoCountPadding
+              skipped count (some tailFirst :: tail)))
+
+theorem countWindowRawSourceEncoderRawBoundaryOutputRouteFamily_blankSentinel :
+    CountWindowRawSourceEncoderRawBoundaryOutputRouteFamily := by
+  intro skipped count tailFirst tail
+  refine
+    ⟨CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription
+        skipped count tailFirst,
+      ?_, ?_⟩
+  · exact
+      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
+        skipped count tailFirst
+  · have hroute :=
+      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundary_blankSentinelEndToEnd_haltsWithOutput
+        skipped count tailFirst tail
+    simpa [
+      countWindowRawSourceEncoderRawBoundaryTape,
+      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape,
+      countWindowRawSourceEncoderTargetTapeNoCountPadding_normalizedOutput]
+      using hroute
+
+def CountWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily : Prop :=
+  forall (skipped count : Word Bool)
+    (tailFirst : Bool) (tail : List (Option Bool)),
+    exists emitter : MachineDescription,
+      emitter.SubroutineReady ∧
+        emitter.HaltsFromTapeEquiv
+          (countWindowRawSourceEncoderRawBoundaryTape
+            skipped count (some tailFirst :: tail))
+          (countWindowRawSourceEncoderTargetTapeNoCountPadding
+            skipped count (some tailFirst :: tail))
+
+theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily_blankSentinel :
+    CountWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily := by
+  intro skipped count tailFirst tail
+  let route :=
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription
+      skipped count tailFirst
+  refine
+    ⟨CommonGround.SameHeadComposition.leftRightSeqDescription
+        route rightEdgeRewindDescription,
+      ?_, ?_⟩
+  · exact
+      CommonGround.SameHeadComposition.leftRightSeqDescription_subroutineReady
+        (CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
+          skipped count tailFirst)
+        rightEdgeRewindDescription_subroutineReady
+  · exact
+      CommonGround.SameHeadComposition.leftRightSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
+        (CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
+          skipped count tailFirst)
+        rightEdgeRewindDescription_subroutineReady
+        (by
+          simpa [route, countWindowRawSourceEncoderRawBoundaryTape,
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape] using
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundary_blankSentinelEndToEnd_haltsEquiv
+              skipped count tailFirst tail)
+        (by
+          simpa [countWindowRawSourceEncoderEncodedLayoutRightEdgeTape,
+            countWindowRawSourceEncoderEncodedLayoutBits,
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeTape,
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape,
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits] using
+            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape_moveRight
+              skipped count tailFirst tail)
+        (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
+          skipped count tailFirst tail).toEquiv
 
 theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
     (hemitter :

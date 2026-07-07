@@ -2364,9 +2364,9 @@ private theorem countedSuffixBoundaryLocatorSourceTape_eq_leftAdvanceCurrentTape
     List.map_append, List.append_assoc, Tape.move, Tape.moveLeft,
     tapeAtCells]
 
-theorem countedSuffixBoundaryLocatorConstruction_core :
-    CountedSuffixBoundaryLocatorConstruction := by
-  refine ⟨countedSuffixBoundaryLocatorDescription, ?_⟩
+theorem countedSuffixBoundaryLocatorDescription_spec :
+    CountedSuffixBoundaryLocatorSpec
+      countedSuffixBoundaryLocatorDescription := by
   constructor
   · exact countedSuffixBoundaryLocatorDescription_subroutineReady
   · intro pref suffixRest suffixFirst guardBit tailFirst tail
@@ -2529,6 +2529,29 @@ theorem countedSuffixBoundaryLocatorConstruction_core :
                           (none : Option Bool))
                         (some guardBit :: some tailFirst :: tail))))
             hPrefixRightRewind
+
+theorem countedSuffixBoundaryLocatorDescription_ready :
+    countedSuffixBoundaryLocatorDescription.SubroutineReady :=
+  countedSuffixBoundaryLocatorDescription_spec.left
+
+theorem countedSuffixBoundaryLocatorDescription_haltsFromTape
+    (pref suffixRest : Word Bool)
+    (suffixFirst guardBit tailFirst : Bool)
+    (tail : List (Option Bool)) :
+    countedSuffixBoundaryLocatorDescription.HaltsFromTape
+      (countedSuffixBoundaryLocatorSourceTape
+        pref (suffixFirst :: suffixRest) (some guardBit)
+        (some tailFirst :: tail))
+      (countedSuffixBoundaryLocatorTargetTape
+        pref (suffixFirst :: suffixRest) (some guardBit)
+        (some tailFirst :: tail)) :=
+  countedSuffixBoundaryLocatorDescription_spec.right
+    pref suffixRest suffixFirst guardBit tailFirst tail
+
+theorem countedSuffixBoundaryLocatorConstruction_core :
+    CountedSuffixBoundaryLocatorConstruction :=
+  ⟨countedSuffixBoundaryLocatorDescription,
+    countedSuffixBoundaryLocatorDescription_spec⟩
 
 end FiniteTransducers
 end CommonGround

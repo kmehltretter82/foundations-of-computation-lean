@@ -15,6 +15,16 @@ namespace Computability
 namespace CommonGround
 namespace FiniteTransducers
 
+theorem tapeAtCells_replicate_none_left_equiv_empty
+    (padding : Nat) (right : List (Option Bool)) :
+    Tape.Equiv
+      (tapeAtCells
+        (List.replicate padding (none : Option Bool)) right)
+      (tapeAtCells [] right) := by
+  cases right <;>
+    simp [Tape.Equiv, Tape.dropTrailingNone, tapeAtCells,
+      FoC.Computability.dropTrailingNone_replicate_none]
+
 theorem tapeAtCells_moveRight_cons
     (leftRev : List (Option Bool)) (cell : Option Bool)
     (rest : List (Option Bool)) :

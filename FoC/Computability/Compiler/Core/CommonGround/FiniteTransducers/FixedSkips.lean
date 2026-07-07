@@ -101,6 +101,119 @@ theorem rightMoveAcrossFourBitsDescription_haltsFromTape_bits
     rightMoveAcrossFourBitsDescription_haltsFromTape
       b0 b1 b2 b3 left right
 
+def rightMoveAcrossThreeBlanksDescription : MachineDescription where
+  stateCount := 4
+  start := 0
+  halt := 3
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 1 none none Direction.right 2
+    , transition 2 none none Direction.right 3 ]
+
+theorem rightMoveAcrossThreeBlanksDescription_wellFormed :
+    rightMoveAcrossThreeBlanksDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := rightMoveAcrossThreeBlanksDescription.transitions)
+      (stateCount := rightMoveAcrossThreeBlanksDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := rightMoveAcrossThreeBlanksDescription.transitions)
+      (by decide)
+
+theorem rightMoveAcrossThreeBlanksDescription_haltTransitionFree :
+    rightMoveAcrossThreeBlanksDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := rightMoveAcrossThreeBlanksDescription.transitions)
+    (state := rightMoveAcrossThreeBlanksDescription.halt)
+    (by decide)
+
+theorem rightMoveAcrossThreeBlanksDescription_subroutineReady :
+    rightMoveAcrossThreeBlanksDescription.SubroutineReady :=
+  ⟨rightMoveAcrossThreeBlanksDescription_wellFormed,
+    rightMoveAcrossThreeBlanksDescription_haltTransitionFree⟩
+
+theorem rightMoveAcrossThreeBlanksDescription_run
+    (left right : List (Option Bool)) :
+    rightMoveAcrossThreeBlanksDescription.runConfig 3
+        { state := rightMoveAcrossThreeBlanksDescription.start
+          tape :=
+            tapeAtCells left
+              (none :: none :: none :: right) } =
+      { state := rightMoveAcrossThreeBlanksDescription.halt
+        tape :=
+          tapeAtCells
+            (none :: none :: none :: left)
+            right } := by
+  cases right <;>
+    simp [rightMoveAcrossThreeBlanksDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem rightMoveAcrossThreeBlanksDescription_haltsFromTape
+    (left right : List (Option Bool)) :
+    rightMoveAcrossThreeBlanksDescription.HaltsFromTape
+      (tapeAtCells left
+        (none :: none :: none :: right))
+      (tapeAtCells
+        (none :: none :: none :: left)
+        right) := by
+  refine ⟨3, ?_⟩
+  constructor <;>
+    rw [rightMoveAcrossThreeBlanksDescription_run]
+
+def rightMoveAcrossTwoBlanksDescription : MachineDescription where
+  stateCount := 3
+  start := 0
+  halt := 2
+  transitions :=
+    [ transition 0 none none Direction.right 1
+    , transition 1 none none Direction.right 2 ]
+
+theorem rightMoveAcrossTwoBlanksDescription_wellFormed :
+    rightMoveAcrossTwoBlanksDescription.WellFormed := by
+  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+  · exact transition_wellFormed_of_all
+      (l := rightMoveAcrossTwoBlanksDescription.transitions)
+      (stateCount := rightMoveAcrossTwoBlanksDescription.stateCount)
+      (by decide)
+  · exact transition_deterministic_of_all
+      (l := rightMoveAcrossTwoBlanksDescription.transitions)
+      (by decide)
+
+theorem rightMoveAcrossTwoBlanksDescription_haltTransitionFree :
+    rightMoveAcrossTwoBlanksDescription.HaltTransitionFree :=
+  transition_notFrom_of_all
+    (l := rightMoveAcrossTwoBlanksDescription.transitions)
+    (state := rightMoveAcrossTwoBlanksDescription.halt)
+    (by decide)
+
+theorem rightMoveAcrossTwoBlanksDescription_subroutineReady :
+    rightMoveAcrossTwoBlanksDescription.SubroutineReady :=
+  ⟨rightMoveAcrossTwoBlanksDescription_wellFormed,
+    rightMoveAcrossTwoBlanksDescription_haltTransitionFree⟩
+
+theorem rightMoveAcrossTwoBlanksDescription_run
+    (left right : List (Option Bool)) :
+    rightMoveAcrossTwoBlanksDescription.runConfig 2
+        { state := rightMoveAcrossTwoBlanksDescription.start
+          tape := tapeAtCells left (none :: none :: right) } =
+      { state := rightMoveAcrossTwoBlanksDescription.halt
+        tape := tapeAtCells (none :: none :: left) right } := by
+  cases right <;>
+    simp [rightMoveAcrossTwoBlanksDescription, runConfig,
+      stepConfig, lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+theorem rightMoveAcrossTwoBlanksDescription_haltsFromTape
+    (left right : List (Option Bool)) :
+    rightMoveAcrossTwoBlanksDescription.HaltsFromTape
+      (tapeAtCells left (none :: none :: right))
+      (tapeAtCells (none :: none :: left) right) := by
+  refine ⟨2, ?_⟩
+  constructor <;>
+    rw [rightMoveAcrossTwoBlanksDescription_run]
+
 end FiniteTransducers
 end CommonGround
 

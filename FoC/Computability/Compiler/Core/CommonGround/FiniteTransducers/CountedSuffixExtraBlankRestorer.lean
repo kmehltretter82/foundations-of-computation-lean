@@ -58,20 +58,44 @@ def CountedSuffixExtraBlankRestorerConstruction : Prop :=
   exists restorer : MachineDescription,
     CountedSuffixExtraBlankRestorerSpec restorer
 
+def countedSuffixExtraBlankRestorerDescription : MachineDescription :=
+  rightEdgeRewindDescription
+
+theorem countedSuffixExtraBlankRestorerDescription_spec :
+    CountedSuffixExtraBlankRestorerSpec
+      countedSuffixExtraBlankRestorerDescription := by
+  constructor
+  · exact rightEdgeRewindDescription_subroutineReady
+  · intro pref suffixRest suffixFirst tail
+    exact
+      rightEdgeRewindDescription_haltsFromTapeWithBase []
+        (List.append pref (suffixFirst :: suffixRest))
+        (none ::
+          none ::
+          none ::
+          List.append
+            (List.replicate suffixRest.length (none : Option Bool))
+            tail)
+
+theorem countedSuffixExtraBlankRestorerDescription_ready :
+    countedSuffixExtraBlankRestorerDescription.SubroutineReady :=
+  countedSuffixExtraBlankRestorerDescription_spec.left
+
+theorem countedSuffixExtraBlankRestorerDescription_haltsFromTape
+    (pref suffixRest : Word Bool) (suffixFirst : Bool)
+    (tail : List (Option Bool)) :
+    countedSuffixExtraBlankRestorerDescription.HaltsFromTape
+      (countedSuffixExtraBlankRightGapSourceTape
+        pref suffixRest suffixFirst tail)
+      (countedSuffixExtraBlankRestoredSourceTape
+        pref suffixRest suffixFirst tail) :=
+  countedSuffixExtraBlankRestorerDescription_spec.right
+    pref suffixRest suffixFirst tail
+
 theorem countedSuffixExtraBlankRestorerConstruction_core :
-    CountedSuffixExtraBlankRestorerConstruction := by
-  exact
-    ⟨rightEdgeRewindDescription,
-      rightEdgeRewindDescription_subroutineReady,
-      fun pref suffixRest suffixFirst tail =>
-        rightEdgeRewindDescription_haltsFromTapeWithBase []
-          (List.append pref (suffixFirst :: suffixRest))
-          (none ::
-            none ::
-            none ::
-            List.append
-              (List.replicate suffixRest.length (none : Option Bool))
-              tail)⟩
+    CountedSuffixExtraBlankRestorerConstruction :=
+  ⟨countedSuffixExtraBlankRestorerDescription,
+    countedSuffixExtraBlankRestorerDescription_spec⟩
 
 end FiniteTransducers
 end CommonGround

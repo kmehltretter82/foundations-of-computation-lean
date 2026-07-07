@@ -1,6 +1,31 @@
+import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.BlankSentinelFinalizer
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.EmitPulledRawBit
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.CellSuffixLoop
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.CountedBoundary
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.EndpointSupport
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.EraseRawFootprintBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.EraseTailHeadBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.LeftMoveAcrossFour
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependCellChunks
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependCellChunksBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependEncodedLayout
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependEncodedLayoutBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependFixedFourBits
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependFixedFourBitsBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependLengthChunks
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PrependLengthChunksBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.PullNearestRawBit
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.MarkerAwarePull
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.MarkedCellSuffixLoop
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.FixedBranchLoop
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.RestoreBlankSentinel
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountWindowRawEncoder.RawBoundaryRightEdgeEmitter.TailHandoff
 import FoC.Computability.Compiler.Core.CommonGround.Identity
+import FoC.Computability.Compiler.Core.CommonGround.SameHeadComposition
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTableChecks
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ConcreteRefresh
@@ -48,253 +73,6 @@ namespace CommonGround
 namespace FiniteTransducers
 namespace CountWindowRawSourceEncoder
 namespace RawBoundaryRightEdgeEmitter
-
-def sourceTape
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    Tape Bool :=
-  tapeAtCells
-    (List.append ((List.append skipped count).reverse.map some) [none])
-    (none ::
-      none ::
-      none ::
-      List.append
-        (List.replicate count.length (none : Option Bool))
-        tail)
-
-def encodedLayoutBits (layout : Word Bool) : Word Bool :=
-  encodeCodeWordAsInput
-    (MachineCodeSymbol.header :: encodeBoolWordAppend layout [])
-
-def rightEdgeTape
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) : Tape Bool :=
-  tapeAtCells
-    ((encodedLayoutBits (List.append skipped count)).reverse.map some)
-    (some tailFirst :: tail)
-
-def preRewindTape
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) : Tape Bool :=
-  Tape.move Direction.left
-    (rightEdgeTape skipped count tailFirst tail)
-
-theorem sourceTape_cells
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    Tape.cells (sourceTape skipped count tail) =
-      none ::
-        List.append ((List.append skipped count).map some)
-          (none ::
-            none ::
-            none ::
-            List.append
-              (List.replicate count.length (none : Option Bool))
-              tail) := by
-  simp [sourceTape, Tape.cells, tapeAtCells, List.reverse_append,
-    List.map_reverse, List.append_assoc]
-
--- Defaulted source view for the finite leaf: raw layout bits are followed by
--- the erased count-window gap and then the live tail.
-theorem sourceTape_defaultedCells
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    List.map optionBitDefaultFalse
-        (Tape.cells (sourceTape skipped count tail)) =
-      false ::
-        List.append (List.append skipped count)
-          (false ::
-            false ::
-              false ::
-                List.append (List.replicate count.length false)
-                  (tail.map optionBitDefaultFalse)) := by
-  rw [sourceTape_cells]
-  simp [List.map_append, List.append_assoc,
-    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
-    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
-
-def entryTape
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    Tape Bool :=
-  Tape.move Direction.left (sourceTape skipped count tail)
-
-def entryDescription : MachineDescription where
-  stateCount := 2
-  start := 0
-  halt := 1
-  transitions :=
-    [ transition 0 none none Direction.left 1 ]
-
-theorem entryDescription_wellFormed :
-    entryDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := entryDescription.transitions)
-      (stateCount := entryDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := entryDescription.transitions)
-      (by decide)
-
-theorem entryDescription_haltTransitionFree :
-    entryDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := entryDescription.transitions)
-    (state := entryDescription.halt)
-    (by decide)
-
-theorem entryDescription_subroutineReady :
-    entryDescription.SubroutineReady :=
-  ⟨entryDescription_wellFormed,
-    entryDescription_haltTransitionFree⟩
-
-theorem entryDescription_run_sourceTape
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    entryDescription.runConfig 1
-        { state := entryDescription.start
-          tape := sourceTape skipped count tail } =
-      { state := entryDescription.halt
-        tape := entryTape skipped count tail } := by
-  simp [entryDescription, entryTape, sourceTape, tapeAtCells, runConfig,
-    stepConfig, lookupTransition, Matches, transition, Tape.read, Tape.write,
-    Tape.move, Tape.moveLeft]
-
-theorem entryDescription_haltsFrom_sourceTape
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    entryDescription.HaltsFromTape
-      (sourceTape skipped count tail)
-      (entryTape skipped count tail) := by
-  refine ⟨1, ?_⟩
-  constructor <;>
-    rw [entryDescription_run_sourceTape]
-
-theorem entryTape_moveRight
-    (skipped count : Word Bool) (tail : List (Option Bool)) :
-    Tape.move Direction.right (entryTape skipped count tail) =
-      sourceTape skipped count tail := by
-  rw [entryTape, sourceTape]
-  exact
-    tapeAtCells_move_right_move_left_append_singleton
-      ((List.append skipped count).reverse.map some)
-      (none : Option Bool)
-      (none ::
-        none ::
-        none ::
-        List.append
-          (List.replicate count.length (none : Option Bool))
-          tail)
-
-theorem rightEdgeTape_cells
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    Tape.cells (rightEdgeTape skipped count tailFirst tail) =
-      List.append
-        ((encodedLayoutBits (List.append skipped count)).map some)
-        (some tailFirst :: tail) := by
-  rw [rightEdgeTape, encodedLayoutBits]
-  change
-    Tape.cells
-        (tapeAtCells
-          ((encodeCodeWordAsInput
-            (MachineCodeSymbol.header ::
-              encodeBoolWordAppend (List.append skipped count) [])).reverse.map
-            some)
-          (some tailFirst :: tail)) =
-      List.append
-        ((encodeCodeWordAsInput
-          (MachineCodeSymbol.header ::
-            encodeBoolWordAppend (List.append skipped count) [])).map some)
-        (some tailFirst :: tail)
-  rw [show
-      (encodeCodeWordAsInput
-        (MachineCodeSymbol.header ::
-          encodeBoolWordAppend (List.append skipped count) [])).reverse.map
-          some =
-        List.append
-          ((encodeCodeWordAsInput
-            (encodeBoolWordAppend (List.append skipped count) [])).reverse.map
-            some)
-          [some false, some false, some false, some false] by
-    simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput,
-      List.map_append, List.append_assoc]]
-  simp [Tape.cells, tapeAtCells, encodeCodeWordAsInput,
-    encodeCodeSymbolAsInput]
-
--- Defaulted target view just before the final rewind: the encoded layout is
--- immediately followed by the nonblank live-tail head.
-theorem rightEdgeTape_defaultedCells
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    List.map optionBitDefaultFalse
-        (Tape.cells (rightEdgeTape skipped count tailFirst tail)) =
-      List.append
-        (encodedLayoutBits (List.append skipped count))
-        (tailFirst :: tail.map optionBitDefaultFalse) := by
-  rw [rightEdgeTape_cells]
-  simp [List.map_append,
-    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
-    FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
-
-private theorem encodedLayoutBits_eq_headerQuoteBits
-    (layout : Word Bool) :
-    encodedLayoutBits layout =
-      List.append
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            layout.length)
-          (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
-            layout)) := by
-  exact
-    (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassHeaderQuoteBits_eq_encodeBoolWordAppend
-      layout).symm
-
-private theorem encodedLayoutBits_eq_header_length_cells
-    (layout : Word Bool) :
-    encodedLayoutBits layout =
-      List.append
-        (encodeCodeSymbolAsInput MachineCodeSymbol.header)
-        (List.append
-          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-            layout.length)
-          (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
-            layout)) :=
-  encodedLayoutBits_eq_headerQuoteBits layout
-
-def rightToLeftEncodedLayoutBits (layout : Word Bool) : Word Bool :=
-  List.append
-    (EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.preservingCellPassCellBits
-      layout).reverse
-    (List.append
-      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
-        layout.length).reverse
-      (encodeCodeSymbolAsInput MachineCodeSymbol.header).reverse)
-
-private theorem rightToLeftEncodedLayoutBits_eq_reverse
-    (layout : Word Bool) :
-    rightToLeftEncodedLayoutBits layout =
-      (encodedLayoutBits layout).reverse := by
-  rw [encodedLayoutBits_eq_header_length_cells]
-  simp [rightToLeftEncodedLayoutBits, List.reverse_append,
-    List.append_assoc]
-
-theorem rightEdgeTape_eq_rightToLeftEncodedLayoutBits
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rightEdgeTape skipped count tailFirst tail =
-      tapeAtCells
-        ((rightToLeftEncodedLayoutBits
-          (List.append skipped count)).map some)
-        (some tailFirst :: tail) := by
-  rw [rightEdgeTape, rightToLeftEncodedLayoutBits_eq_reverse]
-
-theorem preRewindTape_eq_rightToLeftEncodedLayoutBits
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    preRewindTape skipped count tailFirst tail =
-      Tape.move Direction.left
-        (tapeAtCells
-          ((rightToLeftEncodedLayoutBits
-            (List.append skipped count)).map some)
-          (some tailFirst :: tail)) := by
-  rw [preRewindTape, rightEdgeTape_eq_rightToLeftEncodedLayoutBits]
 
 /-!
 ## Structured raw-layout cell emitter
@@ -579,6 +357,27 @@ def structuredRawBoundaryOutputTape
 def structuredRawBoundaryRightEdgeEmitterOutputTape
     (layout : Word Bool) : Tape Bool :=
   structuredRawBoundaryOutputTape (encodedLayoutBits layout)
+
+theorem structuredRawBoundaryOutputTape_cells
+    (bits : Word Bool) :
+    Tape.cells (structuredRawBoundaryOutputTape bits) =
+      bits.map some ++ [none] := by
+  simp [structuredRawBoundaryOutputTape, Tape.cells]
+
+theorem structuredRawBoundaryOutputTape_normalizedOutput
+    (bits : Word Bool) :
+    Tape.normalizedOutput (structuredRawBoundaryOutputTape bits) = bits := by
+  rw [Tape.normalizedOutput, structuredRawBoundaryOutputTape_cells,
+    List.filterMap_append]
+  simpa using Tape.filterMap_id_map_some bits
+
+theorem structuredRawBoundaryRightEdgeEmitterOutputTape_normalizedOutput
+    (layout : Word Bool) :
+    Tape.normalizedOutput
+        (structuredRawBoundaryRightEdgeEmitterOutputTape layout) =
+      encodedLayoutBits layout := by
+  simpa [structuredRawBoundaryRightEdgeEmitterOutputTape] using
+    structuredRawBoundaryOutputTape_normalizedOutput (encodedLayoutBits layout)
 
 private def structuredRawBoundarySourceScanTape
     (processed remaining : Word Bool) : Tape Bool :=
@@ -1494,12 +1293,12 @@ theorem rightEdgeTape_rewind_target_defaultedCells
 
 def rawBoundaryRightEdgeEmitterCoreDescription :
     MachineDescription :=
-  entryDescription
+  emptyLayoutTailHandoffRightEdgeDescription
 
 theorem rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady :
     rawBoundaryRightEdgeEmitterCoreDescription.SubroutineReady := by
   rw [rawBoundaryRightEdgeEmitterCoreDescription]
-  exact entryDescription_subroutineReady
+  exact emptyLayoutTailHandoffRightEdgeDescription_subroutineReady
 
 def rawBoundaryRightEdgeEmitterDescription :
     MachineDescription :=
@@ -1514,17 +1313,49 @@ theorem rawBoundaryRightEdgeEmitterDescription_subroutineReady :
       rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
       CommonGround.Identity.exactIdentityDescription_subroutineReady
 
--- WARNING: This theorem is not just unfinished. With the current definition
--- `rawBoundaryRightEdgeEmitterCoreDescription = entryDescription`, it is false:
--- `entryDescription` only moves left once and cannot produce `rightEdgeTape`.
--- Fix the core machine/route contract before spending proof effort here.
+-- Remaining core gap: the current executable core is the checked
+-- zero-raw-layout skeleton.  It is correct for `skipped = []` and `count = []`;
+-- the nonempty raw-layout loop still has to consume raw bits and emit their
+-- cell chunks before the public theorem is fully constructive.
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+    (tailFirst : Bool) (tail : List (Option Bool)) :
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+      (sourceTape [] [] (some tailFirst :: tail))
+      (rightEdgeTape [] [] tailFirst tail) := by
+  simpa [rawBoundaryRightEdgeEmitterCoreDescription] using
+    emptyLayoutTailHandoffRightEdgeDescription_haltsFrom_sourceTape
+      tailFirst tail
+
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+    (skipped count : Word Bool)
+    (h : List.append skipped count ≠ [])
+    (tailFirst : Bool) (tail : List (Option Bool)) :
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+      (sourceTape skipped count (some tailFirst :: tail))
+      (rightEdgeTape skipped count tailFirst tail) := by
+  sorry
+
 theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail) := by
-  sorry
+  cases skipped with
+  | nil =>
+      cases count with
+      | nil =>
+          exact
+            rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+              tailFirst tail
+      | cons bit rest =>
+          exact
+            rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+              ([] : Word Bool) (bit :: rest) (by simp) tailFirst tail
+  | cons bit rest =>
+      exact
+        rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+          (bit :: rest) count (by simp) tailFirst tail
 
 theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
     (skipped count : Word Bool) (tailFirst : Bool)
