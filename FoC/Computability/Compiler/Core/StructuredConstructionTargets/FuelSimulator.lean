@@ -488,54 +488,6 @@ theorem fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
         by
           simpa [fuelSimulatorStructuredOutputTape] using hT⟩
 
-def PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction :
-    Prop :=
-  forall attempt : MachineDescription,
-    Structured3EndpointWrappedConstruction
-      (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorRightShiftedSpec
-        attempt)
-
-theorem fuelSimulatorStructuredConstruction_of_endpointExactIndexed
-    (h :
-      forall attempt : MachineDescription,
-        FuelSimulatorStructuredEndpointExactIndexedConstruction attempt) :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
-  intro attempt
-  rcases h attempt with ⟨W, initialized, lowered, hspec⟩
-  exact
-    ⟨W,
-      fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
-        (attempt := attempt)
-        (W := W)
-        (initialized := initialized)
-        (lowered := lowered)
-        hspec⟩
-
-theorem fuelSimulatorStructuredConstruction_of_coreEndpoint
-    (h : FuelSimulatorStructuredCoreEndpointConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction :=
-  fuelSimulatorStructuredConstruction_of_endpointExactIndexed h
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_structured
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction := by
-  exact
-    pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_of_spec
-      (by
-        intro attempt
-        rcases h attempt with ⟨W, hspec⟩
-        exact ⟨W.machine, hspec⟩)
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction_structuredLeaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelSimulatorStructuredCodeRightShiftedConstruction := by
-  -- Legacy exact-output public leaf.  The cleanup route now has
-  -- `fuelSimulatorStructuredEndpointEquivIndexedConstruction_core`; closing
-  -- this equality-based public contract needs either a restricted exact
-  -- projector for this target family or a public contract migration.
-  sorry
-
-
 end StructuredConstructionTargets
 
 end Computability

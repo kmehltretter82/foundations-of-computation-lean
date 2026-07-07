@@ -579,57 +579,6 @@ theorem boundedFuelPairEnumeratorRightShiftedSpec_of_endpointExactIndexed
       boundedFuelPairEnumeratorInput_eq_of_inputTape_eq hinput
     exact ⟨i, hw, hT⟩
 
-def PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction :
-    Prop :=
-  forall runner : MachineDescription,
-    runner.SubroutineReady ->
-      Structured3EndpointWrappedConstruction
-        (PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
-          runner)
-
-theorem boundedFuelPairEnumeratorStructuredConstruction_of_endpointExactIndexed
-    (h :
-      forall runner : MachineDescription,
-        runner.SubroutineReady ->
-          BoundedFuelPairEnumeratorStructuredEndpointExactIndexedConstruction
-            runner) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
-  intro runner hrunner
-  rcases h runner hrunner with ⟨W, initialized, lowered, hspec⟩
-  exact
-    ⟨W,
-      boundedFuelPairEnumeratorRightShiftedSpec_of_endpointExactIndexed
-        (runner := runner)
-        (W := W)
-        (initialized := initialized)
-        (lowered := lowered)
-        hspec⟩
-
-theorem boundedFuelPairEnumeratorStructuredConstruction_of_coreEndpoint
-    (h :
-      forall runner : MachineDescription,
-        BoundedFuelPairEnumeratorStructuredCoreEndpointConstruction
-          runner) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction :=
-  boundedFuelPairEnumeratorStructuredConstruction_of_endpointExactIndexed h
-
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction_of_structured
-    (h :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
-  intro runner hrunner
-  rcases h runner hrunner with ⟨W, hspec⟩
-  exact ⟨W.machine, hspec⟩
-
-theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction_structuredLeaf :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorStructuredRightShiftedSpecConstruction := by
-  -- Legacy exact-output public leaf.  The cleanup route now has
-  -- `boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_core`;
-  -- closing this equality-based public contract needs either a restricted
-  -- exact projector for this target family or a public contract migration.
-  sorry
-
-
 end StructuredConstructionTargets
 
 end Computability

@@ -379,14 +379,10 @@ protected/framed/witnessed controller-invocation contracts; it emits the
 controller layout with the simulated boolean-word result installed as
 normalized output.
 -/
-private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_finite_leaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :=
-  pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf
-
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
-  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_structured
-    pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_finite_leaf
+  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_endpointEquivIndexed
+    stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
 
 /--
 Finite-machine leaf for witnessed controller stage-attempt invocation.  This is

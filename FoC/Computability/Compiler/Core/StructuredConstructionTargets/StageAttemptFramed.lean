@@ -13,14 +13,6 @@ namespace StructuredConstructionTargets
 open CommonGround.FiniteTransducers.Structured
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 
-def PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :
-    Prop :=
-  forall attempt : MachineDescription,
-    attempt.SubroutineReady ->
-      Structured3EndpointWrappedConstruction
-        (CommonGround.ControllerInvocation.StageAttemptFramedExactSpec
-          attempt)
-
 /--
 Index for framed invocation endpoint runs: a controller layout, a boolean-word
 result, and a concrete fuel witness for the underlying attempt run.
@@ -533,6 +525,50 @@ theorem stageAttemptFramedOutput_result_eq_of_tape_eq
   have hresult := congrArg DovetailControllerLayout.result hlayout
   simpa [DovetailControllerLayout.withResult] using hresult
 
+theorem stageAttemptFramedOutput_result_eq_of_tape_equiv
+    {attempt : MachineDescription}
+    {C : DovetailControllerLayout}
+    {result : Word Bool}
+    {i : StageAttemptFramedStructuredIndex attempt}
+    {T : Tape Bool}
+    (hT : Tape.Equiv T (stageAttemptFramedStructuredOutputTape i))
+    (houtput :
+      Tape.normalizedOutput T =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult C result)))
+    (hC : C = i.C) :
+    i.result = result := by
+  have hout :
+      Tape.normalizedOutput
+          (stageAttemptFramedStructuredOutputTape i) =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C i.result)) := by
+    simpa [stageAttemptFramedStructuredOutputTape] using
+      CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput
+        i.C i.result
+  have hbits :
+      encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C i.result)) =
+        encodeCodeWordAsInput
+          (DovetailControllerLayout.encode
+            (DovetailControllerLayout.withResult i.C result)) := by
+    rw [← hout, ← Tape.Equiv.normalizedOutput_eq hT, houtput, hC]
+  have hcode :
+      DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult i.C i.result) =
+        DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult i.C result) :=
+    encodeCodeWordAsInput_injective hbits
+  have hlayout :
+      DovetailControllerLayout.withResult i.C i.result =
+        DovetailControllerLayout.withResult i.C result :=
+    DovetailControllerLayout.encode_injective hcode
+  have hresult := congrArg DovetailControllerLayout.result hlayout
+  simpa [DovetailControllerLayout.withResult] using hresult
+
 theorem stageAttemptFramedExactSpec_of_endpointExactIndexed
     {attempt : MachineDescription}
     {W : Structured3EndpointWrapper}
@@ -610,47 +646,118 @@ theorem stageAttemptFramedExactSpec_of_endpointExactIndexed
         by
           simpa [hC, hresult] using i.attempt_halts⟩
 
-theorem stageAttemptFramedStructuredConstruction_of_endpointExactIndexed
+theorem stageAttemptFramedRealizes_of_endpointEquivIndexed
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered :
+      StageAttemptFramedStructuredIndex attempt -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W
+        stageAttemptFramedStructuredInputTape
+        initialized
+        lowered
+        stageAttemptFramedStructuredOutputTape) :
+    CommonGround.ControllerInvocation.StageAttemptFramedRealizes
+      attempt W.machine := by
+  constructor
+  · exact W.machine_subroutineReady
+  constructor
+  · intro C result hrun
+    rcases hrun with ⟨fuel, hattempt⟩
+    let i : StageAttemptFramedStructuredIndex attempt :=
+      { C := C
+        result := result
+        fuel := fuel
+        attempt_halts := hattempt }
+    have hforward :=
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+        (Structured3EndpointEquivIndexedFamilySpec.forward hspec i)
+    simpa [MachineDescription.HaltsWithOutput,
+      MachineDescription.HaltsFromTapeWithOutput,
+      MachineDescription.HaltsWithOutputIn,
+      MachineDescription.HaltsFromTapeWithOutputIn,
+      MachineDescription.initial,
+      stageAttemptFramedStructuredInputTape,
+      stageAttemptFramedStructuredOutputTape,
+      CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput,
+      i] using hforward
+  · intro C result hhalt
+    let inputBits :=
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode C)
+    let outputBits :=
+      encodeCodeWordAsInput
+        (DovetailControllerLayout.encode
+          (DovetailControllerLayout.withResult C result))
+    rcases hhalt with ⟨fuel, hhaltFuel⟩
+    let T :=
+      (W.machine.runConfig fuel (W.machine.initial inputBits)).tape
+    have hfrom :
+        W.machine.HaltsFromTape (Tape.input inputBits) T := by
+      exact
+        ⟨fuel,
+          by
+            rcases hhaltFuel with ⟨hstate, _houtput⟩
+            exact ⟨hstate, rfl⟩⟩
+    rcases
+        Structured3EndpointEquivIndexedFamilySpec.closedIndex
+          hspec (Tape.input inputBits) T hfrom with
+      ⟨i, hinput, hT⟩
+    have hC : C = i.C := by
+      exact
+        stageAttemptFramedInput_layout_eq_of_inputTape_eq
+          (attempt := attempt)
+          (C := C)
+          (i := i)
+          (by
+            simpa [inputBits] using hinput)
+    have houtput :
+        Tape.normalizedOutput T =
+          encodeCodeWordAsInput
+            (DovetailControllerLayout.encode
+              (DovetailControllerLayout.withResult C result)) := by
+      rcases hhaltFuel with ⟨_hstate, hnormalized⟩
+      simpa [T, outputBits] using hnormalized
+    have hresult : i.result = result :=
+      stageAttemptFramedOutput_result_eq_of_tape_equiv
+        (attempt := attempt)
+        (C := C)
+        (result := result)
+        (i := i)
+        (T := T)
+        hT houtput hC
+    exact
+      ⟨i.fuel,
+        by
+          simpa [hC, hresult] using i.attempt_halts⟩
+
+theorem stageAttemptFramedConstruction_of_endpointEquivIndexed
     (h :
       forall attempt : MachineDescription,
         attempt.SubroutineReady ->
-          StageAttemptFramedStructuredEndpointExactIndexedConstruction
+          StageAttemptFramedStructuredEndpointEquivIndexedConstruction
             attempt) :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
+    CommonGround.ControllerInvocation.StageAttemptFramedConstruction := by
   intro attempt hattempt
   rcases h attempt hattempt with ⟨W, initialized, lowered, hspec⟩
   exact
-    ⟨W,
-      stageAttemptFramedExactSpec_of_endpointExactIndexed
+    ⟨W.machine,
+      stageAttemptFramedRealizes_of_endpointEquivIndexed
         (attempt := attempt)
         (W := W)
         (initialized := initialized)
         (lowered := lowered)
         hspec⟩
 
-theorem stageAttemptFramedStructuredConstruction_of_coreEndpoint
-    (h : StageAttemptFramedStructuredCoreEndpointConstruction) :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData :=
-  stageAttemptFramedStructuredConstruction_of_endpointExactIndexed h
-
-theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_structured
+theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_endpointEquivIndexed
     (h :
-      PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData) :
-    CommonGround.ControllerInvocation.StageAttemptFramedConstruction := by
-  exact
-    CommonGround.ControllerInvocation.stageAttemptFramedConstruction_of_exact
-      (by
-        intro attempt hattempt
-        rcases h attempt hattempt with ⟨W, hspec⟩
-        exact ⟨W.machine, hspec⟩)
-
-theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData_structuredLeaf :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstructionData := by
-  -- Legacy exact-output public leaf.  The cleanup route now has
-  -- `stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core`;
-  -- closing this equality-based public contract needs either a restricted
-  -- exact projector for this target family or a public contract migration.
-  sorry
+      forall attempt : MachineDescription,
+        attempt.SubroutineReady ->
+          StageAttemptFramedStructuredEndpointEquivIndexedConstruction
+            attempt) :
+    CommonGround.ControllerInvocation.StageAttemptFramedConstruction :=
+  stageAttemptFramedConstruction_of_endpointEquivIndexed h
 
 
 end StructuredConstructionTargets
