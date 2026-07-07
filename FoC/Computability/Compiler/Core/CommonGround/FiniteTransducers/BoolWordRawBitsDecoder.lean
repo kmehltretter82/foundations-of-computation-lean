@@ -1,5 +1,4 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder.EndpointAdapters
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoder.InputMaterializerFrontier
 
 set_option doc.verso true
 
