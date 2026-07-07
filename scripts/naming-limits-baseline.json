@@ -7,36 +7,7 @@
     "route_contracts_file": "no new *RouteContracts.lean files"
   },
   "violations": {
-    "compiler_dir_depth": [
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/StaticMachine/NoRowReturn.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/StaticMachine/Runs.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix/BoolWord.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix/Primitive.lean",
-        "value": 6
-      }
-    ],
+    "compiler_dir_depth": [],
     "compiler_rel_path": [
       {
         "key": "compiler_rel_path",
@@ -170,27 +141,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/Selection.lean",
         "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/StaticMachine/NoRowReturn.lean",
-        "value": 108
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/StaticMachine/Runs.lean",
-        "value": 101
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/DispatcherAssembly/StaticMachine.lean",
-        "value": 96
       },
       {
         "key": "compiler_rel_path",
@@ -345,27 +295,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/Basic.lean",
         "value": 83
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix/BoolWord.lean",
-        "value": 97
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix/Primitive.lean",
-        "value": 98
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/CanonicalLayouts/DovetailLayoutScanner/PrimitiveClosed/BoolSuffix.lean",
-        "value": 88
       },
       {
         "key": "compiler_rel_path",

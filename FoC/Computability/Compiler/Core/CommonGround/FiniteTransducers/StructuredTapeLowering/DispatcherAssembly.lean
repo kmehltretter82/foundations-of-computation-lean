@@ -1,1 +1,1 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.StaticMachine
+import FoC.Computability.Compiler.Structured.Dispatcher.StaticMachine

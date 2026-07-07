@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.StaticMachine.NoRowReturn
+import FoC.Computability.Compiler.Structured.Dispatcher.StaticMachine.NoRowReturn
 
 set_option doc.verso true
 

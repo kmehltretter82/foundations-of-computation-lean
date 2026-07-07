@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.StaticMachine.Runs
+import FoC.Computability.Compiler.Structured.Dispatcher.StaticMachine.Runs
 
 set_option doc.verso true
 

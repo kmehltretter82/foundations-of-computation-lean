@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.SelectedSeparatorRefreshRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.RunsStructuredSingleton3
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.DispatcherAssembly.StaticMachine
+import FoC.Computability.Compiler.Structured.Dispatcher.StaticMachine
 
 namespace FoC
 namespace Computability
