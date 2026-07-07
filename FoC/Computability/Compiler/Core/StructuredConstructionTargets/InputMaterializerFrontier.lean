@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerFrontier
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
 
 set_option doc.verso true
@@ -31,14 +32,32 @@ def Structured3EndpointBlankOutputMaterializerConstruction
       CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
         (source input) Tape.blank)
 
+theorem structured3EndpointBlankOutputMaterializerConstruction_of_exactInputMaterializer
+    {ι : Type}
+    {source : ι -> Tape Bool}
+    (hexact :
+      CommonGround.FiniteTransducers.Structured3BlankOutputExactInputMaterializerConstruction
+        source) :
+    Structured3EndpointBlankOutputMaterializerConstruction source := by
+  rcases hexact with
+    ⟨materializer, hready, hforward, hclosedIndex⟩
+  refine ⟨materializer, hready, ?_⟩
+  constructor
+  · intro input
+    exact hforward input
+  · intro Tin T hhalt
+    simpa [
+      CommonGround.FiniteTransducers.InputMaterializerExactClosedIndexedFromTape] using
+      hclosedIndex Tin T hhalt
+
 theorem structured3EndpointBlankOutputMaterializerConstruction_core
     {ι : Type}
     (source : ι -> Tape Bool) :
     Structured3EndpointBlankOutputMaterializerConstruction source := by
-  -- Remaining finite-machine leaf: exactly materialize each public source
-  -- tape into the guarded three-tape endpoint input with blank scratch and
-  -- blank output, and prove indexed closedness for that source family.
-  sorry
+  exact
+    structured3EndpointBlankOutputMaterializerConstruction_of_exactInputMaterializer
+      (CommonGround.FiniteTransducers.structured3BlankOutputExactInputMaterializerConstruction_core
+        source)
 
 end StructuredConstructionTargets
 
