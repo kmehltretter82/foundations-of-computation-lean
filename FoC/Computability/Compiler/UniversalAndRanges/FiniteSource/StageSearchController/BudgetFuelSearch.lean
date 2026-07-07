@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.Intersection
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall
 
 set_option doc.verso true
 

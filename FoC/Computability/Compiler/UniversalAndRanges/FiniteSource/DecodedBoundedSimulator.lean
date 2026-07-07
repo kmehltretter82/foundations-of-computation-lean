@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DescriptionPrefixDecoder
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator.NormalizedRunner
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator.NormRun
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageCodeDecoder
 
 set_option doc.verso true

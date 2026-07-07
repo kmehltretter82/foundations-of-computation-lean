@@ -1,6 +1,6 @@
 import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.BoundedSimulatorLoop
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall
 
 set_option doc.verso true
 

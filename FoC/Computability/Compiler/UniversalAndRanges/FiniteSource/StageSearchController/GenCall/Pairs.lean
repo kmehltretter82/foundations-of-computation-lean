@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.ExactFuel
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall.ExactFuel
 
 set_option doc.verso true
 

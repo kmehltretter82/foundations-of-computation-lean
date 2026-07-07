@@ -1,8 +1,8 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.ExactFuel
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Product
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall.Pairs
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall.Product
 
 set_option doc.verso true
 

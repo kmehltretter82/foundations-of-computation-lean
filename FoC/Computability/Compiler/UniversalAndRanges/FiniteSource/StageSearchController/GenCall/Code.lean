@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.GeneratedCode
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Layout
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall.Basic
 
 set_option doc.verso true
 

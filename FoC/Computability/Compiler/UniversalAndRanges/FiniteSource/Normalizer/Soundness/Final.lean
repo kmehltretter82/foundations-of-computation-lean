@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.TransitionBlock
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.Normalizer.Soundness.TransBlock
 set_option doc.verso true
 
 /-!

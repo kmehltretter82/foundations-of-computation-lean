@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GeneratedCallSearch.PairEnumerator
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchController.GenCall.Pairs
 
 set_option doc.verso true
 

@@ -8,71 +8,7 @@
   },
   "violations": {
     "compiler_dir_depth": [],
-    "compiler_rel_path": [
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator/NormalizedRunner/Constructions.lean",
-        "value": 91
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator/NormalizedRunner/TransformSemantics.lean",
-        "value": 96
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/Normalizer/Soundness/TransitionBlock/Context.lean",
-        "value": 81
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/Basic.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/ExactFuel.lean",
-        "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/GeneratedCode.lean",
-        "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/PairEnumerator.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/Product.lean",
-        "value": 86
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GeneratedCallSearch/SearchAlgebra.lean",
-        "value": 92
-      }
-    ],
+    "compiler_rel_path": [],
     "decl_name": [],
     "formal_lean_path": [],
     "route_contracts_file": [

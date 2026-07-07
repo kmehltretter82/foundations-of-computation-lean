@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator.NormalizedRunner.TransformSemantics
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.DecodedBoundedSimulator.NormRun.Transform
 
 set_option doc.verso true
 
