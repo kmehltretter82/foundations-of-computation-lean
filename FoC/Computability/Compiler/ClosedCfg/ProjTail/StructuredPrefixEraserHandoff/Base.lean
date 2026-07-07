@@ -142,7 +142,7 @@ theorem encodedStructuredTapeCellsPrefix_two_guarded_filterMap
     logicalTapeCode_eq_map_some,
     List.filterMap_append, Function.comp_def]
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_normalizedOutput_eq_guardedBits_append_targetTape_normalizedOutput
+theorem source_normalizedOutput_eq_guardedBits_append_target
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
     Tape.normalizedOutput
@@ -200,7 +200,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape
     selectedSegmentLogicalTapeDecoderDensifierSourceCells_filterMap
       [] bits padding
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_filterMap_eq_guardedBits_append_targetTape_cells_filterMap
+theorem source_cells_filterMap_eq_guardedBits_append_target
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
     (Tape.cells
@@ -288,7 +288,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_prefix_append_targetTape_cells,
     selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape_eq_footprintSourceTape]
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_expandedPrefix_append_footprintSourceTape_cells
+theorem source_cells_eq_expandedPrefix_append_footprint
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
     Tape.cells
@@ -321,7 +321,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape
                     bits padding)
                   [none, none])))) := by
   rw [
-    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_expandedPrefix_append_footprintSourceTape_cells,
+    source_cells_eq_expandedPrefix_append_footprint,
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint]
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape_cells_eq_boundaryFields_append_footprintCells
@@ -458,7 +458,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBound
   simp [selectedSegmentLogicalTapeDecoderDensifierFootprintCells_filterMap,
     List.filterMap_append, Function.comp_def]
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixSecondFieldBoundaryEraserTargetTape_cells_eq_firstFieldBoundaryEraserSourceTape_cells
+theorem secondBoundaryTarget_cells_eq_firstBoundarySource
     (T0 T1 : Tape Bool) (bits : Word Bool)
     (padding : List (Option Bool)) :
     Tape.cells
@@ -969,7 +969,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintH
       selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConsPadSymbolCaseSpec_of_guardedPrefixEraserSpec
         hcons⟩
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_guardedPrefixEraser
+theorem footprintHandoffSplitPadCaseConstruction_ofGuardedEraser
     (hguard :
       GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction) :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
@@ -1672,7 +1672,7 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintH
     · intro T0 T1 bit rest padBit padding
       exact hrun T0 T1 (bit :: rest) (some padBit :: padding)
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction_of_handoffOutput
+theorem footprintHandoffSplitPadCaseOutputConstruction_ofHandoffOutput
     (hhandoff :
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction) :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction := by
@@ -1739,12 +1739,12 @@ theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintH
   · exact
       selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputSpec_of_splitPadSymbolCaseOutputSpec
 
-theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_iff_splitPadSymbolCaseOutputConstruction :
+theorem footprintHandoffOutputConstruction_iff_splitPadCaseOutput :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction ↔
       SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction := by
   constructor
   · exact
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseOutputConstruction_of_handoffOutput
+      footprintHandoffSplitPadCaseOutputConstruction_ofHandoffOutput
   · exact
       selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffOutputConstruction_of_splitPadSymbolCaseOutput
 

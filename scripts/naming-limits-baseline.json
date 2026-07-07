@@ -1415,55 +1415,6 @@
       {
         "key": "decl_name",
         "limit": 128,
-        "line": 145,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 139
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 203,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 137
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 291,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 129
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 461,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 141
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 972,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 131
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 1675,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 131
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 1742,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
-        "value": 137
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
         "line": 856,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/CountWindowRawEncoder/RawBoundaryRightEdgeEmitter/CountedBoundary.lean",
         "value": 132
