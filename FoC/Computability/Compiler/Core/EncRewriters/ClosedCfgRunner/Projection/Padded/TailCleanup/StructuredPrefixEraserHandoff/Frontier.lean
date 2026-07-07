@@ -22,11 +22,23 @@ namespace EncRewriters
 namespace BoundedLayoutRunner
 namespace SelectedProjectionPaddedTailCleanup
 
+theorem guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
+    GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
+  -- Remaining reusable finite-machine leaf: erase the guarded encodings of
+  -- the first two structured logical tapes, split by payload and padding shape.
+  sorry
+
+theorem guardedTwoTapeStructuredPrefixEraserConstruction_core :
+    GuardedTwoTapeStructuredPrefixEraserConstruction := by
+  exact
+    guardedTwoTapeStructuredPrefixEraserConstruction_of_splitPadSymbolCases
+      guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
+
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction := by
-  -- Remaining finite-machine leaf: delete the concrete two-tape guarded
-  -- structured prefix for each nil/cons payload and padding-symbol branch.
-  sorry
+  exact
+    selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffSplitPadSymbolCaseConstruction_of_guardedPrefixEraser
+      guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction_core :
     SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserFootprintHandoffConstruction := by
