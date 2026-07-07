@@ -468,15 +468,6 @@ theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_of_mat
       hmaterializer hcore
 
 /--
-Finite-table leaf for the fuel-simulator public-input materializer.
--/
-theorem fuelSimulatorStructuredIndexedMaterializerConstruction_core :
-    FuelSimulatorStructuredIndexedMaterializerConstruction := by
-  -- Remaining parser/materializer obligation: recognize generated fuel-input
-  -- codes and materialize the guarded three-logical-tape input.
-  sorry
-
-/--
 Finite-table leaf for the lowered fuel-simulator structured core.
 -/
 theorem fuelSimulatorStructuredLoweredCoreConstruction_core
@@ -486,23 +477,17 @@ theorem fuelSimulatorStructuredLoweredCoreConstruction_core
   -- the exact simulator-layout output on logical tape 2.
   sorry
 
-theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_core :
-    FuelSimulatorStructuredEquivInputMaterializerConstruction :=
-  fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
-    fuelSimulatorStructuredIndexedMaterializerConstruction_core
-
 /--
-Target-local parser/core obligation for the fuel-simulator target.  The
-public endpoint theorem below only composes this with a shared tape-2
-projector.
+Finite-table leaf for the fuel-simulator public-input materializer on the
+equivalence-facing endpoint route.
 -/
-theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_core
-    (attempt : MachineDescription) :
-    FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction
-      attempt :=
-  fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
-    fuelSimulatorStructuredIndexedMaterializerConstruction_core
-    (fuelSimulatorStructuredLoweredCoreConstruction_core attempt)
+theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_core :
+    FuelSimulatorStructuredEquivInputMaterializerConstruction := by
+  -- Remaining parser/materializer obligation: recognize generated fuel-input
+  -- codes, materialize the canonical guarded three-logical-tape input through
+  -- the reusable CommonGround structured-input contract, and prove indexed
+  -- closedness for valid fuel-input codes.
+  sorry
 
 /--
 Target-local equivalence-facing parser/core obligation for the fuel-simulator
