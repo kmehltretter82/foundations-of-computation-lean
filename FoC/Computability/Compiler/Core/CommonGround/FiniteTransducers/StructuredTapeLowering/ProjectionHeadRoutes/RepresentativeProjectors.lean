@@ -47,6 +47,63 @@ theorem structuredSelectedHeadSegmentDecoderRepresentativeOutputTape_equiv
       (selectedSegmentLogicalTapeDecoderRestPadding rest)
       encodedPrefix
 
+private theorem statefulOptionCellsFrom_length
+    (next : Nat -> Bool -> Nat) (emit : Nat -> Bool -> Option Bool)
+    (state : Nat) (input : Word Bool) :
+    (statefulOptionCellsFrom next emit state input).length = input.length := by
+  induction input generalizing state with
+  | nil => rfl
+  | cons bit rest ih =>
+      simp [statefulOptionCellsFrom, ih]
+
+private theorem selectedSegmentLogicalTapeDecoderSource_contextLength_le_handoff
+    (target : Tape Bool) (padding encodedPrefix : List (Option Bool)) :
+    Tape.contextLength
+        (tapeAtEncodedSplit encodedPrefix
+          (List.append tapeSeparatorCells
+            (List.append (logicalTapeCode (guardLogicalTape target))
+              (none :: padding)))) <=
+      Tape.contextLength
+        (canonicalPrimitiveSeqHandoffTape
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+            target padding encodedPrefix)) := by
+  cases padding with
+  | nil =>
+      simp [tapeAtEncodedSplit, tapeSeparatorCells,
+        logicalTapeCode_eq_map_some,
+        selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape,
+        selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape,
+        FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
+        canonicalPrimitiveSeqHandoffTape,
+        tapeAtCells, Tape.contextLength, Tape.move,
+        Tape.moveLeft, Tape.moveRight,
+        statefulOptionCellsFrom_length]
+      lia
+  | cons pad padding =>
+      cases padding with
+      | nil =>
+          simp [tapeAtEncodedSplit, tapeSeparatorCells,
+            logicalTapeCode_eq_map_some,
+            selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape,
+            selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape,
+            FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
+            canonicalPrimitiveSeqHandoffTape,
+            tapeAtCells, Tape.contextLength, Tape.move,
+            Tape.moveLeft, Tape.moveRight,
+            statefulOptionCellsFrom_length]
+          lia
+      | cons next padding =>
+          simp [tapeAtEncodedSplit, tapeSeparatorCells,
+            logicalTapeCode_eq_map_some,
+            selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape,
+            selectedSegmentLogicalTapeDecoderCellShapeCleanupSourceTape,
+            FSTStatefulOptionAppendTargetTapeFromLeftWithPadding,
+            canonicalPrimitiveSeqHandoffTape,
+            tapeAtCells, Tape.contextLength, Tape.move,
+            Tape.moveLeft, Tape.moveRight,
+            statefulOptionCellsFrom_length]
+          lia
+
 /--
 Context-length guard for the selected-head representative output.
 
@@ -62,7 +119,40 @@ theorem structuredSelectedHeadSegmentDecoderRepresentativeOutputTape_contextLeng
       Tape.contextLength
         (structuredSelectedHeadSegmentDecoderRepresentativeOutputTape
           target rest encodedPrefix) := by
-  sorry
+  have hsource :
+      Tape.contextLength
+          (tapeAtEncodedSplit encodedPrefix
+            (encodedStructuredTapeCells (guardLogicalTape target :: rest))) <=
+        Tape.contextLength
+          (canonicalPrimitiveSeqHandoffTape
+            (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+              target (selectedSegmentLogicalTapeDecoderRestPadding rest)
+              encodedPrefix)) := by
+    change Tape.contextLength
+        (tapeAtEncodedSplit encodedPrefix
+          (List.append tapeSeparatorCells
+            (List.append (logicalTapeCode (guardLogicalTape target))
+              (encodedStructuredTapeCells rest)))) <= _
+    rw [encodedStructuredTapeCells_eq_none_cons_restPadding rest]
+    simpa [tapeSeparatorCells] using
+      selectedSegmentLogicalTapeDecoderSource_contextLength_le_handoff
+        target (selectedSegmentLogicalTapeDecoderRestPadding rest)
+        encodedPrefix
+  have hhandoff :
+      Tape.contextLength
+          (canonicalPrimitiveSeqHandoffTape
+            (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
+              target (selectedSegmentLogicalTapeDecoderRestPadding rest)
+              encodedPrefix)) <=
+        Tape.contextLength
+          (selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape
+            target (selectedSegmentLogicalTapeDecoderRestPadding rest)
+            encodedPrefix) :=
+    selectedSegmentLogicalTapeDecoderPaddedCleanupOutputTape_contextLength_ge_handoff
+      target (selectedSegmentLogicalTapeDecoderRestPadding rest) encodedPrefix
+  exact Nat.le_trans hsource (by
+    simpa [structuredSelectedHeadSegmentDecoderRepresentativeOutputTape] using
+      hhandoff)
 
 /--
 Exact selected-head decoder behavior to a representative output tape.
@@ -261,7 +351,11 @@ theorem structuredTape2RepresentativeSegmentOutputTape_contextLength_ge_source
       Tape.contextLength
         (structuredTape2RepresentativeSegmentOutputTape
           T0 T1 T2 physical) := by
-  sorry
+  rw [hseparator.2]
+  simpa [structuredTape2RepresentativeSegmentOutputTape,
+    encodedSuffixFromTape] using
+    structuredSelectedHeadSegmentDecoderRepresentativeOutputTape_contextLength_ge_source
+      T2 [] (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
 
 structure StructuredTape2RepresentativeSegmentNormalizerSpec
     (normalizer : MachineDescription) : Prop where
