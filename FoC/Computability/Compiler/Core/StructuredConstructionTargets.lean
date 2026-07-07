@@ -435,6 +435,55 @@ def ExactClosedIndexedFromTape {ι : Type}
       exists i : ι, Tin = source i ∧ T = target i
 
 /--
+Forward and indexed-closed materializer data for canonical endpoint leaves.
+
+The per-index exact closedness field of the exact materializer spec is derivable from
+{name (full := FoC.Computability.MachineDescription.SubroutineReady)}`MachineDescription.SubroutineReady`
+and exact forward behavior by determinism.  The genuinely target-specific
+closed obligation is the indexed inversion statement: any materializer halt
+must have started from one of the intended public inputs.
+-/
+structure Structured3EndpointIndexedMaterializerSpec {ι : Type}
+    (input initialized : ι -> Tape Bool)
+    (materializer : MachineDescription) : Prop where
+  forward :
+    forall i : ι,
+      materializer.HaltsFromTape (input i) (initialized i)
+  closedIndex :
+    ExactClosedIndexedFromTape materializer input initialized
+
+/--
+Existence wrapper for target-specific indexed input materializers.
+-/
+def Structured3EndpointIndexedMaterializerConstruction {ι : Type}
+    (input initialized : ι -> Tape Bool) : Prop :=
+  exists materializer : MachineDescription,
+    materializer.SubroutineReady ∧
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized materializer
+
+namespace Structured3EndpointIndexedMaterializerSpec
+
+/--
+Derive exact per-index closedness from forward behavior and subroutine
+determinism.
+-/
+theorem closed
+    {ι : Type}
+    {input initialized : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized materializer)
+    (hready : materializer.SubroutineReady)
+    (i : ι) :
+    ExactClosedFromTape materializer (input i) (initialized i) :=
+  exactClosedFromTape_of_haltsFromTape_of_subroutineReady
+    hready (hspec.forward i)
+
+end Structured3EndpointIndexedMaterializerSpec
+
+/--
 Reusable exact materializer component for canonical endpoint leaves.
 
 The materializer must map each public input tape to the exact initialized
@@ -451,6 +500,28 @@ structure Structured3EndpointExactMaterializerSpec {ι : Type}
       ExactClosedFromTape materializer (input i) (initialized i)
   closedIndex :
     ExactClosedIndexedFromTape materializer input initialized
+
+namespace Structured3EndpointIndexedMaterializerSpec
+
+/--
+Upgrade forward/indexed materializer data to the exact materializer component
+expected by the canonical endpoint wrapper.
+-/
+theorem toExactMaterializerSpec
+    {ι : Type}
+    {input initialized : ι -> Tape Bool}
+    {materializer : MachineDescription}
+    (hspec :
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized materializer)
+    (hready : materializer.SubroutineReady) :
+    Structured3EndpointExactMaterializerSpec
+      input initialized materializer where
+  forward := hspec.forward
+  closed := hspec.closed hready
+  closedIndex := hspec.closedIndex
+
+end Structured3EndpointIndexedMaterializerSpec
 
 /--
 Reusable exact lowered-core component for canonical endpoint leaves.
@@ -787,6 +858,12 @@ materialize the public input, run the lowered structured core, and prove that
 the lowered output places the public result on logical tape 2.  The actual
 tape-2 projector is supplied once by
 {name}`structured3EndpointExactTape2ProjectorConstruction_core`.
+
+The materializer field carries only exact forward behavior plus indexed
+closedness.  Per-index exact closedness is installed when these components are
+converted to full endpoint components, using the
+{name (full := FoC.Computability.MachineDescription.SubroutineReady)}`MachineDescription.SubroutineReady`
+field and machine determinism.
 -/
 structure Structured3CanonicalExactEndpointCoreComponents
     {ι : Type}
@@ -803,7 +880,7 @@ structure Structured3CanonicalExactEndpointCoreComponents
         encodedGuardedStructured3Tapes
           (tape0 i) (tape1 i) (output i)
   materializer :
-    Structured3EndpointExactMaterializerSpec
+    Structured3EndpointIndexedMaterializerSpec
       input initialized initializer
   loweredCore :
     Structured3EndpointExactLoweredCoreSpec
@@ -819,6 +896,93 @@ def Structured3CanonicalExactEndpointCoreComponentConstruction
   Nonempty
     (Structured3CanonicalExactEndpointCoreComponents
       input initialized lowered output tape0 tape1)
+
+/--
+Target-specific lowered structured core data, before installing an input
+materializer.
+
+This separates the two remaining target-specific jobs: first recognize and
+materialize the public input family, then run the lowered structured core from
+the canonical initialized three-tape layout to a lowered output whose logical
+tape 2 carries the public output.
+-/
+structure Structured3CanonicalExactEndpointLoweredCoreComponents
+    {ι : Type}
+    (initialized lowered output tape0 tape1 : ι -> Tape Bool) where
+  core : CommonGround.FiniteTransducers.Structured.Description
+  coreWellFormed : core.WellFormed
+  coreHaltTransitionFree : core.HaltTransitionFree
+  coreSupportsRows : SupportsReadWriteRows3 core
+  loweredShape :
+    forall i : ι,
+      lowered i =
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (output i)
+  loweredCore :
+    Structured3EndpointExactLoweredCoreSpec
+      initialized lowered (lowerStructured3Description core)
+
+/--
+Existence wrapper for target-specific lowered structured core data.
+-/
+def Structured3CanonicalExactEndpointLoweredCoreConstruction
+    {ι : Type}
+    (initialized lowered output tape0 tape1 : ι -> Tape Bool) : Prop :=
+  Nonempty
+    (Structured3CanonicalExactEndpointLoweredCoreComponents
+      initialized lowered output tape0 tape1)
+
+namespace Structured3CanonicalExactEndpointLoweredCoreComponents
+
+/--
+Install a concrete indexed materializer in front of lowered structured core
+data to obtain no-projector endpoint core components.
+-/
+def toCoreComponents
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (C :
+      Structured3CanonicalExactEndpointLoweredCoreComponents
+        initialized lowered output tape0 tape1)
+    {initializer : MachineDescription}
+    (hinitializerReady : initializer.SubroutineReady)
+    (hmaterializer :
+      Structured3EndpointIndexedMaterializerSpec
+        input initialized initializer) :
+    Structured3CanonicalExactEndpointCoreComponents
+      input initialized lowered output tape0 tape1 where
+  core := C.core
+  initializer := initializer
+  coreWellFormed := C.coreWellFormed
+  coreHaltTransitionFree := C.coreHaltTransitionFree
+  coreSupportsRows := C.coreSupportsRows
+  initializerSubroutineReady := hinitializerReady
+  loweredShape := C.loweredShape
+  materializer := hmaterializer
+  loweredCore := C.loweredCore
+
+end Structured3CanonicalExactEndpointLoweredCoreComponents
+
+/--
+Indexed materializer construction plus lowered structured core construction
+give the target-specific no-projector endpoint components.
+-/
+theorem structured3CanonicalExactEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {ι : Type}
+    {input initialized lowered output tape0 tape1 : ι -> Tape Bool}
+    (hmaterializer :
+      Structured3EndpointIndexedMaterializerConstruction
+        input initialized)
+    (hcore :
+      Structured3CanonicalExactEndpointLoweredCoreConstruction
+        initialized lowered output tape0 tape1) :
+    Structured3CanonicalExactEndpointCoreComponentConstruction
+      input initialized lowered output tape0 tape1 := by
+  rcases hmaterializer with
+    ⟨initializer, hinitializerReady, hmaterializerSpec⟩
+  rcases hcore with ⟨C⟩
+  exact
+    ⟨C.toCoreComponents hinitializerReady hmaterializerSpec⟩
 
 namespace Structured3CanonicalExactEndpointCoreComponents
 
@@ -846,7 +1010,9 @@ def toSharedProjectorComponents
   initializerSubroutineReady := C.initializerSubroutineReady
   projectorSubroutineReady := hprojector.subroutineReady
   loweredShape := C.loweredShape
-  materializer := C.materializer
+  materializer :=
+    C.materializer.toExactMaterializerSpec
+      C.initializerSubroutineReady
   loweredCore := C.loweredCore
   projectorRoute := hprojector
 
@@ -1314,6 +1480,18 @@ def FuelSimulatorStructuredExactMaterializerSpec
     materializer
 
 /--
+Target-specific fuel-simulator materializer obligation before deterministic
+per-input exact closedness is installed by the shared endpoint infrastructure.
+-/
+def FuelSimulatorStructuredIndexedMaterializerSpec
+    (materializer : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerSpec
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+    materializer
+
+/--
 Exact lowered-core behavior for the canonical fuel-simulator endpoint.
 -/
 def FuelSimulatorStructuredExactLoweredCoreSpec
@@ -1461,6 +1639,60 @@ def FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction
     (fun i => fuelSimulatorStructuredOutputTape attempt i)
     (fun i => fuelSimulatorStructuredInputTape i)
     (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Fuel-simulator input parser/materializer construction, separated from the
+lowered structured simulator core.
+-/
+def FuelSimulatorStructuredIndexedMaterializerConstruction : Prop :=
+  Structured3EndpointIndexedMaterializerConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInputTape i)
+    (fun i => fuelSimulatorStructuredInitializedTape i)
+
+/--
+Fuel-simulator lowered structured core data after input materialization.
+-/
+def FuelSimulatorStructuredLoweredCoreComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointLoweredCoreComponents
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Existence form for the fuel-simulator lowered structured core.
+-/
+def FuelSimulatorStructuredLoweredCoreConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointLoweredCoreConstruction
+    (fun i : FuelSimulatorStructuredIndex =>
+      fuelSimulatorStructuredInitializedTape i)
+    (fun i => fuelSimulatorStructuredLoweredTape attempt i)
+    (fun i => fuelSimulatorStructuredOutputTape attempt i)
+    (fun i => fuelSimulatorStructuredInputTape i)
+    (fun _i : FuelSimulatorStructuredIndex => Tape.blank)
+
+/--
+Combine the fuel-simulator parser/materializer and lowered core into the
+no-projector endpoint component obligation.
+-/
+theorem fuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {attempt : MachineDescription}
+    (hmaterializer :
+      FuelSimulatorStructuredIndexedMaterializerConstruction)
+    (hcore :
+      FuelSimulatorStructuredLoweredCoreConstruction attempt) :
+    FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction
+      attempt := by
+  simpa [FuelSimulatorStructuredIndexedMaterializerConstruction,
+    FuelSimulatorStructuredLoweredCoreConstruction,
+    FuelSimulatorStructuredCanonicalEndpointCoreComponentConstruction] using
+    structured3CanonicalExactEndpointCoreComponentConstruction_of_materializer_loweredCore
+      hmaterializer hcore
 
 /--
 Install the shared exact tape-2 projector into fuel-simulator core components.
@@ -1754,6 +1986,19 @@ def StageAttemptFramedStructuredExactMaterializerSpec
     materializer
 
 /--
+Target-specific framed-invocation materializer obligation before deterministic
+per-input exact closedness is installed by the shared endpoint infrastructure.
+-/
+def StageAttemptFramedStructuredIndexedMaterializerSpec
+    (attempt : MachineDescription)
+    (materializer : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerSpec
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+    materializer
+
+/--
 Exact lowered-core behavior for the canonical framed-invocation endpoint.
 -/
 def StageAttemptFramedStructuredExactLoweredCoreSpec
@@ -1903,6 +2148,62 @@ def StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
     (fun i => stageAttemptFramedStructuredOutputTape i)
     (fun i => stageAttemptFramedStructuredInputTape i)
     (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+/--
+Framed-invocation input parser/materializer construction, separated from the
+lowered structured framed wrapper core.
+-/
+def StageAttemptFramedStructuredIndexedMaterializerConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerConstruction
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInputTape i)
+    (fun i => stageAttemptFramedStructuredInitializedTape i)
+
+/--
+Framed-invocation lowered structured core data after input materialization.
+-/
+def StageAttemptFramedStructuredLoweredCoreComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointLoweredCoreComponents
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+    (fun i => stageAttemptFramedStructuredInputTape i)
+    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+/--
+Existence form for the framed-invocation lowered structured core.
+-/
+def StageAttemptFramedStructuredLoweredCoreConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointLoweredCoreConstruction
+    (fun i : StageAttemptFramedStructuredIndex attempt =>
+      stageAttemptFramedStructuredInitializedTape i)
+    (fun i => stageAttemptFramedStructuredLoweredTape i)
+    (fun i => stageAttemptFramedStructuredOutputTape i)
+    (fun i => stageAttemptFramedStructuredInputTape i)
+    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+/--
+Combine the framed-invocation parser/materializer and lowered core into the
+no-projector endpoint component obligation.
+-/
+theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {attempt : MachineDescription}
+    (hmaterializer :
+      StageAttemptFramedStructuredIndexedMaterializerConstruction
+        attempt)
+    (hcore :
+      StageAttemptFramedStructuredLoweredCoreConstruction attempt) :
+    StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
+      attempt := by
+  simpa [StageAttemptFramedStructuredIndexedMaterializerConstruction,
+    StageAttemptFramedStructuredLoweredCoreConstruction,
+    StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction] using
+    structured3CanonicalExactEndpointCoreComponentConstruction_of_materializer_loweredCore
+      hmaterializer hcore
 
 /--
 Install the shared exact tape-2 projector into framed-invocation core
@@ -2264,6 +2565,21 @@ def FuelOutputStructuredExactMaterializerSpec
     materializer
 
 /--
+Target-specific fuel-output materializer obligation before deterministic
+per-input exact closedness is installed by the shared endpoint infrastructure.
+-/
+def FuelOutputStructuredIndexedMaterializerSpec
+    (attempt : MachineDescription)
+    (materializer : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerSpec
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+    materializer
+
+/--
 Exact lowered-core behavior for the canonical fuel-output endpoint.
 -/
 def FuelOutputStructuredExactLoweredCoreSpec
@@ -2454,6 +2770,76 @@ def FuelOutputStructuredCanonicalEndpointCoreComponentConstruction
       PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
         attempt =>
       Tape.blank)
+
+/--
+Fuel-output input parser/materializer construction, separated from the lowered
+structured extractor core.
+-/
+def FuelOutputStructuredIndexedMaterializerConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInputTape i)
+    (fun i => fuelOutputStructuredInitializedTape i)
+
+/--
+Fuel-output lowered structured extractor core data after input materialization.
+-/
+def FuelOutputStructuredLoweredCoreComponents
+    (attempt : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointLoweredCoreComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+    (fun i => fuelOutputStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      Tape.blank)
+
+/--
+Existence form for the fuel-output lowered structured extractor core.
+-/
+def FuelOutputStructuredLoweredCoreConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointLoweredCoreConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      fuelOutputStructuredInitializedTape i)
+    (fun i => fuelOutputStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
+    (fun i => fuelOutputStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt =>
+      Tape.blank)
+
+/--
+Combine the fuel-output parser/materializer and lowered extractor core into
+the no-projector endpoint component obligation.
+-/
+theorem fuelOutputStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {attempt : MachineDescription}
+    (hmaterializer :
+      FuelOutputStructuredIndexedMaterializerConstruction
+        attempt)
+    (hcore :
+      FuelOutputStructuredLoweredCoreConstruction attempt) :
+    FuelOutputStructuredCanonicalEndpointCoreComponentConstruction
+      attempt := by
+  simpa [FuelOutputStructuredIndexedMaterializerConstruction,
+    FuelOutputStructuredLoweredCoreConstruction,
+    FuelOutputStructuredCanonicalEndpointCoreComponentConstruction] using
+    structured3CanonicalExactEndpointCoreComponentConstruction_of_materializer_loweredCore
+      hmaterializer hcore
 
 /--
 Install the shared exact tape-2 projector into fuel-output core components.
@@ -2733,6 +3119,21 @@ def BoundedFuelPairEnumeratorStructuredExactMaterializerSpec
     materializer
 
 /--
+Target-specific bounded-enumerator materializer obligation before deterministic
+per-input exact closedness is installed by the shared endpoint infrastructure.
+-/
+def BoundedFuelPairEnumeratorStructuredIndexedMaterializerSpec
+    (runner : MachineDescription)
+    (materializer : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerSpec
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+    materializer
+
+/--
 Exact lowered-core behavior for the canonical bounded enumerator endpoint.
 -/
 def BoundedFuelPairEnumeratorStructuredExactLoweredCoreSpec
@@ -2931,6 +3332,80 @@ def BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstructio
       PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
         runner =>
       Tape.blank)
+
+/--
+Bounded-enumerator input parser/materializer construction, separated from the
+lowered structured enumerator core.
+-/
+def BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction
+    (runner : MachineDescription) : Prop :=
+  Structured3EndpointIndexedMaterializerConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredInitializedTape i)
+
+/--
+Bounded-enumerator lowered structured core data after input materialization.
+-/
+def BoundedFuelPairEnumeratorStructuredLoweredCoreComponents
+    (runner : MachineDescription) : Type :=
+  Structured3CanonicalExactEndpointLoweredCoreComponents
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+    (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      Tape.blank)
+
+/--
+Existence form for the bounded-enumerator lowered structured core.
+-/
+def BoundedFuelPairEnumeratorStructuredLoweredCoreConstruction
+    (runner : MachineDescription) : Prop :=
+  Structured3CanonicalExactEndpointLoweredCoreConstruction
+    (fun i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      boundedFuelPairEnumeratorStructuredInitializedTape i)
+    (fun i => boundedFuelPairEnumeratorStructuredLoweredTape i)
+    (fun i =>
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
+        i)
+    (fun i => boundedFuelPairEnumeratorStructuredInputTape i)
+    (fun _i :
+      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
+        runner =>
+      Tape.blank)
+
+/--
+Combine the bounded-enumerator parser/materializer and lowered core into the
+no-projector endpoint component obligation.
+-/
+theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
+    {runner : MachineDescription}
+    (hmaterializer :
+      BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction
+        runner)
+    (hcore :
+      BoundedFuelPairEnumeratorStructuredLoweredCoreConstruction
+        runner) :
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction
+      runner := by
+  simpa [
+    BoundedFuelPairEnumeratorStructuredIndexedMaterializerConstruction,
+    BoundedFuelPairEnumeratorStructuredLoweredCoreConstruction,
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction] using
+    structured3CanonicalExactEndpointCoreComponentConstruction_of_materializer_loweredCore
+      hmaterializer hcore
 
 /--
 Install the shared exact tape-2 projector into bounded fuel-pair enumerator
