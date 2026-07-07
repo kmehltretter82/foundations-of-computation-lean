@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge.InputMaterializerFrontier
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge.SelectedSegmentRoutes
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMatFrontier
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.SelectedSegments
 
 set_option doc.verso true
 

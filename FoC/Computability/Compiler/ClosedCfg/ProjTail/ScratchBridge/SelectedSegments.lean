@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridge.InputMaterializerContracts
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMatContracts
 
 set_option doc.verso true
 

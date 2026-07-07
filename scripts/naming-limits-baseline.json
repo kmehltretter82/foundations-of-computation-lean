@@ -257,34 +257,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/InputMaterializerContracts.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/InputMaterializerFrontier.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/SelectedSegmentRoutes.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/Shape.lean",
-        "value": 7
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge.lean",
         "value": 6
       },
@@ -1647,34 +1619,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindow.lean",
         "value": 90
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/InputMaterializerContracts.lean",
-        "value": 123
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/InputMaterializerFrontier.lean",
-        "value": 122
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/SelectedSegmentRoutes.lean",
-        "value": 118
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridge/Shape.lean",
-        "value": 102
       },
       {
         "key": "compiler_rel_path",
