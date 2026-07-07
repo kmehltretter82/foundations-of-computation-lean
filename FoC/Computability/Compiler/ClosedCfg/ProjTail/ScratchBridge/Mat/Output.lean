@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoolWordRawBitsDecoderInputMaterializerOutput
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Generic
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Output
 
 set_option doc.verso true
 

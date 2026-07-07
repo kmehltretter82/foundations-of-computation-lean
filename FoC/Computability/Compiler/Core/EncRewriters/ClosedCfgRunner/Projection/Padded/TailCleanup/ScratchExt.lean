@@ -20,10 +20,10 @@ implementation is split by responsibility:
   construction leaves for the scratch-count materializer and restorer.
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge` exposes the structured
   endpoint facts and remaining finite-machine leaves.
-- {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeThreaded` carries
+- {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Threaded` carries
   the lowered structured extractor bridge through the current scratch-count
   materializer scaffold.
-- {module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput` records
+- {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Output` records
   normalized-output endpoint views for the count-window bridge wrappers.
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Output` records
   normalized-output endpoint views for the structured input materializer

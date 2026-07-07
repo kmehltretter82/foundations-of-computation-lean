@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeOutput
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Output
 
 set_option doc.verso true
 

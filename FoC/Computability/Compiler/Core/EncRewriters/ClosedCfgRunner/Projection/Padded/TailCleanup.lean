@@ -1,10 +1,10 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScaffoldOutput
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionRouteContracts
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeSelectedDecoderRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeSelectedHeadRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeThreadedRouteContracts
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedDecoder
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHead
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHeadThreaded
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.Threaded
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Contracts
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.OutputRoutes
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.BranchRoutes

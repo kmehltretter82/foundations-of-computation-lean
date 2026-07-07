@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScratchExtCountWindowBridgeThreaded
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Threaded
 
 set_option doc.verso true
 

@@ -257,48 +257,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedDecoderRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreadedRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowConstructions.lean",
         "value": 6
       },
@@ -1561,48 +1519,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeOutput.lean",
-        "value": 102
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedDecoderRouteContracts.lean",
-        "value": 125
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadRouteContracts.lean",
-        "value": 122
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts.lean",
-        "value": 130
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 104
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreadedRouteContracts.lean",
-        "value": 118
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowConstructions.lean",
         "value": 103
       },
@@ -2101,6 +2017,76 @@
       {
         "key": "decl_name",
         "limit": 128,
+        "line": 782,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Output.lean",
+        "value": 136
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 868,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Output.lean",
+        "value": 144
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 124,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Routes/SelectedDecoder.lean",
+        "value": 132
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 59,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 130
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 123,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 132
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 509,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 136
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 583,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 146
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 610,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 157
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 636,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 136
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
+        "line": 697,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+        "value": 132
+      },
+      {
+        "key": "decl_name",
+        "limit": 128,
         "line": 856,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/CountWindowRawEncoder/RawBoundaryRightEdgeEmitter/CountedBoundary.lean",
         "value": 132
@@ -2181,76 +2167,6 @@
         "line": 444,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/OutputHybrid.lean",
         "value": 129
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 782,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeOutput.lean",
-        "value": 136
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 868,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeOutput.lean",
-        "value": 144
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 124,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedDecoderRouteContracts.lean",
-        "value": 132
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 59,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 130
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 123,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 132
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 509,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 136
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 583,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 146
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 610,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 157
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 636,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 136
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 697,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreaded.lean",
-        "value": 132
       },
       {
         "key": "decl_name",
@@ -2449,13 +2365,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/CountWindowRawEncoder/RawBoundaryRightEdgeEmitterRouteContracts/EraseTailHeadBlankSentinel.lean",
         "value": 165
-      },
-      {
-        "key": "formal_lean_path",
-        "limit": 160,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts.lean",
-        "value": 164
       }
     ],
     "route_contracts_file": [
@@ -2507,34 +2416,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
         "value": "ParsedInnerRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedDecoderRouteContracts.lean",
-        "value": "ScratchExtCountWindowBridgeSelectedDecoderRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadRouteContracts.lean",
-        "value": "ScratchExtCountWindowBridgeSelectedHeadRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts.lean",
-        "value": "ScratchExtCountWindowBridgeSelectedHeadThreadedRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/ScratchExtCountWindowBridgeThreadedRouteContracts.lean",
-        "value": "ScratchExtCountWindowBridgeThreadedRouteContracts.lean"
       },
       {
         "key": "route_contracts_file",
