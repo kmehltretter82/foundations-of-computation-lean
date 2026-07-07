@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerFrontier
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
 
 set_option doc.verso true
@@ -27,9 +28,11 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConst
     Structured3InputMaterializerConstruction
       selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
       selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput := by
-  -- Generic endpoint materializer: wrap the current one-tape source as tape 0
-  -- of a guarded three-tape encoding, with blank scratch/output tapes.
-  sorry
+  simpa [
+    Structured3BlankOutputInputMaterializerConstruction,
+    selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerOutput] using
+    structured3BlankOutputInputMaterializerConstruction_core
+      selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerSource
 
 theorem selectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction_core :
     SelectedSegmentLogicalTapeDecoderPaddedExactCleanupForwardSplitConstruction := by
