@@ -362,13 +362,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionShape.lean",
         "value": 6
       },
@@ -426,13 +419,6 @@
         "limit": 5,
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserOutput.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserRouteContracts.lean",
         "value": 6
       },
       {
@@ -1624,13 +1610,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionRouteContracts.lean",
-        "value": 110
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionShape.lean",
         "value": 101
       },
@@ -1675,13 +1654,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserOutput.lean",
         "value": 97
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserRouteContracts.lean",
-        "value": 105
       },
       {
         "key": "compiler_rel_path",
@@ -2416,20 +2388,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
         "value": "ParsedInnerRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/SelectedFootprintCompactionRouteContracts.lean",
-        "value": "SelectedFootprintCompactionRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Padded/TailCleanup/StructuredPrefixEraserRouteContracts.lean",
-        "value": "StructuredPrefixEraserRouteContracts.lean"
       },
       {
         "key": "route_contracts_file",

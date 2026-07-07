@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.ScaffoldOutput
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.SelectedFootprintCompactionRouteContracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Padded.TailCleanup.StructuredPrefixEraserRouteContracts
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.Footprint.Contracts
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.PrefixEraser.Contracts
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedDecoder
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHead
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHeadThreaded
