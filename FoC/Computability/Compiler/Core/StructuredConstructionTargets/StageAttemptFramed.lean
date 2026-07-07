@@ -336,9 +336,13 @@ theorem stageAttemptFramedStructuredIndexedMaterializerConstruction_core
     (attempt : MachineDescription) :
     StageAttemptFramedStructuredIndexedMaterializerConstruction
       attempt := by
-  -- Remaining parser/materializer obligation: recognize controller layout
-  -- inputs and materialize the guarded three-logical-tape input.
-  sorry
+  simpa [StageAttemptFramedStructuredIndexedMaterializerConstruction,
+    stageAttemptFramedStructuredInitializedTape,
+    stageAttemptFramedStructuredOutputBuffer,
+    Structured3EndpointBlankOutputMaterializerConstruction] using
+    structured3EndpointBlankOutputMaterializerConstruction_core
+      (fun i : StageAttemptFramedStructuredIndex attempt =>
+        stageAttemptFramedStructuredInputTape i)
 
 /--
 Finite-table leaf for the lowered framed-invocation structured core.

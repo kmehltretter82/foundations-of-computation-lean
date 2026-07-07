@@ -378,9 +378,15 @@ theorem fuelOutputStructuredIndexedMaterializerConstruction_core
     (attempt : MachineDescription) :
     FuelOutputStructuredIndexedMaterializerConstruction
       attempt := by
-  -- Remaining parser/materializer obligation: recognize halted simulator
-  -- layouts and materialize the guarded three-logical-tape input.
-  sorry
+  simpa [FuelOutputStructuredIndexedMaterializerConstruction,
+    fuelOutputStructuredInitializedTape,
+    fuelOutputStructuredOutputBuffer,
+    Structured3EndpointBlankOutputMaterializerConstruction] using
+    structured3EndpointBlankOutputMaterializerConstruction_core
+      (fun i :
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+          attempt =>
+        fuelOutputStructuredInputTape i)
 
 /--
 Finite-table leaf for the lowered fuel-output structured core.
