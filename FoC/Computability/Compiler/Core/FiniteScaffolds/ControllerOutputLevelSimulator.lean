@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
+import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets
 
 set_option doc.verso true
@@ -130,23 +131,28 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
             attempt L)
           hextractorWithTape with
       ⟨TsimExtractor, hsimExtractorHalt, hTsimExtractor⟩
-    have hsimExtractorFromParser :
-        simExtractor.HaltsFromTape
-          (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tparser)
-          TsimExtractor := by
-      rw [tapeCodePrimitiveCodeWordHandoffMove, hparserMoveLeft]
-      simpa [simExtractor, FixedDescriptionBoundedSimulatorInput,
-        SimulatorLayout.asBoolInput] using
-        hsimExtractorHalt
     have hTsimExtractorOutput :
         Tape.normalizedOutput TsimExtractor =
           encodeCodeWordAsInput (encodeBoolWord result) := by
       rw [Tape.Equiv.normalizedOutput_eq hTsimExtractor]
       exact hTextractorOutput
+    have hparserHandoffEquiv :
+        Tape.Equiv
+          (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tparser)
+          (Tape.input (FixedDescriptionBoundedSimulatorInput L)) := by
+      rw [tapeCodePrimitiveCodeWordHandoffMove, hparserMoveLeft]
+      exact
+        Tape.Equiv.refl
+          (Tape.input (FixedDescriptionBoundedSimulatorInput L))
     exact
-      seqSubroutine_haltsWithOutput_forward
+      CommonGround.SeqComposition.seqSubroutine_haltsWithOutput_forward_of_input_equiv
         hparserReady hsimExtractorReady hparserHalt
-        hsimExtractorFromParser hTsimExtractorOutput
+        hparserHandoffEquiv
+        (by
+          simpa [simExtractor, FixedDescriptionBoundedSimulatorInput,
+            SimulatorLayout.asBoolInput] using
+            hsimExtractorHalt)
+        hTsimExtractorOutput
   · intro w limit fuel result hrunner
     let L :=
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
@@ -244,14 +250,10 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorGener
   pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHandoffConstruction_of_rightShifted
     pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeRightShiftedConstruction_finite_leaf
 
-private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_finite_leaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf
-
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
-  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
-    pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_finite_leaf
+  pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_endpointEquivIndexed
+    fuelOutputStructuredEndpointEquivIndexedConstruction_core
 
 private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=

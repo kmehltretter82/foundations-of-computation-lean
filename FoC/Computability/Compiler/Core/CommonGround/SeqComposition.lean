@@ -96,6 +96,30 @@ theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
         hA hB hAhalts hmove hBactual,
       hTequiv⟩
 
+theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_input_equiv
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hhandoff : Tape.Equiv (Tape.move handoffMove Tmid) Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (seqSubroutine A B handoffMove).HaltsFromTapeEquiv Tin Tout := by
+  rcases hBhalts with ⟨ToutActual, hBactual, hToutActual⟩
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := B)
+        (Tin := Tnext)
+        (Tin' := Tape.move handoffMove Tmid)
+        (Tout := ToutActual)
+        (Tape.Equiv.symm hhandoff)
+        hBactual with
+    ⟨ToutHandoff, hBHandoff, hToutHandoff⟩
+  exact
+    ⟨ToutHandoff,
+      seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+        hA hB hAhalts rfl hBHandoff,
+      Tape.Equiv.trans hToutHandoff hToutActual⟩
+
 theorem seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
     {A B : MachineDescription} {handoffMove : Direction}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -140,6 +164,31 @@ theorem seqSubroutine_haltsWithTape_of_haltsWithTape_eq
       (runConfig_reaches_from_move_eq
         (B := B) (handoffMove := handoffMove)
         hmove hnB)
+
+theorem seqSubroutine_haltsWithOutput_forward_of_input_equiv
+    {A B : MachineDescription} {handoffMove : Direction}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input : Word Bool} {Tmid Tnext Tout : Tape Bool} {out : Word Bool}
+    (hAhalts : A.HaltsWithTape input Tmid)
+    (hhandoff : Tape.Equiv (Tape.move handoffMove Tmid) Tnext)
+    (hBhalts : B.HaltsFromTape Tnext Tout)
+    (hout : Tape.normalizedOutput Tout = out) :
+    (seqSubroutine A B handoffMove).HaltsWithOutput input out := by
+  rcases
+      MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (D := B)
+        (Tin := Tnext)
+        (Tin' := Tape.move handoffMove Tmid)
+        (Tout := Tout)
+        (Tape.Equiv.symm hhandoff)
+        hBhalts with
+    ⟨ToutHandoff, hBHandoff, hToutHandoff⟩
+  exact
+    seqSubroutine_haltsWithOutput_forward
+      hA hB hAhalts hBHandoff
+      (by
+        rw [Tape.Equiv.normalizedOutput_eq hToutHandoff]
+        exact hout)
 
 theorem seqSubroutine_exactFamilySpec
     {ι : Type} {A B : MachineDescription} {handoffMove : Direction}

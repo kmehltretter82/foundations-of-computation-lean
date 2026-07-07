@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed
 
 set_option doc.verso true
@@ -590,6 +591,88 @@ theorem fuelOutputStructuredConstruction_of_coreEndpoint
     PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction :=
   fuelOutputStructuredConstruction_of_endpointExactIndexed h
 
+theorem fuelOutputCodeSubroutineConstruction_of_endpointEquivIndexed
+    {attempt : MachineDescription}
+    {W : Structured3EndpointWrapper}
+    {initialized lowered :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt -> Tape Bool}
+    (hspec :
+      Structured3EndpointEquivIndexedFamilySpec
+        W
+        fuelOutputStructuredInputTape
+        initialized
+        lowered
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputTape) :
+    exists extractor : MachineDescription,
+      TapeCodePrimitiveOutputCompiledSubroutineByDescription
+        (PairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive
+          attempt)
+        extractor := by
+  refine ⟨W.machine, ?_⟩
+  exact
+    CommonGround.CodeWordEmitters.outputCompiled_of_indexed_tape_equiv_spec
+      W.machine_subroutineReady.left
+      W.machine_subroutineReady.right
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputInputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
+      (fun i =>
+        CommonGround.CodeWordEmitters.exactOutputTape_normalizedOutput
+          PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode i)
+      (fun i => by
+        simpa [fuelOutputStructuredInputTape] using
+          Structured3EndpointEquivIndexedFamilySpec.forward hspec i)
+      (fun code T hhalt => by
+        have hfrom :
+            W.machine.HaltsFromTape
+              (Tape.input (encodeCodeWordAsInput code)) T :=
+          haltsFromTape_input_of_haltsWithTape hhalt
+        rcases
+            Structured3EndpointEquivIndexedFamilySpec.closedIndex
+              hspec
+              (Tape.input (encodeCodeWordAsInput code)) T
+              hfrom with
+          ⟨i, hinput, hT⟩
+        exact
+          ⟨i, fuelOutputInputCode_eq_of_inputTape_eq hinput, hT⟩)
+      (by
+        intro code out
+        constructor
+        · intro htransform
+          rcases
+              (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+                attempt code out).mp htransform with
+            ⟨L, hcode, hstate, houtput⟩
+          let i :
+              PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+                attempt :=
+            ⟨(L, out), ⟨hstate, houtput⟩⟩
+          exact ⟨i, hcode, rfl⟩
+        · intro hindexed
+          rcases hindexed with ⟨i, hcode, hout⟩
+          exact
+            (pairedRecognizerDovetailControllerStageAttemptFuelOutputCodePrimitive_transform_eq_some_iff
+              attempt code out).mpr
+              ⟨i.1.1, hcode, i.2.left, by
+                rw [hout]
+                exact i.2.right⟩)
+
+theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_endpointEquivIndexed
+    (h :
+      forall attempt : MachineDescription,
+        FuelOutputStructuredEndpointEquivIndexedConstruction attempt) :
+    PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction := by
+  intro attempt
+  rcases h attempt with ⟨W, initialized, lowered, hspec⟩
+  exact
+    fuelOutputCodeSubroutineConstruction_of_endpointEquivIndexed
+      (attempt := attempt)
+      (W := W)
+      (initialized := initialized)
+      (lowered := lowered)
+      hspec
+
 theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_structured
     (h :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction) :
@@ -600,14 +683,6 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineCo
         intro attempt
         rcases h attempt with ⟨W, hspec⟩
         exact ⟨W.machine, hspec⟩)
-
-theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction_structuredLeaf :
-    PairedRecognizerDovetailControllerStageAttemptFuelOutputStructuredCodeSubroutineConstruction := by
-  -- Legacy exact-output public leaf.  The cleanup route now has
-  -- `fuelOutputStructuredEndpointEquivIndexedConstruction_core`; closing this
-  -- equality-based public contract needs either a restricted exact projector
-  -- for this target family or a public contract migration.
-  sorry
 
 
 end StructuredConstructionTargets
