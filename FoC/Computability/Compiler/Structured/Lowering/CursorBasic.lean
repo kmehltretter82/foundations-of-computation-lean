@@ -1270,6 +1270,26 @@ inductive SingletonGuardSlackEndpointShape :
 
 namespace SingletonGuardSlackEndpointShape
 
+theorem start_read
+    {target : List (Tape Bool)} {physical : Tape Bool}
+    (hshape : SingletonGuardSlackEndpointShape target physical) :
+    Tape.read physical = none := by
+  cases hshape with
+  | canonical hphysical =>
+      rw [hphysical]
+      simp [encodedGuardedStructuredTapes, encodedStructuredTapes,
+        encodedStructuredTapeCells, guardLogicalTapes, guardLogicalTape,
+        logicalTapeCode, logicalCellListBits, logicalCellBits,
+        tapeSeparatorCells, tapeAtCells, Tape.read]
+  | leftBoundary head right =>
+      simp [encodedStructuredTapes, encodedStructuredTapeCells,
+        logicalTapeCode, logicalCellListBits, logicalCellBits,
+        headMarkerCells, tapeSeparatorCells, tapeAtCells, Tape.read]
+  | rightBoundary left head =>
+      simp [encodedStructuredTapes, encodedStructuredTapeCells,
+        logicalTapeCode, logicalCellListBits, logicalCellBits,
+        headMarkerCells, tapeSeparatorCells, tapeAtCells, Tape.read]
+
 theorem canonical_singleton_afterOpening_read
     (target : Tape Bool) :
     Tape.read

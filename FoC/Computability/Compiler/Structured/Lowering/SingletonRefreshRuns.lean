@@ -526,7 +526,7 @@ theorem singletonShapeRefreshDescription_run_false_of_shape
       { state := singletonShapeTerminalProbeStart
         tape := physical } :=
   singletonShapeRefreshDescription_run_false_of_reads
-    physical hshape.openingSeparator_read hread
+    physical hshape.start_read hread
 
 theorem singletonShapeRefreshDescription_run_true_of_shape
     {target : List (Tape Bool)} {physical : Tape Bool}
@@ -538,7 +538,7 @@ theorem singletonShapeRefreshDescription_run_true_of_shape
       { state := singletonShapeLeftRepairStart
         tape := physical } :=
   singletonShapeRefreshDescription_run_true_of_reads
-    physical hshape.openingSeparator_read hread
+    physical hshape.start_read hread
 
 theorem singletonShapeRefreshDescription_run_canonical_opening
     (target : Tape Bool) :
@@ -1068,17 +1068,22 @@ theorem singletonShapeRefreshDescription_haltsFrom_structuredSingletonEndpoint_s
     {target : Tape Bool} {physical : Tape Bool}
     (hshape : StructuredSingletonGuardSlackEndpointShape [target] physical) :
     singletonShapeRefreshDescription.HaltsFromTapeEquiv physical
-      (encodedGuardedStructuredTapes [target]) :=
-  singletonShapeRefreshDescription_contract
-    |>.realizes_structuredSingletonEndpoint_singleton hshape
+      (encodedGuardedStructuredTapes [target]) := by
+  rcases hshape with ⟨actual, hlist, hphysical⟩
+  rcases singletonGuardSlackEndpointShapeList_singleton hlist with
+    ⟨actualTape, hactual, hsingleton⟩
+  rw [hactual] at hphysical
+  rw [hphysical]
+  exact singletonShapeRefreshDescription_contract.realizes hsingleton
 
 theorem singletonShapeRefreshNormalizer_realizes_structuredSingletonEndpoint_singleton
     {target : Tape Bool} {physical : Tape Bool}
     (hshape : StructuredSingletonGuardSlackEndpointShape [target] physical) :
     singletonShapeRefreshNormalizer.machine.HaltsFromTapeEquiv physical
-      (encodedGuardedStructuredTapes [target]) :=
-  singletonShapeRefreshNormalizer
-    |>.realizes_structuredSingletonEndpoint_singleton hshape
+      (encodedGuardedStructuredTapes [target]) := by
+  exact
+    singletonShapeRefreshDescription_haltsFrom_structuredSingletonEndpoint_singleton
+      hshape
 
 end MultiTapeLowering
 end Structured
