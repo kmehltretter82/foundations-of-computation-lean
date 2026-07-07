@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.Core
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.Core
 
 set_option doc.verso true
 
@@ -8,7 +8,7 @@ set_option doc.verso true
 This module isolates the pure source-fields and nested-layout parsed tape facts
 used by the padded merge post-transition leaves.  The scanner definitions and
 exact source-scanner runs remain in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.Core`;
+{module}`FoC.Computability.Compiler.ClosedCfg.PostTrans.Core`;
 branch contracts and finite leaves import this module when they need the parsed
 nested-layout source and target shapes.
 -/

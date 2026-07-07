@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.BranchHandoffShape
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.BranchHandoffShape
 
 set_option doc.verso true
 

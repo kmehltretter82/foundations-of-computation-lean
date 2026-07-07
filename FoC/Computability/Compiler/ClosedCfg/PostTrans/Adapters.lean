@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.Specs
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.Specs
 
 set_option doc.verso true
 
@@ -7,7 +7,7 @@ set_option doc.verso true
 
 This module contains the branch-composition adapters for the padded merge
 post-transition phase.  The construction-family contracts live in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.Specs`.
+{module}`FoC.Computability.Compiler.ClosedCfg.PostTrans.Specs`.
 -/
 
 namespace FoC

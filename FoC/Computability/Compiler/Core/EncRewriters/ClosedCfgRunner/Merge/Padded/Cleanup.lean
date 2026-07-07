@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition
+import FoC.Computability.Compiler.ClosedCfg.PostTrans
 
 set_option doc.verso true
 

@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.NestedLayoutShape
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutShape
 
 set_option doc.verso true
 

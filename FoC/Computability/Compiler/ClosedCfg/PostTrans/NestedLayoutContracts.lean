@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.NestedLayoutParser
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser
 
 set_option doc.verso true
 
@@ -7,7 +7,7 @@ set_option doc.verso true
 
 This module exposes the padded merge nested-layout parser as a set of exact and
 normalized-output routes.  The finite-machine leaves remain in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.NestedLayoutParser`;
+{module}`FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser`;
 the definitions here make the feasible contextual window route explicit and
 keep the impossible isolated restorer route as a guardrail.
 -/

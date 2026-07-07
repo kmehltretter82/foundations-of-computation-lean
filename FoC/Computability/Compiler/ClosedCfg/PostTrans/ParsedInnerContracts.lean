@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.ParsedInner
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.ParsedInner
 
 set_option doc.verso true
 
@@ -9,7 +9,7 @@ This module packages the parsed-inner post-prefix route for padded merge.  The
 fixed prefix cleanup and post-prefix gap close phases are already concrete
 finite transducers; the branch-parametric field transport remains the finite
 machine leaf in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Merge.Padded.PostTransition.ParsedInner`.
+{module}`FoC.Computability.Compiler.ClosedCfg.PostTrans.ParsedInner`.
 -/
 
 namespace FoC

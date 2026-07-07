@@ -40,83 +40,6 @@
         "key": "compiler_dir_depth",
         "limit": 5,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/Adapters.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/BranchContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/BranchHandoffShape.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/Core.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutParser.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutShape.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInner.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerWindows.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/Specs.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Projection/Quoter/Assembly/Finish.lean",
         "value": 6
       },
@@ -490,55 +413,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/BranchContracts.lean",
-        "value": 82
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/BranchHandoffShape.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutParser.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutRouteContracts.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutShape.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
-        "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerWindows.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/RunLoop/SourceShape.lean",
         "value": 82
       },
@@ -622,20 +496,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredInputMaterializerRouteContracts.lean",
         "value": "StructuredInputMaterializerRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/NestedLayoutRouteContracts.lean",
-        "value": "NestedLayoutRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
-        "value": "ParsedInnerRouteContracts.lean"
       },
       {
         "key": "route_contracts_file",
