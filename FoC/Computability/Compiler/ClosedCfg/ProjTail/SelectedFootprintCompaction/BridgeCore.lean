@@ -1,8 +1,8 @@
 import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.Composition
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.PairEncodedOptionCellCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadEndpointConstructions
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
+import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
+import FoC.Computability.Compiler.Structured.HeadRoutes
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompactionPaddingOutput
 
 set_option doc.verso true

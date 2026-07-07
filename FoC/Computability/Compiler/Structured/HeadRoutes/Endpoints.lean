@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
+import FoC.Computability.Compiler.Structured.HeadRoutes
 
 set_option doc.verso true
 
@@ -8,7 +8,7 @@ set_option doc.verso true
 
 This module contains the concrete endpoint-construction leaves for the raw
 selected-head three-tape route.  The route contracts and reusable adapters live
-in {module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes`;
+in {module}`FoC.Computability.Compiler.Structured.HeadRoutes`;
 the remaining endpoint bridge obligations are kept near the top here so they
 are easy to find and work on independently.
 -/

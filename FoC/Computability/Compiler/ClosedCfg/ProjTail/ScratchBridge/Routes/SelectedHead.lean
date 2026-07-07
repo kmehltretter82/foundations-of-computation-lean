@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes
+import FoC.Computability.Compiler.Structured.HeadRoutes
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Output
 
 set_option doc.verso true
@@ -9,7 +9,7 @@ set_option doc.verso true
 The count-window bridge currently obtains its structured tape-2 normalizer
 through the selected-prefix densifier route.  The generic selected-head route
 introduced in
-{module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes`
+{module}`FoC.Computability.Compiler.Structured.HeadRoutes`
 is another reusable way to expose the same downstream count-window surface:
 selected-segment decoder, tape-2 segment normalizer, output projector, and
 scan-source materializer inputs.

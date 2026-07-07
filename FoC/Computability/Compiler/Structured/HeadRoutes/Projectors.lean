@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes.ExactCleanup
+import FoC.Computability.Compiler.Structured.HeadRoutes.ExactCleanup
 
 set_option doc.verso true
 

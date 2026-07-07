@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes.Pipeline
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes.RepresentativeCleanup
+import FoC.Computability.Compiler.Structured.HeadRoutes.Pipeline
+import FoC.Computability.Compiler.Structured.HeadRoutes.RepresentativeCleanup
 
 set_option doc.verso true
 

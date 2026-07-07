@@ -427,76 +427,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadEndpointConstructions.lean",
-        "value": 99
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/Base.lean",
-        "value": 89
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/ExactCleanup.lean",
-        "value": 97
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/Pipeline.lean",
-        "value": 93
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/Projectors.lean",
-        "value": 95
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/RawHeadNormalizer.lean",
-        "value": 102
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/RepresentativeCleanup.lean",
-        "value": 106
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes/RepresentativeProjectors.lean",
-        "value": 109
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionHeadRoutes.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionRouteContracts.lean",
-        "value": 88
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/RunsStructuredSingleton3.lean",
         "value": 88
       },
@@ -825,13 +755,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredInputMaterializerRouteContracts.lean",
         "value": "StructuredInputMaterializerRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredTapeLowering/ProjectionRouteContracts.lean",
-        "value": "ProjectionRouteContracts.lean"
       },
       {
         "key": "route_contracts_file",

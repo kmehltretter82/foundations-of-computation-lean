@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes.RepresentativeProjectors
+import FoC.Computability.Compiler.Structured.HeadRoutes.RepresentativeProjectors
 
 set_option doc.verso true
 

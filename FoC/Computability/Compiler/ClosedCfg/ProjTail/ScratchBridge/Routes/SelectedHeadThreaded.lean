@@ -14,7 +14,7 @@ extractor, and the downstream scratch-extension pipeline.
 
 This module records the parallel threaded route when the selected decoder is
 provided by the generic selected-head route from
-{module}`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes`.
+{module}`FoC.Computability.Compiler.Structured.HeadRoutes`.
 It is intentionally conditional: the remaining finite-machine work is still
 the structured input materializer and the padded selected-head cleanup.  Once
 those are available, this route threads them through the same scan-source

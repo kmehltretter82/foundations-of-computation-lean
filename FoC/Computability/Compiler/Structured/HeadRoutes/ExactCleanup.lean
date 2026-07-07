@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredTapeLowering.ProjectionHeadRoutes.RawHeadNormalizer
+import FoC.Computability.Compiler.Structured.HeadRoutes.RawHeadNormalizer
 
 set_option doc.verso true
 
