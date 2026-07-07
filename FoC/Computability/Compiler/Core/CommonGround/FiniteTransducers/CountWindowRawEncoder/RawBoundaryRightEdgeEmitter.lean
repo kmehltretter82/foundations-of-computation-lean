@@ -1458,9 +1458,10 @@ theorem rawBoundaryRightEdgeEmitterDescription_subroutineReady :
       rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
       CommonGround.Identity.exactIdentityDescription_subroutineReady
 
--- If this core run theorem cannot be proved for the chosen core table, the
--- core machine itself needs to be reconsidered rather than hidden behind the
--- public construction wrapper.
+-- WARNING: This theorem is not just unfinished. With the current definition
+-- `rawBoundaryRightEdgeEmitterCoreDescription = entryDescription`, it is false:
+-- `entryDescription` only moves left once and cannot produce `rightEdgeTape`.
+-- Fix the core machine/route contract before spending proof effort here.
 theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :

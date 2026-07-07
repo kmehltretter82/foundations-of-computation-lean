@@ -33,10 +33,11 @@ theorem structured3BlankOutputInputMaterializerConstruction_core
     {ι : Type}
     (source : ι -> Tape Bool) :
     Structured3BlankOutputInputMaterializerConstruction source := by
-  -- Remaining weak finite-machine leaf: materialize each source tape into the
-  -- guarded three-tape input with blank scratch and blank output, up to tape
-  -- equivalence.  Exact indexed closedness is source-family-specific and
-  -- belongs in the target materializer leaves.
+  -- WARNING: This arbitrary-source frontier is too strong as stated. The
+  -- target encodes the literal `Tape` representation, so equivalent inputs
+  -- such as `Tape.blank` and `{ left := [none], head := none, right := [] }`
+  -- can require non-equivalent encoded targets. Specialize this to a canonical
+  -- source family or canonicalize the source before encoding.
   sorry
 
 end FiniteTransducers
