@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Contracts
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.RunConfigEmitter
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Contracts
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter
 
 set_option doc.verso true
 

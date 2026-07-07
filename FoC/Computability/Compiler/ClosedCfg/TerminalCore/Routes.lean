@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseOutputAdapters
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.RunConfigEmitter
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter
 
 set_option doc.verso true
 
@@ -9,7 +9,7 @@ set_option doc.verso true
 This module packages the terminal padded-emitter route around the remaining
 run-config finite-machine leaf.  The exact post-scan construction still lives
 in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.RunConfigEmitter`;
+{module}`FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter`;
 the definitions here expose the weaker normalized-output and equivalence
 surfaces that downstream simulator composition can use when exact physical tape
 position is stronger than the semantic endpoint.

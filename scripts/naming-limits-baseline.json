@@ -147,76 +147,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/RunLoop/SourceShape.lean",
         "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Adapters.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Contracts.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Core.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/FieldTapes.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Rewind.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/RightShiftedSource.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/RunConfigEmitter.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/SourceTapes.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Specs.lean",
-        "value": 6
-      },
-      {
-        "key": "compiler_dir_depth",
-        "limit": 5,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/TerminalRouteContracts.lean",
-        "value": 6
       }
     ],
     "compiler_rel_path": [
@@ -616,69 +546,6 @@
         "key": "compiler_rel_path",
         "limit": 80,
         "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Adapters.lean",
-        "value": 84
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Contracts.lean",
-        "value": 85
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/FieldTapes.lean",
-        "value": 86
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Rewind.lean",
-        "value": 82
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/RightShiftedSource.lean",
-        "value": 94
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/RunConfigEmitter.lean",
-        "value": 92
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/SourceTapes.lean",
-        "value": 87
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/Specs.lean",
-        "value": 81
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/TerminalRouteContracts.lean",
-        "value": 98
-      },
-      {
-        "key": "compiler_rel_path",
-        "limit": 80,
-        "line": null,
         "path": "formal/FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator/NormalizedRunner/Constructions.lean",
         "value": 91
       },
@@ -769,13 +636,6 @@
         "line": null,
         "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Merge/Padded/PostTransition/ParsedInnerRouteContracts.lean",
         "value": "ParsedInnerRouteContracts.lean"
-      },
-      {
-        "key": "route_contracts_file",
-        "limit": "no *RouteContracts.lean files",
-        "line": null,
-        "path": "formal/FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter/TerminalCore/TerminalRouteContracts.lean",
-        "value": "TerminalRouteContracts.lean"
       },
       {
         "key": "route_contracts_file",

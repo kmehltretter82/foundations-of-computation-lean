@@ -1,6 +1,6 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Rewind
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.RightShiftedSource
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Specs
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Rewind
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RightShiftedSource
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Specs
 
 set_option doc.verso true
 
@@ -10,7 +10,7 @@ set_option doc.verso true
 This module contains the adapter lemmas that compose the terminal source,
 field-FST target, FST target, right-scratch, and final body construction
 families.  The construction-family contracts live in
-{module}`FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Specs`.
+{module}`FoC.Computability.Compiler.ClosedCfg.TerminalCore.Specs`.
 -/
 
 namespace FoC

@@ -1,7 +1,7 @@
 import FoC.Computability.TapeLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.SourceShapeCore
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore
 
 set_option doc.verso true
 

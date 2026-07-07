@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.Adapters
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.FieldTapes
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.FieldTapes
 
 set_option doc.verso true
 

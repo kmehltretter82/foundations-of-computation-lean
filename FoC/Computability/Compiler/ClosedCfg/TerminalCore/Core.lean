@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore.SourceTapes
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.SourceTapes
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 
 set_option doc.verso true

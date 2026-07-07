@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.TerminalCore
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore
 
 set_option doc.verso true
 
