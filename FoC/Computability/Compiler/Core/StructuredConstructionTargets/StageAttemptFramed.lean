@@ -330,6 +330,21 @@ theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_o
       hmaterializer hcore
 
 /--
+Finite-table leaf for the framed-invocation target.  This is the only
+target-local parser/core obligation; the public endpoint theorem below only
+composes it with the shared exact tape-2 projector.
+-/
+theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
+    (attempt : MachineDescription)
+    (_hattempt : attempt.SubroutineReady) :
+    StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
+      attempt := by
+  -- Remaining structured finite-table obligation: build the framed-invocation
+  -- parser/materializer and structured core that installs the simulated
+  -- boolean-word result on logical tape 2.
+  sorry
+
+/--
 Install the shared exact tape-2 projector into framed-invocation core
 components.
 -/
@@ -599,12 +614,8 @@ theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationStructuredConstru
             stageAttemptFramedStructuredCanonicalEndpointConstruction_of_components
               (stageAttemptFramedStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
                 (stageAttemptFramedStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (by
-                    -- Remaining structured finite-table obligation: build the
-                    -- framed-invocation parser/materializer and structured
-                    -- core that installs the simulated boolean-word result on
-                    -- logical tape 2.
-                    sorry)
+                  (stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
+                    attempt hattempt)
                   structured3EndpointExactTape2ProjectorConstruction_core))))
 
 

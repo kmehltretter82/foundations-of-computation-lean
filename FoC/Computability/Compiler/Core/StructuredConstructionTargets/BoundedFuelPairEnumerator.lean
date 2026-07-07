@@ -380,6 +380,22 @@ theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstru
       hmaterializer hcore
 
 /--
+Finite-table leaf for the bounded fuel-pair enumerator target.  This is the
+only target-local parser/core obligation; the public endpoint theorem below
+only composes it with the shared exact tape-2 projector.
+-/
+theorem boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
+    (runner : MachineDescription)
+    (_hrunner : runner.SubroutineReady) :
+    BoundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction
+      runner := by
+  -- Remaining structured finite-table obligation: build the bounded fuel-pair
+  -- parser/materializer and structured core that enumerates bounded fuel
+  -- pairs, invokes the exact-fuel runner endpoint, and leaves the
+  -- right-shifted classifier handoff tape on logical tape 2.
+  sorry
+
+/--
 Install the shared exact tape-2 projector into bounded fuel-pair enumerator
 core components.
 -/
@@ -577,13 +593,8 @@ theorem pairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorS
             boundedFuelPairEnumeratorStructuredCanonicalEndpointConstruction_of_components
               (boundedFuelPairEnumeratorStructuredCanonicalEndpointComponentConstruction_of_sharedProjector
                 (boundedFuelPairEnumeratorStructuredCanonicalEndpointSharedProjectorConstruction_of_coreComponents
-                  (by
-                    -- Remaining structured finite-table obligation: build the
-                    -- bounded fuel-pair parser/materializer and structured
-                    -- core that enumerates bounded fuel pairs, invokes the
-                    -- exact-fuel runner endpoint, and leaves the right-shifted
-                    -- classifier handoff tape on logical tape 2.
-                    sorry)
+                  (boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
+                    runner hrunner)
                   structured3EndpointExactTape2ProjectorConstruction_core))))
 
 
