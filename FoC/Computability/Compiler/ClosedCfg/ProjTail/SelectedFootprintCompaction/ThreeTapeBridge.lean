@@ -628,7 +628,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectab
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSpec_of_splitPadSymbolCaseSpec
         hspec⟩
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSplitPadSymbolCaseConstruction_of_construction
+theorem projectableSeparatorFocusSplitPadCaseConstruction_ofConstruction
     (hfocus :
       SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction) :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusSplitPadSymbolCaseConstruction := by
@@ -823,7 +823,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparator
       bits padding] using
     hrun bits padding
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction_of_pairEncodedSplitTarget
+theorem separatorFocusSplitPadCaseConstruction_ofPairEncodedSplitTarget
     (hfocus :
       PairEncodedOptionCellCompactor.SplitTargetSeparatorFocusConstruction) :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeSeparatorFocusSplitPadSymbolCaseConstruction := by
@@ -879,7 +879,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectab
     (PairEncodedOptionCellCompactor.splitTargetProjectableRightEdgeRewindOutputSpec_of_rightEdgeRewindOutputSpec
       hfocus)
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_of_pairEncodedRightEdgeRewindOutput
+theorem projectableSeparatorFocusConstruction_ofRewindOutput
     (hfocus :
       PairEncodedOptionCellCompactor.SplitTargetRightEdgeRewindOutputConstruction) :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction :=
@@ -887,7 +887,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectab
     (PairEncodedOptionCellCompactor.splitTargetProjectableRightEdgeRewindOutputConstruction_of_rightEdgeRewindOutput
       hfocus)
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_of_pairEncodedRightEdgeRewindOutputSplitPadSymbolCases
+theorem projectableSeparatorFocusConstruction_ofRewindOutputSplitPadCases
     (hsplit :
       PairEncodedOptionCellCompactor.SplitTargetRightEdgeRewindOutputSplitPadSymbolCaseConstruction) :
     SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction :=
@@ -994,7 +994,7 @@ theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructure
       selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressSpec_of_separatorFocus_projector
         hfocusSpec hprojectorSpec⟩
 
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_of_projectableSeparatorFocus_projector
+theorem structuredEgressConstruction_ofProjectableFocusProjector
     (hfocus :
       SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction)
     (hprojector : StructuredTape2ProjectorConstruction) :

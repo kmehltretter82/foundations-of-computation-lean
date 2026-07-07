@@ -1415,55 +1415,6 @@
       {
         "key": "decl_name",
         "limit": 128,
-        "line": 271,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 150
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 283,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/BridgeCore.lean",
-        "value": 135
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 631,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 134
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 826,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 133
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 882,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 136
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 890,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 155
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
-        "line": 997,
-        "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ThreeTapeBridge.lean",
-        "value": 130
-      },
-      {
-        "key": "decl_name",
-        "limit": 128,
         "line": 145,
         "path": "formal/FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
         "value": 139

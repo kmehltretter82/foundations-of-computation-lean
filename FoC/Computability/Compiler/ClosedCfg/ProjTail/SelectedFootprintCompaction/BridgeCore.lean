@@ -268,7 +268,7 @@ theorem rightEdgeRewindSourceTape_cells_filterMap
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_cells_filterMap
       bits padding
 
-theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_filterMap_eq_rightEdgeRewindSourceTape_cells_filterMap
+theorem rightEndSource_cells_filterMap_eq_rewindSource
     (bits : Word Bool) (padding : List (Option Bool)) :
     (Tape.cells
         (rightEndCompactionSourceTape
@@ -280,7 +280,7 @@ theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierF
     rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_cells_filterMap,
     rightEdgeRewindSourceTape_cells_filterMap]
 
-theorem rightEndCompactionSourceTape_selectedSegmentLogicalTapeDecoderDensifierFootprintLeftCells_normalizedOutput_eq_rightEdgeRewindSourceTape
+theorem rightEndSource_normalizedOutput_eq_rewindSource
     (bits : Word Bool) (padding : List (Option Bool)) :
     Tape.normalizedOutput
         (rightEndCompactionSourceTape
