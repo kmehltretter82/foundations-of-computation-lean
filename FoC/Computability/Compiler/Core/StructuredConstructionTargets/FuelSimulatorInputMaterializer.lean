@@ -1,5 +1,3 @@
-import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.Basic
-import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
 
 set_option doc.verso true
@@ -316,129 +314,23 @@ theorem fuelSimulatorInputRecognizerConstruction_core :
   ⟨fuelSimulatorInputRecognizerDescription,
     fuelSimulatorInputRecognizerDescription_spec⟩
 
-/-- Generic embedding-emitter phase for guarded three-logical-tape inputs. -/
-def Structured3InputEmbeddingEmitterConstruction : Prop :=
-  Structured3InputMaterializerConstruction
-    (fun source : Tape Bool => source)
-    (fun _source : Tape Bool => Tape.blank)
-
-/--
-Concrete emitter that expands an arbitrary public source tape into the guarded
-three-logical-tape input with blank scratch and blank output buffer.
--/
-def structured3InputEmbeddingEmitterDescription : MachineDescription :=
-  { stateCount := 1
-    start := 0
-    halt := 0
-    transitions := [] }
-
-theorem structured3InputEmbeddingEmitterDescription_spec :
-    Structured3InputMaterializerSpec
-      (fun source : Tape Bool => source)
-      (fun _source : Tape Bool => Tape.blank)
-      structured3InputEmbeddingEmitterDescription := by
-  -- Remaining finite-machine obligation: build the stream transducer that
-  -- emits `structured3InputMaterializerTargetTape source Tape.blank`, expanding
-  -- each source cell into the guarded structured logical-tape encoding.
-  sorry
-
-theorem structured3InputEmbeddingEmitterConstruction_core :
-    Structured3InputEmbeddingEmitterConstruction :=
-  ⟨structured3InputEmbeddingEmitterDescription,
-    structured3InputEmbeddingEmitterDescription_spec⟩
-
-/-- The actual two-phase materializer table named by the pilot route. -/
-def fuelSimulatorStructuredEquivInputMaterializerDescription
-    (recognizer emitter : MachineDescription) : MachineDescription :=
-  MachineDescription.seqSubroutine recognizer emitter
-    tapeCodePrimitiveCodeWordHandoffMove
-
-theorem fuelSimulatorStructuredEquivInputMaterializer_closedIndex_of_parts
-    {recognizer emitter : MachineDescription}
-    (hrecognizer : FuelSimulatorInputRecognizerSpec recognizer)
-    (hemitter :
-      Structured3InputMaterializerSpec
-        (fun source : Tape Bool => source)
-        (fun _source : Tape Bool => Tape.blank)
-        emitter) :
-    EquivClosedIndexedFromTape
-      (fuelSimulatorStructuredEquivInputMaterializerDescription
-        recognizer emitter)
-      (fun i : FuelSimulatorStructuredIndex =>
-        fuelSimulatorStructuredInputTape i)
-      (Structured3EndpointEquivInputMaterializerInitialized
-        (fun i : FuelSimulatorStructuredIndex =>
-          fuelSimulatorStructuredInputTape i)
-        (fun i => fuelSimulatorStructuredOutputBuffer i)) := by
-  -- Remaining indexed-closedness obligation for the sequenced route:
-  -- invert the recognizer phase to recover the FuelSimulator index, then use
-  -- emitter determinism to transport the final tape to the guarded structured
-  -- target for that index.
-  sorry
-
-theorem fuelSimulatorStructuredEquivInputMaterializerSpec_of_parts
-    {recognizer emitter : MachineDescription}
-    (hrecognizer : FuelSimulatorInputRecognizerSpec recognizer)
-    (hemitter :
-      Structured3InputMaterializerSpec
-        (fun source : Tape Bool => source)
-        (fun _source : Tape Bool => Tape.blank)
-        emitter) :
-    Structured3EndpointEquivInputMaterializerSpec
-      (fun i : FuelSimulatorStructuredIndex =>
-        fuelSimulatorStructuredInputTape i)
-      (fun i => fuelSimulatorStructuredOutputBuffer i)
-      (fuelSimulatorStructuredEquivInputMaterializerDescription
-        recognizer emitter) := by
-  constructor
-  · constructor
-    · exact
-        MachineDescription.seqSubroutine_subroutineReady
-          hrecognizer.left hemitter.left
-    · intro i
-      rcases hrecognizer.right.left i with ⟨nR, hR⟩
-      let Tmid :=
-        EncRewriters.CanonicalLayouts.HandoffTape
-          fuelSimulatorStructuredInputCode i
-      have hRfrom :
-          recognizer.HaltsFromTape
-            (fuelSimulatorStructuredInputTape i) Tmid := by
-        refine ⟨nR, ?_⟩
-        simpa [fuelSimulatorStructuredInputTape, Tmid,
-          EncRewriters.CanonicalLayouts.Bits] using hR
-      have hhandoff :
-          Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid =
-            fuelSimulatorStructuredInputTape i := by
-        simpa [Tmid, fuelSimulatorStructuredInputTape,
-          EncRewriters.CanonicalLayouts.InputTape,
-          EncRewriters.CanonicalLayouts.Bits] using
-          EncRewriters.CanonicalLayouts.handoffTape_handoff
-            fuelSimulatorStructuredInputCode_cons i
-      have hE :
-          emitter.HaltsFromTapeEquiv
-            (fuelSimulatorStructuredInputTape i)
-            (structured3InputMaterializerTargetTape
-              (fuelSimulatorStructuredInputTape i) Tape.blank) :=
-        hemitter.right (fuelSimulatorStructuredInputTape i)
-      simpa [fuelSimulatorStructuredEquivInputMaterializerDescription,
-        fuelSimulatorStructuredOutputBuffer] using
-        CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
-          hrecognizer.left hemitter.left hRfrom hhandoff hE
-  · exact
-      fuelSimulatorStructuredEquivInputMaterializer_closedIndex_of_parts
-        hrecognizer hemitter
-
 theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_parts
     (hrecognizer : FuelSimulatorInputRecognizerConstruction)
     (hemitter : Structured3InputEmbeddingEmitterConstruction) :
     FuelSimulatorStructuredEquivInputMaterializerConstruction := by
-  rcases hrecognizer with ⟨recognizer, hrecognizerSpec⟩
-  rcases hemitter with ⟨emitter, hemitterSpec⟩
-  exact
-    ⟨fuelSimulatorStructuredEquivInputMaterializerDescription
-        recognizer emitter,
-      fuelSimulatorStructuredEquivInputMaterializerSpec_of_parts
-        hrecognizerSpec hemitterSpec⟩
+  simpa [
+    FuelSimulatorStructuredEquivInputMaterializerConstruction,
+    fuelSimulatorStructuredInputTape,
+    fuelSimulatorStructuredOutputBuffer,
+    EncRewriters.CanonicalLayouts.InputTape,
+    EncRewriters.CanonicalLayouts.Bits] using
+    closedRecognizerStructuredEquivInputMaterializerConstruction_of_parts
+      (α := FuelSimulatorStructuredIndex)
+      (decode := decodeFuelSimulatorStructuredInputCode)
+      (encode := fuelSimulatorStructuredInputCode)
+      fuelSimulatorStructuredInputCode_cons
+      hrecognizer
+      hemitter
 
 /--
 Finite-table leaf for the fuel-simulator public-input materializer on the
