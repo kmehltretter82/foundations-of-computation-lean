@@ -246,10 +246,6 @@ theorem rawLt_trans {p q r : RatPair}
       (q.num * (p.den : Int)) * ((r.den : Int) * (q.den : Int)) =
         (q.num * (r.den : Int)) * ((p.den : Int) * (q.den : Int)) := by
     ac_rfl
-  have hmiddle_right :
-      (q.num * (r.den : Int)) * ((p.den : Int) * (q.den : Int)) =
-        (q.num * (r.den : Int)) * ((p.den : Int) * (q.den : Int)) := by
-    rfl
   have hright :
       (r.num * (q.den : Int)) * ((p.den : Int) * (q.den : Int)) =
         (r.num * (p.den : Int)) * ((q.den : Int) * (q.den : Int)) := by
@@ -261,7 +257,7 @@ theorem rawLt_trans {p q r : RatPair}
   have h2 :
       (q.num * (r.den : Int)) * ((p.den : Int) * (q.den : Int)) <
         (r.num * (p.den : Int)) * ((q.den : Int) * (q.den : Int)) := by
-    simpa [hmiddle_right, hright] using hright_mul
+    simpa [hright] using hright_mul
   exact Int.lt_of_mul_lt_mul_right (Int.lt_trans h1 h2) (Int.le_of_lt hd)
 
 theorem rawLt_irrefl (p : RatPair) : ¬ RawLt p p := by
@@ -635,6 +631,58 @@ def le (x y : QRat) : Prop :=
 instance : LE QRat where
   le := le
 
+theorem le_iff_toRat_le (x y : QRat) :
+    x ≤ y <-> toRat x ≤ toRat y := by
+  constructor
+  · intro h
+    apply Rat.not_lt.mp
+    intro hlt
+    exact h (lt_of_toRat_lt hlt)
+  · intro h hyx
+    exact Rat.not_le.mpr (toRat_lt_of_lt hyx) h
+
+theorem toRat_le_of_le {x y : QRat} (h : x ≤ y) :
+    toRat x ≤ toRat y :=
+  (le_iff_toRat_le x y).mp h
+
+theorem le_of_toRat_le {x y : QRat} (h : toRat x ≤ toRat y) :
+    x ≤ y :=
+  (le_iff_toRat_le x y).mpr h
+
+theorem le_of_lt {x y : QRat} (h : x < y) : x ≤ y :=
+  lt_asymm h
+
+theorem le_refl (x : QRat) : x ≤ x :=
+  lt_irrefl x
+
+theorem le_trans {x y z : QRat} (hxy : x ≤ y) (hyz : y ≤ z) : x ≤ z :=
+  le_of_toRat_le (Rat.le_trans (toRat_le_of_le hxy) (toRat_le_of_le hyz))
+
+theorem le_antisymm {x y : QRat} (hxy : x ≤ y) (hyx : y ≤ x) : x = y := by
+  cases lt_trichotomy x y with
+  | inl hlt =>
+      exact False.elim (hyx hlt)
+  | inr hrest =>
+      cases hrest with
+      | inl heq =>
+          exact heq
+      | inr hgt =>
+          exact False.elim (hxy hgt)
+
+theorem le_total (x y : QRat) : x ≤ y ∨ y ≤ x := by
+  cases lt_trichotomy x y with
+  | inl hlt =>
+      exact Or.inl (le_of_lt hlt)
+  | inr hrest =>
+      cases hrest with
+      | inl heq =>
+          exact Or.inl (by
+            intro h
+            rw [heq] at h
+            exact lt_irrefl y h)
+      | inr hgt =>
+          exact Or.inr (le_of_lt hgt)
+
 theorem eq_of_toRat_eq {x y : QRat} (h : toRat x = toRat y) : x = y :=
   toRat_injective h
 
@@ -774,6 +822,14 @@ theorem ofNat_mul (m n : Nat) :
 theorem add_mul (x y z : QRat) : (x + y) * z = x * z + y * z := by
   apply eq_of_toRat_eq
   rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.add_mul]
+
+theorem mul_assoc (x y z : QRat) : (x * y) * z = x * (y * z) := by
+  apply eq_of_toRat_eq
+  rw [toRat_mul, toRat_mul, toRat_mul, toRat_mul, Rat.mul_assoc]
+
+theorem mul_add (x y z : QRat) : x * (y + z) = x * y + x * z := by
+  apply eq_of_toRat_eq
+  rw [toRat_mul, toRat_add, toRat_add, toRat_mul, toRat_mul, Rat.mul_add]
 
 theorem zero_lt_one : (0 : QRat) < 1 := by
   change RatPair.RawLt (RatPair.ofInt 0) (RatPair.ofInt 1)
@@ -989,6 +1045,11 @@ theorem mul_div_cancel (x : QRat) {y : QRat} (hy : y ≠ 0) :
   apply eq_of_toRat_eq
   rw [toRat_div, toRat_mul]
   exact Rat.mul_div_cancel (toRat_ne_zero_of_ne_zero hy)
+
+theorem mul_inv_cancel {x : QRat} (hx : x ≠ 0) : x * x⁻¹ = 1 := by
+  apply eq_of_toRat_eq
+  rw [toRat_mul, toRat_inv, toRat_one]
+  exact Rat.mul_inv_cancel (toRat x) (toRat_ne_zero_of_ne_zero hx)
 
 theorem exists_nat_mul_pos_gt (z : QRat) {c : QRat} (hc : 0 < c) :
     exists n : Nat, z < ofNat n * c := by

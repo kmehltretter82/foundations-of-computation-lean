@@ -15,7 +15,7 @@ Dedekind-cut real type and transports this theorem to real uncountability.
 
 Used by:
 - Chapter 2, Section 2.6: real-number uncountability diagonal argument
-- {lit}`Real` bridge: uncountability of an interval and of {lit}`Real`
+- {lit}`Real` bridge: injection of streams into cuts and uncountability of {lit}`Real`
 -/
 
 namespace FoC

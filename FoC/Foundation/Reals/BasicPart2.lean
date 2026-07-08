@@ -376,17 +376,114 @@ theorem right_distrib (x y z : Real) :
     have hcong := congrArg (fun t : Real => -t) htarget_neg
     simpa [neg_neg] using hcong
 
+theorem left_distrib (x y z : Real) :
+    x * (y + z) = x * y + x * z := by
+  calc
+    x * (y + z) = (y + z) * x := mul_comm x (y + z)
+    _ = y * x + z * x := right_distrib y z x
+    _ = x * y + x * z := by rw [mul_comm y x, mul_comm z x]
+
 /-!
-**Nonzero division by cancellation.** The theorem {name}`right_distrib` and
-{name}`mul_ne_zero` turn equality after multiplication by a nonzero denominator
-into cancellation. The quotient selector below uses classical choice only to
-pick a preimage; the cancellation theorem proves that, for an actual product
-{lit}`a * d`, the selected quotient is the original {lit}`a`.
+**Associativity of multiplication.** On nonnegative cuts, multiplication is the
+cut product {name}`mulNonneg`, whose associativity {name}`mulNonneg_assoc` is
+proved directly on lower sets. The sign-split definition of {name}`Real.mul`
+then reduces the general case to the nonnegative core by pulling negations out
+with {name}`neg_mul` and {name}`mul_neg`, one factor at a time.
 -/
 
-theorem mul_right_cancel_of_right_distrib
-    (right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
-    {a b d : Real} (hd : d ≠ 0) (h : a * d = b * d) : a = b := by
+theorem mul_nonneg {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    (0 : Real) ≤ x * y := by
+  classical
+  change (0 : Real) ≤ mul x y
+  unfold mul
+  simp [hx, hy]
+  exact mulNonneg_nonneg x y hx hy
+
+theorem mul_eq_mulNonneg {x y : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    x * y = mulNonneg x y hx hy := by
+  classical
+  change mul x y = mulNonneg x y hx hy
+  unfold mul
+  simp [hx, hy]
+
+private theorem mul_assoc_nonneg (x y z : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) (hz : (0 : Real) ≤ z) :
+    (x * y) * z = x * (y * z) := by
+  have hxy : (0 : Real) ≤ x * y := mul_nonneg hx hy
+  have hyz : (0 : Real) ≤ y * z := mul_nonneg hy hz
+  calc
+    (x * y) * z = mulNonneg (x * y) z hxy hz :=
+      mul_eq_mulNonneg hxy hz
+    _ = mulNonneg (mulNonneg x y hx hy) z (mulNonneg_nonneg x y hx hy) hz :=
+      mulNonneg_congr (mul_eq_mulNonneg hx hy) rfl hxy hz
+        (mulNonneg_nonneg x y hx hy) hz
+    _ = mulNonneg x (mulNonneg y z hy hz) hx (mulNonneg_nonneg y z hy hz) :=
+      mulNonneg_assoc x y z hx hy hz
+    _ = mulNonneg x (y * z) hx hyz :=
+      mulNonneg_congr rfl (mul_eq_mulNonneg hy hz).symm hx
+        (mulNonneg_nonneg y z hy hz) hx hyz
+    _ = x * (y * z) := (mul_eq_mulNonneg hx hyz).symm
+
+private theorem mul_assoc_nonneg_left_pair (x y z : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
+    (x * y) * z = x * (y * z) := by
+  by_cases hz : (0 : Real) ≤ z
+  · exact mul_assoc_nonneg x y z hx hy hz
+  · have hnz : (0 : Real) ≤ -z := nonneg_neg_of_not_nonneg hz
+    have hneg : -((x * y) * z) = -(x * (y * z)) := by
+      calc
+        -((x * y) * z) = (x * y) * -z := (mul_neg (x * y) z).symm
+        _ = x * (y * -z) := mul_assoc_nonneg x y (-z) hx hy hnz
+        _ = x * -(y * z) := by rw [mul_neg y z]
+        _ = -(x * (y * z)) := mul_neg x (y * z)
+    have hcong := congrArg (fun t : Real => -t) hneg
+    simpa [neg_neg] using hcong
+
+private theorem mul_assoc_nonneg_left (x y z : Real)
+    (hx : (0 : Real) ≤ x) :
+    (x * y) * z = x * (y * z) := by
+  by_cases hy : (0 : Real) ≤ y
+  · exact mul_assoc_nonneg_left_pair x y z hx hy
+  · have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
+    have hneg : -((x * y) * z) = -(x * (y * z)) := by
+      calc
+        -((x * y) * z) = (-(x * y)) * z := (neg_mul (x * y) z).symm
+        _ = (x * -y) * z := by rw [mul_neg x y]
+        _ = x * ((-y) * z) := mul_assoc_nonneg_left_pair x (-y) z hx hny
+        _ = x * -(y * z) := by rw [neg_mul y z]
+        _ = -(x * (y * z)) := mul_neg x (y * z)
+    have hcong := congrArg (fun t : Real => -t) hneg
+    simpa [neg_neg] using hcong
+
+theorem mul_assoc (x y z : Real) : (x * y) * z = x * (y * z) := by
+  by_cases hx : (0 : Real) ≤ x
+  · exact mul_assoc_nonneg_left x y z hx
+  · have hnx : (0 : Real) ≤ -x := nonneg_neg_of_not_nonneg hx
+    have hneg : -((x * y) * z) = -(x * (y * z)) := by
+      calc
+        -((x * y) * z) = (-(x * y)) * z := (neg_mul (x * y) z).symm
+        _ = ((-x) * y) * z := by rw [neg_mul x y]
+        _ = (-x) * (y * z) := mul_assoc_nonneg_left (-x) y z hnx
+        _ = -(x * (y * z)) := neg_mul x (y * z)
+    have hcong := congrArg (fun t : Real => -t) hneg
+    simpa [neg_neg] using hcong
+
+/-!
+**Nonzero division as a classical selector.** The theorem {name}`right_distrib`
+and {name}`mul_ne_zero` turn equality after multiplication by a nonzero
+denominator into cancellation ({name}`mul_right_cancel`). The quotient selector
+below uses classical choice to pick a preimage under multiplication by the
+denominator, if one exists, and returns {lit}`0` otherwise. It is specified only
+on exact products: {name}`divByNonzero_mul_cancel` proves that, for an actual
+product {lit}`a * d`, the selected quotient is the original {lit}`a`. Existence
+of multiplicative inverses for arbitrary nonzero cuts is not proved here, so
+this is not total field division.
+-/
+
+theorem mul_right_cancel {a b d : Real} (hd : d ≠ 0)
+    (h : a * d = b * d) : a = b := by
   by_cases hdiff : a + -b = 0
   · exact eq_of_add_neg_eq_zero hdiff
   · have hprod_ne : (a + -b) * d ≠ 0 := mul_ne_zero hdiff hd
@@ -398,30 +495,18 @@ theorem mul_right_cancel_of_right_distrib
       _ = b * d + -(b * d) := by rw [h]
       _ = 0 := add_neg_cancel (b * d)
 
-noncomputable def divByNonzeroOfRightDistrib
-    (_right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
-    (num : Real) (d : Real) (_hd : d ≠ 0) : Real := by
+noncomputable def divByNonzero (num : Real) (d : Real) (_hd : d ≠ 0) : Real := by
   classical
   exact if h : exists q : Real, q * d = num then Classical.choose h else 0
 
-theorem divByNonzeroOfRightDistrib_mul_cancel
-    (right_distrib : forall a b c : Real, (a + b) * c = a * c + b * c)
-    (a d : Real) (hd : d ≠ 0) :
-    divByNonzeroOfRightDistrib right_distrib (a * d) d hd = a := by
+theorem divByNonzero_mul_cancel (a d : Real) (hd : d ≠ 0) :
+    divByNonzero (a * d) d hd = a := by
   classical
-  unfold divByNonzeroOfRightDistrib
+  unfold divByNonzero
   by_cases h : exists q : Real, q * d = a * d
   · simp [h]
-    exact mul_right_cancel_of_right_distrib right_distrib hd
-      (Classical.choose_spec h)
+    exact mul_right_cancel hd (Classical.choose_spec h)
   · exact False.elim (h ⟨a, rfl⟩)
-
-noncomputable def divByNonzero (num : Real) (d : Real) (hd : d ≠ 0) : Real :=
-  divByNonzeroOfRightDistrib right_distrib num d hd
-
-theorem divByNonzero_mul_cancel (a d : Real) (hd : d ≠ 0) :
-    divByNonzero (a * d) d hd = a :=
-  divByNonzeroOfRightDistrib_mul_cancel right_distrib a d hd
 
 theorem qreal_mul (a b : QRat) :
     qreal a * qreal b = qreal (a * b) := by

@@ -246,12 +246,7 @@ theorem dedekind_real_geometric_series_algebra :
     sub_eq_add_neg := Real.sub_eq_add_neg
     one_mul := Real.one_mul
     mul_one := Real.mul_one
-    left_distrib := by
-      intro a b c
-      calc
-        a * (b + c) = (b + c) * a := Real.mul_comm a (b + c)
-        _ = b * a + c * a := Real.right_distrib b c a
-        _ = a * b + a * c := by rw [Real.mul_comm b a, Real.mul_comm c a]
+    left_distrib := Real.left_distrib
     right_distrib := Real.right_distrib
     mul_neg := Real.mul_neg
   }
@@ -293,8 +288,8 @@ theorem arbitrary_real_geometric_series_division_formula
 The theorem above is the arbitrary-real induction core for the book's
 geometric-series formula, stated against the exact algebra laws needed by the
 calculation. The custom Dedekind-real layer supplies the additive laws,
-multiplicative identities, multiplication commutativity, right distributivity,
-and multiplication by negatives used by
+multiplicative identities, multiplication commutativity, both distributivity
+laws, and multiplication by negatives used by
 {name}`DedekindRealGeometricSeriesAlgebra`.
 
 The division form uses {name}`Real.divByNonzero`, a noncomputable selector for a

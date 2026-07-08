@@ -973,6 +973,76 @@ theorem mulNonneg_comm (x y : Real)
         exact Or.inr
           ⟨a, b, ha0, hb0, ha, hb, by simpa [QRat.mul_comm] using hqba⟩
 
+theorem mulNonneg_assoc (x y z : Real)
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) (hz : (0 : Real) ≤ z) :
+    mulNonneg (mulNonneg x y hx hy) z (mulNonneg_nonneg x y hx hy) hz =
+      mulNonneg x (mulNonneg y z hy hz) hx (mulNonneg_nonneg y z hy hz) := by
+  apply ext
+  intro q
+  constructor
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact Or.inl hq0
+    | inr hprod =>
+        rcases hprod with ⟨s, c, hs0, hc0, hsxy, hzc, hqsc⟩
+        cases hsxy with
+        | inl hsneg =>
+            exact False.elim (QRat.lt_asymm hs0 hsneg)
+        | inr hab =>
+            rcases hab with ⟨a, b, ha0, hb0, hxa, hyb, hsab⟩
+            have hq_abc : q < (a * b) * c :=
+              QRat.lt_trans hqsc (QRat.mul_lt_mul_of_pos_right hsab hc0)
+            have hq_a_bc : q < a * (b * c) := by
+              rwa [QRat.mul_assoc] at hq_abc
+            rcases y.open_upward b hyb with ⟨b', hbb', hyb'⟩
+            rcases z.open_upward c hzc with ⟨c', hcc', hzc'⟩
+            have hb'0 : 0 < b' := QRat.lt_trans hb0 hbb'
+            have hc'0 : 0 < c' := QRat.lt_trans hc0 hcc'
+            have hbc_lt : b * c < b' * c' :=
+              QRat.mul_lt_mul_of_pos hbb' hcc' hb0 hc0
+            exact Or.inr ⟨a, b * c, ha0, QRat.mul_pos hb0 hc0, hxa,
+              Or.inr ⟨b', c', hb'0, hc'0, hyb', hzc', hbc_lt⟩, hq_a_bc⟩
+  · intro hq
+    cases hq with
+    | inl hq0 =>
+        exact Or.inl hq0
+    | inr hprod =>
+        rcases hprod with ⟨a, t, ha0, ht0, hxa, htyz, hqat⟩
+        cases htyz with
+        | inl htneg =>
+            exact False.elim (QRat.lt_asymm ht0 htneg)
+        | inr hbc =>
+            rcases hbc with ⟨b, c, hb0, hc0, hyb, hzc, htbc⟩
+            have hq_a_bc : q < a * (b * c) :=
+              QRat.lt_trans hqat (QRat.mul_lt_mul_of_pos_left htbc ha0)
+            have hq_abc : q < (a * b) * c := by
+              rwa [← QRat.mul_assoc] at hq_a_bc
+            rcases x.open_upward a hxa with ⟨a', haa', hxa'⟩
+            rcases y.open_upward b hyb with ⟨b', hbb', hyb'⟩
+            have ha'0 : 0 < a' := QRat.lt_trans ha0 haa'
+            have hb'0 : 0 < b' := QRat.lt_trans hb0 hbb'
+            have hab_lt : a * b < a' * b' :=
+              QRat.mul_lt_mul_of_pos haa' hbb' ha0 hb0
+            exact Or.inr ⟨a * b, c, QRat.mul_pos ha0 hb0, hc0,
+              Or.inr ⟨a', b', ha'0, hb'0, hxa', hyb', hab_lt⟩, hzc, hq_abc⟩
+
+private theorem mulNonneg_add_right_lower_of_bound {x y z : Real}
+    (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) (hz : (0 : Real) ≤ z)
+    {q a b e : QRat} (hq0 : ¬ q < 0) (he0 : 0 < e)
+    (hxa : x.lower a) (hyb : y.lower b) (hze : z.lower e)
+    (hqabe : q < (a + b) * e) :
+    (mulNonneg (x + y) z (add_nonneg hx hy) hz).lower q := by
+  have hqdiv : q / e < a + b :=
+    (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
+  rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
+  have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
+  have hs0 : 0 < s :=
+    QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
+  have hqse : q < s * e :=
+    (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
+  exact Or.inr ⟨s, e, hs0, he0, ⟨a, b, hxa, hyb, hsab⟩, hze, hqse⟩
+
 theorem mulNonneg_add_right (x y z : Real)
     (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
     (hz : (0 : Real) ≤ z) :
@@ -1022,16 +1092,8 @@ theorem mulNonneg_add_right (x y z : Real)
             have hqabe : q < (a + b) * e := by
               have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
               simpa [QRat.add_mul] using hsum
-            have hqdiv : q / e < a + b :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
-            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
-            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
-            have hs0 : 0 < s :=
-              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
-            have hqse : q < s * e :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
-            exact Or.inr ⟨s, e, hs0, he0,
-              ⟨a, b, hy_a, hyb, hsab⟩, hze, hqse⟩
+            exact mulNonneg_add_right_lower_of_bound hx hy hz
+              hq0 he0 hy_a hyb hze hqabe
     | inr hprodu =>
         cases hvyz with
         | inl hv0 =>
@@ -1045,16 +1107,8 @@ theorem mulNonneg_add_right (x y z : Real)
             have hqabe : q < (a + b) * e := by
               have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
               simpa [QRat.add_mul] using hsum
-            have hqdiv : q / e < a + b :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
-            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
-            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
-            have hs0 : 0 < s :=
-              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
-            have hqse : q < s * e :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
-            exact Or.inr ⟨s, e, hs0, he0,
-              ⟨a, b, hxa, hy_b, hsab⟩, hze, hqse⟩
+            exact mulNonneg_add_right_lower_of_bound hx hy hz
+              hq0 he0 hxa hy_b hze hqabe
         | inr hprodv =>
             rcases hprodu with ⟨a, c, ha0, hc0, hxa, hzc, huac⟩
             rcases hprodv with ⟨b, d, hb0, hd0, hyb, hzd, hvbd⟩
@@ -1081,16 +1135,8 @@ theorem mulNonneg_add_right (x y z : Real)
             have hqabe : q < (a + b) * e := by
               have hsum := QRat.lt_trans hquv (QRat.add_lt_add huae hvbe)
               simpa [QRat.add_mul] using hsum
-            have hqdiv : q / e < a + b :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := a + b) he0).mpr hqabe
-            rcases QRat.density hqdiv with ⟨s, hqs, hsab⟩
-            have hqdiv_nonneg : ¬ q / e < 0 := QRat.div_nonneg hq0 he0
-            have hs0 : 0 < s :=
-              QRat.zero_lt_of_not_lt_zero_of_lt hqdiv_nonneg hqs
-            have hqse : q < s * e :=
-              (QRat.div_lt_iff (x := q) (y := e) (c := s) he0).mp hqs
-            exact Or.inr ⟨s, e, hs0, he0,
-              ⟨a, b, hxa, hyb, hsab⟩, hze, hqse⟩
+            exact mulNonneg_add_right_lower_of_bound hx hy hz
+              hq0 he0 hxa hyb hze hqabe
 
 theorem mulNonneg_pos_of_pos {x y : Real}
     (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y)
