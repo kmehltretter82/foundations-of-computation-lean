@@ -71,14 +71,14 @@ lake env lean --run scripts/export-declarations.lean \
   > .lake/structured-target-decls.csv
 ```
 
-Columns are `name`, `kind`, `module`, `file`, `is_private`, `is_generated`,
-`depends_on_sorry`, kernel `type`, `normalized_type`, `normalization_ok`, and
-`normalization_error`.  `depends_on_sorry` means Lean's axiom collector found
-`sorryAx` in the declaration's dependency closure; it is not restricted to
-direct source-level `sorry`s.  The normalized type beta-reduces the type and
-erases binder and universe parameter names before printing.  If normalization
-fails, `normalized_type` is empty and the error column records the failure
-instead of falling back to the raw type.
+Columns are `name`, `short_name`, `kind`, `module`, `file`, `is_private`,
+`is_generated`, `depends_on_sorry`, kernel `type`, `normalized_type`,
+`normalization_ok`, and `normalization_error`.  `depends_on_sorry` means Lean's
+axiom collector found `sorryAx` in the declaration's dependency closure; it is
+not restricted to direct source-level `sorry`s.  The normalized type
+beta-reduces the type and erases binder and universe parameter names before
+printing.  If normalization fails, `normalized_type` is empty and the error
+column records the failure instead of falling back to the raw type.
 
 The first argument is the module to import; the second is the declaration-name
 prefix to include.  Exporting all of `FoC.Computability` is possible once the
@@ -90,6 +90,10 @@ lake env lean --run scripts/export-declarations.lean \
   FoC.Computability FoC.Computability --raw-only \
   > .lake/computability-decls-raw.csv
 ```
+
+The exporter logs progress to stderr by default, so redirected CSV output stays
+clean.  Use `--progress-every=N` to change the interval or `--no-progress` for
+quiet scripted runs.
 
 Find exact duplicate type surfaces with:
 
@@ -120,7 +124,8 @@ For a broader manual review queue, summarize declaration smells:
 scripts/summarize-declaration-smells.py .lake/structured-target-decls.csv
 ```
 
-This reports declarations depending on `sorry`, long names/types, axiom/opaque
-rows, and exact/normalized duplicate type groups.  Pass `--kind theorem` to
-review only theorem surfaces.  Treat the output as a triage list for human or
-AI review, not as an automated refactoring instruction.
+This reports declarations depending on `sorry`, long fully qualified names,
+long local declaration names, long types, axiom/opaque rows, and
+exact/normalized duplicate type groups.  Pass `--kind theorem` to review only
+theorem surfaces.  Treat the output as a triage list for human or AI review, not
+as an automated refactoring instruction.

@@ -21,36 +21,6 @@ open Languages
 universe uStage uDescription uSimulator
 
 /--
-Generic pair-bounding algebra for dovetail drivers: existential search over a
-raw pair is equivalent to existential search under some finite outer limit.
--/
-theorem exists_bounded_pair_iff_exists_pair
-    (P : Nat -> Nat -> Prop) :
-    (exists limit : Nat,
-      exists m : Nat,
-      exists n : Nat,
-        m ≤ limit ∧ n ≤ limit ∧ P m n) <->
-      exists m : Nat, exists n : Nat, P m n := by
-  exact
-    FiniteRecognizer.TupleSearch.exists_bounded_pair_iff_exists_pair P
-
-/--
-Generic triple-bounding algebra for dovetail drivers: existential search over
-a raw triple is equivalent to existential search under some finite outer
-limit.
--/
-theorem exists_bounded_triple_iff_exists_triple
-    (P : Nat -> Nat -> Nat -> Prop) :
-    (exists limit : Nat,
-      exists m : Nat,
-      exists n : Nat,
-      exists fuel : Nat,
-        m ≤ limit ∧ n ≤ limit ∧ fuel ≤ limit ∧ P m n fuel) <->
-      exists m : Nat, exists n : Nat, exists fuel : Nat, P m n fuel := by
-  exact
-    FiniteRecognizer.TupleSearch.exists_bounded_triple_iff_exists_triple P
-
-/--
 Search over an explicit fuel component is the same as unbounded halting for
 the selected generated input.
 -/

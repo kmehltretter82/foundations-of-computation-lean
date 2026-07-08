@@ -22,31 +22,6 @@ namespace TupleSearch
 universe uSymbol uState uLeft uRight
 
 /--
-Generic pair-bounding algebra for dovetail drivers.
--/
-theorem exists_bounded_pair_iff_exists_pair
-    (P : Nat -> Nat -> Prop) :
-    (exists limit : Nat,
-      exists m : Nat,
-      exists n : Nat,
-        m <= limit /\ n <= limit /\ P m n) <->
-      exists m : Nat, exists n : Nat, P m n := by
-  exact CommonGround.exists_bounded_pair_iff_exists_pair P
-
-/--
-Generic triple-bounding algebra for dovetail drivers.
--/
-theorem exists_bounded_triple_iff_exists_triple
-    (P : Nat -> Nat -> Nat -> Prop) :
-    (exists limit : Nat,
-      exists m : Nat,
-      exists n : Nat,
-      exists fuel : Nat,
-        m <= limit /\ n <= limit /\ fuel <= limit /\ P m n fuel) <->
-      exists m : Nat, exists n : Nat, exists fuel : Nat, P m n fuel := by
-  exact CommonGround.exists_bounded_triple_iff_exists_triple P
-
-/--
 Search over an explicit fuel component is equivalent to ordinary halting for
 some generated input.
 -/
@@ -91,7 +66,7 @@ theorem exists_bounded_pair_haltsOnInputIn_iff_exists_haltsOnInput
         TuringMachine.HaltsOnInput M (inputOf m) := by
   exact
     Iff.trans
-      (exists_bounded_pair_iff_exists_pair
+      (CommonGround.exists_bounded_pair_iff_exists_pair
         (fun m fuel =>
           TuringMachine.HaltsOnInputIn M fuel (inputOf m)))
       (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
@@ -147,7 +122,7 @@ theorem exists_bounded_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
         TuringMachine.HaltsOnInput M (inputOf m n) := by
   exact
     Iff.trans
-      (exists_bounded_triple_iff_exists_triple
+      (CommonGround.exists_bounded_triple_iff_exists_triple
         (fun m n fuel =>
           TuringMachine.HaltsOnInputIn M fuel (inputOf m n)))
       (exists_triple_haltsOnInputIn_iff_exists_pair_haltsOnInput
@@ -291,7 +266,7 @@ theorem exists_bounded_pair_haltsOnInputIn_and_iff_haltsOnInput_and
         TuringMachine.HaltsOnInput right input := by
   exact
     Iff.trans
-      (exists_bounded_pair_iff_exists_pair
+      (CommonGround.exists_bounded_pair_iff_exists_pair
         (fun leftFuel rightFuel =>
           TuringMachine.HaltsOnInputIn left leftFuel input /\
             TuringMachine.HaltsOnInputIn right rightFuel input))

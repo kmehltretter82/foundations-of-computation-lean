@@ -12,8 +12,37 @@ def bool_col(row: dict[str, str], name: str) -> bool:
     return row.get(name) == "true"
 
 
+def generated_name(name: str) -> bool:
+    return (
+        "._@" in name
+        or "._proof_" in name
+        or "._simp_" in name
+        or "._aux_" in name
+        or ".«_aux_" in name
+        or ".match_" in name
+        or ".rec_" in name
+        or ".below" in name
+        or ".brecOn" in name
+        or ".noConfusion" in name
+        or ".casesOn" in name
+        or name.endswith(".rec")
+        or name.endswith(".recOn")
+        or ".ctorIdx" in name
+        or "._sunfold" in name
+        or "._unsafe_rec" in name
+        or "._flat_ctor" in name
+        or ".eq_def" in name
+        or ".sizeOf_spec" in name
+        or any(
+            part.startswith("eq_") and part[3:].isdigit()
+            for part in name.split(".")
+        )
+    )
+
+
 def visible(row: dict[str, str], include_generated: bool, include_private: bool) -> bool:
-    if not include_generated and bool_col(row, "is_generated"):
+    generated = bool_col(row, "is_generated") or generated_name(row.get("name", ""))
+    if not include_generated and generated:
         return False
     if not include_private and bool_col(row, "is_private"):
         return False
@@ -22,6 +51,11 @@ def visible(row: dict[str, str], include_generated: bool, include_private: bool)
 
 def sorry_dependency(row: dict[str, str]) -> str:
     return row.get("depends_on_sorry", row.get("has_sorry", ""))
+
+
+def short_name(row: dict[str, str]) -> str:
+    name = row.get("name", "")
+    return row.get("short_name") or name.rsplit(".", 1)[-1]
 
 
 def print_rows(title: str, rows: list[dict[str, str]], limit: int) -> None:
@@ -56,6 +90,7 @@ def main() -> int:
     parser.add_argument("csv_file")
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--long-name", type=int, default=100)
+    parser.add_argument("--long-short-name", type=int, default=80)
     parser.add_argument("--long-type", type=int, default=1200)
     parser.add_argument("--include-generated", action="store_true")
     parser.add_argument("--include-private", action="store_true")
@@ -88,10 +123,21 @@ def main() -> int:
         args.limit,
     )
     print_rows(
-        "Long names",
+        "Long fully qualified names",
         sorted(
             [row for row in review_rows if len(row.get("name", "")) >= args.long_name],
             key=lambda row: (-len(row.get("name", "")), row.get("name", "")),
+        ),
+        args.limit,
+    )
+    print_rows(
+        "Long local declaration names",
+        sorted(
+            [
+                row for row in review_rows
+                if len(short_name(row)) >= args.long_short_name
+            ],
+            key=lambda row: (-len(short_name(row)), row.get("name", "")),
         ),
         args.limit,
     )

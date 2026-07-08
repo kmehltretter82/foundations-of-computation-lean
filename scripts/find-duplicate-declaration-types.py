@@ -13,12 +13,18 @@ from collections import defaultdict
 def generated_name(name: str) -> bool:
     return (
         "._@" in name
+        or "._proof_" in name
+        or "._simp_" in name
+        or "._aux_" in name
+        or ".«_aux_" in name
         or ".match_" in name
         or ".rec_" in name
         or ".below" in name
         or ".brecOn" in name
         or ".noConfusion" in name
         or ".casesOn" in name
+        or name.endswith(".rec")
+        or name.endswith(".recOn")
         or ".ctorIdx" in name
         or "._sunfold" in name
         or "._unsafe_rec" in name
@@ -84,11 +90,8 @@ def main() -> int:
                 continue
             if not args.include_private and row.get("is_private") == "true":
                 continue
-            is_generated = row.get("is_generated")
-            generated = (
-                is_generated == "true"
-                if is_generated is not None
-                else generated_name(row.get("name", ""))
+            generated = row.get("is_generated") == "true" or generated_name(
+                row.get("name", "")
             )
             if not args.include_generated and generated:
                 continue

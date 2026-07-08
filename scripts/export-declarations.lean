@@ -10,6 +10,9 @@ def nameFromString (s : String) : Name :=
 def csvEscape (s : String) : String :=
   "\"" ++ s.replace "\"" "\"\"" ++ "\""
 
+def shortNameString (s : String) : String :=
+  (s.splitOn ".").getLast?.getD s
+
 def nameStartsWith (pref name : Name) : Bool :=
   let ps := pref.components.map Name.toString
   let ns := name.components.map Name.toString
@@ -84,12 +87,18 @@ def fileOfModule (modName : String) : String :=
 
 def isGeneratedNameString (s : String) : Bool :=
   s.contains "._@" ||
+    s.contains "._proof_" ||
+    s.contains "._simp_" ||
+    s.contains "._aux_" ||
+    s.contains ".«_aux_" ||
     s.contains ".match_" ||
     s.contains ".rec_" ||
     s.contains ".below" ||
     s.contains ".brecOn" ||
     s.contains ".noConfusion" ||
     s.contains ".casesOn" ||
+    s.endsWith ".rec" ||
+    s.endsWith ".recOn" ||
     s.contains ".ctorIdx" ||
     s.contains "._sunfold" ||
     s.contains "._unsafe_rec" ||
@@ -192,6 +201,7 @@ unsafe def emitDecl (env : Environment) (includeNormalized : Bool)
   let isGenerated := isGeneratedNameString name.toString
   pure <| String.intercalate ","
     [csvEscape name.toString,
+     csvEscape (shortNameString name.toString),
      csvEscape (ConstantInfo.kindString ci),
      csvEscape modName,
      csvEscape fileName,
@@ -204,16 +214,19 @@ unsafe def emitDecl (env : Environment) (includeNormalized : Bool)
      csvEscape normalizedType.error]
 
 def usage : String :=
-  "Usage: lake env lean --run scripts/export-declarations.lean [MODULE] [PREFIX] [--raw-only]\n" ++
+  "Usage: lake env lean --run scripts/export-declarations.lean [MODULE] [PREFIX] [--raw-only] [--progress-every=N] [--no-progress]\n" ++
   "\n" ++
   "MODULE is the module to import, default FoC.Computability.\n" ++
   "PREFIX is the declaration-name prefix to export, default FoC.Computability.\n" ++
-  "--raw-only skips normalized_type generation for faster broad exports."
+  "--raw-only skips normalized_type generation for faster broad exports.\n" ++
+  "--progress-every=N logs progress to stderr every N matched declarations.\n" ++
+  "--no-progress disables stderr progress logging."
 
 structure ExportOptions where
   moduleName : Name
   prefixName : Name
   includeNormalized : Bool
+  progressEvery : Nat
 
 inductive ParsedArgs where
   | options (opts : ExportOptions)
@@ -221,18 +234,54 @@ inductive ParsedArgs where
   | error (msg : String)
 
 def parseArgs (args : List String) : ParsedArgs :=
-  let knownFlags := ["--raw-only", "-h", "--help"]
-  match args.find? (fun arg => arg.startsWith "--" && !knownFlags.contains arg) with
+  let knownFlag (arg : String) : Bool :=
+    ["--raw-only", "--no-progress", "-h", "--help"].contains arg ||
+      arg.startsWith "--progress-every="
+  match args.find? (fun arg => arg.startsWith "--" && !knownFlag arg) with
   | some arg => .error s!"unknown option: {arg}\n\n{usage}"
   | none =>
       if args.contains "-h" || args.contains "--help" then
         .help
       else
-        let positionals := args.filter (fun arg => !arg.startsWith "-")
-        .options
-          { moduleName := nameFromString (positionals.getD 0 "FoC.Computability")
-            prefixName := nameFromString (positionals.getD 1 "FoC.Computability")
-            includeNormalized := !args.contains "--raw-only" }
+        let progressArg? :=
+          args.find? (fun arg => arg.startsWith "--progress-every=")
+        let progressEvery? :=
+          progressArg?.bind fun arg =>
+            arg.drop "--progress-every=".length |>.toNat?
+        match progressArg?, progressEvery? with
+        | some arg, none =>
+            .error s!"invalid progress interval: {arg}\n\n{usage}"
+        | _, _ =>
+            let positionals := args.filter (fun arg => !arg.startsWith "-")
+            .options
+              { moduleName := nameFromString (positionals.getD 0 "FoC.Computability")
+                prefixName := nameFromString (positionals.getD 1 "FoC.Computability")
+                includeNormalized := !args.contains "--raw-only"
+                progressEvery :=
+                  if args.contains "--no-progress" then
+                    0
+                  else
+                    progressEvery?.getD 500 }
+
+def shouldReportProgress (progressEvery processed : Nat) : Bool :=
+  progressEvery != 0 && processed != 0 && processed % progressEvery == 0
+
+unsafe def emitRows (env : Environment) (opts : ExportOptions)
+    (entries : Array (Name × ConstantInfo)) : IO (Array String) := do
+  let total := entries.size
+  if opts.progressEvery != 0 then
+    IO.eprintln s!"export-declarations: matched {total} declarations"
+  let mut rows := #[]
+  let mut processed := 0
+  for entry in entries do
+    let (name, ci) := entry
+    rows := rows.push (← emitDecl env opts.includeNormalized name ci)
+    processed := processed + 1
+    if shouldReportProgress opts.progressEvery processed then
+      IO.eprintln s!"export-declarations: processed {processed}/{total}"
+  if opts.progressEvery != 0 then
+    IO.eprintln s!"export-declarations: processed {processed}/{total}"
+  pure rows
 
 unsafe def main (_args : List String) : IO UInt32 := do
   match parseArgs _args with
@@ -244,15 +293,15 @@ unsafe def main (_args : List String) : IO UInt32 := do
       pure 0
   | .options opts =>
       let env ← importModules #[{ module := opts.moduleName }] {} 0
-      let rows ←
-        (SMap.toList env.constants).foldlM (init := (#[] : Array String))
-          fun rows entry => do
-            let (name, ci) := entry
-            if nameStartsWith opts.prefixName name then
-              pure (rows.push (← emitDecl env opts.includeNormalized name ci))
+      let entries :=
+        (SMap.toList env.constants).foldl (init := (#[] : Array (Name × ConstantInfo)))
+          fun rows entry =>
+            if nameStartsWith opts.prefixName entry.1 then
+              rows.push entry
             else
-              pure rows
-      IO.println "name,kind,module,file,is_private,is_generated,depends_on_sorry,type,normalized_type,normalization_ok,normalization_error"
+              rows
+      let rows ← emitRows env opts entries
+      IO.println "name,short_name,kind,module,file,is_private,is_generated,depends_on_sorry,type,normalized_type,normalization_ok,normalization_error"
       for row in Array.qsort rows (fun a b => decide (a < b)) do
         IO.println row
       pure 0

@@ -43,7 +43,7 @@ theorem codePrefixStageSearchControllerBudgetDovetailWitness_iff_budgetFuel
         TuringMachine.HaltsOnInputIn checker fuel
           (CodePrefixRecognizerStageCode encoded budget) := by
   exact
-    exists_bounded_pair_iff_exists_pair
+    CommonGround.exists_bounded_pair_iff_exists_pair
       (fun budget fuel =>
         TuringMachine.HaltsOnInputIn checker fuel
           (CodePrefixRecognizerStageCode encoded budget))
