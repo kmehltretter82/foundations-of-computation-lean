@@ -248,7 +248,7 @@ theorem reverse_step_derives {D : MachineDescription}
       cases hstep
   | some t =>
       rw [hlookup] at hstep
-      have hmatches := lookupTransition_matches hlookup
+      have hmatches := MachineDescription.lookupTransition_matches hlookup
       have htmem : t ∈ D.transitions :=
         MachineDescription.lookupTransition_mem hlookup
       cases hstep

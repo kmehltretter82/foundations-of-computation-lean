@@ -69,17 +69,6 @@ theorem runsFromStateTapeEquiv_tableMachine_of_machine
       exact hrun,
       hequiv⟩
 
-theorem lookupTransition_match
-    {D : MachineDescription} {source : Nat} {read : Option Bool}
-    {t : TransitionDescription}
-    (h : D.lookupTransition source read = some t) :
-    t.source = source ∧ t.read = read := by
-  unfold MachineDescription.lookupTransition at h
-  have hpred :
-      MachineDescription.Matches source read t = true :=
-    List.find?_some h
-  simpa [MachineDescription.Matches] using hpred
-
 theorem lookupTransition_sameAction_of_subset_deterministic
     {small big : MachineDescription}
     (hsubset :
@@ -95,7 +84,7 @@ theorem lookupTransition_sameAction_of_subset_deterministic
     MachineDescription.lookupTransition_mem hlookup
   have htmemBig : t ∈ big.transitions :=
     hsubset t htmem
-  have htmatch := lookupTransition_match hlookup
+  have htmatch := MachineDescription.lookupTransition_matches hlookup
   have htmatchBool :
       MachineDescription.Matches source read t = true := by
     simp [MachineDescription.Matches, htmatch.left, htmatch.right]
@@ -109,7 +98,7 @@ theorem lookupTransition_sameAction_of_subset_deterministic
   | some u =>
       have humem : u ∈ big.transitions :=
         MachineDescription.lookupTransition_mem hbig
-      have humatch := lookupTransition_match hbig
+      have humatch := MachineDescription.lookupTransition_matches hbig
       have hkey : TransitionDescription.SameKey t u := by
         exact
           ⟨htmatch.left.trans humatch.left.symm,

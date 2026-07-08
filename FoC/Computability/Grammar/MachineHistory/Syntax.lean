@@ -498,34 +498,6 @@ theorem cleanupEnd_mem (D : MachineDescription) :
       [] ∈ productions D := by
   simp [productions, cleanupProductions]
 
-theorem lookupTransition_matches {D : MachineDescription}
-    {source : Nat} {read : Option Bool} {t : TransitionDescription}
-    (h : D.lookupTransition source read = some t) :
-    t.source = source ∧ t.read = read := by
-  unfold MachineDescription.lookupTransition at h
-  let p := MachineDescription.Matches source read
-  have hmatches :
-      forall l : List TransitionDescription,
-        l.find? p = some t -> p t = true := by
-    intro l
-    induction l with
-    | nil =>
-        intro hnil
-        simp at hnil
-    | cons a rest ih =>
-        intro hfind
-        rw [List.find?_cons] at hfind
-        cases hm : p a
-        · simp [hm] at hfind
-          exact ih hfind
-        · simp [hm] at hfind
-          cases hfind
-          exact hm
-  have ht : MachineDescription.Matches source read t = true :=
-    hmatches D.transitions h
-  simp [MachineDescription.Matches] at ht
-  exact ⟨ht.left, ht.right⟩
-
 theorem lookupTransition_exists_of_mem_matches
     {D : MachineDescription} {source : Nat} {read : Option Bool}
     {t : TransitionDescription}

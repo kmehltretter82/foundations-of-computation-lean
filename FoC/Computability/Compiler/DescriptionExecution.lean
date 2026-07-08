@@ -70,6 +70,15 @@ theorem lookupTransition_mem {D : MachineDescription}
           simp
   exact hmem D.transitions h
 
+theorem lookupTransition_matches {D : MachineDescription}
+    {source : Nat} {read : Option Bool} {t : TransitionDescription}
+    (h : D.lookupTransition source read = some t) :
+    t.source = source ∧ t.read = read := by
+  unfold lookupTransition at h
+  have hpred : Matches source read t = true :=
+    List.find?_some h
+  simpa [Matches] using hpred
+
 theorem stepConfig_state_bound {D : MachineDescription}
     {c d : Configuration}
     (hD : D.WellFormed)

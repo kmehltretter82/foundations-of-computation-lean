@@ -96,34 +96,6 @@ theorem matches_eq_true_iff
       transition.source = source ∧ transition.read = read := by
   simp [Matches]
 
-theorem lookupTransition_matches
-    {D : MachineDescription} {source : Nat} {read : Option Bool}
-    {t : TransitionDescription}
-    (hlookup : D.lookupTransition source read = some t) :
-    t.source = source ∧ t.read = read := by
-  unfold lookupTransition at hlookup
-  let p := Matches source read
-  have hmatches :
-      forall transitions : List TransitionDescription,
-        transitions.find? p = some t -> p t = true := by
-    intro transitions
-    induction transitions with
-    | nil =>
-        intro hnil
-        simp at hnil
-    | cons candidate rest ih =>
-        intro hfind
-        rw [List.find?_cons] at hfind
-        cases hp : p candidate
-        · simp [hp] at hfind
-          exact ih hfind
-        · simp [hp] at hfind
-          cases hfind
-          exact hp
-  have ht : Matches source read t = true :=
-    hmatches D.transitions hlookup
-  simpa [Matches] using ht
-
 theorem stepConfig_eq_none_iff_lookupTransition_eq_none
     {D : MachineDescription} {c : Configuration} :
     D.stepConfig c = none <->
