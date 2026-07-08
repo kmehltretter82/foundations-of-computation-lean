@@ -26,8 +26,9 @@ construction.
 The page is intentionally a sampler. The first block is still propositional
 logic, but the later blocks demonstrate how ordinary mathematical proof
 obligations appear in Lean: parity is an existential predicate, divisibility is
-an existential integer multiple, rationality is a representation theorem, and
-real-number closure is delegated to the reusable real-number layer.
+an existential integer multiple, rationality is the existence of a fraction
+representative denoting a given value, and real-number closure is delegated to
+the reusable real-number layer.
 -/
 
 open Foundation
@@ -171,46 +172,83 @@ theorem four_digit_divisible_by_three_iff_digit_sum_divisible_by_three
 /-!
 # Rational and Real Arithmetic
 
-The rational-number statements show closure under addition and multiplication.
+The rational-number statements formalize the book's worked example that the
+sum of two rational numbers is rational, along with the product analogue. A
+rational number is written as a fraction {lit}`a/b` with integer numerator
+and nonzero integer denominator; the structure {lit}`Rational` packages such
+a fraction, and {lit}`Rational.toRat` records the value it denotes. The
+closure theorems then say something contentful: the cross-multiplication
+formulas from the book produce a fraction whose denominator is still nonzero
+and whose value is exactly the sum, respectively the product, of the two
+input values.
+
 The real-number statements give density, rational-real closure wrappers, and
 the direct Dedekind-cut example showing that products of irrational quantities
 can be rational.
 
-The rational results are concrete algebra on numerator-denominator
-representations. The real results are phrased at the predicate level: a real is
-rational if it is represented by an embedded quotient rational, and irrational
-if no such representation exists.
+The real results are phrased at the predicate level: a real is rational if it
+is represented by an embedded quotient rational, and irrational if no such
+representation exists.
 -/
 
-theorem rational_representation_definition {a b : Int}
-    (hb : b ≠ 0) : Rational.IsRepresentation a b :=
-  Rational.representation_of_den_ne_zero hb
+/-!
+The book's definition of rational: a value is rational when it can be written
+as a ratio of integers with nonzero denominator. Formally, every such ratio
+is the denoted value of a {lit}`Rational` representative.
+-/
+theorem rational_representation_definition {a b : Int} (hb : b ≠ 0) :
+    exists x : Rational, x.toRat = Rat.divInt a b :=
+  ⟨⟨a, b, hb⟩, rfl⟩
 
-theorem six_is_rational_representation :
-    Rational.IsRepresentation 6 1 :=
-  Rational.representation_of_den_ne_zero (by decide)
+theorem six_is_rational :
+    (Rational.ofInt 6).toRat = (6 : Rat) :=
+  Rational.toRat_ofInt 6
 
-theorem three_halves_is_rational_representation :
-    Rational.IsRepresentation 3 2 :=
-  Rational.representation_of_den_ne_zero (by decide)
+theorem three_halves_is_rational :
+    exists x : Rational, x.toRat = Rat.divInt 3 2 :=
+  ⟨⟨3, 2, by decide⟩, rfl⟩
+
+/-!
+Different representatives can denote the same value: {lit}`6/4` and
+{lit}`3/2` are distinct fractions with a common value.
+-/
+theorem six_fourths_denotes_three_halves :
+    (⟨6, 4, by decide⟩ : Rational).toRat = (⟨3, 2, by decide⟩ : Rational).toRat := by
+  decide
+
+/-!
+The book's key algebraic step: {lit}`a/b + c/d = (ad + cb)/(bd)`. The
+denominator {lit}`b*d` is nonzero because neither factor is zero, and the
+resulting fraction denotes exactly the sum of the two input values.
+-/
+theorem sum_denominator_nonzero {b d : Int}
+    (hb : b ≠ 0) (hd : d ≠ 0) : b * d ≠ 0 :=
+  Int.mul_ne_zero hb hd
 
 theorem sum_of_rational_representations {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
-    Rational.IsRepresentation (a * d + c * b) (b * d) :=
-  Rational.add_representation hb hd
+    (⟨a, b, hb⟩ : Rational).toRat + (⟨c, d, hd⟩ : Rational).toRat =
+      (⟨a * d + c * b, b * d, Int.mul_ne_zero hb hd⟩ : Rational).toRat :=
+  (Rational.toRat_add ⟨a, b, hb⟩ ⟨c, d, hd⟩).symm
 
+/-!
+Closure under addition: the sum of the values of two rationals is again the
+value of a rational, witnessed by the common-denominator formula packaged in
+{lit}`Rational.add`.
+-/
 theorem sum_of_rational_numbers_is_rational (x y : Rational) :
-    (Rational.add x y).den ≠ 0 :=
-  Rational.add_den_ne_zero x y
+    exists z : Rational, z.toRat = x.toRat + y.toRat :=
+  ⟨Rational.add x y, Rational.toRat_add x y⟩
 
 theorem product_of_rational_representations {a b c d : Int}
     (hb : b ≠ 0) (hd : d ≠ 0) :
-    Rational.IsRepresentation (a * c) (b * d) :=
-  Rational.mul_representation hb hd
+    (⟨a, b, hb⟩ : Rational).toRat * (⟨c, d, hd⟩ : Rational).toRat =
+      (⟨a * c, b * d, Int.mul_ne_zero hb hd⟩ : Rational).toRat :=
+  (Rational.toRat_mul ⟨a, b, hb⟩ ⟨c, d, hd⟩).symm
 
 theorem product_of_rational_numbers_is_rational (x y : Rational) :
-    (Rational.mul x y).den ≠ 0 :=
-  Rational.mul_den_ne_zero x y
+    exists z : Rational, z.toRat = x.toRat * y.toRat :=
+  ⟨Rational.mul x y, Rational.toRat_mul x y⟩
 
 theorem real_number_between {x y : Real} (h : x < y) :
     exists z : Real, x < z ∧ z < y :=

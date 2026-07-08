@@ -6,9 +6,12 @@ set_option doc.verso true
 ## Raw rational representatives
 
 The book introduces rational numbers as ratios of integers with nonzero
-denominator. This module formalizes that representation directly. It does not
-yet quotient different representatives such as {lit}`1/2` and {lit}`2/4`; that
-quotient layer is developed separately in
+denominator. This module formalizes that representation directly, together
+with its value semantics: {lit}`Rational.toRat` sends a representative to the
+rational value it denotes, and the homomorphism laws below show that the
+representative formulas for sum and product compute the correct values. The
+module does not quotient different representatives such as {lit}`1/2` and
+{lit}`2/4`; that quotient layer is developed separately in
 {module -checked}`FoC.Foundation.QuotientRationals`.
 
 ## Book coordinates
@@ -43,9 +46,6 @@ The operations are defined by the usual representative formulas, with each
 definition carrying the proof that the new denominator is nonzero.
 -/
 
-def IsRepresentation (_num den : Int) : Prop :=
-  den ≠ 0
-
 def ofInt (n : Int) : Rational where
   num := n
   den := 1
@@ -78,9 +78,13 @@ def inv (x : Rational) (h : x.num ≠ 0) : Rational where
 def div (x y : Rational) (h : y.num ≠ 0) : Rational :=
   mul x (inv y h)
 
-theorem representation_of_den_ne_zero {num den : Int}
-    (hden : den ≠ 0) : IsRepresentation num den :=
-  hden
+/-!
+# Denominator side conditions
+
+The denominators produced by addition and multiplication stay nonzero because
+a product of nonzero integers is nonzero. This side condition is carried by
+the {lit}`Rational` structure itself; the lemmas restate it by name.
+-/
 
 theorem add_den_ne_zero (x y : Rational) :
     (add x y).den ≠ 0 :=
@@ -91,24 +95,47 @@ theorem mul_den_ne_zero (x y : Rational) :
   (mul x y).den_ne_zero
 
 /-!
-# Representability checks
+# Value semantics
 
-The rational-addition proof checks that the usual common-denominator formula
-still has a nonzero denominator.
+A representative denotes the rational value {lit}`num/den`. The map
+{lit}`toRat` records that value in the Lean core rational numbers, the same
+reference semantics used by {module -checked}`FoC.Foundation.QuotientRationals`.
+The homomorphism laws state that the representative formulas compute the
+correct values: the common-denominator sum formula really adds the two
+denoted fractions, and the product formula really multiplies them. These
+laws are the formal content of the book's closure proofs for rational
+arithmetic.
 -/
-theorem add_representation {a b c d : Int}
-    (hb : b ≠ 0) (hd : d ≠ 0) :
-    IsRepresentation (a * d + c * b) (b * d) :=
-  Int.mul_ne_zero hb hd
 
-/-!
-The rational-multiplication exercise has the same shape: the product
-denominator is nonzero when both input denominators are nonzero.
--/
-theorem mul_representation {a b c d : Int}
-    (hb : b ≠ 0) (hd : d ≠ 0) :
-    IsRepresentation (a * c) (b * d) :=
-  Int.mul_ne_zero hb hd
+def toRat (x : Rational) : Rat :=
+  Rat.divInt x.num x.den
+
+theorem toRat_ofInt (n : Int) :
+    (ofInt n).toRat = (n : Rat) := by
+  show Rat.divInt n 1 = (n : Rat)
+  exact Rat.num_divInt_den (n : Rat)
+
+theorem toRat_add (x y : Rational) :
+    (add x y).toRat = x.toRat + y.toRat := by
+  show Rat.divInt (x.num * y.den + y.num * x.den) (x.den * y.den) =
+    Rat.divInt x.num x.den + Rat.divInt y.num y.den
+  rw [Rat.divInt_add_divInt _ _ x.den_ne_zero y.den_ne_zero]
+
+theorem toRat_neg (x : Rational) :
+    (neg x).toRat = -x.toRat := by
+  show Rat.divInt (-x.num) x.den = -Rat.divInt x.num x.den
+  rw [Rat.neg_divInt]
+
+theorem toRat_sub (x y : Rational) :
+    (sub x y).toRat = x.toRat - y.toRat := by
+  show (add x (neg y)).toRat = x.toRat - y.toRat
+  rw [toRat_add, toRat_neg, Rat.sub_eq_add_neg]
+
+theorem toRat_mul (x y : Rational) :
+    (mul x y).toRat = x.toRat * y.toRat := by
+  show Rat.divInt (x.num * y.num) (x.den * y.den) =
+    Rat.divInt x.num x.den * Rat.divInt y.num y.den
+  rw [Rat.divInt_mul_divInt]
 
 end Rational
 
