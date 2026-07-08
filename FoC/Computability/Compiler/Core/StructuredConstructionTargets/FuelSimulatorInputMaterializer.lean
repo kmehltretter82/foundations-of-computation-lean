@@ -330,21 +330,43 @@ This is the first real machine leaf left by the pilot: parse
 {lit}`suffix = encodeNatAppend fuel []`,
 and preserve the source tape as the handoff tape for the embedding emitter.
 -/
+def NatClosedScannerDescription : MachineDescription where
+  stateCount := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.stateCount
+  start := 200
+  halt := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.halt
+  transitions := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.transitions
+
 def fuelSimulatorInputRecognizerCoreDescription : MachineDescription :=
-  seqSubroutine MarkedPrefixScannerDescription NatSuffixScannerDescription Direction.right
+  seqSubroutine MarkedPrefixScannerDescription NatClosedScannerDescription Direction.right
 
 def fuelSimulatorInputRecognizerDescription : MachineDescription :=
-  StageInputRecognizerDescription
-    (StageInputMarkedCoreDescription fuelSimulatorInputRecognizerCoreDescription)
+  StageInputIdentityDescription
+    (StageInputRecognizerDescription
+      (StageInputMarkedCoreDescription fuelSimulatorInputRecognizerCoreDescription))
+
+theorem fuelSimulatorInputRecognizerDescription_ready :
+    fuelSimulatorInputRecognizerDescription.SubroutineReady := by sorry
+
+theorem fuelSimulatorInputRecognizerDescription_forward
+    (i : FuelSimulatorStructuredIndex) :
+    fuelSimulatorInputRecognizerDescription.HaltsFromTape
+      (fuelSimulatorStructuredInputTape i)
+      (EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i) := by sorry
+
+theorem fuelSimulatorInputRecognizerDescription_closedIndex
+    (Tin T : Tape Bool)
+    (h : fuelSimulatorInputRecognizerDescription.HaltsFromTape Tin T) :
+    ∃ i : FuelSimulatorStructuredIndex,
+      Tin = fuelSimulatorStructuredInputTape i ∧
+      T = EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i := by sorry
 
 theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
     FuelSimulatorInputRecognizerExactRunSpec
       fuelSimulatorInputRecognizerDescription := by
-  -- Remaining finite-machine obligation: replace the placeholder description
-  -- with the concrete FuelSimulator-family parser and prove the closed
-  -- indexed run spec above, including arbitrary-input closedness for the
-  -- recognizer phase.
-  sorry
+  constructor
+  · exact fuelSimulatorInputRecognizerDescription_ready
+  · exact fuelSimulatorInputRecognizerDescription_forward
+  · exact fuelSimulatorInputRecognizerDescription_closedIndex
 
 theorem fuelSimulatorInputRecognizerDescription_spec :
     FuelSimulatorInputRecognizerSpec
