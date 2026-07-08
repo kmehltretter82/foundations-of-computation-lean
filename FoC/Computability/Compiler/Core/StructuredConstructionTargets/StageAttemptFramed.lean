@@ -401,6 +401,16 @@ theorem stageAttemptFramedConstruction_of_endpointEquivIndexed
         (lowered := lowered)
         hspec⟩
 
+theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
+    (attempt : MachineDescription)
+    (hattempt : attempt.SubroutineReady) :
+    StageAttemptFramedStructuredEndpointEquivIndexedConstruction attempt :=
+  stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
+    (stageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
+      (stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
+        attempt hattempt)
+      structured3EndpointTape2ProjectorConstruction_core)
+
 end StructuredConstructionTargets
 
 end Computability
