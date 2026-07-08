@@ -971,6 +971,31 @@ private theorem run_state200_stageNat_end
         encodeCodeSymbolAsInput,
         List.reverse_append, List.map_append, List.append_assoc] using h
 
+theorem run_state200_stageNat_closed_to_halt
+    (stage : Nat) (pre : Word Bool)
+    (leftTail : List (Option Bool)) :
+    SIMS.runConfig
+        ((4 * stage + 5) +
+          ((List.append pre (stageNatBits stage)).length + 1))
+        (config 200
+          (List.append (pre.reverse.map some) (none :: leftTail))
+          ((stageNatBits stage).map some)) =
+      config 999 (none :: leftTail)
+        (List.append
+          ((List.append pre (stageNatBits stage)).map some)
+          [none]) := by
+  rw [runConfig_add]
+  rw [run_state200_stageNat_end stage pre none leftTail]
+  rw [show (List.append pre (stageNatBits stage)).length + 1 =
+      (List.append pre (stageNatBits stage)).reverse.length + 1 by
+    rw [List.length_reverse]]
+  rw [runConfig_add]
+  rw [run_state220_bits_to_boundary]
+  simpa [List.reverse_reverse] using
+    run_state220_none leftTail
+      (List.append
+        ((List.append pre (stageNatBits stage)).map some) [none])
+
 /-!
 **Entry configurations.**  The two public forward runners split on the payload
 length.  The empty payload reaches the final append phase directly, while a

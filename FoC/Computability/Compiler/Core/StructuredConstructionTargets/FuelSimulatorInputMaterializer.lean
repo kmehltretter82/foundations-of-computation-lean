@@ -670,6 +670,162 @@ theorem fuelSimulatorInputCheckedValidatorTape_equiv_handoff
     Tape.Equiv,
     FoC.Computability.dropTrailingNone_append_none]
 
+private theorem runConfig_eq_of_transitions_eq
+    (D E : MachineDescription)
+    (htrans : D.transitions = E.transitions)
+    (n : Nat) (c : MachineDescription.Configuration) :
+    D.runConfig n c = E.runConfig n c := by
+  induction n generalizing c with
+  | zero =>
+      rfl
+  | succ n ih =>
+      change
+        (match D.stepConfig c with
+        | none => c
+        | some next => D.runConfig n next) =
+          match E.stepConfig c with
+          | none => c
+          | some next => E.runConfig n next
+      have hstep : D.stepConfig c = E.stepConfig c := by
+        unfold stepConfig
+        unfold lookupTransition
+        rw [htrans]
+      rw [hstep]
+      cases E.stepConfig c with
+      | none =>
+          rfl
+      | some next =>
+          exact ih next
+
+private theorem natClosedScannerDescription_run_stageNat_closed
+    (fuel : Nat) (pre : Word Bool)
+    (leftTail : List (Option Bool)) :
+    NatClosedScannerDescription.runConfig
+        ((4 * fuel + 5) +
+          ((List.append pre (stageNatBits fuel)).length + 1))
+        (config 200
+          (List.append (pre.reverse.map some) (none :: leftTail))
+          ((stageNatBits fuel).map some)) =
+      config 999 (none :: leftTail)
+        (List.append
+          ((List.append pre (stageNatBits fuel)).map some)
+          [none]) := by
+  rw [runConfig_eq_of_transitions_eq NatClosedScannerDescription
+    StageInputMarkedScannerDescription (by rfl)]
+  exact run_state200_stageNat_closed_to_halt fuel pre leftTail
+
+theorem fuelSimulatorInputSecondBitMarkedCheckedHandoffTape_eq_tapeAtCells
+    (i : FuelSimulatorStructuredIndex) :
+    fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i =
+      DovetailInitialLayoutInitializer.tapeAtCells [none, some false]
+        (List.append
+          ((fuelSimulatorInputSecondBitTail i).map some) [none]) := by
+  unfold fuelSimulatorInputSecondBitMarkedCheckedHandoffTape
+  unfold fuelSimulatorInputSecondBitMarkedCheckedTape
+  cases fuelSimulatorInputSecondBitTail i <;>
+    simp [DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.move, Tape.moveRight]
+
+private theorem fuelSimulatorCore_forward_marked_of_tail_shape
+    (tailPrefix : Word Bool) (limit fuel : Nat)
+    (tail : Word Bool)
+    (htail :
+      tail =
+        List.append tailPrefix
+          (List.append (stageNatBits limit) (stageNatBits fuel)))
+    (h200 :
+      exists n : Nat,
+        MarkedPrefixScannerDescription.runConfig n
+            (markedTailStartConfig tail) =
+          config 200
+            (List.append (tailPrefix.reverse.map some)
+              (none :: [some false]))
+            (List.append ((stageNatBits limit).map some)
+              ((stageNatBits fuel).map some))) :
+    exists steps : Nat,
+      fuelSimulatorInputRecognizerCoreDescription.runConfig steps
+          { state := fuelSimulatorInputRecognizerCoreDescription.start
+            tape := (markedTailStartConfig tail).tape } =
+        { state := fuelSimulatorInputRecognizerCoreDescription.halt
+          tape :=
+            DovetailInitialLayoutInitializer.tapeAtCells
+              [none, some false]
+              (List.append (tail.map some) [none]) } := by
+  rcases h200 with ⟨n1, h1⟩
+  rcases stageNatBits_false_false_tail fuel with ⟨ftail, hftail⟩
+  rcases run_markedPrefix_raw_to_handoff_withBase limit
+      (List.append (tailPrefix.reverse.map some) (none :: [some false]))
+      false (false :: ftail) with ⟨n2, h2⟩
+  have hrun :
+      MarkedPrefixScannerDescription.runConfig (n1 + n2)
+          (markedTailStartConfig tail) =
+        natSuffixHandoffConfigWithBase limit
+          (List.append (tailPrefix.reverse.map some)
+            (none :: [some false]))
+          (false :: false :: ftail) := by
+    rw [runConfig_add, h1, hftail]
+    simpa using h2
+  have hArun :
+      MarkedPrefixScannerDescription.runConfig (n1 + n2)
+          { state := MarkedPrefixScannerDescription.start
+            tape := (markedTailStartConfig tail).tape } =
+        { state := MarkedPrefixScannerDescription.halt
+          tape :=
+            (natSuffixHandoffConfigWithBase limit
+              (List.append (tailPrefix.reverse.map some)
+                (none :: [some false]))
+              (false :: false :: ftail)).tape } := hrun
+  have hmove :=
+    natSuffixHandoffConfigWithBase_move_right limit
+      (List.append (tailPrefix.reverse.map some) (none :: [some false]))
+      false (false :: ftail)
+  have hB :=
+    natClosedScannerDescription_run_stageNat_closed fuel
+      (List.append tailPrefix (stageNatBits limit)) [some false]
+  have hleft :
+      List.append
+          ((List.append tailPrefix (stageNatBits limit)).reverse.map some)
+          (none :: [some false]) =
+        List.append ((stageNatBits limit).reverse.map some)
+          (List.append (tailPrefix.reverse.map some)
+            (none :: [some false])) := by
+    simp [List.reverse_append, List.map_append, List.append_assoc]
+  have hcells :
+      List.append (List.append tailPrefix (stageNatBits limit))
+          (stageNatBits fuel) = tail := by
+    rw [htail]
+    simp [List.append_assoc]
+  rw [hleft, hcells, hftail] at hB
+  have hBReach :
+      exists nB : Nat,
+        NatClosedScannerDescription.runConfig nB
+            { state := NatClosedScannerDescription.start
+              tape :=
+                Tape.move Direction.right
+                  ((natSuffixHandoffConfigWithBase limit
+                    (List.append (tailPrefix.reverse.map some)
+                      (none :: [some false]))
+                    (false :: false :: ftail)).tape) } =
+          { state := NatClosedScannerDescription.halt
+            tape :=
+              DovetailInitialLayoutInitializer.tapeAtCells
+                [none, some false]
+                (List.append (tail.map some) [none]) } := by
+    refine ⟨(4 * fuel + 5) + (tail.length + 1), ?_⟩
+    rw [hmove]
+    exact hB
+  rcases
+      seqSubroutine_reaches_of_runConfig_eq
+        (A := MarkedPrefixScannerDescription)
+        (B := NatClosedScannerDescription)
+        (handoffMove := Direction.right)
+        markedPrefixScannerDescription_subroutineReady
+        natClosedScannerDescription_ready
+        hArun hBReach with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [fuelSimulatorInputRecognizerCoreDescription] using hsteps
+
 theorem fuelSimulatorInputRecognizerCoreDescription_forward_marked
     (i : FuelSimulatorStructuredIndex) :
     exists steps : Nat,
@@ -678,10 +834,44 @@ theorem fuelSimulatorInputRecognizerCoreDescription_forward_marked
             tape := fuelSimulatorInputSecondBitMarkedHandoffTape i } =
         { state := fuelSimulatorInputRecognizerCoreDescription.halt
           tape := fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i } := by
-  -- Remaining finite-machine obligation: prove the suffix-aware marked
-  -- stage-prefix scanner run, then compose it with the closed fuel-natural
-  -- scanner.
-  sorry
+  cases i with | mk w limit fuel =>
+  rw [fuelSimulatorInputSecondBitMarkedCheckedHandoffTape_eq_tapeAtCells]
+  have hstart :
+      fuelSimulatorInputSecondBitMarkedHandoffTape
+          { w := w, limit := limit, fuel := fuel } =
+        (markedTailStartConfig
+          (fuelSimulatorInputSecondBitTail
+            { w := w, limit := limit, fuel := fuel })).tape := rfl
+  rw [hstart]
+  cases w with
+  | nil =>
+      refine
+        fuelSimulatorCore_forward_marked_of_tail_shape
+          [true, true] limit fuel
+          (fuelSimulatorInputSecondBitTail
+            { w := [], limit := limit, fuel := fuel })
+          ?_ ?_
+      · rw [fuelSimulatorInputSecondBitTail_nil_shape]
+        rfl
+      · rw [fuelSimulatorInputSecondBitTail_nil_shape]
+        exact
+          ⟨18, by
+            simpa using
+              markedPrefix_run_marked_tail_done_stageNat_to_state200 limit
+                (stageNatBits fuel)⟩
+  | cons b rest =>
+      refine
+        fuelSimulatorCore_forward_marked_of_tail_shape
+          (stageInputSecondBitTailPrefix (b :: rest)) limit fuel
+          (fuelSimulatorInputSecondBitTail
+            { w := b :: rest, limit := limit, fuel := fuel })
+          ?_ ?_
+      · rw [fuelSimulatorInputSecondBitTail_cons_shape]
+        simp [stageInputSecondBitTailPrefix, List.append_assoc]
+      · rw [fuelSimulatorInputSecondBitTail_cons_shape]
+        exact
+          markedPrefix_run_marked_tail_nonempty_to_state200 b rest limit
+            (stageNatBits fuel)
 
 theorem fuelSimulatorStageInputMarkedCoreDescription_forward
     (i : FuelSimulatorStructuredIndex) :
