@@ -27,7 +27,9 @@ MAX_FORMAL_LEAN_PATH = 160
 MAX_DECL_NAME = 128
 
 DECL_RE = re.compile(
-    r"^\s*(?:private\s+|protected\s+)?(?:theorem|lemma)\s+([^\s(:]+)",
+    r"^\s*(?:(?:private|protected|noncomputable|unsafe|partial)\s+)*"
+    r"(?:(?:theorem|lemma|def|abbrev|structure|inductive|class|opaque|axiom)"
+    r"\s+([^\s(:]+)|instance(?:\s+([^\s(:]+))?)",
     re.MULTILINE,
 )
 
@@ -200,7 +202,9 @@ def audit(root: Path) -> dict[str, list[Violation]]:
         starts = line_starts(text)
         masked = masked_source(text)
         for match in DECL_RE.finditer(masked):
-            name = match.group(1)
+            name = match.group(1) or match.group(2)
+            if not name or name[0] in "[{(":
+                continue
             name_len = len(name)
             if name_len > MAX_DECL_NAME:
                 violations["decl_name"].append(

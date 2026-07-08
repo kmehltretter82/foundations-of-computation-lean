@@ -169,24 +169,20 @@ implementation usually lives in the corresponding subdirectory.
 Keep header scanning and transition parsing separate: `FiniteSource.lean`
 tracks `decodeTransitions count tokens`; it is not the header scanner.
 
-## Current FuelSimulator Materializer Work
+## Active Obligation Search
 
-See top-level `FUELSIMULATOR_MATERIALIZER_PILOT_PLAN.md`.
+Do not keep live hole lists in this map.  For current obligations, search the
+source or export declaration data:
 
-The active materializer holes are:
-
-```lean
-structured3InputEmbeddingEmitterDescription_spec
-closedRecognizerStructuredEquivInputMaterializer_closedIndex_of_parts
-fuelSimulatorInputRecognizerDescription_spec
+```sh
+rg -n "sorry" FoC/Computability/Compiler/Core/StructuredConstructionTargets
+lake env lean --run scripts/export-declarations.lean \
+  FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorInputMaterializer \
+  FoC.Computability.StructuredConstructionTargets \
+  > .lake/structured-target-decls.csv
+scripts/summarize-declaration-smells.py --kind theorem \
+  .lake/structured-target-decls.csv
 ```
 
-Preferred order:
-
-1. Prove or isolate deterministic transport from an actual halt plus forward
-   `HaltsFromTapeEquiv`.
-2. Close the shared closed-index sequencing lemma.
-3. Prototype the emitter on `Tape.input bits`.
-4. Replace the emitter table proof.
-5. Replace the FuelSimulator recognizer table proof.
-
+Keep active proof-order notes in the working plan for that task, not in this
+navigational overview.

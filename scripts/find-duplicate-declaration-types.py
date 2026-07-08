@@ -20,6 +20,15 @@ def generated_name(name: str) -> bool:
         or ".noConfusion" in name
         or ".casesOn" in name
         or ".ctorIdx" in name
+        or "._sunfold" in name
+        or "._unsafe_rec" in name
+        or "._flat_ctor" in name
+        or ".eq_def" in name
+        or ".sizeOf_spec" in name
+        or any(
+            part.startswith("eq_") and part[3:].isdigit()
+            for part in name.split(".")
+        )
     )
 
 
@@ -52,15 +61,25 @@ def main() -> int:
     parser.add_argument(
         "--normalized",
         action="store_true",
-        help="Group by normalized_type instead of raw type when available.",
+        help="Group by normalized_type instead of raw type.",
+    )
+    parser.add_argument(
+        "--allow-normalization-failures",
+        action="store_true",
+        help="With --normalized, skip rows whose normalized_type was not generated.",
     )
     args = parser.parse_args()
 
     wanted_kinds = set(args.kind or [])
     groups: dict[str, list[dict[str, str]]] = defaultdict(list)
+    normalization_failures = 0
+    normalized_column_missing = False
 
     with open(args.csv_file, newline="") as f:
-        for row in csv.DictReader(f):
+        reader = csv.DictReader(f)
+        if args.normalized and "normalized_type" not in (reader.fieldnames or []):
+            normalized_column_missing = True
+        for row in reader:
             if wanted_kinds and row.get("kind") not in wanted_kinds:
                 continue
             if not args.include_private and row.get("is_private") == "true":
@@ -73,10 +92,32 @@ def main() -> int:
             )
             if not args.include_generated and generated:
                 continue
-            key = row.get("normalized_type") if args.normalized else row.get("type")
+            if args.normalized:
+                if row.get("normalization_ok") == "false":
+                    normalization_failures += 1
+                    continue
+                key = row.get("normalized_type")
+            else:
+                key = row.get("type")
             if not key:
                 continue
             groups[key].append(row)
+
+    if normalized_column_missing:
+        print(
+            "--normalized requested, but CSV has no normalized_type column",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.normalized and normalization_failures and not args.allow_normalization_failures:
+        print(
+            "--normalized skipped "
+            f"{normalization_failures} rows without successful normalized_type; "
+            "pass --allow-normalization-failures to print partial groups",
+            file=sys.stderr,
+        )
+        return 2
 
     writer = csv.writer(sys.stdout)
     key_label = "normalized_type" if args.normalized else "type"

@@ -61,7 +61,7 @@ def coreState (env : Environment) : Core.State :=
     infoState := default
     snapshotTasks := #[] }
 
-unsafe def declarationHasSorry (env : Environment) (name : Name) : IO Bool := do
+unsafe def declarationDependsOnSorry (env : Environment) (name : Name) : IO Bool := do
   let action : CoreM (Array Name) := collectAxioms name
   let axioms ← EIO.toIO (fun _ => IO.userError "Lean collectAxioms failed")
     (action.run' coreContext (coreState env))
@@ -150,26 +150,45 @@ def ppType (type : Expr) : String :=
   toString type
 
 def normalizedTypeKeyCore (type : Expr) : CoreM String := do
-  let (reduced, _) ←
-    (Meta.reduce type (explicitOnly := false)
-      (skipTypes := false) (skipProofs := false)).run
+  let reduced ← Core.betaReduce type
   let normalized := (normalizeExprNames reduced).run #[] |>.fst
   pure (toString normalized)
 
-unsafe def normalizedTypeKey (env : Environment) (type : Expr) : IO String := do
-  try
-    EIO.toIO (fun _ => IO.userError "Lean type normalization failed")
-      ((normalizedTypeKeyCore type).run' coreContext (coreState env))
-  catch _ =>
-    pure (toString type)
+structure NormalizedType where
+  type : String
+  ok : Bool
+  error : String
 
-unsafe def emitDecl (env : Environment) (name : Name) (ci : ConstantInfo) :
+def normalizedTypeSkipped : NormalizedType :=
+  { type := ""
+    ok := false
+    error := "not requested" }
+
+unsafe def normalizedTypeKey (env : Environment) (type : Expr) :
+    IO NormalizedType := do
+  try
+    let normalized ← EIO.toIO
+      (fun _ => IO.userError "Lean type normalization failed")
+      ((normalizedTypeKeyCore type).run' coreContext (coreState env))
+    pure { type := normalized, ok := true, error := "" }
+  catch err =>
+    pure
+      { type := ""
+        ok := false
+        error := toString err }
+
+unsafe def emitDecl (env : Environment) (includeNormalized : Bool)
+    (name : Name) (ci : ConstantInfo) :
     IO String := do
   let modName := (moduleOf? env name).map Name.toString |>.getD ""
   let fileName := fileOfModule modName
   let type := ppType ci.type
-  let normalizedType ← normalizedTypeKey env ci.type
-  let hasSorry ← declarationHasSorry env name
+  let normalizedType ←
+    if includeNormalized then
+      normalizedTypeKey env ci.type
+    else
+      pure normalizedTypeSkipped
+  let dependsOnSorry ← declarationDependsOnSorry env name
   let isGenerated := isGeneratedNameString name.toString
   pure <| String.intercalate ","
     [csvEscape name.toString,
@@ -178,22 +197,62 @@ unsafe def emitDecl (env : Environment) (name : Name) (ci : ConstantInfo) :
      csvEscape fileName,
      csvEscape (toString (isPrivateName name)),
      csvEscape (toString isGenerated),
-     csvEscape (toString hasSorry),
+     csvEscape (toString dependsOnSorry),
      csvEscape type,
-     csvEscape normalizedType]
+     csvEscape normalizedType.type,
+     csvEscape (toString normalizedType.ok),
+     csvEscape normalizedType.error]
+
+def usage : String :=
+  "Usage: lake env lean --run scripts/export-declarations.lean [MODULE] [PREFIX] [--raw-only]\n" ++
+  "\n" ++
+  "MODULE is the module to import, default FoC.Computability.\n" ++
+  "PREFIX is the declaration-name prefix to export, default FoC.Computability.\n" ++
+  "--raw-only skips normalized_type generation for faster broad exports."
+
+structure ExportOptions where
+  moduleName : Name
+  prefixName : Name
+  includeNormalized : Bool
+
+inductive ParsedArgs where
+  | options (opts : ExportOptions)
+  | help
+  | error (msg : String)
+
+def parseArgs (args : List String) : ParsedArgs :=
+  let knownFlags := ["--raw-only", "-h", "--help"]
+  match args.find? (fun arg => arg.startsWith "--" && !knownFlags.contains arg) with
+  | some arg => .error s!"unknown option: {arg}\n\n{usage}"
+  | none =>
+      if args.contains "-h" || args.contains "--help" then
+        .help
+      else
+        let positionals := args.filter (fun arg => !arg.startsWith "-")
+        .options
+          { moduleName := nameFromString (positionals.getD 0 "FoC.Computability")
+            prefixName := nameFromString (positionals.getD 1 "FoC.Computability")
+            includeNormalized := !args.contains "--raw-only" }
 
 unsafe def main (_args : List String) : IO UInt32 := do
-  let moduleName := nameFromString (_args.getD 0 "FoC.Computability")
-  let prefixName := nameFromString (_args.getD 1 "FoC.Computability")
-  let env ← importModules #[{ module := moduleName }] {} 0
-  let rows ←
-    (SMap.toList env.constants).foldlM (init := (#[] : Array String)) fun rows entry => do
-      let (name, ci) := entry
-      if nameStartsWith prefixName name then
-        pure (rows.push (← emitDecl env name ci))
-      else
-        pure rows
-  IO.println "name,kind,module,file,is_private,is_generated,has_sorry,type,normalized_type"
-  for row in Array.qsort rows (fun a b => decide (a < b)) do
-    IO.println row
-  pure 0
+  match parseArgs _args with
+  | .error msg =>
+      IO.eprintln msg
+      pure 1
+  | .help =>
+      IO.println usage
+      pure 0
+  | .options opts =>
+      let env ← importModules #[{ module := opts.moduleName }] {} 0
+      let rows ←
+        (SMap.toList env.constants).foldlM (init := (#[] : Array String))
+          fun rows entry => do
+            let (name, ci) := entry
+            if nameStartsWith opts.prefixName name then
+              pure (rows.push (← emitDecl env opts.includeNormalized name ci))
+            else
+              pure rows
+      IO.println "name,kind,module,file,is_private,is_generated,depends_on_sorry,type,normalized_type,normalization_ok,normalization_error"
+      for row in Array.qsort rows (fun a b => decide (a < b)) do
+        IO.println row
+      pure 0

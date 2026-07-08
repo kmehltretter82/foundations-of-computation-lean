@@ -20,12 +20,16 @@ def visible(row: dict[str, str], include_generated: bool, include_private: bool)
     return True
 
 
+def sorry_dependency(row: dict[str, str]) -> str:
+    return row.get("depends_on_sorry", row.get("has_sorry", ""))
+
+
 def print_rows(title: str, rows: list[dict[str, str]], limit: int) -> None:
     print(f"\n## {title} ({len(rows)})")
     for row in rows[:limit]:
         print(
             f"- {row['name']} [{row.get('file', row.get('module', ''))}] "
-            f"kind={row.get('kind', '')} sorry={row.get('has_sorry', '')}"
+            f"kind={row.get('kind', '')} depends_on_sorry={sorry_dependency(row)}"
         )
     if len(rows) > limit:
         print(f"- ... {len(rows) - limit} more")
@@ -55,15 +59,22 @@ def main() -> int:
     parser.add_argument("--long-type", type=int, default=1200)
     parser.add_argument("--include-generated", action="store_true")
     parser.add_argument("--include-private", action="store_true")
+    parser.add_argument(
+        "--kind",
+        action="append",
+        help="Only include this kind in the review queue; may be repeated.",
+    )
     args = parser.parse_args()
 
     with open(args.csv_file, newline="") as f:
         rows = list(csv.DictReader(f))
 
+    wanted_kinds = set(args.kind or [])
     review_rows = [
         row
         for row in rows
         if visible(row, args.include_generated, args.include_private)
+        and (not wanted_kinds or row.get("kind") in wanted_kinds)
     ]
 
     print(f"# Declaration Smell Summary")
@@ -72,8 +83,8 @@ def main() -> int:
     print(f"kinds: {dict(Counter(row.get('kind', '') for row in review_rows))}")
 
     print_rows(
-        "Sorry-backed declarations",
-        [row for row in review_rows if bool_col(row, "has_sorry")],
+        "Declarations depending on sorry",
+        [row for row in review_rows if sorry_dependency(row) == "true"],
         args.limit,
     )
     print_rows(
@@ -98,10 +109,28 @@ def main() -> int:
         args.limit,
     )
 
-    for key, title in [("type", "Exact duplicate type groups"),
-                       ("normalized_type", "Normalized duplicate type groups")]:
-        groups = duplicate_groups(review_rows, key, 2)
+    duplicate_modes = [
+        ("type", "Exact duplicate type groups", review_rows),
+        (
+            "normalized_type",
+            "Normalized duplicate type groups",
+            [
+                row
+                for row in review_rows
+                if row.get("normalization_ok", "true") == "true"
+            ],
+        ),
+    ]
+    skipped_normalized = sum(
+        1 for row in review_rows if row.get("normalization_ok") == "false"
+    )
+    for key, title, rows_for_mode in duplicate_modes:
+        groups = duplicate_groups(rows_for_mode, key, 2)
         print(f"\n## {title} ({len(groups)})")
+        if key == "normalized_type" and skipped_normalized:
+            print(
+                f"- skipped {skipped_normalized} rows without successful normalized_type"
+            )
         for value, group in groups[: args.limit]:
             names = "; ".join(row["name"] for row in group[:6])
             suffix = "" if len(group) <= 6 else f"; ... {len(group) - 6} more"

@@ -72,12 +72,24 @@ lake env lean --run scripts/export-declarations.lean \
 ```
 
 Columns are `name`, `kind`, `module`, `file`, `is_private`, `is_generated`,
-`has_sorry`, kernel `type`, and `normalized_type`.  The normalized type
-beta/reducible-reduces the type and erases binder and universe parameter names
-before printing.  The first argument is the module to import; the second is the
-declaration-name prefix to include.  Exporting all of `FoC.Computability` is
-possible once the imported `.olean`s are current, but focused module exports
-are much cheaper during proof work.
+`depends_on_sorry`, kernel `type`, `normalized_type`, `normalization_ok`, and
+`normalization_error`.  `depends_on_sorry` means Lean's axiom collector found
+`sorryAx` in the declaration's dependency closure; it is not restricted to
+direct source-level `sorry`s.  The normalized type beta-reduces the type and
+erases binder and universe parameter names before printing.  If normalization
+fails, `normalized_type` is empty and the error column records the failure
+instead of falling back to the raw type.
+
+The first argument is the module to import; the second is the declaration-name
+prefix to include.  Exporting all of `FoC.Computability` is possible once the
+imported `.olean`s are current, but focused module exports are much cheaper
+during proof work.  For a broad raw inventory, skip normalization:
+
+```sh
+lake env lean --run scripts/export-declarations.lean \
+  FoC.Computability FoC.Computability --raw-only \
+  > .lake/computability-decls-raw.csv
+```
 
 Find exact duplicate type surfaces with:
 
@@ -96,6 +108,9 @@ scripts/find-duplicate-declaration-types.py --kind theorem --normalized \
 Both modes are audit signals, not proofs that no semantic duplicates exist.
 The normalized mode catches more alpha/unfolding noise, but it can still miss
 statements that are equivalent only after simplification or theorem proving.
+The duplicate finder refuses partial normalized reports by default when any
+reviewed row lacks a successful `normalized_type`; pass
+`--allow-normalization-failures` to print a partial report anyway.
 Generated equation/helper declarations and private declarations are filtered by
 default; pass `--include-generated` or `--include-private` to include them.
 
@@ -105,6 +120,7 @@ For a broader manual review queue, summarize declaration smells:
 scripts/summarize-declaration-smells.py .lake/structured-target-decls.csv
 ```
 
-This reports sorry-backed declarations, long names/types, axiom/opaque rows,
-and exact/normalized duplicate type groups.  Treat the output as a triage list
-for human or AI review, not as an automated refactoring instruction.
+This reports declarations depending on `sorry`, long names/types, axiom/opaque
+rows, and exact/normalized duplicate type groups.  Pass `--kind theorem` to
+review only theorem surfaces.  Treat the output as a triage list for human or
+AI review, not as an automated refactoring instruction.
