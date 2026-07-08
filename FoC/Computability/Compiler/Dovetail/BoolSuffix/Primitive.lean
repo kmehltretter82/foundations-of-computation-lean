@@ -390,7 +390,7 @@ private theorem boolSuffixScannerDescription_runConfig_nil_ne_halt
         ([] : List (Option Bool)))).state ≠
       BSS.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
       (D := BSS)
       (c :=
@@ -419,7 +419,7 @@ private theorem boolSuffixScannerDescription_runConfig_true_start_ne_halt
         (some true :: rest))).state ≠
       BSS.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
       (D := BSS)
       (c :=
@@ -453,7 +453,7 @@ private theorem boolSuffixScannerDescription_runConfig_false_false_ne_halt
   let stuck : Configuration :=
     BSS.runConfig 1 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
       (D := BSS)
       (c := start) (stuck := stuck) (k := 1) (n := n)
@@ -485,7 +485,7 @@ private theorem boolSuffixScannerDescription_runConfig_false_true_false_false_ne
   let stuck : Configuration :=
     BSS.runConfig 3 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
       (D := BSS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
@@ -517,7 +517,7 @@ private theorem boolSuffixScannerDescription_runConfig_false_true_true_true_ne_h
   let stuck : Configuration :=
     BSS.runConfig 3 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolSuffixScannerDescription_haltTransitionFree
       (D := BSS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
@@ -804,7 +804,7 @@ private theorem boolFinalScannerDescription_runConfig_nil_ne_halt
         ([] : List (Option Bool)))).state ≠
       BFS.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
       (D := BFS)
       (c :=
@@ -833,7 +833,7 @@ private theorem boolFinalScannerDescription_runConfig_true_start_ne_halt
         (some true :: rest))).state ≠
       BFS.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
       (D := BFS)
       (c :=
@@ -867,7 +867,7 @@ private theorem boolFinalScannerDescription_runConfig_false_false_ne_halt
   let stuck : Configuration :=
     BFS.runConfig 1 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
       (D := BFS)
       (c := start) (stuck := stuck) (k := 1) (n := n)
@@ -899,7 +899,7 @@ private theorem boolFinalScannerDescription_runConfig_false_true_false_false_ne_
   let stuck : Configuration :=
     BFS.runConfig 3 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
       (D := BFS)
       (c := start) (stuck := stuck) (k := 3) (n := n)
@@ -931,7 +931,7 @@ private theorem boolFinalScannerDescription_runConfig_false_true_true_true_ne_ha
   let stuck : Configuration :=
     BFS.runConfig 3 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       boolFinalScannerDescription_haltTransitionFree
       (D := BFS)
       (c := start) (stuck := stuck) (k := 3) (n := n)

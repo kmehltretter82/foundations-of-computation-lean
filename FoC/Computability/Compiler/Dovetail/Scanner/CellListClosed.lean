@@ -47,7 +47,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        primitive_runConfig_state_ne_halt_of_reaches_stuck
+        CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           CLSS_htf
           (D := CLSS)
           (c :=
@@ -68,7 +68,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
       cases symbol with
       | header =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -100,7 +100,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                 lia)
       | transition =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -158,7 +158,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
           simp [decodeNat] at hdecode
       | blank =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -190,7 +190,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                 lia)
       | zero =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -222,7 +222,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                 lia)
       | one =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -254,7 +254,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                 lia)
       | moveLeft =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -286,7 +286,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_decodeNat_none_ne_ha
                 lia)
       | moveRight =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -325,7 +325,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
   cases tokens with
   | nil =>
       exact
-        primitive_runConfig_state_ne_halt_of_reaches_stuck
+        CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           CLSS_htf
           (D := CLSS)
           (c :=
@@ -346,7 +346,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
       cases symbol with
       | header =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -378,7 +378,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                 lia)
       | transition =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -410,7 +410,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                 lia)
       | tick =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -442,7 +442,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                 lia)
       | done =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -480,7 +480,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
           simp [decodeCell] at hdecode
       | moveLeft =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -525,7 +525,7 @@ theorem cellListSuffixScannerDescription_runConfig_state130_decodeCell_none_ne_h
                 lia)
       | moveRight =>
           exact
-            primitive_runConfig_state_ne_halt_of_reaches_stuck
+            CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
               CLSS_htf
               (D := CLSS)
               (c :=
@@ -1090,7 +1090,7 @@ private theorem cellListCanonicalFinishStartConfigWithBase_nil_suffix_ne_halt
       (cellListCanonicalRestoredLeftWithBase cells baseLeft)
       ([] : List (Option Bool))
   apply
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       CLSS_htf
       (D := CLSS)
       (c := cellListCanonicalFinishStartConfigWithBase cells baseLeft [])
@@ -1120,7 +1120,7 @@ private theorem cellListCanonicalFinishStartConfigWithBase_moveRight_suffix_ne_h
         (cellListCanonicalRestoredLeftWithBase cells baseLeft)
         ((true :: false :: false :: false :: tail).map some))
   apply
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       CLSS_htf
       (D := CLSS)
       (c :=

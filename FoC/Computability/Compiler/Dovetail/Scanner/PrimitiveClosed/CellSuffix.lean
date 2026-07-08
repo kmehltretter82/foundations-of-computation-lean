@@ -34,7 +34,7 @@ private theorem cellSuffixScannerDescription_runConfig_nil_ne_halt
         baseLeft ([] : List (Option Bool)))).state ≠
       CellSuffixScannerDescription.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       cellSuffixScannerDescription_haltTransitionFree
       (D := CellSuffixScannerDescription)
       (c :=
@@ -68,7 +68,7 @@ private theorem cellSuffixScannerDescription_runConfig_true_start_ne_halt
         baseLeft (some true :: rest))).state ≠
       CellSuffixScannerDescription.halt := by
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       cellSuffixScannerDescription_haltTransitionFree
       (D := CellSuffixScannerDescription)
       (c :=
@@ -109,7 +109,7 @@ private theorem cellSuffixScannerDescription_runConfig_false_false_ne_halt
     CellSuffixScannerDescription.runConfig
       1 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       cellSuffixScannerDescription_haltTransitionFree
       (D := CellSuffixScannerDescription)
       (c := start) (stuck := stuck) (k := 1) (n := n)
@@ -151,7 +151,7 @@ private theorem cellSuffixScannerDescription_runConfig_false_true_true_ne_halt
     CellSuffixScannerDescription.runConfig
       3 start
   exact
-    primitive_runConfig_state_ne_halt_of_reaches_stuck
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
       cellSuffixScannerDescription_haltTransitionFree
       (D := CellSuffixScannerDescription)
       (c := start) (stuck := stuck) (k := 3) (n := n)
@@ -390,7 +390,7 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
   cases cell with
   | none =>
       exact
-        primitive_runConfig_state_ne_halt_of_reaches_stuck
+        CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           cellSuffixScannerDescription_haltTransitionFree
           (D := CellSuffixScannerDescription)
           (c :=
@@ -432,7 +432,7 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
   | some b =>
       cases b
       · exact
-          primitive_runConfig_state_ne_halt_of_reaches_stuck
+          CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
             cellSuffixScannerDescription_haltTransitionFree
             (D := CellSuffixScannerDescription)
             (c :=
@@ -476,7 +476,7 @@ private theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_nil_ne_h
                 encodeCodeSymbolAsInput, Tape.read,
                 Tape.write, Tape.move, Tape.moveRight])
       · exact
-          primitive_runConfig_state_ne_halt_of_reaches_stuck
+          CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
             cellSuffixScannerDescription_haltTransitionFree
             (D := CellSuffixScannerDescription)
             (c :=

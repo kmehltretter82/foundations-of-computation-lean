@@ -142,7 +142,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
           stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
         simp [stuck, c0, BoolWordSuffixScannerDescription, config]
       exact False.elim
-        (primitive_runConfig_state_ne_halt_of_reaches_stuck
+        (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           boolWordSuffixScannerDescription_haltTransitionFree
           (D := BoolWordSuffixScannerDescription)
           (c := c0) (stuck := stuck) (k := 0) (n := n)
@@ -174,7 +174,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
                 transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             exact False.elim
-              (primitive_runConfig_state_ne_halt_of_reaches_stuck
+              (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                 boolWordSuffixScannerDescription_haltTransitionFree
                 (D := BoolWordSuffixScannerDescription)
                 (c := c0) (stuck := stuck) (k := 1) (n := n)
@@ -210,7 +210,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
                       transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
-                    (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                       boolWordSuffixScannerDescription_haltTransitionFree
                       (D := BoolWordSuffixScannerDescription)
                       (c := c0) (stuck := stuck) (k := 2) (n := n)
@@ -248,7 +248,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
                           transition, Tape.read,
                           Tape.write, Tape.move, Tape.moveRight]
                     exact False.elim
-                      (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                      (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                         boolWordSuffixScannerDescription_haltTransitionFree
                         (D := BoolWordSuffixScannerDescription)
                         (c := c0) (stuck := stuck) (k := 2) (n := n)
@@ -284,7 +284,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
                             transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                         exact False.elim
-                          (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                          (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                             boolWordSuffixScannerDescription_haltTransitionFree
                             (D := BoolWordSuffixScannerDescription)
                             (c := c0) (stuck := stuck) (k := 4)
@@ -318,7 +318,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
                     transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               exact False.elim
-                (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                   boolWordSuffixScannerDescription_haltTransitionFree
                   (D := BoolWordSuffixScannerDescription)
                   (c := c0) (stuck := stuck) (k := 1) (n := n)
@@ -338,7 +338,7 @@ theorem boolWordSuffixScannerDescription_runConfig_120_nat_prefix_inv
             stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
           simp [stuck, c0, BoolWordSuffixScannerDescription, config]
         exact False.elim
-          (primitive_runConfig_state_ne_halt_of_reaches_stuck
+          (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
             boolWordSuffixScannerDescription_haltTransitionFree
             (D := BoolWordSuffixScannerDescription)
             (c := c0) (stuck := stuck) (k := 0) (n := n)
@@ -484,7 +484,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
           stuck.state ≠ BoolWordSuffixScannerDescription.halt := by
         simp [stuck, c0, config, BoolWordSuffixScannerDescription]
       exact False.elim
-        (primitive_runConfig_state_ne_halt_of_reaches_stuck
+        (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           boolWordSuffixScannerDescription_haltTransitionFree
           (D := BoolWordSuffixScannerDescription)
           (c := c0) (stuck := stuck) (k := 0) (n := n)
@@ -517,7 +517,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
                 transition, Tape.read, Tape.write,
                 Tape.move, Tape.moveRight]
             exact False.elim
-              (primitive_runConfig_state_ne_halt_of_reaches_stuck
+              (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                 boolWordSuffixScannerDescription_haltTransitionFree
                 (D := BoolWordSuffixScannerDescription)
                 (c := c0) (stuck := stuck) (k := 1) (n := n)
@@ -551,7 +551,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
                     transition, Tape.read, Tape.write,
                     Tape.move, Tape.moveRight]
               exact False.elim
-                (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                   boolWordSuffixScannerDescription_haltTransitionFree
                   (D := BoolWordSuffixScannerDescription)
                   (c := c0) (stuck := stuck) (k := 1) (n := n)
@@ -584,7 +584,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
                       transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
-                    (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                       boolWordSuffixScannerDescription_haltTransitionFree
                       (D := BoolWordSuffixScannerDescription)
                       (c := c0) (stuck := stuck) (k := 2) (n := n)
@@ -623,7 +623,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
                             transition, Tape.read,
                             Tape.write, Tape.move, Tape.moveRight]
                       exact False.elim
-                        (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                        (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                           boolWordSuffixScannerDescription_haltTransitionFree
                           (D := BoolWordSuffixScannerDescription)
                           (c := c0) (stuck := stuck) (k := 3) (n := n)
@@ -667,7 +667,7 @@ theorem boolWordSuffixScannerDescription_runConfig_130_marked_prefix_inv
                               transition, Tape.read,
                               Tape.write, Tape.move, Tape.moveRight]
                           exact False.elim
-                            (primitive_runConfig_state_ne_halt_of_reaches_stuck
+                            (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                               boolWordSuffixScannerDescription_haltTransitionFree
                               (D := BoolWordSuffixScannerDescription)
                               (c := c0) (stuck := stuck) (k := 3) (n := n)

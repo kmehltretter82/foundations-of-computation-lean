@@ -388,17 +388,6 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_return_inv
     simp [config, tapeAtCells, Tape.move, Tape.moveRight]
   simpa [hmove] using hbodyRun
 
-theorem runConfig_state_ne_halt_of_reaches_stuck
-    {D : MachineDescription}
-    {c stuck : Configuration} {k n : Nat}
-    (hD : D.HaltTransitionFree)
-    (hprefix : D.runConfig k c = stuck)
-    (hstep : D.stepConfig stuck = none)
-    (hstuck : stuck.state ≠ D.halt) :
-    (D.runConfig n c).state ≠ D.halt :=
-  CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-    hD hprefix hstep hstuck
-
 theorem transitionRemainderPrefixScannerDescription_markedTail_inv
     {tail : Word Bool} {T : Tape Bool} {n : Nat}
     (h :
@@ -444,7 +433,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
           Matches, transition,
           Tape.read, Tape.write, Tape.move, Tape.moveRight]
       exact False.elim
-        (runConfig_state_ne_halt_of_reaches_stuck
+        (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
           transitionRemainderPrefixScannerDescription_haltTransitionFree
           (D := TRP)
           (c := start) (stuck := stuck) (k := 1) (n := n)
@@ -476,7 +465,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                 Matches, transition,
                 Tape.read, Tape.write, Tape.move, Tape.moveRight]
             exact False.elim
-              (runConfig_state_ne_halt_of_reaches_stuck
+              (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                 transitionRemainderPrefixScannerDescription_haltTransitionFree
                 (D := TRP)
                 (c := start) (stuck := stuck) (k := 2) (n := n)
@@ -509,7 +498,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                     Matches, transition,
                     Tape.read, Tape.write, Tape.move, Tape.moveRight]
               exact False.elim
-                (runConfig_state_ne_halt_of_reaches_stuck
+                (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                   transitionRemainderPrefixScannerDescription_haltTransitionFree
                   (D := TRP)
                   (c := start) (stuck := stuck) (k := 2) (n := n)
@@ -542,7 +531,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                       transition, Tape.read, Tape.write,
                       Tape.move, Tape.moveRight]
                   exact False.elim
-                    (runConfig_state_ne_halt_of_reaches_stuck
+                    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
                       transitionRemainderPrefixScannerDescription_haltTransitionFree
                       (D := TRP)
                       (c := start) (stuck := stuck) (k := 3) (n := n)
@@ -591,7 +580,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
               Matches, transition,
               Tape.read, Tape.write, Tape.move, Tape.moveRight]
         exact False.elim
-          (runConfig_state_ne_halt_of_reaches_stuck
+          (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
             transitionRemainderPrefixScannerDescription_haltTransitionFree
             (D := TRP)
             (c := start) (stuck := stuck) (k := 1) (n := n)
