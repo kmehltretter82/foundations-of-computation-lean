@@ -149,6 +149,16 @@ theorem boundedFuelPairEnumeratorRightShiftedSpec_of_endpointExactIndexed
       boundedFuelPairEnumeratorInput_eq_of_inputTape_eq hinput
     exact ⟨i, hw, hT⟩
 
+theorem boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_core
+    (runner : MachineDescription)
+    (hrunner : runner.SubroutineReady) :
+    BoundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction runner :=
+  boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
+    (boundedFuelPairEnumeratorStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
+      (boundedFuelPairEnumeratorStructuredCanonicalEndpointCoreComponentConstruction_core
+        runner hrunner)
+      structured3EndpointTape2ProjectorConstruction_core)
+
 end StructuredConstructionTargets
 
 end Computability
