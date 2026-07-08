@@ -350,19 +350,6 @@ theorem fuelSimulatorStructuredLoweredCoreConstruction_core
   sorry
 
 /--
-Target-local equivalence-facing parser/core obligation for the fuel-simulator
-target.
--/
-theorem fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_core
-    (attempt : MachineDescription) :
-    FuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction
-      attempt :=
-  fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_of_inputMaterializer_loweredCore
-    fuelSimulatorStructuredEquivInputMaterializerConstruction_core
-    (fuelSimulatorStructuredEquivLoweredCoreConstruction_of_loweredCore
-      (fuelSimulatorStructuredLoweredCoreConstruction_core attempt))
-
-/--
 Fuel-simulator endpoint components for the equivalence-facing prototype path,
 including the shared tape-2 projector.
 -/
@@ -460,19 +447,6 @@ theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivSharedPr
       fuelSimulatorStructuredInitializedTape,
       fuelSimulatorStructuredLoweredTape attempt,
       C.equivIndexedFamilySpec⟩
-
-/--
-Equivalence-facing fuel-simulator endpoint assembled from the parser/core
-components and the shared equivalence tape-2 projector.
--/
-theorem fuelSimulatorStructuredEndpointEquivIndexedConstruction_core
-    (attempt : MachineDescription) :
-    FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt :=
-  fuelSimulatorStructuredEndpointEquivIndexedConstruction_of_equivComponents
-    (fuelSimulatorStructuredCanonicalEndpointEquivComponentConstruction_of_equivCoreComponents
-      (fuelSimulatorStructuredCanonicalEndpointEquivCoreComponentConstruction_core
-        attempt)
-      structured3EndpointTape2ProjectorConstruction_core)
 
 theorem fuelSimulatorStructuredExactIndexedSpec_of_canonical
     {attempt : MachineDescription}

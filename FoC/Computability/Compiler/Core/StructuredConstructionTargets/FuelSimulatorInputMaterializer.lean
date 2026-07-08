@@ -259,14 +259,14 @@ theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
 /-- Semantic contract for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerSpec
     (recognizer : MachineDescription) : Prop :=
-  ClosedInputFamilyRecognizerSpec
+  EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
     decodeFuelSimulatorStructuredInputCode
     fuelSimulatorStructuredInputCode
     recognizer
 
 /-- Existence wrapper for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerConstruction : Prop :=
-  ClosedInputFamilyRecognizerConstruction
+  EncRewriters.CanonicalLayouts.ClosedRecognizerConstruction
     decodeFuelSimulatorStructuredInputCode
     fuelSimulatorStructuredInputCode
 
@@ -274,8 +274,8 @@ def FuelSimulatorInputRecognizerConstruction : Prop :=
 Exact finite-machine behavior for the FuelSimulator-family recognizer.
 
 The recognizer must accept exactly the canonical public input tapes indexed by
-{name}`FuelSimulatorStructuredIndex`, hand off by moving one cell right, and
-reject all other starting tapes by never halting.
+{name}`FuelSimulatorStructuredIndex` when started from ordinary input tapes and
+hand off by moving one cell right.
 -/
 structure FuelSimulatorInputRecognizerExactRunSpec
     (recognizer : MachineDescription) : Prop where
@@ -286,11 +286,13 @@ structure FuelSimulatorInputRecognizerExactRunSpec
         (fuelSimulatorStructuredInputTape i)
         (EncRewriters.CanonicalLayouts.HandoffTape
           fuelSimulatorStructuredInputCode i)
-  closedIndex :
-    forall Tin T : Tape Bool,
-      recognizer.HaltsFromTape Tin T ->
+  closedCanonical :
+    forall code : Word MachineCodeSymbol,
+    forall T : Tape Bool,
+      recognizer.HaltsWithTape
+        (encodeCodeWordAsInput code) T ->
         ∃ i : FuelSimulatorStructuredIndex,
-          Tin = fuelSimulatorStructuredInputTape i ∧
+          decodeFuelSimulatorStructuredInputCode code = some i ∧
             T = EncRewriters.CanonicalLayouts.HandoffTape
               fuelSimulatorStructuredInputCode i
 
@@ -299,28 +301,13 @@ theorem fuelSimulatorInputRecognizerSpec_of_exactRunSpec
     (hspec : FuelSimulatorInputRecognizerExactRunSpec recognizer) :
     FuelSimulatorInputRecognizerSpec recognizer := by
   constructor
-  · refine ⟨hspec.ready, ?_, ?_⟩
+  · exact hspec.ready
+  · constructor
     · intro i
       apply haltsWithTape_of_haltsFromTape_input
       simpa [fuelSimulatorStructuredInputTape,
         EncRewriters.CanonicalLayouts.Bits] using hspec.forward i
-    · intro code T hhalt
-      have hfrom :
-          recognizer.HaltsFromTape
-            (Tape.input (encodeCodeWordAsInput code)) T :=
-        haltsFromTape_input_of_haltsWithTape hhalt
-      rcases hspec.closedIndex _ _ hfrom with ⟨i, hTin, hT⟩
-      refine ⟨i, ?_, hT⟩
-      have hcode : code = fuelSimulatorStructuredInputCode i :=
-        fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hTin
-      rw [hcode]
-      exact decodeFuelSimulatorStructuredInputCode_encode i
-  · intro Tin T hhalt
-    rcases hspec.closedIndex Tin T hhalt with ⟨i, hTin, hT⟩
-    refine ⟨i, ?_, hT⟩
-    simpa [fuelSimulatorStructuredInputTape,
-      EncRewriters.CanonicalLayouts.InputTape,
-      EncRewriters.CanonicalLayouts.Bits] using hTin
+    · exact hspec.closedCanonical
 
 /--
 Concrete finite parser for generated FuelSimulator public-input codes.
@@ -353,11 +340,13 @@ theorem fuelSimulatorInputRecognizerDescription_forward
       (fuelSimulatorStructuredInputTape i)
       (EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i) := by sorry
 
-theorem fuelSimulatorInputRecognizerDescription_closedIndex
-    (Tin T : Tape Bool)
-    (h : fuelSimulatorInputRecognizerDescription.HaltsFromTape Tin T) :
+theorem fuelSimulatorInputRecognizerDescription_closedCanonical
+    (code : Word MachineCodeSymbol) (T : Tape Bool)
+    (h :
+      fuelSimulatorInputRecognizerDescription.HaltsWithTape
+        (encodeCodeWordAsInput code) T) :
     ∃ i : FuelSimulatorStructuredIndex,
-      Tin = fuelSimulatorStructuredInputTape i ∧
+      decodeFuelSimulatorStructuredInputCode code = some i ∧
       T = EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i := by sorry
 
 theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
@@ -366,7 +355,7 @@ theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
   constructor
   · exact fuelSimulatorInputRecognizerDescription_ready
   · exact fuelSimulatorInputRecognizerDescription_forward
-  · exact fuelSimulatorInputRecognizerDescription_closedIndex
+  · exact fuelSimulatorInputRecognizerDescription_closedCanonical
 
 theorem fuelSimulatorInputRecognizerDescription_spec :
     FuelSimulatorInputRecognizerSpec
@@ -378,34 +367,6 @@ theorem fuelSimulatorInputRecognizerConstruction_core :
     FuelSimulatorInputRecognizerConstruction :=
   ⟨fuelSimulatorInputRecognizerDescription,
     fuelSimulatorInputRecognizerDescription_spec⟩
-
-theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_parts
-    (hrecognizer : FuelSimulatorInputRecognizerConstruction)
-    (hemitter : Structured3InputEmbeddingEmitterConstruction) :
-    FuelSimulatorStructuredEquivInputMaterializerConstruction := by
-  simpa [
-    FuelSimulatorStructuredEquivInputMaterializerConstruction,
-    fuelSimulatorStructuredInputTape,
-    fuelSimulatorStructuredOutputBuffer,
-    EncRewriters.CanonicalLayouts.InputTape,
-    EncRewriters.CanonicalLayouts.Bits] using
-    closedRecognizerStructuredEquivInputMaterializerConstruction_of_parts
-      (α := FuelSimulatorStructuredIndex)
-      (decode := decodeFuelSimulatorStructuredInputCode)
-      (encode := fuelSimulatorStructuredInputCode)
-      fuelSimulatorStructuredInputCode_cons
-      hrecognizer
-      hemitter
-
-/--
-Finite-table leaf for the fuel-simulator public-input materializer on the
-equivalence-facing endpoint route.
--/
-theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_core :
-    FuelSimulatorStructuredEquivInputMaterializerConstruction :=
-  fuelSimulatorStructuredEquivInputMaterializerConstruction_of_parts
-    fuelSimulatorInputRecognizerConstruction_core
-    structured3InputEmbeddingEmitterConstruction_core
 
 end StructuredConstructionTargets
 

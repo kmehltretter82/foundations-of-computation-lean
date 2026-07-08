@@ -526,11 +526,10 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubr
 private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=
   by
-    exact
-      pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_endpointEquiv_extractor
-        fuelSimulatorStructuredEndpointEquivIndexedConstruction_core
-        EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
-        pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf
+    -- Remaining finite-table obligation: build the fuel-simulator parser
+    -- endpoint without relying on arbitrary-start closedness for unmarked input
+    -- tapes.
+    sorry
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
