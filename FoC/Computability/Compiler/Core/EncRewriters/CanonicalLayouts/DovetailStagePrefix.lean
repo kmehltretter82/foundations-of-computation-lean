@@ -338,6 +338,779 @@ theorem markedPrefix_run_state200_stageNat_handoff
     markedPrefix_run_state210_handoff b (some true)
       (List.append tail left) right
 
+private theorem markedPrefix_run_state100_tick
+    (left tail : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 100 left
+          (List.append (tickBits.map some) tail)) =
+      config 120 (List.append markedTickRev left) tail := by
+  cases tail <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    tickBits, markedTickRev, encodeCodeSymbolAsInput,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state100_done
+    (left tail : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 100 left
+          (List.append (doneBits.map some) tail)) =
+      config 150
+        (List.append (doneBits.reverse.map some) left) tail := by
+  cases tail <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    doneBits, encodeCodeSymbolAsInput, config, tapeAtCells,
+    keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state120_tick
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 120 left
+          (List.append (tickBits.map some) right)) =
+      config 120
+        (List.append (tickBits.reverse.map some) left) right := by
+  cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    tickBits, config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    encodeCodeSymbolAsInput, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state120_done
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 120 left
+          (List.append (doneBits.map some) right)) =
+      config 130
+        (List.append (doneBits.reverse.map some) left) right := by
+  cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    doneBits, config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    encodeCodeSymbolAsInput, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state120_stageNat
+    (n : Nat) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig (4 * n + 4)
+        (config 120 left
+          (List.append ((stageNatBits n).map some) right)) =
+      config 130
+        (List.append ((stageNatBits n).reverse.map some) left)
+        right := by
+  induction n generalizing left with
+  | zero =>
+      simpa [stageNatBits_zero] using
+        markedPrefix_run_state120_done left right
+  | succ n ih =>
+      rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by
+        lia]
+      rw [runConfig_add]
+      rw [show
+          List.append ((stageNatBits (n + 1)).map some) right =
+            List.append (tickBits.map some)
+              (List.append ((stageNatBits n).map some) right) by
+        simp [stageNatBits_succ, tickBits, encodeCodeSymbolAsInput]]
+      rw [markedPrefix_run_state120_tick]
+      rw [ih]
+      simp [stageNatBits_succ, tickBits, encodeCodeSymbolAsInput,
+        List.map_append, List.append_assoc]
+
+private theorem markedPrefix_run_state130_markedCell
+    (b : Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 130 left
+          (List.append ((markedCellBits b).map some) right)) =
+      config 130
+        (List.append ((markedCellBits b).reverse.map some) left)
+        right := by
+  cases b <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    markedCellBits, config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state130_markedCells
+    (processed : Word Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig
+        (4 * processed.length)
+        (config 130 left
+          (List.append ((markedCellsBits processed).map some)
+            right)) =
+      config 130
+        (List.append ((markedCellsBits processed).reverse.map some)
+          left)
+        right := by
+  induction processed generalizing left with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show 4 * (b :: rest).length =
+          4 + 4 * rest.length by simp; lia]
+      rw [runConfig_add]
+      rw [show
+          List.append ((markedCellsBits (b :: rest)).map some)
+              right =
+            List.append ((markedCellBits b).map some)
+              (List.append ((markedCellsBits rest).map some)
+                right) by
+          simp [markedCellsBits, List.map_append, List.append_assoc]]
+      rw [markedPrefix_run_state130_markedCell]
+      rw [ih]
+      simp [markedCellsBits, List.reverse_append, List.map_append,
+        List.append_assoc]
+
+private theorem markedPrefix_run_state130_currentCell
+    (b : Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 6
+        (config 130 left
+          (List.append ((cellBits b).map some) right)) =
+      config 140 (some true :: some true :: left)
+        (some b :: some (!b) :: right) := by
+  cases b <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    cellBits, config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    encodeCodeSymbolAsInput, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+    Tape.moveRight]
+
+private theorem markedPrefix_run_state140_returnToLengthMarker
+    (scanRev : Word Bool) (headBit : Bool)
+    (leftTail right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig
+        (scanRev.length + 4)
+        (config 140
+          (List.append (scanRev.map some)
+            (none :: some true :: leftTail))
+          (some headBit :: right)) =
+      config 100 (some false :: some true :: leftTail)
+        (List.append (scanRev.reverse.map some)
+          (some headBit :: right)) := by
+  induction scanRev generalizing headBit right with
+  | nil =>
+      cases headBit <;> cases right <;>
+      simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+        config, tapeAtCells, keep, keepMove, writeMove,
+        scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+        runConfig, stepConfig, lookupTransition, Matches, transition,
+        Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+  | cons b rest ih =>
+      rw [show (b :: rest).length + 4 =
+          1 + (rest.length + 4) by
+        simp
+        lia]
+      rw [runConfig_add]
+      change
+        MarkedPrefixScannerDescription.runConfig (rest.length + 4)
+          (MarkedPrefixScannerDescription.runConfig 1
+            (config 140
+              (some b :: List.append (List.map some rest)
+                (none :: some true :: leftTail))
+              (some headBit :: right))) =
+          config 100 (some false :: some true :: leftTail)
+            (List.append (List.map some (b :: rest).reverse)
+              (some headBit :: right))
+      rw [show
+          MarkedPrefixScannerDescription.runConfig 1
+            (config 140
+              (some b :: List.append (List.map some rest)
+                (none :: some true :: leftTail))
+              (some headBit :: right)) =
+          config 140
+            (List.append (List.map some rest)
+              (none :: some true :: leftTail))
+            (some b :: some headBit :: right) by
+        cases headBit <;> cases b <;> cases right <;>
+        simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+          config, tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+          runConfig, stepConfig, lookupTransition, Matches, transition,
+          Tape.read, Tape.write, Tape.move, Tape.moveLeft]]
+      rw [ih]
+      simp [List.map_append, List.append_assoc]
+
+private def markedPrefixFinishStartConfigWithTailCells
+    (w : Word Bool) (tailCells : List (Option Bool)) :
+    Configuration :=
+  config 150 (finishStartLeft w)
+    (List.append ((markedCellsBits w).map some) tailCells)
+
+private def markedPrefixMarkingState120WithTailCells
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (tailCells : List (Option Bool)) :
+    Configuration :=
+  config 120 (activeLengthPrefixRev processed.length)
+    (List.append ((stageNatBits rest.length).map some)
+      (List.append ((markedCellsBits processed).map some)
+        (List.append ((cellBits b).map some)
+          (List.append ((cellsBits rest).map some) tailCells))))
+
+private def markedPrefixState100AfterMarkedWithTailCells
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (tailCells : List (Option Bool)) :
+    Configuration :=
+  config 100 (finishLengthPrefixRev processed.length)
+    (List.append ((stageNatBits rest.length).map some)
+      (List.append ((markedCellsBits processed).map some)
+        (List.append ((markedCellBits b).map some)
+          (List.append ((cellsBits rest).map some) tailCells))))
+
+private theorem markedPrefix_run_mark_current_to_state100_withTailCells
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedPrefixMarkingState120WithTailCells
+            processed b rest tailCells) =
+        markedPrefixState100AfterMarkedWithTailCells
+          processed b rest tailCells := by
+  let scanRev := markingReturnScanRev processed rest
+  refine
+    ⟨(4 * rest.length + 4) +
+        (4 * processed.length + (6 + (scanRev.length + 4))), ?_⟩
+  rw [runConfig_add]
+  unfold markedPrefixMarkingState120WithTailCells
+  rw [markedPrefix_run_state120_stageNat]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state130_markedCells]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state130_currentCell]
+  have hreturn :=
+    markedPrefix_run_state140_returnToLengthMarker scanRev b
+      (activeLengthPrefixTail processed.length)
+      (some (!b) ::
+        List.append ((cellsBits rest).map some) tailCells)
+  cases b <;>
+  simpa [markedPrefixState100AfterMarkedWithTailCells, scanRev,
+    markingReturnScanRev, activeLengthPrefixRev,
+    activeLengthPrefixRestored, markedCellBits,
+    List.map_append, List.reverse_append, List.append_assoc]
+    using hreturn
+
+private theorem markedPrefix_run_marking_loop_from_state120_withTailCells
+    (processed : Word Bool) (b : Bool) (rest : Word Bool)
+    (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedPrefixMarkingState120WithTailCells
+            processed b rest tailCells) =
+        markedPrefixFinishStartConfigWithTailCells
+          (List.append processed (b :: rest)) tailCells := by
+  induction rest generalizing processed b with
+  | nil =>
+      rcases markedPrefix_run_mark_current_to_state100_withTailCells
+          processed b [] tailCells with
+        ⟨markSteps, hmark⟩
+      refine ⟨markSteps + 4, ?_⟩
+      rw [runConfig_add]
+      rw [hmark]
+      unfold markedPrefixState100AfterMarkedWithTailCells
+      change
+        MarkedPrefixScannerDescription.runConfig 4
+            (config 100 (finishLengthPrefixRev processed.length)
+              (List.append (doneBits.map some)
+                (List.append ((markedCellsBits processed).map some)
+                  (List.append ((markedCellBits b).map some)
+                    tailCells)))) =
+          markedPrefixFinishStartConfigWithTailCells
+            (List.append processed [b]) tailCells
+      rw [markedPrefix_run_state100_done]
+      unfold markedPrefixFinishStartConfigWithTailCells finishStartLeft
+      rw [markedCellsBits_append_single_map]
+      simp [List.length_append, List.append_assoc]
+  | cons next rest ih =>
+      rcases markedPrefix_run_mark_current_to_state100_withTailCells
+          processed b (next :: rest) tailCells with
+        ⟨markSteps, hmark⟩
+      rcases ih (List.append processed [b]) next with
+        ⟨recSteps, hrec⟩
+      refine ⟨markSteps + 4 + recSteps, ?_⟩
+      rw [show markSteps + 4 + recSteps =
+          markSteps + (4 + recSteps) by lia]
+      rw [runConfig_add]
+      rw [hmark]
+      rw [runConfig_add]
+      unfold markedPrefixState100AfterMarkedWithTailCells
+      rw [show
+          (stageNatBits (next :: rest).length).map some =
+            List.append (tickBits.map some)
+              ((stageNatBits rest.length).map some) by
+        simp [stageNatBits_succ, tickBits,
+          encodeCodeSymbolAsInput]]
+      change
+        MarkedPrefixScannerDescription.runConfig recSteps
+            (MarkedPrefixScannerDescription.runConfig 4
+              (config 100 (finishLengthPrefixRev processed.length)
+                (List.append (tickBits.map some)
+                  (List.append ((stageNatBits rest.length).map some)
+                    (List.append ((markedCellsBits processed).map some)
+                      (List.append ((markedCellBits b).map some)
+                        (List.append
+                          ((cellsBits (next :: rest)).map some)
+                          tailCells))))))) =
+          markedPrefixFinishStartConfigWithTailCells
+            (List.append processed (b :: next :: rest)) tailCells
+      rw [markedPrefix_run_state100_tick]
+      unfold markedPrefixMarkingState120WithTailCells at hrec
+      rw [markedCellsBits_append_single_map] at hrec
+      simpa [activeLengthPrefixRev_succ, cellsBits_cons,
+        List.length_append, List.map_append, List.append_assoc] using hrec
+
+private theorem markedPrefix_run_state120_bool_tail_to_finish_cells
+    (b : Bool) (rest : Word Bool) (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (config 120 [none, some true, none, some false]
+            (List.append ((stageNatBits rest.length).map some)
+              (List.append ((cellBits b).map some)
+                (List.append ((cellsBits rest).map some) tailCells)))) =
+        markedPrefixFinishStartConfigWithTailCells
+          (b :: rest) tailCells := by
+  rcases markedPrefix_run_marking_loop_from_state120_withTailCells
+      ([] : Word Bool) b rest tailCells with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [markedPrefixMarkingState120WithTailCells,
+    activeLengthPrefixRev_zero] using hsteps
+
+private def markedPrefixState160AfterRestoreWithTailCells
+    (w : Word Bool) (tailCells : List (Option Bool)) :
+    Configuration :=
+  config 160
+    (List.append ((cellsBits w).reverse.map some)
+      (finishStartLeft w))
+    (some false :: none :: tailCells)
+
+private def markedPrefixAppendBlankStartConfigWithTailCells
+    (w : Word Bool) (tailCells : List (Option Bool)) :
+    Configuration :=
+  config 180 [none, some false]
+    (List.append ((stageInputSecondBitTailPrefix w).map some)
+      (some false :: none :: tailCells))
+
+private theorem markedPrefix_run_state150_markedCell
+    (b : Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 4
+        (config 150 left
+          (List.append ((markedCellBits b).map some) right)) =
+      config 150
+        (List.append ((cellBits b).reverse.map some) left)
+        right := by
+  cases b <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    markedCellBits, cellBits,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches,
+    transition, encodeCodeSymbolAsInput,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state150_markedCells
+    (processed : Word Bool)
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig
+        (4 * processed.length)
+        (config 150 left
+          (List.append ((markedCellsBits processed).map some)
+            right)) =
+      config 150
+        (List.append ((cellsBits processed).reverse.map some)
+          left)
+        right := by
+  induction processed generalizing left with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show 4 * (b :: rest).length =
+          4 + 4 * rest.length by simp; lia]
+      rw [runConfig_add]
+      rw [show
+          List.append ((markedCellsBits (b :: rest)).map some)
+              right =
+            List.append ((markedCellBits b).map some)
+              (List.append ((markedCellsBits rest).map some)
+                right) by
+          simp [markedCellsBits, List.map_append, List.append_assoc]]
+      rw [markedPrefix_run_state150_markedCell]
+      rw [ih]
+      simp [List.reverse_append, List.map_append,
+        List.append_assoc]
+
+private theorem markedPrefix_run_state150_to_state160
+    (left tail : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 2
+        (config 150 left (some false :: some false :: tail)) =
+      config 160 left (some false :: none :: tail) := by
+  cases tail <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches,
+    transition, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
+    Tape.moveRight]
+
+private theorem markedPrefix_run_finish_restore_cells_tailCells
+    (w : Word Bool) (tailCells : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig
+        (4 * w.length + 2)
+        (markedPrefixFinishStartConfigWithTailCells w
+          (some false :: some false :: tailCells)) =
+      markedPrefixState160AfterRestoreWithTailCells w tailCells := by
+  rw [runConfig_add]
+  change
+    MarkedPrefixScannerDescription.runConfig 2
+        (MarkedPrefixScannerDescription.runConfig (4 * w.length)
+          (config 150 (finishStartLeft w)
+            (List.append ((markedCellsBits w).map some)
+              (some false :: some false :: tailCells)))) =
+      markedPrefixState160AfterRestoreWithTailCells w tailCells
+  rw [markedPrefix_run_state150_markedCells]
+  rw [markedPrefix_run_state150_to_state160]
+  simp [markedPrefixState160AfterRestoreWithTailCells]
+
+private theorem markedPrefix_run_state160_some_cons
+    (b : Bool) (cell : Option Bool)
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 160 (cell :: left) (some b :: right)) =
+      config 160 left (cell :: some b :: right) := by
+  cases b <;> cases cell <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem markedPrefix_run_state160_bits_to_boundary
+    (bitsToRight : Word Bool) (boundary : Option Bool)
+    (leftTail right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig bitsToRight.length
+        (state160ScanConfig bitsToRight boundary leftTail right) =
+      config 160 leftTail
+        (boundary ::
+          List.append (bitsToRight.reverse.map some) right) := by
+  induction bitsToRight generalizing boundary leftTail right with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      rw [show (b :: rest).length = rest.length + 1 by simp]
+      rw [show rest.length + 1 = 1 + rest.length by lia]
+      rw [runConfig_add]
+      cases rest with
+      | nil =>
+          change
+            MarkedPrefixScannerDescription.runConfig 0
+                (MarkedPrefixScannerDescription.runConfig 1
+                  (config 160 (boundary :: leftTail)
+                    (some b :: right))) =
+              config 160 leftTail (boundary :: some b :: right)
+          rw [markedPrefix_run_state160_some_cons]
+          rfl
+      | cons b' rest =>
+          change
+            MarkedPrefixScannerDescription.runConfig
+                (b' :: rest).length
+                (MarkedPrefixScannerDescription.runConfig 1
+                  (config 160
+                    (some b' ::
+                      List.append (rest.map some)
+                        (boundary :: leftTail))
+                    (some b :: right))) =
+              config 160 leftTail
+                (boundary ::
+                  List.append
+                    ((b :: b' :: rest).reverse.map some)
+                    right)
+          rw [markedPrefix_run_state160_some_cons]
+          have h := ih boundary leftTail (some b :: right)
+          simp [state160ScanConfig] at h
+          simpa [List.map_append, List.append_assoc] using h
+
+private theorem markedPrefix_run_state160_none_to_state161
+    (cell : Option Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 160 (cell :: left) (none :: right)) =
+      config 161 left (cell :: none :: right) := by
+  cases cell <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem markedPrefix_run_state161_false_to_state170
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 161 left (some false :: right)) =
+      config 170 (some false :: left) right := by
+  cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state170_none_to_state180
+    (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 170 (some false :: left) (none :: right)) =
+      config 180 (none :: some false :: left) right := by
+  cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_finish_scan_left_to_append_tailCells
+    (b : Bool) (rest : Word Bool) (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedPrefixState160AfterRestoreWithTailCells
+            (b :: rest) tailCells) =
+        markedPrefixAppendBlankStartConfigWithTailCells
+          (b :: rest) tailCells := by
+  let bits := finishScanBits (b :: rest)
+  let scanRight := none :: tailCells
+  have hstart :
+      markedPrefixState160AfterRestoreWithTailCells
+          (b :: rest) tailCells =
+        state160ScanConfig bits none [some false] scanRight := by
+    cases b <;>
+    simp [bits, scanRight, finishScanBits,
+      markedPrefixState160AfterRestoreWithTailCells, finishStartLeft,
+      finishLengthPrefixRev_eq_scanBits, state160ScanConfig,
+      cellsBits_cons, cellBits,
+      List.map_append, List.reverse_append, List.append_assoc]
+  refine ⟨bits.length + 3, ?_⟩
+  rw [show bits.length + 3 = bits.length + (1 + (1 + 1)) by
+    lia]
+  rw [runConfig_add]
+  rw [hstart]
+  rw [markedPrefix_run_state160_bits_to_boundary]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state160_none_to_state161]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state161_false_to_state170]
+  rw [markedPrefix_run_state170_none_to_state180]
+  simp [markedPrefixAppendBlankStartConfigWithTailCells, bits, scanRight,
+    finishScanBits_reverse_nonempty, List.map_append, List.append_assoc]
+
+private theorem markedPrefix_run_state180_some
+    (b : Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 180 left (some b :: right)) =
+      config 180 (some b :: left) right := by
+  cases b <;> cases right <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveRight]
+
+private theorem markedPrefix_run_state180_bits
+    (bits : Word Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig bits.length
+        (config 180 left (List.append (bits.map some) right)) =
+      config 180
+        (List.append (bits.reverse.map some) left) right := by
+  induction bits generalizing left right with
+  | nil =>
+      rfl
+  | cons b rest ih =>
+      change
+        MarkedPrefixScannerDescription.runConfig
+            (rest.length + 1)
+            (config 180 left
+              (some b :: List.append (rest.map some) right)) =
+          config 180
+            (List.append ((b :: rest).reverse.map some) left) right
+      rw [show rest.length + 1 = 1 + rest.length by lia]
+      rw [runConfig_add]
+      rw [markedPrefix_run_state180_some]
+      rw [ih]
+      simp [List.map_append, List.append_assoc]
+
+private theorem markedPrefix_run_state180_none_cons
+    (cell : Option Bool) (left right : List (Option Bool)) :
+    MarkedPrefixScannerDescription.runConfig 1
+        (config 180 (cell :: left) (none :: right)) =
+      config 200 left (cell :: some false :: right) := by
+  cases cell <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    config, tapeAtCells, keep, keepMove, writeMove,
+    scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+    runConfig, stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem markedPrefix_run_append_blank_to_state200_tailCells
+    (b : Bool) (rest : Word Bool) (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedPrefixAppendBlankStartConfigWithTailCells
+            (b :: rest) tailCells) =
+        config 200
+          (List.append
+            ((stageInputSecondBitTailPrefix (b :: rest)).reverse.map some)
+            (none :: [some false]))
+          (some false :: some false :: tailCells) := by
+  let tailPrefix := stageInputSecondBitTailPrefix (b :: rest)
+  refine ⟨tailPrefix.length + 2, ?_⟩
+  rw [show tailPrefix.length + 2 = tailPrefix.length + (1 + 1) by
+    lia]
+  rw [runConfig_add]
+  unfold markedPrefixAppendBlankStartConfigWithTailCells
+  change
+    MarkedPrefixScannerDescription.runConfig (1 + 1)
+        (MarkedPrefixScannerDescription.runConfig tailPrefix.length
+          (config 180 [none, some false]
+            (List.append (tailPrefix.map some)
+              (some false :: none :: tailCells)))) =
+      config 200
+        (List.append (tailPrefix.reverse.map some)
+          (none :: [some false]))
+        (some false :: some false :: tailCells)
+  rw [markedPrefix_run_state180_bits]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state180_some]
+  rw [markedPrefix_run_state180_none_cons]
+
+private theorem markedPrefix_run_finish_cells_false_false_to_state200
+    (b : Bool) (rest : Word Bool) (tailCells : List (Option Bool)) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedPrefixFinishStartConfigWithTailCells
+            (b :: rest) (some false :: some false :: tailCells)) =
+        config 200
+          (List.append
+            ((stageInputSecondBitTailPrefix (b :: rest)).reverse.map some)
+            (none :: [some false]))
+          (some false :: some false :: tailCells) := by
+  rcases markedPrefix_run_finish_scan_left_to_append_tailCells
+      b rest tailCells with
+    ⟨scanSteps, hscan⟩
+  rcases markedPrefix_run_append_blank_to_state200_tailCells
+      b rest tailCells with
+    ⟨appendSteps, happend⟩
+  refine
+    ⟨(4 * (b :: rest).length + 2) + scanSteps + appendSteps, ?_⟩
+  rw [show
+      (4 * (b :: rest).length + 2) + scanSteps + appendSteps =
+        (4 * (b :: rest).length + 2) +
+          (scanSteps + appendSteps) by
+    lia]
+  rw [runConfig_add]
+  rw [markedPrefix_run_finish_restore_cells_tailCells]
+  rw [runConfig_add]
+  rw [hscan]
+  exact happend
+
+theorem markedPrefix_run_marked_tail_done_stageNat_to_state200
+    (stage : Nat) (suffixBits : Word Bool) :
+    MarkedPrefixScannerDescription.runConfig 18
+        (markedTailStartConfig
+          (true :: true ::
+            List.append (stageNatBits stage) suffixBits)) =
+      config 200 [some true, some true, none, some false]
+        (List.append ((stageNatBits stage).map some)
+          (suffixBits.map some)) := by
+  cases stage <;>
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    markedTailStartConfig, stageNatBits, encodeNat,
+    encodeCodeWordAsInput, encodeCodeSymbolAsInput, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt, runConfig, stepConfig,
+    lookupTransition, Matches, transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem markedPrefix_run_state120_nonempty_to_state200
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (config 120 [none, some true, none, some false]
+            (List.append ((stageNatBits rest.length).map some)
+              (List.append ((cellBits b).map some)
+                (List.append ((cellsBits rest).map some)
+                  (List.append ((stageNatBits stage).map some)
+                    (suffixBits.map some)))))) =
+        config 200
+          (List.append
+            ((stageInputSecondBitTailPrefix (b :: rest)).reverse.map some)
+            (none :: [some false]))
+          (List.append ((stageNatBits stage).map some)
+            (suffixBits.map some)) := by
+  rcases stageNatBits_false_false_tail stage with
+    ⟨stageTail, hstageTail⟩
+  rcases markedPrefix_run_state120_bool_tail_to_finish_cells
+      b rest
+      (List.append ((stageNatBits stage).map some)
+        (suffixBits.map some)) with
+    ⟨markSteps, hmark⟩
+  rcases markedPrefix_run_finish_cells_false_false_to_state200
+      b rest
+      (List.append (stageTail.map some) (suffixBits.map some)) with
+    ⟨finishSteps, hfinish⟩
+  refine ⟨markSteps + finishSteps, ?_⟩
+  rw [runConfig_add]
+  rw [hmark]
+  rw [hstageTail]
+  have htailCells :
+      List.append (List.map some (false :: false :: stageTail))
+          (suffixBits.map some) =
+        some false :: some false ::
+          List.append (stageTail.map some) (suffixBits.map some) := by
+    simp
+  rw [htailCells]
+  rw [hfinish]
+
+theorem markedPrefix_run_marked_tail_tick_to_state120
+    (bits : Word Bool) :
+    MarkedPrefixScannerDescription.runConfig 6
+        (markedTailStartConfig (true :: false :: bits)) =
+      config 120 [none, some true, none, some false]
+        (bits.map some) := by
+  simp [MarkedPrefixScannerDescription, StageInputMarkedScannerDescription,
+    markedTailStartConfig, config, tapeAtCells,
+    keep, keepMove, writeMove, scanLeftToSentinelRestart,
+    scanLeftToSentinelHalt, runConfig, stepConfig,
+    lookupTransition, Matches, transition, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+  generalize bits.map some = cells
+  cases cells <;> rfl
+
+theorem markedPrefix_run_marked_tail_nonempty_to_state200
+    (b : Bool) (rest : Word Bool) (stage : Nat)
+    (suffixBits : Word Bool) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (markedTailStartConfig
+            (true :: false ::
+              List.append (stageNatBits rest.length)
+                (List.append (cellBits b)
+                  (List.append (cellsBits rest)
+                    (List.append (stageNatBits stage) suffixBits))))) =
+        config 200
+          (List.append
+            ((stageInputSecondBitTailPrefix (b :: rest)).reverse.map some)
+            (none :: [some false]))
+          (List.append ((stageNatBits stage).map some)
+            (suffixBits.map some)) := by
+  rcases markedPrefix_run_state120_nonempty_to_state200
+      b rest stage suffixBits with
+    ⟨tailSteps, htail⟩
+  refine ⟨6 + tailSteps, ?_⟩
+  rw [runConfig_add]
+  rw [markedPrefix_run_marked_tail_tick_to_state120]
+  simpa [List.map_append, List.append_assoc] using htail
+
 def natSuffixHandoffConfigWithBase
     (stage : Nat) (baseLeft : List (Option Bool))
     (suffixBits : Word Bool) : Configuration :=
@@ -348,6 +1121,28 @@ def natSuffixHandoffConfigWithBase
           (List.append ((stageNatBits stage).reverse.map some)
             baseLeft)
           (suffixBits.map some)) }
+
+theorem run_markedPrefix_raw_to_handoff_withBase
+    (stage : Nat) (baseLeft : List (Option Bool))
+    (b : Bool) (suffixTail : Word Bool) :
+    exists steps : Nat,
+      MarkedPrefixScannerDescription.runConfig steps
+          (config 200 baseLeft
+            (List.append ((stageNatBits stage).map some)
+              (some b :: suffixTail.map some))) =
+        natSuffixHandoffConfigWithBase stage baseLeft
+          (b :: suffixTail) := by
+  rcases stageNatBits_reverse_map_some_cons stage with
+    ⟨tail, htail⟩
+  refine ⟨4 * stage + 5, ?_⟩
+  rw [show 4 * stage + 5 = (4 * stage + 4) + 1 by lia]
+  rw [runConfig_add]
+  rw [markedPrefix_run_state200_stageNat_to_state210]
+  rw [htail]
+  unfold natSuffixHandoffConfigWithBase
+  simpa [config, tapeAtCells, htail, List.append_assoc] using
+    markedPrefix_run_state210_handoff b (some true)
+      (List.append tail baseLeft) (suffixTail.map some)
 
 def natSuffixHandoffConfigWithBaseAndRight
     (stage : Nat) (baseLeft : List (Option Bool))

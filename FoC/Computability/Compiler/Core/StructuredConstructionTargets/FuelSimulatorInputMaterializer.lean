@@ -27,6 +27,7 @@ open CommonGround.FiniteTransducers.Structured
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 open FoC.Computability.EncRewriters.CanonicalLayouts.DovetailStagePrefix
 open FoC.Computability.DovetailInitialLayoutInitializer
+open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 /-- Index for the fuel-simulator structured input family: word, stage limit,
 and fuel budget. -/
@@ -259,30 +260,41 @@ theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
 /-- Semantic contract for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerSpec
     (recognizer : MachineDescription) : Prop :=
-  EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
-    decodeFuelSimulatorStructuredInputCode
-    fuelSimulatorStructuredInputCode
-    recognizer
+  recognizer.SubroutineReady ∧
+    (forall i : FuelSimulatorStructuredIndex,
+      recognizer.HaltsFromTapeEquiv
+        (fuelSimulatorStructuredInputTape i)
+        (EncRewriters.CanonicalLayouts.HandoffTape
+          fuelSimulatorStructuredInputCode i)) ∧
+      forall code : Word MachineCodeSymbol,
+      forall T : Tape Bool,
+        recognizer.HaltsWithTape
+            (encodeCodeWordAsInput code) T ->
+          exists i : FuelSimulatorStructuredIndex,
+            decodeFuelSimulatorStructuredInputCode code = some i ∧
+              Tape.Equiv T
+                (EncRewriters.CanonicalLayouts.HandoffTape
+                  fuelSimulatorStructuredInputCode i)
 
 /-- Existence wrapper for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerConstruction : Prop :=
-  EncRewriters.CanonicalLayouts.ClosedRecognizerConstruction
-    decodeFuelSimulatorStructuredInputCode
-    fuelSimulatorStructuredInputCode
+  exists recognizer : MachineDescription,
+    FuelSimulatorInputRecognizerSpec recognizer
 
 /--
-Exact finite-machine behavior for the FuelSimulator-family recognizer.
+Equivalence-facing finite-machine behavior for the FuelSimulator-family
+recognizer.
 
 The recognizer must accept exactly the canonical public input tapes indexed by
 {name}`FuelSimulatorStructuredIndex` when started from ordinary input tapes and
-hand off by moving one cell right.
+hand off to a tape equivalent to moving one cell right.
 -/
-structure FuelSimulatorInputRecognizerExactRunSpec
+structure FuelSimulatorInputRecognizerEquivRunSpec
     (recognizer : MachineDescription) : Prop where
   ready : recognizer.SubroutineReady
   forward :
     forall i : FuelSimulatorStructuredIndex,
-      recognizer.HaltsFromTape
+      recognizer.HaltsFromTapeEquiv
         (fuelSimulatorStructuredInputTape i)
         (EncRewriters.CanonicalLayouts.HandoffTape
           fuelSimulatorStructuredInputCode i)
@@ -293,20 +305,18 @@ structure FuelSimulatorInputRecognizerExactRunSpec
         (encodeCodeWordAsInput code) T ->
         ∃ i : FuelSimulatorStructuredIndex,
           decodeFuelSimulatorStructuredInputCode code = some i ∧
-            T = EncRewriters.CanonicalLayouts.HandoffTape
-              fuelSimulatorStructuredInputCode i
+            Tape.Equiv T
+              (EncRewriters.CanonicalLayouts.HandoffTape
+                fuelSimulatorStructuredInputCode i)
 
-theorem fuelSimulatorInputRecognizerSpec_of_exactRunSpec
+theorem fuelSimulatorInputRecognizerSpec_of_equivRunSpec
     {recognizer : MachineDescription}
-    (hspec : FuelSimulatorInputRecognizerExactRunSpec recognizer) :
+    (hspec : FuelSimulatorInputRecognizerEquivRunSpec recognizer) :
     FuelSimulatorInputRecognizerSpec recognizer := by
   constructor
   · exact hspec.ready
   · constructor
-    · intro i
-      apply haltsWithTape_of_haltsFromTape_input
-      simpa [fuelSimulatorStructuredInputTape,
-        EncRewriters.CanonicalLayouts.Bits] using hspec.forward i
+    · exact hspec.forward
     · exact hspec.closedCanonical
 
 /--
@@ -390,10 +400,461 @@ theorem fuelSimulatorInputRecognizerCoreDescription_ready :
       markedPrefixScannerDescription_subroutineReady
       natClosedScannerDescription_ready
 
+def fuelSimulatorInputBits
+    (i : FuelSimulatorStructuredIndex) : Word Bool :=
+  encodeCodeWordAsInput (fuelSimulatorStructuredInputCode i)
+
+def fuelSimulatorInputSecondBitTail
+    (i : FuelSimulatorStructuredIndex) : Word Bool :=
+  match fuelSimulatorInputBits i with
+  | _ :: _ :: tail => tail
+  | _ => []
+
+theorem fuelSimulatorInputBits_eq_false_false_tail
+    (i : FuelSimulatorStructuredIndex) :
+    fuelSimulatorInputBits i =
+      false :: false :: fuelSimulatorInputSecondBitTail i := by
+  cases i with | mk w limit fuel =>
+  cases w with
+  | nil =>
+      simp [fuelSimulatorInputBits,
+        fuelSimulatorInputSecondBitTail,
+        fuelSimulatorStructuredInputCode,
+        PairedRecognizerDovetailControllerStageAttemptFuelInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat,
+        encodeCodeWordAsInput,
+        encodeCodeSymbolAsInput]
+  | cons b rest =>
+      simp [fuelSimulatorInputBits,
+        fuelSimulatorInputSecondBitTail,
+        fuelSimulatorStructuredInputCode,
+        PairedRecognizerDovetailControllerStageAttemptFuelInputCode,
+        DovetailLayout.stageInputCodeAppend,
+        encodeBoolWordAppend,
+        encodeCellListAppend,
+        encodeNatAppend,
+        encodeNat]
+
+theorem fuelSimulatorInputBits_nil_shape
+    (limit fuel : Nat) :
+    fuelSimulatorInputBits
+        { w := ([] : Word Bool), limit := limit, fuel := fuel } =
+      false :: false :: true :: true ::
+        List.append (stageNatBits limit) (stageNatBits fuel) := by
+  simp [fuelSimulatorInputBits, fuelSimulatorStructuredInputCode,
+    PairedRecognizerDovetailControllerStageAttemptFuelInputCode,
+    DovetailLayout.stageInputCodeAppend,
+    encodeBoolWordAppend, encodeCellListAppend,
+    stageNatBits, encodeCellsAppend]
+  rw [natBits_eq_encodeNatAppend 0
+    (encodeNatAppend limit (encodeNatAppend fuel []))]
+  rw [natBits_eq_encodeNatAppend limit (encodeNatAppend fuel [])]
+  rw [natBits_eq_encodeNatAppend fuel ([] : Word MachineCodeSymbol)]
+  simp [stageNatBits, encodeNat, encodeCodeWordAsInput,
+    encodeCodeSymbolAsInput]
+
+theorem fuelSimulatorInputSecondBitTail_nil_shape
+    (limit fuel : Nat) :
+    fuelSimulatorInputSecondBitTail
+        { w := ([] : Word Bool), limit := limit, fuel := fuel } =
+      true :: true ::
+        List.append (stageNatBits limit) (stageNatBits fuel) := by
+  unfold fuelSimulatorInputSecondBitTail
+  rw [fuelSimulatorInputBits_nil_shape limit fuel]
+
+theorem fuelSimulatorInputBits_cons_shape
+    (b : Bool) (rest : Word Bool) (limit fuel : Nat) :
+    fuelSimulatorInputBits
+        { w := b :: rest, limit := limit, fuel := fuel } =
+      false :: false :: true :: false ::
+        List.append (stageNatBits rest.length)
+          (List.append (cellBits b)
+            (List.append (cellsBits rest)
+              (List.append (stageNatBits limit)
+                (stageNatBits fuel)))) := by
+  cases b <;>
+  simp [fuelSimulatorInputBits, fuelSimulatorStructuredInputCode,
+    PairedRecognizerDovetailControllerStageAttemptFuelInputCode,
+    DovetailLayout.stageInputCodeAppend,
+    encodeBoolWordAppend, encodeCellListAppend,
+    encodeNatAppend, encodeNat, stageNatBits,
+    encodeCellAppend, encodeCell, encodeCellsAppend,
+    encodeCodeSymbolAsInput, cellBits, cellsBits]
+  · change
+      false :: false :: true :: false ::
+        encodeCodeWordAsInput
+          (List.append (encodeNat rest.length)
+            (MachineCodeSymbol.zero ::
+              encodeCellsAppend (List.map some rest)
+                (List.append (encodeNat limit) (encodeNat fuel)))) =
+        false :: false :: true :: false ::
+          (List.append (encodeCodeWordAsInput (encodeNat rest.length))
+            (false :: true :: false :: true ::
+              (List.append
+                (encodeCodeWordAsInput
+                  (encodeCellsAppend (List.map some rest) []))
+                (List.append (encodeCodeWordAsInput (encodeNat limit))
+                  (encodeCodeWordAsInput (encodeNat fuel))))))
+    rw [show
+        encodeCellsAppend (List.map some rest)
+            (List.append (encodeNat limit) (encodeNat fuel)) =
+          List.append
+            (encodeCellsAppend (List.map some rest) [])
+            (List.append (encodeNat limit) (encodeNat fuel)) by
+        simpa using
+          (encodeCellsAppend_append (List.map some rest)
+            ([] : Word MachineCodeSymbol)
+            (List.append (encodeNat limit) (encodeNat fuel)))]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+    change
+      encodeCodeWordAsInput
+          (List.append (encodeCellsAppend (List.map some rest) [])
+            (List.append (encodeNat limit) (encodeNat fuel))) =
+        List.append
+          (encodeCodeWordAsInput
+            (encodeCellsAppend (List.map some rest) []))
+          (List.append (encodeCodeWordAsInput (encodeNat limit))
+            (encodeCodeWordAsInput (encodeNat fuel)))
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+  · change
+      false :: false :: true :: false ::
+        encodeCodeWordAsInput
+          (List.append (encodeNat rest.length)
+            (MachineCodeSymbol.one ::
+              encodeCellsAppend (List.map some rest)
+                (List.append (encodeNat limit) (encodeNat fuel)))) =
+        false :: false :: true :: false ::
+          (List.append (encodeCodeWordAsInput (encodeNat rest.length))
+            (false :: true :: true :: false ::
+              (List.append
+                (encodeCodeWordAsInput
+                  (encodeCellsAppend (List.map some rest) []))
+                (List.append (encodeCodeWordAsInput (encodeNat limit))
+                  (encodeCodeWordAsInput (encodeNat fuel))))))
+    rw [show
+        encodeCellsAppend (List.map some rest)
+            (List.append (encodeNat limit) (encodeNat fuel)) =
+          List.append
+            (encodeCellsAppend (List.map some rest) [])
+            (List.append (encodeNat limit) (encodeNat fuel)) by
+        simpa using
+          (encodeCellsAppend_append (List.map some rest)
+            ([] : Word MachineCodeSymbol)
+            (List.append (encodeNat limit) (encodeNat fuel)))]
+    rw [encodeCodeWordAsInput_append]
+    simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+    change
+      encodeCodeWordAsInput
+          (List.append (encodeCellsAppend (List.map some rest) [])
+            (List.append (encodeNat limit) (encodeNat fuel))) =
+        List.append
+          (encodeCodeWordAsInput
+            (encodeCellsAppend (List.map some rest) []))
+          (List.append (encodeCodeWordAsInput (encodeNat limit))
+            (encodeCodeWordAsInput (encodeNat fuel)))
+    rw [encodeCodeWordAsInput_append]
+    rw [encodeCodeWordAsInput_append]
+
+theorem fuelSimulatorInputSecondBitTail_cons_shape
+    (b : Bool) (rest : Word Bool) (limit fuel : Nat) :
+    fuelSimulatorInputSecondBitTail
+        { w := b :: rest, limit := limit, fuel := fuel } =
+      true :: false ::
+        List.append (stageNatBits rest.length)
+          (List.append (cellBits b)
+            (List.append (cellsBits rest)
+              (List.append (stageNatBits limit)
+                (stageNatBits fuel)))) := by
+  unfold fuelSimulatorInputSecondBitTail
+  rw [fuelSimulatorInputBits_cons_shape b rest limit fuel]
+
+def fuelSimulatorInputSecondBitMarkedTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells [some false]
+    (none :: (fuelSimulatorInputSecondBitTail i).map some)
+
+def fuelSimulatorInputSecondBitMarkedHandoffTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  Tape.move Direction.right
+    (fuelSimulatorInputSecondBitMarkedTape i)
+
+def fuelSimulatorInputSecondBitMarkedCheckedTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells [some false]
+    (List.append
+      (none :: (fuelSimulatorInputSecondBitTail i).map some)
+      [none])
+
+def fuelSimulatorInputSecondBitMarkedCheckedHandoffTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  Tape.move Direction.right
+    (fuelSimulatorInputSecondBitMarkedCheckedTape i)
+
+def fuelSimulatorInputCheckedInputTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  DovetailInitialLayoutInitializer.tapeAtCells []
+    (List.append (List.map some (fuelSimulatorInputBits i)) [none])
+
+def fuelSimulatorInputCheckedValidatorTape
+    (i : FuelSimulatorStructuredIndex) : Tape Bool :=
+  Tape.move Direction.right
+    (fuelSimulatorInputCheckedInputTape i)
+
+theorem markStageInputSecondBitDescription_run_fuel
+    (i : FuelSimulatorStructuredIndex) :
+    MarkStageInputSecondBitDescription.runConfig 3
+        (MarkStageInputSecondBitDescription.initial
+          (fuelSimulatorInputBits i)) =
+      { state := MarkStageInputSecondBitDescription.halt
+        tape := fuelSimulatorInputSecondBitMarkedTape i } := by
+  rw [fuelSimulatorInputBits_eq_false_false_tail i]
+  simp [MarkStageInputSecondBitDescription,
+    fuelSimulatorInputSecondBitMarkedTape,
+    fuelSimulatorInputSecondBitTail,
+    DovetailInitialLayoutInitializer.tapeAtCells, initial,
+    runConfig, stepConfig,
+    lookupTransition, Matches,
+    transition, Tape.input, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem restoreStageInputSecondBitDescription_run_checked_fuel
+    (i : FuelSimulatorStructuredIndex) :
+    RestoreStageInputSecondBitDescription.runConfig 1
+        { state := RestoreStageInputSecondBitDescription.start
+          tape := fuelSimulatorInputSecondBitMarkedCheckedTape i } =
+      { state := RestoreStageInputSecondBitDescription.halt
+        tape := fuelSimulatorInputCheckedInputTape i } := by
+  unfold fuelSimulatorInputSecondBitMarkedCheckedTape
+  unfold fuelSimulatorInputCheckedInputTape
+  rw [fuelSimulatorInputBits_eq_false_false_tail i]
+  simp [RestoreStageInputSecondBitDescription,
+    fuelSimulatorInputSecondBitTail,
+    DovetailInitialLayoutInitializer.tapeAtCells, runConfig,
+    stepConfig, lookupTransition, Matches, transition,
+    Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+theorem fuelSimulatorInputSecondBitMarkedCheckedHandoffTape_move_left
+    (i : FuelSimulatorStructuredIndex) :
+    Tape.move Direction.left
+        (fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i) =
+      fuelSimulatorInputSecondBitMarkedCheckedTape i := by
+  unfold fuelSimulatorInputSecondBitMarkedCheckedHandoffTape
+  unfold fuelSimulatorInputSecondBitMarkedCheckedTape
+  cases fuelSimulatorInputSecondBitTail i <;>
+    simp [DovetailInitialLayoutInitializer.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+
+theorem fuelSimulatorInputCheckedValidatorTape_equiv_handoff
+    (i : FuelSimulatorStructuredIndex) :
+    Tape.Equiv
+      (fuelSimulatorInputCheckedValidatorTape i)
+      (EncRewriters.CanonicalLayouts.HandoffTape
+        fuelSimulatorStructuredInputCode i) := by
+  change
+    Tape.Equiv
+      (fuelSimulatorInputCheckedValidatorTape i)
+      (Tape.move Direction.right
+        (Tape.input (fuelSimulatorInputBits i)))
+  unfold fuelSimulatorInputCheckedValidatorTape
+  unfold fuelSimulatorInputCheckedInputTape
+  rw [fuelSimulatorInputBits_eq_false_false_tail i]
+  simp [fuelSimulatorInputSecondBitTail,
+    DovetailInitialLayoutInitializer.tapeAtCells,
+    Tape.input, Tape.move, Tape.moveRight,
+    Tape.Equiv,
+    FoC.Computability.dropTrailingNone_append_none]
+
+theorem fuelSimulatorInputRecognizerCoreDescription_forward_marked
+    (i : FuelSimulatorStructuredIndex) :
+    exists steps : Nat,
+      fuelSimulatorInputRecognizerCoreDescription.runConfig steps
+          { state := fuelSimulatorInputRecognizerCoreDescription.start
+            tape := fuelSimulatorInputSecondBitMarkedHandoffTape i } =
+        { state := fuelSimulatorInputRecognizerCoreDescription.halt
+          tape := fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i } := by
+  -- Remaining finite-machine obligation: prove the suffix-aware marked
+  -- stage-prefix scanner run, then compose it with the closed fuel-natural
+  -- scanner.
+  sorry
+
+theorem fuelSimulatorStageInputMarkedCoreDescription_forward
+    (i : FuelSimulatorStructuredIndex) :
+    exists steps : Nat,
+      (StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription).runConfig steps
+          ((StageInputMarkedCoreDescription
+            fuelSimulatorInputRecognizerCoreDescription).initial
+              (fuelSimulatorInputBits i)) =
+        { state :=
+            (StageInputMarkedCoreDescription
+              fuelSimulatorInputRecognizerCoreDescription).halt
+          tape :=
+            fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i } := by
+  let A := MarkStageInputSecondBitDescription
+  let B := fuelSimulatorInputRecognizerCoreDescription
+  have hArun :
+      A.runConfig 3
+          { state := A.start
+            tape := Tape.input (fuelSimulatorInputBits i) } =
+        { state := A.halt
+          tape := fuelSimulatorInputSecondBitMarkedTape i } := by
+    simpa [A, initial] using
+      markStageInputSecondBitDescription_run_fuel i
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.right
+                  (fuelSimulatorInputSecondBitMarkedTape i) } =
+          { state := B.halt
+            tape :=
+              fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i } := by
+    simpa [B, fuelSimulatorInputSecondBitMarkedHandoffTape] using
+      fuelSimulatorInputRecognizerCoreDescription_forward_marked i
+  rcases
+      seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.right)
+        markStageInputSecondBitDescription_ready
+        fuelSimulatorInputRecognizerCoreDescription_ready
+        hArun hBReach with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [StageInputMarkedCoreDescription, A, B,
+    initial] using hsteps
+
+theorem fuelSimulatorStageInputRecognizerDescription_forward_checked
+    (i : FuelSimulatorStructuredIndex) :
+    exists steps : Nat,
+      (StageInputRecognizerDescription
+        (StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription)).runConfig steps
+          ((StageInputRecognizerDescription
+            (StageInputMarkedCoreDescription
+              fuelSimulatorInputRecognizerCoreDescription)).initial
+              (fuelSimulatorInputBits i)) =
+        { state :=
+            (StageInputRecognizerDescription
+              (StageInputMarkedCoreDescription
+                fuelSimulatorInputRecognizerCoreDescription)).halt
+          tape := fuelSimulatorInputCheckedInputTape i } := by
+  let A :=
+    StageInputMarkedCoreDescription
+      fuelSimulatorInputRecognizerCoreDescription
+  let B := RestoreStageInputSecondBitDescription
+  have hAready : A.SubroutineReady := by
+    simpa [A, StageInputMarkedCoreDescription] using
+      seqSubroutine_subroutineReady
+        markStageInputSecondBitDescription_ready
+        fuelSimulatorInputRecognizerCoreDescription_ready
+  have hBready : B.SubroutineReady :=
+    restoreStageInputSecondBitDescription_ready
+  rcases fuelSimulatorStageInputMarkedCoreDescription_forward i with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape := Tape.input (fuelSimulatorInputBits i) } =
+        { state := A.halt
+          tape := fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i } := by
+    simpa [A, initial] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.left
+                  (fuelSimulatorInputSecondBitMarkedCheckedHandoffTape i) } =
+          { state := B.halt
+            tape := fuelSimulatorInputCheckedInputTape i } := by
+    refine ⟨1, ?_⟩
+    rw [fuelSimulatorInputSecondBitMarkedCheckedHandoffTape_move_left]
+    simpa [B] using
+      restoreStageInputSecondBitDescription_run_checked_fuel i
+  rcases
+      seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.left)
+        hAready hBready hArun hBReach with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_⟩
+  simpa [StageInputRecognizerDescription, A, B,
+    initial] using hsteps
+
 def fuelSimulatorInputRecognizerDescription : MachineDescription :=
   StageInputIdentityDescription
     (StageInputRecognizerDescription
       (StageInputMarkedCoreDescription fuelSimulatorInputRecognizerCoreDescription))
+
+theorem fuelSimulatorInputRecognizerDescription_forward_checked
+    (i : FuelSimulatorStructuredIndex) :
+    fuelSimulatorInputRecognizerDescription.HaltsFromTape
+      (fuelSimulatorStructuredInputTape i)
+      (fuelSimulatorInputCheckedValidatorTape i) := by
+  let A :=
+    StageInputRecognizerDescription
+      (StageInputMarkedCoreDescription
+        fuelSimulatorInputRecognizerCoreDescription)
+  let B := ExactIdentityDescription
+  have hAready : A.SubroutineReady := by
+    have hmarked :
+        (StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription).SubroutineReady := by
+      simpa [StageInputMarkedCoreDescription] using
+        seqSubroutine_subroutineReady
+          markStageInputSecondBitDescription_ready
+          fuelSimulatorInputRecognizerCoreDescription_ready
+    simpa [A, StageInputRecognizerDescription] using
+      seqSubroutine_subroutineReady
+        hmarked
+        restoreStageInputSecondBitDescription_ready
+  have hBready : B.SubroutineReady :=
+    ⟨exactIdentityDescription_wellFormed,
+      exactIdentityDescription_haltTransitionFree⟩
+  rcases fuelSimulatorStageInputRecognizerDescription_forward_checked i with
+    ⟨nA, hA⟩
+  have hArun :
+      A.runConfig nA
+          { state := A.start
+            tape := Tape.input (fuelSimulatorInputBits i) } =
+        { state := A.halt
+          tape := fuelSimulatorInputCheckedInputTape i } := by
+    simpa [A, initial] using hA
+  have hBReach :
+      exists nB : Nat,
+        B.runConfig nB
+            { state := B.start
+              tape :=
+                Tape.move Direction.right
+                  (fuelSimulatorInputCheckedInputTape i) } =
+          { state := B.halt
+            tape := fuelSimulatorInputCheckedValidatorTape i } := by
+    refine ⟨0, ?_⟩
+    simp [B, fuelSimulatorInputCheckedValidatorTape,
+      runConfig, ExactIdentityDescription]
+  rcases
+      seqSubroutine_reaches_of_runConfig_eq
+        (A := A) (B := B) (handoffMove := Direction.right)
+        hAready hBready hArun hBReach with
+    ⟨steps, hsteps⟩
+  refine ⟨steps, ?_, ?_⟩
+  · simpa [fuelSimulatorInputRecognizerDescription,
+      fuelSimulatorStructuredInputTape,
+      fuelSimulatorInputBits,
+      EncRewriters.CanonicalLayouts.Bits,
+      A, B, initial] using
+      congrArg MachineDescription.Configuration.state hsteps
+  · simpa [fuelSimulatorInputRecognizerDescription,
+      fuelSimulatorStructuredInputTape,
+      fuelSimulatorInputBits,
+      EncRewriters.CanonicalLayouts.Bits,
+      A, B, initial] using
+      congrArg Configuration.tape hsteps
 
 theorem fuelSimulatorInputRecognizerDescription_ready :
     fuelSimulatorInputRecognizerDescription.SubroutineReady := by
@@ -421,9 +882,13 @@ theorem fuelSimulatorInputRecognizerDescription_ready :
 
 theorem fuelSimulatorInputRecognizerDescription_forward
     (i : FuelSimulatorStructuredIndex) :
-    fuelSimulatorInputRecognizerDescription.HaltsFromTape
+    fuelSimulatorInputRecognizerDescription.HaltsFromTapeEquiv
       (fuelSimulatorStructuredInputTape i)
-      (EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i) := by sorry
+      (EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i) := by
+  exact
+    ⟨fuelSimulatorInputCheckedValidatorTape i,
+      fuelSimulatorInputRecognizerDescription_forward_checked i,
+      fuelSimulatorInputCheckedValidatorTape_equiv_handoff i⟩
 
 theorem fuelSimulatorInputRecognizerDescription_closedCanonical
     (code : Word MachineCodeSymbol) (T : Tape Bool)
@@ -432,10 +897,12 @@ theorem fuelSimulatorInputRecognizerDescription_closedCanonical
         (encodeCodeWordAsInput code) T) :
     ∃ i : FuelSimulatorStructuredIndex,
       decodeFuelSimulatorStructuredInputCode code = some i ∧
-      T = EncRewriters.CanonicalLayouts.HandoffTape fuelSimulatorStructuredInputCode i := by sorry
+      Tape.Equiv T
+        (EncRewriters.CanonicalLayouts.HandoffTape
+          fuelSimulatorStructuredInputCode i) := by sorry
 
-theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
-    FuelSimulatorInputRecognizerExactRunSpec
+theorem fuelSimulatorInputRecognizerDescription_equivRunSpec :
+    FuelSimulatorInputRecognizerEquivRunSpec
       fuelSimulatorInputRecognizerDescription := by
   constructor
   · exact fuelSimulatorInputRecognizerDescription_ready
@@ -445,8 +912,8 @@ theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
 theorem fuelSimulatorInputRecognizerDescription_spec :
     FuelSimulatorInputRecognizerSpec
       fuelSimulatorInputRecognizerDescription :=
-  fuelSimulatorInputRecognizerSpec_of_exactRunSpec
-    fuelSimulatorInputRecognizerDescription_exactRunSpec
+  fuelSimulatorInputRecognizerSpec_of_equivRunSpec
+    fuelSimulatorInputRecognizerDescription_equivRunSpec
 
 theorem fuelSimulatorInputRecognizerConstruction_core :
     FuelSimulatorInputRecognizerConstruction :=
