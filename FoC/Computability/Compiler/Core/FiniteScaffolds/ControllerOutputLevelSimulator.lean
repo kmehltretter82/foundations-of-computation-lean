@@ -42,19 +42,19 @@ private theorem fuelSimulatorStructuredOutputTape_handoffEquiv
       (Tape.input
         (FixedDescriptionBoundedSimulatorInput
           (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-            attempt i.1 i.2.1 i.2.2))) := by
+            attempt i.w i.limit i.fuel))) := by
   have htransform :
       (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive
         attempt).transform
         (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-          i.1 i.2.1 i.2.2) =
+          i.w i.limit i.fuel) =
         some
           (SimulatorLayout.encode
             (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-              attempt i.1 i.2.1 i.2.2)) := by
+              attempt i.w i.limit i.fuel)) := by
     exact
       pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_encode
-        attempt i.1 i.2.1 i.2.2
+        attempt i.w i.limit i.fuel
   rcases
       pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_cons
         htransform with
@@ -65,7 +65,7 @@ private theorem fuelSimulatorStructuredOutputTape_handoffEquiv
         Tape.input
           (FixedDescriptionBoundedSimulatorInput
             (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-              attempt i.1 i.2.1 i.2.2)) := by
+              attempt i.w i.limit i.fuel)) := by
     simpa [fuelSimulatorStructuredOutputTape,
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape,
       FixedDescriptionBoundedSimulatorInput, SimulatorLayout.asBoolInput,
@@ -82,7 +82,7 @@ private theorem fuelSimulatorStructuredOutputTape_handoffEquiv
             (Tape.input
               (FixedDescriptionBoundedSimulatorInput
                 (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
-                  attempt i.1 i.2.1 i.2.2))))
+                  attempt i.w i.limit i.fuel))))
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_equiv_extractor
     (hparserConstruction :
@@ -321,7 +321,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
     let L :=
       PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
         attempt w limit fuel
-    let i : FuelSimulatorStructuredIndex := ⟨w, (limit, fuel)⟩
+    let i : FuelSimulatorStructuredIndex := ⟨w, limit, fuel⟩
     rcases
         Structured3EndpointEquivIndexedFamilySpec.forward
           hparserEndpoint i with
@@ -438,8 +438,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
             w limit fuel =
           fuelSimulatorStructuredInputCode i :=
       fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hinput
-    rcases i with ⟨wi, irest⟩
-    rcases irest with ⟨limiti, fueli⟩
+    rcases i with ⟨wi, limiti, fueli⟩
     simp [fuelSimulatorStructuredInputCode] at hcode
     rcases
         pairedRecognizerDovetailControllerStageAttemptFuelInputCode_injective
@@ -454,7 +453,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
           (Tape.input (FixedDescriptionBoundedSimulatorInput L)) := by
       simpa [L] using
         fuelSimulatorStructuredOutputTape_handoffEquiv
-          attempt (⟨w, (limit, fuel)⟩ : FuelSimulatorStructuredIndex)
+          attempt ⟨w, limit, fuel⟩
           hTparser
     rcases
         HaltsFromTapeEquiv_of_input_equiv

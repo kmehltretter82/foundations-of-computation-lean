@@ -28,13 +28,17 @@ open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 open FoC.Computability.EncRewriters.CanonicalLayouts.DovetailStagePrefix
 open FoC.Computability.DovetailInitialLayoutInitializer
 
-def FuelSimulatorStructuredIndex : Type :=
-  Sigma (fun _w : Word Bool => Nat × Nat)
+/-- Index for the fuel-simulator structured input family: word, stage limit,
+and fuel budget. -/
+structure FuelSimulatorStructuredIndex where
+  w     : Word Bool
+  limit : Nat
+  fuel  : Nat
 
 def fuelSimulatorStructuredInputCode
     (i : FuelSimulatorStructuredIndex) : Word MachineCodeSymbol :=
   PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-    i.1 i.2.1 i.2.2
+    i.w i.limit i.fuel
 
 def fuelSimulatorStructuredInputTape
     (i : FuelSimulatorStructuredIndex) : Tape Bool :=
@@ -75,14 +79,14 @@ def decodeFuelSimulatorStructuredInputCode
   | none => none
   | some ((w, limit), suffix) =>
       match decodeNat suffix with
-      | some (fuel, []) => some ⟨w, (limit, fuel)⟩
+      | some (fuel, []) => some { w, limit, fuel }
       | _ => none
 
 theorem decodeFuelSimulatorStructuredInputCode_encode
     (i : FuelSimulatorStructuredIndex) :
     decodeFuelSimulatorStructuredInputCode
       (fuelSimulatorStructuredInputCode i) = some i := by
-  rcases i with ⟨w, limit, fuel⟩
+  cases i with | mk w limit fuel =>
   simp [decodeFuelSimulatorStructuredInputCode,
     fuelSimulatorStructuredInputCode,
     PairedRecognizerDovetailControllerStageAttemptFuelInputCode,
@@ -95,41 +99,28 @@ theorem decodeFuelSimulatorStructuredInputCode_eq_some_encode
     (h :
       decodeFuelSimulatorStructuredInputCode code = some i) :
     code = fuelSimulatorStructuredInputCode i := by
-  unfold decodeFuelSimulatorStructuredInputCode at h
+  simp only [decodeFuelSimulatorStructuredInputCode] at h
   cases hstage : DovetailLayout.decodeStageInput code with
-  | none =>
-      simp [hstage] at h
+  | none => simp [hstage] at h
   | some parsed =>
-      rcases parsed with ⟨stageInput, suffix⟩
-      rcases stageInput with ⟨w, limit⟩
-      cases hfuel : decodeNat suffix with
-      | none =>
-          simp [hstage, hfuel] at h
-      | some parsedFuel =>
-          rcases parsedFuel with ⟨fuel, rest⟩
-          cases rest with
-          | nil =>
-              simp [hstage, hfuel] at h
-              cases h
-              have hcode :
-                  code =
-                    DovetailLayout.stageInputCodeAppend
-                      w limit suffix :=
-                DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend
-                  hstage
-              have hsuffix :
-                  suffix = encodeNatAppend fuel [] :=
-                decodeNat_eq_some_encodeNatAppend hfuel
-              rw [hcode, hsuffix]
-              rfl
-          | cons _ _ =>
-              simp [hstage, hfuel] at h
+    rcases parsed with ⟨⟨w, limit⟩, suffix⟩
+    cases hfuel : decodeNat suffix with
+    | none => simp [hstage, hfuel] at h
+    | some parsedFuel =>
+      rcases parsedFuel with ⟨fuel, rest⟩
+      cases rest with
+      | cons _ _ => simp [hstage, hfuel] at h
+      | nil =>
+        simp [hstage, hfuel] at h; cases h
+        rw [DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend hstage,
+            decodeNat_eq_some_encodeNatAppend hfuel]
+        rfl
 
 theorem fuelSimulatorStructuredInputCode_injective :
     Function.Injective fuelSimulatorStructuredInputCode := by
   intro i j h
-  rcases i with ⟨w1, limit1, fuel1⟩
-  rcases j with ⟨w2, limit2, fuel2⟩
+  cases i with | mk w1 limit1 fuel1 =>
+  cases j with | mk w2 limit2 fuel2 =>
   simp [fuelSimulatorStructuredInputCode] at h ⊢
   rcases
       pairedRecognizerDovetailControllerStageAttemptFuelInputCode_injective
@@ -147,10 +138,10 @@ theorem fuelSimulatorStructuredInputTape_injective :
 
 theorem fuelSimulatorStructuredInputCode_cons
     (i : FuelSimulatorStructuredIndex) :
-    exists symbol : MachineCodeSymbol,
-    exists tail : Word MachineCodeSymbol,
+    ∃ symbol : MachineCodeSymbol,
+    ∃ tail : Word MachineCodeSymbol,
       fuelSimulatorStructuredInputCode i = symbol :: tail := by
-  rcases i with ⟨w, limit, fuel⟩
+  cases i with | mk w limit fuel =>
   unfold fuelSimulatorStructuredInputCode
   unfold PairedRecognizerDovetailControllerStageAttemptFuelInputCode
   unfold DovetailLayout.stageInputCodeAppend
@@ -175,13 +166,6 @@ theorem fuelSimulatorStructuredInputCode_eq_of_inputTape_eq
       (by
         simpa [fuelSimulatorStructuredInputTape] using h)
 
-theorem fuelSimulatorStructuredInitializedTape_eq_materializerTarget
-    (i : FuelSimulatorStructuredIndex) :
-    fuelSimulatorStructuredInitializedTape i =
-      structured3InputMaterializerTargetTape
-        (fuelSimulatorStructuredInputTape i)
-        Tape.blank := by
-  rfl
 
 /--
 Exact materializer behavior needed by the canonical fuel-simulator endpoint.
@@ -189,9 +173,8 @@ Exact materializer behavior needed by the canonical fuel-simulator endpoint.
 def FuelSimulatorStructuredExactMaterializerSpec
     (materializer : MachineDescription) : Prop :=
   Structured3EndpointExactMaterializerSpec
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
+    fuelSimulatorStructuredInputTape
+    fuelSimulatorStructuredInitializedTape
     materializer
 
 /--
@@ -201,9 +184,8 @@ per-input exact closedness is installed by the shared endpoint infrastructure.
 def FuelSimulatorStructuredIndexedMaterializerSpec
     (materializer : MachineDescription) : Prop :=
   Structured3EndpointIndexedMaterializerSpec
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
+    fuelSimulatorStructuredInputTape
+    fuelSimulatorStructuredInitializedTape
     materializer
 
 /--
@@ -212,9 +194,8 @@ lowered structured simulator core.
 -/
 def FuelSimulatorStructuredIndexedMaterializerConstruction : Prop :=
   Structured3EndpointIndexedMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
+    fuelSimulatorStructuredInputTape
+    fuelSimulatorStructuredInitializedTape
 
 /--
 Equivalence-facing fuel-simulator input parser/materializer construction.
@@ -226,9 +207,8 @@ up to tape equivalence.
 def FuelSimulatorStructuredEquivIndexedMaterializerConstruction :
     Prop :=
   Structured3EndpointEquivIndexedMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredInitializedTape i)
+    fuelSimulatorStructuredInputTape
+    fuelSimulatorStructuredInitializedTape
 
 /--
 Fuel-simulator materializer through the reusable CommonGround structured-input
@@ -237,9 +217,8 @@ contract, plus the indexed closedness required by endpoint wrappers.
 def FuelSimulatorStructuredEquivInputMaterializerConstruction :
     Prop :=
   Structured3EndpointEquivInputMaterializerConstruction
-    (fun i : FuelSimulatorStructuredIndex =>
-      fuelSimulatorStructuredInputTape i)
-    (fun i => fuelSimulatorStructuredOutputBuffer i)
+    fuelSimulatorStructuredInputTape
+    fuelSimulatorStructuredOutputBuffer
 
 /--
 The existing exact indexed materializer obligation feeds the equivalence-facing
@@ -310,7 +289,7 @@ structure FuelSimulatorInputRecognizerExactRunSpec
   closedIndex :
     forall Tin T : Tape Bool,
       recognizer.HaltsFromTape Tin T ->
-        exists i : FuelSimulatorStructuredIndex,
+        ∃ i : FuelSimulatorStructuredIndex,
           Tin = fuelSimulatorStructuredInputTape i ∧
             T = EncRewriters.CanonicalLayouts.HandoffTape
               fuelSimulatorStructuredInputCode i

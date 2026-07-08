@@ -17,7 +17,7 @@ def fuelSimulatorStructuredOutputTape
     (attempt : MachineDescription)
     (i : FuelSimulatorStructuredIndex) : Tape Bool :=
   PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape
-    attempt i.1 i.2.1 i.2.2
+    attempt i.w i.limit i.fuel
 
 def FuelSimulatorStructuredEndpointExactIndexedConstruction
     (attempt : MachineDescription) : Prop :=
@@ -544,7 +544,7 @@ theorem fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
       fuelSimulatorStructuredOutputTape] using
       haltsWithTape_of_haltsFromTape_input
         (Structured3EndpointExactIndexedFamilySpec.forward
-          hspec ⟨w, (limit, fuel)⟩)
+          hspec ⟨w, limit, fuel⟩)
   · intro code T hhalt
     have hfrom :
         W.machine.HaltsFromTape
@@ -559,7 +559,7 @@ theorem fuelSimulatorRightShiftedSpec_of_endpointExactIndexed
     have hcode : code = fuelSimulatorStructuredInputCode i :=
       fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hinput
     exact
-      ⟨i.1, i.2.1, i.2.2,
+      ⟨i.w, i.limit, i.fuel,
         by
           simpa [fuelSimulatorStructuredInputCode] using hcode,
         by
