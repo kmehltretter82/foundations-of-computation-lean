@@ -609,16 +609,12 @@ theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
   codePrefixDecodedBoundedSimulatorConstruction_of_codeMachine
     codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold
 
-theorem codePrefixStageSearchControllerCoreConstruction_finite :
-    CodePrefixStageSearchControllerCoreConstruction := by
-  exact codePrefixStageSearchControllerCoreConstruction_core
-
 theorem codePrefixStageSearchControllerConstruction_scaffold :
     CodePrefixStageSearchControllerConstruction := by
   intro normalizerState branchState simulatorState
     normalizer branch simulator hnormalizer hbranch hsimulator
   exact
-    codePrefixStageSearchControllerCoreConstruction_finite
+    codePrefixStageSearchControllerCoreConstruction_core
       simulator hsimulator
 
 theorem codePrefixStageSearchControllerCoreConstruction_of_finiteSource
@@ -632,10 +628,6 @@ theorem codePrefixStageSearchControllerCoreConstruction_of_finiteSource
   rcases hbranch with ⟨branchState, branch, hbranch⟩
   exact hsearch normalizer branch simulator
     hnormalizer hbranch hsimulator
-
-theorem codePrefixStageSearchControllerCoreConstruction_scaffold :
-    CodePrefixStageSearchControllerCoreConstruction :=
-  codePrefixStageSearchControllerCoreConstruction_finite
 
 theorem codePrefixStageSearchControllerConstruction_of_core
     (hcore : CodePrefixStageSearchControllerCoreConstruction) :

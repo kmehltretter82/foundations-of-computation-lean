@@ -607,14 +607,6 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
   exact codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf
 
 /--
-Adapter from the semantic decoded simulator leaf to the code-primitive
-contract.
--/
-theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_core :
-    CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
-  exact codePrefixDecodedBoundedSimulatorCodeMachineFiniteLeaf
-
-/--
 Finite-machine leaf that sequences the stage decoder, description decoder, and
 bounded simulation phase.
 -/
