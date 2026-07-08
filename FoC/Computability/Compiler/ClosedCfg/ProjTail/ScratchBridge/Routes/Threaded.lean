@@ -131,114 +131,41 @@ theorem exactRouteConstruction_core :
     CountWindowSelectedDecoderRouteContracts.structuredPrefixDensifierComponentConstruction_core
     loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
 
-/-!
-## Exact projections
--/
-
-theorem materializerRouteConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerRouteContracts.ExactRouteConstruction :=
-  hroute.materializerRoute
-
-theorem selectedDecoderRouteConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowSelectedDecoderRouteContracts.StructuredPrefixDensifierComponentConstruction :=
-  hroute.selectedDecoderRoute
-
-theorem inputInitializerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction :=
-  hroute.inputInitializer
-
-theorem loweredExtractorConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction :=
-  hroute.loweredExtractor
-
-theorem segmentNormalizerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction :=
-  hroute.segmentNormalizer
-
-theorem outputProjectorConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  hroute.outputProjector
-
-theorem scanSourceMaterializerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  hroute.scanSourceMaterializer
-
-theorem scratchCountWindowMaterializerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
-  hroute.scratchCountWindowMaterializer
-
-theorem scratchCountWindowRestorerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerConstruction :=
-  hroute.scratchCountWindowRestorer
-
-theorem scratchCountWindowMaterializerAndRestorerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
-  hroute.scratchCountWindowMaterializerAndRestorer
-
-theorem postPaddingScratchCountExtenderConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
-  hroute.postPaddingScratchCountExtender
-
-theorem scratchExtConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
-  hroute.scratchExt
-
-theorem postPaddingScratchAllocatorConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
-  hroute.postPaddingScratchAllocator
-
 theorem inputInitializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction :=
-  inputInitializerConstruction_of_exactRoute exactRouteConstruction_core
+  exactRouteConstruction_core.inputInitializer
 
 theorem segmentNormalizerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction :=
-  segmentNormalizerConstruction_of_exactRoute exactRouteConstruction_core
+  exactRouteConstruction_core.segmentNormalizer
 
 theorem outputProjectorConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  outputProjectorConstruction_of_exactRoute exactRouteConstruction_core
+  exactRouteConstruction_core.outputProjector
 
 theorem scanSourceMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  scanSourceMaterializerConstruction_of_exactRoute exactRouteConstruction_core
+  exactRouteConstruction_core.scanSourceMaterializer
 
 theorem scratchCountWindowMaterializerConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
-  scratchCountWindowMaterializerConstruction_of_exactRoute
-    exactRouteConstruction_core
+  exactRouteConstruction_core.scratchCountWindowMaterializer
 
 theorem scratchCountWindowMaterializerAndRestorerConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerConstruction :=
-  scratchCountWindowMaterializerAndRestorerConstruction_of_exactRoute
-    exactRouteConstruction_core
+  exactRouteConstruction_core.scratchCountWindowMaterializerAndRestorer
 
 theorem postPaddingScratchCountExtenderConstruction_core :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderConstruction :=
-  postPaddingScratchCountExtenderConstruction_of_exactRoute
-    exactRouteConstruction_core
+  exactRouteConstruction_core.postPaddingScratchCountExtender
 
 theorem scratchExtConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchExtConstruction :=
-  scratchExtConstruction_of_exactRoute exactRouteConstruction_core
+  exactRouteConstruction_core.scratchExt
 
 theorem postPaddingScratchAllocatorConstruction_core :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
-  postPaddingScratchAllocatorConstruction_of_exactRoute
-    exactRouteConstruction_core
+  exactRouteConstruction_core.postPaddingScratchAllocator
 
 /-!
 ## Output threaded route
@@ -376,154 +303,53 @@ theorem outputRouteConstruction_core :
     OutputRouteConstruction :=
   outputRouteConstruction_of_exactRoute exactRouteConstruction_core
 
-/-!
-## Output projections
--/
-
-theorem exactRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    ExactRouteConstruction :=
-  hroute.exactRoute
-
-theorem materializerOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.OutputRouteConstruction :=
-  hroute.materializerOutputRoute
-
-theorem materializerOutputBranchConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.OutputRouteBranchConstruction :=
-  hroute.materializerOutputBranches
-
-theorem materializerAcceptOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.AcceptOutputRouteConstruction :=
-  hroute.materializerAcceptOutputRoute
-
-theorem materializerRejectOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.RejectOutputRouteConstruction :=
-  hroute.materializerRejectOutputRoute
-
-theorem selectedDecoderOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowSelectedDecoderRouteContracts.StructuredPrefixOutputComponentConstruction :=
-  hroute.selectedDecoderOutputRoute
-
-theorem inputInitializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredInputInitializerOutputConstruction :=
-  hroute.inputInitializerOutput
-
-theorem segmentNormalizerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerOutputConstruction :=
-  hroute.segmentNormalizerOutput
-
-theorem outputProjectorOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorOutputConstruction :=
-  hroute.outputProjectorOutput
-
-theorem scanSourceMaterializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerOutputConstruction :=
-  hroute.scanSourceMaterializerOutput
-
-theorem rejectScanSourceOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    RejectPostFieldDecodedPrefixScanSourceOutputConstruction :=
-  hroute.rejectScanSourceOutput
-
-theorem acceptScanSourceOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    AcceptPostFieldRewoundToDecodedPrefixScanSourceOutputConstruction :=
-  hroute.acceptScanSourceOutput
-
-theorem scratchCountWindowMaterializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOutputConstruction :=
-  hroute.scratchCountWindowMaterializerOutput
-
-theorem scratchCountWindowRestorerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerOutputConstruction :=
-  hroute.scratchCountWindowRestorerOutput
-
-theorem scratchCountWindowMaterializerAndRestorerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerOutputConstruction :=
-  hroute.scratchCountWindowMaterializerAndRestorerOutput
-
-theorem postPaddingScratchCountExtenderOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderOutputConstruction :=
-  hroute.postPaddingScratchCountExtenderOutput
-
-theorem scratchExtOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchExtOutputConstruction :=
-  hroute.scratchExtOutput
-
-theorem postPaddingScratchAllocatorOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorOutputConstruction :=
-  hroute.postPaddingScratchAllocatorOutput
-
 theorem inputInitializerOutputConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputInitializerOutputConstruction :=
-  inputInitializerOutputConstruction_of_outputRoute outputRouteConstruction_core
+  outputRouteConstruction_core.inputInitializerOutput
 
 theorem materializerOutputBranchConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.OutputRouteBranchConstruction :=
-  materializerOutputBranchConstruction_of_outputRoute outputRouteConstruction_core
+  outputRouteConstruction_core.materializerOutputBranches
 
 theorem materializerAcceptOutputRouteConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.AcceptOutputRouteConstruction :=
-  materializerAcceptOutputRouteConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.materializerAcceptOutputRoute
 
 theorem materializerRejectOutputRouteConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.RejectOutputRouteConstruction :=
-  materializerRejectOutputRouteConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.materializerRejectOutputRoute
 
 theorem segmentNormalizerOutputConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerOutputConstruction :=
-  segmentNormalizerOutputConstruction_of_outputRoute outputRouteConstruction_core
+  outputRouteConstruction_core.segmentNormalizerOutput
 
 theorem outputProjectorOutputConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorOutputConstruction :=
-  outputProjectorOutputConstruction_of_outputRoute outputRouteConstruction_core
+  outputRouteConstruction_core.outputProjectorOutput
 
 theorem scanSourceMaterializerOutputConstruction_core :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerOutputConstruction :=
-  scanSourceMaterializerOutputConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.scanSourceMaterializerOutput
 
 theorem scratchCountWindowMaterializerOutputConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOutputConstruction :=
-  scratchCountWindowMaterializerOutputConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.scratchCountWindowMaterializerOutput
 
 theorem scratchCountWindowMaterializerAndRestorerOutputConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerOutputConstruction :=
-  scratchCountWindowMaterializerAndRestorerOutputConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.scratchCountWindowMaterializerAndRestorerOutput
 
 theorem postPaddingScratchCountExtenderOutputConstruction_core :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderOutputConstruction :=
-  postPaddingScratchCountExtenderOutputConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.postPaddingScratchCountExtenderOutput
 
 theorem scratchExtOutputConstruction_core :
     SelectedProjectionPaddedTailCleanupScratchExtOutputConstruction :=
-  scratchExtOutputConstruction_of_outputRoute outputRouteConstruction_core
+  outputRouteConstruction_core.scratchExtOutput
 
 theorem postPaddingScratchAllocatorOutputConstruction_core :
     SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorOutputConstruction :=
-  postPaddingScratchAllocatorOutputConstruction_of_outputRoute
-    outputRouteConstruction_core
+  outputRouteConstruction_core.postPaddingScratchAllocatorOutput
 
 end CountWindowThreadedBridgeRouteContracts
 

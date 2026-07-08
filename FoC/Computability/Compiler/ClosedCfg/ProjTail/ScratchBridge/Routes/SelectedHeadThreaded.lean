@@ -338,100 +338,6 @@ theorem outputRouteConstruction_of_headCleanup
       hmaterializer hcleanup hextractor)
 
 /-!
-## Output projections
--/
-
-theorem exactRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    ExactRouteConstruction :=
-  hroute.exactRoute
-
-theorem materializerOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.OutputRouteConstruction :=
-  hroute.materializerOutputRoute
-
-theorem materializerOutputBranchConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.OutputRouteBranchConstruction :=
-  hroute.materializerOutputBranches
-
-theorem materializerAcceptOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.AcceptOutputRouteConstruction :=
-  hroute.materializerAcceptOutputRoute
-
-theorem materializerRejectOutputRouteConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredMaterializerOutputRouteContracts.RejectOutputRouteConstruction :=
-  hroute.materializerRejectOutputRoute
-
-theorem selectedSegmentDecoderOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderOutputConstruction :=
-  hroute.selectedSegmentDecoderOutput
-
-theorem segmentNormalizerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerOutputConstruction :=
-  hroute.segmentNormalizerOutput
-
-theorem outputProjectorOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorOutputConstruction :=
-  hroute.outputProjectorOutput
-
-theorem inputInitializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredInputInitializerOutputConstruction :=
-  hroute.inputInitializerOutput
-
-theorem scanSourceMaterializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerOutputConstruction :=
-  hroute.scanSourceMaterializerOutput
-
-theorem rejectScanSourceOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    RejectPostFieldDecodedPrefixScanSourceOutputConstruction :=
-  hroute.rejectScanSourceOutput
-
-theorem acceptScanSourceOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    AcceptPostFieldRewoundToDecodedPrefixScanSourceOutputConstruction :=
-  hroute.acceptScanSourceOutput
-
-theorem scratchCountWindowMaterializerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerOutputConstruction :=
-  hroute.scratchCountWindowMaterializerOutput
-
-theorem scratchCountWindowRestorerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowRestorerOutputConstruction :=
-  hroute.scratchCountWindowRestorerOutput
-
-theorem scratchCountWindowMaterializerAndRestorerOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerAndRestorerOutputConstruction :=
-  hroute.scratchCountWindowMaterializerAndRestorerOutput
-
-theorem postPaddingScratchCountExtenderOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchCountExtenderOutputConstruction :=
-  hroute.postPaddingScratchCountExtenderOutput
-
-theorem scratchExtOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchExtOutputConstruction :=
-  hroute.scratchExtOutput
-
-theorem postPaddingScratchAllocatorOutputConstruction_of_outputRoute
-    (hroute : OutputRouteConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorOutputConstruction :=
-  hroute.postPaddingScratchAllocatorOutput
-
-/-!
 ## Bridge compatibility
 
 These small bundles show that the selected-head threaded route exposes the
@@ -518,26 +424,6 @@ theorem downstreamBridgeConstruction_of_headCleanup
   downstreamBridgeConstruction_of_exactRoute
     (exactRouteConstruction_of_headCleanup
       hmaterializer hcleanup hextractor)
-
-theorem exactRouteConstruction_of_downstreamBridge
-    (hbridge : DownstreamBridgeConstruction) :
-    ExactRouteConstruction :=
-  hbridge.exactRoute
-
-theorem outputRouteConstruction_of_downstreamBridge
-    (hbridge : DownstreamBridgeConstruction) :
-    OutputRouteConstruction :=
-  hbridge.outputRoute
-
-theorem postPaddingScratchAllocatorConstruction_of_downstreamBridge
-    (hbridge : DownstreamBridgeConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction :=
-  hbridge.postPaddingScratchAllocator
-
-theorem postPaddingScratchAllocatorOutputConstruction_of_downstreamBridge
-    (hbridge : DownstreamBridgeConstruction) :
-    SelectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorOutputConstruction :=
-  hbridge.postPaddingScratchAllocatorOutput
 
 end CountWindowSelectedHeadThreadedRouteContracts
 
