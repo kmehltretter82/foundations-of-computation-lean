@@ -102,11 +102,6 @@ theorem encodedStructuredTapeCells_eq_separator_append_restPadding
   rw [encodedStructuredTapeCells_eq_none_cons_restPadding]
   rfl
 
-/-- The rest padding for a singleton specialization is empty. -/
-theorem selectedSegmentLogicalTapeDecoderRestPadding_singleton :
-    selectedSegmentLogicalTapeDecoderRestPadding [] = [] := by
-  rfl
-
 /--
 Target tape produced by the selected-segment scanner when the selected segment
 has an encoded structured suffix to its right.
