@@ -351,29 +351,8 @@ This is the first real machine leaf left by the pilot: parse
 {lit}`suffix = encodeNatAppend fuel []`,
 and preserve the source tape as the handoff tape for the embedding emitter.
 -/
-def fuelSimulatorInputRecognizerTransitions : List TransitionDescription :=
-  let phase1 := MarkedPrefixScannerDescription
-  let phase2 := NatSuffixScannerDescription
-  let shift := phase1.stateCount
-
-  phase1.transitions ++
-  (phase2.transitions.map (fun t =>
-    { t with
-      source := shift + t.source,
-      target := if t.target == phase2.halt then
-                  shift + phase2.stateCount
-                else
-                  shift + t.target })) ++
-  [ transition phase1.halt (some false) (some false) Direction.right (shift + phase2.start),
-    transition phase1.halt (some true) (some true) Direction.right (shift + phase2.start) ]
-
 def fuelSimulatorInputRecognizerCoreDescription : MachineDescription :=
-  let phase1 := MarkedPrefixScannerDescription
-  let phase2 := NatSuffixScannerDescription
-  { stateCount := phase1.stateCount + phase2.stateCount + 1
-    start := phase1.start
-    halt := phase1.stateCount + phase2.stateCount
-    transitions := fuelSimulatorInputRecognizerTransitions }
+  seqSubroutine MarkedPrefixScannerDescription NatSuffixScannerDescription Direction.right
 
 def fuelSimulatorInputRecognizerDescription : MachineDescription :=
   StageInputRecognizerDescription
