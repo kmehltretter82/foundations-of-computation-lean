@@ -381,7 +381,7 @@ normalized output.
 -/
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
-  pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_endpointEquivIndexed
+  stageAttemptFramedConstruction_of_endpointEquivIndexed
     stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
 
 /--

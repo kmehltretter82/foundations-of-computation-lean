@@ -750,16 +750,6 @@ theorem stageAttemptFramedConstruction_of_endpointEquivIndexed
         (lowered := lowered)
         hspec⟩
 
-theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_endpointEquivIndexed
-    (h :
-      forall attempt : MachineDescription,
-        attempt.SubroutineReady ->
-          StageAttemptFramedStructuredEndpointEquivIndexedConstruction
-            attempt) :
-    CommonGround.ControllerInvocation.StageAttemptFramedConstruction :=
-  stageAttemptFramedConstruction_of_endpointEquivIndexed h
-
-
 end StructuredConstructionTargets
 
 end Computability
