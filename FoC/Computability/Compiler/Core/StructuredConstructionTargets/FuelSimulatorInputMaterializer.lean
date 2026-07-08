@@ -1080,6 +1080,90 @@ theorem fuelSimulatorInputRecognizerDescription_forward
       fuelSimulatorInputRecognizerDescription_forward_checked i,
       fuelSimulatorInputCheckedValidatorTape_equiv_handoff i⟩
 
+/--
+Core decode inversion: if the marked stage-prefix + closed-fuel-nat scanner core
+halts from the marked handoff tape of some tail, then the originating code
+decodes into the FuelSimulator input family.  This is the remaining
+finite-machine obligation for closedness.
+-/
+theorem fuelSimulatorInputRecognizerCoreDescription_closedDecode
+    (code : Word MachineCodeSymbol) (tail : Word Bool) (Tmid : Tape Bool)
+    (hbits : encodeCodeWordAsInput code = false :: false :: tail)
+    (hcore :
+      exists nB : Nat,
+        fuelSimulatorInputRecognizerCoreDescription.runConfig nB
+            { state := fuelSimulatorInputRecognizerCoreDescription.start
+              tape :=
+                Tape.move Direction.right
+                  (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+                    (none :: tail.map some)) } =
+          { state := fuelSimulatorInputRecognizerCoreDescription.halt
+            tape := Tmid }) :
+    exists i : FuelSimulatorStructuredIndex,
+      decodeFuelSimulatorStructuredInputCode code = some i := by
+  sorry
+
+/--
+Peels the marker/recognizer/identity wrappers off a halting run of the full
+recognizer, reducing closedness to the core decode inversion above.
+-/
+theorem fuelSimulatorInputRecognizerDescription_closedDecode
+    (code : Word MachineCodeSymbol) (T : Tape Bool)
+    (h :
+      fuelSimulatorInputRecognizerDescription.HaltsWithTape
+        (encodeCodeWordAsInput code) T) :
+    exists i : FuelSimulatorStructuredIndex,
+      decodeFuelSimulatorStructuredInputCode code = some i := by
+  have hSIMCready :
+      (StageInputMarkedCoreDescription
+        fuelSimulatorInputRecognizerCoreDescription).SubroutineReady := by
+    simpa [StageInputMarkedCoreDescription] using
+      seqSubroutine_subroutineReady
+        markStageInputSecondBitDescription_ready
+        fuelSimulatorInputRecognizerCoreDescription_ready
+  have hSIRready :
+      (StageInputRecognizerDescription
+        (StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription)).SubroutineReady := by
+    simpa [StageInputRecognizerDescription] using
+      seqSubroutine_subroutineReady
+        hSIMCready
+        restoreStageInputSecondBitDescription_ready
+  have hIdReady : ExactIdentityDescription.SubroutineReady :=
+    ⟨exactIdentityDescription_wellFormed,
+      exactIdentityDescription_haltTransitionFree⟩
+  obtain ⟨Tmid1, hSIR, _hId⟩ :=
+    seqSubroutine_haltsWithTape_inv
+      (A :=
+        StageInputRecognizerDescription
+          (StageInputMarkedCoreDescription
+            fuelSimulatorInputRecognizerCoreDescription))
+      (B := ExactIdentityDescription)
+      (handoffMove := Direction.right)
+      hSIRready hIdReady h
+  obtain ⟨Tmid2, hSIMC, _hRestore⟩ :=
+    seqSubroutine_haltsWithTape_inv
+      (A :=
+        StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription)
+      (B := RestoreStageInputSecondBitDescription)
+      (handoffMove := Direction.left)
+      hSIMCready restoreStageInputSecondBitDescription_ready hSIR
+  obtain ⟨Tmark, hMSIB, nB, hcoreRun⟩ :=
+    seqSubroutine_haltsWithTape_inv
+      (A := MarkStageInputSecondBitDescription)
+      (B := fuelSimulatorInputRecognizerCoreDescription)
+      (handoffMove := Direction.right)
+      markStageInputSecondBitDescription_ready
+      fuelSimulatorInputRecognizerCoreDescription_ready hSIMC
+  obtain ⟨tail, hbits, hTmark⟩ :=
+    markStageInputSecondBitDescription_haltsWithTape_inv hMSIB
+  refine
+    fuelSimulatorInputRecognizerCoreDescription_closedDecode
+      code tail Tmid2 hbits ⟨nB, ?_⟩
+  rw [hTmark] at hcoreRun
+  exact hcoreRun
+
 theorem fuelSimulatorInputRecognizerDescription_closedCanonical
     (code : Word MachineCodeSymbol) (T : Tape Bool)
     (h :
@@ -1089,7 +1173,28 @@ theorem fuelSimulatorInputRecognizerDescription_closedCanonical
       decodeFuelSimulatorStructuredInputCode code = some i ∧
       Tape.Equiv T
         (EncRewriters.CanonicalLayouts.HandoffTape
-          fuelSimulatorStructuredInputCode i) := by sorry
+          fuelSimulatorStructuredInputCode i) := by
+  obtain ⟨i, hdec⟩ :=
+    fuelSimulatorInputRecognizerDescription_closedDecode code T h
+  refine ⟨i, hdec, ?_⟩
+  have hcode : code = fuelSimulatorStructuredInputCode i :=
+    decodeFuelSimulatorStructuredInputCode_eq_some_encode hdec
+  have hFromTape :
+      fuelSimulatorInputRecognizerDescription.HaltsFromTape
+        (fuelSimulatorStructuredInputTape i) T := by
+    have htape :
+        fuelSimulatorStructuredInputTape i =
+          Tape.input (encodeCodeWordAsInput code) := by
+      rw [hcode]; rfl
+    rw [htape]
+    exact h
+  have hT : T = fuelSimulatorInputCheckedValidatorTape i :=
+    haltsFromTape_functional_of_haltTransitionFree
+      fuelSimulatorInputRecognizerDescription_ready.right
+      hFromTape
+      (fuelSimulatorInputRecognizerDescription_forward_checked i)
+  rw [hT]
+  exact fuelSimulatorInputCheckedValidatorTape_equiv_handoff i
 
 theorem fuelSimulatorInputRecognizerDescription_equivRunSpec :
     FuelSimulatorInputRecognizerEquivRunSpec
