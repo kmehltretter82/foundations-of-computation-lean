@@ -714,6 +714,23 @@ theorem closedFromTapeEquiv_of_haltsFromTapeEquiv_of_subroutineReady
   exact hequiv
 
 /--
+Transport an actual deterministic halt to the target tape named by an
+equivalence-forward run.
+-/
+theorem haltsFromTape_equiv_target_of_forward
+    {D : MachineDescription} {Tin Tactual Ttarget : Tape Bool}
+    (hready : D.SubroutineReady)
+    (hactual : D.HaltsFromTape Tin Tactual)
+    (hforward : D.HaltsFromTapeEquiv Tin Ttarget) :
+    Tape.Equiv Tactual Ttarget := by
+  rcases hforward with ⟨Tforward, hforwardActual, hTforward⟩
+  have hTactual : Tactual = Tforward :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hready.right hactual hforwardActual
+  rw [hTactual]
+  exact hTforward
+
+/--
 Equivalence-facing shared tape-2 projector route for canonical three-tape
 endpoints.
 -/
@@ -1102,31 +1119,305 @@ pilot route.  Target files provide a public code-family recognizer; the common
 emitter and sequencing route live here.
 -/
 
-/-- Generic embedding-emitter phase for guarded three-logical-tape inputs. -/
+/--
+Embedding-emitter phase for guarded three-logical-tape inputs whose public
+source is an ordinary input tape.
+
+This is intentionally indexed by {lean}`Word Bool`, not by arbitrary
+{lean}`Tape Bool`.
+The current endpoint materializer route only hands the emitter canonical
+{lit}`Tape.input bits` sources after the recognizer phase.  Keeping that
+narrower contract leaves the remaining finite-machine obligation as a stream
+transducer over the scanned input word.
+-/
 def Structured3InputEmbeddingEmitterConstruction : Prop :=
   Structured3InputMaterializerConstruction
-    (fun source : Tape Bool => source)
-    (fun _source : Tape Bool => Tape.blank)
+    (fun bits : Word Bool => Tape.input bits)
+    (fun _bits : Word Bool => Tape.blank)
+
+/-- Encoded logical-tape segment for a guarded public input word. -/
+def guardedInputWordLogicalTapeCode (bits : Word Bool) :
+    List (Option Bool) :=
+  List.append (logicalCellCode (none : Option Bool))
+    (List.append headMarkerCells
+      (List.append
+        (match bits with
+        | [] => logicalCellCode (none : Option Bool)
+        | bit :: rest =>
+            List.append (logicalCellCode (some bit))
+              (logicalCellListCode (rest.map some)))
+        (logicalCellCode (none : Option Bool))))
+
+theorem guardedInputWordLogicalTapeCode_eq_logicalTapeCode
+    (bits : Word Bool) :
+    guardedInputWordLogicalTapeCode bits =
+      logicalTapeCode (guardLogicalTape (Tape.input bits)) := by
+  cases bits with
+  | nil =>
+      rfl
+  | cons bit rest =>
+      change
+        List.append (logicalCellCode (none : Option Bool))
+          (List.append headMarkerCells
+            (List.append
+              (List.append (logicalCellCode (some bit))
+                (logicalCellListCode (rest.map some)))
+              (logicalCellCode (none : Option Bool)))) =
+        List.append (logicalCellListCode [none])
+          (List.append headMarkerCells
+            (List.append (logicalCellCode (some bit))
+              (logicalCellListCode (List.append (rest.map some) [none]))))
+      simp [logicalCellListBits, List.append_assoc]
+
+/-- Encoded logical-tape segment for a guarded blank tape. -/
+def guardedBlankLogicalTapeCode : List (Option Bool) :=
+  guardedInputWordLogicalTapeCode []
+
+theorem guardedBlankLogicalTapeCode_eq_logicalTapeCode :
+    guardedBlankLogicalTapeCode =
+      logicalTapeCode (guardLogicalTape Tape.blank) := by
+  rfl
 
 /--
-Concrete emitter that expands an arbitrary public source tape into the guarded
-three-logical-tape input with blank scratch and blank output buffer.
+Explicit physical cells for the narrowed input-tape embedding emitter target.
 -/
-def structured3InputEmbeddingEmitterDescription : MachineDescription :=
+def structured3InputEmbeddingEmitterTargetCells
+    (bits : Word Bool) : List (Option Bool) :=
+  List.append tapeSeparatorCells
+    (List.append (guardedInputWordLogicalTapeCode bits)
+      (List.append tapeSeparatorCells
+        (List.append guardedBlankLogicalTapeCode
+          (List.append tapeSeparatorCells
+            (List.append guardedBlankLogicalTapeCode
+              tapeSeparatorCells)))))
+
+theorem structured3InputEmbeddingEmitterTargetCells_eq
+    (bits : Word Bool) :
+    structured3InputEmbeddingEmitterTargetCells bits =
+      Tape.cells
+        (structured3InputMaterializerTargetTape
+          (Tape.input bits) Tape.blank) := by
+  rw [structured3InputEmbeddingEmitterTargetCells,
+    guardedInputWordLogicalTapeCode_eq_logicalTapeCode,
+    guardedBlankLogicalTapeCode_eq_logicalTapeCode,
+    structured3InputMaterializerTargetTape,
+    encodedGuardedStructured3Tapes_cells]
+
+/-- Exact tape represented by the explicit input-embedding target cells. -/
+def structured3InputEmbeddingEmitterTargetTape
+    (bits : Word Bool) : Tape Bool :=
+  tapeAtCells [] (structured3InputEmbeddingEmitterTargetCells bits)
+
+theorem structured3InputEmbeddingEmitterTargetTape_eq_materializerTarget
+    (bits : Word Bool) :
+    structured3InputEmbeddingEmitterTargetTape bits =
+      structured3InputMaterializerTargetTape
+        (Tape.input bits) Tape.blank := by
+  unfold structured3InputEmbeddingEmitterTargetTape
+  unfold structured3InputEmbeddingEmitterTargetCells
+  rw [guardedInputWordLogicalTapeCode_eq_logicalTapeCode]
+  rw [guardedBlankLogicalTapeCode_eq_logicalTapeCode]
+  rfl
+
+/--
+Control state for the stream-expansion phase below the narrowed shared
+embedding emitter.
+
+The phase needs to distinguish the initial blank of {lit}`Tape.input []` from
+the blank just to the right of a nonempty input word.
+-/
+inductive OptionCellExpandAppendScanState where
+  | fresh
+  | afterBit
+  deriving DecidableEq, Repr
+
+/-- Static cells written before scanning the public input word. -/
+def optionCellExpandAppendPrefixCells : List (Option Bool) :=
+  List.append tapeSeparatorCells
+    (List.append (logicalCellCode (none : Option Bool)) headMarkerCells)
+
+/-- Physical cells emitted for one scanned public input bit. -/
+def optionCellExpandAppendBitCells (bit : Bool) : List (Option Bool) :=
+  logicalCellCode (some bit)
+
+/--
+Physical cells emitted from the scanned input window before the right guard.
+The empty source word contributes the blank head cell of {lit}`Tape.input []`;
+the nonempty source word contributes the logical-cell code of each input bit.
+-/
+def optionCellExpandAppendScannedCells
+    (bits : Word Bool) : List (Option Bool) :=
+  match bits with
+  | [] => logicalCellCode (none : Option Bool)
+  | bit :: rest =>
+      List.append (optionCellExpandAppendBitCells bit)
+        (logicalCellListCode (rest.map some))
+
+/-- Right guard after the public input logical-tape segment. -/
+def optionCellExpandAppendRightGuardCells : List (Option Bool) :=
+  logicalCellCode (none : Option Bool)
+
+/-- Static suffix for blank scratch tape, blank output tape, and final separator. -/
+def optionCellExpandAppendSuffixCells : List (Option Bool) :=
+  List.append tapeSeparatorCells
+    (List.append guardedBlankLogicalTapeCode
+      (List.append tapeSeparatorCells
+        (List.append guardedBlankLogicalTapeCode tapeSeparatorCells)))
+
+/--
+Exact physical target for the option-cell expansion primitive.
+
+The eventual finite table should write these cells and rewind to the first
+separator.  This is the reusable missing primitive called out by the
+FuelSimulator materializer pilot plan.
+-/
+def optionCellExpandAppendTargetCells
+    (bits : Word Bool) : List (Option Bool) :=
+  List.append optionCellExpandAppendPrefixCells
+    (List.append (optionCellExpandAppendScannedCells bits)
+      (List.append optionCellExpandAppendRightGuardCells
+        optionCellExpandAppendSuffixCells))
+
+theorem optionCellExpandAppendTargetCells_eq_structured3
+    (bits : Word Bool) :
+    optionCellExpandAppendTargetCells bits =
+      structured3InputEmbeddingEmitterTargetCells bits := by
+  cases bits with
+  | nil =>
+      rfl
+  | cons bit rest =>
+      simp [optionCellExpandAppendTargetCells,
+        structured3InputEmbeddingEmitterTargetCells,
+        optionCellExpandAppendPrefixCells,
+        optionCellExpandAppendScannedCells,
+        optionCellExpandAppendRightGuardCells,
+        optionCellExpandAppendSuffixCells,
+        guardedInputWordLogicalTapeCode,
+        optionCellExpandAppendBitCells,
+        guardedBlankLogicalTapeCode, List.append_assoc]
+
+/--
+Concrete run contract for the option-cell expansion primitive below the shared
+embedding emitter.
+-/
+structure OptionCellExpandAppendRunSpec
+    (emitter : MachineDescription) : Prop where
+  ready : emitter.SubroutineReady
+  forward :
+    forall bits : Word Bool,
+      emitter.HaltsFromTape
+        (Tape.input bits)
+        (tapeAtCells [] (optionCellExpandAppendTargetCells bits))
+
+/--
+Concrete finite table placeholder for the stream expansion and left rewind.
+-/
+def optionCellExpandAppendDescription : MachineDescription :=
   { stateCount := 1
     start := 0
     halt := 0
     transitions := [] }
 
+theorem optionCellExpandAppendDescription_runSpec :
+    OptionCellExpandAppendRunSpec optionCellExpandAppendDescription := by
+  -- Finite-machine obligation: scan the canonical input word, expand each
+  -- logical cell into its two physical cells, append the guarded blank tapes,
+  -- and rewind to the left boundary separator.
+  sorry
+
+/--
+Exact finite-machine run contract for the narrowed shared embedding emitter.
+
+This is the concrete machine boundary below the public
+{name}`Structured3InputMaterializerSpec`: the emitter must write the explicit
+physical cells for the guarded three-logical-tape input and stop with the head
+on the left boundary separator.
+-/
+def Structured3InputEmbeddingEmitterTargetCellsRunSpec
+    (emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall bits : Word Bool,
+      emitter.HaltsFromTape
+        (Tape.input bits)
+        (structured3InputEmbeddingEmitterTargetTape bits)
+
+theorem structured3InputEmbeddingEmitterSpec_of_targetCellsRunSpec
+    {emitter : MachineDescription}
+    (hspec :
+      Structured3InputEmbeddingEmitterTargetCellsRunSpec emitter) :
+    Structured3InputMaterializerSpec
+      (fun bits : Word Bool => Tape.input bits)
+      (fun _bits : Word Bool => Tape.blank)
+      emitter := by
+  constructor
+  · exact hspec.left
+  · intro bits
+    refine
+      ⟨structured3InputEmbeddingEmitterTargetTape bits,
+        hspec.right bits, ?_⟩
+    rw [structured3InputEmbeddingEmitterTargetTape_eq_materializerTarget]
+    exact Tape.Equiv.refl
+      (structured3InputMaterializerTargetTape
+        (Tape.input bits) Tape.blank)
+
+/--
+Recognizer contract for a public code family used as the first phase of an
+indexed endpoint materializer.
+
+The canonical-layout recognizer spec supplies the standard forward and
+input-word inversion facts.  The additional indexed closedness field is the
+stronger property needed by endpoint wrappers: any halt from any starting tape
+must have started from one of the indexed canonical input tapes and must finish
+at that index's handoff tape.
+-/
+structure ClosedInputFamilyRecognizerSpec
+    {α : Type}
+    (decode : Word MachineCodeSymbol -> Option α)
+    (encode : α -> Word MachineCodeSymbol)
+    (recognizer : MachineDescription) : Prop where
+  canonical :
+    EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
+      decode encode recognizer
+  closedIndex :
+    forall Tin T : Tape Bool,
+      recognizer.HaltsFromTape Tin T ->
+        exists a : α,
+          Tin = EncRewriters.CanonicalLayouts.InputTape encode a ∧
+            T = EncRewriters.CanonicalLayouts.HandoffTape encode a
+
+/-- Existence wrapper for closed public code-family recognizers. -/
+def ClosedInputFamilyRecognizerConstruction
+    {α : Type}
+    (decode : Word MachineCodeSymbol -> Option α)
+    (encode : α -> Word MachineCodeSymbol) : Prop :=
+  exists recognizer : MachineDescription,
+    ClosedInputFamilyRecognizerSpec decode encode recognizer
+
+/--
+Concrete emitter that expands a public input word into the guarded
+three-logical-tape input with blank scratch and blank output buffer.
+-/
+def structured3InputEmbeddingEmitterDescription : MachineDescription :=
+  optionCellExpandAppendDescription
+
+theorem structured3InputEmbeddingEmitterDescription_targetCellsRunSpec :
+    Structured3InputEmbeddingEmitterTargetCellsRunSpec
+      structured3InputEmbeddingEmitterDescription := by
+  constructor
+  · exact optionCellExpandAppendDescription_runSpec.ready
+  · intro bits
+    unfold structured3InputEmbeddingEmitterDescription
+    unfold structured3InputEmbeddingEmitterTargetTape
+    rw [← optionCellExpandAppendTargetCells_eq_structured3 bits]
+    exact optionCellExpandAppendDescription_runSpec.forward bits
+
 theorem structured3InputEmbeddingEmitterDescription_spec :
     Structured3InputMaterializerSpec
-      (fun source : Tape Bool => source)
-      (fun _source : Tape Bool => Tape.blank)
-      structured3InputEmbeddingEmitterDescription := by
-  -- Shared finite-machine obligation: build the stream transducer that emits
-  -- `structured3InputMaterializerTargetTape source Tape.blank`, expanding each
-  -- source cell into the guarded structured logical-tape encoding.
-  sorry
+      (fun bits : Word Bool => Tape.input bits)
+      (fun _bits : Word Bool => Tape.blank)
+      structured3InputEmbeddingEmitterDescription :=
+  structured3InputEmbeddingEmitterSpec_of_targetCellsRunSpec
+    structured3InputEmbeddingEmitterDescription_targetCellsRunSpec
 
 theorem structured3InputEmbeddingEmitterConstruction_core :
     Structured3InputEmbeddingEmitterConstruction :=
@@ -1153,12 +1444,12 @@ theorem closedRecognizerStructuredEquivInputMaterializer_closedIndex_of_parts
           encode a = symbol :: tail)
     {recognizer emitter : MachineDescription}
     (hrecognizer :
-      EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
+      ClosedInputFamilyRecognizerSpec
         decode encode recognizer)
     (hemitter :
       Structured3InputMaterializerSpec
-        (fun source : Tape Bool => source)
-        (fun _source : Tape Bool => Tape.blank)
+        (fun bits : Word Bool => Tape.input bits)
+        (fun _bits : Word Bool => Tape.blank)
         emitter) :
     EquivClosedIndexedFromTape
       (closedRecognizerStructuredInputMaterializerDescription
@@ -1169,11 +1460,31 @@ theorem closedRecognizerStructuredEquivInputMaterializer_closedIndex_of_parts
         (fun a : α =>
           EncRewriters.CanonicalLayouts.InputTape encode a)
         (fun _a => Tape.blank)) := by
-  -- Shared indexed-closedness obligation for the sequenced route:
-  -- invert the recognizer phase to recover the code-family index, then use
-  -- emitter determinism to transport the final tape to the guarded structured
-  -- target for that index.
-  sorry
+  intro Tin T hhalt
+  rcases
+      MachineDescription.seqSubroutine_haltsFromTape_closed_exists_mid
+        hrecognizer.canonical.left hemitter.left hhalt with
+    ⟨Tmid, hrecognizerRun, hemitterRun⟩
+  rcases hrecognizer.closedIndex Tin Tmid hrecognizerRun with
+    ⟨a, hTin, hTmid⟩
+  refine ⟨a, hTin, ?_⟩
+  have hhandoff :
+      Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid =
+        EncRewriters.CanonicalLayouts.InputTape encode a := by
+    rw [hTmid]
+    exact
+      EncRewriters.CanonicalLayouts.handoffTape_handoff
+        hencodeCons a
+  have hemitterActual :
+      emitter.HaltsFromTape
+        (EncRewriters.CanonicalLayouts.InputTape encode a) T := by
+    simpa [hhandoff] using hemitterRun
+  exact
+    haltsFromTape_equiv_target_of_forward
+      hemitter.left
+      hemitterActual
+      (hemitter.right
+        (EncRewriters.CanonicalLayouts.Bits encode a))
 
 theorem closedRecognizerStructuredEquivInputMaterializerSpec_of_parts
     {α : Type}
@@ -1186,12 +1497,12 @@ theorem closedRecognizerStructuredEquivInputMaterializerSpec_of_parts
           encode a = symbol :: tail)
     {recognizer emitter : MachineDescription}
     (hrecognizer :
-      EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
+      ClosedInputFamilyRecognizerSpec
         decode encode recognizer)
     (hemitter :
       Structured3InputMaterializerSpec
-        (fun source : Tape Bool => source)
-        (fun _source : Tape Bool => Tape.blank)
+        (fun bits : Word Bool => Tape.input bits)
+        (fun _bits : Word Bool => Tape.blank)
         emitter) :
     Structured3EndpointEquivInputMaterializerSpec
       (fun a : α =>
@@ -1203,9 +1514,9 @@ theorem closedRecognizerStructuredEquivInputMaterializerSpec_of_parts
   · constructor
     · exact
         MachineDescription.seqSubroutine_subroutineReady
-          hrecognizer.left hemitter.left
+          hrecognizer.canonical.left hemitter.left
     · intro a
-      rcases hrecognizer.right.left a with ⟨nR, hR⟩
+      rcases hrecognizer.canonical.right.left a with ⟨nR, hR⟩
       let Tmid :=
         EncRewriters.CanonicalLayouts.HandoffTape encode a
       have hRfrom :
@@ -1227,11 +1538,13 @@ theorem closedRecognizerStructuredEquivInputMaterializerSpec_of_parts
             (structured3InputMaterializerTargetTape
               (EncRewriters.CanonicalLayouts.InputTape encode a)
               Tape.blank) :=
-        hemitter.right
-          (EncRewriters.CanonicalLayouts.InputTape encode a)
+        by
+          simpa [EncRewriters.CanonicalLayouts.InputTape] using
+            hemitter.right
+              (EncRewriters.CanonicalLayouts.Bits encode a)
       simpa [closedRecognizerStructuredInputMaterializerDescription] using
         CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
-          hrecognizer.left hemitter.left hRfrom hhandoff hE
+          hrecognizer.canonical.left hemitter.left hRfrom hhandoff hE
   · exact
       closedRecognizerStructuredEquivInputMaterializer_closedIndex_of_parts
         hencodeCons hrecognizer hemitter
@@ -1246,7 +1559,7 @@ theorem closedRecognizerStructuredEquivInputMaterializerConstruction_of_parts
         exists tail : Word MachineCodeSymbol,
           encode a = symbol :: tail)
     (hrecognizer :
-      EncRewriters.CanonicalLayouts.ClosedRecognizerConstruction
+      ClosedInputFamilyRecognizerConstruction
         decode encode)
     (hemitter : Structured3InputEmbeddingEmitterConstruction) :
     Structured3EndpointEquivInputMaterializerConstruction

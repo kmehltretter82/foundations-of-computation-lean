@@ -276,16 +276,68 @@ theorem fuelSimulatorStructuredEquivInputMaterializerConstruction_of_indexed
 /-- Semantic contract for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerSpec
     (recognizer : MachineDescription) : Prop :=
-  EncRewriters.CanonicalLayouts.ClosedRecognizerSpec
+  ClosedInputFamilyRecognizerSpec
     decodeFuelSimulatorStructuredInputCode
     fuelSimulatorStructuredInputCode
     recognizer
 
 /-- Existence wrapper for the FuelSimulator-family recognizer phase. -/
 def FuelSimulatorInputRecognizerConstruction : Prop :=
-  EncRewriters.CanonicalLayouts.ClosedRecognizerConstruction
+  ClosedInputFamilyRecognizerConstruction
     decodeFuelSimulatorStructuredInputCode
     fuelSimulatorStructuredInputCode
+
+/--
+Exact finite-machine behavior for the FuelSimulator-family recognizer.
+
+The recognizer must accept exactly the canonical public input tapes indexed by
+{name}`FuelSimulatorStructuredIndex`, hand off by moving one cell right, and
+reject all other starting tapes by never halting.
+-/
+structure FuelSimulatorInputRecognizerExactRunSpec
+    (recognizer : MachineDescription) : Prop where
+  ready : recognizer.SubroutineReady
+  forward :
+    forall i : FuelSimulatorStructuredIndex,
+      recognizer.HaltsFromTape
+        (fuelSimulatorStructuredInputTape i)
+        (EncRewriters.CanonicalLayouts.HandoffTape
+          fuelSimulatorStructuredInputCode i)
+  closedIndex :
+    forall Tin T : Tape Bool,
+      recognizer.HaltsFromTape Tin T ->
+        exists i : FuelSimulatorStructuredIndex,
+          Tin = fuelSimulatorStructuredInputTape i ∧
+            T = EncRewriters.CanonicalLayouts.HandoffTape
+              fuelSimulatorStructuredInputCode i
+
+theorem fuelSimulatorInputRecognizerSpec_of_exactRunSpec
+    {recognizer : MachineDescription}
+    (hspec : FuelSimulatorInputRecognizerExactRunSpec recognizer) :
+    FuelSimulatorInputRecognizerSpec recognizer := by
+  constructor
+  · refine ⟨hspec.ready, ?_, ?_⟩
+    · intro i
+      apply haltsWithTape_of_haltsFromTape_input
+      simpa [fuelSimulatorStructuredInputTape,
+        EncRewriters.CanonicalLayouts.Bits] using hspec.forward i
+    · intro code T hhalt
+      have hfrom :
+          recognizer.HaltsFromTape
+            (Tape.input (encodeCodeWordAsInput code)) T :=
+        haltsFromTape_input_of_haltsWithTape hhalt
+      rcases hspec.closedIndex _ _ hfrom with ⟨i, hTin, hT⟩
+      refine ⟨i, ?_, hT⟩
+      have hcode : code = fuelSimulatorStructuredInputCode i :=
+        fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hTin
+      rw [hcode]
+      exact decodeFuelSimulatorStructuredInputCode_encode i
+  · intro Tin T hhalt
+    rcases hspec.closedIndex Tin T hhalt with ⟨i, hTin, hT⟩
+    refine ⟨i, ?_, hT⟩
+    simpa [fuelSimulatorStructuredInputTape,
+      EncRewriters.CanonicalLayouts.InputTape,
+      EncRewriters.CanonicalLayouts.Bits] using hTin
 
 /--
 Concrete finite parser for generated FuelSimulator public-input codes.
@@ -301,13 +353,20 @@ def fuelSimulatorInputRecognizerDescription : MachineDescription :=
     halt := 0
     transitions := [] }
 
-theorem fuelSimulatorInputRecognizerDescription_spec :
-    FuelSimulatorInputRecognizerSpec
+theorem fuelSimulatorInputRecognizerDescription_exactRunSpec :
+    FuelSimulatorInputRecognizerExactRunSpec
       fuelSimulatorInputRecognizerDescription := by
   -- Remaining finite-machine obligation: replace the placeholder description
   -- with the concrete FuelSimulator-family parser and prove the closed
-  -- canonical-layout recognizer spec above.
+  -- indexed run spec above, including arbitrary-input closedness for the
+  -- recognizer phase.
   sorry
+
+theorem fuelSimulatorInputRecognizerDescription_spec :
+    FuelSimulatorInputRecognizerSpec
+      fuelSimulatorInputRecognizerDescription :=
+  fuelSimulatorInputRecognizerSpec_of_exactRunSpec
+    fuelSimulatorInputRecognizerDescription_exactRunSpec
 
 theorem fuelSimulatorInputRecognizerConstruction_core :
     FuelSimulatorInputRecognizerConstruction :=
