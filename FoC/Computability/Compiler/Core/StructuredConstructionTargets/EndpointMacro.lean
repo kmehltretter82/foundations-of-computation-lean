@@ -16,12 +16,12 @@ open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 open Lean
 open Lean.Parser
 
-macro "declare_structured_endpoint" 
-  "Prefix:" P:ident 
-  "lowerPrefix:" p:ident 
+macro "declare_structured_endpoint"
+  "Prefix:" P:ident
+  "lowerPrefix:" p:ident
   "Param:" "(" param:ident ":" paramTy:term ")"
-  "Index:" idxTy:term 
-  "InputTape:" inTape:term 
+  "Index:" idxTy:term
+  "InputTape:" inTape:term
   "OutputTape:" outTape:term : command => do
 
   let EndpointExactIndexedConstruction := mkIdentFrom P (P.getId.appendAfter "EndpointExactIndexedConstruction")
