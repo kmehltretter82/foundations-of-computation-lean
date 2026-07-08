@@ -323,8 +323,72 @@ def NatClosedScannerDescription : MachineDescription where
   halt := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.halt
   transitions := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.transitions
 
+theorem markStageInputSecondBitDescription_ready :
+    MarkStageInputSecondBitDescription.SubroutineReady := by
+  refine ⟨?_, ?_⟩
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact
+        transition_wellFormed_of_all
+          (l := MarkStageInputSecondBitDescription.transitions)
+          (stateCount := MarkStageInputSecondBitDescription.stateCount)
+          (by decide)
+    · exact
+        transition_deterministic_of_all
+          (l := MarkStageInputSecondBitDescription.transitions)
+          (by decide)
+  · exact
+      transition_notFrom_of_all
+        (l := MarkStageInputSecondBitDescription.transitions)
+        (state := MarkStageInputSecondBitDescription.halt)
+        (by decide)
+
+theorem restoreStageInputSecondBitDescription_ready :
+    RestoreStageInputSecondBitDescription.SubroutineReady := by
+  refine ⟨?_, ?_⟩
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact
+        transition_wellFormed_of_all
+          (l := RestoreStageInputSecondBitDescription.transitions)
+          (stateCount := RestoreStageInputSecondBitDescription.stateCount)
+          (by decide)
+    · exact
+        transition_deterministic_of_all
+          (l := RestoreStageInputSecondBitDescription.transitions)
+          (by decide)
+  · exact
+      transition_notFrom_of_all
+        (l := RestoreStageInputSecondBitDescription.transitions)
+        (state := RestoreStageInputSecondBitDescription.halt)
+        (by decide)
+
+theorem natClosedScannerDescription_ready :
+    NatClosedScannerDescription.SubroutineReady := by
+  refine ⟨?_, ?_⟩
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact
+        transition_wellFormed_of_all
+          (l := NatClosedScannerDescription.transitions)
+          (stateCount := NatClosedScannerDescription.stateCount)
+          (by decide)
+    · exact
+        transition_deterministic_of_all
+          (l := NatClosedScannerDescription.transitions)
+          (by decide)
+  · exact
+      transition_notFrom_of_all
+        (l := NatClosedScannerDescription.transitions)
+        (state := NatClosedScannerDescription.halt)
+        (by decide)
+
 def fuelSimulatorInputRecognizerCoreDescription : MachineDescription :=
   seqSubroutine MarkedPrefixScannerDescription NatClosedScannerDescription Direction.right
+
+theorem fuelSimulatorInputRecognizerCoreDescription_ready :
+    fuelSimulatorInputRecognizerCoreDescription.SubroutineReady := by
+  simpa [fuelSimulatorInputRecognizerCoreDescription] using
+    seqSubroutine_subroutineReady
+      markedPrefixScannerDescription_subroutineReady
+      natClosedScannerDescription_ready
 
 def fuelSimulatorInputRecognizerDescription : MachineDescription :=
   StageInputIdentityDescription
@@ -332,7 +396,28 @@ def fuelSimulatorInputRecognizerDescription : MachineDescription :=
       (StageInputMarkedCoreDescription fuelSimulatorInputRecognizerCoreDescription))
 
 theorem fuelSimulatorInputRecognizerDescription_ready :
-    fuelSimulatorInputRecognizerDescription.SubroutineReady := by sorry
+    fuelSimulatorInputRecognizerDescription.SubroutineReady := by
+  have hmarked :
+      (StageInputMarkedCoreDescription
+        fuelSimulatorInputRecognizerCoreDescription).SubroutineReady := by
+    simpa [StageInputMarkedCoreDescription] using
+      seqSubroutine_subroutineReady
+        markStageInputSecondBitDescription_ready
+        fuelSimulatorInputRecognizerCoreDescription_ready
+  have hrecognizer :
+      (StageInputRecognizerDescription
+        (StageInputMarkedCoreDescription
+          fuelSimulatorInputRecognizerCoreDescription)).SubroutineReady := by
+    simpa [StageInputRecognizerDescription] using
+      seqSubroutine_subroutineReady
+        hmarked
+        restoreStageInputSecondBitDescription_ready
+  simpa [fuelSimulatorInputRecognizerDescription,
+    StageInputIdentityDescription] using
+    seqSubroutine_subroutineReady
+      hrecognizer
+      ⟨exactIdentityDescription_wellFormed,
+        exactIdentityDescription_haltTransitionFree⟩
 
 theorem fuelSimulatorInputRecognizerDescription_forward
     (i : FuelSimulatorStructuredIndex) :
