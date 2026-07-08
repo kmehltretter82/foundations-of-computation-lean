@@ -1749,33 +1749,6 @@ theorem rawBoundaryEmptyLayoutEmissionRoute
       rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
         tailFirst tail }
 
-theorem rawBoundary_emptyLayout_tailHead_halts
-    (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    prependEmptyLayoutLeftOfHeadDescription.HaltsFromTape
-      (tailHeadHandoffTape [] [] tailFirst tail)
-      (rightEdgeTape [] [] tailFirst tail) :=
-  (rawBoundaryEmptyLayoutEmissionRoute
-    tailFirst tail).emptyPrependerHaltsFromTailHead
-
-theorem rawBoundary_emptyLayout_sourceToRightEdge_halts
-    (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    emptyLayoutTailHandoffRightEdgeDescription.HaltsFromTape
-      (sourceTape [] [] (some tailFirst :: tail))
-      (rightEdgeTape [] [] tailFirst tail) :=
-  (rawBoundaryEmptyLayoutEmissionRoute
-    tailFirst tail).sourceToRightEdgeHalts
-
-theorem rawBoundary_emptyLayout_coreDescription_halts
-    (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
-      (sourceTape [] [] (some tailFirst :: tail))
-      (rightEdgeTape [] [] tailFirst tail) :=
-  (rawBoundaryEmptyLayoutEmissionRoute
-    tailFirst tail).coreDescriptionHalts
-
 /-!
 ## Scratch-ready generated emission route
 -/
@@ -1908,12 +1881,6 @@ structure RawBoundaryRightEdgeEndpointShape
   rightEdgeLeftLength :
     (rightEdgeTape skipped count tailFirst tail).left.length =
       encodedLayoutScratchCellCount (List.append skipped count)
-  encodedDefaultTarget :
-    List.map optionBitDefaultFalse
-        (Tape.cells (rightEdgeTape skipped count tailFirst tail)) =
-      List.append
-        (encodedLayoutBits (List.append skipped count))
-        (tailFirst :: tail.map optionBitDefaultFalse)
 
 theorem rawBoundaryRightEdgeEndpointShape
     (skipped count : Word Bool)
@@ -1933,9 +1900,7 @@ theorem rawBoundaryRightEdgeEndpointShape
     preRewindMoveRight :=
       preRewindTape_moveRight skipped count tailFirst tail
     rightEdgeLeftLength :=
-      rightEdgeTape_left_length skipped count tailFirst tail
-    encodedDefaultTarget :=
-      rightEdgeTape_defaultedCells skipped count tailFirst tail }
+      rightEdgeTape_left_length skipped count tailFirst tail }
 
 theorem rawBoundary_rightEdge_cells
     (skipped count : Word Bool)
@@ -2274,24 +2239,6 @@ theorem rawBoundaryRightEdgeEmitterCoreRouteConstruction_core :
     RawBoundaryRightEdgeEmitterCoreRouteConstruction :=
   rawBoundaryRightEdgeEmitterCoreRoute
 
-theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_route
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
-      (sourceTape skipped count (some tailFirst :: tail))
-      (rightEdgeTape skipped count tailFirst tail) :=
-  (rawBoundaryRightEdgeEmitterCoreRoute).coreHaltsRightEdge
-    skipped count tailFirst tail
-
-theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape_route
-    (skipped count : Word Bool) (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
-      (sourceTape skipped count (some tailFirst :: tail))
-      (preRewindTape skipped count tailFirst tail) :=
-  (rawBoundaryRightEdgeEmitterCoreRoute).wrapperHaltsPreRewind
-    skipped count tailFirst tail
-
 theorem construction_core_route : Construction :=
   rawBoundaryRightEdgeEmitterCoreRoute.construction
 
@@ -2352,26 +2299,6 @@ theorem rawBoundaryRightEdgeEmitterEndpointRoute
         skipped count tailFirst tail
     rightEdgeMove :=
       preRewindTape_moveRight skipped count tailFirst tail }
-
-theorem rawBoundaryRightEdgeEmitterEndpointRoute_sourceToPreRewind
-    (skipped count : Word Bool)
-    (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
-      (sourceTape skipped count (some tailFirst :: tail))
-      (preRewindTape skipped count tailFirst tail) :=
-  (rawBoundaryRightEdgeEmitterEndpointRoute
-    skipped count tailFirst tail).sourceToPreRewind
-
-theorem rawBoundaryRightEdgeEmitterEndpointRoute_sourceToRightEdge
-    (skipped count : Word Bool)
-    (tailFirst : Bool)
-    (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
-      (sourceTape skipped count (some tailFirst :: tail))
-      (rightEdgeTape skipped count tailFirst tail) :=
-  (rawBoundaryRightEdgeEmitterEndpointRoute
-    skipped count tailFirst tail).sourceToRightEdge
 
 end RawBoundaryRightEdgeEmitter
 end CountWindowRawSourceEncoder
