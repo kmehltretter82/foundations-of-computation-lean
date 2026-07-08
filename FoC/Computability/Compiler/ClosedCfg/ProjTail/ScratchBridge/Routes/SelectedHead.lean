@@ -295,45 +295,6 @@ theorem exactRouteConstruction_of_headCleanup
       hcleanup)
 
 /-!
-## Exact route projections
--/
-
-theorem selectedHeadRoute_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    StructuredSelectedHeadDecoderRouteConstruction :=
-  hroute.selectedHeadRoute
-
-theorem selectedSegmentDecoderConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction :=
-  hroute.selectedSegmentDecoder
-
-theorem selectedSegmentDecoderOutputConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderOutputConstruction :=
-  hroute.selectedSegmentDecoderOutput
-
-theorem segmentNormalizerConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction :=
-  hroute.segmentNormalizer
-
-theorem segmentNormalizerOutputConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerOutputConstruction :=
-  hroute.segmentNormalizerOutput
-
-theorem outputProjectorConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  hroute.outputProjector
-
-theorem outputProjectorOutputConstruction_of_exactRoute
-    (hroute : ExactRouteConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorOutputConstruction :=
-  hroute.outputProjectorOutput
-
-/-!
 ## Scan-source materializer route
 
 The count-window bridge uses the output projector together with the structured
