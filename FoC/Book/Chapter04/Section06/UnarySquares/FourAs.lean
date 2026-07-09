@@ -5,7 +5,14 @@ set_option doc.verso true
 /-!
 # FourAs
 
-Supporting declarations and helper lemmas for Book Chapter04 Section06 UnarySquares FourAs.
+Book: Section 4.6, Exercise 1 (find a derivation for {lit}`aaaa` in the third
+sample grammar).
+
+This module records the explicit step-by-step derivation of {lit}`aaaa`, the
+square word with {lit}`n = 2`, in the unary-square grammar. It is the worked
+answer to the exercise; the general family is covered by the theorems in
+{module}`FoC.Book.Chapter04.Section06.UnarySquares.Basic` and
+{module}`FoC.Book.Chapter04.Section06.UnarySquares.Reachability`.
 -/
 
 
@@ -20,7 +27,8 @@ open Grammars
 def fourAsWord : Word SquareTerminal :=
   [SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a]
 
- /-- {name}`squareGrammar_generates_four_as` captures the core lemma for this local construction. -/
+/-- Explicit nineteen-step derivation of {lit}`aaaa` in the square grammar:
+two grow steps, a stop, the marker-processing passes, and the final cleanup. -/
 theorem squareGrammar_generates_four_as :
     fourAsWord ∈ GeneralGrammar.GeneratedLanguage SquareGrammar := by
   let S := squareN SquareNT.start

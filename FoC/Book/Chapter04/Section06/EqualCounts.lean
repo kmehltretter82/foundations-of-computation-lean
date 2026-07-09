@@ -9,6 +9,10 @@ namespace Section06
 
 /-!
 # Section 4.6 equal counts over three symbols
+
+Book: Section 4.6, first sample grammar (the words over {lit}`{a, b, c}` with
+equally many {lit}`a`s, {lit}`b`s, and {lit}`c`s); the {lit}`baabcc`
+derivation at the end mirrors the worked derivation in the text.
 -/
 
 open Languages

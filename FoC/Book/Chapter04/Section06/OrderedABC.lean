@@ -9,6 +9,10 @@ namespace Section06
 
 /-!
 # Section 4.6 ordered three-block counts
+
+Book: Section 4.6, second sample grammar (the ordered language
+{lit}`a^n b^n c^n`); the {lit}`aabbcc` derivation at the end answers the
+corresponding part of Exercise 1.
 -/
 
 open Languages

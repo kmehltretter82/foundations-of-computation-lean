@@ -10,6 +10,18 @@ namespace Section06
 open Languages
 open Grammars
 
+/-!
+# PostStop
+
+Book: Section 4.6, third sample grammar (the unary-square language
+{lit}`a^(n^2)`).
+
+This module defines the post-stop states of the unary-square grammar (the
+forms reached after the stop production) and proves that each post-stop
+production preserves the emitted-plus-potential invariant, or in the terminal
+case produces a word of square length.
+-/
+
 def squarePostStopForm
     (emitted : Nat) (middle : SententialForm SquareTerminal SquareNT) :
     SententialForm SquareTerminal SquareNT :=

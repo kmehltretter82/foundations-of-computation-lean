@@ -5,7 +5,17 @@ set_option doc.verso true
 /-!
 # Reachability
 
-Supporting declarations and helper lemmas for Book Chapter04 Section06 UnarySquares Reachability.
+Book: Section 4.6, third sample grammar (the unary-square language
+{lit}`a^(n^2)`).
+
+This module finishes the unary-square development with the soundness
+direction and the exact generated language. The invariant
+{lit}`SquareReachableState` classifies every sentential form derivable from
+the start symbol as the start form, a grow form, a post-stop state, or a
+terminal word of square length. Case analysis over the productions shows the
+invariant is closed under one yield step; derivation induction then shows
+every generated terminal word has square length, which combines with the
+constructive generation direction into the language equality.
 -/
 
 
@@ -30,7 +40,7 @@ inductive SquareReachableState :
       (hword : word ∈ squareLanguage) :
       SquareReachableState (SententialForm.terminalWord word)
 
- /-- {name}`squarePostStopForm_count_start` captures the core lemma for this local construction. -/
+/-- A post-stop form with a clean middle contains no {name}`SquareNT.start` nonterminal. -/
 theorem squarePostStopForm_count_start
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -41,7 +51,7 @@ theorem squarePostStopForm_count_start
     squareMiddleClean_count_start hclean, SententialCountNonterminal,
     squareN, ggNonterminal]
 
- /-- {name}`squarePostStopForm_count_t` captures the core lemma for this local construction. -/
+/-- A post-stop form with a clean middle contains no {name}`SquareNT.t` nonterminal. -/
 theorem squarePostStopForm_count_t
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -52,7 +62,9 @@ theorem squarePostStopForm_count_t
     squareMiddleClean_count_t hclean, SententialCountNonterminal,
     squareN, ggNonterminal]
 
- /-- {name}`squarePostStopState_yields_reachable` captures the core lemma for this local construction. -/
+/-- One yield step from a post-stop state stays reachable: the start and grow
+rules cannot apply, the moving and removing rules preserve the post-stop
+invariant, and the finish rule produces a terminal word of square length. -/
 theorem squarePostStopState_yields_reachable
     {x y : SententialForm SquareTerminal SquareNT}
     {n : Nat}
@@ -99,7 +111,7 @@ theorem squarePostStopState_yields_reachable
         exact SquareReachableState.terminal hword
       simpa using hterminal
 
- /-- {name}`squareGrowForm_count_start` captures the core lemma for this local construction. -/
+/-- A grow form contains no {name}`SquareNT.start` nonterminal. -/
 theorem squareGrowForm_count_start (n : Nat) :
     SententialCountNonterminal SquareNT.start (squareGrowForm n) = 0 := by
   have hb :
@@ -117,14 +129,17 @@ theorem squareGrowForm_count_start (n : Nat) :
   simp [squareGrowForm, sententialCountNonterminal_append,
     hb, ha, SententialCountNonterminal, squareN, ggNonterminal]
 
- /-- {name}`squareGrowForm_count_terminal_a` captures the core lemma for this local construction. -/
+/-- A grow form contains no terminal {lit}`a` yet. -/
 theorem squareGrowForm_count_terminal_a (n : Nat) :
     SententialCountTerminal SquareTerminal.a (squareGrowForm n) = 0 := by
   simp [squareGrowForm, sententialCountTerminal_append,
     squareBForm_count_terminal_a, squareMarkerAForm_count_terminal_a,
     SententialCountTerminal, squareN, ggNonterminal]
 
- /-- {name}`squareGrowForm_yields_reachable` captures the core lemma for this local construction. -/
+/-- One yield step from a grow form stays reachable: only the grow rule
+(giving the next grow form) and the stop rule (entering a post-stop state)
+can apply; every other production is ruled out by counting and occurrence
+lemmas. -/
 theorem squareGrowForm_yields_reachable
     {y : SententialForm SquareTerminal SquareNT}
     (n : Nat)
@@ -253,7 +268,8 @@ theorem squareGrowForm_yields_reachable
                 squareMarkerAForm (n + 1) ++ [squareN SquareNT.e]) at htail
           simp [squareN, ggNonterminal] at htail
 
- /-- {name}`squareStart_yields_reachable` captures the core lemma for this local construction. -/
+/-- The only yield step from the start form applies the start production and
+lands in the grow form with zero markers. -/
 theorem squareStart_yields_reachable
     {y : SententialForm SquareTerminal SquareNT}
     (hstep : GeneralGrammar.Yields SquareGrammar [squareN SquareNT.start] y) :
@@ -347,7 +363,8 @@ theorem squareStart_yields_reachable
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
 
- /-- {name}`squareTerminalState_yields_reachable` captures the core lemma for this local construction. -/
+/-- No production applies to a terminal word, so a yield step from a terminal
+state is vacuously reachable. -/
 theorem squareTerminalState_yields_reachable
     {word : Word SquareTerminal}
     (_hword : word ∈ squareLanguage)
@@ -427,7 +444,8 @@ theorem squareTerminalState_yields_reachable
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
 
- /-- {name}`squareReachableState_yields_reachable` captures the core lemma for this local construction. -/
+/-- The reachability invariant is closed under one yield step, by dispatching
+to the per-state lemmas above. -/
 theorem squareReachableState_yields_reachable
     {x y : SententialForm SquareTerminal SquareNT}
     (hx : SquareReachableState x)
@@ -443,7 +461,8 @@ theorem squareReachableState_yields_reachable
   | terminal hword =>
       exact squareTerminalState_yields_reachable hword hstep
 
- /-- {name}`squareReachableState_derives` captures the core lemma for this local construction. -/
+/-- The reachability invariant is closed under derivations, by induction on
+the derivation. -/
 theorem squareReachableState_derives
     {x y : SententialForm SquareTerminal SquareNT}
     (h : GeneralGrammar.Derives SquareGrammar x y)
@@ -455,7 +474,8 @@ theorem squareReachableState_derives
   | step hstep _ ih =>
       exact ih (squareReachableState_yields_reachable hx hstep)
 
- /-- {name}`squarePostStopForm_count_d` captures the core lemma for this local construction. -/
+/-- A post-stop form with a clean middle contains exactly one
+{name}`SquareNT.d` nonterminal, so it is never a terminal word. -/
 theorem squarePostStopForm_count_d
     {emitted : Nat} {middle : SententialForm SquareTerminal SquareNT}
     (hclean : SquareMiddleClean middle) :
@@ -465,7 +485,9 @@ theorem squarePostStopForm_count_d
     squareTerminalAForm_count_nonterminal, squareMiddleClean_count_d hclean,
     SententialCountNonterminal, squareN, ggNonterminal]
 
- /-- {name}`squareReachableState_terminal_square` captures the core lemma for this local construction. -/
+/-- A reachable state that is a terminal word can only come from the terminal
+constructor, because every other state still carries a nonterminal; hence the
+word has square length. -/
 theorem squareReachableState_terminal_square
     {word : Word SquareTerminal}
     (hstate : SquareReachableState (SententialForm.terminalWord word)) :
@@ -497,7 +519,8 @@ theorem squareReachableState_terminal_square
       cases hto
       exact hword
 
- /-- {name}`square_generated_only_language` captures the core lemma for this local construction. -/
+/-- Soundness: every word generated by the square grammar lies in
+{name}`squareLanguage`. -/
 theorem square_generated_only_language
     {word : Word SquareTerminal}
     (h : word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar) :
@@ -510,7 +533,9 @@ theorem square_generated_only_language
   exact squareReachableState_terminal_square
     (squareReachableState_derives hderives SquareReachableState.start)
 
- /-- {name}`square_generated_language_exact` provides the witness needed for existential progress. -/
+/-- The square grammar generates exactly {name}`squareLanguage`: soundness
+comes from the reachability invariant, completeness from the constructive
+derivations of every square word. -/
 theorem square_generated_language_exact :
     Language.Equal (GeneralGrammar.GeneratedLanguage SquareGrammar)
       squareLanguage := by
@@ -519,7 +544,8 @@ theorem square_generated_language_exact :
   · exact square_generated_only_language
   · exact square_language_subset_generated
 
- /-- {name}`squareGrammar_finite_production_squareLanguage` captures the core lemma for this local construction. -/
+/-- {name}`squareLanguage` is generated by a general grammar with finitely
+many productions, namely the square grammar. -/
 theorem squareGrammar_finite_production_squareLanguage :
     FiniteProductionGeneralLanguage squareLanguage := by
   exists SquareNT

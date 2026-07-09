@@ -11,59 +11,21 @@ open Languages
 open Grammars
 
 /-!
-The remaining square lemmas are soundness checks. They classify every reachable
-sentential form into one of the derivation stages above; if a derivation is
-already terminal, that terminal word must be one of the square-length words.
+# Shared Count and Occurrence Lemmas
+
+Book: Section 4.6, third sample grammar (the unary-square language
+{lit}`a^(n^2)`).
+
+This module collects the nonterminal-count and unique-occurrence lemmas about
+start, grow, and marker forms on which the soundness development in the
+sibling modules {lit}`UnarySquares.Potential`, {lit}`UnarySquares.PostStop`,
+and {lit}`UnarySquares.Reachability` builds. An earlier shape-classification
+route toward completeness that used to live here (a
+{lit}`SquareDerivationShape` predicate whose completeness was left as an
+assumption) was superseded by the reachability invariant in
+{lit}`UnarySquares.Reachability`, which proves the exact generated language
+outright; the superseded route has been removed.
 -/
-
-def squareFinishRowsForm (rowWidth processed remaining : Nat) :
-    SententialForm SquareTerminal SquareNT :=
-  squareTerminalAForm (rowWidth * processed) ++ [squareN SquareNT.d] ++
-    squareRows rowWidth remaining ++ [squareN SquareNT.e]
-
-def squareFinishMoveForm
-    (rowWidth processed moved remaining : Nat) :
-    SententialForm SquareTerminal SquareNT :=
-  squareTerminalAForm (rowWidth * processed + moved) ++
-    [squareN SquareNT.d] ++
-      squareTerminalAForm (rowWidth - moved) ++
-        squareRows rowWidth remaining ++ [squareN SquareNT.e]
-
-def squareProcessMoveForm
-    (remaining rowWidth processed moved afterRows : Nat) :
-    SententialForm SquareTerminal SquareNT :=
-  [squareN SquareNT.d] ++ squareBForm remaining ++
-    squareRows (rowWidth + 1) processed ++
-      [squareN SquareNT.markA] ++ squareTerminalAForm (moved + 1) ++
-        [squareN SquareNT.b] ++ squareTerminalAForm (rowWidth - moved) ++
-          squareRows rowWidth afterRows ++ [squareN SquareNT.e]
-
-inductive SquareDerivationShape :
-    SententialForm SquareTerminal SquareNT -> Prop where
-  | start :
-      SquareDerivationShape [squareN SquareNT.start]
-  | grow (n : Nat) :
-      SquareDerivationShape (squareGrowForm n)
-  | process (total remaining rowWidth : Nat)
-      (hbalance : rowWidth + remaining = total) :
-      SquareDerivationShape
-        (squareProcessForm remaining rowWidth total)
-  | processMove (remaining rowWidth processed moved afterRows : Nat)
-      (hmoved : moved <= rowWidth) :
-      SquareDerivationShape
-        (squareProcessMoveForm remaining rowWidth processed moved afterRows)
-  | finishRows (rowWidth processed remaining : Nat)
-      (hbalance : processed + remaining = rowWidth) :
-      SquareDerivationShape
-        (squareFinishRowsForm rowWidth processed remaining)
-  | finishMove (rowWidth processed moved remaining : Nat)
-      (hmoved : moved <= rowWidth)
-      (hbalance : processed + 1 + remaining = rowWidth) :
-      SquareDerivationShape
-        (squareFinishMoveForm rowWidth processed moved remaining)
-  | terminal (n : Nat) :
-      SquareDerivationShape
-        (SententialForm.terminalWord (squareWord n))
 
 theorem square_start_form_count_start :
     SententialCountNonterminal SquareNT.start [squareN SquareNT.start] = 1 := by
@@ -86,17 +48,6 @@ theorem squareMarkerAForm_count_d (n : Nat) :
     (sententialCountNonterminal_repeat_nonterminal_of_ne
       (terminal := SquareTerminal) (A := SquareNT.d)
       (B := SquareNT.markA) (by intro h; cases h) n)
-
-theorem squareRows_count_d (rowWidth rows : Nat) :
-    SententialCountNonterminal SquareNT.d
-      (squareRows rowWidth rows) = 0 := by
-  induction rows with
-  | zero =>
-      rfl
-  | succ rows ih =>
-      simp [squareRows, sententialCountNonterminal_append,
-        squareTerminalAForm_count_nonterminal, ih, squareN,
-        ggNonterminal, SententialCountNonterminal]
 
 theorem squareGrowForm_count_d (n : Nat) :
     SententialCountNonterminal SquareNT.d (squareGrowForm n) = 1 := by
@@ -133,6 +84,13 @@ theorem squareGrowForm_tail_count_t (n : Nat) :
       (squareMarkerAForm n ++ [squareN SquareNT.e]) = 0 := by
   simp [sententialCountNonterminal_append, squareMarkerAForm_count_t,
     SententialCountNonterminal, squareN, ggNonterminal]
+
+/-!
+The occurrence lemmas locate the unique {name}`SquareNT.t` head inside a grow
+form: any decomposition that exhibits a {name}`SquareNT.t` must split the form
+exactly at the head position. The reachability case analysis uses this to pin
+down where a production can apply.
+-/
 
 theorem squareBForm_t_occurrence
     {tail u v : SententialForm SquareTerminal SquareNT} (n : Nat)
@@ -196,141 +154,6 @@ theorem squareGrowForm_t_occurrence
       · rw [hocc.left]
         rfl
       · exact hocc.right
-
-theorem squareGrowForm_grow_shape
-    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
-    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
-    SquareDerivationShape
-      (u ++ [squareN SquareNT.b, squareN SquareNT.t,
-        squareN SquareNT.markA] ++ v) := by
-  have hocc := squareGrowForm_t_occurrence n h
-  rw [hocc.left, hocc.right]
-  simpa [squareGrowForm, squareBForm_succ_eq_append, squareMarkerAForm,
-    Word.RepeatSymbol, List.append_assoc] using
-    SquareDerivationShape.grow (n + 1)
-
-theorem squareGrowForm_stop_shape
-    {u v : SententialForm SquareTerminal SquareNT} (n : Nat)
-    (h : squareGrowForm n = u ++ [squareN SquareNT.t] ++ v) :
-    SquareDerivationShape (u ++ v) := by
-  have hocc := squareGrowForm_t_occurrence n h
-  rw [hocc.left, hocc.right]
-  have hbalance : 0 + n = n := by lia
-  simpa [squareProcessForm, squareRows_zero_eq_markerAForm,
-    List.append_assoc] using
-    SquareDerivationShape.process n n 0 hbalance
-
-theorem squareProcessForm_count_d
-    (remaining rowWidth rows : Nat) :
-    SententialCountNonterminal SquareNT.d
-      (squareProcessForm remaining rowWidth rows) = 1 := by
-  simp [squareProcessForm, sententialCountNonterminal_append,
-    squareBForm_count_d, squareRows_count_d, squareN,
-    ggNonterminal, SententialCountNonterminal]
-
-theorem squareProcessMoveForm_count_d
-    (remaining rowWidth processed moved afterRows : Nat) :
-    SententialCountNonterminal SquareNT.d
-      (squareProcessMoveForm remaining rowWidth processed moved afterRows) = 1 := by
-  simp [squareProcessMoveForm, sententialCountNonterminal_append,
-    squareBForm_count_d, squareRows_count_d,
-    squareTerminalAForm_count_nonterminal, squareN,
-    ggNonterminal, SententialCountNonterminal]
-
-theorem squareFinishRowsForm_count_d
-    (rowWidth processed remaining : Nat) :
-    SententialCountNonterminal SquareNT.d
-      (squareFinishRowsForm rowWidth processed remaining) = 1 := by
-  simp [squareFinishRowsForm, sententialCountNonterminal_append,
-    squareTerminalAForm_count_nonterminal, squareRows_count_d, squareN,
-    ggNonterminal, SententialCountNonterminal]
-
-theorem squareFinishMoveForm_count_d
-    (rowWidth processed moved remaining : Nat) :
-    SententialCountNonterminal SquareNT.d
-      (squareFinishMoveForm rowWidth processed moved remaining) = 1 := by
-  simp [squareFinishMoveForm, sententialCountNonterminal_append,
-    squareTerminalAForm_count_nonterminal, squareRows_count_d, squareN,
-    ggNonterminal, SententialCountNonterminal]
-
-/-!
-The reverse direction for square words is count-based. The derivation-shape
-lemmas track the remaining marker state and conclude that any terminal result
-has square length.
--/
-
-theorem square_derivation_shape_terminal_square
-    {sf : SententialForm SquareTerminal SquareNT}
-    (hshape : SquareDerivationShape sf)
-    {word : Word SquareTerminal}
-    (hsf : sf = SententialForm.terminalWord word) :
-    word ∈ squareLanguage := by
-  cases hshape with
-  | start =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          square_start_form_count_start hsf)
-  | grow n =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          (squareGrowForm_count_d n) hsf)
-  | process total remaining rowWidth hbalance =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          (squareProcessForm_count_d remaining rowWidth total) hsf)
-  | processMove remaining rowWidth processed moved afterRows hmoved =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          (squareProcessMoveForm_count_d remaining rowWidth processed moved afterRows)
-          hsf)
-  | finishRows rowWidth processed remaining hbalance =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          (squareFinishRowsForm_count_d rowWidth processed remaining) hsf)
-  | finishMove rowWidth processed moved remaining hmoved hbalance =>
-      exact False.elim
-        (sententialCountNonterminal_terminal_absurd
-          (squareFinishMoveForm_count_d rowWidth processed moved remaining)
-          hsf)
-  | terminal n =>
-      have hword : squareWord n = word := by
-        have hto := congrArg SententialForm.toWord? hsf
-        simpa [SententialForm.terminalWord_toWord] using hto
-      exists n
-      exact hword.symm
-
-theorem square_derivation_shape_terminal_square_of_terminal
-    {word : Word SquareTerminal}
-    (hshape : SquareDerivationShape (SententialForm.terminalWord word)) :
-    word ∈ squareLanguage :=
-  square_derivation_shape_terminal_square hshape rfl
-
-def SquareDerivationShapeCompleteness : Prop :=
-  forall {sf : SententialForm SquareTerminal SquareNT},
-    GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start] sf ->
-      SquareDerivationShape sf
-
-theorem square_generated_only_language_of_shape_completeness
-    (hcomplete : SquareDerivationShapeCompleteness)
-    {word : Word SquareTerminal}
-    (h : word ∈ GeneralGrammar.GeneratedLanguage SquareGrammar) :
-    word ∈ squareLanguage := by
-  have hderives :
-      GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
-        (SententialForm.terminalWord word) := by
-    simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareN,
-      ggNonterminal] using h
-  exact square_derivation_shape_terminal_square_of_terminal
-    (hcomplete hderives)
-
-theorem square_generated_language_exact_of_shape_completeness
-    (hcomplete : SquareDerivationShapeCompleteness) :
-    Language.Equal (GeneralGrammar.GeneratedLanguage SquareGrammar)
-      squareLanguage := by
-  intro word
-  constructor
-  · exact square_generated_only_language_of_shape_completeness hcomplete
-  · exact square_language_subset_generated
 
 end Section06
 end Chapter04

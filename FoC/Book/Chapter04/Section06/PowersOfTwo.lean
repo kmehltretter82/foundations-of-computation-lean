@@ -9,6 +9,10 @@ namespace Section06
 
 /-!
 # Section 4.6 powers of two
+
+Book: Section 4.6, Exercise 4e (a grammar for {lit}`a^(2^n)`). The book states
+this exercise without giving a grammar; the grammar in this file is our own
+construction, not one from the text.
 -/
 
 open Languages
@@ -17,8 +21,18 @@ open Grammars
 /-!
 # Powers of Two
 
-The final example uses a doubling phase: each pass duplicates the current
-markers and returns to the left before either doubling again or finishing.
+This grammar uses a doubling phase: each pass duplicates the current markers
+and returns to the left before either doubling again or finishing.
+
+Formalization status: only the generation direction is proved
+unconditionally. The theorem {lit}`powerTwo_words_generated` shows that every
+word {lit}`a^(2^n)` is generated, for every {lit}`n`. The converse soundness
+direction, that the grammar generates nothing outside the power-of-two family,
+is only stated as the unproved proposition
+{lit}`PowerTwoGeneratedOnlyLanguageConstruction`; the exactness theorem
+{lit}`powerTwo_generated_language_exact_of_soundness` is conditional on that
+assumption. In particular, every unconditional theorem in this file would also
+hold of a grammar that generated all of {lit}`a*`.
 -/
 
 inductive PowerTwoNT where
@@ -192,8 +206,8 @@ def powerTwoLanguage : Language SquareTerminal :=
   fun word => exists n, word = powerTwoWord n
 
 /-!
-**Marker algebra.** The next lemmas formalize the two moving-head phases in the
-book grammar. A {name}`PowerTwoNT.d` marker scans right and doubles every
+**Marker algebra.** The next lemmas formalize the two moving-head phases of
+this grammar. A {name}`PowerTwoNT.d` marker scans right and doubles every
 {name}`PowerTwoNT.markA`; a {name}`PowerTwoNT.r` marker then returns left.
 -/
 
@@ -451,9 +465,12 @@ theorem powerTwo_words_generated (n : Nat) :
     powN, ggNonterminal] using hall
 
 /-!
-**Power-of-two closeout.** The constructive direction now covers the full
-family. Exactness is reduced to the remaining soundness statement that every
-terminal derivation has power-of-two length.
+**Power-of-two closeout.** The constructive direction covers the full family:
+{name}`powerTwo_words_generated` places every {lit}`a^(2^n)` in the generated
+language. The reverse inclusion, that every generated word has power-of-two
+length, is only named as {lit}`PowerTwoGeneratedOnlyLanguageConstruction`
+below; it remains an unproved assumption, and the exactness theorem
+{lit}`powerTwo_generated_language_exact_of_soundness` is conditional on it.
 -/
 
 theorem powerTwo_language_subset_generated {word : Word SquareTerminal}

@@ -9,6 +9,10 @@ namespace Section06
 
 /-!
 # Section 4.6 unary squares
+
+Book: Section 4.6, third sample grammar (the unary-square language
+{lit}`a^(n^2)`); the derivation of {lit}`aaaa` asked for by Exercise 1 lives
+in the sibling module {lit}`FoC.Book.Chapter04.Section06.UnarySquares.FourAs`.
 -/
 
 open Languages

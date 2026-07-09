@@ -9,6 +9,9 @@ namespace Section06
 
 /-!
 # Section 4.6 ordered four-block counts
+
+Book: Section 4.6, Exercise 4a (a grammar for the ordered four-block language
+{lit}`a^n b^n c^n d^n`).
 -/
 
 open Languages
@@ -17,9 +20,17 @@ open Grammars
 /-!
 # Ordered Four-Block Counts
 
-This example extends the ordered-block method to four terminals, producing
-words of the form {lit}`a^n b^n c^n d^n` and sample derivations such as
-{lit}`aabbccdd`.
+This example extends the ordered-block method of the second sample grammar to
+four terminals. The grammar is intended to generate the words
+{lit}`a^n b^n c^n d^n`, but this file does not prove that language equality in
+either direction. What is proved: every generated word has equal counts of
+{lit}`a`, {lit}`b`, {lit}`c`, and {lit}`d` (a count-preservation invariant,
+which does not constrain the order of the letters), together with concrete
+witness derivations of the empty word and of {lit}`aabbccdd`. Neither the
+soundness inclusion (every generated word is ordered) nor the generation
+inclusion (every {lit}`a^n b^n c^n d^n` is generated) is formalized; compare
+{module}`FoC.Book.Chapter04.Section06.OrderedABC`, where the three-letter
+analogue is proved exactly.
 -/
 
 inductive OrderedABCDNT where
@@ -249,8 +260,10 @@ theorem orderedABCDGrammar_has_finite_productions :
 
 /-!
 The four-symbol ordered grammar is the same construction one dimension higher.
-The following block records finite production data, count preservation, and one
-concrete generated witness before returning to smaller counterexample grammars.
+The following block records finite production data and count preservation;
+witness derivations for the empty word and {lit}`aabbccdd` close the file.
+Count preservation is the only invariant proved about generated words, so
+these theorems do not establish that generated words are ordered.
 -/
 
 theorem orderedABCDGrammar_finite_production_generated :
@@ -366,10 +379,51 @@ def aabbccddWord : Word FourCountTerminal :=
     FourCountTerminal.d, FourCountTerminal.d]
 
 /-!
-The explicit {lit}`aabbccdd` derivation is a sanity check for the four-count
-grammar. It follows the same production pattern as the general construction but
-keeps the concrete word visible.
+The two explicit derivations below are sanity checks for the four-block
+grammar: the empty word (finishing immediately through the phase
+nonterminals) and {lit}`aabbccdd` (two grow steps, marker sorting, and the
+four emission phases). They are individual witnesses, not a proof that every
+ordered four-block word is generated.
 -/
+
+theorem orderedABCDGrammar_generates_empty :
+    (Word.Empty : Word FourCountTerminal) ∈
+      GeneralGrammar.GeneratedLanguage OrderedABCDGrammar := by
+  let S := ordered4N OrderedABCDNT.start
+  let X := ordered4N OrderedABCDNT.x
+  let Y := ordered4N OrderedABCDNT.y
+  let Z := ordered4N OrderedABCDNT.z
+  let Q := ordered4N OrderedABCDNT.q
+  have h1 : GeneralGrammar.Yields OrderedABCDGrammar [S] [X] := by
+    simpa [S, X] using
+      general_yields_of_production (G := OrderedABCDGrammar)
+        OrderedABCDProduces.startX [] []
+  have h2 : GeneralGrammar.Yields OrderedABCDGrammar [X] [Y] := by
+    simpa [X, Y] using
+      general_yields_of_production (G := OrderedABCDGrammar)
+        OrderedABCDProduces.xToY [] []
+  have h3 : GeneralGrammar.Yields OrderedABCDGrammar [Y] [Z] := by
+    simpa [Y, Z] using
+      general_yields_of_production (G := OrderedABCDGrammar)
+        OrderedABCDProduces.yToZ [] []
+  have h4 : GeneralGrammar.Yields OrderedABCDGrammar [Z] [Q] := by
+    simpa [Z, Q] using
+      general_yields_of_production (G := OrderedABCDGrammar)
+        OrderedABCDProduces.zToQ [] []
+  have h5 : GeneralGrammar.Yields OrderedABCDGrammar [Q] [] := by
+    simpa [Q] using
+      general_yields_of_production (G := OrderedABCDGrammar)
+        OrderedABCDProduces.finish [] []
+  have hderives :
+      GeneralGrammar.Derives OrderedABCDGrammar [S] [] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.refl [])))))
+  simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, Word.Empty,
+    SententialForm.terminalWord, S, ordered4N, ggNonterminal] using hderives
 
 theorem orderedABCDGrammar_generates_aabbccdd :
     aabbccddWord ∈ GeneralGrammar.GeneratedLanguage OrderedABCDGrammar := by

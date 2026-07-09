@@ -11,13 +11,18 @@ open Languages
 open Grammars
 
 /-!
-The square grammar now has a constructive completeness direction for every
-square word. The named phase-shape theorem above is retained as a compact
-terminal-state consequence, but the exact proof below uses a stronger
-reachability invariant: start, growth, post-stop, and terminal-square states
-are each preserved by every unrestricted one-step yield. Derivation induction
-then gives the reverse generated-language inclusion without any remaining
-shape-completeness assumption.
+# Potential
+
+Book: Section 4.6, third sample grammar (the unary-square language
+{lit}`a^(n^2)`).
+
+The exact-language proof for the square grammar rests on a reachability
+invariant: start, growth, post-stop, and terminal-square states are each
+preserved by every unrestricted one-step yield, and derivation induction then
+gives the reverse generated-language inclusion without any completeness
+assumption. This module defines the potential function on middle segments
+(emitted terminals plus remaining marker inversions) that makes the post-stop
+part of that invariant work.
 -/
 
 def squareMiddleInversionsFrom (seenB : Nat) :

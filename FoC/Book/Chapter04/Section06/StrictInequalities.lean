@@ -9,17 +9,29 @@ namespace Section06
 
 /-!
 # Section 4.6 strict block inequalities
+
+Book: Section 4.6, Exercise 4f (a grammar for the words over
+{lit}`{a, b, c}` with strictly more {lit}`a`s than {lit}`b`s and strictly more
+{lit}`b`s than {lit}`c`s), formalized by the strict three-way grammar in the
+second half of this file. The strict-more-{lit}`b` grammar in the first half
+corresponds to nothing in Section 4.6; it is a warm-up example only.
 -/
 
 open Languages
 open Grammars
 
 /-!
-# Strict Block Inequalities
+# Strict Block Inequalities (warm-up)
 
 The strict-more-{lit}`b` grammar generates ordered block words with more {lit}`b`s than
 {lit}`a`s. The proof uses a tail phase that adds at least one extra {lit}`b` after all
 balanced {lit}`a`/{lit}`b` pairs have been produced.
+
+This grammar is a warm-up with no counterpart in the book section: every
+production rewrites a single nonterminal, so it is in fact context-free (its
+language {lit}`a^n b^m` with {lit}`m > n` is context-free as well). Unlike the
+strict three-way grammar below, its generated language is characterized
+exactly, in the theorem {lit}`strictMoreB_generated_language_exact`.
 -/
 
 inductive StrictMoreBNT where
@@ -508,9 +520,18 @@ theorem strictMoreBGrammar_generates_aabbb :
 /-!
 # Strict Three-Way Counts
 
-This grammar targets strict count inequalities among {lit}`a`, {lit}`b`, and {lit}`c`
-symbols. The invariant records count margins so each production can be checked
-locally against the intended strict ordering.
+Book: Section 4.6, Exercise 4f. This grammar targets the language of words
+over {lit}`{a, b, c}` whose counts satisfy {lit}`n_a > n_b > n_c`. The
+invariant records count margins so each production can be checked locally
+against the intended strict ordering.
+
+Formalization status: only the soundness direction is proved. The theorem
+{lit}`strictABCGreaterGrammar_generated_has_strict_counts` shows every
+generated word satisfies {lit}`n_a > n_b > n_c`, and two witness derivations
+({lit}`aab` and {lit}`aaabbc`) show particular words are generated. The
+generation direction, that every word with {lit}`n_a > n_b > n_c` is
+generated, is not formalized, so the language equality with the exercise
+language is not proved in either packaged form.
 -/
 
 inductive StrictABCGreaterNT where
@@ -887,8 +908,11 @@ theorem strictABCGreaterGrammar_generated_has_strict_counts
 
 /-!
 The strict three-way grammar is used mainly as a count-invariant example. It
-guarantees a strict inequality among the three terminal counts, and the concrete
-derivation below witnesses a small generated word.
+guarantees a strict inequality among the three terminal counts, and the two
+concrete derivations below witness small generated words: {lit}`aab` (the
+shortest word of the language) and {lit}`aaabbc` (a word using all three
+letters, with one marker swap). These are individual witnesses; generation of
+every word with strictly decreasing counts is not proved.
 -/
 
 def strictABCGreaterAABWord : Word EqualCountTerminal :=
@@ -956,6 +980,115 @@ theorem strictABCGreaterGrammar_generates_aab :
                   (GeneralGrammar.Derives.refl [a, a, b])))))))
   simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
     strictABCGreaterAABWord, SententialForm.terminalWord, S, a, b] using
+    hderives
+
+def strictABCGreaterAAABBCWord : Word EqualCountTerminal :=
+  [EqualCountTerminal.a, EqualCountTerminal.a, EqualCountTerminal.a,
+    EqualCountTerminal.b, EqualCountTerminal.b, EqualCountTerminal.c]
+
+theorem strictABCGreaterGrammar_generates_aaabbc :
+    strictABCGreaterAAABBCWord ∈
+      GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar := by
+  let S := strictABCGreaterN StrictABCGreaterNT.start
+  let P := strictABCGreaterN StrictABCGreaterNT.pair
+  let X := strictABCGreaterN StrictABCGreaterNT.extraA
+  let R := strictABCGreaterN StrictABCGreaterNT.done
+  let A := strictABCGreaterN StrictABCGreaterNT.markA
+  let B := strictABCGreaterN StrictABCGreaterNT.markB
+  let C := strictABCGreaterN StrictABCGreaterNT.markC
+  let a := strictABCGreaterT EqualCountTerminal.a
+  let b := strictABCGreaterT EqualCountTerminal.b
+  let c := strictABCGreaterT EqualCountTerminal.c
+  have h1 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [S] [S, A, B, C] := by
+    simpa [S, A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.growTriple [] []
+  have h2 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [S, A, B, C]
+        [P, A, B, C] := by
+    simpa [S, P, A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.toPair [] [A, B, C]
+  have h3 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [P, A, B, C]
+        [X, A, B, A, B, C] := by
+    simpa [P, X, A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.endPair [] [A, B, C]
+  have h4 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [X, A, B, A, B, C]
+        [R, A, A, B, A, B, C] := by
+    simpa [X, R, A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.endExtraA [] [A, B, A, B, C]
+  have h5 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [R, A, A, B, A, B, C]
+        [A, A, B, A, B, C] := by
+    simpa [R, A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.finish [] [A, A, B, A, B, C]
+  have h6 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [A, A, B, A, B, C]
+        [A, A, A, B, B, C] := by
+    simpa [A, B, C] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.swapBA [A, A] [B, C]
+  have h7 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [A, A, A, B, B, C]
+        [a, A, A, B, B, C] := by
+    simpa [A, B, C, a] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitA [] [A, A, B, B, C]
+  have h8 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, A, A, B, B, C]
+        [a, a, A, B, B, C] := by
+    simpa [A, B, C, a] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitA [a] [A, B, B, C]
+  have h9 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, a, A, B, B, C]
+        [a, a, a, B, B, C] := by
+    simpa [A, B, C, a] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitA [a, a] [B, B, C]
+  have h10 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, a, a, B, B, C]
+        [a, a, a, b, B, C] := by
+    simpa [B, C, a, b] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitB [a, a, a] [B, C]
+  have h11 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, a, a, b, B, C]
+        [a, a, a, b, b, C] := by
+    simpa [B, C, a, b] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitB [a, a, a, b] [C]
+  have h12 :
+      GeneralGrammar.Yields StrictABCGreaterGrammar [a, a, a, b, b, C]
+        [a, a, a, b, b, c] := by
+    simpa [C, a, b, c] using
+      general_yields_of_production (G := StrictABCGreaterGrammar)
+        StrictABCGreaterProduces.emitC [a, a, a, b, b] []
+  have hderives :
+      GeneralGrammar.Derives StrictABCGreaterGrammar [S]
+        [a, a, a, b, b, c] :=
+    GeneralGrammar.Derives.step h1
+      (GeneralGrammar.Derives.step h2
+        (GeneralGrammar.Derives.step h3
+          (GeneralGrammar.Derives.step h4
+            (GeneralGrammar.Derives.step h5
+              (GeneralGrammar.Derives.step h6
+                (GeneralGrammar.Derives.step h7
+                  (GeneralGrammar.Derives.step h8
+                    (GeneralGrammar.Derives.step h9
+                      (GeneralGrammar.Derives.step h10
+                        (GeneralGrammar.Derives.step h11
+                          (GeneralGrammar.Derives.step h12
+                            (GeneralGrammar.Derives.refl
+                              [a, a, a, b, b, c]))))))))))))
+  simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
+    strictABCGreaterAAABBCWord, SententialForm.terminalWord, S, a, b, c] using
     hderives
 
 

@@ -9,6 +9,9 @@ namespace Section06
 
 /-!
 # Section 4.6 equal counts over four symbols
+
+Book: Section 4.6, Exercise 3 (a grammar for the words over
+{lit}`{a, b, c, d}` in which all four symbols occur equally often).
 -/
 
 open Languages
