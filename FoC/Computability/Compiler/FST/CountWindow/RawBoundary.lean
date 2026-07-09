@@ -1333,8 +1333,16 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail) := by
-  -- Remaining obligation: prove the nonempty raw-layout loop reaches the
-  -- right-edge handoff tape.
+  -- Not provable for the current core description: the zero-raw-layout
+  -- skeleton demonstrably fails on nonempty layouts.  Running the machine
+  -- shows it gets stuck at a non-halt state for `skipped = [true]`,
+  -- `count = []`, and halts on a 10-cell tape (target: 17 cells) for
+  -- `skipped = []`, `count = [true]`.  Closing this needs a uniform
+  -- nonempty-capable core machine.  The assembled pull-and-emit loop routes
+  -- cannot supply one either: `sourceBranchRouteCountBound` demands
+  -- `3 * (n - 2) + 3 <= count.length` while `count.length <= n`, which is
+  -- unsatisfiable for layouts of length `n >= 2`, so the gap-consuming
+  -- algorithm must first gain a room-making pass over the unread raw bits.
   sorry
 
 theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
