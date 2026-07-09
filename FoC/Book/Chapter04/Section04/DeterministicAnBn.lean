@@ -316,15 +316,94 @@ theorem detAnBnPDA_deterministic :
         htransD, hcD, hdD⟩
     cases htransD
 
+/-!
+The deterministic language class also demands an explicit finite
+presentation. The machine has a one-symbol stack alphabet and exactly the
+three transition rules listed below, so the presentation is immediate.
+-/
+
+def anBnPDAStackFinite : Foundation.FiniteType AnBnPDAStack where
+  elems := [AnBnPDAStack.marker]
+  complete := by
+    intro s
+    cases s
+    simp
+
+def detAnBnReadARule :
+    PDA.TransitionRule Section01.AB AnBnPDAStack DetAnBnPDAState where
+  source := DetAnBnPDAState.read
+  input? := some Section01.AB.a
+  pop := []
+  target := DetAnBnPDAState.read
+  push := [AnBnPDAStack.marker]
+
+def detAnBnFirstBRule :
+    PDA.TransitionRule Section01.AB AnBnPDAStack DetAnBnPDAState where
+  source := DetAnBnPDAState.read
+  input? := some Section01.AB.b
+  pop := [AnBnPDAStack.marker]
+  target := DetAnBnPDAState.pop
+  push := []
+
+def detAnBnPopBRule :
+    PDA.TransitionRule Section01.AB AnBnPDAStack DetAnBnPDAState where
+  source := DetAnBnPDAState.pop
+  input? := some Section01.AB.b
+  pop := [AnBnPDAStack.marker]
+  target := DetAnBnPDAState.pop
+  push := []
+
+def detAnBnPDATransitionRules :
+    List (PDA.TransitionRule Section01.AB AnBnPDAStack DetAnBnPDAState) :=
+  [detAnBnReadARule, detAnBnFirstBRule, detAnBnPopBRule]
+
+def detAnBnPDA_finitePresentation :
+    PDA.FinitePresentation DetAnBnPDA where
+  stackFinite := anBnPDAStackFinite
+  transitionRules := detAnBnPDATransitionRules
+  transition_complete := by
+    intro q a? pop r push
+    constructor
+    · intro h
+      cases h with
+      | readA =>
+          exact ⟨detAnBnReadARule,
+            by simp [detAnBnPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | firstB =>
+          exact ⟨detAnBnFirstBRule,
+            by simp [detAnBnPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | popB =>
+          exact ⟨detAnBnPopBRule,
+            by simp [detAnBnPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+    · intro h
+      rcases h with ⟨rule, hmem, happ⟩
+      rcases happ with ⟨hq, ha, hpop, hr, hpush⟩
+      subst hq
+      subst ha
+      subst hpop
+      subst hr
+      subst hpush
+      simp [detAnBnPDATransitionRules] at hmem
+      rcases hmem with h | h | h <;> subst h
+      · exact DetAnBnPDATransition.readA
+      · exact DetAnBnPDATransition.firstB
+      · exact DetAnBnPDATransition.popB
+  acceptingStates := [DetAnBnPDAState.read, DetAnBnPDAState.pop]
+  accept_complete := by
+    intro q
+    cases q <;> simp [DetAnBnPDA]
+
 theorem anbn_block_language_deterministic_pda_recognizable :
     DeterministicPDARecognizable AnBnBlockLanguage := by
   exists AnBnPDAStack
   exists DetAnBnPDAState
   exists DetAnBnPDA
-  constructor
-  · exact detAnBnPDA_deterministic
-  · intro w
-    exact detAnBnPDA_accepted_language_exact w
+  refine ⟨⟨detAnBnPDA_finitePresentation⟩, detAnBnPDA_deterministic, ?_⟩
+  intro w
+  exact detAnBnPDA_accepted_language_exact w
 
 end Section04
 end Chapter04

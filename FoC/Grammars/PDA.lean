@@ -184,8 +184,10 @@ inductive ComputesIn (M : PDA input stack state) :
 # Acceptance modes
 
 The default accepted language uses final state and empty stack. The companion
-predicates keep the final-state-only and empty-stack-only variants available for
-conversion theorems.
+predicates keep the final-state-only and empty-stack-only variants available.
+Only the easy one-way implications from the default mode to each variant are
+proved in this module; the standard constructions showing the acceptance modes
+equivalent are not formalized here.
 -/
 
 def Accepts (M : PDA input stack state) (w : Word input) : Prop :=
@@ -205,14 +207,43 @@ def AcceptsByEmptyStack (M : PDA input stack state) (w : Word input) : Prop :=
 def AcceptedLanguage (M : PDA input stack state) : Language input :=
   fun w => Accepts M w
 
+/-!
+# Recognizability and determinism
+
+{lit}`FinitePresentationRecognizable` is the class of languages accepted by a
+PDA that carries an explicit finite presentation: a finite stack alphabet, a
+finite transition-rule list, and a finite accepting-state list.
+{lit}`Recognizable` is defined to be the same class. The presentation
+requirement is essential, not a convenience: the bare {name}`PDA` record
+constrains only state finiteness, and its transition field is an arbitrary
+relation over unbounded pop words, so a two-state machine that pushes its
+input and pops the whole stack exactly when the reversed stack lies in a
+target language would accept any language whatsoever. A presentation-free
+recognizability class would therefore contain every language and must not be
+mistaken for context-freeness.
+
+{lit}`Deterministic` compares the results of one-step moves: any two
+successors of the same configuration must be equal. One edge case relative to
+the book's phrasing about non-overlapping rules is worth noting: a transition
+relation containing two distinct rules with the same source state, input, pop
+word, target state, and push word, or distinct applicable rules that happen
+to produce identical successor configurations, still counts as deterministic
+here, because only the resulting configurations are compared, not the rules
+used to reach them.
+-/
+
 def FinitePresentationRecognizable (L : Language input) : Prop :=
   exists stack : Type, exists state : Type, exists M : PDA input stack state,
     exists _presentation : FinitePresentation M,
       Language.Equal (AcceptedLanguage M) L
 
 def Recognizable (L : Language input) : Prop :=
-  exists stack : Type, exists state : Type, exists M : PDA input stack state,
-    Language.Equal (AcceptedLanguage M) L
+  FinitePresentationRecognizable L
+
+theorem recognizable_iff_finitePresentationRecognizable
+    {L : Language input} :
+    Recognizable L <-> FinitePresentationRecognizable L :=
+  Iff.rfl
 
 def Deterministic (M : PDA input stack state) : Prop :=
   forall c d e, Step M c d -> Step M c e -> d = e
@@ -396,6 +427,15 @@ theorem computes_consumes_prefix {M : PDA input stack state}
       c.unread = Word.Concat consumed d.unread := by
   rcases computes_exists_length h with ⟨n, hn⟩
   exact computesIn_consumes_prefix hn
+
+/-!
+# Acceptance-mode implications
+
+Acceptance in the default mode, final state with empty stack, trivially
+implies each single-condition variant. These one-way implications are the
+only acceptance-mode bridges provided; the converse conversions between the
+modes are not formalized.
+-/
 
 theorem accepts_implies_final_state_accepts {M : PDA input stack state}
     {w : Word input} (h : Accepts M w) : AcceptsByFinalState M w := by

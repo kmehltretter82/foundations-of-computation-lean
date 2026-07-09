@@ -40,7 +40,15 @@ def PDAToCFG (M : PDA input stack state)
     CFG input (PDA.ToCFGNonterminal stack state) :=
   PDA.ToCFG M presentation
 
-def PDAToCFGExact (M : PDA input stack state)
+/-!
+{lit}`PDAToCFGTopPopExact` is a guarded exactness statement, not an
+unconditional language equality: it unfolds to an implication whose
+hypothesis is the top-pop normal form {name}`Grammars.PDA.PopsAtMostOne`.
+The unconditional exactness for arbitrary finitely presented PDAs goes
+through {lit}`PDAToCFGNormalized` below.
+-/
+
+def PDAToCFGTopPopExact (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) : Prop :=
   PDA.ToCFGTopPopExact M presentation
 
@@ -1165,23 +1173,6 @@ theorem pda_to_cfg_empty_derives_of_epsilon_stack_then_empty_summary
   PDA.toCFG_emptyDerives_of_epsilon_stackThenEmptySummary
     htransition hrest
 
-theorem pda_to_cfg_empty_derives_of_computes_in_at_most_two_via_summary
-    {M : PDA input stack state}
-    {presentation : PDA.FinitePresentation M}
-    {n : Nat} {p q : state} {sourceInput targetInput : Word input}
-    (hnorm : PDA.PopsAtMostOne M)
-    (hn : n <= 2)
-    (hcomp : PDA.ComputesIn M n
-      { state := p, unread := sourceInput, stack := [] }
-      { state := q, unread := targetInput, stack := [] }) :
-    exists consumed : Word input,
-      sourceInput = Word.Concat consumed targetInput ∧
-        CFG.Derives (PDAToCFG M presentation)
-          [Symbol.nonterminal (PDA.ToCFGNonterminal.empty p q)]
-          (SententialForm.terminalWord consumed) :=
-  PDA.toCFG_emptyDerives_of_computesIn_atMostTwo_emptyStack_viaSummary
-    hnorm hn hcomp
-
 theorem pda_to_cfg_generates_of_empty_summary_accepts_in
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
@@ -1231,13 +1222,6 @@ theorem pda_empty_summary_trace_of_step_empty_stack_and_stack_then_empty_complet
     EmptySummaryPDAComputesIn M (n + 1) p sourceInput q targetInput :=
   PDA.emptySummaryComputesIn_of_step_emptyStack_of_stackThenEmptySummaryComplete
     hcomplete hstep hrest
-
-theorem pda_empty_summary_complete_of_stack_then_empty_summary_complete_by_first_step
-    {M : PDA input stack state}
-    (hcomplete : StackThenEmptySummaryPDAComplete M) :
-    EmptySummaryPDAComplete M :=
-  PDA.emptySummaryComplete_of_stackThenEmptySummaryComplete_by_first_step
-    hcomplete
 
 theorem pda_stack_then_empty_summary_complete_for_computes_of_complete
     {M : PDA input stack state}
@@ -1425,20 +1409,20 @@ theorem pda_to_cfg_top_pop_exact_of_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
     (hcomplete : TopPopEmptySummaryPDAComplete M) :
-    PDAToCFGExact M presentation :=
+    PDAToCFGTopPopExact M presentation :=
   PDA.toCFG_topPopExact_of_emptySummaryComplete hcomplete
 
 theorem pda_to_cfg_top_pop_exact_of_stack_then_empty_summary_complete
     {M : PDA input stack state}
     {presentation : PDA.FinitePresentation M}
     (hcomplete : TopPopStackThenEmptySummaryPDAComplete M) :
-    PDAToCFGExact M presentation :=
+    PDAToCFGTopPopExact M presentation :=
   PDA.toCFG_topPopExact_of_stackThenEmptySummaryComplete hcomplete
 
 theorem pda_to_cfg_top_pop_exact
     (M : PDA input stack state)
     (presentation : PDA.FinitePresentation M) :
-    PDAToCFGExact M presentation :=
+    PDAToCFGTopPopExact M presentation :=
   PDA.toCFG_topPopExact M presentation
 
 /-!
@@ -1496,6 +1480,39 @@ theorem finite_presentation_pda_context_free
   finite_presentation_pda_context_free_of_pop_normalize_language_exact
     (M := M) (presentation := presentation)
     (pda_pop_normalize_language_exact M presentation)
+
+/-!
+The last two theorems package the section's numbered theorem from the book: a
+language over a finite alphabet is context-free if and only if it is accepted
+by some finitely presented PDA. The forward direction is the CFG-to-PDA
+simulation from the first half of the section; the backward direction
+transports the PDA-to-CFG conversion above along the language equality
+carried by the recognizability witness.
+-/
+
+theorem finite_presentation_pda_recognizable_context_free
+    {input : Type} {L : Language input}
+    (hL : PDA.FinitePresentationRecognizable L) :
+    CFL.ContextFreeLanguage L := by
+  rcases hL with ⟨stack, state, M, presentation, hM⟩
+  rcases finite_presentation_pda_context_free
+      (M := M) (presentation := presentation) with
+    ⟨nonterminal, G, hGfinite, hGexact⟩
+  exact ⟨nonterminal, G, hGfinite,
+    FoC.Foundation.FSet.equal_trans hGexact hM⟩
+
+theorem context_free_iff_finite_presentation_pda_recognizable
+    {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L : Language input} :
+    CFL.ContextFreeLanguage L <->
+      PDA.FinitePresentationRecognizable L := by
+  constructor
+  · intro hL
+    exact
+      finite_production_context_free_language_finite_presentation_pda_recognizable
+        inputFinite hL
+  · exact finite_presentation_pda_recognizable_context_free
 
 end Section04
 end Chapter04

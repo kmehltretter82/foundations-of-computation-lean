@@ -149,6 +149,11 @@ form, and deterministic context-free languages with an explicit end marker.
 The accepted-language predicate packages the machine behavior as a language.
 Finite presentations are needed for constructive conversion back to grammars:
 the grammar must have a finite set of productions.
+
+{lit}`PDAAcceptedLanguage` and {lit}`FinitePresentationPDARecognizable` are
+section-facing spellings of the corresponding library names; later pages use
+the {name}`Grammars.PDA` library names directly, so these two aliases exist
+purely as vocabulary for this section's narrative.
 -/
 
 def PDAAcceptedLanguage (M : PDA input stack state) : Language input :=
@@ -176,9 +181,23 @@ theorem pda_accepts_implies_empty_stack_accepts {M : PDA input stack state}
 def DeterministicPDA (M : PDA input stack state) : Prop :=
   PDA.Deterministic M
 
+/-!
+Both deterministic language classes require the witnessing machine to have a
+finite presentation, exactly like the nondeterministic class
+{name}`Grammars.PDA.FinitePresentationRecognizable` above. Without that
+conjunct a deterministic machine with an infinite stack alphabet and an
+infinite transition relation could accept languages far outside the book's
+deterministic context-free class.
+
+The {lit}`EndMarked` family supplies the book's end-marker construction: a
+deterministic context-free language is one whose end-marked version is
+accepted by a deterministic, finitely presented PDA.
+-/
+
 def DeterministicPDARecognizable (L : Language input) : Prop :=
   exists stack : Type, exists state : Type, exists M : PDA input stack state,
-    PDA.Deterministic M ∧ Language.Equal (PDA.AcceptedLanguage M) L
+    PDA.HasFinitePresentation M ∧ PDA.Deterministic M ∧
+      Language.Equal (PDA.AcceptedLanguage M) L
 
 inductive EndMarked (input : Type u) where
   | symbol : input -> EndMarked input
@@ -196,7 +215,7 @@ def EndMarkedLanguage (L : Language input) : Language (EndMarked input) :=
 def DeterministicContextFreeLanguageWithEndMarker (L : Language input) : Prop :=
   exists stack : Type, exists state : Type,
     exists M : PDA (EndMarked input) stack state,
-      PDA.Deterministic M ∧
+      PDA.HasFinitePresentation M ∧ PDA.Deterministic M ∧
         Language.Equal (PDA.AcceptedLanguage M) (EndMarkedLanguage L)
 
 /-!

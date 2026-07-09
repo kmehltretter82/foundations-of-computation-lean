@@ -687,43 +687,19 @@ theorem finite_presentation_pda_language_diff_dfa_context_free
 /-!
 # Recognizability Wrappers
 
-The final group states the automaton-side closure theorems: PDA-recognizable
-and finite-presentation PDA-recognizable languages are closed under
-intersection with, and subtraction by, regular languages.
+The final group states the automaton-side closure theorems:
+finite-presentation PDA-recognizable languages are closed under intersection
+with, and subtraction by, regular languages. Since
+{name}`Grammars.PDA.Recognizable` requires a finite presentation and is
+definitionally {name}`Grammars.PDA.FinitePresentationRecognizable`, the
+closure statements come in two spellings with identical content; the
+{lit}`pda_recognizable` spellings simply delegate to the
+{lit}`finite_presentation` versions.
 
 These wrappers translate the concrete product construction into the language
 classes used in the book. They are also used later to subtract finite
 languages from context-free languages.
 -/
-
-theorem pda_recognizable_inter_dfa_recognizable
-    {L R : Language input}
-    (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
-    PDA.Recognizable (Language.Inter L R) := by
-  cases hL with
-  | intro stack hstack =>
-      cases hstack with
-      | intro pstate hpstate =>
-          cases hpstate with
-          | intro P hP =>
-              cases hR with
-              | intro dstate hdstate =>
-                  cases hdstate with
-                  | intro D hD =>
-                      exists stack
-                      exists pstate × dstate
-                      exists PDAIntersectDFA P D
-                      intro w
-                      constructor
-                      · intro hw
-                        have hExact :=
-                          (pda_intersect_dfa_accepted_language_exact P D w).mp hw
-                        constructor
-                        · exact (hP w).mp hExact.left
-                        · exact (hD w).mp hExact.right
-                      · intro hw
-                        exact (pda_intersect_dfa_accepted_language_exact P D w).mpr
-                          (And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right))
 
 theorem finite_presentation_pda_recognizable_inter_dfa
     {L R : Language input}
@@ -755,6 +731,12 @@ theorem finite_presentation_pda_recognizable_inter_dfa_recognizable
   classical
   rcases hR with ⟨dstate, D, hD⟩
   exact finite_presentation_pda_recognizable_inter_dfa hL D hD
+
+theorem pda_recognizable_inter_dfa_recognizable
+    {L R : Language input}
+    (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
+    PDA.Recognizable (Language.Inter L R) :=
+  finite_presentation_pda_recognizable_inter_dfa_recognizable hL hR
 
 theorem finite_presentation_pda_recognizable_diff_dfa
     {L R : Language input}
@@ -799,19 +781,6 @@ can be converted into a finite-presentation PDA using the construction from
 Section 4.4.
 -/
 
-theorem finite_production_context_free_pda_recognizable {input : Type}
-    {L : Language input}
-    (hL : CFL.FiniteProductionContextFreeLanguage L) :
-    PDA.Recognizable L := by
-  cases hL with
-  | intro nonterminal hnt =>
-      cases hnt with
-      | intro G hG =>
-          exists Symbol input nonterminal
-          exists CFG.ToPDAState
-          exists CFG.ToPDA G
-          exact FoC.Foundation.FSet.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
-
 theorem finite_production_context_free_finite_presentation_pda_recognizable
     {input : Type}
     (inputFinite : Foundation.FiniteType input)
@@ -826,11 +795,13 @@ theorem finite_production_context_free_finite_presentation_pda_recognizable
     G inputFinite hG.left
   exact FoC.Foundation.FSet.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
-theorem context_free_language_pda_recognizable {input : Type}
+theorem finite_production_context_free_pda_recognizable {input : Type}
+    (inputFinite : Foundation.FiniteType input)
     {L : Language input}
-    (hL : CFL.ContextFreeLanguage L) :
+    (hL : CFL.FiniteProductionContextFreeLanguage L) :
     PDA.Recognizable L :=
-  finite_production_context_free_pda_recognizable hL
+  finite_production_context_free_finite_presentation_pda_recognizable
+    inputFinite hL
 
 theorem context_free_language_finite_presentation_pda_recognizable
     {input : Type}
@@ -840,6 +811,13 @@ theorem context_free_language_finite_presentation_pda_recognizable
     PDA.FinitePresentationRecognizable L :=
   finite_production_context_free_finite_presentation_pda_recognizable
     inputFinite hL
+
+theorem context_free_language_pda_recognizable {input : Type}
+    (inputFinite : Foundation.FiniteType input)
+    {L : Language input}
+    (hL : CFL.ContextFreeLanguage L) :
+    PDA.Recognizable L :=
+  finite_production_context_free_pda_recognizable inputFinite hL
 
 theorem finite_list_dfa_recognizable (ws : List (Word input)) :
     DFA.Recognizable (fun w : Word input => w ∈ ws) :=
@@ -886,11 +864,8 @@ theorem finite_presentation_pda_recognizable_diff_finite_language
 
 theorem pda_recognizable_diff_dfa_recognizable {L R : Language input}
     (hL : PDA.Recognizable L) (hR : DFA.Recognizable R) :
-    PDA.Recognizable (Language.Diff L R) := by
-  simpa [Language.Diff, Language.Inter, Language.Compl, Foundation.FSet.Diff,
-    Foundation.FSet.Inter, Foundation.FSet.Compl] using
-    pda_recognizable_inter_dfa_recognizable hL
-      (DFA.recognizable_complement hR)
+    PDA.Recognizable (Language.Diff L R) :=
+  finite_presentation_pda_recognizable_diff_dfa_recognizable hL hR
 
 theorem pda_recognizable_diff_finite_list {L : Language input}
     (hL : PDA.Recognizable L) (ws : List (Word input)) :
@@ -906,11 +881,12 @@ theorem pda_recognizable_diff_finite_language {L M : Language input}
 
 theorem context_free_diff_finite_language_pda_recognizable
     {input : Type}
+    (inputFinite : Foundation.FiniteType input)
     {L M : Language input}
     (hL : CFL.ContextFreeLanguage L) (hM : Language.Finite M) :
     PDA.Recognizable (Language.Diff L M) :=
   pda_recognizable_diff_finite_language
-    (context_free_language_pda_recognizable hL) hM
+    (context_free_language_pda_recognizable inputFinite hL) hM
 
 theorem context_free_diff_finite_language_finite_presentation_pda_recognizable
     {input : Type}

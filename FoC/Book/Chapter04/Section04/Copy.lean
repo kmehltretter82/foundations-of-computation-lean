@@ -318,15 +318,114 @@ theorem copyPDA_deterministic :
         htransD, hcD, hdD⟩
     cases htransD
 
+/-!
+The deterministic language class also demands an explicit finite
+presentation. The copy machine's stack alphabet is the two-symbol input
+alphabet of the first half, and its five transition rules are listed below.
+-/
+
+def copyPushARule :
+    PDA.TransitionRule CopyInput Section01.AB CopyPDAState where
+  source := CopyPDAState.push
+  input? := some CopyInput.a
+  pop := []
+  target := CopyPDAState.push
+  push := [Section01.AB.a]
+
+def copyPushBRule :
+    PDA.TransitionRule CopyInput Section01.AB CopyPDAState where
+  source := CopyPDAState.push
+  input? := some CopyInput.b
+  pop := []
+  target := CopyPDAState.push
+  push := [Section01.AB.b]
+
+def copyReadCenterRule :
+    PDA.TransitionRule CopyInput Section01.AB CopyPDAState where
+  source := CopyPDAState.push
+  input? := some CopyInput.c
+  pop := []
+  target := CopyPDAState.pop
+  push := []
+
+def copyPopARule :
+    PDA.TransitionRule CopyInput Section01.AB CopyPDAState where
+  source := CopyPDAState.pop
+  input? := some CopyInput.a
+  pop := [Section01.AB.a]
+  target := CopyPDAState.pop
+  push := []
+
+def copyPopBRule :
+    PDA.TransitionRule CopyInput Section01.AB CopyPDAState where
+  source := CopyPDAState.pop
+  input? := some CopyInput.b
+  pop := [Section01.AB.b]
+  target := CopyPDAState.pop
+  push := []
+
+def copyPDATransitionRules :
+    List (PDA.TransitionRule CopyInput Section01.AB CopyPDAState) :=
+  [copyPushARule, copyPushBRule, copyReadCenterRule,
+    copyPopARule, copyPopBRule]
+
+def copyPDA_finitePresentation :
+    PDA.FinitePresentation CopyPDA where
+  stackFinite := Section01.AB.finite
+  transitionRules := copyPDATransitionRules
+  transition_complete := by
+    intro q a? pop r push
+    constructor
+    · intro h
+      cases h with
+      | pushA =>
+          exact ⟨copyPushARule,
+            by simp [copyPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | pushB =>
+          exact ⟨copyPushBRule,
+            by simp [copyPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | readCenter =>
+          exact ⟨copyReadCenterRule,
+            by simp [copyPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | popA =>
+          exact ⟨copyPopARule,
+            by simp [copyPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+      | popB =>
+          exact ⟨copyPopBRule,
+            by simp [copyPDATransitionRules],
+            rfl, rfl, rfl, rfl, rfl⟩
+    · intro h
+      rcases h with ⟨rule, hmem, happ⟩
+      rcases happ with ⟨hq, ha, hpop, hr, hpush⟩
+      subst hq
+      subst ha
+      subst hpop
+      subst hr
+      subst hpush
+      simp [copyPDATransitionRules] at hmem
+      rcases hmem with h | h | h | h | h <;> subst h
+      · exact CopyPDATransition.pushA
+      · exact CopyPDATransition.pushB
+      · exact CopyPDATransition.readCenter
+      · exact CopyPDATransition.popA
+      · exact CopyPDATransition.popB
+  acceptingStates := [CopyPDAState.pop]
+  accept_complete := by
+    intro q
+    cases q <;> simp [CopyPDA]
+
 theorem copy_centered_language_deterministic_pda_recognizable :
     DeterministicPDARecognizable CopyCenteredLanguage := by
   exists Section01.AB
   exists CopyPDAState
   exists CopyPDA
-  constructor
-  · exact copyPDA_deterministic
-  · intro input
-    exact copyPDA_accepted_language_exact input
+  refine ⟨⟨copyPDA_finitePresentation⟩, copyPDA_deterministic, ?_⟩
+  intro input
+  exact copyPDA_accepted_language_exact input
 
 end Section04
 end Chapter04
