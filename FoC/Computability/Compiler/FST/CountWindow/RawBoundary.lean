@@ -1,6 +1,7 @@
 import FoC.Computability.ListLemmas
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TapeLemmas
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.BlankSentinelFinalizer
+import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.BlockMigrationLoop
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.EmitPulledRawBit
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CellSuffixLoop
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CountedBoundary
