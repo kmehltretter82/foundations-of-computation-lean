@@ -311,6 +311,129 @@ theorem rawBoundaryChunkExpandLoopDescription_run_scan_cons_obligation
               pref (blankTail + 1) right } := by
   sorry
 
+private theorem rawBoundaryChunkExpandCellBits_append_singleton
+    (pref : Word Bool) (rawBit : Bool) :
+    preservingCellPassCellBits (List.append pref [rawBit]) =
+      List.append (preservingCellPassCellBits pref)
+        (rawBoundaryChunkExpandCellBits rawBit) := by
+  induction pref with
+  | nil =>
+      cases rawBit <;>
+        simp [rawBoundaryChunkExpandCellBits,
+          pulledRawBitCellChunkBits, preservingCellPassCellBits,
+          preservingCellPassZeroBits, preservingCellPassOneBits]
+  | cons bit rest ih =>
+      cases bit <;> cases rawBit
+      all_goals
+        simp [rawBoundaryChunkExpandCellBits,
+          pulledRawBitCellChunkBits, preservingCellPassCellBits,
+          preservingCellPassZeroBits, preservingCellPassOneBits] at ih ⊢
+        rw [ih]
+
+private theorem rawBoundaryChunkExpandLoopDescription_run_scan_halts
+    (layout emitted : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    exists steps : Nat,
+      rawBoundaryChunkExpandLoopDescription.runConfig steps
+          { state := rawBoundaryChunkExpandLoopScan
+            tape :=
+              rawBoundaryChunkExpandScanTape
+                emitted layout blankTail right } =
+        { state := rawBoundaryChunkExpandLoopHalt
+          tape :=
+            rawBoundaryChunkExpandSeparatorTape
+              (List.append (preservingCellPassCellBits layout) emitted)
+              [] (blankTail + layout.length) right } := by
+  let motive : Nat -> Prop :=
+    fun n =>
+      forall (layout emitted : Word Bool) (blankTail : Nat)
+        (right : List (Option Bool)),
+        layout.length = n ->
+          exists steps : Nat,
+            rawBoundaryChunkExpandLoopDescription.runConfig steps
+                { state := rawBoundaryChunkExpandLoopScan
+                  tape :=
+                    rawBoundaryChunkExpandScanTape
+                      emitted layout blankTail right } =
+              { state := rawBoundaryChunkExpandLoopHalt
+                tape :=
+                  rawBoundaryChunkExpandSeparatorTape
+                    (List.append (preservingCellPassCellBits layout)
+                      emitted)
+                    [] (blankTail + layout.length) right }
+  have hmain : motive layout.length := by
+    induction layout.length using Nat.strongRecOn with
+    | ind n ih =>
+        intro current emitted blankTail right hlen
+        cases current with
+        | nil =>
+            refine ⟨1, ?_⟩
+            simpa [preservingCellPassCellBits] using
+              rawBoundaryChunkExpandLoopDescription_run_done
+                emitted blankTail right
+        | cons head rest =>
+            rcases
+                FoC.Computability.list_exists_append_singleton_of_ne_nil
+                  (head :: rest) (by simp) with
+              ⟨pref, rawBit, hcurrent⟩
+            rw [hcurrent] at hlen ⊢
+            have hpref_len :
+                pref.length < n := by
+              simp [List.length_append] at hlen
+              lia
+            rcases
+                rawBoundaryChunkExpandLoopDescription_run_scan_cons_obligation
+                  emitted pref rawBit blankTail right with
+              ⟨stepCount, hstep⟩
+            have hrec :
+                exists recSteps : Nat,
+                  rawBoundaryChunkExpandLoopDescription.runConfig recSteps
+                      { state := rawBoundaryChunkExpandLoopScan
+                        tape :=
+                          rawBoundaryChunkExpandScanTape
+                            (List.append
+                              (rawBoundaryChunkExpandCellBits rawBit)
+                              emitted)
+                            pref (blankTail + 1) right } =
+                    { state := rawBoundaryChunkExpandLoopHalt
+                      tape :=
+                        rawBoundaryChunkExpandSeparatorTape
+                          (List.append
+                            (preservingCellPassCellBits pref)
+                            (List.append
+                              (rawBoundaryChunkExpandCellBits rawBit)
+                              emitted))
+                          [] (blankTail + 1 + pref.length) right } := by
+              have hcall :=
+                ih pref.length hpref_len pref
+                  (List.append (rawBoundaryChunkExpandCellBits rawBit)
+                    emitted)
+                  (blankTail + 1) right rfl
+              simpa [Nat.add_assoc] using hcall
+            rcases hrec with ⟨recSteps, hrecRun⟩
+            refine ⟨stepCount + recSteps, ?_⟩
+            rw [MachineDescription.runConfig_add]
+            rw [hstep]
+            rw [hrecRun]
+            have hbits :
+                List.append
+                    (preservingCellPassCellBits pref)
+                    (List.append
+                      (rawBoundaryChunkExpandCellBits rawBit) emitted) =
+                  List.append
+                    (preservingCellPassCellBits
+                      (List.append pref [rawBit]))
+                    emitted := by
+              rw [rawBoundaryChunkExpandCellBits_append_singleton]
+              simp [List.append_assoc]
+            have hblank :
+                blankTail + 1 + pref.length =
+                  blankTail + (List.append pref [rawBit]).length := by
+              simp [List.length_append]
+              lia
+            rw [hbits, hblank]
+  exact hmain layout emitted blankTail right rfl
+
 theorem rawBoundaryChunkExpandLoopDescription_haltsFrom_separator_obligation
     (layout emitted : Word Bool) (blankTail : Nat)
     (right : List (Option Bool)) :
@@ -320,7 +443,36 @@ theorem rawBoundaryChunkExpandLoopDescription_haltsFrom_separator_obligation
       (rawBoundaryChunkExpandSeparatorTape
         (List.append (preservingCellPassCellBits layout) emitted)
         [] (blankTail + layout.length) right) := by
-  sorry
+  rcases
+      rawBoundaryChunkExpandLoopDescription_run_scan_halts
+        layout emitted blankTail right with
+    ⟨scanSteps, hscan⟩
+  refine ⟨1 + scanSteps, ?_⟩
+  dsimp [MachineDescription.HaltsFromTapeIn]
+  rw [MachineDescription.runConfig_add]
+  simpa [rawBoundaryChunkExpandLoopDescription,
+    rawBoundaryChunkExpandLoopStart,
+    rawBoundaryChunkExpandLoopHalt] using
+    (show
+      (rawBoundaryChunkExpandLoopDescription.runConfig scanSteps
+          (rawBoundaryChunkExpandLoopDescription.runConfig 1
+            { state := rawBoundaryChunkExpandLoopStart
+              tape :=
+                rawBoundaryChunkExpandSeparatorTape
+                  emitted layout blankTail right })).state =
+            rawBoundaryChunkExpandLoopHalt ∧
+          (rawBoundaryChunkExpandLoopDescription.runConfig scanSteps
+            (rawBoundaryChunkExpandLoopDescription.runConfig 1
+              { state := rawBoundaryChunkExpandLoopStart
+                tape :=
+                  rawBoundaryChunkExpandSeparatorTape
+                    emitted layout blankTail right })).tape =
+            rawBoundaryChunkExpandSeparatorTape
+              (List.append (preservingCellPassCellBits layout) emitted) []
+              (blankTail + layout.length) right by
+      rw [rawBoundaryChunkExpandLoopDescription_run_start]
+      rw [hscan]
+      constructor <;> rfl)
 
 end RawBoundaryRightEdgeEmitter
 end CountWindowRawSourceEncoder
