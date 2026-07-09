@@ -12,7 +12,7 @@ This section moves from propositional formulas to predicates over a domain.
 Lean's ordinary function and proposition types already represent the book's
 one-place predicates, universal statements, and existential statements.
 
-The theorem group formalizes the Figure 1.5 quantifier laws: negating a
+The theorem group formalizes the Figure 1.9 quantifier laws: negating a
 universal statement, negating an existential statement, and commuting two
 quantifiers of the same kind.
 
@@ -36,6 +36,17 @@ def Universal (P : alpha -> Prop) : Prop :=
 def Existential (P : alpha -> Prop) : Prop :=
   exists x, P x
 
+/-!
+# Counting Quantifiers
+
+The section's happy-person examples show how plain quantifiers express
+counting statements: {lit}`AtLeastTwo` and {lit}`ExactlyOne` are the section's
+displayed translations of "at least two people are happy" and "there is
+exactly one happy person". {lit}`ExactlyThree` answers the exercise that asks
+for "there are exactly three happy people": three pairwise-distinct witnesses,
+plus the clause that every witness is one of the three.
+-/
+
 def AtLeastTwo (P : alpha -> Prop) : Prop :=
   exists x y, P x ∧ P y ∧ x ≠ y
 
@@ -44,6 +55,51 @@ def AtLeastThree (P : alpha -> Prop) : Prop :=
 
 def ExactlyOne (P : alpha -> Prop) : Prop :=
   (exists x, P x) ∧ forall y z, P y -> P z -> y = z
+
+def ExactlyThree (P : alpha -> Prop) : Prop :=
+  exists x y z, P x ∧ P y ∧ P z ∧ x ≠ y ∧ x ≠ z ∧ y ≠ z ∧
+    forall w, P w -> w = x ∨ w = y ∨ w = z
+
+/-! The counting forms relate as expected: three pairwise-distinct witnesses
+contain two, and exactly three witnesses are in particular at least three. -/
+theorem atLeastTwo_of_atLeastThree {P : alpha -> Prop}
+    (h : AtLeastThree P) : AtLeastTwo P := by
+  cases h with
+  | intro x hx =>
+      cases hx with
+      | intro y hy =>
+          cases hy with
+          | intro z hz =>
+              exact Exists.intro x (Exists.intro y
+                (And.intro hz.left
+                  (And.intro hz.right.left hz.right.right.right.left)))
+
+theorem atLeastThree_of_exactlyThree {P : alpha -> Prop}
+    (h : ExactlyThree P) : AtLeastThree P := by
+  cases h with
+  | intro x hx =>
+      cases hx with
+      | intro y hy =>
+          cases hy with
+          | intro z hz =>
+              exact Exists.intro x (Exists.intro y (Exists.intro z
+                (And.intro hz.left
+                  (And.intro hz.right.left
+                    (And.intro hz.right.right.left
+                      (And.intro hz.right.right.right.left
+                        (And.intro hz.right.right.right.right.left
+                          hz.right.right.right.right.right.left)))))))
+
+/-! The uniqueness clause of {lit}`ExactlyOne` rules out a second distinct
+witness, so exactly one and at least two are incompatible. -/
+theorem not_atLeastTwo_of_exactlyOne {P : alpha -> Prop}
+    (h : ExactlyOne P) : ¬ AtLeastTwo P := by
+  intro htwo
+  cases htwo with
+  | intro x hx =>
+      cases hx with
+      | intro y hy =>
+          exact hy.right.right (h.right x y hy.left hy.right.left)
 
 /-!
 # Finite Domains and Translation Examples

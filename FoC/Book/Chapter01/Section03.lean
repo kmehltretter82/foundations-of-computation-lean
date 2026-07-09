@@ -222,8 +222,8 @@ theorem labeled_circuit_computes_formula :
 /-!
 # Disjunctive Normal Form
 
-The list definitions below are the computational core of Definition 1.3 and
-Theorem 1.1 from the source text.
+The list definitions below are the computational core of Definition 1.5 and
+Theorem 1.3 from the source text.
 -/
 
 /-! A literal is either a variable or the negation of a variable. -/

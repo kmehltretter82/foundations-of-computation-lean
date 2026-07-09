@@ -23,9 +23,9 @@ Dedekind-cut real order layer, and real multiplication are formalized in the
 foundation.
 
 The section begins with proof-by-contradiction vocabulary, then formalizes the
-number-theoretic examples: odd-square contradiction, prime-divisor existence,
-Euclid's finite-list theorem for primes, finite pigeonhole vocabulary, and
-square-root irrationality cores.
+number-theoretic examples: odd-square contradiction, the even-square exercise,
+prime-divisor existence, Euclid's finite-list theorem for primes, finite
+pigeonhole vocabulary, and square-root irrationality cores.
 
 The common pattern is to assume the opposite of the target statement and
 derive an impossible combination of facts. In the finite-prime theorem, the
@@ -47,6 +47,42 @@ theorem contradiction_elim {p q : Prop} (hp : p) (hnp : ¬ p) : q := by
 theorem odd_integer_square_not_even {n : Int}
     (h : IntPred.Odd n) : ¬ IntPred.Even (n * n) :=
   IntPred.odd_square_not_even h
+
+/-!
+Exercise 2(a) asks for a contradiction proof that an integer whose square is
+even is itself even. The parity dichotomy supplies the assume-the-opposite
+step: an integer that is not even is odd. The contradiction core is the
+foundation theorem that an odd integer has an odd square.
+-/
+
+theorem integer_even_or_odd (n : Int) : IntPred.Even n ∨ IntPred.Odd n := by
+  have hcases : n % 2 = 0 ∨ n % 2 = 1 := by
+    have hnonneg : 0 ≤ n % 2 := Int.emod_nonneg n (by decide)
+    have hlt : n % 2 < 2 := Int.emod_lt_of_pos n (by decide)
+    lia
+  have hdiv := Int.mul_ediv_add_emod n 2
+  cases hcases with
+  | inl hzero =>
+      left
+      exists n / 2
+      lia
+  | inr hone =>
+      right
+      exists n / 2
+      lia
+
+theorem even_integer_of_square_even {n : Int}
+    (h : IntPred.Even (n * n)) : IntPred.Even n := by
+  cases integer_even_or_odd n with
+  | inl heven => exact heven
+  | inr hodd => exact False.elim (IntPred.odd_square_not_even hodd h)
+
+/-!
+The natural-number divisibility form of the same fact is proved in the
+foundation, where the square-root irrationality arguments use it.
+-/
+theorem even_natural_of_square_even {n : Nat} (h : 2 ∣ n * n) : 2 ∣ n :=
+  NatDivisibility.two_dvd_of_two_dvd_square h
 
 theorem prime_divisor_exists (n : Nat) (hn : 1 < n) :
     exists p, NatPrime.Prime p ∧ NatPred.Divides p n :=

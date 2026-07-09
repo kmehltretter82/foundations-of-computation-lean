@@ -15,20 +15,21 @@ logical implication: every valuation that makes the premises true also makes
 the conclusion true.
 
 The valid rules are checked by truth-table splitting. The invalid rules are
-represented by explicit countervaluations.
+represented by explicit countervaluations, and each countervaluation feeds a
+theorem saying that the proposed rule is not a logical implication. The
+section's formal-proof discussion is represented by a checked proof-line
+format together with a soundness theorem.
 
-The valid-rule declarations package a premise and conclusion into a single
+Most valid-rule declarations package the premises and conclusion into a single
 formula implication. For example, modus ponens is formalized as: whenever
 {lit}`p -> q` and {lit}`p` are true under a valuation, {lit}`q` is true under that valuation.
-The invalid-rule declarations have the opposite shape: they exhibit a
-valuation that makes the premises true while the proposed conclusion is false.
+Conjunction introduction is instead stated with two separate premise
+hypotheses at the valuation level. The invalid-rule declarations have the
+opposite shape: they exhibit a valuation that makes the premises true while
+the proposed conclusion is false.
 -/
 
 open Foundation
-
-/-! Book-facing synonym for semantic logical implication. -/
-def LogicallyImplies (p q : PropForm Var) : Prop :=
-  PropForm.LogicallyImplies p q
 
 /-! Modus ponens: from p implies q and p, infer q. -/
 theorem modus_ponens (p q : PropForm Var) :
@@ -68,14 +69,18 @@ theorem disjunctive_syllogism (p q : PropForm Var) :
     cases hq : PropForm.eval valuation q <;>
     simp [PropForm.eval, hp, hq]
 
-theorem conjunction_intro (p q : PropForm Var) :
-    PropForm.LogicallyImplies
-      (PropForm.and p q)
-      (PropForm.and p q) := by
-  intro valuation
-  cases hp : PropForm.eval valuation p <;>
-    cases hq : PropForm.eval valuation q <;>
-    simp [PropForm.eval, hp, hq]
+/-!
+Conjunction introduction takes its two premises separately: a valuation that
+makes {lit}`p` true and makes {lit}`q` true also makes the conjunction of
+{lit}`p` and {lit}`q` true. Packaging the two premises into a single
+conjunction formula would make the rule a triviality, so this rule is stated
+at the valuation level.
+-/
+theorem conjunction_intro (p q : PropForm Var) (valuation : Var -> Bool)
+    (hp : PropForm.eval valuation p = true)
+    (hq : PropForm.eval valuation q = true) :
+    PropForm.eval valuation (PropForm.and p q) = true := by
+  simp [PropForm.eval, hp, hq]
 
 theorem conjunction_elim_left (p q : PropForm Var) :
     PropForm.LogicallyImplies (PropForm.and p q) p := by
@@ -188,16 +193,160 @@ theorem predicate_modus_tollens (P Q : alpha -> Prop) (a : alpha)
   intro hpa
   exact hnqa (hforall a hpa)
 
+/-!
+# Formal Proofs
+
+The book defines a formal proof as a sequence of propositions in which every
+line is either a premise of the argument or follows by logical deduction from
+lines that precede it, and the last line is the conclusion.
+{lit}`FormalProofStep` records one proof line: a step is either a premise or a
+statement derived from a list of cited earlier statements.
+-/
+
 inductive FormalProofStep (Statement : Type u) where
   | premise : Statement -> FormalProofStep Statement
   | derived : Statement -> List Statement -> FormalProofStep Statement
 
+def FormalProofStep.statement : FormalProofStep Statement -> Statement
+  | premise s => s
+  | derived s _ => s
+
+def proofPremises : List (FormalProofStep Statement) -> List Statement
+  | [] => []
+  | FormalProofStep.premise s :: rest => s :: proofPremises rest
+  | FormalProofStep.derived _ _ :: rest => proofPremises rest
+
 /-!
-{lit}`FormalProofStep` is lightweight vocabulary for the book's discussion of proof
-lines: a step is either a premise or something derived from earlier statements.
-The semantic soundness of particular rules is handled by the implication
-theorems above.
+The checker walks the proof list while accumulating the statements established
+so far. Each derived line may cite only statements of earlier lines, and its
+statement must be true under every valuation that makes all cited statements
+true, which is the semantic reading of "follows by logical deduction".
 -/
+def CheckedProofFrom (earlier : List (PropForm Var)) :
+    List (FormalProofStep (PropForm Var)) -> Prop
+  | [] => True
+  | FormalProofStep.premise s :: rest => CheckedProofFrom (s :: earlier) rest
+  | FormalProofStep.derived s cited :: rest =>
+      (forall c, c ∈ cited -> c ∈ earlier) ∧
+        (forall valuation : Var -> Bool,
+          (forall c, c ∈ cited -> PropForm.eval valuation c = true) ->
+          PropForm.eval valuation s = true) ∧
+        CheckedProofFrom (s :: earlier) rest
+
+def CheckedProof (steps : List (FormalProofStep (PropForm Var))) : Prop :=
+  CheckedProofFrom [] steps
+
+/-!
+Soundness of the checker, in accumulator form: if a proof list checks relative
+to a set of already-established statements, then any valuation that makes the
+established statements and all premise lines true makes every line true.
+-/
+theorem checkedProofFrom_all_true {valuation : Var -> Bool} :
+    forall {steps : List (FormalProofStep (PropForm Var))}
+      {earlier : List (PropForm Var)},
+      CheckedProofFrom earlier steps ->
+      (forall p, p ∈ earlier -> PropForm.eval valuation p = true) ->
+      (forall p, p ∈ proofPremises steps -> PropForm.eval valuation p = true) ->
+      forall step, step ∈ steps ->
+        PropForm.eval valuation step.statement = true := by
+  intro steps
+  induction steps with
+  | nil =>
+      intro earlier _ _ _ step hstep
+      cases hstep
+  | cons step rest ih =>
+      intro earlier hchecked hearlier hpremises current hcurrent
+      cases step with
+      | premise s =>
+          have hs : PropForm.eval valuation s = true := by
+            apply hpremises
+            simp [proofPremises]
+          have hearlier' : forall p, p ∈ s :: earlier ->
+              PropForm.eval valuation p = true := by
+            intro p hp
+            cases hp with
+            | head => exact hs
+            | tail _ hmem => exact hearlier p hmem
+          have hpremises' : forall p, p ∈ proofPremises rest ->
+              PropForm.eval valuation p = true := by
+            intro p hp
+            apply hpremises
+            simp [proofPremises, hp]
+          cases hcurrent with
+          | head => exact hs
+          | tail _ hmem =>
+              exact ih hchecked hearlier' hpremises' current hmem
+      | derived s cited =>
+          have hs : PropForm.eval valuation s = true := by
+            apply hchecked.right.left
+            intro c hc
+            exact hearlier c (hchecked.left c hc)
+          have hearlier' : forall p, p ∈ s :: earlier ->
+              PropForm.eval valuation p = true := by
+            intro p hp
+            cases hp with
+            | head => exact hs
+            | tail _ hmem => exact hearlier p hmem
+          cases hcurrent with
+          | head => exact hs
+          | tail _ hmem =>
+              exact ih hchecked.right.right hearlier'
+                (by simpa [proofPremises] using hpremises) current hmem
+
+/-!
+The existence of a checked formal proof shows that the argument is valid:
+every valuation that makes the premise lines true makes every line true, and
+in particular the last line, which is the conclusion of the argument.
+-/
+theorem checked_proof_lines_true {steps : List (FormalProofStep (PropForm Var))}
+    (hchecked : CheckedProof steps) (valuation : Var -> Bool)
+    (hpremises : forall p, p ∈ proofPremises steps ->
+      PropForm.eval valuation p = true) :
+    forall step, step ∈ steps ->
+      PropForm.eval valuation step.statement = true := by
+  have hempty : forall p, p ∈ ([] : List (PropForm Var)) ->
+      PropForm.eval valuation p = true := by
+    intro p hp
+    cases hp
+  exact checkedProofFrom_all_true hchecked hempty hpremises
+
+/-!
+The section's first displayed formal proof derives {lit}`s` from the five
+premises of the five-premise argument in nine numbered lines. The list below
+is that proof, line by line, and the theorem checks it: two modus ponens
+steps, a conjunction introduction, and a final modus ponens.
+-/
+def fivePremiseFormalProof (p q r s t : PropForm Var) :
+    List (FormalProofStep (PropForm Var)) :=
+  [FormalProofStep.premise (PropForm.imp q p),
+    FormalProofStep.premise q,
+    FormalProofStep.derived p [PropForm.imp q p, q],
+    FormalProofStep.premise (PropForm.imp t r),
+    FormalProofStep.premise t,
+    FormalProofStep.derived r [PropForm.imp t r, t],
+    FormalProofStep.derived (PropForm.and p r) [p, r],
+    FormalProofStep.premise (PropForm.imp (PropForm.and p r) s),
+    FormalProofStep.derived s
+      [PropForm.and p r, PropForm.imp (PropForm.and p r) s]]
+
+theorem fivePremiseFormalProof_checked (p q r s t : PropForm Var) :
+    CheckedProof (fivePremiseFormalProof p q r s t) := by
+  simp [CheckedProof, fivePremiseFormalProof, CheckedProofFrom]
+  apply And.intro
+  · intro valuation h1 h2
+    simp [PropForm.eval, h2] at h1
+    exact h1
+  apply And.intro
+  · intro valuation h1 h2
+    simp [PropForm.eval, h2] at h1
+    exact h1
+  apply And.intro
+  · intro valuation hp hr
+    simp [PropForm.eval, hp, hr]
+  · intro valuation h1 h2
+    simp [PropForm.eval] at h1
+    simp [PropForm.eval, h1.left, h1.right] at h2
+    exact h2
 
 /-!
 Affirming the consequent is invalid. The valuation in the proof makes "p
@@ -211,6 +360,19 @@ theorem invalid_affirming_consequent :
   exact Exists.intro (fun b => b) (And.intro rfl (And.intro rfl rfl))
 
 /-!
+The countervaluation gives the punchline: the premises of affirming the
+consequent do not logically imply its conclusion.
+-/
+theorem affirming_consequent_not_logically_implies :
+    ¬ PropForm.LogicallyImplies
+        (PropForm.and (PropForm.imp (PropForm.var false) (PropForm.var true))
+          (PropForm.var true))
+        (PropForm.var false) := by
+  intro h
+  have hv := h (fun b => b)
+  simp [PropForm.eval] at hv
+
+/-!
 Denying the antecedent is invalid. The valuation in the proof makes "p implies
 q" and "not p" true while "not q" is false.
 -/
@@ -220,6 +382,19 @@ theorem invalid_denying_antecedent :
       PropForm.eval valuation (PropForm.not (PropForm.var false)) = true ∧
       PropForm.eval valuation (PropForm.not (PropForm.var true)) = false := by
   exact Exists.intro (fun b => b) (And.intro rfl (And.intro rfl rfl))
+
+/-!
+The same countervaluation shows that the premises of denying the antecedent do
+not logically imply its conclusion.
+-/
+theorem denying_antecedent_not_logically_implies :
+    ¬ PropForm.LogicallyImplies
+        (PropForm.and (PropForm.imp (PropForm.var false) (PropForm.var true))
+          (PropForm.not (PropForm.var false)))
+        (PropForm.not (PropForm.var true)) := by
+  intro h
+  have hv := h (fun b => b)
+  simp [PropForm.eval] at hv
 
 inductive DeductionCounterVar where
   | p
@@ -253,6 +428,19 @@ theorem invalid_three_premise_argument_from_text :
             (PropForm.and (PropForm.imp Q (PropForm.and P R)) R)) = true ∧
         PropForm.eval valuation P = false := by
   exact Exists.intro valuation (And.intro rfl rfl)
+
+/-!
+The punchline for the text's three-premise argument: its premises do not
+logically imply the proposed conclusion {lit}`p`.
+-/
+theorem three_premise_argument_from_text_not_logically_implies :
+    ¬ PropForm.LogicallyImplies
+        (PropForm.and (PropForm.imp P Q)
+          (PropForm.and (PropForm.imp Q (PropForm.and P R)) R))
+        P := by
+  intro h
+  have hv := h DeductionCounterVar.valuation
+  simp [PropForm.eval, P, Q, R, DeductionCounterVar.valuation] at hv
 
 end Section05
 end Chapter01
