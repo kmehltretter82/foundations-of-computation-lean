@@ -184,7 +184,8 @@ simplification, `three_tape_phase_step [...]` for phase-composed descriptions,
 `three_tape_support` for all-read row support branches, and `three_tape_run`
 for short runs assembled from explicit step lemmas.
 
-This formalization was developed with assistance from OpenAI Codex and Google Gemini.
+This formalization was developed with assistance from OpenAI Codex, Claude Code,
+and Google Gemini.
 
 ## License
 
