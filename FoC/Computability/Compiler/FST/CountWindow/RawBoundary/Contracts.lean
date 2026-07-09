@@ -1727,7 +1727,7 @@ structure RawBoundaryEmptyLayoutEmissionRoute
       (sourceTape [] [] (some tailFirst :: tail))
       (rightEdgeTape [] [] tailFirst tail)
   coreDescriptionHalts :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape [] [] (some tailFirst :: tail))
       (encodedLeftEdgeTape [] [] tailFirst tail)
 
