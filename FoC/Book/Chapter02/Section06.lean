@@ -172,10 +172,6 @@ theorem rational_representative_code_injective :
           cases hden
           rfl
 
-theorem rational_representative_in_stage (q : Rational) :
-    q ∈ RationalRepresentativeStage (Countability.IntCode q.num + Countability.IntCode q.den) :=
-  rfl
-
 theorem rational_representative_code_on_diagonal (q : Rational) :
     RationalRepresentativeCode q ∈
       Countability.DiagonalList ((RationalRepresentativeCode q).1 + (RationalRepresentativeCode q).2) :=

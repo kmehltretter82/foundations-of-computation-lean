@@ -914,10 +914,11 @@ theorem toCFG_yields_sound
     hw
 
 /-!
-# Soundness: CFG to PDA
+# Soundness: Grammar Derivations Imply PDA Acceptance
 
 If the constructed grammar derives a terminal word, the original PDA accepts
-that word.
+that word. This is the reverse direction that certifies the PDA-to-CFG
+construction exact.
 -/
 
 theorem toCFG_derives_sound

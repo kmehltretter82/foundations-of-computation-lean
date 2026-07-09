@@ -1,5 +1,7 @@
 import FoC.Grammars.ParseTreePart1
 
+set_option doc.verso true
+
 namespace FoC
 namespace Grammars
 namespace CFG
