@@ -16,7 +16,10 @@ sequence" intuition while allowing enumerations to skip positions with
 {lean}`Option.none`.
 
 The module contains reusable constructions for natural numbers, even naturals,
-finite sets, unions, integers, encodable lists, and selected diagonal arguments.
+finite sets, unions, integers, pairs, encodable lists, and selected diagonal
+arguments.  It also proves the infiniteness facts that separate countably
+infinite sets from finite ones: no list enumerates all natural numbers or all
+even natural numbers, so both sets are countably infinite.
 
 ## Book coordinates
 
@@ -141,6 +144,85 @@ theorem countable_subset {A B : FSet alpha}
                   rw [← hn]
                   exact hyA
                 · simp [hfn, hyA] at hn
+
+/-!
+The book states the countable-subset principle for arbitrary sets.  The
+classical corollary discharges the decidability hypothesis of
+{name}`countable_subset`, so book-facing wrappers can state the principle
+unconditionally.
+-/
+theorem countable_subset_classical {A B : FSet alpha}
+    (hAB : Subset A B) (hB : Countable B) : Countable A := by
+  classical
+  exact countable_subset hAB hB
+
+/-!
+# Finite sets are countable
+
+The book defines a countable set as one that is finite or countably infinite.
+The formal connection is that every finite enumeration is in particular a
+partial enumeration by natural numbers: position {lit}`n` of the list is the
+{lit}`n`-th enumerated element.
+-/
+theorem countable_of_finite {A : FSet alpha} (hA : Finite A) : Countable A := by
+  cases hA with
+  | intro xs hxs =>
+      exists fun n => xs[n]?
+      intro x
+      constructor
+      · intro hxA
+        exact List.mem_iff_getElem?.mp ((hxs x).mp hxA)
+      · intro hx
+        exact (hxs x).mpr (List.mem_iff_getElem?.mpr hx)
+
+/-!
+# Infinite sets
+
+A finite list of natural numbers cannot contain a number larger than its
+maximum, so no list enumerates all of {lit}`Nat`: the set of natural numbers
+is infinite.  The same bound shows that the even natural numbers are
+infinite.  Combined with the enumerations above, both sets are countably
+infinite in the book's sense.
+-/
+
+private theorem list_mem_le_foldr_max (xs : List Nat) :
+    forall x, x ∈ xs -> x <= xs.foldr Nat.max 0 := by
+  induction xs with
+  | nil =>
+      intro x hx
+      cases hx
+  | cons y ys ih =>
+      intro x hx
+      cases hx with
+      | head =>
+          exact Nat.le_max_left y (ys.foldr Nat.max 0)
+      | tail _ h =>
+          exact Nat.le_trans (ih x h) (Nat.le_max_right y (ys.foldr Nat.max 0))
+
+theorem nat_univ_not_finite : ¬ Finite (Univ : FSet Nat) := by
+  intro hfin
+  cases hfin with
+  | intro xs hxs =>
+      have hmem : xs.foldr Nat.max 0 + 1 ∈ xs :=
+        (hxs (xs.foldr Nat.max 0 + 1)).mp True.intro
+      have hle := list_mem_le_foldr_max xs _ hmem
+      lia
+
+theorem even_naturals_not_finite : ¬ Finite EvenNaturals := by
+  intro hfin
+  cases hfin with
+  | intro xs hxs =>
+      have hmem : 2 * (xs.foldr Nat.max 0 + 1) ∈ xs :=
+        (hxs (2 * (xs.foldr Nat.max 0 + 1))).mp
+          (Exists.intro (xs.foldr Nat.max 0 + 1) rfl)
+      have hle := list_mem_le_foldr_max xs _ hmem
+      lia
+
+theorem nat_univ_countably_infinite : CountablyInfinite (Univ : FSet Nat) :=
+  And.intro nat_univ_countable nat_univ_not_finite
+
+theorem even_naturals_countably_infinite : CountablyInfinite EvenNaturals :=
+  And.intro even_naturals_countable even_naturals_not_finite
 
 /-!
 # Countable unions
@@ -384,6 +466,18 @@ theorem pairCode_injective : Fn.Injective (fun p : Nat × Nat => PairCode p.1 p.
               cases ha
               cases hb
               rfl
+
+/-!
+Exercise 10 from Section 2.6 asks for the countability of {lit}`Nat × Nat`.
+The injective pair code above is the required encoding, and searching for
+codes enumerates the full set of pairs.
+-/
+theorem natPair_encodable : EncodableByNat (Nat × Nat) :=
+  Exists.intro (fun p => PairCode p.1 p.2) pairCode_injective
+
+theorem natPair_univ_countable :
+    FSet.Countable (FSet.Univ : FSet (Nat × Nat)) :=
+  countable_univ_of_encodableByNat natPair_encodable
 
 def OptionCode (code : alpha -> Nat) : Option alpha -> Nat
   | none => 0

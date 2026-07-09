@@ -185,6 +185,45 @@ theorem valueOf_indexOfDecidable [DecidableEq alpha]
 
 end FiniteType
 
+/-!
+# Removing duplicates
+
+A finite enumeration may repeat elements.  With decidable equality the
+duplicates can be filtered out, turning any enumeration into a duplicate-free
+one.  This is the bridge from coverage witnesses to cardinality witnesses.
+-/
+
+def ListDedup [DecidableEq alpha] : List alpha -> List alpha
+  | [] => []
+  | x :: xs => if x ∈ xs then ListDedup xs else x :: ListDedup xs
+
+theorem mem_listDedup [DecidableEq alpha] {x : alpha} {xs : List alpha} :
+    x ∈ ListDedup xs <-> x ∈ xs := by
+  induction xs with
+  | nil =>
+      constructor <;> intro h <;> cases h
+  | cons y ys ih =>
+      by_cases hy : y ∈ ys
+      · simp [ListDedup, hy, ih]
+        intro hxy
+        rw [hxy]
+        exact hy
+      · simp [ListDedup, hy, ih]
+
+theorem listDedup_nodup [DecidableEq alpha] (xs : List alpha) :
+    (ListDedup xs).Nodup := by
+  induction xs with
+  | nil =>
+      simp [ListDedup]
+  | cons y ys ih =>
+      by_cases hy : y ∈ ys
+      · simpa [ListDedup, hy] using ih
+      · simp [ListDedup, hy, List.nodup_cons]
+        constructor
+        · intro hmem
+          exact hy (mem_listDedup.mp hmem)
+        · exact ih
+
 namespace FSet
 
 /-!
@@ -247,6 +286,43 @@ theorem finite_subset {A B : FSet alpha}
         have hx : x ∈ xs ∧ x ∈ A := by
           simpa using hxFilter
         exact hx.right
+
+/-!
+The book states the finite-subset principle for arbitrary sets.  The classical
+corollary discharges the decidability hypothesis of {name}`finite_subset`, so
+book-facing wrappers can state the principle unconditionally.
+-/
+theorem finite_subset_classical {A B : FSet alpha}
+    (hAB : Subset A B) (hB : Finite B) : Finite A := by
+  classical
+  exact finite_subset hAB hB
+
+/-!
+With decidable equality, every finite set also has a duplicate-free
+enumeration: deduplicating a coverage witness preserves the enumerated set.
+The classical corollary removes the decidability hypothesis.
+-/
+theorem finiteWithNoDuplicates_of_finite [DecidableEq alpha] {A : FSet alpha}
+    (hA : Finite A) : FiniteWithNoDuplicates A := by
+  cases hA with
+  | intro xs hxs =>
+      exists ListDedup xs
+      constructor
+      · exact listDedup_nodup xs
+      · intro x
+        rw [mem_listDedup]
+        exact hxs x
+
+theorem finiteWithNoDuplicates_of_finite_classical {A : FSet alpha}
+    (hA : Finite A) : FiniteWithNoDuplicates A := by
+  classical
+  exact finiteWithNoDuplicates_of_finite hA
+
+theorem finite_of_finiteWithNoDuplicates {A : FSet alpha}
+    (hA : FiniteWithNoDuplicates A) : Finite A := by
+  cases hA with
+  | intro xs hxs =>
+      exact Exists.intro xs hxs.right
 
 end FSet
 

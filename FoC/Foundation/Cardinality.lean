@@ -10,11 +10,17 @@ set_option doc.verso true
 
 The book's finite-cardinality laws are represented by explicit list models:
 products are nested lists of pairs, powersets are lists of sublists, and
-function spaces are lists of finite tuples. Duplicate-free enumeration remains
-the bridge from these list models back to finite sets.
+function spaces are lists of finite tuples. Duplicate-free enumeration is the
+bridge from these list models back to finite sets: cardinality is unique,
+every set with a cardinality is finite, every finite set with decidable
+equality has a cardinality, and the product and union cardinality laws are
+proved for predicate sets themselves.
 
 The finite pigeonhole principle uses the same bridge: map the duplicate-free
 enumeration of the larger set into the smaller one, then compare list lengths.
+The initial segments of the natural numbers model the book's counting sets
+{lit}`N_n`, including the theorem that distinct segments admit no one-to-one
+correspondence.
 
 ## Book coordinates
 
@@ -163,6 +169,121 @@ theorem pigeonhole_collision_of_cardinality_lt {A : FSet alpha} {B : FSet beta}
     cardinality_le_of_injective_maps_to hA hB f hinjOn hmap
   lia
 
+/-!
+# Cardinality is well-defined
+
+Exercise 5 from Section 2.6 asks for the key sanity property of finite
+cardinality: any two duplicate-free enumerations of the same set have the same
+length.  The subset form compares enumerations of a set and a superset; the
+uniqueness theorem follows by comparing a set with itself.
+-/
+
+theorem hasCardinality_le_of_subset {A B : FSet alpha} {m n : Nat}
+    [DecidableEq alpha]
+    (hAB : Subset A B) (hA : HasCardinality A m) (hB : HasCardinality B n) :
+    m <= n := by
+  cases hA with
+  | intro xs hxs =>
+      cases hB with
+      | intro ys hys =>
+          have hsub : forall a, a ∈ xs -> a ∈ ys := by
+            intro a ha
+            exact (hys.left.right a).mp (hAB a ((hxs.left.right a).mpr ha))
+          have hle := list_nodup_length_le_of_subset hxs.left.left hsub
+          rw [hxs.right, hys.right] at hle
+          exact hle
+
+theorem hasCardinality_unique {A : FSet alpha} {m n : Nat} [DecidableEq alpha]
+    (hm : HasCardinality A m) (hn : HasCardinality A n) : m = n := by
+  apply Nat.le_antisymm
+  · exact hasCardinality_le_of_subset (fun _ hx => hx) hm hn
+  · exact hasCardinality_le_of_subset (fun _ hx => hx) hn hm
+
+theorem hasCardinality_unique_classical {A : FSet alpha} {m n : Nat}
+    (hm : HasCardinality A m) (hn : HasCardinality A n) : m = n := by
+  classical
+  exact hasCardinality_unique hm hn
+
+/-!
+# Bridges to finiteness
+
+A cardinality witness is in particular a finite enumeration.  Conversely,
+deduplicating a finite enumeration produces a cardinality witness, so every
+finite set has some cardinality.
+-/
+
+theorem finite_of_hasCardinality {A : FSet alpha} {n : Nat}
+    (h : HasCardinality A n) : Finite A := by
+  cases h with
+  | intro xs hxs =>
+      exact Exists.intro xs hxs.left.right
+
+theorem exists_hasCardinality_of_finite [DecidableEq alpha] {A : FSet alpha}
+    (h : Finite A) : exists n, HasCardinality A n := by
+  cases finiteWithNoDuplicates_of_finite h with
+  | intro xs hxs =>
+      exact Exists.intro xs.length (Exists.intro xs (And.intro hxs rfl))
+
+theorem exists_hasCardinality_of_finite_classical {A : FSet alpha}
+    (h : Finite A) : exists n, HasCardinality A n := by
+  classical
+  exact exists_hasCardinality_of_finite h
+
+/-!
+# Counting segments
+
+The book's basis for counting is the family of initial segments
+{lit}`N_n = {0, 1, ..., n-1}` of the natural numbers.  Each segment has
+cardinality {lit}`n`.  Theorem 2.6 of Section 2.6 states that distinct
+segments admit no one-to-one correspondence: any function that maps
+{lit}`N_m` into {lit}`N_n` injectively and onto forces {lit}`m = n`.
+-/
+
+def Segment (n : Nat) : FSet Nat :=
+  fun k => k < n
+
+theorem segment_hasCardinality (n : Nat) : HasCardinality (Segment n) n := by
+  exists List.range n
+  constructor
+  · constructor
+    · exact List.nodup_range
+    · intro x
+      constructor
+      · intro hx
+        exact List.mem_range.mpr hx
+      · intro hx
+        exact List.mem_range.mp hx
+  · simp
+
+theorem segment_correspondence_eq {m n : Nat} (f : Nat -> Nat)
+    (hmap : forall x, x ∈ Segment m -> f x ∈ Segment n)
+    (hinj : forall x y, x ∈ Segment m -> y ∈ Segment m -> f x = f y -> x = y)
+    (hsurj : forall y, y ∈ Segment n -> exists x, x ∈ Segment m ∧ f x = y) :
+    m = n := by
+  apply Nat.le_antisymm
+  · exact cardinality_le_of_injective_maps_to
+      (segment_hasCardinality m) (segment_hasCardinality n) f
+      (by
+        intro x y hx hy hxy
+        exact hinj x y hx hy hxy)
+      hmap
+  · have hsub : forall y, y ∈ List.range n -> y ∈ (List.range m).map f := by
+      intro y hy
+      cases hsurj y (List.mem_range.mp hy) with
+      | intro x hx =>
+          exact List.mem_map.mpr
+            (Exists.intro x (And.intro (List.mem_range.mpr hx.left) hx.right))
+    have hle := list_nodup_length_le_of_subset List.nodup_range hsub
+    simpa using hle
+
+theorem no_segment_correspondence_of_ne {m n : Nat} (hmn : m ≠ n)
+    (f : Nat -> Nat) :
+    ¬ ((forall x, x ∈ Segment m -> f x ∈ Segment n) ∧
+        (forall x y, x ∈ Segment m -> y ∈ Segment m -> f x = f y -> x = y) ∧
+        (forall y, y ∈ Segment n -> exists x, x ∈ Segment m ∧ f x = y)) := by
+  intro h
+  exact hmn (segment_correspondence_eq f h.left h.right.left h.right.right)
+
 end FSet
 
 namespace ListCard
@@ -191,6 +312,67 @@ theorem length_pairs {alpha : Type u} {beta : Type v} (xs : List alpha) (ys : Li
       simp [Pairs, ih, Nat.add_mul, Nat.add_comm]
 
 /-!
+The pair list is a faithful model of the cross product: it contains exactly
+the pairs with coordinates from the two input lists, and it is duplicate-free
+whenever both inputs are.  These two lemmas upgrade the length identity above
+to the set-level product cardinality law proved at the end of this module.
+-/
+theorem mem_pairs {alpha : Type u} {beta : Type v}
+    {xs : List alpha} {ys : List beta} {p : alpha × beta} :
+    p ∈ Pairs xs ys <-> p.1 ∈ xs ∧ p.2 ∈ ys := by
+  induction xs with
+  | nil =>
+      simp [Pairs]
+  | cons x xs ih =>
+      simp only [Pairs]
+      constructor
+      · intro hp
+        cases List.mem_append.mp hp with
+        | inl hleft =>
+            cases List.mem_map.mp hleft with
+            | intro y hy =>
+                rw [← hy.right]
+                exact And.intro (List.Mem.head xs) hy.left
+        | inr hright =>
+            have h := ih.mp hright
+            exact And.intro (List.Mem.tail x h.left) h.right
+      · intro hp
+        cases p with
+        | mk a b =>
+            cases hp.left with
+            | head =>
+                exact List.mem_append.mpr
+                  (Or.inl (List.mem_map.mpr
+                    (Exists.intro b (And.intro hp.right rfl))))
+            | tail _ ha =>
+                exact List.mem_append.mpr
+                  (Or.inr (ih.mpr (And.intro ha hp.right)))
+
+theorem pairs_nodup {alpha : Type u} {beta : Type v}
+    {xs : List alpha} {ys : List beta}
+    (hxs : xs.Nodup) (hys : ys.Nodup) : (Pairs xs ys).Nodup := by
+  induction xs with
+  | nil =>
+      simp [Pairs]
+  | cons x xs ih =>
+      rw [List.nodup_cons] at hxs
+      simp only [Pairs]
+      rw [List.nodup_append]
+      constructor
+      · exact list_nodup_map_of_injective_on_list hys (by
+          intro a b _ _ hab
+          have hsnd := congrArg Prod.snd hab
+          simpa using hsnd)
+      constructor
+      · exact ih hxs.right
+      · intro p hp q hq hpq
+        cases List.mem_map.mp hp with
+        | intro y hy =>
+            have hq1 : q.1 ∈ xs := (mem_pairs.mp hq).left
+            rw [← hpq, ← hy.right] at hq1
+            exact hxs.left hq1
+
+/-!
 Disjoint union cardinality is represented by appending the two finite lists.
 -/
 theorem length_append (xs ys : List alpha) :
@@ -198,9 +380,11 @@ theorem length_append (xs ys : List alpha) :
   exact List.length_append
 
 /-!
-The finite inclusion-exclusion identity is reduced to the three disjoint parts:
-elements only on the left, elements in both sets, and elements only on the
-right.
+This identity is the arithmetic core of inclusion-exclusion: splitting a union
+into elements only on the left, elements in both sets, and elements only on
+the right.  It carries no set content by itself; the genuine set-level law is
+{lit}`FSet.union_hasCardinality_inclusion_exclusion`, proved at the end of
+this module.
 -/
 theorem union_cardinality_by_parts (leftOnly both rightOnly : Nat) :
     leftOnly + both + rightOnly =
@@ -229,6 +413,62 @@ theorem length_sublists {alpha : Type u} (xs : List alpha) :
   | cons x xs ih =>
       simp [Sublists, ih, Nat.pow_succ]
       lia
+
+/-!
+The sublist model is complete: the enumerated lists are exactly the sublists
+(in the sense of {name}`List.Sublist`) of the input.  When the input list is
+duplicate-free, the enumeration itself is duplicate-free, so its length
+{lit}`2 ^ n` is an honest count of the distinct sublists.  Together these
+lemmas justify reading {name}`length_sublists` as the powerset cardinality law
+for a set presented by a duplicate-free enumeration.
+-/
+theorem mem_sublists {alpha : Type u} {xs l : List alpha} :
+    l ∈ Sublists xs <-> l.Sublist xs := by
+  induction xs generalizing l with
+  | nil =>
+      simp [Sublists, List.sublist_nil]
+  | cons x xs ih =>
+      simp only [Sublists]
+      constructor
+      · intro hl
+        cases List.mem_append.mp hl with
+        | inl h =>
+            exact List.Sublist.cons x (ih.mp h)
+        | inr h =>
+            cases List.mem_map.mp h with
+            | intro t ht =>
+                rw [← ht.right]
+                exact List.Sublist.cons_cons x (ih.mp ht.left)
+      · intro hl
+        cases hl with
+        | cons _ h =>
+            exact List.mem_append.mpr (Or.inl (ih.mpr h))
+        | cons_cons _ h =>
+            exact List.mem_append.mpr
+              (Or.inr (List.mem_map.mpr
+                (Exists.intro _ (And.intro (ih.mpr h) rfl))))
+
+theorem sublists_nodup {alpha : Type u} {xs : List alpha}
+    (hxs : xs.Nodup) : (Sublists xs).Nodup := by
+  induction xs with
+  | nil =>
+      simp [Sublists]
+  | cons x xs ih =>
+      rw [List.nodup_cons] at hxs
+      simp only [Sublists]
+      rw [List.nodup_append]
+      constructor
+      · exact ih hxs.right
+      constructor
+      · exact list_nodup_map_of_injective_on_list (ih hxs.right) (by
+          intro a b _ _ hab
+          injection hab)
+      · intro l hl t ht hlt
+        cases List.mem_map.mp ht with
+        | intro t' ht' =>
+            have hsub := mem_sublists.mp hl
+            rw [hlt, ← ht'.right] at hsub
+            exact hxs.left (hsub.subset (List.Mem.head t'))
 
 /-!
 # Function spaces
@@ -265,7 +505,367 @@ theorem length_tuples {alpha : Type u} (choices : List alpha) (n : Nat) :
   | succ n ih =>
       rw [Tuples, length_extendTuples, ih, Nat.pow_succ]
 
+private theorem mem_extendTuples {alpha : Type u} {choices : List alpha}
+    {tails : List (List alpha)} {l : List alpha} :
+    l ∈ ExtendTuples choices tails <->
+      exists x t, x ∈ choices ∧ t ∈ tails ∧ l = x :: t := by
+  induction tails with
+  | nil =>
+      simp [ExtendTuples]
+  | cons tail tails ih =>
+      simp only [ExtendTuples]
+      constructor
+      · intro hl
+        cases List.mem_append.mp hl with
+        | inl h =>
+            cases List.mem_map.mp h with
+            | intro x hx =>
+                exact Exists.intro x (Exists.intro tail
+                  (And.intro hx.left
+                    (And.intro (List.Mem.head tails) hx.right.symm)))
+        | inr h =>
+            cases ih.mp h with
+            | intro x hx =>
+                cases hx with
+                | intro t ht =>
+                    exact Exists.intro x (Exists.intro t
+                      (And.intro ht.left
+                        (And.intro (List.Mem.tail tail ht.right.left)
+                          ht.right.right)))
+      · intro h
+        cases h with
+        | intro x hx =>
+            cases hx with
+            | intro t ht =>
+                cases ht.right.left with
+                | head =>
+                    exact List.mem_append.mpr
+                      (Or.inl (List.mem_map.mpr
+                        (Exists.intro x
+                          (And.intro ht.left ht.right.right.symm))))
+                | tail _ ht' =>
+                    exact List.mem_append.mpr
+                      (Or.inr (ih.mpr (Exists.intro x (Exists.intro t
+                        (And.intro ht.left
+                          (And.intro ht' ht.right.right))))))
+
+/-!
+The tuple model is complete and duplicate-free: its members are exactly the
+length-{lit}`n` lists drawn from the choice list, and the enumeration has no
+duplicates when the choice list has none.  These lemmas upgrade
+{name}`length_tuples` to an honest count of the distinct tuples.
+-/
+theorem mem_tuples {alpha : Type u} {choices : List alpha} {n : Nat}
+    {l : List alpha} :
+    l ∈ Tuples choices n <->
+      l.length = n ∧ forall x, x ∈ l -> x ∈ choices := by
+  induction n generalizing l with
+  | zero =>
+      simp only [Tuples]
+      constructor
+      · intro hl
+        have hnil : l = [] := by
+          cases hl with
+          | head => rfl
+          | tail _ h => cases h
+        rw [hnil]
+        exact And.intro rfl (by
+          intro x hx
+          cases hx)
+      · intro h
+        rw [List.length_eq_zero_iff.mp h.left]
+        exact List.Mem.head []
+  | succ n ih =>
+      rw [Tuples, mem_extendTuples]
+      constructor
+      · intro h
+        cases h with
+        | intro x hx =>
+            cases hx with
+            | intro t ht =>
+                have ht' := ih.mp ht.right.left
+                rw [ht.right.right]
+                constructor
+                · simp [ht'.left]
+                · intro y hy
+                  cases hy with
+                  | head => exact ht.left
+                  | tail _ h => exact ht'.right y h
+      · intro h
+        cases l with
+        | nil =>
+            cases h.left
+        | cons y t =>
+            exact Exists.intro y (Exists.intro t
+              (And.intro (h.right y (List.Mem.head t))
+                (And.intro (ih.mpr (And.intro
+                  (by
+                    have hlen := h.left
+                    simp at hlen
+                    exact hlen)
+                  (by
+                    intro z hz
+                    exact h.right z (List.Mem.tail y hz))))
+                  rfl)))
+
+private theorem extendTuples_nodup {alpha : Type u} {choices : List alpha}
+    {tails : List (List alpha)}
+    (hc : choices.Nodup) (ht : tails.Nodup) :
+    (ExtendTuples choices tails).Nodup := by
+  induction tails with
+  | nil =>
+      simp [ExtendTuples]
+  | cons tail tails ih =>
+      rw [List.nodup_cons] at ht
+      simp only [ExtendTuples]
+      rw [List.nodup_append]
+      constructor
+      · exact list_nodup_map_of_injective_on_list hc (by
+          intro a b _ _ hab
+          injection hab)
+      constructor
+      · exact ih ht.right
+      · intro l hl t' ht' hlt
+        cases List.mem_map.mp hl with
+        | intro x hx =>
+            cases mem_extendTuples.mp ht' with
+            | intro y hy =>
+                cases hy with
+                | intro u hu =>
+                    have hcons : x :: tail = y :: u := by
+                      rw [hx.right, hlt, hu.right.right]
+                    have htail : tail = u := by
+                      injection hcons
+                    apply ht.left
+                    rw [htail]
+                    exact hu.right.left
+
+theorem tuples_nodup {alpha : Type u} {choices : List alpha}
+    (hc : choices.Nodup) (n : Nat) : (Tuples choices n).Nodup := by
+  induction n with
+  | zero =>
+      simp [Tuples]
+  | succ n ih =>
+      rw [Tuples]
+      exact extendTuples_nodup hc ih
+
 end ListCard
+
+namespace FSet
+
+/-!
+# Set-level cardinality laws
+
+The list models above become genuine set-level theorems here: the cross
+product of sets with cardinalities {lit}`m` and {lit}`n` has cardinality
+{lit}`m * n`, and the union of two finite sets satisfies the book's
+inclusion-exclusion law.  These are the statements surfaced as Theorem 2.8 of
+Section 2.6.
+-/
+
+theorem product_hasCardinality {A : FSet alpha} {B : FSet beta} {m n : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n) :
+    HasCardinality (Product A B) (m * n) := by
+  cases hA with
+  | intro xs hxs =>
+      cases hB with
+      | intro ys hys =>
+          exists ListCard.Pairs xs ys
+          constructor
+          · constructor
+            · exact ListCard.pairs_nodup hxs.left.left hys.left.left
+            · intro p
+              constructor
+              · intro hp
+                exact ListCard.mem_pairs.mpr
+                  (And.intro ((hxs.left.right p.1).mp hp.left)
+                    ((hys.left.right p.2).mp hp.right))
+              · intro hp
+                have h := ListCard.mem_pairs.mp hp
+                exact And.intro ((hxs.left.right p.1).mpr h.left)
+                  ((hys.left.right p.2).mpr h.right)
+          · rw [ListCard.length_pairs, hxs.right, hys.right]
+
+private theorem list_nodup_filter (p : alpha -> Bool)
+    {xs : List alpha} (h : xs.Nodup) : (xs.filter p).Nodup := by
+  induction xs with
+  | nil =>
+      simp
+  | cons x xs ih =>
+      rw [List.nodup_cons] at h
+      rw [List.filter_cons]
+      by_cases hx : p x = true
+      · rw [if_pos hx, List.nodup_cons]
+        constructor
+        · intro hmem
+          exact h.left (List.mem_filter.mp hmem).left
+        · exact ih h.right
+      · rw [if_neg hx]
+        exact ih h.right
+
+private theorem list_length_filter_split (p : alpha -> Bool) (xs : List alpha) :
+    (xs.filter p).length + (xs.filter (fun x => !(p x))).length = xs.length := by
+  induction xs with
+  | nil => rfl
+  | cons x xs ih =>
+      by_cases hx : p x = true
+      · simp [hx]
+        lia
+      · simp [hx]
+        lia
+
+/-!
+The union of two finite sets is enumerated by listing the first set and then
+the members of the second set that were not already listed.  The skipped
+members are exactly the intersection, which yields the inclusion-exclusion
+count.  The primed form uses truncated subtraction on the outside; the
+subtraction is total because the intersection is a subset of either set.
+-/
+theorem union_inter_hasCardinality_parts [DecidableEq alpha]
+    {A B : FSet alpha} {m n k : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hI : HasCardinality (Inter A B) k) :
+    HasCardinality (Union A B) (m + (n - k)) := by
+  cases hA with
+  | intro xs hxs =>
+      cases hB with
+      | intro ys hys =>
+          have hBothEnum : ListUniquelyEnumerates
+              (ys.filter (fun y => decide (y ∈ xs))) (Inter A B) := by
+            constructor
+            · exact list_nodup_filter _ hys.left.left
+            · intro x
+              constructor
+              · intro hx
+                apply List.mem_filter.mpr
+                constructor
+                · exact (hys.left.right x).mp hx.right
+                · simp
+                  exact (hxs.left.right x).mp hx.left
+              · intro hx
+                have hx' := List.mem_filter.mp hx
+                have hxxs : x ∈ xs := by
+                  simpa using hx'.right
+                exact And.intro ((hxs.left.right x).mpr hxxs)
+                  ((hys.left.right x).mpr hx'.left)
+          have hkLen : (ys.filter (fun y => decide (y ∈ xs))).length = k :=
+            hasCardinality_unique
+              (Exists.intro _ (And.intro hBothEnum rfl)) hI
+          have hsplit :=
+            list_length_filter_split (fun y => decide (y ∈ xs)) ys
+          exists xs ++ ys.filter (fun y => !(decide (y ∈ xs)))
+          constructor
+          · constructor
+            · show (xs ++ ys.filter (fun y => !(decide (y ∈ xs)))).Nodup
+              rw [List.nodup_append]
+              constructor
+              · exact hxs.left.left
+              constructor
+              · exact list_nodup_filter _ hys.left.left
+              · intro a ha b hb hab
+                have hb' := List.mem_filter.mp hb
+                have hbxs : ¬ b ∈ xs := by
+                  simpa using hb'.right
+                rw [hab] at ha
+                exact hbxs ha
+            · intro x
+              constructor
+              · intro hx
+                by_cases hxxs : x ∈ xs
+                · exact List.mem_append.mpr (Or.inl hxxs)
+                · cases hx with
+                  | inl hxA =>
+                      exact False.elim (hxxs ((hxs.left.right x).mp hxA))
+                  | inr hxB =>
+                      apply List.mem_append.mpr
+                      apply Or.inr
+                      apply List.mem_filter.mpr
+                      constructor
+                      · exact (hys.left.right x).mp hxB
+                      · simp [hxxs]
+              · intro hx
+                cases List.mem_append.mp hx with
+                | inl hxxs =>
+                    exact Or.inl ((hxs.left.right x).mpr hxxs)
+                | inr hxfilter =>
+                    exact Or.inr ((hys.left.right x).mpr
+                      (List.mem_filter.mp hxfilter).left)
+          · rw [List.length_append, hxs.right]
+            rw [hkLen, hys.right] at hsplit
+            lia
+
+theorem union_hasCardinality_inclusion_exclusion [DecidableEq alpha]
+    {A B : FSet alpha} {m n k : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hI : HasCardinality (Inter A B) k) :
+    HasCardinality (Union A B) (m + n - k) := by
+  have hk : k <= n :=
+    hasCardinality_le_of_subset (fun _ hx => hx.right) hI hB
+  have h := union_inter_hasCardinality_parts hA hB hI
+  have heq : m + (n - k) = m + n - k := by lia
+  rw [heq] at h
+  exact h
+
+theorem union_hasCardinality_inclusion_exclusion_classical
+    {A B : FSet alpha} {m n k : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hI : HasCardinality (Inter A B) k) :
+    HasCardinality (Union A B) (m + n - k) := by
+  classical
+  exact union_hasCardinality_inclusion_exclusion hA hB hI
+
+/-!
+The additive form avoids natural-number subtraction entirely: the cardinality
+of the union plus the cardinality of the intersection equals the sum of the
+two cardinalities.
+-/
+theorem union_add_inter_cardinality [DecidableEq alpha]
+    {A B : FSet alpha} {m n u k : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hU : HasCardinality (Union A B) u)
+    (hI : HasCardinality (Inter A B) k) :
+    u + k = m + n := by
+  have hk : k <= n :=
+    hasCardinality_le_of_subset (fun _ hx => hx.right) hI hB
+  have h := union_inter_hasCardinality_parts hA hB hI
+  have hu : u = m + (n - k) := hasCardinality_unique hU h
+  lia
+
+theorem union_add_inter_cardinality_classical
+    {A B : FSet alpha} {m n u k : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hU : HasCardinality (Union A B) u)
+    (hI : HasCardinality (Inter A B) k) :
+    u + k = m + n := by
+  classical
+  exact union_add_inter_cardinality hA hB hU hI
+
+theorem union_hasCardinality_of_disjoint [DecidableEq alpha]
+    {A B : FSet alpha} {m n : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hAB : Disjoint A B) :
+    HasCardinality (Union A B) (m + n) := by
+  have hI : HasCardinality (Inter A B) 0 := by
+    apply hasCardinality_of_equal (A := (Empty : FSet alpha))
+    · intro x
+      constructor
+      · intro hx
+        cases hx
+      · intro hx
+        exact False.elim (hAB x hx)
+    · exact empty_has_cardinality_zero
+  have h := union_inter_hasCardinality_parts hA hB hI
+  simpa using h
+
+theorem union_hasCardinality_of_disjoint_classical
+    {A B : FSet alpha} {m n : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n)
+    (hAB : Disjoint A B) :
+    HasCardinality (Union A B) (m + n) := by
+  classical
+  exact union_hasCardinality_of_disjoint hA hB hAB
+
+end FSet
 
 end Foundation
 end FoC

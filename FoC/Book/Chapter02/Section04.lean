@@ -55,7 +55,8 @@ theorem preimage_membership (f : alpha -> beta) (B : FSet beta) (x : alpha) :
 
 The next statements expose the formal meanings of one-to-one, onto, and
 bijection. The distinct-images theorem is the usual contrapositive form of
-injectivity.
+injectivity; as in the book it holds for arbitrary types, with the reverse
+direction using classical case analysis.
 
 The quantifier order matters: injectivity starts with two inputs and compares
 their outputs, while surjectivity starts with a desired output and asks for an
@@ -70,9 +71,10 @@ theorem injective_definition (f : alpha -> beta) :
     Fn.Injective f <-> forall {x y}, f x = f y -> x = y :=
   Iff.rfl
 
-theorem injective_iff_distinct_images [DecidableEq alpha] (f : alpha -> beta) :
-    Fn.Injective f <-> forall x y, x ≠ y -> f x ≠ f y :=
-  Fn.injective_iff_distinct_images f
+theorem injective_iff_distinct_images (f : alpha -> beta) :
+    Fn.Injective f <-> forall x y, x ≠ y -> f x ≠ f y := by
+  classical
+  exact Fn.injective_iff_distinct_images f
 
 theorem distinct_images_of_injective {f : alpha -> beta}
     (hf : Fn.Injective f) : forall x y, x ≠ y -> f x ≠ f y :=

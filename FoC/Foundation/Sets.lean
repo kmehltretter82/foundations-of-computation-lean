@@ -414,6 +414,30 @@ theorem compl_listUnion (sets : List (FSet alpha)) :
             have htail : x ∈ Compl (ListUnion As) := (ih x).mpr hx.right
             exact htail hAs
 
+/-!
+# Classical complement laws
+
+The book states the complement laws for arbitrary sets, without any
+decidability assumption.  The lemmas above keep their decidable hypotheses so
+that computable developments can use them, and the corollaries below discharge
+those hypotheses with classical logic.  Book-facing wrappers should use the
+classical forms, which match the textbook statements exactly.
+-/
+
+theorem double_compl_classical (A : FSet alpha) : Equal (Compl (Compl A)) A := by
+  classical
+  exact double_compl A
+
+theorem union_compl_univ_classical (A : FSet alpha) :
+    Equal (Union A (Compl A)) Univ := by
+  classical
+  exact union_compl_univ A
+
+theorem demorgan_inter_classical (A B : FSet alpha) :
+    Equal (Compl (Inter A B)) (Union (Compl A) (Compl B)) := by
+  classical
+  exact demorgan_inter A B
+
 theorem compl_listInter (sets : List (FSet alpha))
     (hdec : forall A : FSet alpha, A ∈ sets -> DecidablePred (fun x => x ∈ A)) :
     Equal (Compl (ListInter sets)) (ListUnion (sets.map Compl)) := by
@@ -448,6 +472,11 @@ theorem compl_listInter (sets : List (FSet alpha))
                 intro B hB
                 exact hdec B (List.Mem.tail A hB)) x).mpr htail
             exact htailCompl hInter.right
+
+theorem compl_listInter_classical (sets : List (FSet alpha)) :
+    Equal (Compl (ListInter sets)) (ListUnion (sets.map Compl)) := by
+  classical
+  exact compl_listInter sets (fun _ _ => inferInstance)
 
 /-!
 # Cantor diagonalization

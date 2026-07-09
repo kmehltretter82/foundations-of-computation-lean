@@ -124,6 +124,18 @@ theorem classes_equal_or_disjoint {R : Rel alpha} (h : Equivalence R)
       intro x hx
       exact hoverlap (Exists.intro x hx))
 
+/-!
+The book states the dichotomy for arbitrary equivalence relations.  The
+classical corollary discharges the decidability hypothesis of
+{name}`classes_equal_or_disjoint`, so book-facing wrappers can state the
+dichotomy unconditionally.
+-/
+theorem classes_equal_or_disjoint_classical {R : Rel alpha} (h : Equivalence R)
+    (a b : alpha) :
+    FSet.Equal (Class R a) (Class R b) ∨ FSet.Disjoint (Class R a) (Class R b) := by
+  classical
+  exact classes_equal_or_disjoint h a b
+
 def classes_partition {R : Rel alpha} (h : Equivalence R) : Partition alpha where
   block := Classes R
   covers := by
