@@ -1,6 +1,8 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefix
+import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefixClosed
 import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputValidator
+import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanner.Closed
 
 set_option doc.verso true
 
@@ -1083,12 +1085,20 @@ theorem fuelSimulatorInputRecognizerDescription_forward
 /--
 Core decode inversion: if the marked stage-prefix + closed-fuel-nat scanner core
 halts from the marked handoff tape of some tail, then the originating code
-decodes into the FuelSimulator input family.  This is the remaining
-finite-machine obligation for closedness.
+decodes into the FuelSimulator input family.  The proof splits on the parse of
+the code: a successful parse with a nonempty suffix follows the forward run to
+the fuel scanner, which forces the suffix to be an exact fuel nat; an exact
+stage-input parse or a failed parse contradicts the halting run via the base
+scanner's closed spec or the marking-loop leaf.
 -/
 theorem fuelSimulatorInputRecognizerCoreDescription_closedDecode
     (code : Word MachineCodeSymbol) (tail : Word Bool) (Tmid : Tape Bool)
     (hbits : encodeCodeWordAsInput code = false :: false :: tail)
+    (hmark :
+      MarkStageInputSecondBitDescription.HaltsWithTape
+        (encodeCodeWordAsInput code)
+        (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+          (none :: tail.map some)))
     (hcore :
       exists nB : Nat,
         fuelSimulatorInputRecognizerCoreDescription.runConfig nB
@@ -1101,7 +1111,230 @@ theorem fuelSimulatorInputRecognizerCoreDescription_closedDecode
             tape := Tmid }) :
     exists i : FuelSimulatorStructuredIndex,
       decodeFuelSimulatorStructuredInputCode code = some i := by
-  sorry
+  -- Peel the marked-prefix/fuel-suffix sequence.
+  have hcoreFrom :
+      fuelSimulatorInputRecognizerCoreDescription.HaltsFromTape
+        (Tape.move Direction.right
+          (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+            (none :: tail.map some))) Tmid := by
+    rcases hcore with ⟨nB, hnB⟩
+    refine ⟨nB, ?_, ?_⟩
+    · simpa using congrArg MachineDescription.Configuration.state hnB
+    · simpa using congrArg MachineDescription.Configuration.tape hnB
+  obtain ⟨TmidMP, hMPFrom, nNat, hNatRun⟩ :=
+    seqSubroutine_haltsFromTape_inv
+      markedPrefixScannerDescription_subroutineReady
+      natClosedScannerDescription_ready hcoreFrom
+  obtain ⟨nA, hMPrun⟩ := runConfig_eq_halt_of_haltsFromTape hMPFrom
+  rw [show ({ state := MarkedPrefixScannerDescription.start
+              tape :=
+                Tape.move Direction.right
+                  (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+                    (none :: tail.map some)) } :
+        MachineDescription.Configuration) = markedTailStartConfig tail
+      from rfl] at hMPrun
+  -- Either the marked-prefix run agrees with the base scanner run (whose
+  -- closed spec pins the parse and the handoff tape), or the base run visited
+  -- state 210 over a bit (and the marking-loop leaf pins a nonempty parse).
+  have hdisj :=
+    markedPrefix_runConfig_eq_sims_or_reaches_state210_bit nA
+      (markedTailStartConfig tail)
+  have hspecOf :
+      MarkedPrefixScannerDescription.runConfig nA
+          (markedTailStartConfig tail) =
+        StageInputMarkedScannerDescription.runConfig nA
+          (markedTailStartConfig tail) ->
+      exists w : Word Bool,
+      exists stage : Nat,
+        code = PairedRecognizerDovetailStageInputCode w stage ∧
+          TmidMP = stageInputSecondBitMarkedCheckedHandoffTape w stage := by
+    intro heq
+    refine
+      stageInputMarkedScannerDescription_spec.2.2 code
+        (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+          (none :: tail.map some)) TmidMP hmark ⟨nA, ?_⟩
+    rw [show ({ state := StageInputMarkedScannerDescription.start
+                tape :=
+                  Tape.move Direction.right
+                    (DovetailInitialLayoutInitializer.tapeAtCells [some false]
+                      (none :: tail.map some)) } :
+          MachineDescription.Configuration) = markedTailStartConfig tail
+        from rfl]
+    rw [← heq]
+    exact hMPrun
+  have hleafOf :
+      (exists m : Nat,
+        m < nA ∧
+          (StageInputMarkedScannerDescription.runConfig m
+            (markedTailStartConfig tail)).state = 210 ∧
+            (Tape.read
+              (StageInputMarkedScannerDescription.runConfig m
+                (markedTailStartConfig tail)).tape).isSome) ->
+      exists w : Word Bool,
+      exists limit : Nat,
+      exists symbol : MachineCodeSymbol,
+      exists rest : Word MachineCodeSymbol,
+        DovetailLayout.decodeStageInput code =
+          some ((w, limit), symbol :: rest) := by
+    rintro ⟨m, -, h210, hread⟩
+    exact
+      sims_marked_code_tail_reach210_decodeStageInput code tail m
+        hbits h210 hread
+  cases hdec : DovetailLayout.decodeStageInput code with
+  | none =>
+      exfalso
+      rcases hdisj with heq | hreach
+      · obtain ⟨w', stage', hcode', -⟩ := hspecOf heq
+        rw [hcode'] at hdec
+        simp [PairedRecognizerDovetailStageInputCode,
+          DovetailLayout.decodeStageInput_stageInputCode] at hdec
+      · obtain ⟨w', limit', symbol', rest', hsome⟩ := hleafOf hreach
+        rw [hdec] at hsome
+        simp at hsome
+  | some parsed =>
+      rcases parsed with ⟨⟨w, limit⟩, suffix⟩
+      have hcodeEq :
+          code = DovetailLayout.stageInputCodeAppend w limit suffix :=
+        DovetailLayout.decodeStageInput_eq_some_stageInputCodeAppend hdec
+      cases suffix with
+      | nil =>
+          -- An exact stage-input code has no fuel suffix: the closed fuel
+          -- scanner would have to halt from a checked handoff tape, where it
+          -- is stuck within two steps.
+          exfalso
+          rcases hdisj with heq | hreach
+          · obtain ⟨w', stage', -, hTcheck⟩ := hspecOf heq
+            rw [hTcheck] at hNatRun
+            have hclosed :
+                StageInputMarkedScannerDescription.runConfig nNat
+                    { state := 200
+                      tape :=
+                        Tape.move Direction.right
+                          (stageInputSecondBitMarkedCheckedHandoffTape
+                            w' stage') } =
+                  { state := StageInputMarkedScannerDescription.halt
+                    tape := Tmid } := by
+              rw [← runConfig_eq_of_transitions_eq NatClosedScannerDescription
+                StageInputMarkedScannerDescription (by rfl)]
+              exact hNatRun
+            exact
+              sims_state200_checked_handoff_ne_halt w' stage' nNat
+                (by
+                  simpa using
+                    congrArg MachineDescription.Configuration.state hclosed)
+          · obtain ⟨w', limit', symbol', rest', hsome⟩ := hleafOf hreach
+            rw [hdec] at hsome
+            injection hsome with hsome
+            injection hsome with hpair hnil
+            cases hnil
+      | cons symbol rest' =>
+          -- The parse has a nonempty suffix: run the marked-prefix scanner
+          -- forward to its handoff and let the closed fuel scanner force the
+          -- suffix to be an exact fuel nat.
+          obtain ⟨b0, bits0, hcons⟩ :=
+            encodeCodeWordAsInput_cons_head symbol rest'
+          have htail :
+              tail =
+                List.append (stageInputSecondBitTail w limit)
+                  (encodeCodeWordAsInput (symbol :: rest')) := by
+            have hb :
+                encodeCodeWordAsInput code =
+                  List.append (stageInputBits w limit)
+                    (encodeCodeWordAsInput (symbol :: rest')) := by
+              rw [hcodeEq, stageInputCodeAppend_eq_append,
+                encodeCodeWordAsInput_append]
+              rfl
+            rw [hbits, stageInputBits_eq_false_false_tail] at hb
+            injection hb with _ hb
+            injection hb with _ hb
+          have htail' :
+              tail =
+                List.append (stageInputSecondBitTailPrefix w)
+                  (List.append (stageNatBits limit) (b0 :: bits0)) := by
+            rw [htail, hcons, stageInputSecondBitTail_eq_prefix_stageNat]
+            simp [List.append_assoc]
+          obtain ⟨baseLeft, nF, hforward⟩ :
+              exists baseLeft : List (Option Bool),
+              exists nF : Nat,
+                MarkedPrefixScannerDescription.runConfig nF
+                    (markedTailStartConfig tail) =
+                  config 200 baseLeft
+                    (List.append ((stageNatBits limit).map some)
+                      ((b0 :: bits0).map some)) := by
+            cases w with
+            | nil =>
+                refine ⟨[some true, some true, none, some false], 18, ?_⟩
+                rw [htail']
+                simpa [stageInputSecondBitTailPrefix] using
+                  markedPrefix_run_marked_tail_done_stageNat_to_state200
+                    limit (b0 :: bits0)
+            | cons wb wrest =>
+                rcases markedPrefix_run_marked_tail_nonempty_to_state200 wb
+                    wrest limit (b0 :: bits0) with ⟨steps, hsteps⟩
+                refine
+                  ⟨List.append
+                      ((stageInputSecondBitTailPrefix
+                        (wb :: wrest)).reverse.map some)
+                      (none :: [some false]), steps, ?_⟩
+                rw [htail']
+                simpa [stageInputSecondBitTailPrefix, List.append_assoc]
+                  using hsteps
+          obtain ⟨nH, hhandoff⟩ :=
+            run_markedPrefix_raw_to_handoff_withBase limit baseLeft b0 bits0
+          have hMPhalt :
+              MarkedPrefixScannerDescription.runConfig (nF + nH)
+                  (markedTailStartConfig tail) =
+                { state := MarkedPrefixScannerDescription.halt
+                  tape :=
+                    (natSuffixHandoffConfigWithBase limit baseLeft
+                      (b0 :: bits0)).tape } := by
+            rw [runConfig_add, hforward]
+            rw [show
+                (config 200 baseLeft
+                  (List.append ((stageNatBits limit).map some)
+                    ((b0 :: bits0).map some))) =
+                  (config 200 baseLeft
+                    (List.append ((stageNatBits limit).map some)
+                      (some b0 :: bits0.map some))) from rfl]
+            rw [hhandoff]
+            rfl
+          have hTmidEq :
+              TmidMP =
+                (natSuffixHandoffConfigWithBase limit baseLeft
+                  (b0 :: bits0)).tape :=
+            runConfig_halt_tape_functional_from_config
+              markedPrefixScannerDescription_haltTransitionFree hMPrun hMPhalt
+          have hmove :
+              Tape.move Direction.right TmidMP =
+                DovetailInitialLayoutInitializer.tapeAtCells
+                  (List.append ((stageNatBits limit).reverse.map some)
+                    baseLeft)
+                  ((b0 :: bits0).map some) := by
+            rw [hTmidEq]
+            exact
+              natSuffixHandoffConfigWithBase_move_right limit baseLeft b0 bits0
+          rw [hmove,
+            show ((b0 :: bits0 : Word Bool)) =
+              encodeCodeWordAsInput (symbol :: rest') from hcons.symm]
+            at hNatRun
+          have hSIMS :
+              StageInputMarkedScannerDescription.runConfig nNat
+                  (config 200
+                    (List.append ((stageNatBits limit).reverse.map some)
+                      baseLeft)
+                    ((encodeCodeWordAsInput (symbol :: rest')).map some)) =
+                { state := StageInputMarkedScannerDescription.halt
+                  tape := Tmid } := by
+            rw [← runConfig_eq_of_transitions_eq NatClosedScannerDescription
+              StageInputMarkedScannerDescription (by rfl)]
+            exact hNatRun
+          obtain ⟨fuel, hfuel⟩ :=
+            state200_code_tail_nat_inv (T := Tmid) ⟨nNat, hSIMS⟩
+          refine ⟨⟨w, limit, fuel⟩, ?_⟩
+          have hfuel' : symbol :: rest' = encodeNatAppend fuel [] := by
+            simpa [encodeNatAppend] using hfuel
+          simp [decodeFuelSimulatorStructuredInputCode, hdec, hfuel',
+            decodeNat_encodeNatAppend]
 
 /--
 Peels the marker/recognizer/identity wrappers off a halting run of the full
@@ -1158,11 +1391,10 @@ theorem fuelSimulatorInputRecognizerDescription_closedDecode
       fuelSimulatorInputRecognizerCoreDescription_ready hSIMC
   obtain ⟨tail, hbits, hTmark⟩ :=
     markStageInputSecondBitDescription_haltsWithTape_inv hMSIB
-  refine
+  rw [hTmark] at hMSIB hcoreRun
+  exact
     fuelSimulatorInputRecognizerCoreDescription_closedDecode
-      code tail Tmid2 hbits ⟨nB, ?_⟩
-  rw [hTmark] at hcoreRun
-  exact hcoreRun
+      code tail Tmid2 hbits hMSIB ⟨nB, hcoreRun⟩
 
 theorem fuelSimulatorInputRecognizerDescription_closedCanonical
     (code : Word MachineCodeSymbol) (T : Tape Bool)

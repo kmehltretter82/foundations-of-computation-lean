@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.CanonicalLayouts.DovetailStagePrefix
+import FoC.Computability.Compiler.Core.EncodingLemmas
 
 /-
 # Closed inversion for the dovetail stage-prefix scanner
@@ -162,6 +163,103 @@ theorem markedPrefix_runConfig_eq_sims_or_reaches_state210_bit
             have hMP : MP.runConfig (n + 1) c = c := by
               simp [MachineDescription.runConfig, hMPstep]
             exact Or.inl (by rw [hMP, hSIMS])
+
+/-- Appending a code suffix to a stage-input code is a plain list append. -/
+theorem stageInputCodeAppend_eq_append
+    (w : Word Bool) (stage : Nat) (suffix : Word MachineCodeSymbol) :
+    DovetailLayout.stageInputCodeAppend w stage suffix =
+      List.append (DovetailLayout.stageInputCode w stage) suffix := by
+  unfold DovetailLayout.stageInputCode DovetailLayout.stageInputCodeAppend
+  rw [show encodeNatAppend stage suffix =
+        List.append (encodeNatAppend stage []) suffix by
+      simp [encodeNatAppend]]
+  exact encodeBoolWordAppend_append w (encodeNatAppend stage []) suffix
+
+/-- The encoding of a nonempty code word starts with an explicit bit. -/
+theorem encodeCodeWordAsInput_cons_head
+    (symbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol) :
+    exists b : Bool,
+    exists bits : Word Bool,
+      encodeCodeWordAsInput (symbol :: rest) = b :: bits := by
+  cases symbol <;> exact ⟨_, _, rfl⟩
+
+/--
+The closed fuel-suffix scanner rejects a checked stage-input handoff tape: the
+cell one step to the right of the restored mark is a marked prefix bit, not the
+start of a stage nat, so the scanner is stuck within two steps.
+-/
+theorem sims_state200_checked_handoff_ne_halt
+    (w : Word Bool) (stage : Nat) (n : Nat) :
+    (SIMS.runConfig n
+        { state := 200
+          tape :=
+            Tape.move Direction.right
+              (stageInputSecondBitMarkedCheckedHandoffTape w stage) }).state ≠
+      SIMS.halt := by
+  cases w with
+  | nil =>
+      refine scanner_ne_halt_of_reaches_stepConfig_none (k := 0) ?_ ?_
+      · simp [stageInputSecondBitMarkedCheckedHandoffTape,
+          stageInputSecondBitMarkedCheckedTape,
+          stageInputSecondBitTail_eq_prefix_stageNat,
+          stageInputSecondBitTailPrefix,
+          StageInputMarkedScannerDescription,
+          tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, Matches, transition,
+          Tape.move, Tape.moveRight, Tape.read]
+      · simp [MachineDescription.runConfig,
+          StageInputMarkedScannerDescription]
+  | cons b rest =>
+      rcases stageNatBits_false_false_tail rest.length with ⟨t, ht⟩
+      refine scanner_ne_halt_of_reaches_stepConfig_none (k := 2) ?_ ?_
+      · simp [stageInputSecondBitMarkedCheckedHandoffTape,
+          stageInputSecondBitMarkedCheckedTape,
+          stageInputSecondBitTail_eq_prefix_stageNat,
+          stageInputSecondBitTailPrefix, ht,
+          StageInputMarkedScannerDescription,
+          tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, Matches, transition,
+          Tape.move, Tape.moveRight, Tape.read, Tape.write,
+          List.append_assoc]
+      · simp [stageInputSecondBitMarkedCheckedHandoffTape,
+          stageInputSecondBitMarkedCheckedTape,
+          stageInputSecondBitTail_eq_prefix_stageNat,
+          stageInputSecondBitTailPrefix, ht,
+          StageInputMarkedScannerDescription,
+          tapeAtCells, keep, keepMove, writeMove,
+          scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+          MachineDescription.runConfig, MachineDescription.stepConfig,
+          MachineDescription.lookupTransition, Matches, transition,
+          Tape.move, Tape.moveRight, Tape.read, Tape.write,
+          List.append_assoc]
+
+/--
+Remaining marking-loop leaf (temporary named sorry, tracked in
+FUELSIMULATOR_RECOGNIZER_SORRIES_PLAN.md): if the base scanner, started on the
+marked tail of an encoded code word, reaches state `210` with a bit under the
+head, then the code word parses as a stage-input prefix followed by a nonempty
+code suffix.  State `210` is entered exactly after the post-prefix stage nat
+scans to its done block, and the bit under the head is the first suffix bit.
+-/
+theorem sims_marked_code_tail_reach210_decodeStageInput
+    (code : Word MachineCodeSymbol) (tail : Word Bool) (m : Nat)
+    (hbits : encodeCodeWordAsInput code = false :: false :: tail)
+    (h210 :
+      (SIMS.runConfig m (markedTailStartConfig tail)).state = 210)
+    (hread :
+      (Tape.read
+        (SIMS.runConfig m (markedTailStartConfig tail)).tape).isSome = true) :
+    exists w : Word Bool,
+    exists limit : Nat,
+    exists symbol : MachineCodeSymbol,
+    exists rest : Word MachineCodeSymbol,
+      DovetailLayout.decodeStageInput code =
+        some ((w, limit), symbol :: rest) := by
+  sorry
 
 end DovetailStagePrefix
 end CanonicalLayouts
