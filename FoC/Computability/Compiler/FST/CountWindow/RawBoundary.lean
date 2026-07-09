@@ -4,6 +4,7 @@ import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.BlankSentinel
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.BlockMigrationLoop
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.EmitPulledRawBit
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CellSuffixLoop
+import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.ChunkExpandLoop
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.CountedBoundary
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.EndpointSupport
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.EraseRawFootprintBlankSentinel
