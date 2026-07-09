@@ -1273,6 +1273,267 @@ theorem rawBoundaryLengthCursorOutputBits_eq_length_cells
         (preservingCellPassCellBits layout) := by
   rfl
 
+private theorem rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell
+    (storedAnchor bit : Bool) (count : Nat)
+    (processed remaining : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    exists steps : Nat,
+      rawBoundaryLengthCursorLoopDescription.runConfig steps
+          { state := rawBoundaryLengthCursorLoopCursorCheck
+            tape :=
+              rawBoundaryLengthCursorCursorTape storedAnchor
+                (List.append (rawBoundaryLengthCursorStageNatBits count)
+                  processed)
+                (List.append (rawBoundaryLengthCursorCellBits bit)
+                  (preservingCellPassCellBits remaining))
+                blankTail right } =
+        { state := rawBoundaryLengthCursorLoopCursorCheck
+          tape :=
+            rawBoundaryLengthCursorCursorTape false
+              (List.append
+                (rawBoundaryLengthCursorStageNatBits (count + 1))
+                (List.append processed
+                  (rawBoundaryLengthCursorCellBits bit)))
+              (preservingCellPassCellBits remaining) blankTail right } := by
+  cases bit
+  · exact rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell_false
+      storedAnchor count processed remaining blankTail right
+  · exact rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell_true
+      storedAnchor count processed remaining blankTail right
+
+private theorem rawBoundaryLengthCursor_bootstrap_reshape
+    (bit : Bool) (rest : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    rawBoundaryLengthCursorCursorTape true rawBoundaryLengthCursorDoneBits
+        (preservingCellPassCellBits (bit :: rest)) blankTail right =
+      rawBoundaryLengthCursorCursorTape true
+        (List.append (rawBoundaryLengthCursorStageNatBits 0) [])
+        (List.append (rawBoundaryLengthCursorCellBits bit)
+          (preservingCellPassCellBits rest)) blankTail right := by
+  cases bit <;>
+    simp [rawBoundaryLengthCursorCursorTape,
+      rawBoundaryLengthCursorDoneBits_eq,
+      rawBoundaryLengthCursorStageNatBits,
+      rawBoundaryLengthCursorCellBits_false,
+      rawBoundaryLengthCursorCellBits_true,
+      preservingCellPassCellBits, preservingCellPassZeroBits,
+      preservingCellPassOneBits]
+
+private theorem rawBoundaryLengthCursor_final_reshape
+    (bit : Bool) (rest : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    rawBoundaryLengthCursorCursorTape false
+        (List.append
+          (rawBoundaryLengthCursorStageNatBits (0 + 1 + rest.length))
+          (List.append
+            (List.append [] (rawBoundaryLengthCursorCellBits bit))
+            (preservingCellPassCellBits rest)))
+        [] blankTail right =
+      rawBoundaryLengthCursorTargetTape (bit :: rest) blankTail right := by
+  cases bit <;>
+    simp [rawBoundaryLengthCursorCursorTape,
+      rawBoundaryLengthCursorTargetTape,
+      rawBoundaryLengthCursorSeparatorTape,
+      rawBoundaryLengthCursorOutputBits,
+      rawBoundaryLengthCursorStageNatBits,
+      rawBoundaryLengthCursorCellBits_false,
+      rawBoundaryLengthCursorCellBits_true,
+      preservingCellPassCellBits, preservingCellPassZeroBits,
+      preservingCellPassOneBits, List.reverse_append, List.map_append,
+      List.append_assoc, Nat.add_comm]
+
+private theorem rawBoundaryLengthCursorLoopDescription_run_halts_cons
+    (bit : Bool) (rest : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    exists steps : Nat,
+      rawBoundaryLengthCursorLoopDescription.runConfig steps
+          { state := rawBoundaryLengthCursorLoopStart
+            tape :=
+              rawBoundaryLengthCursorSeparatorTape
+                (preservingCellPassCellBits (bit :: rest)) blankTail
+                right } =
+        { state := rawBoundaryLengthCursorLoopHalt
+          tape :=
+            rawBoundaryLengthCursorTargetTape (bit :: rest) blankTail
+              right } := by
+  rcases rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell
+      true bit 0 [] rest blankTail right with ⟨cellSteps, hcell⟩
+  rcases rawBoundaryLengthCursorLoopDescription_run_cursorCheck_noAnchor
+      rest (0 + 1)
+      (List.append [] (rawBoundaryLengthCursorCellBits bit))
+      blankTail right with ⟨recSteps, hrec⟩
+  refine
+    ⟨(2 * (preservingCellPassCellBits (bit :: rest)).length + 10) +
+        (((preservingCellPassCellBits (bit :: rest)).length + 10) +
+          (cellSteps + recSteps)), ?_⟩
+  rw [MachineDescription.runConfig_add]
+  rw [rawBoundaryLengthCursorLoopDescription_run_donePrefix]
+  rw [MachineDescription.runConfig_add]
+  rw [rawBoundaryLengthCursorLoopDescription_run_cursorBootstrap]
+  rw [rawBoundaryLengthCursor_bootstrap_reshape]
+  rw [MachineDescription.runConfig_add]
+  rw [hcell]
+  rw [hrec]
+  rw [rawBoundaryLengthCursor_final_reshape]
+
+/--
+Exact start-to-halt headline for nonempty layouts: started on the separator
+blank with the cell-chunk block of {lit}`bit :: rest` to its left, the loop
+halts back on the separator with the full length-and-cells output block to its
+left, residue-free.
+-/
+theorem rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_cons
+    (bit : Bool) (rest : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    rawBoundaryLengthCursorLoopDescription.HaltsFromTape
+      (rawBoundaryLengthCursorSeparatorTape
+        (preservingCellPassCellBits (bit :: rest)) blankTail right)
+      (rawBoundaryLengthCursorTargetTape (bit :: rest) blankTail
+        right) := by
+  rcases rawBoundaryLengthCursorLoopDescription_run_halts_cons
+      bit rest blankTail right with ⟨steps, hrun⟩
+  refine ⟨steps, ?_⟩
+  show
+    (rawBoundaryLengthCursorLoopDescription.runConfig steps
+        { state := rawBoundaryLengthCursorLoopStart
+          tape :=
+            rawBoundaryLengthCursorSeparatorTape
+              (preservingCellPassCellBits (bit :: rest)) blankTail
+              right }).state =
+      rawBoundaryLengthCursorLoopHalt ∧
+    (rawBoundaryLengthCursorLoopDescription.runConfig steps
+        { state := rawBoundaryLengthCursorLoopStart
+          tape :=
+            rawBoundaryLengthCursorSeparatorTape
+              (preservingCellPassCellBits (bit :: rest)) blankTail
+              right }).tape =
+      rawBoundaryLengthCursorTargetTape (bit :: rest) blankTail right
+  rw [hrun]
+  exact ⟨rfl, rfl⟩
+
+private theorem rawBoundaryLengthCursor_nil_check_reshape
+    (blankTail : Nat) (right : List (Option Bool)) :
+    rawBoundaryLengthCursorCursorTape true rawBoundaryLengthCursorDoneBits
+        (preservingCellPassCellBits []) blankTail right =
+      tapeAtCells
+        (List.append ((true :: [true, false, false]).map some)
+          (if true then [none] else []))
+        (none ::
+          List.append
+            (List.replicate (blankTail + 1) (none : Option Bool))
+            right) := by
+  simp [rawBoundaryLengthCursorCursorTape,
+    rawBoundaryLengthCursorDoneBits_eq, preservingCellPassCellBits]
+
+private theorem rawBoundaryLengthCursorLoopDescription_run_halts_nil
+    (blankTail : Nat) (right : List (Option Bool)) :
+    exists steps : Nat,
+      rawBoundaryLengthCursorLoopDescription.runConfig steps
+          { state := rawBoundaryLengthCursorLoopStart
+            tape :=
+              rawBoundaryLengthCursorSeparatorTape
+                (preservingCellPassCellBits []) blankTail right } =
+        { state := rawBoundaryLengthCursorLoopHalt
+          tape :=
+            tapeAtCells
+              [some true, some true, some false, some false, none]
+              (none ::
+                List.append
+                  (List.replicate (blankTail + 1) (none : Option Bool))
+                  right) } := by
+  refine
+    ⟨(2 * (preservingCellPassCellBits []).length + 10) +
+        (((preservingCellPassCellBits []).length + 10) + 2), ?_⟩
+  rw [MachineDescription.runConfig_add]
+  rw [rawBoundaryLengthCursorLoopDescription_run_donePrefix]
+  rw [MachineDescription.runConfig_add]
+  rw [rawBoundaryLengthCursorLoopDescription_run_cursorBootstrap]
+  rw [rawBoundaryLengthCursor_nil_check_reshape]
+  rw [rawBoundaryLengthCursorLoopDescription_run_cursorCheck_halt true true
+    [true, false, false]
+    (List.append (List.replicate (blankTail + 1) (none : Option Bool))
+      right)]
+  simp
+
+private theorem rawBoundaryLengthCursor_halt_tape_nil_equiv
+    (blankTail : Nat) (right : List (Option Bool)) :
+    Tape.Equiv
+      (tapeAtCells [some true, some true, some false, some false, none]
+        (none ::
+          List.append
+            (List.replicate (blankTail + 1) (none : Option Bool))
+            right))
+      (rawBoundaryLengthCursorTargetTape [] blankTail right) := by
+  simp [Tape.Equiv, Tape.dropTrailingNone, tapeAtCells,
+    rawBoundaryLengthCursorTargetTape,
+    rawBoundaryLengthCursorSeparatorTape,
+    rawBoundaryLengthCursorOutputBits, preservingCellPassCellBits]
+
+/--
+Empty-layout headline.  The done-chunk phase leaves the far-left anchor blank
+behind as trailing residue, so the statement is tape equivalence rather than
+exact tape equality.
+-/
+theorem rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_nil
+    (blankTail : Nat) (right : List (Option Bool)) :
+    rawBoundaryLengthCursorLoopDescription.HaltsFromTapeEquiv
+      (rawBoundaryLengthCursorSeparatorTape
+        (preservingCellPassCellBits []) blankTail right)
+      (rawBoundaryLengthCursorTargetTape [] blankTail right) := by
+  rcases rawBoundaryLengthCursorLoopDescription_run_halts_nil
+      blankTail right with ⟨steps, hrun⟩
+  refine
+    ⟨tapeAtCells [some true, some true, some false, some false, none]
+        (none ::
+          List.append
+            (List.replicate (blankTail + 1) (none : Option Bool))
+            right),
+      ⟨steps, ?_⟩,
+      rawBoundaryLengthCursor_halt_tape_nil_equiv blankTail right⟩
+  show
+    (rawBoundaryLengthCursorLoopDescription.runConfig steps
+        { state := rawBoundaryLengthCursorLoopStart
+          tape :=
+            rawBoundaryLengthCursorSeparatorTape
+              (preservingCellPassCellBits []) blankTail right }).state =
+      rawBoundaryLengthCursorLoopHalt ∧
+    (rawBoundaryLengthCursorLoopDescription.runConfig steps
+        { state := rawBoundaryLengthCursorLoopStart
+          tape :=
+            rawBoundaryLengthCursorSeparatorTape
+              (preservingCellPassCellBits []) blankTail right }).tape =
+      tapeAtCells [some true, some true, some false, some false, none]
+        (none ::
+          List.append
+            (List.replicate (blankTail + 1) (none : Option Bool))
+            right)
+  rw [hrun]
+  exact ⟨rfl, rfl⟩
+
+/--
+Public start-to-halt headline of the length-cursor loop, uniform in the raw
+layout.  Started on the separator blank with the cell-chunk block of
+{lit}`layout` to its left, the loop halts back on the separator with
+{name}`rawBoundaryLengthCursorOutputBits` to its left, up to trailing blank
+residue.  Nonempty layouts admit the exact statement
+{name}`rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_cons`.
+-/
+theorem rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_obligation
+    (layout : Word Bool) (blankTail : Nat)
+    (right : List (Option Bool)) :
+    rawBoundaryLengthCursorLoopDescription.HaltsFromTapeEquiv
+      (rawBoundaryLengthCursorSeparatorTape
+        (preservingCellPassCellBits layout) blankTail right)
+      (rawBoundaryLengthCursorTargetTape layout blankTail right) := by
+  cases layout with
+  | nil =>
+      exact rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_nil
+        blankTail right
+  | cons bit rest =>
+      exact
+        (rawBoundaryLengthCursorLoopDescription_haltsFrom_separator_cons
+          bit rest blankTail right).toEquiv
+
 end RawBoundaryRightEdgeEmitter
 end CountWindowRawSourceEncoder
 end FiniteTransducers
