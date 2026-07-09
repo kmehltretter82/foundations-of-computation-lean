@@ -1365,7 +1365,7 @@ def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec
   emitter.SubroutineReady ∧
     forall (skipped count : Word Bool)
       (tailFirst : Bool) (tail : List (Option Bool)),
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (countWindowRawSourceEncoderRawBoundaryTape
           skipped count (some tailFirst :: tail))
         (countWindowRawSourceEncoderEncodedLayoutPreRewindTape
@@ -1469,7 +1469,7 @@ theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightE
         rightEdgeRewindDescription_subroutineReady
   · intro skipped count tailFirst tail
     exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
+      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
         hemitterSpec.left
         rightEdgeRewindDescription_subroutineReady
         (hemitterSpec.right skipped count tailFirst tail)

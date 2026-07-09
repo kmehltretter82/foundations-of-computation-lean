@@ -266,7 +266,7 @@ structure CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute
     forall skipped count : Word Bool,
     forall tailFirst : Bool,
     forall tail : List (Option Bool),
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (countWindowRawSourceEncoderRawBoundaryTape
           skipped count (some tailFirst :: tail))
         (countWindowRawSourceEncoderEncodedLayoutPreRewindTape

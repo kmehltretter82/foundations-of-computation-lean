@@ -2183,14 +2183,14 @@ structure RawBoundaryRightEdgeEmitterCoreRoute : Prop where
     forall skipped count : Word Bool,
     forall tailFirst : Bool,
     forall tail : List (Option Bool),
-      rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+      rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
         (rightEdgeTape skipped count tailFirst tail)
   wrapperHaltsPreRewind :
     forall skipped count : Word Bool,
     forall tailFirst : Bool,
     forall tail : List (Option Bool),
-      rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
+      rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
         (preRewindTape skipped count tailFirst tail)
   spec :
@@ -2262,11 +2262,11 @@ structure RawBoundaryRightEdgeEmitterEndpointRoute
   coreRoute :
     RawBoundaryRightEdgeEmitterCoreRoute
   sourceToRightEdge :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail)
   sourceToPreRewind :
-    rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
       (preRewindTape skipped count tailFirst tail)
   rightEdgeMove :

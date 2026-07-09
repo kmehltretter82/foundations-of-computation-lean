@@ -1330,7 +1330,7 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
     (skipped count : Word Bool)
     (h : List.append skipped count ≠ [])
     (tailFirst : Bool) (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail) := by
   -- Not provable for the current core description: the zero-raw-layout
@@ -1343,12 +1343,15 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
   -- `3 * (n - 2) + 3 <= count.length` while `count.length <= n`, which is
   -- unsatisfiable for layouts of length `n >= 2`, so the gap-consuming
   -- algorithm must first gain a room-making pass over the unread raw bits.
+  -- Planned replacement: expand cell chunks leftward past the left sentinel
+  -- (unbounded room), then migrate the assembled block rightward across the
+  -- constant-width gap to the live tail with one-for-one pulls.
   sorry
 
 theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
       (rightEdgeTape skipped count tailFirst tail) := by
   cases skipped with
@@ -1356,8 +1359,8 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
       cases count with
       | nil =>
           exact
-            rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
-              tailFirst tail
+            (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+              tailFirst tail).toEquiv
       | cons bit rest =>
           exact
             rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
@@ -1370,12 +1373,12 @@ theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdg
 theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
-    rawBoundaryRightEdgeEmitterDescription.HaltsFromTape
+    rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
       (preRewindTape skipped count tailFirst tail) := by
   rw [rawBoundaryRightEdgeEmitterDescription, preRewindTape]
   exact
-    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
       rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
       CommonGround.Identity.exactIdentityDescription_subroutineReady
       (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
@@ -1383,13 +1386,13 @@ theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
       rfl
       (CommonGround.Identity.exactIdentityDescription_haltsFromTape
         (Tape.move Direction.left
-          (rightEdgeTape skipped count tailFirst tail)))
+          (rightEdgeTape skipped count tailFirst tail))).toEquiv
 
 def Spec (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall (skipped count : Word Bool)
       (tailFirst : Bool) (tail : List (Option Bool)),
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
         (preRewindTape skipped count tailFirst tail)
 
