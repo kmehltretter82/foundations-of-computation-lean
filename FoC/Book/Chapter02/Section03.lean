@@ -31,7 +31,8 @@ open Foundation
 
 These statements make the computational reading of the set operations explicit:
 to test membership in a compound set, test the corresponding Boolean condition
-on the component memberships.
+on the component memberships. The complement test is not repeated here; it is
+already recorded in the Section 2.2 file as {lit}`complement_membership`.
 -/
 
 theorem union_membership_test (A B : FSet alpha) (x : alpha) :
@@ -46,16 +47,17 @@ theorem difference_membership_test (A B : FSet alpha) (x : alpha) :
     x ∈ FSet.Diff A B <-> x ∈ A ∧ ¬ x ∈ B :=
   Iff.rfl
 
-theorem complement_membership_test (A : FSet alpha) (x : alpha) :
-    x ∈ FSet.Compl A <-> ¬ x ∈ A :=
-  Iff.rfl
-
 /-!
 ## Bit-Vector Sets
 
-For finite universes, the book describes sets as bit vectors. This model uses
-{lean}`Nat -> Bool`, so each operation becomes a pointwise Boolean operation on
-indices.
+For finite universes, the book describes sets as bit vectors: 32-bit binary
+numbers whose universal set is the fixed index range 0 through 31. This model
+instead uses {lean}`Nat -> Bool`, so each operation becomes a pointwise
+Boolean operation on indices, but the universe is the whole of the natural
+numbers rather than the book's 32-bit range. The divergence matters only for
+{lit}`compl`: the book's bitwise not operator flips exactly 32 bits, while the
+complement here flips the bit at every natural-number index. The other
+operations agree with the book bit for bit.
 
 The theorems in this namespace are intentionally definitional: evaluating an
 operation at index {lit}`i` immediately reduces to the Boolean expression for that
@@ -66,12 +68,6 @@ namespace BitVectorSet
 
 abbrev BitSet : Type :=
   Nat -> Bool
-
-def empty : BitSet :=
-  fun _ => false
-
-def universal : BitSet :=
-  fun _ => true
 
 def union (A B : BitSet) : BitSet :=
   fun i => A i || B i

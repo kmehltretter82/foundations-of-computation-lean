@@ -24,24 +24,19 @@ failure propagates.
 open Foundation
 
 /-!
-## Total Functions and Evaluation
+## Total Functions as Partial Functions
 
 Lean's total functions already match the mathematical model. A partial
 function is represented here with {lean}`Option`, where {lit}`some` means
-defined and {lit}`none` means undefined.
+defined and {lit}`none` means undefined. The composition and evaluation
+equations that this page shares with the mathematical treatment are already
+recorded in the Section 2.4 file as {lit}`composition_value` and
+{lit}`evaluation_value`, so they are not repeated here.
 -/
 
 theorem total_function_as_partial (f : alpha -> beta) (x : alpha) :
     Fn.TotalAsPartial f x = some (f x) :=
   Fn.total_as_partial_defined f x
-
-theorem program_compose_value (f : beta -> gamma) (g : alpha -> beta) (x : alpha) :
-    Fn.Compose f g x = f (g x) :=
-  rfl
-
-theorem evaluation_of_function_value (f : alpha -> beta) (x : alpha) :
-    Fn.Evaluation (f, x) = f x :=
-  rfl
 
 /-!
 ## Higher-Order Functions
@@ -87,6 +82,97 @@ theorem partial_compose_some_left {g : beta -> Option gamma} {f : alpha -> Optio
     {x : alpha} {y : beta} (h : f x = some y) :
     PartialCompose g f x = g y := by
   simp [PartialCompose, h]
+
+/-!
+## Partial Functions and a Bottom Value
+
+Exercise 13 of Section 2.6 asks for a one-to-one correspondence between the
+functions from {lit}`A` to {lit}`B ∪ {⊥}` and the partial functions from
+{lit}`A` to {lit}`B`, where {lit}`⊥` is an entity that is not a member of
+{lit}`B`. Since the exercise is about the partial functions defined in this
+section, the correspondence is formalized here.
+
+The bottom-extended codomain is modeled by a set {lit}`B` together with a
+designated element {lit}`bot` outside it, and a function into that codomain is
+a total function whose values all lie in {lit}`FSet.Union B (FSet.Singleton bot)`.
+The correspondence is an explicit pair of mutually inverse translations:
+{lit}`RestrictToPartial` sends the {lit}`bot` outputs to {lit}`none`, and
+{lit}`ExtendWithBottom` sends {lit}`none` back to {lit}`bot`. The two
+round-trip theorems say the translations are inverse at every input, and the
+two value theorems say each translation lands in the intended function space.
+The book's hypothesis that {lit}`⊥` is not in {lit}`B` is used exactly once,
+to recover a partial function from its bottom-extended form. The restricting
+direction is noncomputable because testing whether an output equals
+{lit}`bot` has no algorithmic content for an arbitrary codomain type.
+-/
+
+open Classical in
+noncomputable def RestrictToPartial (bot : beta) (f : alpha -> beta) :
+    Fn.Partial alpha beta :=
+  fun x => if f x = bot then none else some (f x)
+
+def ExtendWithBottom (bot : beta) (p : Fn.Partial alpha beta) : alpha -> beta :=
+  fun x =>
+    match p x with
+    | none => bot
+    | some y => y
+
+theorem restrict_to_partial_values {B : FSet beta} {bot : beta}
+    {f : alpha -> beta}
+    (hf : forall x, f x ∈ FSet.Union B (FSet.Singleton bot))
+    {x : alpha} {y : beta} (h : RestrictToPartial bot f x = some y) :
+    y ∈ B := by
+  classical
+  by_cases hbot : f x = bot
+  · simp [RestrictToPartial, hbot] at h
+  · simp [RestrictToPartial, hbot] at h
+    cases hf x with
+    | inl hB =>
+        rw [<-h]
+        exact hB
+    | inr hsing =>
+        exact absurd hsing hbot
+
+theorem extend_with_bottom_values {B : FSet beta} {bot : beta}
+    {p : Fn.Partial alpha beta}
+    (hp : forall x y, p x = some y -> y ∈ B) (x : alpha) :
+    ExtendWithBottom bot p x ∈ FSet.Union B (FSet.Singleton bot) := by
+  cases hpx : p x with
+  | none =>
+      have hval : ExtendWithBottom bot p x = bot := by
+        simp [ExtendWithBottom, hpx]
+      rw [hval]
+      exact Or.inr rfl
+  | some y =>
+      have hval : ExtendWithBottom bot p x = y := by
+        simp [ExtendWithBottom, hpx]
+      rw [hval]
+      exact Or.inl (hp x y hpx)
+
+theorem extend_after_restrict (bot : beta) (f : alpha -> beta) (x : alpha) :
+    ExtendWithBottom bot (RestrictToPartial bot f) x = f x := by
+  classical
+  by_cases hbot : f x = bot
+  · simp [ExtendWithBottom, RestrictToPartial, hbot]
+  · simp [ExtendWithBottom, RestrictToPartial, hbot]
+
+theorem restrict_after_extend {B : FSet beta} {bot : beta}
+    (hbot : ¬ bot ∈ B) {p : Fn.Partial alpha beta}
+    (hp : forall x y, p x = some y -> y ∈ B) (x : alpha) :
+    RestrictToPartial bot (ExtendWithBottom bot p) x = p x := by
+  classical
+  cases hpx : p x with
+  | none =>
+      have hval : ExtendWithBottom bot p x = bot := by
+        simp [ExtendWithBottom, hpx]
+      simp [RestrictToPartial, hval]
+  | some y =>
+      have hval : ExtendWithBottom bot p x = y := by
+        simp [ExtendWithBottom, hpx]
+      have hne : ¬ y = bot := by
+        intro hyb
+        exact hbot (hyb ▸ hp x y hpx)
+      simp [RestrictToPartial, hval, hne]
 
 end Section05
 end Chapter02

@@ -57,11 +57,13 @@ The function and counting sections cover graphs, images, preimages,
 composition, injectivity, surjectivity, countability, Cantor diagonalization,
 and the rational/real uncountability bridge. Recent cleanup adds exact
 image/preimage transport laws for composition, union, intersection, and
-complement.
+complement, plus the correspondence between partial functions and total
+functions into a codomain extended with a bottom value.
 
 The relation and database sections cover equivalence classes, partitions,
-class overlap/disjointness, transitive closure, relational tables, filtering,
-updates, and primary-key preservation under insertion, selection, and deletion.
+class overlap/disjointness, the natural-number total order and the subset
+partial order, transitive closure, relational tables, filtering, updates, and
+primary-key preservation under insertion, selection, and deletion.
 Programming-language examples and database-management-system implementation
 details remain application material rather than formal source obligations.
 -/

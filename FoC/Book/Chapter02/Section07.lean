@@ -12,7 +12,8 @@ namespace Section07
 
 This section formalizes the chapter's relation vocabulary using the reusable
 definitions in {module}`FoC.Foundation.Relations`. The focus is on equivalence
-relations, equivalence classes, partitions, and transitive closure.
+relations, equivalence classes, partitions, partial and total orders, and
+transitive closure.
 
 A relation is modeled as a proposition-valued function of two inputs. The
 properties below, such as reflexive, symmetric, antisymmetric, and transitive,
@@ -58,11 +59,10 @@ theorem overlapping_equivalence_classes_are_equal {R : Rel alpha}
   Rel.overlapping_classes_equal h hoverlap
 
 theorem equivalence_classes_equal_or_disjoint {R : Rel alpha}
-    (h : Rel.Equivalence R) (a b : alpha)
-    [Decidable (exists x, x ∈ Rel.Class R a ∧ x ∈ Rel.Class R b)] :
+    (h : Rel.Equivalence R) (a b : alpha) :
     FSet.Equal (Rel.Class R a) (Rel.Class R b) ∨
       FSet.Disjoint (Rel.Class R a) (Rel.Class R b) :=
-  Rel.classes_equal_or_disjoint h a b
+  Rel.classes_equal_or_disjoint_classical h a b
 
 /-!
 ## Partitions and Fibers
@@ -79,6 +79,35 @@ def equivalence_classes_form_partition {R : Rel alpha}
 theorem function_fiber_equivalence (f : alpha -> beta) :
     Rel.Equivalence (fun x y : alpha => f x = f y) :=
   Rel.same_fiber_equivalence f
+
+/-!
+## Partial and Total Orders
+
+The book's two standard examples witness the order vocabulary. The numeric
+order on the natural numbers is reflexive, antisymmetric, transitive, and
+total. Set inclusion is a partial order: reflexivity and transitivity are
+immediate, and antisymmetry is Theorem 2.1, that mutual inclusion forces
+equality. The book states the inclusion example for the power set of a set;
+here it is stated for all predicate sets over a type, which is the power set
+of the universal set. In this model, mutual inclusion yields extensional
+equality of the membership predicates, which function and proposition
+extensionality upgrade to Lean equality.
+
+Inclusion is not a total order: as soon as the underlying type has two
+distinct elements, the corresponding singleton sets are incomparable.
+-/
+
+theorem natural_order_is_total_order :
+    Rel.TotalOrder (fun m n : Nat => m ≤ n) :=
+  Rel.nat_le_total_order
+
+theorem subset_is_partial_order :
+    Rel.PartialOrder (fun A B : FSet alpha => FSet.Subset A B) :=
+  Rel.subset_partial_order
+
+theorem subset_is_not_total {a b : alpha} (hab : a ≠ b) :
+    ¬ (forall A B : FSet alpha, FSet.Subset A B ∨ FSet.Subset B A) :=
+  Rel.subset_not_total_order a b hab
 
 /-!
 ## Relation Properties and Closure

@@ -23,6 +23,19 @@ namespace FoC
 namespace Foundation
 
 /-!
+# Set extensionality
+
+Mutual inclusion of predicate sets upgrades to Lean equality: pointwise
+equivalence of membership becomes equality of the membership predicates by
+function and proposition extensionality.  This is the form of the book's
+Theorem 2.1 that supplies antisymmetry for the subset order below.
+-/
+
+theorem FSet.eq_of_equal {A B : FSet alpha} (h : FSet.Equal A B) : A = B := by
+  funext x
+  exact propext (h x)
+
+/-!
 # Relation predicates
 
 A relation is a binary predicate.  The first definitions package the usual
@@ -172,6 +185,44 @@ theorem same_fiber_equivalence (f : alpha -> beta) :
       exact hxy.symm
     · intro x y z hxy hyz
       exact Eq.trans hxy hyz
+
+/-!
+# Order examples
+
+The chapter's two standard order examples witness the order definitions.  The
+numeric order on the natural numbers is a total order.  Set inclusion is a
+partial order whose antisymmetry comes from {name}`FSet.eq_of_equal`, and it
+is not total once the underlying type has two distinct elements: the two
+singleton sets are incomparable.
+-/
+
+theorem nat_le_total_order : TotalOrder (fun m n : Nat => m ≤ n) := by
+  refine And.intro (And.intro ?_ (And.intro ?_ ?_)) ?_
+  · intro n
+    exact Nat.le_refl n
+  · intro m n hmn hnm
+    exact Nat.le_antisymm hmn hnm
+  · intro k m n hkm hmn
+    exact Nat.le_trans hkm hmn
+  · intro m n
+    exact Nat.le_total m n
+
+theorem subset_partial_order :
+    PartialOrder (fun A B : FSet alpha => FSet.Subset A B) := by
+  refine And.intro ?_ (And.intro ?_ ?_)
+  · intro A x hx
+    exact hx
+  · intro A B hAB hBA
+    exact FSet.eq_of_equal (FSet.equal_of_subsets hAB hBA)
+  · intro A B C hAB hBC
+    exact FSet.subset_trans hAB hBC
+
+theorem subset_not_total_order (a b : alpha) (hab : a ≠ b) :
+    ¬ (forall A B : FSet alpha, FSet.Subset A B ∨ FSet.Subset B A) := by
+  intro htotal
+  cases htotal (FSet.Singleton a) (FSet.Singleton b) with
+  | inl hsub => exact hab (hsub a rfl)
+  | inr hsub => exact hab (hsub b rfl).symm
 
 /-!
 # Transitive closure
