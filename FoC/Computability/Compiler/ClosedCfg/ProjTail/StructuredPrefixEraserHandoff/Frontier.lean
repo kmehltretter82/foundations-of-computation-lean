@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHandoff.Base
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHandoff.Impl.PairParityEraser
 
 set_option doc.verso true
 
@@ -23,11 +24,9 @@ namespace BoundedLayoutRunner
 namespace SelectedProjectionPaddedTailCleanup
 
 theorem guardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction_core :
-    GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction := by
-  -- Remaining reusable finite-machine obligation: erase the guarded encodings
-  -- of the first two structured logical tapes, split by payload and padding
-  -- shape.
-  sorry
+    GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseConstruction :=
+  ⟨pairParityEraserDescription,
+    pairParityEraserDescription_splitPadSymbolCaseSpec⟩
 
 theorem guardedTwoTapeStructuredPrefixEraserConstruction_core :
     GuardedTwoTapeStructuredPrefixEraserConstruction := by
