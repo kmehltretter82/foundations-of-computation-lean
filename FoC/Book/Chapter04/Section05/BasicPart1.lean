@@ -73,14 +73,6 @@ def dfaAcceptingPresentation
     · intro hq
       simpa using (List.mem_filter.mp hq).2
 
-def dfaComplementAcceptingPresentation
-    (D : DFA input dstate) [DecidablePred D.accept] :
-    DFAAcceptingPresentation (DFA.Complement D) := by
-  let _ : DecidablePred (DFA.Complement D).accept := fun q => by
-    unfold DFA.Complement
-    infer_instance
-  exact dfaAcceptingPresentation (DFA.Complement D)
-
 def pdaIntersectDFA_transitionRule
     (D : DFA input dstate)
     (rule : PDA.TransitionRule input stack pstate)
@@ -262,6 +254,14 @@ def pdaIntersectDFA_finitePresentation
   accept_complete :=
     pdaIntersectDFA_accept_complete P D presentation accepting
 
+def pdaIntersectDFA_finitePresentation_auto
+    (P : PDA input stack pstate) (D : DFA input dstate)
+    (presentation : PDA.FinitePresentation P)
+    [DecidablePred D.accept] :
+    PDA.FinitePresentation (PDAIntersectDFA P D) :=
+  pdaIntersectDFA_finitePresentation P D presentation
+    (dfaAcceptingPresentation D)
+
 /-!
 # Product Exactness
 
@@ -272,17 +272,7 @@ summary is exact intersection.
 Exactness has two directions. A product computation projects to a PDA
 computation and a DFA run, and a PDA computation whose input is accepted by
 the DFA can be lifted to a product computation.
--/
 
-def pdaIntersectDFA_finitePresentation_auto
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    [DecidablePred D.accept] :
-    PDA.FinitePresentation (PDAIntersectDFA P D) :=
-  pdaIntersectDFA_finitePresentation P D presentation
-    (dfaAcceptingPresentation D)
-
-/-!
 The first exactness direction lifts a PDA computation into the product machine.
 The DFA state is not guessed: after consuming the whole input it must be
 {lit}`DFA.RunFrom D r c.unread`.
@@ -419,46 +409,7 @@ theorem pda_intersect_dfa_accepted_language_exact
 
 Once the product PDA has a finite presentation, the PDA-to-CFG theorem turns
 intersection and difference with DFA languages into context-free languages.
-Some wrappers keep the older conditional exactness target explicit, while the
-later theorems use the unconditional finite-presentation theorem.
 -/
-
-theorem pda_intersect_dfa_context_free_of_empty_summary_complete
-    {input stack pstate dstate : Type}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    (accepting : DFAAcceptingPresentation D)
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
-    CFL.ContextFreeLanguage
-      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) := by
-  let productPresentation :=
-    pdaIntersectDFA_finitePresentation P D presentation accepting
-  have hProduct :
-      CFL.ContextFreeLanguage
-        (PDA.AcceptedLanguage (PDAIntersectDFA P D)) :=
-    Section04.finite_presentation_pda_context_free_of_empty_summary_complete
-      (M := PDAIntersectDFA P D)
-      (presentation := productPresentation) hcomplete
-  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
-  exists nonterminal
-  exists G
-  constructor
-  · exact hfinite
-  · exact FoC.Foundation.FSet.equal_trans hEq
-      (fun w => pda_intersect_dfa_accepted_language_exact P D w)
-
-theorem pda_intersect_dfa_context_free_of_empty_summary_complete_auto
-    {input stack pstate dstate : Type}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    [DecidablePred D.accept]
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
-    CFL.ContextFreeLanguage
-      (Language.Inter (PDA.AcceptedLanguage P) (DFA.Language D)) :=
-  pda_intersect_dfa_context_free_of_empty_summary_complete
-    P D presentation (dfaAcceptingPresentation D) hcomplete
 
 theorem pda_intersect_dfa_context_free
     {input stack pstate dstate : Type}
@@ -482,52 +433,6 @@ theorem pda_intersect_dfa_context_free
   · exact hfinite
   · exact FoC.Foundation.FSet.equal_trans hEq
       (fun w => pda_intersect_dfa_accepted_language_exact P D w)
-
-theorem pda_diff_dfa_context_free_of_empty_summary_complete
-    {input stack pstate dstate : Type}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    (acceptingComplement :
-      DFAAcceptingPresentation (DFA.Complement D))
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete
-        (PDAIntersectDFA P (DFA.Complement D))) :
-    CFL.ContextFreeLanguage
-      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) := by
-  have hProduct :=
-    pda_intersect_dfa_context_free_of_empty_summary_complete
-      P (DFA.Complement D) presentation acceptingComplement hcomplete
-  rcases hProduct with ⟨nonterminal, G, hfinite, hEq⟩
-  exists nonterminal
-  exists G
-  constructor
-  · exact hfinite
-  · intro w
-    constructor
-    · intro hw
-      have hInter := (hEq w).mp hw
-      constructor
-      · exact hInter.left
-      · intro hD
-        exact (DFA.complement_accepts D w).mp hInter.right hD
-    · intro hw
-      apply (hEq w).mpr
-      constructor
-      · exact hw.left
-      · exact (DFA.complement_accepts D w).mpr hw.right
-
-theorem pda_diff_dfa_context_free_of_empty_summary_complete_auto
-    {input stack pstate dstate : Type}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    [DecidablePred D.accept]
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete
-        (PDAIntersectDFA P (DFA.Complement D))) :
-    CFL.ContextFreeLanguage
-      (Language.Diff (PDA.AcceptedLanguage P) (DFA.Language D)) :=
-  pda_diff_dfa_context_free_of_empty_summary_complete
-    P D presentation (dfaComplementAcceptingPresentation D) hcomplete
 
 theorem pda_diff_dfa_context_free
     {input stack pstate dstate : Type}
@@ -567,34 +472,6 @@ and {lit}`R` is recognized by a DFA, then {lit}`L ∩ R` and {lit}`L \\ R` are
 context-free.
 -/
 
-theorem finite_presentation_pda_language_inter_dfa_context_free_of_empty_summary_complete
-    {input stack pstate dstate : Type}
-    {L R : Language input}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    [DecidablePred D.accept]
-    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
-    (hD : Language.Equal (DFA.Language D) R)
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete (PDAIntersectDFA P D)) :
-    CFL.ContextFreeLanguage (Language.Inter L R) := by
-  have hBase :=
-    pda_intersect_dfa_context_free_of_empty_summary_complete_auto
-      P D presentation hcomplete
-  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
-  exists nonterminal
-  exists G
-  constructor
-  · exact hfinite
-  · intro w
-    constructor
-    · intro hw
-      have hprod := (hEq w).mp hw
-      exact And.intro ((hP w).mp hprod.left) ((hD w).mp hprod.right)
-    · intro hw
-      apply (hEq w).mpr
-      exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
-
 theorem finite_presentation_pda_language_inter_dfa_context_free
     {input stack pstate dstate : Type}
     {L R : Language input}
@@ -618,41 +495,6 @@ theorem finite_presentation_pda_language_inter_dfa_context_free
     · intro hw
       apply (hEq w).mpr
       exact And.intro ((hP w).mpr hw.left) ((hD w).mpr hw.right)
-
-theorem finite_presentation_pda_language_diff_dfa_context_free_of_empty_summary_complete
-    {input stack pstate dstate : Type}
-    {L R : Language input}
-    (P : PDA input stack pstate) (D : DFA input dstate)
-    (presentation : PDA.FinitePresentation P)
-    [DecidablePred D.accept]
-    (hP : Language.Equal (PDA.AcceptedLanguage P) L)
-    (hD : Language.Equal (DFA.Language D) R)
-    (hcomplete :
-      Section04.EmptySummaryPDAComplete
-        (PDAIntersectDFA P (DFA.Complement D))) :
-    CFL.ContextFreeLanguage (Language.Diff L R) := by
-  have hBase :=
-    pda_diff_dfa_context_free_of_empty_summary_complete_auto
-      P D presentation hcomplete
-  rcases hBase with ⟨nonterminal, G, hfinite, hEq⟩
-  exists nonterminal
-  exists G
-  constructor
-  · exact hfinite
-  · intro w
-    constructor
-    · intro hw
-      have hdiff := (hEq w).mp hw
-      constructor
-      · exact (hP w).mp hdiff.left
-      · intro hR
-        exact hdiff.right ((hD w).mpr hR)
-    · intro hw
-      apply (hEq w).mpr
-      constructor
-      · exact (hP w).mpr hw.left
-      · intro hDfa
-        exact hw.right ((hD w).mp hDfa)
 
 theorem finite_presentation_pda_language_diff_dfa_context_free
     {input stack pstate dstate : Type}

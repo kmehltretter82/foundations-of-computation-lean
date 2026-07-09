@@ -983,12 +983,6 @@ theorem anbncn_short_middle_count_a_or_c_zero
       lia
     exact anbncn_middle_before_c_count_c_zero hword hprefix
 
-theorem cfl_pumped_two_count (s : ABC) (u x y z v : Word ABC) :
-    Word.Count s (CFL.Pumped u x y z v 2) =
-      Word.Count s (CFL.Concat5 u x y z v) +
-        Word.Count s (Word.Concat x z) := by
-  exact cfl_pumped_two_count_symbol s u x y z v
-
 /-!
 Pumping with count {lit}`2` adds one extra copy of {lit}`x` and one extra copy
 of {lit}`z`. Since {lit}`x ++ z` is nonempty but misses either all {lit}`a`s or
@@ -1047,15 +1041,15 @@ theorem anbncn_pump_two_not_mem
   have hcountA :
       Word.Count ABC.a (CFL.Pumped u x y z v 2) =
         K + Word.Count ABC.a (Word.Concat x z) := by
-    rw [cfl_pumped_two_count, ← hword, anbncn_block_count_a K]
+    rw [cfl_pumped_two_count_symbol, ← hword, anbncn_block_count_a K]
   have hcountB :
       Word.Count ABC.b (CFL.Pumped u x y z v 2) =
         K + Word.Count ABC.b (Word.Concat x z) := by
-    rw [cfl_pumped_two_count, ← hword, anbncn_block_count_b K]
+    rw [cfl_pumped_two_count_symbol, ← hword, anbncn_block_count_b K]
   have hcountC :
       Word.Count ABC.c (CFL.Pumped u x y z v 2) =
         K + Word.Count ABC.c (Word.Concat x z) := by
-    rw [cfl_pumped_two_count, ← hword, anbncn_block_count_c K]
+    rw [cfl_pumped_two_count_symbol, ← hword, anbncn_block_count_c K]
   have hEqAB :
       K + Word.Count ABC.a (Word.Concat x z) =
         K + Word.Count ABC.b (Word.Concat x z) := by
@@ -1113,10 +1107,18 @@ theorem anbncn_not_context_free :
 /-!
 # The Duplicate-Word Language
 
-The book's second pumping example is `{ w w | w in {a,b}* }`. The full
-context-free pumping contradiction needs a careful position argument, but the
-basic vocabulary and count facts are reusable: every duplicate word has an even
-number of any fixed symbol.
+The book's second pumping example is `{ w w | w in {a,b}* }`. This module
+proves the counting core of the argument: every duplicate word has an even
+number of any fixed symbol, so a pumped word with five `b`s cannot be a
+duplicate. That closes every decomposition whose pumped block `x z` contains a
+`b` (see `duplicate_pump_two_not_mem_of_middle_count_b_le_one`).
+
+The complementary case, where `x z` consists entirely of `a`s, cannot be closed
+by any symbol count: duplicating an all-`a` block leaves every symbol count
+even. Settling it needs the book's position argument over the four `a`-blocks
+of `a^K b a^K b a^K b a^K b`, which is not formalized here. The reusable count
+lemmas below are the honest partial result; the full non-context-freeness
+theorem for `{ w w }` is left as future work.
 -/
 
 def duplicateWordLanguage : Language Section01.AB :=
@@ -1321,11 +1323,6 @@ theorem finite_production_cfls_not_closed_under_complement :
     astarBnCn_finite_production_context_free
     anbnCstar_inter_astarBnCn_exact
     finite_production_cfls_closed_under_union
-
-theorem anbncn_not_context_free_from_pumping_lemma
-    (_pumpingLemma : CFL.PumpingLemmaConclusion anbncnLanguage) :
-    ¬ CFL.ContextFreeLanguage anbncnLanguage :=
-  anbncn_not_context_free
 
 /-!
 The concrete contradiction for `{ a^n b^n c^n | n >= 0 }` is now formalized:
