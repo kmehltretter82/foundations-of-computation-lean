@@ -107,6 +107,28 @@ theorem integer_square_divisible_by_three_if_number_divisible_by_three {n : Int}
     (h : IntPred.Divides 3 n) : IntPred.Divides 3 (n * n) :=
   IntPred.divides_square_of_divides h
 
+/-!
+The exercise asks for an iff, and the substantive direction is the converse:
+if {lit}`3` divides a square, it divides the number. The proof transports the
+natural-number fact from the foundation layer through {lit}`Int.natAbs`.
+-/
+
+theorem integer_number_divisible_by_three_if_square_divisible_by_three {n : Int}
+    (h : IntPred.Divides 3 (n * n)) : IntPred.Divides 3 n := by
+  have hdvd : (3 : Int) ∣ n * n := h
+  have hnat : 3 ∣ n.natAbs * n.natAbs := by
+    have habs := Int.natAbs_dvd_natAbs.mpr hdvd
+    simpa [Int.natAbs_mul] using habs
+  have hn : 3 ∣ n.natAbs :=
+    NatDivisibility.three_dvd_of_three_dvd_square hnat
+  exact Int.natAbs_dvd_natAbs.mp (by simpa using hn)
+
+theorem integer_divisible_by_three_iff_square_divisible_by_three (n : Int) :
+    IntPred.Divides 3 n <-> IntPred.Divides 3 (n * n) :=
+  Iff.intro
+    integer_square_divisible_by_three_if_number_divisible_by_three
+    integer_number_divisible_by_three_if_square_divisible_by_three
+
 theorem sum_of_two_even_integers_even {m n : Int}
     (hm : IntPred.Even m) (hn : IntPred.Even n) : IntPred.Even (m + n) :=
   IntPred.even_add hm hn
