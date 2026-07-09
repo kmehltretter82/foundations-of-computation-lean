@@ -169,6 +169,199 @@ theorem scanner_ne_halt_of_reaches_ne_halt_region
   CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
     stageInputMarkedScannerDescription_haltTransitionFree hrun hmid
 
+/-
+**Suffix-gate closure.**  The scanner parks at state 210 over a bit exactly
+when a nonempty suffix follows a complete stage nat; that configuration is
+stuck, so a run has at most one such resting point.  Failure configurations
+freeze elsewhere (or the run halts), so their runs can never visit the suffix
+gate.  ScannerDeadAt packages the two exclusions used by the closed decode
+inversions.
+-/
+
+/-- State {lit}`210` has no row for a marked bit: such a configuration is stuck. -/
+theorem scanner_stepConfig_none_of_state210_bit
+    {c : Configuration}
+    (hstate : c.state = 210)
+    (hread : (Tape.read c.tape).isSome = true) :
+    SIMS.stepConfig c = none := by
+  rcases Option.isSome_iff_exists.mp hread with ⟨b, hb⟩
+  have hlook : SIMS.lookupTransition 210 (some b) = none := by
+    cases b <;> decide
+  unfold MachineDescription.stepConfig
+  rw [hstate, hb, hlook]
+
+/-- A run that visits the suffix gate freezes there. -/
+theorem scanner_runConfig_frozen_of_reach210_bit
+    {c : Configuration} {m : Nat}
+    (hstate : (SIMS.runConfig m c).state = 210)
+    (hread :
+      (Tape.read (SIMS.runConfig m c).tape).isSome = true)
+    (i : Nat) :
+    SIMS.runConfig (m + i) c = SIMS.runConfig m c := by
+  rw [runConfig_add]
+  exact
+    runConfig_of_stepConfig_none
+      (scanner_stepConfig_none_of_state210_bit hstate hread) i
+
+/-- A halting run never visits the suffix gate. -/
+theorem scanner_halt_no_reach210_bit
+    {c : Configuration} {T : Tape Bool} {n m : Nat}
+    (hhalt :
+      SIMS.runConfig n c = { state := SIMS.halt, tape := T })
+    (hstate : (SIMS.runConfig m c).state = 210)
+    (hread :
+      (Tape.read (SIMS.runConfig m c).tape).isSome = true) :
+    False := by
+  by_cases hmn : n ≤ m
+  · have hfrozen :
+        SIMS.runConfig m c = { state := SIMS.halt, tape := T } := by
+      have hsplit : m = n + (m - n) := by lia
+      rw [hsplit, runConfig_add, hhalt]
+      exact
+        runConfig_halt
+          stageInputMarkedScannerDescription_haltTransitionFree T (m - n)
+    rw [hfrozen] at hstate
+    simp [StageInputMarkedScannerDescription] at hstate
+  · have hfrozen :
+        SIMS.runConfig n c = SIMS.runConfig m c := by
+      have hsplit : n = m + (n - m) := by lia
+      rw [hsplit]
+      exact scanner_runConfig_frozen_of_reach210_bit hstate hread (n - m)
+    rw [hhalt] at hfrozen
+    have hproj := congrArg Configuration.state hfrozen
+    rw [hstate] at hproj
+    simp [StageInputMarkedScannerDescription] at hproj
+
+/--
+A visit to the suffix gate survives cutting off a run prefix: either the visit
+happens after the prefix, or the run froze at the gate before the prefix ended
+and the prefix endpoint is the gate configuration itself.
+-/
+theorem scanner_reach210_bit_after_prefix
+    {c mid : Configuration} {k m : Nat}
+    (hprefix : SIMS.runConfig k c = mid)
+    (hstate : (SIMS.runConfig m c).state = 210)
+    (hread :
+      (Tape.read (SIMS.runConfig m c).tape).isSome = true) :
+    exists m' : Nat,
+      (SIMS.runConfig m' mid).state = 210 ∧
+        (Tape.read (SIMS.runConfig m' mid).tape).isSome = true := by
+  by_cases hkm : k ≤ m
+  · refine ⟨m - k, ?_, ?_⟩
+    · have hsplit : m = k + (m - k) := by lia
+      rw [hsplit, runConfig_add, hprefix] at hstate
+      exact hstate
+    · have hsplit : m = k + (m - k) := by lia
+      rw [hsplit, runConfig_add, hprefix] at hread
+      exact hread
+  · have hfrozen :
+        SIMS.runConfig k c = SIMS.runConfig m c := by
+      have hsplit : k = m + (k - m) := by lia
+      rw [hsplit]
+      exact scanner_runConfig_frozen_of_reach210_bit hstate hread (k - m)
+    rw [hprefix] at hfrozen
+    refine ⟨0, ?_, ?_⟩
+    · show (SIMS.runConfig 0 mid).state = 210
+      rw [show SIMS.runConfig 0 mid = mid from rfl, hfrozen]
+      exact hstate
+    · show (Tape.read (SIMS.runConfig 0 mid).tape).isSome = true
+      rw [show SIMS.runConfig 0 mid = mid from rfl, hfrozen]
+      exact hread
+
+/--
+Step {lit}`n` of the run from {lit}`c` neither halts nor rests at state
+{lit}`210` with a bit under the head.
+-/
+def ScannerDeadAt (c : Configuration) (n : Nat) : Prop :=
+  (SIMS.runConfig n c).state ≠ SIMS.halt ∧
+    ¬((SIMS.runConfig n c).state = 210 ∧
+      (Tape.read (SIMS.runConfig n c).tape).isSome = true)
+
+theorem scannerDeadAt_of_reaches_stuck
+    {c stuck : Configuration} {k n : Nat}
+    (hrun : SIMS.runConfig k c = stuck)
+    (hstep : SIMS.stepConfig stuck = none)
+    (hhalt : stuck.state ≠ SIMS.halt)
+    (h210 : stuck.state ≠ 210) :
+    ScannerDeadAt c n := by
+  refine ⟨scanner_ne_halt_of_reaches_stuck hrun hstep hhalt, ?_⟩
+  rintro ⟨hstate, hread⟩
+  by_cases hkn : k ≤ n
+  · have hn : SIMS.runConfig n c = stuck := by
+      have hsplit : n = k + (n - k) := by lia
+      rw [hsplit, runConfig_add, hrun]
+      exact runConfig_of_stepConfig_none hstep (n - k)
+    rw [hn] at hstate
+    exact h210 hstate
+  · have hk : SIMS.runConfig k c = SIMS.runConfig n c := by
+      have hsplit : k = n + (k - n) := by lia
+      rw [hsplit]
+      exact scanner_runConfig_frozen_of_reach210_bit hstate hread (k - n)
+    rw [hrun] at hk
+    rw [← hk] at hstate
+    exact h210 hstate
+
+theorem scannerDeadAt_of_reaches_stepConfig_none
+    {c : Configuration} {k n : Nat}
+    (hstep : SIMS.stepConfig (SIMS.runConfig k c) = none)
+    (hhalt : (SIMS.runConfig k c).state ≠ SIMS.halt)
+    (h210 : (SIMS.runConfig k c).state ≠ 210) :
+    ScannerDeadAt c n :=
+  scannerDeadAt_of_reaches_stuck (k := k) rfl hstep hhalt h210
+
+theorem scannerDeadAt_of_reaches_dead_region
+    {c mid : Configuration} {k n : Nat}
+    (hrun : SIMS.runConfig k c = mid)
+    (hmid : forall m : Nat, ScannerDeadAt mid m) :
+    ScannerDeadAt c n := by
+  refine
+    ⟨scanner_ne_halt_of_reaches_ne_halt_region hrun
+      (fun m => (hmid m).1), ?_⟩
+  rintro ⟨hstate, hread⟩
+  by_cases hkn : k ≤ n
+  · have hn :
+        SIMS.runConfig n c = SIMS.runConfig (n - k) mid := by
+      have hsplit :
+          SIMS.runConfig n c = SIMS.runConfig (k + (n - k)) c := by
+        have hnk : k + (n - k) = n := by lia
+        rw [hnk]
+      rw [hsplit, runConfig_add, hrun]
+    rw [hn] at hstate hread
+    exact (hmid (n - k)).2 ⟨hstate, hread⟩
+  · have hk : SIMS.runConfig k c = SIMS.runConfig n c := by
+      have hsplit : k = n + (k - n) := by lia
+      rw [hsplit]
+      exact scanner_runConfig_frozen_of_reach210_bit hstate hread (k - n)
+    rw [hrun] at hk
+    refine (hmid 0).2 ⟨?_, ?_⟩
+    · show (SIMS.runConfig 0 mid).state = 210
+      rw [show SIMS.runConfig 0 mid = mid from rfl, hk]
+      exact hstate
+    · show (Tape.read (SIMS.runConfig 0 mid).tape).isSome = true
+      rw [show SIMS.runConfig 0 mid = mid from rfl, hk]
+      exact hread
+
+/-- The marked tail of a code word never starts with a cleared bit. -/
+theorem scanner_marked_tail_false_dead
+    (rest : Word Bool) (n : Nat) :
+    ScannerDeadAt (markedTailStartConfig (false :: rest)) n := by
+  have hstep :
+      SIMS.stepConfig
+          (markedTailStartConfig (false :: rest)) = none := by
+    cases rest <;>
+    simp [markedTailStartConfig, StageInputMarkedScannerDescription,
+      tapeAtCells, keep, keepMove, writeMove,
+      scanLeftToSentinelRestart, scanLeftToSentinelHalt,
+      stepConfig, lookupTransition,
+      Matches, transition,
+      Tape.move, Tape.moveRight, Tape.read]
+  refine
+    scannerDeadAt_of_reaches_stepConfig_none (k := 0) hstep ?_ ?_
+  · simp [markedTailStartConfig, StageInputMarkedScannerDescription,
+      MachineDescription.runConfig]
+  · simp [markedTailStartConfig, StageInputMarkedScannerDescription,
+      MachineDescription.runConfig]
+
 /-!
 **Closed-tail inversion.**  The scanner accepts some arbitrary bit tails that
 cannot arise from an encoded code word.  The shape inversion is therefore stated
@@ -329,27 +522,29 @@ theorem run_marked_tail_done_false_false_to_state200
     transition, Tape.read, Tape.write,
     Tape.move, Tape.moveLeft, Tape.moveRight]
 
-private theorem state120_natPrefixFailure_ne_halt
+private theorem state120_natPrefixFailure_dead
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (config 120 leftRev
-        ((encodeCodeWordAsInput tokens).map some))).state ≠
-      SIMS.halt := by
+        ((encodeCodeWordAsInput tokens).map some)) n := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        scanner_ne_halt_of_reaches_stepConfig_none
+        scannerDeadAt_of_reaches_stepConfig_none
           (k := 0) (by
             rfl)
           (by
             change (120 : Nat) ≠ 999
             lia)
+          (by
+            change (120 : Nat) ≠ 210
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 2) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -366,9 +561,12 @@ private theorem state120_natPrefixFailure_ne_halt
               (by
                 change (122 : Nat) ≠ 999
                 lia)
+              (by
+                change (122 : Nat) ≠ 210
+                lia)
       | transition =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 2) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -384,6 +582,9 @@ private theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (122 : Nat) ≠ 999
+                lia)
+              (by
+                change (122 : Nat) ≠ 210
                 lia)
       | tick =>
           simp [decodeNat] at hdecode
@@ -391,7 +592,7 @@ private theorem state120_natPrefixFailure_ne_halt
           | none =>
               simp [hrest] at hdecode
               apply
-                scanner_ne_halt_of_reaches_ne_halt_region
+                scannerDeadAt_of_reaches_dead_region
                   (k := 4)
                   (mid :=
                     config 120
@@ -412,7 +613,7 @@ private theorem state120_natPrefixFailure_ne_halt
           simp [decodeNat] at hdecode
       | blank =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -428,10 +629,13 @@ private theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
+                lia)
+              (by
+                change (121 : Nat) ≠ 210
                 lia)
       | zero =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -447,10 +651,13 @@ private theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
+                lia)
+              (by
+                change (121 : Nat) ≠ 210
                 lia)
       | one =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -466,10 +673,13 @@ private theorem state120_natPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (121 : Nat) ≠ 999
+                lia)
+              (by
+                change (121 : Nat) ≠ 210
                 lia)
       | moveLeft =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -486,9 +696,12 @@ private theorem state120_natPrefixFailure_ne_halt
               (by
                 change (121 : Nat) ≠ 999
                 lia)
+              (by
+                change (121 : Nat) ≠ 210
+                lia)
       | moveRight =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 0) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -505,6 +718,17 @@ private theorem state120_natPrefixFailure_ne_halt
               (by
                 change (120 : Nat) ≠ 999
                 lia)
+              (by
+                change (120 : Nat) ≠ 210
+                lia)
+
+theorem run_state120_decodeNat_none_dead
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : decodeNat tokens = none) (n : Nat) :
+    ScannerDeadAt
+      (config 120 leftRev
+        ((encodeCodeWordAsInput tokens).map some)) n :=
+  state120_natPrefixFailure_dead tokens leftRev hdecode n
 
 theorem run_state120_decodeNat_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -513,29 +737,31 @@ theorem run_state120_decodeNat_none_ne_halt
       (config 120 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
       SIMS.halt :=
-  state120_natPrefixFailure_ne_halt tokens leftRev hdecode n
+  (state120_natPrefixFailure_dead tokens leftRev hdecode n).1
 
-private theorem state130_cellPrefixFailure_ne_halt
+private theorem state130_cellPrefixFailure_dead
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeCell tokens = none) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (config 130 leftRev
-        ((encodeCodeWordAsInput tokens).map some))).state ≠
-      SIMS.halt := by
+        ((encodeCodeWordAsInput tokens).map some)) n := by
   cases tokens with
   | nil =>
       exact
-        scanner_ne_halt_of_reaches_stepConfig_none
+        scannerDeadAt_of_reaches_stepConfig_none
           (k := 0) (by
             rfl)
           (by
             change (130 : Nat) ≠ 999
             lia)
+          (by
+            change (130 : Nat) ≠ 210
+            lia)
   | cons symbol rest =>
       cases symbol with
       | header =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -551,10 +777,13 @@ private theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
+                lia)
+              (by
+                change (131 : Nat) ≠ 210
                 lia)
       | transition =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -570,10 +799,13 @@ private theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
+                lia)
+              (by
+                change (131 : Nat) ≠ 210
                 lia)
       | tick =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -590,9 +822,12 @@ private theorem state130_cellPrefixFailure_ne_halt
               (by
                 change (131 : Nat) ≠ 999
                 lia)
+              (by
+                change (131 : Nat) ≠ 210
+                lia)
       | done =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -608,6 +843,9 @@ private theorem state130_cellPrefixFailure_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (131 : Nat) ≠ 999
+                lia)
+              (by
+                change (131 : Nat) ≠ 210
                 lia)
       | blank =>
           simp [decodeCell] at hdecode
@@ -617,7 +855,7 @@ private theorem state130_cellPrefixFailure_ne_halt
           simp [decodeCell] at hdecode
       | moveLeft =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 5) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -635,9 +873,12 @@ private theorem state130_cellPrefixFailure_ne_halt
               (by
                 change (145 : Nat) ≠ 999
                 lia)
+              (by
+                change (145 : Nat) ≠ 210
+                lia)
       | moveRight =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -654,6 +895,17 @@ private theorem state130_cellPrefixFailure_ne_halt
               (by
                 change (135 : Nat) ≠ 999
                 lia)
+              (by
+                change (135 : Nat) ≠ 210
+                lia)
+
+theorem run_state130_decodeCell_none_dead
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : decodeCell tokens = none) (n : Nat) :
+    ScannerDeadAt
+      (config 130 leftRev
+        ((encodeCodeWordAsInput tokens).map some)) n :=
+  state130_cellPrefixFailure_dead tokens leftRev hdecode n
 
 theorem run_state130_decodeCell_none_ne_halt
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
@@ -662,18 +914,17 @@ theorem run_state130_decodeCell_none_ne_halt
       (config 130 leftRev
         ((encodeCodeWordAsInput tokens).map some))).state ≠
       SIMS.halt :=
-  state130_cellPrefixFailure_ne_halt tokens leftRev hdecode n
+  (state130_cellPrefixFailure_dead tokens leftRev hdecode n).1
 
-theorem run_state130_blank_cell_ne_halt
+theorem run_state130_blank_cell_dead
     (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (config 130 leftRev
         ((encodeCodeWordAsInput
-          (encodeCellAppend none suffix)).map some))).state ≠
-      SIMS.halt := by
+          (encodeCellAppend none suffix)).map some)) n := by
   exact
-    scanner_ne_halt_of_reaches_stepConfig_none
+    scannerDeadAt_of_reaches_stepConfig_none
       (k := 5) (by
         cases suffix <;>
         simp [StageInputMarkedScannerDescription, config, tapeAtCells,
@@ -691,6 +942,19 @@ theorem run_state130_blank_cell_ne_halt
       (by
         change (139 : Nat) ≠ 999
         lia)
+      (by
+        change (139 : Nat) ≠ 210
+        lia)
+
+theorem run_state130_blank_cell_ne_halt
+    (suffix : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (n : Nat) :
+    (SIMS.runConfig n
+      (config 130 leftRev
+        ((encodeCodeWordAsInput
+          (encodeCellAppend none suffix)).map some))).state ≠
+      SIMS.halt :=
+  (run_state130_blank_cell_dead suffix leftRev n).1
 
 private def markingTailConfig
     (marked : Word Bool) (remainingCells : Nat)
@@ -834,15 +1098,14 @@ private theorem run_marking_tail_mark_one
   rw [hleftNext]
   simp
 
-private theorem markingTail_cellListFailure_ne_halt
+private theorem markingTail_cellListFailure_dead
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol)
     (hdecode :
       decodeCells remainingCells tokens = none)
     (n : Nat) :
-    (SIMS.runConfig n
-      (markingTailConfig marked remainingCells tokens)).state ≠
-      SIMS.halt := by
+    ScannerDeadAt
+      (markingTailConfig marked remainingCells tokens) n := by
   induction remainingCells generalizing marked tokens n with
   | zero =>
       simp [decodeCells] at hdecode
@@ -850,7 +1113,7 @@ private theorem markingTail_cellListFailure_ne_halt
       cases hcell : decodeCell tokens with
       | none =>
           apply
-            scanner_ne_halt_of_reaches_ne_halt_region
+            scannerDeadAt_of_reaches_dead_region
               (k := (4 * remainingTail + 4) + 4 * marked.length)
               (mid :=
                 config 130
@@ -862,7 +1125,7 @@ private theorem markingTail_cellListFailure_ne_halt
                 marked remainingTail tokens
           · intro m
             exact
-              run_state130_decodeCell_none_ne_halt
+              run_state130_decodeCell_none_dead
                 tokens
                 (markingTailPayloadLeftRev marked remainingTail)
                 hcell m
@@ -875,7 +1138,7 @@ private theorem markingTail_cellListFailure_ne_halt
           cases cell with
           | none =>
               apply
-                scanner_ne_halt_of_reaches_ne_halt_region
+                scannerDeadAt_of_reaches_dead_region
                   (k := (4 * remainingTail + 4) + 4 * marked.length)
                   (mid :=
                     config 130
@@ -890,7 +1153,7 @@ private theorem markingTail_cellListFailure_ne_halt
                     (encodeCellAppend none restAfterCell)
               · intro m
                 exact
-                  run_state130_blank_cell_ne_halt
+                  run_state130_blank_cell_dead
                     restAfterCell
                     (markingTailPayloadLeftRev marked remainingTail)
                     m
@@ -909,7 +1172,7 @@ private theorem markingTail_cellListFailure_ne_halt
                             marked nextTail b restAfterCell with
                         ⟨steps, hsteps⟩
                       apply
-                        scanner_ne_halt_of_reaches_ne_halt_region
+                        scannerDeadAt_of_reaches_dead_region
                           (k := steps)
                           (mid :=
                             markingTailConfig (List.append marked [b])
@@ -924,26 +1187,24 @@ private theorem markingTail_cellListFailure_ne_halt
                   simp [decodeCells, hcell, hrest]
                     at hdecode
 
-private theorem run_marking_tail_decodeCells_none_ne_halt
+private theorem run_marking_tail_decodeCells_none_dead
     (marked : Word Bool) (remainingCells : Nat)
     (tokens : Word MachineCodeSymbol)
     (hdecode :
       decodeCells remainingCells tokens = none)
     (n : Nat) :
-    (SIMS.runConfig n
-      (markingTailConfig marked remainingCells tokens)).state ≠
-      SIMS.halt :=
-  markingTail_cellListFailure_ne_halt marked remainingCells tokens hdecode n
+    ScannerDeadAt
+      (markingTailConfig marked remainingCells tokens) n :=
+  markingTail_cellListFailure_dead marked remainingCells tokens hdecode n
 
-private theorem markingTail_boolWordFailure_ne_halt
+private theorem markingTail_boolWordFailure_dead
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
     (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (markingTailConfig marked cells.length
-        (encodeCellsAppend cells suffix))).state ≠
-      SIMS.halt := by
+        (encodeCellsAppend cells suffix)) n := by
   induction cells generalizing marked suffix n with
   | nil =>
       simp [cellsToWord?] at hword
@@ -951,7 +1212,7 @@ private theorem markingTail_boolWordFailure_ne_halt
       cases cell with
       | none =>
           apply
-            scanner_ne_halt_of_reaches_ne_halt_region
+            scannerDeadAt_of_reaches_dead_region
               (k := (4 * rest.length + 4) + 4 * marked.length)
               (mid :=
                 config 130
@@ -979,7 +1240,7 @@ private theorem markingTail_boolWordFailure_ne_halt
                   (encodeCellsAppend rest suffix))
           · intro m
             exact
-              run_state130_blank_cell_ne_halt
+              run_state130_blank_cell_dead
                 (encodeCellsAppend rest suffix)
                 (markingTailPayloadLeftRev marked rest.length)
                 m
@@ -997,7 +1258,7 @@ private theorem markingTail_boolWordFailure_ne_halt
                           (nextCell :: restTail) suffix) with
                     ⟨steps, hsteps⟩
                   apply
-                    scanner_ne_halt_of_reaches_ne_halt_region
+                    scannerDeadAt_of_reaches_dead_region
                       (k := steps)
                       (mid :=
                         markingTailConfig (List.append marked [b])
@@ -1021,31 +1282,29 @@ private theorem markingTail_boolWordFailure_ne_halt
           | some decoded =>
               simp [cellsToWord?, hrest] at hword
 
-private theorem run_marking_tail_cellsToWord_none_ne_halt
+private theorem run_marking_tail_cellsToWord_none_dead
     (marked : Word Bool) (cells : List (Option Bool))
     (suffix : Word MachineCodeSymbol)
     (hword : cellsToWord? cells = none)
     (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (markingTailConfig marked cells.length
-        (encodeCellsAppend cells suffix))).state ≠
-      SIMS.halt :=
-  markingTail_boolWordFailure_ne_halt marked cells suffix hword n
+        (encodeCellsAppend cells suffix)) n :=
+  markingTail_boolWordFailure_dead marked cells suffix hword n
 
-private theorem state120_boolWordFailure_ne_halt
+private theorem state120_boolWordFailure_dead
     (rest : Word MachineCodeSymbol)
     (hdecode :
       decodeBoolWord
         (MachineCodeSymbol.tick :: rest) = none)
     (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (config 120 [none, some true, none, some false]
-        ((encodeCodeWordAsInput rest).map some))).state ≠
-      SIMS.halt := by
+        ((encodeCodeWordAsInput rest).map some)) n := by
   cases hnat : decodeNat rest with
   | none =>
       exact
-        run_state120_decodeNat_none_ne_halt
+        run_state120_decodeNat_none_dead
           rest [none, some true, none, some false] hnat n
   | some parsedNat =>
       rcases parsedNat with ⟨remainingTail, tokensAfterLen⟩
@@ -1056,13 +1315,12 @@ private theorem state120_boolWordFailure_ne_halt
         decodeNat_eq_some_encodeNatAppend hnat
       rw [hrest]
       change
-        (SIMS.runConfig n
+        ScannerDeadAt
           (config 120 [none, some true, none, some false]
             (List.map some
               (encodeCodeWordAsInput
                 (encodeNatAppend remainingTail
-                  tokensAfterLen))))).state ≠
-          SIMS.halt
+                  tokensAfterLen)))) n
       unfold encodeNatAppend
       rw [encodeCodeWordAsInput_append]
       have hbits :
@@ -1077,16 +1335,15 @@ private theorem state120_boolWordFailure_ne_halt
         simp [stageNatBits, List.map_append]
       rw [hbits]
       change
-        (SIMS.runConfig n
+        ScannerDeadAt
           (markingTailConfig ([] : Word Bool)
-            (remainingTail + 1) tokensAfterLen)).state ≠
-          SIMS.halt
+            (remainingTail + 1) tokensAfterLen) n
       cases hcells :
           decodeCells (remainingTail + 1)
             tokensAfterLen with
       | none =>
           exact
-            run_marking_tail_decodeCells_none_ne_halt
+            run_marking_tail_decodeCells_none_dead
               ([] : Word Bool) (remainingTail + 1)
               tokensAfterLen hcells n
       | some parsedCells =>
@@ -1101,13 +1358,24 @@ private theorem state120_boolWordFailure_ne_halt
                   hcells
               rw [hcellsShape.left, hcellsShape.right]
               exact
-                run_marking_tail_cellsToWord_none_ne_halt
+                run_marking_tail_cellsToWord_none_dead
                   ([] : Word Bool) cells suffix hword n
           | some decoded =>
               simp [decodeBoolWord,
                 decodeCellList,
                 decodeNat, hnat, hcells, hword]
                 at hdecode
+
+theorem run_state120_decodeBoolWord_none_dead
+    (rest : Word MachineCodeSymbol)
+    (hdecode :
+      decodeBoolWord
+        (MachineCodeSymbol.tick :: rest) = none)
+    (n : Nat) :
+    ScannerDeadAt
+      (config 120 [none, some true, none, some false]
+        ((encodeCodeWordAsInput rest).map some)) n :=
+  state120_boolWordFailure_dead rest hdecode n
 
 private theorem run_state120_decodeBoolWord_none_ne_halt
     (rest : Word MachineCodeSymbol)
@@ -1119,7 +1387,7 @@ private theorem run_state120_decodeBoolWord_none_ne_halt
       (config 120 [none, some true, none, some false]
         ((encodeCodeWordAsInput rest).map some))).state ≠
       SIMS.halt :=
-  state120_boolWordFailure_ne_halt rest hdecode n
+  (state120_boolWordFailure_dead rest hdecode n).1
 
 theorem run_state200_done_to_state210
     (left right : List (Option Bool)) :
@@ -1204,27 +1472,29 @@ private theorem run_state210_encoded_cons_ne_halt
         change (210 : Nat) ≠ 999
         lia)
 
-theorem run_state200_decodeNat_none_ne_halt
+private theorem state200_natPrefixFailure_dead
     (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
     (hdecode : decodeNat tokens = none) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (config 200 leftRev
-        ((encodeCodeWordAsInput tokens).map some))).state ≠
-      SIMS.halt := by
+        ((encodeCodeWordAsInput tokens).map some)) n := by
   induction tokens generalizing leftRev n with
   | nil =>
       exact
-        scanner_ne_halt_of_reaches_stepConfig_none
+        scannerDeadAt_of_reaches_stepConfig_none
           (k := 0) (by
             rfl)
           (by
             change (200 : Nat) ≠ 999
             lia)
+          (by
+            change (200 : Nat) ≠ 210
+            lia)
   | cons symbol rest ih =>
       cases symbol with
       | header =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 2) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1241,9 +1511,12 @@ theorem run_state200_decodeNat_none_ne_halt
               (by
                 change (202 : Nat) ≠ 999
                 lia)
+              (by
+                change (202 : Nat) ≠ 210
+                lia)
       | transition =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 2) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1259,6 +1532,9 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (202 : Nat) ≠ 999
+                lia)
+              (by
+                change (202 : Nat) ≠ 210
                 lia)
       | tick =>
           simp [decodeNat] at hdecode
@@ -1266,7 +1542,7 @@ theorem run_state200_decodeNat_none_ne_halt
           | none =>
               simp [hrest] at hdecode
               apply
-                scanner_ne_halt_of_reaches_ne_halt_region
+                scannerDeadAt_of_reaches_dead_region
                   (k := 4)
                   (mid :=
                     config 200
@@ -1287,7 +1563,7 @@ theorem run_state200_decodeNat_none_ne_halt
           simp [decodeNat] at hdecode
       | blank =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1303,10 +1579,13 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
+                lia)
+              (by
+                change (201 : Nat) ≠ 210
                 lia)
       | zero =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1322,10 +1601,13 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
+                lia)
+              (by
+                change (201 : Nat) ≠ 210
                 lia)
       | one =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1341,10 +1623,13 @@ theorem run_state200_decodeNat_none_ne_halt
                   Tape.read, Tape.write, Tape.move, Tape.moveRight])
               (by
                 change (201 : Nat) ≠ 999
+                lia)
+              (by
+                change (201 : Nat) ≠ 210
                 lia)
       | moveLeft =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 1) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1361,9 +1646,12 @@ theorem run_state200_decodeNat_none_ne_halt
               (by
                 change (201 : Nat) ≠ 999
                 lia)
+              (by
+                change (201 : Nat) ≠ 210
+                lia)
       | moveRight =>
           exact
-            scanner_ne_halt_of_reaches_stepConfig_none
+            scannerDeadAt_of_reaches_stepConfig_none
               (k := 0) (by
                 cases rest <;>
                 simp [StageInputMarkedScannerDescription, config,
@@ -1380,6 +1668,26 @@ theorem run_state200_decodeNat_none_ne_halt
               (by
                 change (200 : Nat) ≠ 999
                 lia)
+              (by
+                change (200 : Nat) ≠ 210
+                lia)
+
+theorem run_state200_decodeNat_none_dead
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : decodeNat tokens = none) (n : Nat) :
+    ScannerDeadAt
+      (config 200 leftRev
+        ((encodeCodeWordAsInput tokens).map some)) n :=
+  state200_natPrefixFailure_dead tokens leftRev hdecode n
+
+theorem run_state200_decodeNat_none_ne_halt
+    (tokens : Word MachineCodeSymbol) (leftRev : List (Option Bool))
+    (hdecode : decodeNat tokens = none) (n : Nat) :
+    (SIMS.runConfig n
+      (config 200 leftRev
+        ((encodeCodeWordAsInput tokens).map some))).state ≠
+      SIMS.halt :=
+  (state200_natPrefixFailure_dead tokens leftRev hdecode n).1
 
 private theorem state200_nonemptySuffixFailure_ne_halt
     (stage : Nat) (symbol : MachineCodeSymbol)

@@ -306,14 +306,13 @@ private theorem decodeBoolWord_tick_tail_shape
         encodeCellAppend,
         encodeCell] at htokens
       exact htokens
-private theorem run_finish_tail_blank_ne_halt
+private theorem run_finish_tail_blank_dead
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
-          (MachineCodeSymbol.blank :: suffixTail)))).state ≠
-      SIMS.halt := by
+          (MachineCodeSymbol.blank :: suffixTail))) n := by
   let stuck :=
     config 151
       (some false ::
@@ -338,19 +337,20 @@ private theorem run_finish_tail_blank_ne_halt
           ((encodeCodeWordAsInput
             (MachineCodeSymbol.blank :: suffixTail)).map some))
   exact
-    scanner_ne_halt_of_reaches_stuck
+    scannerDeadAt_of_reaches_stuck
       (k := 4 * (b :: rest).length + 1)
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-private theorem run_finish_tail_zero_ne_halt
+      (by
+        simp [stuck, config])
+private theorem run_finish_tail_zero_dead
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
-          (MachineCodeSymbol.zero :: suffixTail)))).state ≠
-      SIMS.halt := by
+          (MachineCodeSymbol.zero :: suffixTail))) n := by
   let stuck :=
     config 151
       (some false ::
@@ -375,19 +375,20 @@ private theorem run_finish_tail_zero_ne_halt
           ((encodeCodeWordAsInput
             (MachineCodeSymbol.zero :: suffixTail)).map some))
   exact
-    scanner_ne_halt_of_reaches_stuck
+    scannerDeadAt_of_reaches_stuck
       (k := 4 * (b :: rest).length + 1)
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-private theorem run_finish_tail_one_ne_halt
+      (by
+        simp [stuck, config])
+private theorem run_finish_tail_one_dead
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
-          (MachineCodeSymbol.one :: suffixTail)))).state ≠
-      SIMS.halt := by
+          (MachineCodeSymbol.one :: suffixTail))) n := by
   let stuck :=
     config 151
       (some false ::
@@ -412,19 +413,20 @@ private theorem run_finish_tail_one_ne_halt
           ((encodeCodeWordAsInput
             (MachineCodeSymbol.one :: suffixTail)).map some))
   exact
-    scanner_ne_halt_of_reaches_stuck
+    scannerDeadAt_of_reaches_stuck
       (k := 4 * (b :: rest).length + 1)
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-private theorem run_finish_tail_moveLeft_ne_halt
+      (by
+        simp [stuck, config])
+private theorem run_finish_tail_moveLeft_dead
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
-          (MachineCodeSymbol.moveLeft :: suffixTail)))).state ≠
-      SIMS.halt := by
+          (MachineCodeSymbol.moveLeft :: suffixTail))) n := by
   let stuck :=
     config 151
       (some false ::
@@ -449,19 +451,20 @@ private theorem run_finish_tail_moveLeft_ne_halt
           ((encodeCodeWordAsInput
             (MachineCodeSymbol.moveLeft :: suffixTail)).map some))
   exact
-    scanner_ne_halt_of_reaches_stuck
+    scannerDeadAt_of_reaches_stuck
       (k := 4 * (b :: rest).length + 1)
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
-private theorem run_finish_tail_moveRight_ne_halt
+      (by
+        simp [stuck, config])
+private theorem run_finish_tail_moveRight_dead
     (b : Bool) (rest : Word Bool)
     (suffixTail : Word MachineCodeSymbol) (n : Nat) :
-    (SIMS.runConfig n
+    ScannerDeadAt
       (finishStartConfigWithTailBits (b :: rest)
         (encodeCodeWordAsInput
-          (MachineCodeSymbol.moveRight :: suffixTail)))).state ≠
-      SIMS.halt := by
+          (MachineCodeSymbol.moveRight :: suffixTail))) n := by
   let stuck :=
     config 152
       (some false ::
@@ -486,11 +489,63 @@ private theorem run_finish_tail_moveRight_ne_halt
           ((encodeCodeWordAsInput
             (MachineCodeSymbol.moveRight :: suffixTail)).map some))
   exact
-    scanner_ne_halt_of_reaches_stuck
+    scannerDeadAt_of_reaches_stuck
       (k := 4 * (b :: rest).length + 1)
       (stuck := stuck) hstuck rfl
       (by
         simp [stuck, config, StageInputMarkedScannerDescription])
+      (by
+        simp [stuck, config])
+private theorem run_finish_tail_blank_ne_halt
+    (b : Bool) (rest : Word Bool)
+    (suffixTail : Word MachineCodeSymbol) (n : Nat) :
+    (SIMS.runConfig n
+      (finishStartConfigWithTailBits (b :: rest)
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.blank :: suffixTail)))).state ≠
+      SIMS.halt :=
+  (run_finish_tail_blank_dead b rest suffixTail n).1
+
+private theorem run_finish_tail_zero_ne_halt
+    (b : Bool) (rest : Word Bool)
+    (suffixTail : Word MachineCodeSymbol) (n : Nat) :
+    (SIMS.runConfig n
+      (finishStartConfigWithTailBits (b :: rest)
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.zero :: suffixTail)))).state ≠
+      SIMS.halt :=
+  (run_finish_tail_zero_dead b rest suffixTail n).1
+
+private theorem run_finish_tail_one_ne_halt
+    (b : Bool) (rest : Word Bool)
+    (suffixTail : Word MachineCodeSymbol) (n : Nat) :
+    (SIMS.runConfig n
+      (finishStartConfigWithTailBits (b :: rest)
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.one :: suffixTail)))).state ≠
+      SIMS.halt :=
+  (run_finish_tail_one_dead b rest suffixTail n).1
+
+private theorem run_finish_tail_moveLeft_ne_halt
+    (b : Bool) (rest : Word Bool)
+    (suffixTail : Word MachineCodeSymbol) (n : Nat) :
+    (SIMS.runConfig n
+      (finishStartConfigWithTailBits (b :: rest)
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.moveLeft :: suffixTail)))).state ≠
+      SIMS.halt :=
+  (run_finish_tail_moveLeft_dead b rest suffixTail n).1
+
+private theorem run_finish_tail_moveRight_ne_halt
+    (b : Bool) (rest : Word Bool)
+    (suffixTail : Word MachineCodeSymbol) (n : Nat) :
+    (SIMS.runConfig n
+      (finishStartConfigWithTailBits (b :: rest)
+        (encodeCodeWordAsInput
+          (MachineCodeSymbol.moveRight :: suffixTail)))).state ≠
+      SIMS.halt :=
+  (run_finish_tail_moveRight_dead b rest suffixTail n).1
+
 private theorem encode_bool_tail_input_bits
     (b : Bool) (restW : Word Bool)
     (suffix : Word MachineCodeSymbol) :
@@ -569,6 +624,165 @@ private theorem encode_bool_tail_input_bits
             suffix)) = _
     rw [encodeCodeWordAsInput_append]
     simp [List.map_append]
+/--
+After the tick entry, a successfully parsed boolword whose stage suffix fails
+to parse as a nat leaves the scanner dead: the marking loop finishes, and the
+stage-nat region then rejects the suffix before the suffix gate.
+-/
+theorem run_state120_boolWord_suffix_decodeNat_none_dead
+    (rest suffix : Word MachineCodeSymbol) (w : Word Bool)
+    (hinput :
+      decodeBoolWord
+          (MachineCodeSymbol.tick :: rest) =
+        some (w, suffix))
+    (hdecode : decodeNat suffix = none) (n : Nat) :
+    ScannerDeadAt
+      (config 120 [none, some true, none, some false]
+        ((encodeCodeWordAsInput rest).map some)) n := by
+  rcases decodeBoolWord_tick_tail_shape hinput with
+    ⟨b, restW, -, hrest⟩
+  have htailBits :
+      (encodeCodeWordAsInput rest).map some =
+        List.append ((stageNatBits restW.length).map some)
+          (List.append ((cellBits b).map some)
+            (List.append ((cellsBits restW).map some)
+              ((encodeCodeWordAsInput suffix).map some))) := by
+    rw [hrest]
+    exact encode_bool_tail_input_bits b restW suffix
+  rw [htailBits]
+  rcases run_state120_bool_tail_to_finish b restW
+      (encodeCodeWordAsInput suffix) with
+    ⟨finishSteps, hfinish⟩
+  refine scannerDeadAt_of_reaches_dead_region hfinish ?_
+  intro m
+  cases suffix with
+  | nil =>
+      refine
+        scannerDeadAt_of_reaches_stuck
+          (k := 4 * (b :: restW).length)
+          (stuck :=
+            config 150
+              (List.append
+                ((cellsBits (b :: restW)).reverse.map some)
+                (finishStartLeft (b :: restW)))
+              ([] : List (Option Bool)))
+          ?_ rfl
+          (by
+            change (150 : Nat) ≠ 999
+            lia)
+          (by
+            change (150 : Nat) ≠ 210
+            lia)
+      simpa [finishStartConfigWithTailBits,
+        encodeCodeWordAsInput] using
+        run_state150_markedCells (b :: restW)
+          (finishStartLeft (b :: restW))
+          ([] : List (Option Bool))
+  | cons symbol suffixTail =>
+      cases symbol with
+      | header =>
+          rcases run_finish_tail_false_false_to_state200 b restW
+              (false :: false ::
+                encodeCodeWordAsInput suffixTail) with
+            ⟨prefixSteps, hprefix⟩
+          have hprefix' :
+              SIMS.runConfig prefixSteps
+                  (finishStartConfigWithTailBits (b :: restW)
+                    (encodeCodeWordAsInput
+                      (MachineCodeSymbol.header :: suffixTail))) =
+                config 200
+                  (List.append
+                    ((stageInputSecondBitTailPrefix
+                      (b :: restW)).reverse.map some)
+                    (none :: [some false]))
+                  ((encodeCodeWordAsInput
+                    (MachineCodeSymbol.header :: suffixTail)).map some) := by
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
+              using hprefix
+          refine scannerDeadAt_of_reaches_dead_region hprefix' ?_
+          intro m'
+          exact
+            run_state200_decodeNat_none_dead
+              (MachineCodeSymbol.header :: suffixTail)
+              (List.append
+                ((stageInputSecondBitTailPrefix
+                  (b :: restW)).reverse.map some)
+                (none :: [some false]))
+              hdecode m'
+      | transition =>
+          rcases run_finish_tail_false_false_to_state200 b restW
+              (false :: true ::
+                encodeCodeWordAsInput suffixTail) with
+            ⟨prefixSteps, hprefix⟩
+          have hprefix' :
+              SIMS.runConfig prefixSteps
+                  (finishStartConfigWithTailBits (b :: restW)
+                    (encodeCodeWordAsInput
+                      (MachineCodeSymbol.transition :: suffixTail))) =
+                config 200
+                  (List.append
+                    ((stageInputSecondBitTailPrefix
+                      (b :: restW)).reverse.map some)
+                    (none :: [some false]))
+                  ((encodeCodeWordAsInput
+                    (MachineCodeSymbol.transition :: suffixTail)).map some) := by
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
+              using hprefix
+          refine scannerDeadAt_of_reaches_dead_region hprefix' ?_
+          intro m'
+          exact
+            run_state200_decodeNat_none_dead
+              (MachineCodeSymbol.transition :: suffixTail)
+              (List.append
+                ((stageInputSecondBitTailPrefix
+                  (b :: restW)).reverse.map some)
+                (none :: [some false]))
+              hdecode m'
+      | tick =>
+          rcases run_finish_tail_false_false_to_state200 b restW
+              (true :: false ::
+                encodeCodeWordAsInput suffixTail) with
+            ⟨prefixSteps, hprefix⟩
+          have hprefix' :
+              SIMS.runConfig prefixSteps
+                  (finishStartConfigWithTailBits (b :: restW)
+                    (encodeCodeWordAsInput
+                      (MachineCodeSymbol.tick :: suffixTail))) =
+                config 200
+                  (List.append
+                    ((stageInputSecondBitTailPrefix
+                      (b :: restW)).reverse.map some)
+                    (none :: [some false]))
+                  ((encodeCodeWordAsInput
+                    (MachineCodeSymbol.tick :: suffixTail)).map some) := by
+            simpa [encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput]
+              using hprefix
+          refine scannerDeadAt_of_reaches_dead_region hprefix' ?_
+          intro m'
+          exact
+            run_state200_decodeNat_none_dead
+              (MachineCodeSymbol.tick :: suffixTail)
+              (List.append
+                ((stageInputSecondBitTailPrefix
+                  (b :: restW)).reverse.map some)
+                (none :: [some false]))
+              hdecode m'
+      | done =>
+          simp [decodeNat] at hdecode
+      | blank =>
+          exact run_finish_tail_blank_dead b restW suffixTail m
+      | zero =>
+          exact run_finish_tail_zero_dead b restW suffixTail m
+      | one =>
+          exact run_finish_tail_one_dead b restW suffixTail m
+      | moveLeft =>
+          exact run_finish_tail_moveLeft_dead b restW suffixTail m
+      | moveRight =>
+          exact run_finish_tail_moveRight_dead b restW suffixTail m
+
 private theorem state120_tick_tail_stageSuffixDecoder_inv
     {rest suffix : Word MachineCodeSymbol} {w : Word Bool}
     {T : Tape Bool}
