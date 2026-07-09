@@ -253,78 +253,6 @@ theorem countWindowRawSourceEncoder_scanToTailPastFirst
     skipped count tailFirst tail).scanToTailPastFirst
 
 /-!
-## Raw-boundary right-edge emitter route
--/
-
-structure CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute
-    (emitter : MachineDescription) : Prop where
-  spec :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec emitter
-  subroutineReady :
-    emitter.SubroutineReady
-  haltsPreRewind :
-    forall skipped count : Word Bool,
-    forall tailFirst : Bool,
-    forall tail : List (Option Bool),
-      emitter.HaltsFromTapeEquiv
-        (countWindowRawSourceEncoderRawBoundaryTape
-          skipped count (some tailFirst :: tail))
-        (countWindowRawSourceEncoderEncodedLayoutPreRewindTape
-          skipped count tailFirst tail)
-  preRewindMoveRight :
-    forall skipped count : Word Bool,
-    forall tailFirst : Bool,
-    forall tail : List (Option Bool),
-      Tape.move Direction.right
-          (countWindowRawSourceEncoderEncodedLayoutPreRewindTape
-            skipped count tailFirst tail) =
-        countWindowRawSourceEncoderEncodedLayoutRightEdgeTape
-          skipped count tailFirst tail
-  rightEdgeRewind :
-    forall skipped count : Word Bool,
-    forall tailFirst : Bool,
-    forall tail : List (Option Bool),
-      rightEdgeRewindDescription.HaltsFromTape
-        (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape
-          skipped count tailFirst tail)
-        (countWindowRawSourceEncoderTargetTapeNoCountPadding
-          skipped count (some tailFirst :: tail))
-
-def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRouteConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute emitter
-
-theorem countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute_of_spec
-    {emitter : MachineDescription}
-    (h :
-      CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec emitter) :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute emitter :=
-  { spec := h
-    subroutineReady := h.left
-    haltsPreRewind := h.right
-    preRewindMoveRight := by
-      intro skipped count tailFirst tail
-      exact
-        countWindowRawSourceEncoderEncodedLayoutPreRewindTape_moveRight
-          skipped count tailFirst tail
-    rightEdgeRewind := by
-      intro skipped count tailFirst tail
-      exact
-        countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
-          skipped count tailFirst tail }
-
-theorem countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute_of_construction
-    (h :
-      CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction) :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRouteConstruction := by
-  rcases h with ⟨emitter, hemits⟩
-  exact
-    ⟨emitter,
-      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute_of_spec
-        hemits⟩
-
-/-!
 ## Raw-boundary equivalence route
 -/
 
@@ -535,10 +463,6 @@ theorem countWindowRawSourceEncoderEquivRoute_of_construction
 -/
 
 structure CountWindowRawSourceEncoderConstructionChainRoute : Prop where
-  rawBoundaryRightEdge :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction
-  rawBoundaryRightEdgeRoute :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRouteConstruction
   rawBoundaryEquiv :
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction
   rawBoundaryEquivRoute :
@@ -567,12 +491,7 @@ def CountWindowRawSourceEncoderConstructionChainRouteConstruction :
 
 theorem countWindowRawSourceEncoderConstructionChainRoute_core :
     CountWindowRawSourceEncoderConstructionChainRoute :=
-  { rawBoundaryRightEdge :=
-      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
-    rawBoundaryRightEdgeRoute :=
-      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterRoute_of_construction
-        countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
-    rawBoundaryEquiv :=
+  { rawBoundaryEquiv :=
       countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core
     rawBoundaryEquivRoute :=
       countWindowRawSourceEncoderRawBoundaryEmitterEquivRoute_of_construction
@@ -605,10 +524,6 @@ theorem countWindowRawSourceEncoderConstructionChainRouteConstruction_core :
 /-!
 ## Public aliases
 -/
-
-theorem countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_route :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction :=
-  countWindowRawSourceEncoderConstructionChainRoute_core.rawBoundaryRightEdge
 
 theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_route :
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction :=

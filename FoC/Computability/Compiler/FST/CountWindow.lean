@@ -1360,22 +1360,6 @@ def CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction :
   exists emitter : MachineDescription,
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivSpec emitter
 
-def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec
-    (emitter : MachineDescription) : Prop :=
-  emitter.SubroutineReady ∧
-    forall (skipped count : Word Bool)
-      (tailFirst : Bool) (tail : List (Option Bool)),
-      emitter.HaltsFromTapeEquiv
-        (countWindowRawSourceEncoderRawBoundaryTape
-          skipped count (some tailFirst :: tail))
-        (countWindowRawSourceEncoderEncodedLayoutPreRewindTape
-          skipped count tailFirst tail)
-
-def CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction :
-    Prop :=
-  exists emitter : MachineDescription,
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterSpec emitter
-
 def CountWindowRawSourceEncoderRawBoundaryOutputRouteFamily : Prop :=
   forall (skipped count : Word Bool)
     (tailFirst : Bool) (tail : List (Option Bool)),
@@ -1451,30 +1435,6 @@ theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily_blankSenti
             CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits] using
             CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape_moveRight
               skipped count tailFirst tail)
-        (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
-          skipped count tailFirst tail).toEquiv
-
-theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
-    (hemitter :
-      CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction) :
-    CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
-  rcases hemitter with ⟨emitter, hemitterSpec⟩
-  refine
-    ⟨seqSubroutine emitter rightEdgeRewindDescription Direction.right,
-      ?_⟩
-  constructor
-  · exact
-      seqSubroutine_subroutineReady
-        hemitterSpec.left
-        rightEdgeRewindDescription_subroutineReady
-  · intro skipped count tailFirst tail
-    exact
-      CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
-        hemitterSpec.left
-        rightEdgeRewindDescription_subroutineReady
-        (hemitterSpec.right skipped count tailFirst tail)
-        (countWindowRawSourceEncoderEncodedLayoutPreRewindTape_moveRight
-          skipped count tailFirst tail)
         (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
           skipped count tailFirst tail).toEquiv
 
@@ -1594,29 +1554,19 @@ theorem countWindowRawSourceEncoderEquivConstruction_of_liveTailEmitter
         rfl
         (hemitterSpec.right skipped count tailFirst tail)
 
-theorem countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core :
-    CountWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction := by
+theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
+    CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
   rcases
       CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.construction_core
     with ⟨emitter, hemitter⟩
   refine ⟨emitter, hemitter.left, ?_⟩
   intro skipped count tailFirst tail
-  simpa [CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.Spec,
-    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape,
-    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape,
-    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeTape,
+  rw [countWindowRawSourceEncoderTargetTapeNoCountPadding_eq_headerBoolWord]
+  simpa [CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape,
+    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLeftEdgeTape,
     CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits,
-    countWindowRawSourceEncoderRawBoundaryTape,
-    countWindowRawSourceEncoderEncodedLayoutPreRewindTape,
-    countWindowRawSourceEncoderEncodedLayoutRightEdgeTape,
-    countWindowRawSourceEncoderEncodedLayoutBits] using
+    countWindowRawSourceEncoderRawBoundaryTape] using
       hemitter.right skipped count tailFirst tail
-
-theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_core :
-    CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction := by
-  exact
-    countWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction_of_rightEdgeEmitter
-      countWindowRawSourceEncoderRawBoundaryRightEdgeEmitterConstruction_core
 
 theorem countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_core :
     CountWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction := by

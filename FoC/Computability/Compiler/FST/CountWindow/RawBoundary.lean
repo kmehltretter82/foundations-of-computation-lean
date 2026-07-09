@@ -1292,83 +1292,112 @@ theorem rightEdgeTape_rewind_target_defaultedCells
     FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse,
     FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.optionBitDefaultFalse_map_some]
 
+/--
+Left-edge endpoint for the raw-boundary emitter: the encoded layout sits
+immediately left of the live tail with the head on the layout's first bit and
+a single blank sentinel to its left.  This is the rewound shape the parent
+count-window encoder consumes.  A uniform machine cannot instead halt on the
+encoded word's right edge: the emitted block and the live tail are contiguous
+nonblank cells with no detectable boundary, which is why the earlier
+right-edge walkers were generated per layout.
+-/
+def encodedLeftEdgeTape
+    (skipped count : Word Bool) (tailFirst : Bool)
+    (tail : List (Option Bool)) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((encodedLayoutBits (List.append skipped count)).map some)
+      (some tailFirst :: tail))
+
 def rawBoundaryRightEdgeEmitterCoreDescription :
     MachineDescription :=
-  emptyLayoutTailHandoffRightEdgeDescription
+  CommonGround.SameHeadComposition.leftRightSeqDescription
+    emptyLayoutTailHandoffRightEdgeDescription
+    rightEdgeRewindDescription
 
 theorem rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady :
     rawBoundaryRightEdgeEmitterCoreDescription.SubroutineReady := by
   rw [rawBoundaryRightEdgeEmitterCoreDescription]
-  exact emptyLayoutTailHandoffRightEdgeDescription_subroutineReady
+  exact
+    CommonGround.SameHeadComposition.leftRightSeqDescription_subroutineReady
+      emptyLayoutTailHandoffRightEdgeDescription_subroutineReady
+      rightEdgeRewindDescription_subroutineReady
 
 def rawBoundaryRightEdgeEmitterDescription :
     MachineDescription :=
-  seqSubroutine rawBoundaryRightEdgeEmitterCoreDescription
-    ExactIdentityDescription Direction.left
+  rawBoundaryRightEdgeEmitterCoreDescription
 
 theorem rawBoundaryRightEdgeEmitterDescription_subroutineReady :
-    rawBoundaryRightEdgeEmitterDescription.SubroutineReady := by
-  rw [rawBoundaryRightEdgeEmitterDescription]
-  exact
-    seqSubroutine_subroutineReady
-      rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
-      CommonGround.Identity.exactIdentityDescription_subroutineReady
+    rawBoundaryRightEdgeEmitterDescription.SubroutineReady :=
+  rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
 
 -- Remaining core gap: the current executable core is the checked
--- zero-raw-layout skeleton.  It is correct for `skipped = []` and `count = []`;
--- the nonempty raw-layout loop still has to consume raw bits and emit their
--- cell chunks before the public theorem is fully constructive.
-theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+-- zero-raw-layout skeleton followed by the right-edge rewind.  It is correct
+-- for `skipped = []` and `count = []`; the nonempty raw-layout passes still
+-- have to consume raw bits and emit their encoded chunks before the public
+-- theorem is fully constructive.
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_empty
     (tailFirst : Bool) (tail : List (Option Bool)) :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
       (sourceTape [] [] (some tailFirst :: tail))
-      (rightEdgeTape [] [] tailFirst tail) := by
-  simpa [rawBoundaryRightEdgeEmitterCoreDescription] using
-    emptyLayoutTailHandoffRightEdgeDescription_haltsFrom_sourceTape
+      (encodedLeftEdgeTape [] [] tailFirst tail) := by
+  rw [rawBoundaryRightEdgeEmitterCoreDescription]
+  refine
+    CommonGround.SameHeadComposition.leftRightSeqDescription_haltsFromTape_of_haltsFromTape
+      emptyLayoutTailHandoffRightEdgeDescription_subroutineReady
+      rightEdgeRewindDescription_subroutineReady
+      (emptyLayoutTailHandoffRightEdgeDescription_haltsFrom_sourceTape
+        tailFirst tail)
+      ?_
+      (by
+        simpa [encodedLeftEdgeTape] using
+          rightEdgeTape_rewind_haltsFromTape
+            ([] : Word Bool) ([] : Word Bool) tailFirst tail)
+  simpa [preRewindTape] using
+    preRewindTape_moveRight ([] : Word Bool) ([] : Word Bool)
       tailFirst tail
 
-theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_nonempty
     (skipped count : Word Bool)
     (h : List.append skipped count ≠ [])
     (tailFirst : Bool) (tail : List (Option Bool)) :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
-      (rightEdgeTape skipped count tailFirst tail) := by
-  -- Not provable for the current core description: the zero-raw-layout
-  -- skeleton demonstrably fails on nonempty layouts.  Running the machine
-  -- shows it gets stuck at a non-halt state for `skipped = [true]`,
-  -- `count = []`, and halts on a 10-cell tape (target: 17 cells) for
-  -- `skipped = []`, `count = [true]`.  Closing this needs a uniform
-  -- nonempty-capable core machine.  The assembled pull-and-emit loop routes
-  -- cannot supply one either: `sourceBranchRouteCountBound` demands
-  -- `3 * (n - 2) + 3 <= count.length` while `count.length <= n`, which is
-  -- unsatisfiable for layouts of length `n >= 2`, so the gap-consuming
-  -- algorithm must first gain a room-making pass over the unread raw bits.
-  -- Planned replacement: expand cell chunks leftward past the left sentinel
+      (encodedLeftEdgeTape skipped count tailFirst tail) := by
+  -- Not provable for the current core description: its zero-raw-layout
+  -- skeleton demonstrably fails on nonempty layouts (stuck at a non-halt
+  -- state for `skipped = [true]`, `count = []`; wrong halt tape for
+  -- `skipped = []`, `count = [true]`).  The assembled pull-and-emit loop
+  -- routes cannot supply a replacement either: `sourceBranchRouteCountBound`
+  -- demands `3 * (n - 2) + 3 <= count.length` while `count.length <= n`,
+  -- which is unsatisfiable for layouts of length `n >= 2`.  Planned
+  -- replacement core: expand encoded chunks leftward past the left sentinel
   -- (unbounded room), then migrate the assembled block rightward across the
-  -- constant-width gap to the live tail with one-for-one pulls.
+  -- constant-width gap to the live tail with one-for-one pulls
+  -- ({name}`rawBoundaryBlockMigrationLoopDescription`), halting on the
+  -- encoded word's left edge as this statement records.
   sorry
 
-theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
+theorem rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge
     (skipped count : Word Bool) (tailFirst : Bool)
     (tail : List (Option Bool)) :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
-      (rightEdgeTape skipped count tailFirst tail) := by
+      (encodedLeftEdgeTape skipped count tailFirst tail) := by
   cases skipped with
   | nil =>
       cases count with
       | nil =>
           exact
-            (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+            (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_empty
               tailFirst tail).toEquiv
       | cons bit rest =>
           exact
-            rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+            rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_nonempty
               ([] : Word Bool) (bit :: rest) (by simp) tailFirst tail
   | cons bit rest =>
       exact
-        rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_nonempty
+        rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_nonempty
           (bit :: rest) count (by simp) tailFirst tail
 
 theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
@@ -1376,18 +1405,9 @@ theorem rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
     (tail : List (Option Bool)) :
     rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
-      (preRewindTape skipped count tailFirst tail) := by
-  rw [rawBoundaryRightEdgeEmitterDescription, preRewindTape]
-  exact
-    CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTapeEquiv_eq
-      rawBoundaryRightEdgeEmitterCoreDescription_subroutineReady
-      CommonGround.Identity.exactIdentityDescription_subroutineReady
-      (rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
-        skipped count tailFirst tail)
-      rfl
-      (CommonGround.Identity.exactIdentityDescription_haltsFromTape
-        (Tape.move Direction.left
-          (rightEdgeTape skipped count tailFirst tail))).toEquiv
+      (encodedLeftEdgeTape skipped count tailFirst tail) :=
+  rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge
+    skipped count tailFirst tail
 
 def Spec (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
@@ -1395,7 +1415,7 @@ def Spec (emitter : MachineDescription) : Prop :=
       (tailFirst : Bool) (tail : List (Option Bool)),
       emitter.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
-        (preRewindTape skipped count tailFirst tail)
+        (encodedLeftEdgeTape skipped count tailFirst tail)
 
 def Construction : Prop :=
   exists emitter : MachineDescription, Spec emitter

@@ -1729,7 +1729,7 @@ structure RawBoundaryEmptyLayoutEmissionRoute
   coreDescriptionHalts :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTape
       (sourceTape [] [] (some tailFirst :: tail))
-      (rightEdgeTape [] [] tailFirst tail)
+      (encodedLeftEdgeTape [] [] tailFirst tail)
 
 theorem rawBoundaryEmptyLayoutEmissionRoute
     (tailFirst : Bool)
@@ -1746,7 +1746,7 @@ theorem rawBoundaryEmptyLayoutEmissionRoute
       emptyLayoutTailHandoffRightEdgeDescription_haltsFrom_sourceTape
         tailFirst tail
     coreDescriptionHalts :=
-      rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge_empty
+      rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge_empty
         tailFirst tail }
 
 /-!
@@ -2179,20 +2179,20 @@ structure RawBoundaryRightEdgeEmitterCoreRoute : Prop where
     rawBoundaryRightEdgeEmitterDescription.HaltTransitionFree
   wrapperReady :
     rawBoundaryRightEdgeEmitterDescription.SubroutineReady
-  coreHaltsRightEdge :
+  coreHaltsEncodedLeftEdge :
     forall skipped count : Word Bool,
     forall tailFirst : Bool,
     forall tail : List (Option Bool),
       rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
-        (rightEdgeTape skipped count tailFirst tail)
-  wrapperHaltsPreRewind :
+        (encodedLeftEdgeTape skipped count tailFirst tail)
+  wrapperHaltsEncodedLeftEdge :
     forall skipped count : Word Bool,
     forall tailFirst : Bool,
     forall tail : List (Option Bool),
       rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
         (sourceTape skipped count (some tailFirst :: tail))
-        (preRewindTape skipped count tailFirst tail)
+        (encodedLeftEdgeTape skipped count tailFirst tail)
   spec :
     Spec rawBoundaryRightEdgeEmitterDescription
   construction :
@@ -2215,12 +2215,12 @@ theorem rawBoundaryRightEdgeEmitterCoreRoute :
       rawBoundaryRightEdgeEmitterDescription_subroutineReady.right
     wrapperReady :=
       rawBoundaryRightEdgeEmitterDescription_subroutineReady
-    coreHaltsRightEdge := by
+    coreHaltsEncodedLeftEdge := by
       intro skipped count tailFirst tail
       exact
-        rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
+        rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge
           skipped count tailFirst tail
-    wrapperHaltsPreRewind := by
+    wrapperHaltsEncodedLeftEdge := by
       intro skipped count tailFirst tail
       exact
         rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
@@ -2261,14 +2261,14 @@ structure RawBoundaryRightEdgeEmitterEndpointRoute
       skipped count tailFirst tail
   coreRoute :
     RawBoundaryRightEdgeEmitterCoreRoute
-  sourceToRightEdge :
+  sourceToEncodedLeftEdge :
     rawBoundaryRightEdgeEmitterCoreDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
-      (rightEdgeTape skipped count tailFirst tail)
-  sourceToPreRewind :
+      (encodedLeftEdgeTape skipped count tailFirst tail)
+  wrapperToEncodedLeftEdge :
     rawBoundaryRightEdgeEmitterDescription.HaltsFromTapeEquiv
       (sourceTape skipped count (some tailFirst :: tail))
-      (preRewindTape skipped count tailFirst tail)
+      (encodedLeftEdgeTape skipped count tailFirst tail)
   rightEdgeMove :
     Tape.move Direction.right
         (preRewindTape skipped count tailFirst tail) =
@@ -2291,10 +2291,10 @@ theorem rawBoundaryRightEdgeEmitterEndpointRoute
         skipped count tailFirst tail
     coreRoute :=
       rawBoundaryRightEdgeEmitterCoreRoute
-    sourceToRightEdge :=
-      rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_rightEdge
+    sourceToEncodedLeftEdge :=
+      rawBoundaryRightEdgeEmitterCoreDescription_haltsFrom_sourceTape_encodedLeftEdge
         skipped count tailFirst tail
-    sourceToPreRewind :=
+    wrapperToEncodedLeftEdge :=
       rawBoundaryRightEdgeEmitterDescription_haltsFrom_sourceTape
         skipped count tailFirst tail
     rightEdgeMove :=
