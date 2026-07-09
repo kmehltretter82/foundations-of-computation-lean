@@ -28,9 +28,10 @@ open Languages
 /-!
 ## Closure by Regular Expressions
 
-Union, concatenation, Kleene star, finite languages, and the universal finite
-alphabet language are regular because the corresponding regular expressions
-can be built directly.
+Union, concatenation, Kleene star, and the universal finite alphabet language
+are regular because the corresponding regular expressions can be built
+directly. The finite-language case was already recorded in Section 3.2 as
+{lit}`Section02.finite_language_is_regular`.
 
 This block uses the expression view of regularity. It shows how to construct a
 regular expression for the new language once regular expressions for the input
@@ -51,10 +52,6 @@ theorem regular_languages_closed_under_kleene_star {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     RegularLanguage.Regular (Language.Star L) :=
   RegExp.regular_star hL
-
-theorem finite_language_regular (ws : List (Word alpha)) :
-    RegularLanguage.Regular (fun w => w ∈ ws) :=
-  RegExp.finite_language_regular ws
 
 theorem finite_alphabet_universal_language_regular
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet) :
@@ -90,23 +87,14 @@ theorem regular_language_is_dfa_recognizable {L : Language alpha}
     RegularLanguage.DFARecognizable L :=
   RegularLanguage.regular_is_dfa_recognizable hL
 
-theorem theorem_regex_to_nfa (r : RegExp alpha) :
-    RegularLanguage.NFARecognizable (RegExp.Denote r) :=
-  regular_expression_language_is_nfa_recognizable r
-
-theorem theorem_regular_to_dfa {L : Language alpha}
-    (hL : RegularLanguage.Regular L) :
-    RegularLanguage.DFARecognizable L :=
-  regular_language_is_dfa_recognizable hL
-
 theorem aStarBStar_nfa_recognizable :
     RegularLanguage.NFARecognizable (RegExp.Denote Section02.aStarBStar) :=
-  theorem_regex_to_nfa Section02.aStarBStar
+  regular_expression_language_is_nfa_recognizable Section02.aStarBStar
 
 theorem oneToThreeAsThenEvenBs_nfa_recognizable :
     RegularLanguage.NFARecognizable
       (RegExp.Denote Section02.oneToThreeAsThenEvenBs) :=
-  theorem_regex_to_nfa Section02.oneToThreeAsThenEvenBs
+  regular_expression_language_is_nfa_recognizable Section02.oneToThreeAsThenEvenBs
 
 theorem dfa_recognizable_closed_under_complement {L : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) :
@@ -190,18 +178,6 @@ theorem nfa_recognizable_language_is_regular
     {L : Language alpha} (hL : RegularLanguage.NFARecognizable L) :
     RegularLanguage.Regular L :=
   RegularLanguage.nfa_recognizable_regular alphabet halphabet hL
-
-theorem theorem_dfa_to_regex
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
-    {L : Language alpha} (hL : RegularLanguage.DFARecognizable L) :
-    RegularLanguage.Regular L :=
-  dfa_recognizable_language_is_regular alphabet halphabet hL
-
-theorem theorem_nfa_to_regex
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
-    {L : Language alpha} (hL : RegularLanguage.NFARecognizable L) :
-    RegularLanguage.Regular L :=
-  nfa_recognizable_language_is_regular alphabet halphabet hL
 
 theorem regular_iff_dfa_recognizable_over_finite_alphabet
     (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)

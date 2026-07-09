@@ -23,9 +23,13 @@ alphabet type to be finite or nonempty. The binary and a/b alphabets below are
 finite examples; later automata and regular-expression theorems add explicit
 finite alphabet data when a construction needs to enumerate symbols.
 
-The concrete alphabets below give the book's binary and a/b examples small
-finite types, so later automata and grammar examples can state
-membership facts with actual words.
+The concrete alphabet types below give the book's binary and a/b examples
+small finite types, so later automata and grammar examples can state
+membership facts with actual words. The accompanying witnesses
+{lit}`BitAlphabet` and {lit}`ABAlphabet` record the book's convention that these
+alphabets are finite; the later sections do not consume these two witnesses
+directly, but instead pass explicit symbol lists or build their own
+finite-state witnesses where finiteness is needed.
 
 The key modeling choice is extensional: a language is not a list of words, but
 a predicate saying which words belong. This is why theorems about language
@@ -90,14 +94,18 @@ theorem empty_string_concat_right (w : Word alpha) :
 /-!
 ## Languages
 
-Language operations are set operations on word predicates. The definitions of
-union, intersection, complement, concatenation, singleton languages, and
-Kleene star are unfolded here in the book's order.
+Language operations are set operations on word predicates. The membership
+lemmas below unfold the definitions of union, intersection, complement,
+difference, concatenation, singleton languages, and Kleene star in the book's
+order.
 
 Concatenation and Kleene star are the first genuinely language-specific
 operations. Concatenation asks for a split of the word into a left part and a
 right part; star asks for a finite list of pieces whose concatenation is the
-word.
+word. The book instead introduces the star of a language as the union
+{lit}`S^0 ∪ S^1 ∪ S^2 ∪ ...` of concatenation powers; the power membership
+lemmas and {lit}`kleene_star_membership` below record that the two
+presentations agree.
 -/
 
 theorem language_membership_definition (L : Language alpha) (w : Word alpha) :
@@ -124,6 +132,23 @@ theorem language_concatenation_membership (L M : Language alpha) (w : Word alpha
     w ∈ Language.Concat L M <->
       exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y :=
   Language.mem_concat w L M
+
+theorem singleton_language_membership (x w : Word alpha) :
+    w ∈ Language.Singleton x <-> w = x :=
+  Language.mem_singleton w x
+
+theorem language_power_zero_membership (L : Language alpha) (w : Word alpha) :
+    w ∈ Language.Power L 0 <-> w = Word.Empty :=
+  Language.mem_power_zero w L
+
+theorem language_power_succ_membership (L : Language alpha) (n : Nat) (w : Word alpha) :
+    w ∈ Language.Power L (n + 1) <->
+      exists x y, x ∈ L ∧ y ∈ Language.Power L n ∧ w = Word.Concat x y :=
+  Language.mem_power_succ w L n
+
+theorem kleene_star_membership (L : Language alpha) (w : Word alpha) :
+    w ∈ Language.Star L <-> exists n, w ∈ Language.Power L n :=
+  Language.mem_star_iff_power w L
 
 theorem language_union_idempotent (L : Language alpha) :
     Language.Equal (Language.Union L L) L :=

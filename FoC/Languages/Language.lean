@@ -123,6 +123,10 @@ These lemmas expose the membership rules for the language constructors and
 finite examples.
 -/
 
+theorem mem_singleton (w x : Word alpha) :
+    w ∈ (Singleton x : Language alpha) <-> w = x :=
+  Iff.rfl
+
 theorem mem_union (w : Word alpha) (L M : Language alpha) :
     w ∈ Union L M <-> w ∈ L ∨ w ∈ M :=
   Iff.rfl
@@ -331,6 +335,70 @@ theorem star_concat {L : Language alpha} {x y : Word alpha}
             | inl hpx => exact hxs.left p hpx
             | inr hpy => exact hys.left p hpy
           · rw [concatWords_append, hxs.right, hys.right]
+
+/-!
+# Star as a union of powers
+
+The book introduces the Kleene star of a language as the union of its
+concatenation powers {lit}`S^0 ∪ S^1 ∪ S^2 ∪ ...`.  The next lemmas connect the
+piece-list definition of {lit}`Star` with the {lit}`Power` operation: the zeroth
+power is the epsilon-only language, successor powers are concatenations, and a
+word lies in the star exactly when it lies in some finite power.
+-/
+
+theorem mem_power_zero (w : Word alpha) (L : Language alpha) :
+    w ∈ Power L 0 <-> w = Word.Empty :=
+  Iff.rfl
+
+theorem mem_power_succ (w : Word alpha) (L : Language alpha) (n : Nat) :
+    w ∈ Power L (n + 1) <->
+      exists x y, x ∈ L ∧ y ∈ Power L n ∧ w = Word.Concat x y :=
+  Iff.rfl
+
+theorem concatWords_mem_power {L : Language alpha} :
+    forall pieces : List (Word alpha),
+      (forall p, p ∈ pieces -> p ∈ L) ->
+        ConcatWords pieces ∈ Power L pieces.length := by
+  intro pieces
+  induction pieces with
+  | nil =>
+      intro _
+      exact rfl
+  | cons p rest ih =>
+      intro hpieces
+      exact ⟨p, ConcatWords rest, hpieces p (by simp),
+        ih (fun q hq => hpieces q (by simp [hq])), rfl⟩
+
+theorem power_subset_star (L : Language alpha) (n : Nat) :
+    Subset (Power L n) (Star L) := by
+  induction n with
+  | zero =>
+      intro w hw
+      have hw' : w = Word.Empty := hw
+      rw [hw']
+      exact star_empty_word L
+  | succ n ih =>
+      intro w hw
+      cases hw with
+      | intro x hx =>
+          cases hx with
+          | intro y hy =>
+              rw [hy.right.right]
+              exact star_concat (star_of_mem L hy.left) (ih y hy.right.left)
+
+theorem mem_star_iff_power (w : Word alpha) (L : Language alpha) :
+    w ∈ Star L <-> exists n, w ∈ Power L n := by
+  constructor
+  · intro hw
+    cases hw with
+    | intro pieces hpieces =>
+        refine ⟨pieces.length, ?_⟩
+        rw [← hpieces.right]
+        exact concatWords_mem_power pieces hpieces.left
+  · intro hw
+    cases hw with
+    | intro n hn =>
+        exact power_subset_star L n w hn
 
 end Language
 end Languages

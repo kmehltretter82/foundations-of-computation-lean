@@ -120,9 +120,24 @@ theorem repeatWord_concat_self (w : Word alpha) (n : Nat) :
               rw [ih]
         _ = Concat w (RepeatWord w (n + 1)) := rfl
 
+theorem length_repeatWord (w : Word alpha) (n : Nat) :
+    Length (RepeatWord w n) = n * Length w := by
+  induction n with
+  | zero =>
+      simp [RepeatWord, Length]
+  | succ n ih =>
+      rw [repeatWord_succ, length_concat, ih, Nat.succ_mul]
+      lia
+
 theorem length_repeatSymbol (a : alpha) (n : Nat) :
     Length (RepeatSymbol a n) = n := by
   simp [Length, RepeatSymbol]
+
+theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
+    Concat (RepeatSymbol a m) (RepeatSymbol a n) = RepeatSymbol a (m + n) := by
+  induction m with
+  | zero => simp [Concat, RepeatSymbol]
+  | succ _ _ => simp [Concat, RepeatSymbol]
 
 theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
     Count a (Concat x y) = Count a x + Count a y := by
@@ -139,6 +154,15 @@ theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
         lia
       · simp [Count, h]
         simpa using ih
+
+theorem count_repeatWord [DecidableEq alpha] (a : alpha) (w : Word alpha) (n : Nat) :
+    Count a (RepeatWord w n) = n * Count a w := by
+  induction n with
+  | zero =>
+      simp [RepeatWord, Count]
+  | succ n ih =>
+      rw [repeatWord_succ, count_concat, ih, Nat.succ_mul]
+      lia
 
 theorem count_repeatSymbol_same [DecidableEq alpha] (a : alpha) (n : Nat) :
     Count a (RepeatSymbol a n) = n := by

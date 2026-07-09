@@ -115,6 +115,13 @@ theorem not_pumping_property_of_counterexamples {L : Language alpha}
 The final vocabulary statements connect the counterexample method to
 regularity. If the regular-language Pumping Lemma is available for {lit}`L`, then
 showing that {lit}`L` has no pumping property proves {lit}`L` is not regular.
+
+Each concrete language below gets two non-regularity theorems. The
+{lit}`..._not_regular_from_pumping_lemma` variants take the pumping-lemma
+conclusion as an explicit hypothesis, mirroring the book's proof-by-pumping
+presentation; since {lit}`pumping_lemma_conclusion` proves that hypothesis
+outright, they are subsumed by their unconditional twins and are kept only to
+match the book's argument structure.
 -/
 
 theorem not_regular_if_no_pumping_property {L : Language alpha}
@@ -149,10 +156,99 @@ theorem pump_two_count_symbol [DecidableEq alpha]
     (sym : alpha) (x y z : Word alpha) :
     Word.Count sym (Word.Concat x (Word.Concat (Word.RepeatWord y 2) z)) =
       Word.Count sym (Word.Concat x (Word.Concat y z)) + Word.Count sym y := by
-  rw [show Word.RepeatWord y 2 = Word.Concat y y by
-    simp [Word.RepeatWord, Word.Concat]]
-  repeat rw [Word.count_concat]
+  simp only [Word.count_concat, Word.count_repeatWord]
   lia
+
+/-!
+Several of the section's bad words share the shape "a block of {lit}`a` symbols
+followed by a fixed suffix". The next lemma performs the common bookkeeping
+step for all of them: when a split {lit}`w = x y z` keeps {lit}`x y` inside the
+initial block, deleting {lit}`y` (pumping with {lit}`k = 0`) just shortens that
+block and leaves the suffix untouched. The concrete bad-word lemmas below are
+instances of this statement.
+-/
+
+theorem repeatSymbol_delete_initial_block {a : alpha}
+    {suffix x y z : Word alpha} {n : Nat}
+    (hword : Word.Concat (Word.RepeatSymbol a n) suffix =
+      Word.Concat x (Word.Concat y z))
+    (hxy : Word.Length (Word.Concat x y) <= n) :
+    Word.Concat x z =
+      Word.Concat (Word.RepeatSymbol a (n - Word.Length y)) suffix := by
+  let lenx := Word.Length x
+  let leny := Word.Length y
+  let lenxy := Word.Length (Word.Concat x y)
+  have hlenxy : lenxy = lenx + leny := by
+    simp [lenxy, lenx, leny, Word.length_concat]
+  have hxyRep : Word.Concat x y = Word.RepeatSymbol a lenxy := by
+    have hprefix :
+        Word.Concat x y =
+          List.take lenxy (Word.Concat (Word.RepeatSymbol a n) suffix) := by
+      calc
+        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
+          change Word.Concat x y = List.take (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.take lenxy (Word.Concat (Word.RepeatSymbol a n) suffix) := by
+          rw [← hword]
+    have htake : List.take lenxy (Word.Concat (Word.RepeatSymbol a n) suffix) =
+        Word.RepeatSymbol a lenxy := by
+      have hle : lenxy <= List.length (Word.RepeatSymbol a n) := by
+        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+      have hleNat : lenxy <= n := by
+        simpa [lenxy] using hxy
+      change List.take lenxy
+          (List.append (Word.RepeatSymbol a n) suffix) =
+        Word.RepeatSymbol a lenxy
+      have ht : List.take lenxy
+          (List.append (Word.RepeatSymbol a n) suffix) =
+          List.take lenxy (Word.RepeatSymbol a n) := by
+        simpa [Word.Concat] using
+          (List.take_append_of_le_length
+            (l₁ := Word.RepeatSymbol a n) (l₂ := suffix) hle)
+      rw [ht]
+      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
+    exact Eq.trans hprefix htake
+  have hxRep : x = Word.RepeatSymbol a lenx := by
+    have htake : x = List.take lenx (Word.Concat x y) := by
+      change x = List.take (List.length x) (List.append x y)
+      exact (List.take_left (l₁ := x) (l₂ := y)).symm
+    rw [htake, hxyRep]
+    have hle : lenx <= lenxy := by
+      simp [lenxy, lenx, Word.Length, Word.Concat]
+    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
+  have hzRep : z = Word.Concat (Word.RepeatSymbol a (n - lenxy)) suffix := by
+    have hzDrop : z = List.drop lenxy (Word.Concat (Word.RepeatSymbol a n) suffix) := by
+      calc
+        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
+          change z = List.drop (List.length (Word.Concat x y))
+            (List.append (Word.Concat x y) z)
+          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
+        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
+          rw [Word.concat_assoc]
+        _ = List.drop lenxy (Word.Concat (Word.RepeatSymbol a n) suffix) := by
+          rw [← hword]
+    rw [hzDrop]
+    have hle : lenxy <= List.length (Word.RepeatSymbol a n) := by
+      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
+    change List.drop lenxy
+        (List.append (Word.RepeatSymbol a n) suffix) =
+      Word.Concat (Word.RepeatSymbol a (n - lenxy)) suffix
+    have hd : List.drop lenxy
+        (List.append (Word.RepeatSymbol a n) suffix) =
+        List.append (List.drop lenxy (Word.RepeatSymbol a n)) suffix := by
+      simpa [Word.Concat] using
+        (List.drop_append_of_le_length
+          (l₁ := Word.RepeatSymbol a n) (l₂ := suffix) hle)
+    rw [hd]
+    simp [Word.Concat, Word.RepeatSymbol]
+  rw [hxRep, hzRep]
+  rw [← Word.concat_assoc]
+  rw [Word.repeatSymbol_concat_same]
+  have harith : lenx + (n - lenxy) = n - leny := by lia
+  rw [harith]
 
 /-!
 # Backreference Language
@@ -168,13 +264,6 @@ first block of {lit}`a` symbols. Pumping with {lit}`k = 0` deletes at least one 
 {lit}`a`, leaving fewer {lit}`a`s before the middle {lit}`b` than after it. That word cannot
 belong to `{ a^n b a^n | n >= 0 }`.
 -/
-
-theorem repeatSymbol_concat_same (a : alpha) (m n : Nat) :
-    Word.Concat (Word.RepeatSymbol a m) (Word.RepeatSymbol a n) =
-      Word.RepeatSymbol a (m + n) := by
-  induction m with
-  | zero => simp [Word.Concat, Word.RepeatSymbol]
-  | succ _ _ => simp [Word.Concat, Word.RepeatSymbol]
 
 theorem anbanWord_injective {p q r s : Nat}
     (h : Section03.anbanWord p q = Section03.anbanWord r s) :
@@ -224,84 +313,8 @@ theorem anbanWord_delete_initial_a
     (hword : Section03.anbanWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
     Word.Concat x z = Section03.anbanWord (n - Word.Length y) n := by
-  let lenx := Word.Length x
-  let leny := Word.Length y
-  let lenxy := Word.Length (Word.Concat x y)
-  have hlenxy : lenxy = lenx + leny := by
-    simp [lenxy, lenx, leny, Word.length_concat]
-  let suffix : Word Section01.AB :=
-    Word.Concat (Word.Symbol Section01.AB.b) (Word.RepeatSymbol Section01.AB.a n)
-  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
-    have hprefix :
-        Word.Concat x y = List.take lenxy (Section03.anbanWord n n) := by
-      calc
-        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
-          change Word.Concat x y = List.take (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.take lenxy (Section03.anbanWord n n) := by
-          rw [← hword]
-    have htake : List.take lenxy (Section03.anbanWord n n) =
-        Word.RepeatSymbol Section01.AB.a lenxy := by
-      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-      have hleNat : lenxy <= n := by
-        simpa [lenxy] using hxy
-      unfold Section03.anbanWord
-      change List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-        Word.RepeatSymbol Section01.AB.a lenxy
-      have ht : List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [suffix, Word.Concat] using
-          (List.take_append_of_le_length
-            (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
-      rw [ht]
-      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
-    exact Eq.trans hprefix htake
-  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
-    have htake : x = List.take lenx (Word.Concat x y) := by
-      change x = List.take (List.length x) (List.append x y)
-      exact (List.take_left (l₁ := x) (l₂ := y)).symm
-    rw [htake, hxyRep]
-    have hle : lenx <= lenxy := by
-      simp [lenxy, lenx, Word.Length, Word.Concat]
-    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
-  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix := by
-    have hzDrop : z = List.drop lenxy (Section03.anbanWord n n) := by
-      calc
-        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
-          change z = List.drop (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.drop lenxy (Section03.anbanWord n n) := by
-          rw [← hword]
-    rw [hzDrop]
-    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-    unfold Section03.anbanWord
-    change List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix
-    have hd : List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n)) suffix := by
-      simpa [suffix, Word.Concat] using
-        (List.drop_append_of_le_length
-          (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
-    rw [hd]
-    simp [Word.Concat, Word.RepeatSymbol]
-  rw [hxRep, hzRep]
-  unfold Section03.anbanWord
-  rw [← Word.concat_assoc]
-  rw [repeatSymbol_concat_same]
-  have harith : lenx + (n - lenxy) = n - leny := by lia
-  rw [harith]
+  unfold Section03.anbanWord at hword ⊢
+  exact repeatSymbol_delete_initial_block hword hxy
 
 theorem anban_no_pumping_property :
     ¬ Pumping.HasPumpingProperty Section03.anbanLanguage := by
@@ -861,85 +874,8 @@ theorem squareBlock_delete_initial_a
     (hword : squareBlockWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
     Word.Concat x z = squareBlockWord (n - Word.Length y) n := by
-  let lenx := Word.Length x
-  let leny := Word.Length y
-  let lenxy := Word.Length (Word.Concat x y)
-  have hlenxy : lenxy = lenx + leny := by
-    simp [lenxy, lenx, leny, Word.length_concat]
-  let suffix : Word Section01.AB :=
-    Word.Concat (Word.Symbol Section01.AB.b)
-      (Word.Concat (Word.RepeatSymbol Section01.AB.a n) (Word.Symbol Section01.AB.b))
-  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
-    have hprefix :
-        Word.Concat x y = List.take lenxy (squareBlockWord n n) := by
-      calc
-        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
-          change Word.Concat x y = List.take (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.take lenxy (squareBlockWord n n) := by
-          rw [← hword]
-    have htake : List.take lenxy (squareBlockWord n n) =
-        Word.RepeatSymbol Section01.AB.a lenxy := by
-      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-      have hleNat : lenxy <= n := by
-        simpa [lenxy] using hxy
-      unfold squareBlockWord
-      change List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-        Word.RepeatSymbol Section01.AB.a lenxy
-      have ht : List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [suffix, Word.Concat] using
-          (List.take_append_of_le_length
-            (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
-      rw [ht]
-      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
-    exact Eq.trans hprefix htake
-  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
-    have htake : x = List.take lenx (Word.Concat x y) := by
-      change x = List.take (List.length x) (List.append x y)
-      exact (List.take_left (l₁ := x) (l₂ := y)).symm
-    rw [htake, hxyRep]
-    have hle : lenx <= lenxy := by
-      simp [lenxy, lenx, Word.Length, Word.Concat]
-    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
-  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix := by
-    have hzDrop : z = List.drop lenxy (squareBlockWord n n) := by
-      calc
-        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
-          change z = List.drop (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.drop lenxy (squareBlockWord n n) := by
-          rw [← hword]
-    rw [hzDrop]
-    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-    unfold squareBlockWord
-    change List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy)) suffix
-    have hd : List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n) suffix) =
-        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n)) suffix := by
-      simpa [suffix, Word.Concat] using
-        (List.drop_append_of_le_length
-          (l₁ := Word.RepeatSymbol Section01.AB.a n) (l₂ := suffix) hle)
-    rw [hd]
-    simp [Word.Concat, Word.RepeatSymbol]
-  rw [hxRep, hzRep]
-  unfold squareBlockWord
-  rw [← Word.concat_assoc]
-  rw [repeatSymbol_concat_same]
-  have harith : lenx + (n - lenxy) = n - leny := by lia
-  rw [harith]
+  unfold squareBlockWord at hword ⊢
+  exact repeatSymbol_delete_initial_block hword hxy
 
 theorem square_no_pumping_property :
     ¬ Pumping.HasPumpingProperty squareLanguage := by
@@ -1138,92 +1074,8 @@ theorem mirrorBlock_delete_initial_a
     (hword : mirrorBlockWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
     Word.Concat x z = mirrorBlockWord (n - Word.Length y) n := by
-  let lenx := Word.Length x
-  let leny := Word.Length y
-  let lenxy := Word.Length (Word.Concat x y)
-  have hlenxy : lenxy = lenx + leny := by
-    simp [lenxy, lenx, leny, Word.length_concat]
-  have hxyRep : Word.Concat x y = Word.RepeatSymbol Section01.AB.a lenxy := by
-    have hprefix :
-        Word.Concat x y = List.take lenxy (mirrorBlockWord n n) := by
-      calc
-        Word.Concat x y = List.take lenxy (Word.Concat (Word.Concat x y) z) := by
-          change Word.Concat x y = List.take (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.take_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.take lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.take lenxy (mirrorBlockWord n n) := by
-          rw [← hword]
-    have htake : List.take lenxy (mirrorBlockWord n n) =
-        Word.RepeatSymbol Section01.AB.a lenxy := by
-      have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-      have hleNat : lenxy <= n := by
-        simpa [lenxy] using hxy
-      unfold mirrorBlockWord
-      change List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n)
-            (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
-        Word.RepeatSymbol Section01.AB.a lenxy
-      have ht : List.take lenxy
-          (List.append (Word.RepeatSymbol Section01.AB.a n)
-            (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
-          List.take lenxy (Word.RepeatSymbol Section01.AB.a n) := by
-        simpa [Word.Concat] using
-          (List.take_append_of_le_length
-            (l₁ := Word.RepeatSymbol Section01.AB.a n)
-            (l₂ := Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) hle)
-      rw [ht]
-      simp [Word.RepeatSymbol, Nat.min_eq_left hleNat]
-    exact Eq.trans hprefix htake
-  have hxRep : x = Word.RepeatSymbol Section01.AB.a lenx := by
-    have htake : x = List.take lenx (Word.Concat x y) := by
-      change x = List.take (List.length x) (List.append x y)
-      exact (List.take_left (l₁ := x) (l₂ := y)).symm
-    rw [htake, hxyRep]
-    have hle : lenx <= lenxy := by
-      simp [lenxy, lenx, Word.Length, Word.Concat]
-    simp [Word.RepeatSymbol, Nat.min_eq_left hle]
-  have hzRep : z = Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy))
-      (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) := by
-    have hzDrop : z = List.drop lenxy (mirrorBlockWord n n) := by
-      calc
-        z = List.drop lenxy (Word.Concat (Word.Concat x y) z) := by
-          change z = List.drop (List.length (Word.Concat x y))
-            (List.append (Word.Concat x y) z)
-          exact (List.drop_left (l₁ := Word.Concat x y) (l₂ := z)).symm
-        _ = List.drop lenxy (Word.Concat x (Word.Concat y z)) := by
-          rw [Word.concat_assoc]
-        _ = List.drop lenxy (mirrorBlockWord n n) := by
-          rw [← hword]
-    rw [hzDrop]
-    have hle : lenxy <= List.length (Word.RepeatSymbol Section01.AB.a n) := by
-      simpa [lenxy, Word.Length, Word.Concat, Word.RepeatSymbol] using hxy
-    unfold mirrorBlockWord
-    change List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n)
-          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
-      Word.Concat (Word.RepeatSymbol Section01.AB.a (n - lenxy))
-        (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))
-    have hd : List.drop lenxy
-        (List.append (Word.RepeatSymbol Section01.AB.a n)
-          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n))) =
-        List.append (List.drop lenxy (Word.RepeatSymbol Section01.AB.a n))
-          (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) := by
-      simpa [Word.Concat] using
-        (List.drop_append_of_le_length
-          (l₁ := Word.RepeatSymbol Section01.AB.a n)
-          (l₂ := Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a n)) hle)
-    rw [hd]
-    simp [Word.Concat, Word.RepeatSymbol]
-  rw [hxRep, hzRep]
-  unfold mirrorBlockWord
-  rw [← Word.concat_assoc]
-  rw [repeatSymbol_concat_same]
-  have harith : lenx + (n - lenxy) = n - leny := by
-    lia
-  rw [harith]
+  unfold mirrorBlockWord at hword ⊢
+  exact repeatSymbol_delete_initial_block hword hxy
 
 theorem reverse_square_no_pumping_property :
     ¬ Pumping.HasPumpingProperty reverseSquareLanguage := by

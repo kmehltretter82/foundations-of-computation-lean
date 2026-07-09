@@ -100,7 +100,46 @@ theorem atLeastTwoOnes_rejects_010 :
   cases h
 
 /-!
-## A DFA With an Exact Language Statement
+## The Exact Language of the Example Machine
+
+The book states the language of this machine exactly: the words containing at
+least two {lit}`1` symbols. The invariant behind the proof reads each state as
+the number of ones the machine has recorded so far, capped at two. Running the
+machine from any state adds the number of ones in the remaining input, again
+capped at two, and acceptance asks for that total to reach two.
+-/
+
+def onesRecorded : TwoOnesState -> Nat
+  | TwoOnesState.noneSeen => 0
+  | TwoOnesState.oneSeen => 1
+  | TwoOnesState.twoOrMore => 2
+
+theorem atLeastTwoOnes_runFrom_accept_iff (w : Word Section01.Bit) :
+    forall q : TwoOnesState,
+      atLeastTwoOnesDFA.accept (DFA.RunFrom atLeastTwoOnesDFA q w) <->
+        2 <= onesRecorded q + Word.Count Section01.Bit.one w := by
+  induction w with
+  | nil =>
+      intro q
+      cases q <;>
+        simp [DFA.RunFrom, atLeastTwoOnesDFA, onesRecorded, Word.Count]
+  | cons b w ih =>
+      intro q
+      rw [DFA.runFrom_cons, ih]
+      cases q <;> cases b <;>
+        simp [atLeastTwoOnesDFA, onesRecorded, Word.Count] <;>
+        first
+          | lia
+          | (constructor <;> intro _ <;> lia)
+
+theorem atLeastTwoOnes_accepts_exact (w : Word Section01.Bit) :
+    DFA.Accepts atLeastTwoOnesDFA w <->
+      2 <= Word.Count Section01.Bit.one w := by
+  simpa [DFA.Accepts, DFA.Run, onesRecorded] using
+    atLeastTwoOnes_runFrom_accept_iff w TwoOnesState.noneSeen
+
+/-!
+## Another DFA With an Exact Language Statement
 
 The next small machine accepts exactly the nonempty words whose first symbol is
 {lit}`a`. It demonstrates the common DFA pattern of remembering a permanent
