@@ -804,6 +804,116 @@ theorem toDerives {G : CFG terminal nonterminal}
   | step hstep _ ih =>
       exact Derives.step (leftmostYields_yields hstep) ih
 
+def castTarget {G : CFG terminal nonterminal}
+    {x y y' : SententialForm terminal nonterminal}
+    (h : y = y') (d : LeftDerivationTrace G x y) :
+    LeftDerivationTrace G x y' :=
+  h ▸ d
+
+/-
+The states of a trace list every sentential form along the derivation, from
+the source through each rewrite down to the target. In the book, a left
+derivation is exactly this sequence of sentential forms; because the step
+obligations are propositions, traces with equal state lists are equal, so
+comparing traces is the same as comparing derivations in the book's sense.
+-/
+
+def states {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G x y) :
+    List (SententialForm terminal nonterminal) :=
+  match x, y, d with
+  | _, _, refl a => [a]
+  | x, _, step _ rest => x :: states rest
+
+theorem states_ne_nil {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G x y) : d.states ≠ [] := by
+  cases d with
+  | refl a => simp [states]
+  | step hstep rest => simp [states]
+
+theorem states_head? {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G x y) : d.states.head? = some x := by
+  cases d with
+  | refl a => rfl
+  | step hstep rest => rfl
+
+theorem states_castTarget {G : CFG terminal nonterminal}
+    {x y y' : SententialForm terminal nonterminal}
+    (h : y = y') (d : LeftDerivationTrace G x y) :
+    (castTarget h d).states = d.states := by
+  cases h
+  rfl
+
+theorem states_trans {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d1 : LeftDerivationTrace G x y) :
+    forall {z : SententialForm terminal nonterminal}
+      (d2 : LeftDerivationTrace G y z),
+      (d1.trans d2).states = d1.states.dropLast ++ d2.states := by
+  induction d1 with
+  | refl a =>
+      intro z d2
+      simp [trans, states]
+  | step hstep rest ih =>
+      intro z d2
+      simp only [trans, states, ih, List.cons_append,
+        List.dropLast_cons_of_ne_nil (states_ne_nil rest)]
+
+theorem states_appendRight {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G x y)
+    (suffix : SententialForm terminal nonterminal) :
+    (d.appendRight suffix).states = d.states.map (· ++ suffix) := by
+  induction d with
+  | refl a => rfl
+  | step hstep rest ih =>
+      simp only [appendRight, states, ih, List.map_cons]
+
+theorem states_appendLeftTerminals {G : CFG terminal nonterminal}
+    {x y pref : SententialForm terminal nonterminal}
+    (hpref : SententialForm.allTerminals pref)
+    (d : LeftDerivationTrace G x y) :
+    (d.appendLeftTerminals hpref).states = d.states.map (pref ++ ·) := by
+  induction d with
+  | refl a => rfl
+  | step hstep rest ih =>
+      simp only [appendLeftTerminals, states, ih, List.map_cons]
+
+theorem eq_of_states_eq {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d1 : LeftDerivationTrace G x y) :
+    forall d2 : LeftDerivationTrace G x y,
+      d1.states = d2.states -> d1 = d2 := by
+  induction d1 with
+  | refl a =>
+      intro d2 h
+      cases d2 with
+      | refl _ => rfl
+      | step hstep2 rest2 =>
+          exfalso
+          simp only [states] at h
+          injection h with _ htail
+          exact states_ne_nil rest2 htail.symm
+  | step hstep1 rest1 ih =>
+      intro d2 h
+      cases d2 with
+      | refl _ =>
+          exfalso
+          simp only [states] at h
+          injection h with _ htail
+          exact states_ne_nil rest1 htail
+      | step hstep2 rest2 =>
+          simp only [states] at h
+          injection h with _ htail
+          have hmid := states_head? rest1
+          rw [htail, states_head? rest2] at hmid
+          injection hmid with hmid
+          subst hmid
+          rw [ih rest2 htail]
+
 end LeftDerivationTrace
 
 namespace RightDerivationTrace
@@ -824,48 +934,41 @@ mutual
 /-
 Every parse tree induces a left derivation by expanding the root production and
 then processing the forest from left to right. This is the direction needed to
-compare ambiguity by parse trees with ambiguity by left derivations.
+compare ambiguity by parse trees with ambiguity by left derivations. The
+definitions are given by explicit trace combinators, with a single target cast
+per forest node, so the state sequence of the resulting trace can be computed
+by the lemmas that follow.
 -/
 
 def ParseTree.leftDerivationTrace {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
     LeftDerivationTrace G [s]
-      (SententialForm.terminalWord (ParseTree.frontier tree)) := by
-  cases tree with
-  | leaf a =>
-      exact LeftDerivationTrace.refl _
-  | node A rhs hprod children =>
-      exact LeftDerivationTrace.step
+      (SententialForm.terminalWord (ParseTree.frontier tree)) :=
+  match tree with
+  | ParseTree.leaf _ =>
+      LeftDerivationTrace.refl _
+  | ParseTree.node A rhs hprod children =>
+      LeftDerivationTrace.step
         (x := [Symbol.nonterminal A]) (y := rhs)
-        (by exact ⟨[], [], A, rhs, trivial, hprod, rfl, by simp⟩)
-        (by
-          simpa [ParseTree.frontier] using
-            ParseForest.leftDerivationTrace children)
+        ⟨[], [], A, rhs, trivial, hprod, rfl, by simp⟩
+        (ParseForest.leftDerivationTrace children)
 
 def ParseForest.leftDerivationTrace {G : CFG terminal nonterminal}
     {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
     LeftDerivationTrace G sent
-      (SententialForm.terminalWord (ParseForest.frontier forest)) := by
-  cases forest with
-  | nil =>
-      exact LeftDerivationTrace.refl _
-  | cons s restSent tree rest =>
-      have hTree :=
-        (ParseTree.leftDerivationTrace tree).appendRight restSent
-      have hRestPrefix :
-          SententialForm.allTerminals
-            (SententialForm.terminalWord
-              (nt := nonterminal) (ParseTree.frontier tree)) :=
-        SententialForm.terminalWord_allTerminals _
-      have hRest :=
-        (ParseForest.leftDerivationTrace rest).appendLeftTerminals hRestPrefix
-      have hAll := hTree.trans hRest
-      change LeftDerivationTrace G (s :: restSent)
-        (SententialForm.terminalWord
-          (Word.Concat (ParseTree.frontier tree)
-            (ParseForest.frontier rest)))
-      rw [SententialForm.terminalWord_append]
-      exact hAll
+      (SententialForm.terminalWord (ParseForest.frontier forest)) :=
+  match forest with
+  | ParseForest.nil =>
+      LeftDerivationTrace.refl _
+  | ParseForest.cons _ restSent tree rest =>
+      LeftDerivationTrace.castTarget
+        (SententialForm.terminalWord_append
+          (ParseTree.frontier tree) (ParseForest.frontier rest)).symm
+        (LeftDerivationTrace.trans
+          ((ParseTree.leftDerivationTrace tree).appendRight restSent)
+          ((ParseForest.leftDerivationTrace rest).appendLeftTerminals
+            (SententialForm.terminalWord_allTerminals
+              (ParseTree.frontier tree))))
 
 end
 
@@ -905,32 +1008,606 @@ theorem parseTree_leftDerivationTrace_correspondence
 /-!
 # Left derivations and ambiguity
 
-The final section records left-derivation traces and proves that ambiguity by
-parse trees is equivalent to ambiguity by left derivations.
+The rest of the module proves the book's Theorem 4.5: parse trees rooted at a
+symbol and leftmost derivation traces of a terminal word correspond one to
+one. A left derivation is compared through its state sequence, the list of
+sentential forms it passes through, which matches the book's reading of a
+derivation. The correspondence then shows that ambiguity by parse trees
+coincides with ambiguity by left derivations, where the left derivations
+themselves are required to differ, not merely the parse trees they came from.
 -/
 
-structure StartLeftDerivation (G : CFG terminal nonterminal)
-    (w : Word terminal) where
-  tree : ParseTree G (Symbol.nonterminal G.start)
-  trace :
-    LeftDerivationTrace G [Symbol.nonterminal G.start]
-      (SententialForm.terminalWord w)
-  frontier_eq : ParseTree.frontier tree = w
+private theorem list_dropLast_append_getLast? {alpha : Type u}
+    {l : List alpha} {a : alpha} (h : l.getLast? = some a) :
+    l.dropLast ++ [a] = l := by
+  induction l with
+  | nil => cases h
+  | cons b t ih =>
+      cases t with
+      | nil =>
+          have hb : ([b] : List alpha).getLast? = some b := rfl
+          rw [hb] at h
+          injection h with h
+          rw [← h]
+          rfl
+      | cons c t' =>
+          rw [List.getLast?_cons_cons] at h
+          show b :: ((c :: t').dropLast ++ [a]) = b :: (c :: t')
+          rw [ih h]
 
-def StartLeftDerivation.ofParseTree {G : CFG terminal nonterminal}
-    {w : Word terminal}
-    (tree : ParseTree G (Symbol.nonterminal G.start))
-    (hfrontier : ParseTree.frontier tree = w) :
-    StartLeftDerivation G w where
-  tree := tree
-  trace := by
-    rw [← hfrontier]
-    exact ParseTree.leftDerivationTrace tree
-  frontier_eq := hfrontier
+mutual
+
+/-
+The state sequence of the canonical left derivation of a tree or forest,
+computed structurally: a node contributes its root expansion, and a forest
+first rewrites its head tree with the remaining sentential form appended and
+then rewrites the remaining forest behind the head tree's terminal frontier.
+-/
+
+def ParseTree.leftStates {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} :
+    ParseTree G s -> List (SententialForm terminal nonterminal)
+  | ParseTree.leaf a => [[Symbol.terminal a]]
+  | ParseTree.node A _ _ children =>
+      [Symbol.nonterminal A] :: ParseForest.leftStates children
+
+def ParseForest.leftStates {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} :
+    ParseForest G sent -> List (SententialForm terminal nonterminal)
+  | ParseForest.nil => [[]]
+  | ParseForest.cons _ restSent tree rest =>
+      (ParseTree.leftStates tree).dropLast.map (· ++ restSent) ++
+        (ParseForest.leftStates rest).map
+          (SententialForm.terminalWord (ParseTree.frontier tree) ++ ·)
+
+end
+
+mutual
+
+theorem ParseTree.states_leftDerivationTrace {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    (ParseTree.leftDerivationTrace tree).states = ParseTree.leftStates tree := by
+  cases tree with
+  | leaf a => rfl
+  | node A rhs hprod children =>
+      have hChildren := ParseForest.states_leftDerivationTrace children
+      simp only [ParseTree.leftDerivationTrace, ParseTree.leftStates,
+        LeftDerivationTrace.states]
+      exact congrArg ([Symbol.nonterminal A] :: ·) hChildren
+
+theorem ParseForest.states_leftDerivationTrace {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.leftDerivationTrace forest).states =
+      ParseForest.leftStates forest := by
+  cases forest with
+  | nil => rfl
+  | cons s restSent tree rest =>
+      have hTree := ParseTree.states_leftDerivationTrace tree
+      have hRest := ParseForest.states_leftDerivationTrace rest
+      calc (ParseForest.leftDerivationTrace
+              (ParseForest.cons s restSent tree rest)).states
+          = ((ParseTree.leftDerivationTrace tree).appendRight
+                restSent).states.dropLast ++
+              ((ParseForest.leftDerivationTrace rest).appendLeftTerminals
+                (SententialForm.terminalWord_allTerminals
+                  (ParseTree.frontier tree))).states :=
+            (LeftDerivationTrace.states_castTarget _ _).trans
+              (LeftDerivationTrace.states_trans _ _)
+        _ = ((ParseTree.leftStates tree).map (· ++ restSent)).dropLast ++
+              (ParseForest.leftStates rest).map
+                (SententialForm.terminalWord (ParseTree.frontier tree) ++ ·) := by
+            rw [LeftDerivationTrace.states_appendRight,
+              LeftDerivationTrace.states_appendLeftTerminals, hTree, hRest]
+        _ = ParseForest.leftStates (ParseForest.cons s restSent tree rest) := by
+            simp only [ParseForest.leftStates, List.map_dropLast]
+
+end
+
+theorem ParseTree.leftStates_ne_nil {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    ParseTree.leftStates tree ≠ [] := by
+  cases tree with
+  | leaf a => simp [ParseTree.leftStates]
+  | node A rhs hprod children => simp [ParseTree.leftStates]
+
+theorem ParseForest.leftStates_ne_nil {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    ParseForest.leftStates forest ≠ [] := by
+  cases forest with
+  | nil => simp [ParseForest.leftStates]
+  | cons s restSent tree rest =>
+      intro h
+      simp only [ParseForest.leftStates] at h
+      rcases List.append_eq_nil_iff.mp h with ⟨-, hmap⟩
+      exact ParseForest.leftStates_ne_nil rest (List.map_eq_nil_iff.mp hmap)
+
+theorem ParseForest.leftStates_getLast? {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.leftStates forest).getLast? =
+      some (SententialForm.terminalWord (ParseForest.frontier forest)) := by
+  cases forest with
+  | nil => rfl
+  | cons s restSent tree rest =>
+      have hRest := ParseForest.leftStates_getLast? rest
+      simp [ParseForest.leftStates, ParseForest.frontier, List.getLast?_append,
+        List.getLast?_map, hRest, SententialForm.terminalWord_append]
+
+theorem ParseTree.leftStates_getLast? {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    (ParseTree.leftStates tree).getLast? =
+      some (SententialForm.terminalWord (ParseTree.frontier tree)) := by
+  cases tree with
+  | leaf a => rfl
+  | node A rhs hprod children =>
+      have hChildren := ParseForest.leftStates_getLast? children
+      simp [ParseTree.leftStates, ParseTree.frontier, List.getLast?_cons,
+        hChildren]
+
+theorem ParseForest.leftStates_head? {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal} (forest : ParseForest G sent) :
+    (ParseForest.leftStates forest).head? = some sent := by
+  cases forest with
+  | nil => rfl
+  | cons s restSent tree rest =>
+      cases tree with
+      | leaf a =>
+          have hRest := ParseForest.leftStates_head? rest
+          simp [ParseForest.leftStates, ParseTree.leftStates, ParseTree.frontier,
+            List.head?_map, hRest, SententialForm.terminalWord]
+      | node A rhs hprod children =>
+          have hne := ParseForest.leftStates_ne_nil children
+          simp [ParseForest.leftStates, ParseTree.leftStates,
+            List.dropLast_cons_of_ne_nil hne]
+
+/-
+A one-tree forest performs exactly the derivation of its tree: the trailing
+empty sentential form contributes nothing, and the final state of the tree
+derivation is its terminal frontier.
+-/
+
+theorem ParseForest.leftStates_singleton {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} (tree : ParseTree G s) :
+    ParseForest.leftStates (ParseForest.cons s [] tree ParseForest.nil) =
+      ParseTree.leftStates tree := by
+  have hlast := ParseTree.leftStates_getLast? tree
+  simp only [ParseForest.leftStates]
+  simp
+  exact list_dropLast_append_getLast? hlast
+
+/-
+Forests over an all-terminal sentential form are forced: every tree must be a
+leaf. Their frontier reads back the sentential form and their derivation is a
+single state.
+-/
+
+theorem ParseForest.eq_of_allTerminals {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal}
+    (hsent : SententialForm.allTerminals sent)
+    (f1 f2 : ParseForest G sent) : f1 = f2 := by
+  cases f1 with
+  | nil =>
+      cases f2 with
+      | nil => rfl
+  | cons s restSent t1 r1 =>
+      cases f2 with
+      | cons _ _ t2 r2 =>
+          cases s with
+          | terminal a =>
+              cases t1 with
+              | leaf _ =>
+                  cases t2 with
+                  | leaf _ =>
+                      have hrest : SententialForm.allTerminals restSent := hsent
+                      rw [ParseForest.eq_of_allTerminals hrest r1 r2]
+          | nonterminal A => cases hsent
+
+theorem ParseForest.leftStates_of_allTerminals {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal}
+    (hsent : SententialForm.allTerminals sent)
+    (f : ParseForest G sent) :
+    ParseForest.leftStates f = [sent] := by
+  cases f with
+  | nil => rfl
+  | cons s restSent tree rest =>
+      cases s with
+      | terminal a =>
+          cases tree with
+          | leaf _ =>
+              have hrest : SententialForm.allTerminals restSent := hsent
+              simp [ParseForest.leftStates, ParseTree.leftStates,
+                ParseTree.frontier, SententialForm.terminalWord,
+                ParseForest.leftStates_of_allTerminals hrest rest]
+      | nonterminal A => cases hsent
+
+theorem ParseForest.terminalWord_frontier_of_allTerminals
+    {G : CFG terminal nonterminal}
+    {sent : SententialForm terminal nonterminal}
+    (hsent : SententialForm.allTerminals sent)
+    (f : ParseForest G sent) :
+    SententialForm.terminalWord (ParseForest.frontier f) = sent := by
+  cases f with
+  | nil => rfl
+  | cons s restSent tree rest =>
+      cases s with
+      | terminal a =>
+          cases tree with
+          | leaf _ =>
+              have hrest : SententialForm.allTerminals restSent := hsent
+              have hone : SententialForm.terminalWord (nt := nonterminal) [a] =
+                  [Symbol.terminal a] := rfl
+              simp [ParseForest.frontier, ParseTree.frontier,
+                SententialForm.terminalWord_append, hone,
+                ParseForest.terminalWord_frontier_of_allTerminals hrest rest]
+      | nonterminal A => cases hsent
+
+theorem ParseForest.nonempty_of_allTerminals {G : CFG terminal nonterminal} :
+    forall (sent : SententialForm terminal nonterminal),
+      SententialForm.allTerminals sent -> Nonempty (ParseForest G sent) := by
+  intro sent
+  induction sent with
+  | nil =>
+      intro _
+      exact ⟨ParseForest.nil⟩
+  | cons s rest ih =>
+      intro h
+      cases s with
+      | terminal a =>
+          have hrest : SententialForm.allTerminals rest := h
+          cases ih hrest with
+          | intro f =>
+              exact ⟨ParseForest.cons _ _ (ParseTree.leaf a) f⟩
+      | nonterminal A => cases h
+
+/-
+Splitting and joining forests along an append of sentential forms. Splits
+exist and appends are injective because a forest follows the list structure of
+its sentential form exactly.
+-/
+
+theorem ParseForest.exists_append_eq {G : CFG terminal nonterminal} :
+    forall {left : SententialForm terminal nonterminal}
+      {right : SententialForm terminal nonterminal}
+      (f : ParseForest G (left ++ right)),
+      exists leftForest : ParseForest G left,
+        exists rightForest : ParseForest G right,
+          f = ParseForest.append leftForest rightForest := by
+  intro left
+  induction left with
+  | nil =>
+      intro right f
+      exact ⟨ParseForest.nil, f, rfl⟩
+  | cons s rest ih =>
+      intro right f
+      cases f with
+      | cons _ _ tree fr =>
+          cases ih fr with
+          | intro f1 hf1 =>
+              cases hf1 with
+              | intro f2 heq =>
+                  refine ⟨ParseForest.cons s rest tree f1, f2, ?_⟩
+                  rw [heq]
+                  rfl
+
+theorem ParseForest.append_inj {G : CFG terminal nonterminal} :
+    forall {left : SententialForm terminal nonterminal}
+      {right : SententialForm terminal nonterminal}
+      {f1 g1 : ParseForest G left} {f2 g2 : ParseForest G right},
+      ParseForest.append f1 f2 = ParseForest.append g1 g2 ->
+        f1 = g1 ∧ f2 = g2 := by
+  intro left
+  induction left with
+  | nil =>
+      intro right f1 g1 f2 g2 h
+      cases f1
+      cases g1
+      exact ⟨rfl, h⟩
+  | cons s rest ih =>
+      intro right f1 g1 f2 g2 h
+      cases f1 with
+      | cons _ _ t1 r1 =>
+          cases g1 with
+          | cons _ _ t2 r2 =>
+              injection h with _ _ ht hr
+              cases ih hr with
+              | intro hrest happend =>
+                  refine ⟨?_, happend⟩
+                  rw [ht, hrest]
+
+/-
+The general append law for derivation states: an appended forest first runs
+the left derivation of the left part in front of the right sentential form,
+then runs the right derivation behind the left part's terminal frontier.
+-/
+
+theorem ParseForest.leftStates_append {G : CFG terminal nonterminal} :
+    forall {left : SententialForm terminal nonterminal}
+      {right : SententialForm terminal nonterminal}
+      (f : ParseForest G left) (g : ParseForest G right),
+      ParseForest.leftStates (ParseForest.append f g) =
+        (ParseForest.leftStates f).dropLast.map (· ++ right) ++
+          (ParseForest.leftStates g).map
+            (SententialForm.terminalWord (ParseForest.frontier f) ++ ·) := by
+  intro left right f g
+  cases f with
+  | nil =>
+      simp [ParseForest.append, ParseForest.leftStates, ParseForest.frontier,
+        SententialForm.terminalWord]
+  | cons s restSent tree rest =>
+      have ih := ParseForest.leftStates_append rest g
+      have hne : (ParseForest.leftStates rest).map
+          (SententialForm.terminalWord (ParseTree.frontier tree) ++ ·) ≠ [] := by
+        intro hmap
+        exact ParseForest.leftStates_ne_nil rest (List.map_eq_nil_iff.mp hmap)
+      simp [ParseForest.append, ParseForest.leftStates, ih,
+        List.dropLast_append_of_ne_nil hne, ParseForest.frontier,
+        SententialForm.terminalWord_append, List.map_map, Function.comp_def,
+        List.append_assoc, ← List.map_dropLast]
+
+theorem ParseForest.leftStates_append_of_allTerminals
+    {G : CFG terminal nonterminal}
+    {left right : SententialForm terminal nonterminal}
+    (hleft : SententialForm.allTerminals left)
+    (f : ParseForest G left) (g : ParseForest G right) :
+    ParseForest.leftStates (ParseForest.append f g) =
+      (ParseForest.leftStates g).map (left ++ ·) := by
+  rw [ParseForest.leftStates_append,
+    ParseForest.leftStates_of_allTerminals hleft f,
+    ParseForest.terminalWord_frontier_of_allTerminals hleft f]
+  rfl
+
+/-
+The expansion step: a forest whose sentential form is an all-terminal prefix,
+a nonterminal, and a suffix performs the leftmost rewrite of that nonterminal
+first, and afterwards behaves as the forest with the node replaced by its
+children. This is the forest reading of one leftmost derivation step.
+-/
+
+theorem ParseForest.leftStates_expand {G : CFG terminal nonterminal}
+    {u v rhs : SententialForm terminal nonterminal} {A : nonterminal}
+    (hu : SententialForm.allTerminals u)
+    (fu : ParseForest G u) (hprod : G.produces A rhs)
+    (children : ParseForest G rhs) (fv : ParseForest G v) :
+    ParseForest.leftStates
+        (ParseForest.append
+          (ParseForest.append fu
+            (ParseForest.cons (Symbol.nonterminal A) []
+              (ParseTree.node A rhs hprod children) ParseForest.nil))
+          fv) =
+      (u ++ [Symbol.nonterminal A] ++ v) ::
+        ParseForest.leftStates
+          (ParseForest.append (ParseForest.append fu children) fv) := by
+  have hmap_ne : (ParseForest.leftStates children).map (u ++ ·) ≠ [] := by
+    intro hmap
+    exact ParseForest.leftStates_ne_nil children (List.map_eq_nil_iff.mp hmap)
+  have hfront2 : SententialForm.terminalWord (nt := nonterminal)
+      (ParseForest.frontier (ParseForest.append fu
+        (ParseForest.cons (Symbol.nonterminal A) []
+          (ParseTree.node A rhs hprod children) ParseForest.nil))) =
+      SententialForm.terminalWord
+        (ParseForest.frontier (ParseForest.append fu children)) := by
+    simp [ParseForest.frontier_append, ParseForest.frontier, ParseTree.frontier,
+      Word.Concat]
+  rw [ParseForest.leftStates_append (ParseForest.append fu
+      (ParseForest.cons (Symbol.nonterminal A) []
+        (ParseTree.node A rhs hprod children) ParseForest.nil)) fv,
+    ParseForest.leftStates_append (ParseForest.append fu children) fv,
+    ParseForest.leftStates_append_of_allTerminals hu fu,
+    ParseForest.leftStates_append_of_allTerminals hu fu,
+    ParseForest.leftStates_singleton, hfront2]
+  simp only [ParseTree.leftStates, List.map_cons,
+    List.dropLast_cons_of_ne_nil hmap_ne, List.cons_append]
+
+/-
+Theorem 4.5, forest form. Every leftmost derivation trace of a terminal word
+is the canonical derivation of exactly one parse forest: the state sequence of
+a trace determines the forest, and every trace's state sequence is realized.
+-/
+
+theorem LeftDerivationTrace.exists_forest_states_eq
+    {G : CFG terminal nonterminal}
+    {sent target : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G sent target) :
+    SententialForm.allTerminals target ->
+      exists f : ParseForest G sent,
+        SententialForm.terminalWord (ParseForest.frontier f) = target ∧
+        ParseForest.leftStates f = d.states := by
+  induction d with
+  | refl x =>
+      intro htarget
+      cases ParseForest.nonempty_of_allTerminals (G := G) x htarget with
+      | intro f =>
+          exact ⟨f, ParseForest.terminalWord_frontier_of_allTerminals htarget f,
+            ParseForest.leftStates_of_allTerminals htarget f⟩
+  | step hstep rest ih =>
+      intro htarget
+      rcases ih htarget with ⟨fy, hfy_front, hfy_states⟩
+      rcases hstep with ⟨u, v, A, rhs, hu, hprod, hx, hy⟩
+      subst hx
+      subst hy
+      rcases ParseForest.exists_append_eq fy with ⟨fl, fv, hfl⟩
+      rcases ParseForest.exists_append_eq fl with ⟨fu, frhs, hfu⟩
+      subst hfl
+      subst hfu
+      refine ⟨ParseForest.append
+        (ParseForest.append fu
+          (ParseForest.cons (Symbol.nonterminal A) []
+            (ParseTree.node A rhs hprod frhs) ParseForest.nil)) fv, ?_, ?_⟩
+      · rw [← hfy_front]
+        simp [ParseForest.frontier_append, ParseForest.frontier,
+          ParseTree.frontier, Word.Concat, List.append_assoc]
+      · rw [ParseForest.leftStates_expand hu fu hprod frhs fv, hfy_states]
+        rfl
+
+theorem LeftDerivationTrace.forest_unique_of_states_eq
+    {G : CFG terminal nonterminal}
+    {sent target : SententialForm terminal nonterminal}
+    (d : LeftDerivationTrace G sent target) :
+    SententialForm.allTerminals target ->
+      forall (f1 f2 : ParseForest G sent),
+        ParseForest.leftStates f1 = d.states ->
+        ParseForest.leftStates f2 = d.states -> f1 = f2 := by
+  induction d with
+  | refl x =>
+      intro htarget f1 f2 _ _
+      exact ParseForest.eq_of_allTerminals htarget f1 f2
+  | step hstep rest ih =>
+      intro htarget f1 f2 h1 h2
+      rcases hstep with ⟨u, v, A, rhs, hu, hprod, hx, hy⟩
+      subst hx
+      subst hy
+      rcases ParseForest.exists_append_eq f1 with ⟨fl1, fv1, hfl1⟩
+      rcases ParseForest.exists_append_eq fl1 with ⟨fu1, fn1, hfn1⟩
+      subst hfl1
+      subst hfn1
+      rcases ParseForest.exists_append_eq f2 with ⟨fl2, fv2, hfl2⟩
+      rcases ParseForest.exists_append_eq fl2 with ⟨fu2, fn2, hfn2⟩
+      subst hfl2
+      subst hfn2
+      cases fn1 with
+      | cons _ _ T1 rest1 =>
+          cases rest1 with
+          | nil =>
+              cases T1 with
+              | node _ rhs1 hprod1 ch1 =>
+                  cases fn2 with
+                  | cons _ _ T2 rest2 =>
+                      cases rest2 with
+                      | nil =>
+                          cases T2 with
+                          | node _ rhs2 hprod2 ch2 =>
+                              rw [ParseForest.leftStates_expand hu fu1 hprod1 ch1 fv1] at h1
+                              rw [ParseForest.leftStates_expand hu fu2 hprod2 ch2 fv2] at h2
+                              simp only [LeftDerivationTrace.states] at h1 h2
+                              injection h1 with _ h1
+                              injection h2 with _ h2
+                              have hhead1 := ParseForest.leftStates_head?
+                                (ParseForest.append (ParseForest.append fu1 ch1) fv1)
+                              rw [h1, LeftDerivationTrace.states_head? rest] at hhead1
+                              injection hhead1 with hhead1
+                              have hrhs1 : rhs1 = rhs :=
+                                (List.append_cancel_left
+                                  (List.append_cancel_right hhead1)).symm
+                              have hhead2 := ParseForest.leftStates_head?
+                                (ParseForest.append (ParseForest.append fu2 ch2) fv2)
+                              rw [h2, LeftDerivationTrace.states_head? rest] at hhead2
+                              injection hhead2 with hhead2
+                              have hrhs2 : rhs2 = rhs :=
+                                (List.append_cancel_left
+                                  (List.append_cancel_right hhead2)).symm
+                              subst hrhs1
+                              subst hrhs2
+                              have hforest := ih htarget
+                                (ParseForest.append (ParseForest.append fu1 ch1) fv1)
+                                (ParseForest.append (ParseForest.append fu2 ch2) fv2)
+                                h1 h2
+                              cases ParseForest.append_inj hforest with
+                              | intro hl hv =>
+                                  cases ParseForest.append_inj hl with
+                                  | intro hfu hch =>
+                                      rw [hfu, hch, hv]
+
+theorem ParseTree.eq_of_leftStates_eq {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} {t1 t2 : ParseTree G s}
+    (h : ParseTree.leftStates t1 = ParseTree.leftStates t2) : t1 = t2 := by
+  have h1 : ParseForest.leftStates (ParseForest.cons s [] t1 ParseForest.nil) =
+      (ParseForest.leftDerivationTrace
+        (ParseForest.cons s [] t1 ParseForest.nil)).states := by
+    rw [ParseForest.states_leftDerivationTrace]
+  have h2 : ParseForest.leftStates (ParseForest.cons s [] t2 ParseForest.nil) =
+      (ParseForest.leftDerivationTrace
+        (ParseForest.cons s [] t1 ParseForest.nil)).states := by
+    rw [ParseForest.states_leftDerivationTrace, ParseForest.leftStates_singleton,
+      ParseForest.leftStates_singleton]
+    exact h.symm
+  have hforest :=
+    LeftDerivationTrace.forest_unique_of_states_eq
+      (ParseForest.leftDerivationTrace
+        (ParseForest.cons s [] t1 ParseForest.nil))
+      (SententialForm.terminalWord_allTerminals _) _ _ h1 h2
+  injection hforest
+
+/-
+Theorem 4.5, tree form. Fixing the derived word, a parse tree with that
+frontier determines a leftmost derivation trace of the word, the assignment is
+injective, and every trace arises from exactly one such tree.
+-/
+
+def ParseTree.leftDerivationTraceTo {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} {w : Word terminal}
+    (tree : ParseTree G s) (hfrontier : ParseTree.frontier tree = w) :
+    LeftDerivationTrace G [s] (SententialForm.terminalWord w) :=
+  LeftDerivationTrace.castTarget
+    (congrArg (SententialForm.terminalWord (nt := nonterminal)) hfrontier)
+    (ParseTree.leftDerivationTrace tree)
+
+theorem ParseTree.states_leftDerivationTraceTo {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} {w : Word terminal}
+    (tree : ParseTree G s) (hfrontier : ParseTree.frontier tree = w) :
+    (ParseTree.leftDerivationTraceTo tree hfrontier).states =
+      ParseTree.leftStates tree :=
+  (LeftDerivationTrace.states_castTarget _ _).trans
+    (ParseTree.states_leftDerivationTrace tree)
+
+theorem ParseTree.leftDerivationTraceTo_inj {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} {w : Word terminal}
+    {t1 t2 : ParseTree G s}
+    {h1 : ParseTree.frontier t1 = w} {h2 : ParseTree.frontier t2 = w}
+    (heq : ParseTree.leftDerivationTraceTo t1 h1 =
+      ParseTree.leftDerivationTraceTo t2 h2) :
+    t1 = t2 := by
+  apply ParseTree.eq_of_leftStates_eq
+  rw [← ParseTree.states_leftDerivationTraceTo t1 h1,
+    ← ParseTree.states_leftDerivationTraceTo t2 h2, heq]
+
+theorem exists_unique_parseTree_of_leftDerivationTrace
+    {G : CFG terminal nonterminal} {w : Word terminal}
+    (d : LeftDerivationTrace G [Symbol.nonterminal G.start]
+      (SententialForm.terminalWord w)) :
+    exists tree : ParseTree G (Symbol.nonterminal G.start),
+      (exists hfrontier : ParseTree.frontier tree = w,
+        ParseTree.leftDerivationTraceTo tree hfrontier = d) ∧
+      forall (tree' : ParseTree G (Symbol.nonterminal G.start))
+        (hfrontier' : ParseTree.frontier tree' = w),
+        ParseTree.leftDerivationTraceTo tree' hfrontier' = d -> tree' = tree := by
+  rcases LeftDerivationTrace.exists_forest_states_eq d
+    (SententialForm.terminalWord_allTerminals w) with ⟨f, hfront, hstates⟩
+  cases f with
+  | cons _ _ tree rest =>
+      cases rest with
+      | nil =>
+          have hfrontier : ParseTree.frontier tree = w := by
+            have htoWord := congrArg SententialForm.toWord? hfront
+            rw [SententialForm.terminalWord_toWord,
+              SententialForm.terminalWord_toWord] at htoWord
+            injection htoWord with htoWord
+            simpa [ParseForest.frontier, ParseTree.frontier, Word.Concat]
+              using htoWord
+          have hstates_tree : ParseTree.leftStates tree = d.states := by
+            rw [← ParseForest.leftStates_singleton tree]
+            exact hstates
+          refine ⟨tree, ⟨hfrontier, ?_⟩, ?_⟩
+          · apply LeftDerivationTrace.eq_of_states_eq
+            rw [ParseTree.states_leftDerivationTraceTo, hstates_tree]
+          · intro tree' hfrontier' htrace'
+            apply ParseTree.eq_of_leftStates_eq
+            rw [← ParseTree.states_leftDerivationTraceTo tree' hfrontier',
+              htrace', ← hstates_tree]
+
+/-!
+Ambiguity by left derivations asks for two genuinely different left
+derivations of the same word: two traces from the start symbol that differ,
+which by the state-sequence lemma above means traces passing through
+different sequences of sentential forms. Theorem 4.5 turns this into the
+parse-tree reading and back.
+-/
 
 def AmbiguousByLeftDerivations (G : CFG terminal nonterminal) : Prop :=
-  exists w, exists d1 : StartLeftDerivation G w,
-    exists d2 : StartLeftDerivation G w, d1.tree ≠ d2.tree
+  exists w : Word terminal,
+    exists d1 : LeftDerivationTrace G [Symbol.nonterminal G.start]
+        (SententialForm.terminalWord w),
+      exists d2 : LeftDerivationTrace G [Symbol.nonterminal G.start]
+          (SententialForm.terminalWord w),
+        d1 ≠ d2
 
 def AmbiguousByParseTrees (G : CFG terminal nonterminal) : Prop :=
   exists w, exists t1 : ParseTree G (Symbol.nonterminal G.start),
@@ -944,31 +1621,23 @@ theorem ambiguousByParseTrees_iff_leftDerivations
     AmbiguousByParseTrees G <-> AmbiguousByLeftDerivations G := by
   constructor
   · intro h
-    cases h with
-    | intro w hw =>
-        cases hw with
-        | intro t1 ht1 =>
-            cases ht1 with
-            | intro t2 ht2 =>
-                exists w
-                exists StartLeftDerivation.ofParseTree t1 ht2.left
-                exists StartLeftDerivation.ofParseTree t2 ht2.right.left
-                exact ht2.right.right
+    rcases h with ⟨w, t1, t2, hf1, hf2, hne⟩
+    refine ⟨w, ParseTree.leftDerivationTraceTo t1 hf1,
+      ParseTree.leftDerivationTraceTo t2 hf2, ?_⟩
+    intro heq
+    exact hne (ParseTree.leftDerivationTraceTo_inj heq)
   · intro h
-    cases h with
-    | intro w hw =>
-        cases hw with
-        | intro d1 hd1 =>
-            cases hd1 with
-            | intro d2 hne =>
-                exists w
-                exists d1.tree
-                exists d2.tree
-                constructor
-                · exact d1.frontier_eq
-                constructor
-                · exact d2.frontier_eq
-                · exact hne
+    rcases h with ⟨w, d1, d2, hne⟩
+    rcases exists_unique_parseTree_of_leftDerivationTrace d1 with
+      ⟨t1, ⟨hf1, ht1⟩, -⟩
+    rcases exists_unique_parseTree_of_leftDerivationTrace d2 with
+      ⟨t2, ⟨hf2, ht2⟩, -⟩
+    refine ⟨w, t1, t2, hf1, hf2, ?_⟩
+    intro heq
+    apply hne
+    rw [← ht1, ← ht2]
+    subst heq
+    rfl
 
 end CFG
 

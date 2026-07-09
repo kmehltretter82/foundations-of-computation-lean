@@ -1107,6 +1107,18 @@ theorem parse_tree_frontier_derives {G : CFG terminal nonterminal}
       (SententialForm.terminalWord (CFG.ParseTree.frontier tree)) :=
   CFG.ParseTree.derives tree
 
+/-!
+## Height and Repeated Nonterminals
+
+The height bounds and repeated-subtree lemmas are the formal groundwork for
+the context-free pumping lemma. They identify a repeated nonterminal on a long
+path and extract the loop derivation used for pumping.
+
+If a parse tree is taller than the number of nonterminals, some nonterminal
+must repeat along a path. The later pumping argument uses the upper occurrence
+and lower occurrence as a replaceable loop.
+-/
+
 theorem parse_tree_frontier_length_bound
     {G : CFG terminal nonterminal} {B : Nat}
     (hB : 0 < B)
@@ -1276,6 +1288,14 @@ theorem parse_tree_exists_minimal_for_frontier
       CFG.ParseTree.MinimalForFrontier minTree :=
   CFG.ParseTree.exists_minimal_for_frontier tree
 
+/-!
+## Parse Trees and Generated Languages
+
+Membership in the generated language, existence of a parse tree rooted at the
+start symbol, and existence of a leftmost derivation trace are equivalent ways
+to witness that a grammar generates a word.
+-/
+
 theorem parse_tree_generates_language {G : CFG terminal nonterminal}
     {w : Word terminal} (h : CFG.ParseTreeGenerates G w) :
     w ∈ CFG.GeneratedLanguage G :=
@@ -1308,32 +1328,23 @@ theorem generated_language_iff_parse_tree_exists
     exact ⟨tree, hfrontier⟩
 
 /-!
-## Height and Repeated Nonterminals
+## Left Derivations and Ambiguity
 
-The height bounds and repeated-subtree lemmas are the formal groundwork for
-the context-free pumping lemma. They identify a repeated nonterminal on a long
-path and extract the loop derivation used for pumping.
+A left derivation rewrites the leftmost nonterminal at every step. The book
+compares left derivations as sequences of sentential forms, and calls a
+grammar ambiguous when some word in its language has more than one left
+derivation. Formally a left derivation is a {name}`CFG.LeftDerivationTrace`,
+and its sequence of sentential forms is {name}`CFG.LeftDerivationTrace.states`;
+two traces of the same word are equal exactly when their state sequences are
+equal, so comparing traces is the book's comparison of derivations.
 
-If a parse tree is taller than the number of nonterminals, some nonterminal
-must repeat along a path. The later pumping argument uses the upper occurrence
-and lower occurrence as a replaceable loop.
+Theorem 4.5 states that parse trees and left derivations correspond one to
+one. Both directions are formalized below: mapping a parse tree to its left
+derivation trace is injective, and every left derivation trace of a word is
+the trace of exactly one parse tree with that frontier. From this
+correspondence, ambiguity by parse trees and ambiguity by left derivations
+are equivalent.
 -/
-
-def LeftmostYields (G : CFG terminal nonterminal)
-    (x y : SententialForm terminal nonterminal) : Prop :=
-  CFG.LeftmostYields G x y
-
-def RightmostYields (G : CFG terminal nonterminal)
-    (x y : SententialForm terminal nonterminal) : Prop :=
-  CFG.RightmostYields G x y
-
-def LeftDerivationTrace (G : CFG terminal nonterminal)
-    (x y : SententialForm terminal nonterminal) : Type :=
-  CFG.LeftDerivationTrace G x y
-
-def RightDerivationTrace (G : CFG terminal nonterminal)
-    (x y : SententialForm terminal nonterminal) : Type :=
-  CFG.RightDerivationTrace G x y
 
 def parse_tree_left_derivation_trace
     {G : CFG terminal nonterminal}
@@ -1383,12 +1394,66 @@ theorem generated_language_iff_left_derivation_trace
   exact Iff.trans generated_language_iff_parse_tree_exists
     parse_tree_left_derivation_trace_correspondence
 
+/-!
+The next group is Theorem 4.5. Two left derivation traces of the same word
+are equal exactly when they pass through the same sentential forms, sending a
+parse tree to its left derivation trace is injective, and every left
+derivation trace of a word comes from exactly one parse tree whose frontier
+is that word.
+-/
+
+theorem left_derivation_trace_eq_of_states_eq
+    {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (d1 d2 : CFG.LeftDerivationTrace G x y)
+    (h : d1.states = d2.states) : d1 = d2 :=
+  CFG.LeftDerivationTrace.eq_of_states_eq d1 d2 h
+
+theorem parse_tree_to_left_derivation_trace_injective
+    {G : CFG terminal nonterminal}
+    {s : Symbol terminal nonterminal} {w : Word terminal}
+    {t1 t2 : CFG.ParseTree G s}
+    {h1 : CFG.ParseTree.frontier t1 = w} {h2 : CFG.ParseTree.frontier t2 = w}
+    (heq : CFG.ParseTree.leftDerivationTraceTo t1 h1 =
+      CFG.ParseTree.leftDerivationTraceTo t2 h2) :
+    t1 = t2 :=
+  CFG.ParseTree.leftDerivationTraceTo_inj heq
+
+theorem left_derivation_trace_unique_parse_tree
+    {G : CFG terminal nonterminal} {w : Word terminal}
+    (d : CFG.LeftDerivationTrace G [Symbol.nonterminal G.start]
+      (SententialForm.terminalWord w)) :
+    exists tree : CFG.ParseTree G (Symbol.nonterminal G.start),
+      (exists hfrontier : CFG.ParseTree.frontier tree = w,
+        CFG.ParseTree.leftDerivationTraceTo tree hfrontier = d) ∧
+      forall (tree' : CFG.ParseTree G (Symbol.nonterminal G.start))
+        (hfrontier' : CFG.ParseTree.frontier tree' = w),
+        CFG.ParseTree.leftDerivationTraceTo tree' hfrontier' = d ->
+          tree' = tree :=
+  CFG.exists_unique_parseTree_of_leftDerivationTrace d
+
+/-!
+The book defines an ambiguous grammar by a word with more than one left
+derivation; {name}`CFG.AmbiguousByLeftDerivations` states exactly that, with
+two distinct traces of the same word. By Theorem 4.5 this is equivalent to the
+existence of two distinct parse trees for one word, which is the working
+definition used below and in later sections.
+-/
+
 def AmbiguousGrammar (G : CFG terminal nonterminal) : Prop :=
   CFG.AmbiguousByParseTrees G
+
+def AmbiguousGrammarByLeftDerivations (G : CFG terminal nonterminal) : Prop :=
+  CFG.AmbiguousByLeftDerivations G
 
 theorem ambiguous_by_parse_trees_iff_left_derivations
     (G : CFG terminal nonterminal) :
     CFG.AmbiguousByParseTrees G <-> CFG.AmbiguousByLeftDerivations G :=
+  CFG.ambiguousByParseTrees_iff_leftDerivations G
+
+theorem ambiguous_grammar_iff_ambiguous_by_left_derivations
+    (G : CFG terminal nonterminal) :
+    AmbiguousGrammar G <-> AmbiguousGrammarByLeftDerivations G :=
   CFG.ambiguousByParseTrees_iff_leftDerivations G
 
 inductive AmbiguousExampleTerminal where
