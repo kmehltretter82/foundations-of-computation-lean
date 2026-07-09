@@ -1,5 +1,6 @@
 import FoC.Grammars
 import FoC.Book.Chapter04.Section01
+import FoC.Book.Chapter04.Section01.RegularBoundary
 import FoC.Book.Chapter04.Section02
 import FoC.Book.Chapter04.Section03
 import FoC.Book.Chapter04.Section04
@@ -55,7 +56,13 @@ the unrestricted grammar vocabulary used at the computability boundary.
 
 The formal core is covered. The CFG sections include derivation/context laws,
 closure under union, concatenation, star, and reversal, exact generated-language
-theorems for representative grammars, and the right/left-regular boundary.
+theorems for representative grammars, and the right/left-regular boundary,
+including the finite-production witness that makes every regular language
+context-free over a covering alphabet. The balanced-parenthesis and palindrome
+grammars are bridged to the book's independent characterizations (prefix
+counts and word reversal), and the {lit}`a^n b^n` corollary separating
+context-free from regular languages is assembled in
+{module}`FoC.Book.Chapter04.Section01.RegularBoundary`.
 The BNF page records the notation semantics and many concrete expansion
 examples; small helper rules now cover both sides of alternatives and
 single-use repetition directly.

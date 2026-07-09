@@ -583,6 +583,114 @@ theorem nfaRightRegularGrammar_language_exact (M : NFA terminal state) :
   · exact nfaRightRegular_generates_to_accepts M
   · exact nfaRightRegular_accepts_to_generates M
 
+/-!
+# Finite productions for the NFA-derived grammar
+
+The grammar read off an NFA inherits a finite production list from the finite
+machine presentation: one empty production per accepting state, one
+nonterminal production per epsilon transition, and one
+terminal-then-nonterminal production per symbol transition. The state list
+comes from the NFA's finite-state witness, and the terminal symbols are drawn
+from an explicit covering alphabet list, so the resulting rule list is finite.
+Acceptance and transition membership are propositions, so the rule list is
+assembled classically; this is enough because {lit}`HasFiniteProductions` only
+asserts that such a list exists.
+-/
+
+open Classical in
+private noncomputable def nfaRightRegularRuleList
+    (alphabet : List terminal) (M : NFA terminal state) :
+    List (Production terminal state) :=
+  (M.statesFinite.elems.filterMap fun q =>
+    if M.accept q then
+      some { lhs := q, rhs := [] }
+    else none)
+    ++ ((M.statesFinite.elems.flatMap fun q =>
+      M.statesFinite.elems.filterMap fun r =>
+        if r ∈ M.step q none then
+          some { lhs := q, rhs := [Symbol.nonterminal r] }
+        else none)
+    ++ (M.statesFinite.elems.flatMap fun q =>
+      alphabet.flatMap fun a =>
+        M.statesFinite.elems.filterMap fun r =>
+          if r ∈ M.step q (some a) then
+            some { lhs := q, rhs := [Symbol.terminal a, Symbol.nonterminal r] }
+          else none))
+
+theorem nfaRightRegularGrammar_hasFiniteProductions
+    (alphabet : List terminal) (halphabet : forall a, a ∈ alphabet)
+    (M : NFA terminal state) :
+    HasFiniteProductions (NFARightRegularGrammar M) := by
+  classical
+  exists nfaRightRegularRuleList alphabet M
+  intro A rhs
+  unfold nfaRightRegularRuleList
+  constructor
+  · intro hprod
+    cases nfaRightRegularGrammar_rightRegular M A rhs hprod with
+    | epsilon =>
+        refine ⟨{ lhs := A, rhs := [] }, ?_, rfl, rfl⟩
+        apply List.mem_append.mpr
+        left
+        apply List.mem_filterMap.mpr
+        exact ⟨A, M.statesFinite.complete A, if_pos hprod⟩
+    | nonterminal B =>
+        refine ⟨{ lhs := A, rhs := [Symbol.nonterminal B] }, ?_, rfl, rfl⟩
+        apply List.mem_append.mpr
+        right
+        apply List.mem_append.mpr
+        left
+        apply List.mem_flatMap.mpr
+        refine ⟨A, M.statesFinite.complete A, ?_⟩
+        apply List.mem_filterMap.mpr
+        exact ⟨B, M.statesFinite.complete B, if_pos hprod⟩
+    | terminalThenNonterminal a B =>
+        refine ⟨{ lhs := A, rhs := [Symbol.terminal a, Symbol.nonterminal B] },
+          ?_, rfl, rfl⟩
+        apply List.mem_append.mpr
+        right
+        apply List.mem_append.mpr
+        right
+        apply List.mem_flatMap.mpr
+        refine ⟨A, M.statesFinite.complete A, ?_⟩
+        apply List.mem_flatMap.mpr
+        refine ⟨a, halphabet a, ?_⟩
+        apply List.mem_filterMap.mpr
+        exact ⟨B, M.statesFinite.complete B, if_pos hprod⟩
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    subst hlhs
+    subst hrhs
+    rcases List.mem_append.mp hmem with hmem | hmem
+    · rcases List.mem_filterMap.mp hmem with ⟨q, _hq, hrule⟩
+      by_cases hacc : M.accept q
+      · rw [if_pos hacc] at hrule
+        injection hrule with hrule
+        subst hrule
+        exact hacc
+      · rw [if_neg hacc] at hrule
+        cases hrule
+    · rcases List.mem_append.mp hmem with hmem | hmem
+      · rcases List.mem_flatMap.mp hmem with ⟨q, _hq, hmem2⟩
+        rcases List.mem_filterMap.mp hmem2 with ⟨r, _hr, hrule⟩
+        by_cases hstep : r ∈ M.step q none
+        · rw [if_pos hstep] at hrule
+          injection hrule with hrule
+          subst hrule
+          exact hstep
+        · rw [if_neg hstep] at hrule
+          cases hrule
+      · rcases List.mem_flatMap.mp hmem with ⟨q, _hq, hmem2⟩
+        rcases List.mem_flatMap.mp hmem2 with ⟨a, _ha, hmem3⟩
+        rcases List.mem_filterMap.mp hmem3 with ⟨r, _hr, hrule⟩
+        by_cases hstep : r ∈ M.step q (some a)
+        · rw [if_pos hstep] at hrule
+          injection hrule with hrule
+          subst hrule
+          exact hstep
+        · rw [if_neg hstep] at hrule
+          cases hrule
+
 theorem nfa_rightRegularLanguage {state : Type} (M : NFA terminal state) :
     RightRegularLanguage (NFA.AcceptedLanguage M) := by
   exists state
@@ -610,6 +718,30 @@ theorem regular_leftRegularLanguage {L : Language terminal}
   leftRegularLanguage_iff_reverse_rightRegular.mpr
     (regular_rightRegularLanguage
       (Languages.RegExp.regular_reverse hL))
+
+/-!
+# Regular languages are context-free
+
+Combining the NFA-to-grammar construction with its finite production list
+yields the book's boundary statement: over a covering alphabet, every regular
+language is a context-free language in the finite-production sense of
+{lit}`CFL.ContextFreeLanguage`.
+-/
+
+theorem regular_contextFreeLanguage (alphabet : List terminal)
+    (halphabet : forall a, a ∈ alphabet) {L : Language terminal}
+    (hL : Languages.RegularLanguage.Regular L) :
+    CFL.ContextFreeLanguage L := by
+  cases Languages.RegularLanguage.regular_is_nfa_recognizable hL with
+  | intro state hstate =>
+      cases hstate with
+      | intro M hM =>
+          exists state
+          exists NFARightRegularGrammar M
+          constructor
+          · exact nfaRightRegularGrammar_hasFiniteProductions alphabet halphabet M
+          · exact FoC.Foundation.FSet.equal_trans
+              (nfaRightRegularGrammar_language_exact M) hM
 
 theorem regular_iff_rightRegularLanguage (alphabet : List terminal)
     (halphabet : forall a, a ∈ alphabet) {L : Language terminal} :

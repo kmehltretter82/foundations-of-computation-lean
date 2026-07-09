@@ -165,6 +165,29 @@ theorem regular_iff_right_regular_language
   CFG.regular_iff_rightRegularLanguage alphabet halphabet
 
 /-!
+## Regular Languages are Context-Free
+
+Theorem 4.4's punchline needs one more ingredient beyond exactness of the
+NFA-to-grammar construction: the constructed grammar must have finitely many
+productions, because the book-facing {lit}`ContextFreeLanguage` predicate
+carries a finite-production witness. Over a covering alphabet list, the
+finite NFA presentation supplies that witness, and every regular language is
+context-free.
+-/
+
+theorem nfa_right_regular_grammar_has_finite_productions {state : Type}
+    (alphabet : List terminal) (halphabet : forall a, a ∈ alphabet)
+    (M : NFA terminal state) :
+    CFG.HasFiniteProductions (CFG.NFARightRegularGrammar M) :=
+  CFG.nfaRightRegularGrammar_hasFiniteProductions alphabet halphabet M
+
+theorem regular_languages_are_context_free
+    (alphabet : List terminal) (halphabet : forall a, a ∈ alphabet)
+    {L : Language terminal} (hL : RegularLanguage.Regular L) :
+    ContextFreeLanguage L :=
+  CFG.regular_contextFreeLanguage alphabet halphabet hL
+
+/-!
 ## Closure of CFLs
 
 The closure theorems for union, concatenation, and Kleene star are proved by
@@ -556,9 +579,212 @@ theorem balanced_parens_context_free :
   · exact balanced_parens_generated_language_exact
 
 /-!
+The book defines balanced parenthesis strings independently of any grammar:
+writing {lit}`r_i` for the number of left parentheses minus the number of
+right parentheses among the first {lit}`i` symbols, the string is balanced
+when every {lit}`r_i` is nonnegative and the final value {lit}`r_n` is zero.
+The predicate below phrases the same condition through prefix decompositions:
+every prefix has at least as many left as right parentheses, and the whole
+word has equally many of each. The bridge theorems prove this counting
+characterization equivalent to the inductive predicate targeted by the
+grammar exactness theorem, so the grammar is connected to the book's
+independent definition instead of only to a production-for-production mirror
+of itself.
+-/
+
+def BalancedParensCount (w : Word Paren) : Prop :=
+  (forall x y : Word Paren, w = Word.Concat x y ->
+    Word.Count Paren.right x <= Word.Count Paren.left x) ∧
+  Word.Count Paren.left w = Word.Count Paren.right w
+
+theorem balanced_parens_count_empty : BalancedParensCount [] := by
+  constructor
+  · intro x y hxy
+    cases x with
+    | nil =>
+        simp [Word.Count]
+    | cons c t =>
+        simp [Word.Concat] at hxy
+  · rfl
+
+/-!
+Each pair production preserves the counting characterization. The prefix case
+analysis follows the shape of the word: a prefix is empty, stops inside the
+wrapped word, stops at the matching right parenthesis, or continues into the
+remaining suffix.
+-/
+
+theorem balanced_parens_count_pair {inside rest : Word Paren}
+    (hinside : BalancedParensCount inside) (hrest : BalancedParensCount rest) :
+    BalancedParensCount
+      (Paren.left :: Word.Concat inside (Paren.right :: rest)) := by
+  constructor
+  · intro x y hxy
+    cases x with
+    | nil =>
+        simp [Word.Count]
+    | cons c t =>
+        have hxy2 : Paren.left :: Word.Concat inside (Paren.right :: rest)
+            = c :: Word.Concat t y := hxy
+        injection hxy2 with hc htail
+        subst hc
+        rcases List.append_eq_append_iff.mp htail with
+          ⟨m, hm1, hm2⟩ | ⟨m, hm1, hm2⟩
+        · cases m with
+          | nil =>
+              have ht : t = inside := by simpa using hm1
+              subst ht
+              have hcount := hinside.right
+              simp [Word.Count]
+              lia
+          | cons m0 m1 =>
+              have hm0 : Paren.right :: rest = m0 :: Word.Concat m1 y := hm2
+              injection hm0 with hm0h hm0t
+              subst hm0h
+              have hrest_prefix := hrest.left m1 y hm0t
+              have ht : t = Word.Concat inside (Paren.right :: m1) := hm1
+              subst ht
+              have hcount := hinside.right
+              simp [Word.Count, Word.count_concat]
+              lia
+        · have hin : inside = Word.Concat t m := hm1
+          have hpre := hinside.left t m hin
+          simp [Word.Count]
+          lia
+  · have hcount_inside := hinside.right
+    have hcount_rest := hrest.right
+    simp [Word.Count, Word.count_concat]
+    lia
+
+theorem balanced_parens_count_of_balanced {w : Word Paren}
+    (h : BalancedParens w) : BalancedParensCount w := by
+  induction h with
+  | empty =>
+      exact balanced_parens_count_empty
+  | pair hinside hrest ihinside ihrest =>
+      exact balanced_parens_count_pair ihinside ihrest
+
+/-!
+For the converse, the auxiliary chain predicate describes words consisting of
+{lit}`n + 1` balanced segments separated by {lit}`n` unmatched right
+parentheses. Reading a word left to right, a leading left parenthesis lowers
+the number of unmatched right parentheses by pairing with the first chain
+separator, and a leading right parenthesis raises it. This avoids any search
+for the first prefix where the running count returns to zero.
+-/
+
+private inductive ParenRightChain : Word Paren -> Nat -> Prop where
+  | base {u : Word Paren} :
+      BalancedParens u -> ParenRightChain u 0
+  | cons {u rest : Word Paren} {n : Nat} :
+      BalancedParens u -> ParenRightChain rest n ->
+      ParenRightChain (Word.Concat u (Paren.right :: rest)) (n + 1)
+
+private theorem parenRightChain_cons_left {t : Word Paren} {n : Nat}
+    (h : ParenRightChain t (n + 1)) :
+    ParenRightChain (Paren.left :: t) n := by
+  cases h with
+  | cons hu hrest =>
+      rename_i u rest
+      cases hrest with
+      | base hbal =>
+          exact ParenRightChain.base (BalancedParens.pair hu hbal)
+      | cons hu2 hrest2 =>
+          rename_i u2 rest2 m
+          have heq : Paren.left :: Word.Concat u
+              (Paren.right :: Word.Concat u2 (Paren.right :: rest2))
+              = Word.Concat
+                  (Paren.left :: Word.Concat u (Paren.right :: u2))
+                  (Paren.right :: rest2) := by
+            simp [Word.Concat, List.append_assoc]
+          rw [heq]
+          exact ParenRightChain.cons (BalancedParens.pair hu hu2) hrest2
+
+private theorem parenRightChain_of_counts (w : Word Paren) :
+    forall n : Nat,
+      (forall x y : Word Paren, w = Word.Concat x y ->
+        Word.Count Paren.right x <= Word.Count Paren.left x + n) ->
+      Word.Count Paren.right w = Word.Count Paren.left w + n ->
+      ParenRightChain w n := by
+  induction w with
+  | nil =>
+      intro n _hpre htot
+      have hn : n = 0 := by simpa [Word.Count] using htot.symm
+      subst hn
+      exact ParenRightChain.base BalancedParens.empty
+  | cons c t ih =>
+      intro n hpre htot
+      cases c with
+      | left =>
+          have hpre' : forall x y : Word Paren, t = Word.Concat x y ->
+              Word.Count Paren.right x <= Word.Count Paren.left x + (n + 1) := by
+            intro x y hxy
+            have h := hpre (Paren.left :: x) y (by rw [hxy]; rfl)
+            simp [Word.Count] at h
+            lia
+          have htot' : Word.Count Paren.right t
+              = Word.Count Paren.left t + (n + 1) := by
+            simp [Word.Count] at htot
+            lia
+          exact parenRightChain_cons_left (ih (n + 1) hpre' htot')
+      | right =>
+          cases n with
+          | zero =>
+              have h := hpre [Paren.right] t rfl
+              simp [Word.Count] at h
+          | succ m =>
+              have hpre' : forall x y : Word Paren, t = Word.Concat x y ->
+                  Word.Count Paren.right x <= Word.Count Paren.left x + m := by
+                intro x y hxy
+                have h := hpre (Paren.right :: x) y (by rw [hxy]; rfl)
+                simp [Word.Count] at h
+                lia
+              have htot' : Word.Count Paren.right t
+                  = Word.Count Paren.left t + m := by
+                simp [Word.Count] at htot
+                lia
+              exact ParenRightChain.cons BalancedParens.empty (ih m hpre' htot')
+
+theorem balanced_parens_of_count {w : Word Paren}
+    (h : BalancedParensCount w) : BalancedParens w := by
+  have hchain := parenRightChain_of_counts w 0
+    (fun x y hxy => by
+      have hpre := h.left x y hxy
+      lia)
+    (by
+      have htot := h.right
+      lia)
+  cases hchain with
+  | base hbal => exact hbal
+
+theorem balanced_parens_iff_count (w : Word Paren) :
+    BalancedParens w <-> BalancedParensCount w :=
+  Iff.intro balanced_parens_count_of_balanced balanced_parens_of_count
+
+theorem balanced_parens_generated_iff_count (w : Word Paren) :
+    w ∈ CFG.GeneratedLanguage BalancedParensGrammar <->
+      BalancedParensCount w :=
+  Iff.trans (balanced_parens_generated_language_exact w)
+    (balanced_parens_iff_count w)
+
+theorem balanced_parens_count_context_free :
+    ContextFreeLanguage BalancedParensCount := by
+  exists BalancedParensNT
+  exists BalancedParensGrammar
+  constructor
+  · exact balanced_parens_has_finite_productions
+  · exact balanced_parens_generated_iff_count
+
+/-!
 Balanced brackets are the same proof pattern with two bracket kinds. The
 round-pair and square-pair productions each get their own generation theorem,
 then the induction over balanced words dispatches to the matching constructor.
+
+Unlike the one-kind parenthesis language above, the two-kind language is
+formalized here only through its inductive predicate. Counting each bracket
+kind separately would not capture proper nesting of mixed brackets, so the
+counting bridge proved for parentheses has no direct analogue here and no
+independent characterization is formalized for this example.
 -/
 
 inductive Bracket where
@@ -1252,6 +1478,56 @@ theorem anbn_generated_language_exact (w : Word AB) :
         exact anbn_words_generated n
 
 /-!
+The {lit}`a^n b^n` grammar has exactly two productions, so the language it
+generates is context-free in the book's finite-production sense. The named
+language definition below is reused by the boundary corollary that separates
+context-free languages from regular languages.
+-/
+
+def anbnWrapProduction : CFG.Production AB AnBnNT where
+  lhs := AnBnNT.S
+  rhs :=
+    [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S, Symbol.terminal AB.b]
+
+def anbnStopProduction : CFG.Production AB AnBnNT where
+  lhs := AnBnNT.S
+  rhs := []
+
+theorem anbn_has_finite_productions :
+    CFG.HasFiniteProductions AnBnGrammar := by
+  exists [anbnWrapProduction, anbnStopProduction]
+  intro A rhs
+  constructor
+  · intro h
+    cases h with
+    | wrap =>
+        exact ⟨anbnWrapProduction, by simp [anbnWrapProduction], rfl, rfl⟩
+    | stop =>
+        exact ⟨anbnStopProduction, by simp [anbnStopProduction], rfl, rfl⟩
+  · intro h
+    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
+    simp [anbnWrapProduction, anbnStopProduction] at hmem
+    rcases hmem with hrule | hrule
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact AnBnProduces.wrap
+    · subst rule
+      cases hlhs
+      cases hrhs
+      exact AnBnProduces.stop
+
+def AnBnLanguage : Language AB :=
+  fun w => exists n, w = AnBnWord n
+
+theorem anbn_context_free : ContextFreeLanguage AnBnLanguage := by
+  exists AnBnNT
+  exists AnBnGrammar
+  constructor
+  · exact anbn_has_finite_productions
+  · exact anbn_generated_language_exact
+
+/-!
 The palindrome grammar is the final example. Its soundness proof separates
 single-letter productions from the two wrapping productions; completeness then
 follows by induction over the inductive palindrome predicate.
@@ -1634,6 +1910,92 @@ theorem palindrome_context_free :
   constructor
   · exact palindrome_has_finite_productions
   · exact palindrome_generated_language_exact
+
+/-!
+The book defines a palindrome independently of any grammar: {lit}`w` is a
+palindrome exactly when {lit}`w` equals its own reversal. The bridge below
+proves that the inductive predicate targeted by the grammar exactness theorem
+coincides with that reversal equation, so the palindrome grammar is connected
+to the book's definition instead of only to a production-for-production mirror
+of itself. The formalized alphabet is the two-letter {lit}`AB` alphabet,
+whereas the book's exercise uses a three-letter example alphabet.
+-/
+
+theorem palindrome_reverse_eq {w : Word AB} (h : PalindromeAB w) :
+    w = Word.Reverse w := by
+  induction h with
+  | empty => rfl
+  | singleA => rfl
+  | singleB => rfl
+  | wrapA hw ih =>
+      simp only [Word.Reverse, Word.Concat] at ih ⊢
+      simp [List.reverse_append, ← ih]
+  | wrapB hw ih =>
+      simp only [Word.Reverse, Word.Concat] at ih ⊢
+      simp [List.reverse_append, ← ih]
+
+/-!
+The converse peels one matching symbol off each end. Bounding the induction by
+word length makes the middle word available to the induction hypothesis after
+both ends are removed.
+-/
+
+private theorem palindrome_of_reverse_bounded :
+    forall (n : Nat) (w : Word AB), Word.Length w <= n ->
+      w = Word.Reverse w -> PalindromeAB w := by
+  intro n
+  induction n with
+  | zero =>
+      intro w hlen _hrev
+      cases w with
+      | nil => exact PalindromeAB.empty
+      | cons c t => simp [Word.Length] at hlen
+  | succ n ih =>
+      intro w hlen hrev
+      cases w with
+      | nil => exact PalindromeAB.empty
+      | cons c t =>
+          rcases List.eq_nil_or_concat t with hnil | ⟨t', last, hconcat⟩
+          · subst hnil
+            cases c with
+            | a => exact PalindromeAB.singleA
+            | b => exact PalindromeAB.singleB
+          · subst hconcat
+            have h := hrev
+            simp only [List.concat_eq_append, Word.Reverse, List.reverse_cons,
+              List.reverse_append, List.reverse_nil, List.nil_append,
+              List.cons_append] at h
+            injection h with hcb htail
+            subst hcb
+            have hlen' : t'.length = t'.reverse.length :=
+              List.length_reverse.symm
+            have hinj := List.append_inj htail hlen'
+            have hpal : t' = Word.Reverse t' := hinj.left
+            have hlent : Word.Length t' <= n := by
+              simp [Word.Length, List.concat_eq_append] at hlen ⊢
+              lia
+            have hmid := ih t' hlent hpal
+            rw [List.concat_eq_append]
+            cases c with
+            | a => exact PalindromeAB.wrapA hmid
+            | b => exact PalindromeAB.wrapB hmid
+
+theorem palindrome_iff_reverse (w : Word AB) :
+    PalindromeAB w <-> w = Word.Reverse w :=
+  Iff.intro palindrome_reverse_eq
+    (fun h => palindrome_of_reverse_bounded (Word.Length w) w (Nat.le_refl _) h)
+
+theorem palindrome_generated_iff_reverse (w : Word AB) :
+    w ∈ CFG.GeneratedLanguage PalindromeGrammar <-> w = Word.Reverse w :=
+  Iff.trans (palindrome_generated_language_exact w) (palindrome_iff_reverse w)
+
+theorem palindrome_reverse_language_context_free :
+    ContextFreeLanguage (fun w : Word AB => w = Word.Reverse w) := by
+  exists PalindromeNT
+  exists PalindromeGrammar
+  constructor
+  · exact palindrome_has_finite_productions
+  · exact palindrome_generated_iff_reverse
 
 end Section01
 end Chapter04

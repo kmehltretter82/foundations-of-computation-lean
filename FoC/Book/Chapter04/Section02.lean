@@ -228,7 +228,11 @@ def signAlternativeExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
 def declarationExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
   BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.type)
     (BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.variable)
-      (BNF.Expr.optional (bnfTerminalExpr BNFExampleTerminal.semicolon)))
+      (BNF.Expr.seq
+        (BNF.Expr.optional
+          (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.equals)
+            (bnfNonterminalExpr BNFExampleNT.expression)))
+        (bnfTerminalExpr BNFExampleTerminal.semicolon)))
 
 def integerExpr : BNF.Expr BNFExampleTerminal BNFExampleNT :=
   BNF.Expr.seq (bnfNonterminalExpr BNFExampleNT.digit)
@@ -461,18 +465,15 @@ theorem bnf_sign_minus_expands :
   exact BNF.Expr.Expands.altRight
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.minus))
 
-theorem bnf_declaration_without_semicolon_expands :
-    BNF.Expr.Expands declarationExpr
-      [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable] := by
-  unfold declarationExpr
-  simpa using BNF.Expr.Expands.seq
-    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.type))
-    (BNF.Expr.Expands.seq
-      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
-      (BNF.Expr.Expands.optionalNone
-        (bnfTerminalExpr BNFExampleTerminal.semicolon)))
+/-!
+The declaration rule reads
+{lit}`<declaration> ::= <type> <variable> [ = <expression> ] ;`: the
+initializer {lit}`= <expression>` is optional, while the closing semicolon is
+mandatory. The two theorems below certify exactly the two expansions the book
+names for this rule, with and without the optional initializer.
+-/
 
-theorem bnf_declaration_with_semicolon_expands :
+theorem bnf_declaration_without_initializer_expands :
     BNF.Expr.Expands declarationExpr
       [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable,
         bnfTerminal BNFExampleTerminal.semicolon] := by
@@ -481,7 +482,30 @@ theorem bnf_declaration_with_semicolon_expands :
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.type))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
-      (BNF.Expr.Expands.optionalSome
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.optionalNone
+          (BNF.Expr.seq (bnfTerminalExpr BNFExampleTerminal.equals)
+            (bnfNonterminalExpr BNFExampleNT.expression)))
+        (BNF.Expr.Expands.symbol
+          (bnfTerminal BNFExampleTerminal.semicolon))))
+
+theorem bnf_declaration_with_initializer_expands :
+    BNF.Expr.Expands declarationExpr
+      [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable,
+        bnfTerminal BNFExampleTerminal.equals,
+        bnfNonterminal BNFExampleNT.expression,
+        bnfTerminal BNFExampleTerminal.semicolon] := by
+  unfold declarationExpr
+  simpa using BNF.Expr.Expands.seq
+    (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.type))
+    (BNF.Expr.Expands.seq
+      (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
+      (BNF.Expr.Expands.seq
+        (BNF.Expr.Expands.optionalSome
+          (BNF.Expr.Expands.seq
+            (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.equals))
+            (BNF.Expr.Expands.symbol
+              (bnfNonterminal BNFExampleNT.expression))))
         (BNF.Expr.Expands.symbol
           (bnfTerminal BNFExampleTerminal.semicolon))))
 
