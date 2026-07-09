@@ -152,12 +152,19 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_inputBits
     SelectedMergeEquivEmitterPaddedOutputTape_contextLength_ge_input
       useAccept p
 
+/--
+Padded-shape emitter contract in the honest tape-equivalence currency: the
+emitter must reach the padded output tape up to trailing-blank equivalence.
+(The name is historical; the spec was relaxed from exact
+{name}`MachineDescription.HaltsFromTape` because every consumer weakens to
+{name}`SelectedMergeEquivEmitterSpec`, which is already equivalence currency.)
+-/
 def SelectedMergePaddedEmitterExactShapeSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SimulatorLayout.tape p.S)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
@@ -186,29 +193,28 @@ def SelectedMergeEquivPaddedEmitterConstruction : Prop :=
     exists emitter : MachineDescription,
       SelectedMergeEquivPaddedEmitterSpec useAccept emitter
 
-theorem selectedMergeEquivPaddedEmitterSpec_of_exactShape
+theorem selectedMergeEquivEmitterSpec_of_exactShape
     {useAccept : Bool} {emitter : MachineDescription}
     (hemits :
       SelectedMergePaddedEmitterExactShapeSpec useAccept emitter) :
-    SelectedMergeEquivPaddedEmitterSpec useAccept emitter := by
+    SelectedMergeEquivEmitterSpec useAccept emitter := by
   constructor
   · exact hemits.left
-  constructor
   · intro p
-    simpa [SelectedMergeEquivPaddedEmitterSpec,
-      SelectedMergeEquivEmitterPaddedOutputTape] using
-      hemits.right p
-  · intro p
-    exact SelectedMergeEquivEmitterPaddedOutputTape_equiv useAccept p
+    rcases hemits.right p with ⟨Tactual, hhalt, hequiv⟩
+    exact
+      ⟨Tactual, hhalt,
+        Tape.Equiv.trans hequiv
+          (SelectedMergeEquivEmitterPaddedOutputTape_equiv useAccept p)⟩
 
-theorem selectedMergeEquivPaddedEmitterConstruction_of_exactShape
+theorem selectedMergeEquivEmitterConstruction_of_exactShape
     (hemits : SelectedMergePaddedEmitterExactShapeConstruction) :
-    SelectedMergeEquivPaddedEmitterConstruction := by
+    SelectedMergeEquivEmitterConstruction := by
   intro useAccept
   rcases hemits useAccept with ⟨emitter, hemits⟩
   exact
     ⟨emitter,
-      selectedMergeEquivPaddedEmitterSpec_of_exactShape hemits⟩
+      selectedMergeEquivEmitterSpec_of_exactShape hemits⟩
 
 theorem selectedMergeEquivEmitterSpec_of_padded
     {useAccept : Bool} {emitter : MachineDescription}

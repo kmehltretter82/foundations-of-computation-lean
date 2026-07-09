@@ -91,7 +91,7 @@ theorem selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
         hafterHit.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         selectedMergePaddedEmitterAfterHeaderScanner_subroutineReady
         hafterHit.left
         (selectedMergePaddedEmitterAfterHeaderScanner_haltsFromPayload p)
@@ -101,9 +101,9 @@ theorem selectedMergePaddedEmitterAfterHeaderRightHandoffConstruction :
 
 theorem selectedMergeEquivConstruction_scaffold :
     SelectedMergeEquivConstruction :=
-  selectedMergeEquivConstruction_of_forwardParser_paddedEmitter
+  selectedMergeEquivConstruction_of_forwardParser_emitter
     selectedMergeForwardParserConstruction_scaffold
-    (selectedMergeEquivPaddedEmitterConstruction_of_exactShape
+    (selectedMergeEquivEmitterConstruction_of_exactShape
       (by
         intro useAccept
         rcases
@@ -121,7 +121,7 @@ theorem selectedMergeEquivConstruction_scaffold :
               hpostHeader.left
         · intro p
           exact
-            CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+            CommonGround.SeqComposition.seqSubroutine_haltsFromTapeEquiv_of_haltsFromTape_eq
               selectedMergePaddedEmitterHeaderRewriter_subroutineReady
               hpostHeader.left
               (selectedMergePaddedEmitterHeaderRewriter_haltsFromPayload p)

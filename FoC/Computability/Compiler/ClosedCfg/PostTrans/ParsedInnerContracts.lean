@@ -27,6 +27,12 @@ private theorem haltsFromTapeWithOutput_of_haltsFromTape_target
     D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
   MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape h
 
+private theorem haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTapeEquiv Tin Tout) :
+    D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
+  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv h
+
 /-!
 ## Output-level parsed-inner specs
 -/
@@ -145,7 +151,7 @@ theorem SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportOutputSpec_
   refine ⟨htransport.left, ?_⟩
   intro p
   exact
-    haltsFromTapeWithOutput_of_haltsFromTape_target
+    haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
       (htransport.right p)
 
 theorem SelectedMergePaddedEmitterAfterHitPaddedParsedInnerOutputSpec_of_exact
@@ -158,7 +164,7 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedParsedInnerOutputSpec_of_exact
   refine ⟨hemitting.left, ?_⟩
   intro p
   exact
-    haltsFromTapeWithOutput_of_haltsFromTape_target
+    haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
       (hemitting.right p)
 
 theorem SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportOutputConstruction_of_exact
@@ -741,7 +747,7 @@ theorem selectedMergePaddedEmitterParsedInnerRouteSpec_of_transport
           htransport.left
     · intro p
       exact
-        CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+        CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
           hprefix.left
           htransport.left
           (hprefix.right p)

@@ -39,7 +39,7 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedSpec_of_rewind
         hpostRewind.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
         hpostRewind.left
         (sourceRewindDescription_haltsFrom_afterHitPaddedTape p)
@@ -68,7 +68,7 @@ theorem SelectedMergePaddedEmitterAfterTransitionPaddedSpec_of_afterHitPadded
         hafterHit.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         selectedMergePaddedEmitterSourceScanner_subroutineReady
         hafterHit.left
         (selectedMergePaddedEmitterSourceScanner_haltsFrom_afterTransitionPadded p)
@@ -111,7 +111,7 @@ theorem SelectedMergePaddedEmitterAfterHitRewindSpec_of_afterTransition
         hafterTransition.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         SelectedMergePaddedEmitterCleanup.skipTransitionPrefixDescription_subroutineReady
         hafterTransition.left
         (skipTransitionPrefixDescription_haltsFrom_afterHitRewindSource p)
@@ -160,7 +160,7 @@ theorem selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
   · exact SeqViaCanonical_subroutineReady hparser.left hemitter.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         hparser.left hemitter.left
         (hparser.right p)
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right

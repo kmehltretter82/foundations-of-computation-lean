@@ -20,12 +20,22 @@ open MachineDescription
 namespace EncRewriters
 namespace BoundedLayoutRunner
 
+/-!
+The branch-parametric specs below are stated in the honest tape-equivalence
+currency ({name}`MachineDescription.HaltsFromTapeEquiv`): every downstream
+consumer weakens to equivalence before reaching the public
+{name}`SelectedMergeEquivEmitterSpec` contract, so exact window accounting is
+not demanded of the finite-machine leaves.  The nested-layout parser spec
+{lit}`SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec` keeps
+the exact currency because its construction is proved exactly.
+-/
+
 def SelectedMergePaddedEmitterAfterTransitionPaddedSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterTransitionPaddedTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
@@ -45,7 +55,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedSpec
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
@@ -58,7 +68,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedDecodedSpec
     (useAccept : Bool) (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
@@ -71,7 +81,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec
     (useAccept : Bool) (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
@@ -98,7 +108,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedParsedInnerSpec
     (useAccept : Bool) (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 

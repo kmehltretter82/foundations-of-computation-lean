@@ -88,7 +88,7 @@ theorem selectedMergePaddedEmitterAfterHitPaddedParsedInnerConstruction
         htransport.left
   · intro p
     exact
-      CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      CommonGround.FiniteTransducers.canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
         hprefixCloser.left
         htransport.left
         (hprefixCloser.right p)

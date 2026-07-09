@@ -1112,12 +1112,40 @@ theorem SelectedMergeEquivEmitterPaddedOutputTape_false_cells_eq_fields
   rw [SelectedMergeEquivEmitterPaddedOutputTape_cells_eq_targetBits,
     SelectedMergePaddedEmitterTargetBits_false_eq_fields]
 
+/--
+Canonical-handoff sequencing where the first machine is exact, the handoff is
+an exact tape equality, and the tail machine only promises tape equivalence.
+This is the composition shape used throughout the equivalence-currency padded
+merge cleanup chain.
+-/
+theorem SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {Tin Tmid Tnext Tout : Tape Bool}
+    (hAhalts : A.HaltsFromTape Tin Tmid)
+    (hmove :
+      Tape.move Direction.left (Tape.move Direction.right Tmid) = Tnext)
+    (hBhalts : B.HaltsFromTapeEquiv Tnext Tout) :
+    (SeqViaCanonical A B).HaltsFromTapeEquiv Tin Tout := by
+  refine
+    SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv hA hB
+      hAhalts.toEquiv ?_ hBhalts
+  rw [hmove]
+  exact Tape.Equiv.refl _
+
+/-!
+The remaining cleanup specs are stated in the honest tape-equivalence
+currency ({name}`MachineDescription.HaltsFromTapeEquiv`): the public merge
+contract downstream is already equivalence currency, so exact padded-window
+accounting is not demanded of the emitters on this route.
+-/
+
 def SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec
     (useAccept : Bool)
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitRightLeftHandoffTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 
@@ -1133,7 +1161,7 @@ def SelectedMergePaddedEmitterAfterHitRewindSpec
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterCleanup.rewindTargetPaddedTape
           (SelectedMergePaddedEmitterCleanup.sourceBits p))
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
@@ -1164,7 +1192,7 @@ theorem SelectedMergePaddedEmitterAfterHitRightLeftHandoffSpec_of_rewind
         hpostRewind.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
         SelectedMergePaddedEmitterCleanup.sourceRewindDescription_subroutineReady
         hpostRewind.left
         (sourceRewindDescription_haltsFrom_afterHitRightLeftHandoffTape p)
@@ -1194,7 +1222,7 @@ def SelectedMergePaddedEmitterAfterHeaderRightHandoffSpec
     (emitter : MachineDescription) : Prop :=
   emitter.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      emitter.HaltsFromTape
+      emitter.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHeaderRightHandoffTape p)
         (SelectedMergeEquivEmitterPaddedOutputTape useAccept p)
 

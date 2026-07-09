@@ -399,11 +399,17 @@ def SelectedMergePaddedEmitterParsedInnerPostPrefixGapCloseSpec
         (SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape p)
         (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
 
+/--
+Branch-parametric transport contract stated in the honest tape-equivalence
+currency: downstream consumers only use {name}`MachineDescription.HaltsFromTapeEquiv`
+(the public parent contract is already equivalence currency), so the padded
+handoff target is demanded only up to trailing-blank equivalence.
+-/
 def SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
     (useAccept : Bool) (transport : MachineDescription) : Prop :=
   transport.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      transport.HaltsFromTape
+      transport.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
         (SelectedMergePaddedEmitterDecodedHandoffTape useAccept p)
 
