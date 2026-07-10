@@ -5,8 +5,9 @@ set_option doc.verso true
 /-!
 # Nested-layout route contracts
 
-This module exposes the padded merge nested-layout parser as a set of exact and
-normalized-output routes.  The finite-machine leaves remain in
+This module exposes the padded merge nested-layout parser through contextual
+tape-equivalence and normalized-output routes, while retaining exact local
+scanner and restorer phases.  The finite-machine leaves remain in
 {module}`FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser`;
 the definitions here make the feasible contextual window route explicit and
 keep the impossible isolated restorer route as a guardrail.
@@ -26,6 +27,12 @@ private theorem haltsFromTapeWithOutput_of_haltsFromTape_target
     (h : D.HaltsFromTape Tin Tout) :
     D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
   MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape h
+
+private theorem haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTapeEquiv Tin Tout) :
+    D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
+  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv h
 
 /-!
 ## Output-level window specs
@@ -104,7 +111,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec
       parser
 
-theorem SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_exact
+theorem SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_equiv
     {materializer : MachineDescription}
     (hmaterializer :
       SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
@@ -114,7 +121,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_ex
   refine ⟨hmaterializer.left, ?_⟩
   intro p
   exact
-    haltsFromTapeWithOutput_of_haltsFromTape_target
+    haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
       (hmaterializer.right p)
 
 theorem SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputSpec_of_exact
@@ -154,7 +161,7 @@ theorem SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerOutputSpec_o
     haltsFromTapeWithOutput_of_haltsFromTape_target
       (hrestorer.right p)
 
-theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_exact
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_equiv
     {parser : MachineDescription}
     (hparser :
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
@@ -164,17 +171,17 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_
   refine ⟨hparser.left, ?_⟩
   intro p
   exact
-    haltsFromTapeWithOutput_of_haltsFromTape_target
+    haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
       (hparser.right p)
 
-theorem SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputConstruction_of_exact
+theorem SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputConstruction_of_equiv
     (hmaterializer :
       SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction) :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputConstruction := by
   rcases hmaterializer with ⟨materializer, hspec⟩
   exact
     ⟨materializer,
-      SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_exact
+      SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_equiv
         hspec⟩
 
 theorem SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputConstruction_of_exact
@@ -197,14 +204,14 @@ theorem SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputConstruction_o
       SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputSpec_of_exact
         hspec⟩
 
-theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction_of_exact
+theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction_of_equiv
     (hparser :
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction) :
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction := by
   rcases hparser with ⟨parser, hspec⟩
   exact
     ⟨parser,
-      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_exact
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_equiv
         hspec⟩
 
 /-!
@@ -423,69 +430,33 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowShape
         p }
 
 /-!
-## Exact and output route bundles
+## Contextual route bundle
 -/
 
-structure SelectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec
+structure SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteSpec
     (materializer scanner restorer : MachineDescription) : Prop where
-  materializerExact :
+  materializerEquiv :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
       materializer
   scannerExact :
     SelectedMergePaddedEmitterNestedLayoutWindowScannerSpec scanner
   restorerExact :
     SelectedMergePaddedEmitterNestedLayoutWindowRestorerSpec restorer
-  materializerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec
-      materializer
-  scannerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputSpec scanner
-  restorerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputSpec
-      restorer
-  parserExact :
+  parserEquiv :
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
       (SelectedMergePaddedEmitterNestedLayoutWindowParser
         materializer scanner restorer)
-  parserOutput :
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec
-      (SelectedMergePaddedEmitterNestedLayoutWindowParser
-        materializer scanner restorer)
   shape :
     forall p : SelectedMergeEmitterPayload,
       SelectedMergePaddedEmitterNestedLayoutWindowShape p
 
-def SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction :
+def SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction :
     Prop :=
   exists materializer scanner restorer : MachineDescription,
-    SelectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec
+    SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteSpec
       materializer scanner restorer
 
-structure SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteSpec
-    (materializer scanner restorer : MachineDescription) : Prop where
-  materializerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec
-      materializer
-  scannerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputSpec scanner
-  restorerOutput :
-    SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputSpec
-      restorer
-  parserOutput :
-    SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec
-      (SelectedMergePaddedEmitterNestedLayoutWindowParser
-        materializer scanner restorer)
-  shape :
-    forall p : SelectedMergeEmitterPayload,
-      SelectedMergePaddedEmitterNestedLayoutWindowShape p
-
-def SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction :
-    Prop :=
-  exists materializer scanner restorer : MachineDescription,
-    SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteSpec
-      materializer scanner restorer
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec_of_parts
+theorem selectedMergePaddedEmitterNestedLayoutWindowContextualRouteSpec_of_parts
     {materializer scanner restorer : MachineDescription}
     (hmaterializer :
       SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
@@ -494,7 +465,7 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec_of_parts
       SelectedMergePaddedEmitterNestedLayoutWindowScannerSpec scanner)
     (hrestorer :
       SelectedMergePaddedEmitterNestedLayoutWindowRestorerSpec restorer) :
-    SelectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec
+    SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteSpec
       materializer scanner restorer := by
   have hparser :
       SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
@@ -503,143 +474,104 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec_of_parts
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec_of_windowMaterializerAndRestorer
       hmaterializer hscanner hrestorer
   exact
-    { materializerExact := hmaterializer
+    { materializerEquiv := hmaterializer
       scannerExact := hscanner
       restorerExact := hrestorer
-      materializerOutput :=
-        SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputSpec_of_exact
-          hmaterializer
-      scannerOutput :=
-        SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputSpec_of_exact
-          hscanner
-      restorerOutput :=
-        SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputSpec_of_exact
-          hrestorer
-      parserExact := hparser
-      parserOutput :=
-        SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_exact
-          hparser
+      parserEquiv := hparser
       shape := selectedMergePaddedEmitterNestedLayoutWindowShape }
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_of_parts
+theorem selectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction_of_parts
     (hmaterializer :
       SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction)
     (hscanner :
       SelectedMergePaddedEmitterNestedLayoutWindowScannerConstruction)
     (hrestorer :
       SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction) :
-    SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction := by
+    SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction := by
   rcases hmaterializer with ⟨materializer, hmaterializerSpec⟩
   rcases hscanner with ⟨scanner, hscannerSpec⟩
   rcases hrestorer with ⟨restorer, hrestorerSpec⟩
   exact
     ⟨materializer, scanner, restorer,
-      selectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec_of_parts
+      selectedMergePaddedEmitterNestedLayoutWindowContextualRouteSpec_of_parts
         hmaterializerSpec hscannerSpec hrestorerSpec⟩
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_exactRoute
+theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction := by
   rcases hroute with ⟨materializer, _scanner, _restorer, hspec⟩
-  exact ⟨materializer, hspec.materializerExact⟩
+  exact ⟨materializer, hspec.materializerEquiv⟩
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction_of_exactRoute
+theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterNestedLayoutWindowScannerConstruction := by
   rcases hroute with ⟨_materializer, scanner, _restorer, hspec⟩
   exact ⟨scanner, hspec.scannerExact⟩
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction_of_exactRoute
+theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction := by
   rcases hroute with ⟨_materializer, _scanner, restorer, hspec⟩
   exact ⟨restorer, hspec.restorerExact⟩
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction_of_exactRoute
+theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConstruction := by
   rcases hroute with ⟨materializer, scanner, restorer, hspec⟩
   exact
-    ⟨materializer, scanner, restorer, hspec.materializerExact,
+    ⟨materializer, scanner, restorer, hspec.materializerEquiv,
       hspec.scannerExact, hspec.restorerExact⟩
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_iff_parts :
-    SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction ↔
+theorem selectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction_iff_parts :
+    SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction ↔
       SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction ∧
       SelectedMergePaddedEmitterNestedLayoutWindowScannerConstruction ∧
       SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction := by
   constructor
   · intro hroute
     exact
-      ⟨selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_exactRoute
+      ⟨selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_contextualRoute
           hroute,
-        selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction_of_exactRoute
+        selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction_of_contextualRoute
           hroute,
-        selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction_of_exactRoute
+        selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction_of_contextualRoute
           hroute⟩
   · intro hparts
     exact
-      selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_of_parts
+      selectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction_of_parts
         hparts.left hparts.right.left hparts.right.right
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core :
-    SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction :=
-  selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_of_parts
+theorem selectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction_core :
+    SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction :=
+  selectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction_of_parts
     selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction
     selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction
     selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowOutputRouteSpec_of_exact
-    {materializer scanner restorer : MachineDescription}
+theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteSpec
-        materializer scanner restorer) :
-    SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteSpec
-      materializer scanner restorer :=
-  { materializerOutput := hroute.materializerOutput
-    scannerOutput := hroute.scannerOutput
-    restorerOutput := hroute.restorerOutput
-    parserOutput := hroute.parserOutput
-    shape := hroute.shape }
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction_of_exact
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
-    SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction := by
-  rcases hroute with ⟨materializer, scanner, restorer, hspec⟩
-  exact
-    ⟨materializer, scanner, restorer,
-      selectedMergePaddedEmitterNestedLayoutWindowOutputRouteSpec_of_exact
-        hspec⟩
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction_core :
-    SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction :=
-  selectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction_of_exact
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core
-
-theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction_of_exactRoute
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction := by
   rcases hroute with ⟨materializer, scanner, restorer, hspec⟩
   exact
     ⟨SelectedMergePaddedEmitterNestedLayoutWindowParser
         materializer scanner restorer,
-      hspec.parserExact⟩
+      hspec.parserEquiv⟩
 
-theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction_of_outputRoute
+theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction) :
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction) :
     SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputConstruction := by
   rcases hroute with ⟨materializer, scanner, restorer, hspec⟩
   exact
     ⟨SelectedMergePaddedEmitterNestedLayoutWindowParser
         materializer scanner restorer,
-      hspec.parserOutput⟩
+      SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedOutputSpec_of_equiv
+        hspec.parserEquiv⟩
 
 /-!
 ## Guardrail route for the isolated restorer
@@ -673,17 +605,9 @@ theorem selectedMergePaddedEmitterNestedLayoutIsolatedRestorerGuardrail :
 ## Field projections
 -/
 
-theorem selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
+theorem selectedMergePaddedEmitterNestedLayoutWindowShape_of_contextualRoute
     (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction)
-    (p : SelectedMergeEmitterPayload) :
-    SelectedMergePaddedEmitterNestedLayoutWindowShape p := by
-  rcases hroute with ⟨_materializer, _scanner, _restorer, hspec⟩
-  exact hspec.shape p
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowShape_of_outputRoute
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction)
+      SelectedMergePaddedEmitterNestedLayoutWindowContextualRouteConstruction)
     (p : SelectedMergeEmitterPayload) :
     SelectedMergePaddedEmitterNestedLayoutWindowShape p := by
   rcases hroute with ⟨_materializer, _scanner, _restorer, hspec⟩
@@ -695,36 +619,31 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowContextRawSource_normalizedO
         (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape p) =
       CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits
         p.L (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p) :=
-  (selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core p)
-      |>.contextRawSourceNormalizedOutput
+  (selectedMergePaddedEmitterNestedLayoutWindowShape p)
+    |>.contextRawSourceNormalizedOutput
 
 theorem selectedMergePaddedEmitterNestedLayoutWindowContextParsed_normalizedOutput_core
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterNestedLayoutContextParsedTape p) =
       SelectedMergePaddedEmitterParsedInnerSourceBits p :=
-  (selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core p)
-      |>.contextParsedNormalizedOutput
+  (selectedMergePaddedEmitterNestedLayoutWindowShape p)
+    |>.contextParsedNormalizedOutput
 
 theorem selectedMergePaddedEmitterNestedLayoutWindowSourceFields_normalizedOutput_core
     (p : SelectedMergeEmitterPayload) :
     Tape.normalizedOutput
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p) =
       SelectedMergePaddedEmitterCleanup.sourceBits p :=
-  (selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core p)
-      |>.sourceFieldsNormalizedOutputEqSourceBits
+  (selectedMergePaddedEmitterNestedLayoutWindowShape p)
+    |>.sourceFieldsNormalizedOutputEqSourceBits
 
 theorem selectedMergePaddedEmitterNestedLayoutWindowRawSource_cells_core
     (p : SelectedMergeEmitterPayload) :
     Tape.cells (SelectedMergePaddedEmitterNestedLayoutRawSourceTape p) =
       (CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits
         p.L []).map some :=
-  (selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core p)
-      |>.rawSourceCells
+  (selectedMergePaddedEmitterNestedLayoutWindowShape p).rawSourceCells
 
 theorem selectedMergePaddedEmitterNestedLayoutWindowContextParsed_move_left_move_right_core
     (p : SelectedMergeEmitterPayload) :
@@ -732,30 +651,8 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowContextParsed_move_left_move
         (Tape.move Direction.right
           (SelectedMergePaddedEmitterNestedLayoutContextParsedTape p)) =
       SelectedMergePaddedEmitterNestedLayoutContextParsedTape p :=
-  (selectedMergePaddedEmitterNestedLayoutWindowShape_of_exactRoute
-    selectedMergePaddedEmitterNestedLayoutWindowExactRouteConstruction_core p)
-      |>.contextParsedMoveLeftMoveRight
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializer_output_core
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction) :
-    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerOutputConstruction := by
-  rcases hroute with ⟨materializer, _scanner, _restorer, hspec⟩
-  exact ⟨materializer, hspec.materializerOutput⟩
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowScanner_output_core
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction) :
-    SelectedMergePaddedEmitterNestedLayoutWindowScannerOutputConstruction := by
-  rcases hroute with ⟨_materializer, scanner, _restorer, hspec⟩
-  exact ⟨scanner, hspec.scannerOutput⟩
-
-theorem selectedMergePaddedEmitterNestedLayoutWindowRestorer_output_core
-    (hroute :
-      SelectedMergePaddedEmitterNestedLayoutWindowOutputRouteConstruction) :
-    SelectedMergePaddedEmitterNestedLayoutWindowRestorerOutputConstruction := by
-  rcases hroute with ⟨_materializer, _scanner, restorer, hspec⟩
-  exact ⟨restorer, hspec.restorerOutput⟩
+  (selectedMergePaddedEmitterNestedLayoutWindowShape p)
+    |>.contextParsedMoveLeftMoveRight
 
 end BoundedLayoutRunner
 end EncRewriters

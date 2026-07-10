@@ -160,11 +160,13 @@ theorem selectedMergePaddedEmitterAfterHitPaddedSourceFieldsSpec_of_parsedInner
   · exact SeqViaCanonical_subroutineReady hparser.left hemitter.left
   · intro p
     exact
-      SeqViaCanonical_haltsFromTapeEquiv_of_haltsFromTape_handoff
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         hparser.left hemitter.left
         (hparser.right p)
-        (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
-          p)
+        (by
+          rw [SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_move_left_move_right
+            p]
+          exact Tape.Equiv.refl _)
         (hemitter.right p)
 
 theorem selectedMergePaddedEmitterAfterHitPaddedSourceFieldsConstruction_of_parsedInner

@@ -240,11 +240,19 @@ theorem checkedDovetailLayoutScannerDescription_haltsFrom_mergeNestedLayoutRawSo
   exact checkedDovetailLayoutScannerDescription_haltsFrom_raw_nestedLayout
     p.L
 
-def SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
+def SelectedMergePaddedEmitterNestedLayoutWindowExactMaterializerSpec
     (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
       materializer.HaltsFromTape
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
+        (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape p)
+
+def SelectedMergePaddedEmitterNestedLayoutWindowMaterializerSpec
+    (materializer : MachineDescription) : Prop :=
+  materializer.SubroutineReady ∧
+    forall p : SelectedMergeEmitterPayload,
+      materializer.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
         (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape p)
 
@@ -314,6 +322,76 @@ def SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction :
   exists restorer : MachineDescription,
     SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerSpec
       restorer
+
+def selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleConfig :
+    Configuration :=
+  { state := 0, tape := Tape.input [] }
+
+def selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleLayout :
+    DovetailLayout :=
+  { input := []
+    stage := 0
+    acceptConfig :=
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleConfig
+    rejectConfig :=
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleConfig
+    acceptHit := false
+    rejectHit := false }
+
+def selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleSimulator :
+    SimulatorLayout :=
+  { input :=
+      encodeCodeWordAsInput
+        (DovetailLayout.encode
+          selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleLayout)
+    stage := 0
+    config :=
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleConfig
+    hit := false }
+
+def selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleParam :
+    SelectedMergeEmitterPayload :=
+  { S :=
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleSimulator
+    L :=
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleLayout
+    input := by
+      simp [
+        selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleSimulator]
+      exact
+        decodeCodeWordAsInput_encodeCodeWordAsInput
+          (DovetailLayout.encode
+            selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleLayout) }
+
+/--
+The old exact materializer source has 450 context cells, while its requested
+target has only 75.  This is the permanent size regression witness for #24.
+-/
+theorem selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexample_contextLengths :
+    Tape.contextLength
+        (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape
+          selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleParam) =
+      450 ∧
+    Tape.contextLength
+        (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape
+          selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleParam) =
+      75 := by
+  set_option maxRecDepth 4096 in
+    decide
+
+/-- The old exact nested-layout materializer family is unreachable. -/
+theorem not_selectedMergePaddedEmitterNestedLayoutWindowExactMaterializerConstruction :
+    ¬ exists materializer : MachineDescription,
+      SelectedMergePaddedEmitterNestedLayoutWindowExactMaterializerSpec
+        materializer := by
+  intro hconstruction
+  rcases hconstruction with ⟨materializer, hmaterializer⟩
+  have hrun :=
+    hmaterializer.right
+      selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleParam
+  apply MachineDescription.not_haltsFromTape_of_contextLength_gt ?_ hrun
+  set_option maxRecDepth 4096 in
+    decide
 
 -- The current restorer contract is inconsistent: two payloads share the same
 -- inner layout source but require different outer-stage target tapes.
@@ -416,27 +494,31 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec_of_window
   · intro p
     have hscannerSeq :
         (SeqViaCanonical materializer
-          scanner).HaltsFromTape
+          scanner).HaltsFromTapeEquiv
           (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
           (SelectedMergePaddedEmitterNestedLayoutContextParsedTape p) := by
       exact
-        SeqViaCanonical_haltsFromTape_of_haltsFromTape
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
           hmaterializer.left
           hscanner.left
           (hmaterializer.right p)
-          (SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_move_left_move_right
-            p)
-          (hscanner.right p)
+          (by
+            rw [SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_move_left_move_right
+              p]
+            exact Tape.Equiv.refl _)
+          (hscanner.right p).toEquiv
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         (SeqViaCanonical_subroutineReady
           hmaterializer.left
           hscanner.left)
         hrestorer.left
         hscannerSeq
-        (SelectedMergePaddedEmitterNestedLayoutContextParsedTape_move_left_move_right
-          p)
-        (hrestorer.right p)
+        (by
+          rw [SelectedMergePaddedEmitterNestedLayoutContextParsedTape_move_left_move_right
+            p]
+          exact Tape.Equiv.refl _)
+        (hrestorer.right p).toEquiv
 
 theorem selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction_of_windowMaterializerAndRestorer
     (h :

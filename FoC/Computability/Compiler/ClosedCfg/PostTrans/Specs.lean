@@ -25,9 +25,9 @@ The branch-parametric specs below are stated in the honest tape-equivalence
 currency ({name}`MachineDescription.HaltsFromTapeEquiv`): every downstream
 consumer weakens to equivalence before reaching the public
 {name}`SelectedMergeEquivEmitterSpec` contract, so exact window accounting is
-not demanded of the finite-machine leaves.  The nested-layout parser spec
-{lit}`SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec` keeps
-the exact currency because its construction is proved exactly.
+not demanded of the finite-machine leaves.  The nested-layout parser uses the
+same currency because its first contextual materializer cannot shrink the
+represented tape window exactly.
 -/
 
 def SelectedMergePaddedEmitterAfterTransitionPaddedSpec
@@ -95,7 +95,7 @@ def SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedSpec
     (parser : MachineDescription) : Prop :=
   parser.SubroutineReady ∧
     forall p : SelectedMergeEmitterPayload,
-      parser.HaltsFromTape
+      parser.HaltsFromTapeEquiv
         (SelectedMergePaddedEmitterAfterHitPaddedSourceFieldsTape p)
         (SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape p)
 
