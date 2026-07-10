@@ -180,6 +180,12 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Book.Chapter04.Section04.DeterministicAnBn",
   "FoC.Book.Chapter04.Section04.Copy"
 ]
+"FoC.Book.Chapter04.Section05" = [
+  "FoC.Book.Chapter04.Section05.AnBnCn",
+  "FoC.Book.Chapter04.Section05.Pumping",
+  "FoC.Book.Chapter04.Section05.DuplicateWord",
+  "FoC.Book.Chapter04.Section05.Nonclosure"
+]
 "FoC.Book.Chapter04.Section06" = [
   "FoC.Book.Chapter04.Section06.Basics",
   "FoC.Book.Chapter04.Section06.EqualCounts",
@@ -637,13 +643,19 @@ title = "PDA to CFG Summary Computations"
 title = "PDA to CFG Syntax"
 
 [modules."FoC.Book.Chapter04.Section05.Basic"]
-title = "Section 4.5: Pumping Setup"
+title = "Section 4.5: Implementation Aggregate"
 
-[modules."FoC.Book.Chapter04.Section05.BasicPart1"]
-title = "Section 4.5: CFL Closure Tools"
+[modules."FoC.Book.Chapter04.Section05.AnBnCn"]
+title = "Section 4.5: Three-Block Witnesses"
 
-[modules."FoC.Book.Chapter04.Section05.BasicPart2"]
-title = "Section 4.5: Pumping Applications"
+[modules."FoC.Book.Chapter04.Section05.Pumping"]
+title = "Section 4.5: CFL Pumping"
+
+[modules."FoC.Book.Chapter04.Section05.DuplicateWord"]
+title = "Section 4.5: Duplicate Words"
+
+[modules."FoC.Book.Chapter04.Section05.Nonclosure"]
+title = "Section 4.5: Nonclosure"
 
 [modules."FoC.Book.Chapter04.Section06.Basics"]
 title = "Section 4.6: General Grammar Basics"
