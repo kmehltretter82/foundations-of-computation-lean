@@ -400,67 +400,19 @@ theorem recursivelyEnumerable_of_programCompiler
   hcompile L h
 
 /-!
-# Partial listings, ranges, and programs
+# Partial-function program ranges
 
-The names in this block are semantic normal forms. A {lit}`ListingProgram` is
-a function from stages to optional output words, and a
-{lit}`PartialUnaryRangeProgram` is a partial function on unary strings. They
-are not finite program syntax or machine descriptions; finite or
-machine-backed compilers are supplied by later construction principles.
+An option-valued function embeds into the staged semantics by producing its
+only possible result at stage zero.  This is a semantic bridge, not finite
+program syntax or a machine description.  Its staged-program range is exactly
+the ordinary partial-function range from
+{module}`FoC.Computability.Enumerable`.
 -/
-
-def ListingProgram (output : Type u) : Type u :=
-  Nat -> Option (Word output)
-
-def ListingProgramLists (stream : ListingProgram output)
-    (L : Language output) : Prop :=
-  PartiallyListedBy stream L
-
-def PartialUnaryRangeProgram (output : Type u) : Type u :=
-  Word Unit -> Option (Word output)
-
-def PartialUnaryRangeProgramGenerates
-    (f : PartialUnaryRangeProgram output)
-    (L : Language output) : Prop :=
-  Language.Equal (PartialRangeLanguage f) L
 
 def PartialFunctionProgram
     (f : Word input -> Option (Word output)) :
     StagedProgram input output where
   run w n := if n = 0 then f w else none
-
-def PartialUnaryFunctionProgramRange (L : Language output) : Prop :=
-  exists f : PartialUnaryRangeProgram output,
-    Language.Equal (ProgramRangeLanguage (PartialFunctionProgram f)) L
-
-theorem listingProgram_iff_partiallyListable
-    (L : Language output) :
-    (exists stream : ListingProgram output,
-      ListingProgramLists stream L) <-> PartiallyListable L := by
-  constructor
-  · intro h
-    cases h with
-    | intro stream hstream =>
-        exact Exists.intro stream hstream
-  · intro h
-    cases h with
-    | intro stream hstream =>
-        exact Exists.intro stream hstream
-
-theorem partialUnaryRangeProgram_iff_partialRangeOfUnaryFunction
-    (L : Language output) :
-    (exists f : PartialUnaryRangeProgram output,
-      PartialUnaryRangeProgramGenerates f L) <->
-        PartialRangeOfUnaryFunction L := by
-  constructor
-  · intro h
-    cases h with
-    | intro f hf =>
-        exact Exists.intro f hf
-  · intro h
-    cases h with
-    | intro f hf =>
-        exact Exists.intro f hf
 
 theorem partialFunctionProgram_range
     (f : Word input -> Option (Word output)) :
@@ -483,31 +435,6 @@ theorem partialFunctionProgram_range
     | intro x hx =>
         exists x
         exists 0
-
-theorem partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction
-    (L : Language output) :
-    PartialUnaryFunctionProgramRange L <->
-      PartialRangeOfUnaryFunction L := by
-  constructor
-  · intro h
-    cases h with
-    | intro f hf =>
-        exists f
-        exact FoC.Foundation.FSet.equal_trans
-          (FoC.Foundation.FSet.equal_symm (partialFunctionProgram_range f)) hf
-  · intro h
-    cases h with
-    | intro f hf =>
-        exists f
-        exact FoC.Foundation.FSet.equal_trans (partialFunctionProgram_range f) hf
-
-theorem partiallyListable_iff_partialUnaryFunctionProgramRange
-    (L : Language output) :
-    PartiallyListable L <-> PartialUnaryFunctionProgramRange L := by
-  exact Iff.trans
-    (partiallyListable_iff_partialRangeOfUnaryFunction L)
-    (Iff.symm
-      (partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction L))
 
 /-!
 ## Two-parameter staged ranges

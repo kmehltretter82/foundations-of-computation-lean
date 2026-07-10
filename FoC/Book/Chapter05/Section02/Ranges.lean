@@ -366,25 +366,11 @@ theorem partially_listable_language_iff_partial_range_of_unary_string_function
   Computability.partiallyListable_iff_partialRangeOfUnaryFunction L
 
 /-!
-Programs are the operational version of the same listing/range story. A listing
-program may skip outputs by being partial; a partial unary range program
-generates exactly the language elements that appear as defined outputs.
+An option-valued function embeds into the staged-program semantics at stage
+zero.  The following aliases retain the book page's compiled-range notation;
+listability and partial unary ranges themselves use the canonical predicates
+from {module}`FoC.Computability.Enumerable` directly.
 -/
-
-def LanguageListingProgram (output : Type u) : Type u :=
-  ListingProgram output
-
-def LanguageListingProgramLists
-    (stream : LanguageListingProgram output) (L : Language output) : Prop :=
-  ListingProgramLists stream L
-
-def LanguagePartialUnaryRangeProgram (output : Type u) : Type u :=
-  PartialUnaryRangeProgram output
-
-def LanguagePartialUnaryRangeProgramGenerates
-    (f : LanguagePartialUnaryRangeProgram output)
-    (L : Language output) : Prop :=
-  PartialUnaryRangeProgramGenerates f L
 
 def LanguagePartialFunctionProgram
     (f : Word input -> Option (Word output)) :
@@ -401,10 +387,6 @@ def LanguageProgramRange (P : StagedProgram input output) :
     Language output :=
   ProgramRangeLanguage P
 
-def LanguagePartialUnaryFunctionProgramRange
-    (L : Language output) : Prop :=
-  PartialUnaryFunctionProgramRange L
-
 def ConcretePartialUnaryTuringComputableRange
     (L : Language Bool) : Prop :=
   PartialUnaryTuringComputableRange L
@@ -417,81 +399,12 @@ def ConcreteCompiledPartialUnaryFunctionProgramRange
     (L : Language Bool) : Prop :=
   CompiledPartialUnaryFunctionProgramRange L
 
-theorem listing_program_iff_partially_listable_language
-    (L : Language output) :
-    (exists stream : LanguageListingProgram output,
-      LanguageListingProgramLists stream L) <->
-        LanguagePartiallyListable L :=
-  Computability.listingProgram_iff_partiallyListable L
-
-theorem partial_unary_range_program_iff_partial_range_of_unary_function
-    (L : Language output) :
-    (exists f : LanguagePartialUnaryRangeProgram output,
-      LanguagePartialUnaryRangeProgramGenerates f L) <->
-        PartialRangeOfUnaryStringFunction L :=
-  Computability.partialUnaryRangeProgram_iff_partialRangeOfUnaryFunction L
-
 theorem partial_function_program_range_language
     (f : Word input -> Option (Word output)) :
     Language.Equal
       (LanguageProgramRange (LanguagePartialFunctionProgram f))
       (PartialFunctionRangeLanguage f) :=
   Computability.partialFunctionProgram_range f
-
-theorem partial_unary_function_program_range_iff_partial_range
-    (L : Language output) :
-    LanguagePartialUnaryFunctionProgramRange L <->
-      PartialRangeOfUnaryStringFunction L :=
-  Computability.partialUnaryFunctionProgramRange_iff_partialRangeOfUnaryFunction
-    L
-
-theorem partially_listable_language_iff_partial_unary_function_program_range
-    (L : Language output) :
-    LanguagePartiallyListable L <->
-      LanguagePartialUnaryFunctionProgramRange L :=
-  Computability.partiallyListable_iff_partialUnaryFunctionProgramRange L
-
-theorem partially_listable_language_has_listing_program
-    {L : Language output}
-    (h : LanguagePartiallyListable L) :
-    exists stream : LanguageListingProgram output,
-      LanguageListingProgramLists stream L :=
-  (listing_program_iff_partially_listable_language L).mpr h
-
-theorem listing_program_language_is_partially_listable
-    {stream : LanguageListingProgram output} {L : Language output}
-    (h : LanguageListingProgramLists stream L) :
-    LanguagePartiallyListable L :=
-  (listing_program_iff_partially_listable_language L).mp
-    (Exists.intro stream h)
-
-theorem partially_listable_language_has_partial_unary_range_program
-    {L : Language output}
-    (h : LanguagePartiallyListable L) :
-    exists f : LanguagePartialUnaryRangeProgram output,
-      LanguagePartialUnaryRangeProgramGenerates f L :=
-  (partial_unary_range_program_iff_partial_range_of_unary_function L).mpr
-    (partially_listable_language_range_of_partial_unary_string_function h)
-
-theorem partial_unary_range_program_language_is_partially_listable
-    {f : LanguagePartialUnaryRangeProgram output} {L : Language output}
-    (h : LanguagePartialUnaryRangeProgramGenerates f L) :
-    LanguagePartiallyListable L :=
-  (partially_listable_language_iff_partial_range_of_unary_string_function L).mpr
-    ((partial_unary_range_program_iff_partial_range_of_unary_function L).mp
-      (Exists.intro f h))
-
-theorem partially_listable_language_has_partial_unary_function_program_range
-    {L : Language output}
-    (h : LanguagePartiallyListable L) :
-    LanguagePartialUnaryFunctionProgramRange L :=
-  (partially_listable_language_iff_partial_unary_function_program_range L).mp h
-
-theorem partial_unary_function_program_range_language_is_partially_listable
-    {L : Language output}
-    (h : LanguagePartialUnaryFunctionProgramRange L) :
-    LanguagePartiallyListable L :=
-  (partially_listable_language_iff_partial_unary_function_program_range L).mpr h
 
 theorem staged_unary_program_range_is_partial_unary_range
     (P : StagedProgram Unit output) :
@@ -786,46 +699,6 @@ theorem concrete_finite_partial_unary_description_output_range_partially_listabl
   concrete_compiled_partial_unary_range_is_partially_listable
     (concrete_finite_partial_unary_description_output_range_compiled
       P hD hcomplete hfunctional)
-
-theorem concrete_finite_partial_unary_description_output_range_has_program_range
-    (P : ConcreteFinitePartialUnaryRangeProgram)
-    (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
-    LanguagePartialUnaryFunctionProgramRange
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
-  partially_listable_language_has_partial_unary_function_program_range
-    (concrete_finite_partial_unary_description_output_range_partially_listable
-      P hD hcomplete hfunctional)
-
-theorem concrete_finite_partial_unary_description_output_range_closeout
-    (P : ConcreteFinitePartialUnaryRangeProgram)
-    (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
-    ConcreteCompiledPartialUnaryRange
-        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
-      ConcretePartialUnaryTuringComputableRange
-        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
-      LanguagePartiallyListable
-        (ConcreteFinitePartialUnaryDescriptionOutputRange P) ∧
-      LanguagePartialUnaryFunctionProgramRange
-        (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
-  constructor
-  · exact
-      concrete_finite_partial_unary_description_output_range_compiled
-        P hD hcomplete hfunctional
-  · constructor
-    · exact
-        concrete_finite_partial_unary_description_output_range_turing_computable
-          P hD hcomplete hfunctional
-    · constructor
-      · exact
-          concrete_finite_partial_unary_description_output_range_partially_listable
-            P hD hcomplete hfunctional
-      · exact
-          concrete_finite_partial_unary_description_output_range_has_program_range
-            P hD hcomplete hfunctional
 
 theorem concrete_finite_partial_unary_description_output_range_compiled_program_range
     (P : ConcreteFinitePartialUnaryRangeProgram)
