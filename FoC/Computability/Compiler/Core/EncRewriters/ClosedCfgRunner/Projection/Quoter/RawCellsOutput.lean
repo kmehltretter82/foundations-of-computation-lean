@@ -5,10 +5,8 @@ set_option doc.verso true
 /-!
 # Raw-cell quote output contracts
 
-The exact raw-cell quoter construction still targets a fully positioned tape.
-This module records the parallel normalized-output surface.  It lets later
-projection routes use the source-rest finish output construction without
-depending on the exact live-tail joiner endpoint.
+The raw-cell quoter targets the fully positioned tape up to trailing-blank
+equivalence. This module records the derived normalized-output surface.
 -/
 
 namespace FoC
@@ -412,13 +410,13 @@ theorem SelectedProjectionInputQuoterPostBoundaryOutputSpec.haltsFromTapeWithOut
       (selectedProjectionInputQuoterRawCellQuoteOutput L) :=
   hraw.right L
 
-/-! ## Exact-to-output adapters -/
+/-! ## Equivalence-to-output adapters -/
 
-private theorem haltsFromTapeWithOutput_of_haltsFromTape_target
+private theorem haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
     {D : MachineDescription} {Tin Tout : Tape Bool}
-    (h : D.HaltsFromTape Tin Tout) :
+    (h : D.HaltsFromTapeEquiv Tin Tout) :
     D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
-  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape h
+  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv h
 
 theorem SelectedProjectionInputQuoterAfterSourceRestShapeSpec.toOutputSpec
     {finish : MachineDescription}
@@ -429,7 +427,7 @@ theorem SelectedProjectionInputQuoterAfterSourceRestShapeSpec.toOutputSpec
   · intro L
     simpa [selectedProjectionInputQuoterRawCellQuoteTargetShapeTape_normalizedOutput
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hfinish.right L)
 
 theorem SelectedProjectionInputQuoterAfterSourceRestPassSpec.toOutputSpec
@@ -441,7 +439,7 @@ theorem SelectedProjectionInputQuoterAfterSourceRestPassSpec.toOutputSpec
   · intro L
     simpa [selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput_output
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hfinish.right L)
 
 theorem SelectedProjectionInputQuoterAfterSourceRestQuoteBoundarySpec.toOutputSpec
@@ -455,7 +453,7 @@ theorem SelectedProjectionInputQuoterAfterSourceRestQuoteBoundarySpec.toOutputSp
   · intro L
     simpa [selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput_output
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hfinish.right L)
 
 theorem SelectedProjectionInputQuoterAfterSourceRestLeftBoundarySpec.toOutputSpec
@@ -469,7 +467,7 @@ theorem SelectedProjectionInputQuoterAfterSourceRestLeftBoundarySpec.toOutputSpe
   · intro L
     simpa [selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput_output
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hfinish.right L)
 
 theorem SelectedProjectionInputQuoterRawCellQuoteSpec.toOutputSpec
@@ -481,7 +479,7 @@ theorem SelectedProjectionInputQuoterRawCellQuoteSpec.toOutputSpec
   · intro L
     simpa [selectedProjectionInputQuoterRawCellQuoteTargetTape_normalizedOutput_output
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hraw.right L)
 
 theorem SelectedProjectionInputQuoterPostBoundarySpec.toOutputSpec
@@ -493,7 +491,7 @@ theorem SelectedProjectionInputQuoterPostBoundarySpec.toOutputSpec
   · intro L
     simpa [selectedProjectionInputQuoterExactTargetTape_normalizedOutput_output
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hraw.right L)
 
 /-! ## Output construction adapters -/

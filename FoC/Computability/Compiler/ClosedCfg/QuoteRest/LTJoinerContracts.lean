@@ -324,15 +324,15 @@ theorem liveTailJoinerAssemblyShape
         p.w p.sourceRestBits p.stage }
 
 /-!
-## Exact and output joiner routes
+## Equivalence and output joiner routes
 -/
 
-structure ExactLiveTailJoinerRouteSpec
+structure EquivLiveTailJoinerRouteSpec
     (finish : MachineDescription) : Prop where
-  family :
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish
-  assembly :
-    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish
+  familyEquiv :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec finish
+  assemblyEquiv :
+    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestEquivSpec finish
   familyOutput :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec finish
   assemblyOutput :
@@ -350,22 +350,22 @@ structure ExactLiveTailJoinerRouteSpec
     forall p : AssemblySourceRestLiveTailEmitterParam,
       LiveTailJoinerAssemblyShape p
 
-def ExactLiveTailJoinerRouteConstruction : Prop :=
+def EquivLiveTailJoinerRouteConstruction : Prop :=
   exists finish : MachineDescription,
-    ExactLiveTailJoinerRouteSpec finish
+    EquivLiveTailJoinerRouteSpec finish
 
-theorem exactLiveTailJoinerRouteSpec_of_familySpec
+theorem equivLiveTailJoinerRouteSpec_of_familyEquivSpec
     {finish : MachineDescription}
     (hfinish :
-      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec finish) :
-    ExactLiveTailJoinerRouteSpec finish := by
-  have hassembly :
-      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish :=
-    (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec finish) :
+    EquivLiveTailJoinerRouteSpec finish := by
+  have hassemblyEquiv :
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestEquivSpec finish :=
+    (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec_iff_assemblyEquivSpec
       finish).mp hfinish
   have hfamilyOutput :
       MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec finish :=
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_of_exact
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_of_equiv
       hfinish
   have hassemblyOutput :
       MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec
@@ -386,8 +386,8 @@ theorem exactLiveTailJoinerRouteSpec_of_familySpec
     StructuredLiveTailJoinerOrdinaryOutputBridgeSpec_of_outputFamily
       hstructured hfamilyOutput
   exact
-    { family := hfinish
-      assembly := hassembly
+    { familyEquiv := hfinish
+      assemblyEquiv := hassemblyEquiv
       familyOutput := hfamilyOutput
       assemblyOutput := hassemblyOutput
       structuredOutput := hstructured
@@ -395,63 +395,63 @@ theorem exactLiveTailJoinerRouteSpec_of_familySpec
       ordinaryOutputBridge := hbridge
       shape := liveTailJoinerAssemblyShape }
 
-theorem exactLiveTailJoinerRouteSpec_of_assemblySpec
+theorem equivLiveTailJoinerRouteSpec_of_assemblyEquivSpec
     {finish : MachineDescription}
     (hfinish :
-      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish) :
-    ExactLiveTailJoinerRouteSpec finish :=
-  exactLiveTailJoinerRouteSpec_of_familySpec
-    ((MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestEquivSpec finish) :
+    EquivLiveTailJoinerRouteSpec finish :=
+  equivLiveTailJoinerRouteSpec_of_familyEquivSpec
+    ((MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec_iff_assemblyEquivSpec
       finish).mpr hfinish)
 
-theorem exactLiveTailJoinerRouteConstruction_of_family
+theorem equivLiveTailJoinerRouteConstruction_of_family
     (hfinish :
-      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction) :
-    ExactLiveTailJoinerRouteConstruction := by
+      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction) :
+    EquivLiveTailJoinerRouteConstruction := by
   rcases hfinish with ⟨finish, hspec⟩
   exact
     ⟨finish,
-      exactLiveTailJoinerRouteSpec_of_familySpec hspec⟩
+      equivLiveTailJoinerRouteSpec_of_familyEquivSpec hspec⟩
 
-theorem familyConstruction_of_exactLiveTailJoinerRouteConstruction
-    (hroute : ExactLiveTailJoinerRouteConstruction) :
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+theorem familyConstruction_of_equivLiveTailJoinerRouteConstruction
+    (hroute : EquivLiveTailJoinerRouteConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction := by
   rcases hroute with ⟨finish, hspec⟩
-  exact ⟨finish, hspec.family⟩
+  exact ⟨finish, hspec.familyEquiv⟩
 
-theorem exactLiveTailJoinerRouteConstruction_iff_familyConstruction :
-    ExactLiveTailJoinerRouteConstruction ↔
-      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+theorem equivLiveTailJoinerRouteConstruction_iff_familyConstruction :
+    EquivLiveTailJoinerRouteConstruction ↔
+      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction := by
   constructor
-  · exact familyConstruction_of_exactLiveTailJoinerRouteConstruction
-  · exact exactLiveTailJoinerRouteConstruction_of_family
+  · exact familyConstruction_of_equivLiveTailJoinerRouteConstruction
+  · exact equivLiveTailJoinerRouteConstruction_of_family
 
-theorem exactLiveTailJoinerRouteConstruction_of_assembly
+theorem equivLiveTailJoinerRouteConstruction_of_assembly
     (hfinish :
-      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
-    ExactLiveTailJoinerRouteConstruction := by
+      MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest) :
+    EquivLiveTailJoinerRouteConstruction := by
   rcases hfinish with ⟨finish, hspec⟩
   exact
     ⟨finish,
-      exactLiveTailJoinerRouteSpec_of_assemblySpec hspec⟩
+      equivLiveTailJoinerRouteSpec_of_assemblyEquivSpec hspec⟩
 
-theorem assemblyConstruction_of_exactLiveTailJoinerRouteConstruction
-    (hroute : ExactLiveTailJoinerRouteConstruction) :
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
+theorem assemblyConstruction_of_equivLiveTailJoinerRouteConstruction
+    (hroute : EquivLiveTailJoinerRouteConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest := by
   rcases hroute with ⟨finish, hspec⟩
-  exact ⟨finish, hspec.assembly⟩
+  exact ⟨finish, hspec.assemblyEquiv⟩
 
-theorem exactLiveTailJoinerRouteConstruction_iff_assemblyConstruction :
-    ExactLiveTailJoinerRouteConstruction ↔
-      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
+theorem equivLiveTailJoinerRouteConstruction_iff_assemblyConstruction :
+    EquivLiveTailJoinerRouteConstruction ↔
+      MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest := by
   constructor
-  · exact assemblyConstruction_of_exactLiveTailJoinerRouteConstruction
-  · exact exactLiveTailJoinerRouteConstruction_of_assembly
+  · exact assemblyConstruction_of_equivLiveTailJoinerRouteConstruction
+  · exact equivLiveTailJoinerRouteConstruction_of_assembly
 
-theorem exactLiveTailJoinerRouteConstruction_core :
-    ExactLiveTailJoinerRouteConstruction :=
-  exactLiveTailJoinerRouteConstruction_of_family
-    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
+theorem equivLiveTailJoinerRouteConstruction_core :
+    EquivLiveTailJoinerRouteConstruction :=
+  equivLiveTailJoinerRouteConstruction_of_family
+    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction
 
 structure OutputLiveTailJoinerRouteSpec
     (finish : MachineDescription) : Prop where
@@ -517,9 +517,9 @@ theorem outputLiveTailJoinerRouteSpec_of_assemblyOutputSpec
     ((MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
       finish).mpr hfinish)
 
-theorem outputLiveTailJoinerRouteSpec_of_exactRouteSpec
+theorem outputLiveTailJoinerRouteSpec_of_equivRouteSpec
     {finish : MachineDescription}
-    (hroute : ExactLiveTailJoinerRouteSpec finish) :
+    (hroute : EquivLiveTailJoinerRouteSpec finish) :
     OutputLiveTailJoinerRouteSpec finish :=
   { familyOutput := hroute.familyOutput
     assemblyOutput := hroute.assemblyOutput
@@ -550,18 +550,18 @@ theorem outputLiveTailJoinerRouteConstruction_iff_familyOutputConstruction :
   · exact familyOutputConstruction_of_outputLiveTailJoinerRouteConstruction
   · exact outputLiveTailJoinerRouteConstruction_of_familyOutput
 
-theorem outputLiveTailJoinerRouteConstruction_of_exactRoute
-    (hroute : ExactLiveTailJoinerRouteConstruction) :
+theorem outputLiveTailJoinerRouteConstruction_of_equivRoute
+    (hroute : EquivLiveTailJoinerRouteConstruction) :
     OutputLiveTailJoinerRouteConstruction := by
   rcases hroute with ⟨finish, hspec⟩
   exact
     ⟨finish,
-      outputLiveTailJoinerRouteSpec_of_exactRouteSpec hspec⟩
+      outputLiveTailJoinerRouteSpec_of_equivRouteSpec hspec⟩
 
 theorem outputLiveTailJoinerRouteConstruction_core :
     OutputLiveTailJoinerRouteConstruction :=
-  outputLiveTailJoinerRouteConstruction_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core
+  outputLiveTailJoinerRouteConstruction_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core
 
 /-!
 ## Structured ordinary-output route
@@ -659,12 +659,12 @@ theorem assemblyOutputConstruction_of_structuredLiveTailJoinerRoute
 ## Parser-stack after-raw-tail-scan route
 -/
 
-structure AfterRawTailScanJoinFinisherRouteSpec
+structure AfterRawTailScanJoinFinisherEquivRouteSpec
     (finish : MachineDescription) : Prop where
-  joinerExact :
-    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestSpec finish
-  finisherExact :
-    MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec
+  joinerEquiv :
+    MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestEquivSpec finish
+  finisherEquiv :
+    MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestEquivSpec
       finish
   joinerOutput :
     MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestOutputSpec
@@ -672,30 +672,30 @@ structure AfterRawTailScanJoinFinisherRouteSpec
   finisherOutput :
     MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestOutputSpec
       finish
-  outputRoute :
-    OutputLiveTailJoinerRouteSpec finish
+  equivRoute :
+    EquivLiveTailJoinerRouteSpec finish
   shape :
     forall p : AssemblySourceRestLiveTailEmitterParam,
       LiveTailJoinerAssemblyShape p
 
-def AfterRawTailScanJoinFinisherRouteConstruction : Prop :=
+def AfterRawTailScanJoinFinisherEquivRouteConstruction : Prop :=
   exists finish : MachineDescription,
-    AfterRawTailScanJoinFinisherRouteSpec finish
+    AfterRawTailScanJoinFinisherEquivRouteSpec finish
 
-theorem afterRawTailScanJoinFinisherRouteSpec_of_exactRoute
+theorem afterRawTailScanJoinFinisherEquivRouteSpec_of_equivRoute
     {finish : MachineDescription}
-    (hroute : ExactLiveTailJoinerRouteSpec finish) :
-    AfterRawTailScanJoinFinisherRouteSpec finish := by
-  have hfinisherExact :
-      MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec
+    (hroute : EquivLiveTailJoinerRouteSpec finish) :
+    AfterRawTailScanJoinFinisherEquivRouteSpec finish := by
+  have hfinisherEquiv :
+      MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestEquivSpec
         finish := by
-    refine ⟨hroute.assembly.left, ?_⟩
+    refine ⟨hroute.assemblyEquiv.left, ?_⟩
     intro w sourceRestBits stage
     rw [
       MixedParserStackWholeSourceAfterRawTailScanTape_eq_mixedOptionCellQuoteLiveTailSeparatedTape]
     rw [MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape]
     rw [← mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape]
-    exact hroute.assembly.right w sourceRestBits stage
+    exact hroute.assemblyEquiv.right w sourceRestBits stage
   have hfinisherOutput :
       MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestOutputSpec
         finish := by
@@ -707,49 +707,49 @@ theorem afterRawTailScanJoinFinisherRouteSpec_of_exactRoute
     rw [← mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape]
     exact hroute.assemblyOutput.right w sourceRestBits stage
   exact
-    { joinerExact := hroute.assembly
-      finisherExact := hfinisherExact
+    { joinerEquiv := hroute.assemblyEquiv
+      finisherEquiv := hfinisherEquiv
       joinerOutput := hroute.assemblyOutput
       finisherOutput := hfinisherOutput
-      outputRoute := outputLiveTailJoinerRouteSpec_of_exactRouteSpec hroute
+      equivRoute := hroute
       shape := hroute.shape }
 
-theorem afterRawTailScanJoinFinisherRouteConstruction_of_exactRoute
-    (hroute : ExactLiveTailJoinerRouteConstruction) :
-    AfterRawTailScanJoinFinisherRouteConstruction := by
+theorem afterRawTailScanJoinFinisherEquivRouteConstruction_of_equivRoute
+    (hroute : EquivLiveTailJoinerRouteConstruction) :
+    AfterRawTailScanJoinFinisherEquivRouteConstruction := by
   rcases hroute with ⟨finish, hspec⟩
   exact
     ⟨finish,
-      afterRawTailScanJoinFinisherRouteSpec_of_exactRoute hspec⟩
+      afterRawTailScanJoinFinisherEquivRouteSpec_of_equivRoute hspec⟩
 
-theorem exactLiveTailJoinerRouteConstruction_of_afterRawTailScanRoute
-    (hroute : AfterRawTailScanJoinFinisherRouteConstruction) :
-    ExactLiveTailJoinerRouteConstruction := by
+theorem equivLiveTailJoinerRouteConstruction_of_afterRawTailScanRoute
+    (hroute : AfterRawTailScanJoinFinisherEquivRouteConstruction) :
+    EquivLiveTailJoinerRouteConstruction := by
   rcases hroute with ⟨finish, hspec⟩
   exact
     ⟨finish,
-      exactLiveTailJoinerRouteSpec_of_assemblySpec hspec.joinerExact⟩
+      hspec.equivRoute⟩
 
-theorem afterRawTailScanJoinFinisherRouteConstruction_iff_exactRoute :
-    AfterRawTailScanJoinFinisherRouteConstruction ↔
-      ExactLiveTailJoinerRouteConstruction := by
+theorem afterRawTailScanJoinFinisherEquivRouteConstruction_iff_equivRoute :
+    AfterRawTailScanJoinFinisherEquivRouteConstruction ↔
+      EquivLiveTailJoinerRouteConstruction := by
   constructor
-  · exact exactLiveTailJoinerRouteConstruction_of_afterRawTailScanRoute
-  · exact afterRawTailScanJoinFinisherRouteConstruction_of_exactRoute
+  · exact equivLiveTailJoinerRouteConstruction_of_afterRawTailScanRoute
+  · exact afterRawTailScanJoinFinisherEquivRouteConstruction_of_equivRoute
 
-theorem afterRawTailScanJoinFinisherRouteConstruction_core :
-    AfterRawTailScanJoinFinisherRouteConstruction :=
-  afterRawTailScanJoinFinisherRouteConstruction_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core
+theorem afterRawTailScanJoinFinisherEquivRouteConstruction_core :
+    AfterRawTailScanJoinFinisherEquivRouteConstruction :=
+  afterRawTailScanJoinFinisherEquivRouteConstruction_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core
 
-theorem mixedParserStackAfterRawTailScanJoinFinisherConstruction_from_route
-    (hroute : AfterRawTailScanJoinFinisherRouteConstruction) :
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
+theorem mixedParserStackAfterRawTailScanJoinFinisherEquivConstruction_from_route
+    (hroute : AfterRawTailScanJoinFinisherEquivRouteConstruction) :
+    MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest := by
   rcases hroute with ⟨finish, hspec⟩
-  exact ⟨finish, hspec.finisherExact⟩
+  exact ⟨finish, hspec.finisherEquiv⟩
 
 theorem mixedParserStackAfterRawTailScanJoinFinisherOutputConstruction_from_route
-    (hroute : AfterRawTailScanJoinFinisherRouteConstruction) :
+    (hroute : AfterRawTailScanJoinFinisherEquivRouteConstruction) :
     MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest := by
   rcases hroute with ⟨finish, hspec⟩
   exact ⟨finish, hspec.finisherOutput⟩
@@ -758,8 +758,8 @@ theorem mixedParserStackAfterRawTailScanJoinFinisherOutputConstruction_from_rout
 ## Field projections
 -/
 
-theorem liveTailJoinerAssemblyShape_of_exactRoute
-    (hroute : ExactLiveTailJoinerRouteConstruction)
+theorem liveTailJoinerAssemblyShape_of_equivRoute
+    (hroute : EquivLiveTailJoinerRouteConstruction)
     (p : AssemblySourceRestLiveTailEmitterParam) :
     LiveTailJoinerAssemblyShape p := by
   rcases hroute with ⟨_finish, hspec⟩
@@ -781,7 +781,7 @@ theorem liveTailJoinerAssemblyShape_of_structuredRoute
   exact hspec.shape p
 
 theorem liveTailJoinerAssemblyShape_of_afterRawTailScanRoute
-    (hroute : AfterRawTailScanJoinFinisherRouteConstruction)
+    (hroute : AfterRawTailScanJoinFinisherEquivRouteConstruction)
     (p : AssemblySourceRestLiveTailEmitterParam) :
     LiveTailJoinerAssemblyShape p := by
   rcases hroute with ⟨_finish, hspec⟩
@@ -794,8 +794,8 @@ theorem liveTailJoinerAssemblyTargetTape_normalizedOutput_core
       Tape.normalizedOutput
         (assemblySourceRestFinishTargetTape
           p.w p.sourceRestBits p.stage) :=
-  (liveTailJoinerAssemblyShape_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core p)
+  (liveTailJoinerAssemblyShape_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core p)
       |>.targetTapeNormalizedOutputEqTargetTape
 
 theorem liveTailJoinerAssemblyTargetOutput_eq_named_core
@@ -808,8 +808,8 @@ theorem liveTailJoinerAssemblyTargetOutput_eq_named_core
           (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
             p.stage)
           p.sourceRestBits) :=
-  (liveTailJoinerAssemblyShape_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core p)
+  (liveTailJoinerAssemblyShape_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core p)
       |>.targetOutputEqNamed
 
 theorem liveTailJoinerAssemblySourceTape_eq_afterRawTailScan_core
@@ -817,8 +817,8 @@ theorem liveTailJoinerAssemblySourceTape_eq_afterRawTailScan_core
     structuredLiveTailJoinerAssemblySourceTape p =
       MixedParserStackWholeSourceAfterRawTailScanTape
         p.w p.sourceRestBits p.stage :=
-  (liveTailJoinerAssemblyShape_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core p)
+  (liveTailJoinerAssemblyShape_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core p)
       |>.sourceTapeEqAfterRawTailScan
 
 theorem liveTailJoinerAssemblyTargetOutput_eq_segments_core
@@ -829,8 +829,8 @@ theorem liveTailJoinerAssemblyTargetOutput_eq_segments_core
         (List.append
           (assemblySourceRestLiveTailEmitterQuoteRest p)
           (assemblySourceRestLiveTailEmitterRawTail p)) :=
-  (liveTailJoinerAssemblyShape_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core p)
+  (liveTailJoinerAssemblyShape_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core p)
       |>.targetOutputEqSegments
 
 theorem liveTailJoinerAssemblySeparatedTape_normalizedOutput_core
@@ -843,8 +843,8 @@ theorem liveTailJoinerAssemblySeparatedTape_normalizedOutput_core
           (preservingCellPassCellBits p.sourceRestBits)) =
       assemblySourceRestFinishSeparatedOutput
         p.w p.sourceRestBits p.stage :=
-  (liveTailJoinerAssemblyShape_of_exactRoute
-    exactLiveTailJoinerRouteConstruction_core p)
+  (liveTailJoinerAssemblyShape_of_equivRoute
+    equivLiveTailJoinerRouteConstruction_core p)
       |>.separatedTapeNormalizedOutput
 
 end SelectedProjectionInputQuoterFiniteLeaf

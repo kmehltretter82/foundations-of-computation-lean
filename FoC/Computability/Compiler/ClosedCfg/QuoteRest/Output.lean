@@ -60,6 +60,18 @@ theorem assemblySourceRestFinishOutput_eq_targetTape_namedOutput
   rw [assemblySourceRestFinishOutput,
     assemblySourceRestFinishJoinedOutput_eq_targetTape_namedOutput]
 
+def AssemblySourceRestFinishEquivSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTapeEquiv
+        (assemblySourceRestFinishSourceTape w sourceRestBits stage)
+        (assemblySourceRestFinishTargetTape w sourceRestBits stage)
+
+def AssemblySourceRestFinishEquivConstruction : Prop :=
+  exists finish : MachineDescription,
+    AssemblySourceRestFinishEquivSpec finish
+
 def AssemblySourceRestFinishOutputSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
@@ -71,6 +83,21 @@ def AssemblySourceRestFinishOutputSpec
 def AssemblySourceRestFinishOutputConstruction : Prop :=
   exists finish : MachineDescription,
     AssemblySourceRestFinishOutputSpec finish
+
+theorem AssemblySourceRestFinishEquivSpec.subroutineReady
+    {finish : MachineDescription}
+    (hfinish : AssemblySourceRestFinishEquivSpec finish) :
+    finish.SubroutineReady :=
+  hfinish.left
+
+theorem AssemblySourceRestFinishEquivSpec.haltsFromTapeEquiv
+    {finish : MachineDescription}
+    (hfinish : AssemblySourceRestFinishEquivSpec finish)
+    (w sourceRestBits : Word Bool) (stage : Nat) :
+    finish.HaltsFromTapeEquiv
+      (assemblySourceRestFinishSourceTape w sourceRestBits stage)
+      (assemblySourceRestFinishTargetTape w sourceRestBits stage) :=
+  hfinish.right w sourceRestBits stage
 
 def AssemblySourceRestFinishBoundaryOutputSpec
     (finish : MachineDescription) : Prop :=
@@ -304,13 +331,31 @@ theorem MixedParserStackDefaultedInternalMarkerFinisherAssemblySourceRestOutputS
       (assemblySourceRestFinishOutput w sourceRestBits stage) :=
   hfinish.right w sourceRestBits stage
 
-/-! ## Exact-to-output adapters -/
+/-! ## Tape-to-output adapters -/
 
 private theorem haltsFromTapeWithOutput_of_haltsFromTape_target
     {D : MachineDescription} {Tin Tout : Tape Bool}
     (h : D.HaltsFromTape Tin Tout) :
     D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
   MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape h
+
+theorem AssemblySourceRestFinishEquivSpec.toOutputSpec
+    {finish : MachineDescription}
+    (hfinish : AssemblySourceRestFinishEquivSpec finish) :
+    AssemblySourceRestFinishOutputSpec finish := by
+  constructor
+  · exact hfinish.left
+  · intro w sourceRestBits stage
+    rw [assemblySourceRestFinishOutput_eq_targetTape_normalizedOutput]
+    exact
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+        (hfinish.right w sourceRestBits stage)
+
+theorem AssemblySourceRestFinishEquivConstruction.toOutputConstruction
+    (h : AssemblySourceRestFinishEquivConstruction) :
+    AssemblySourceRestFinishOutputConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact ⟨finish, hfinish.toOutputSpec⟩
 
 theorem AssemblySourceRestFinishSpec.toOutputSpec
     {finish : MachineDescription}
@@ -602,7 +647,133 @@ theorem assemblySourceRestFinishOutputConstruction_of_boundary
     ⟨assemblySourceRestFinishOutputFromBoundary finish,
       assemblySourceRestFinishOutputSpec_of_boundary hfinish⟩
 
+def assemblySourceRestFinishEquivFromInnerLiveTail
+    (inner : MachineDescription) : MachineDescription :=
+  assemblySourceRestFinishOutputFromQuoteBoundary
+    (assemblySourceRestFinishOutputFromLeftBoundary
+      (SeqViaCanonical mixedParserStackSeekLeftBoundaryDescription
+        (SeqViaCanonical
+          mixedParserStackDefaultInternalMarkerDescription inner)))
+
+theorem assemblySourceRestFinishEquivConstruction_of_innerLiveTail
+    (hinner : MixedParserStackSourceRestFinishAssemblyEquivConstruction) :
+    AssemblySourceRestFinishEquivConstruction := by
+  rcases hinner with ⟨inner, hinner⟩
+  refine ⟨assemblySourceRestFinishEquivFromInnerLiveTail inner, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady
+        scanRightToBlankLeftDescription_subroutineReady
+        (SeqViaCanonical_subroutineReady
+          scanLeftToBlankLeftDescription_subroutineReady
+          (SeqViaCanonical_subroutineReady
+            mixedParserStackSeekLeftBoundaryDescription_subroutineReady
+            (SeqViaCanonical_subroutineReady
+              mixedParserStackDefaultInternalMarkerDescription_subroutineReady
+              hinner.left)))
+  · intro w sourceRestBits stage
+    have hdefault :
+        (SeqViaCanonical
+          mixedParserStackDefaultInternalMarkerDescription inner).HaltsFromTapeEquiv
+          (MixedParserStackRewriterTrueLeftBoundaryTape
+            w sourceRestBits
+            (preservingCellPassCellBits sourceRestBits)
+            stage)
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      exact
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+          mixedParserStackDefaultInternalMarkerDescription_subroutineReady
+          hinner.left
+          (mixedParserStackDefaultInternalMarkerDescription_haltsFrom_trueLeftBoundaryTape
+            w sourceRestBits
+            (preservingCellPassCellBits sourceRestBits)
+            stage).toEquiv
+          (by
+            rw [MixedParserStackRewriterDefaultedInternalMarkerTape_move_left_move_right]
+            exact Tape.Equiv.refl _)
+          (hinner.right w sourceRestBits stage)
+    have hseek :
+        (SeqViaCanonical mixedParserStackSeekLeftBoundaryDescription
+          (SeqViaCanonical
+            mixedParserStackDefaultInternalMarkerDescription inner)).HaltsFromTapeEquiv
+          (MixedParserStackRewriterSourceTape
+            (assemblySourceRestFinishParserPrefixCells w)
+            (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+              stage)
+            sourceRestBits
+            (preservingCellPassCellBits sourceRestBits))
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      exact
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+          mixedParserStackSeekLeftBoundaryDescription_subroutineReady
+          (SeqViaCanonical_subroutineReady
+            mixedParserStackDefaultInternalMarkerDescription_subroutineReady
+            hinner.left)
+          (mixedParserStackSeekLeftBoundaryDescription_haltsFrom_sourceTape
+            w sourceRestBits
+            (preservingCellPassCellBits sourceRestBits)
+            stage).toEquiv
+          (by
+            rw [MixedParserStackRewriterTrueLeftBoundaryTape_move_left_move_right]
+            exact Tape.Equiv.refl _)
+          hdefault
+    have hleftBoundary :
+        (SeqViaCanonical mixedParserStackSeekLeftBoundaryDescription
+          (SeqViaCanonical
+            mixedParserStackDefaultInternalMarkerDescription inner)).HaltsFromTapeEquiv
+          (assemblySourceRestFinishLeftBoundaryTape
+            w sourceRestBits stage)
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      simpa [MixedParserStackRewriterSourceTape_eq_leftBoundary] using hseek
+    have hquoteBoundary :
+        (assemblySourceRestFinishOutputFromLeftBoundary
+          (SeqViaCanonical mixedParserStackSeekLeftBoundaryDescription
+            (SeqViaCanonical
+              mixedParserStackDefaultInternalMarkerDescription inner))).HaltsFromTapeEquiv
+          (assemblySourceRestFinishQuoteBoundaryTape
+            w sourceRestBits stage)
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      exact
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+          scanLeftToBlankLeftDescription_subroutineReady
+          (SeqViaCanonical_subroutineReady
+            mixedParserStackSeekLeftBoundaryDescription_subroutineReady
+            (SeqViaCanonical_subroutineReady
+              mixedParserStackDefaultInternalMarkerDescription_subroutineReady
+              hinner.left))
+          (scanLeftToBlankLeftDescription_haltsFrom_finishQuoteBoundaryTape
+            w sourceRestBits stage).toEquiv
+          (by
+            rw [assemblySourceRestFinishLeftBoundaryTape_move_left_move_right_output]
+            exact Tape.Equiv.refl _)
+          hleftBoundary
+    exact
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+        scanRightToBlankLeftDescription_subroutineReady
+        (SeqViaCanonical_subroutineReady
+          scanLeftToBlankLeftDescription_subroutineReady
+          (SeqViaCanonical_subroutineReady
+            mixedParserStackSeekLeftBoundaryDescription_subroutineReady
+            (SeqViaCanonical_subroutineReady
+              mixedParserStackDefaultInternalMarkerDescription_subroutineReady
+              hinner.left)))
+        (scanRightToBlankLeftDescription_haltsFrom_finishSourceTape
+          w sourceRestBits stage).toEquiv
+        (by
+          rw [assemblySourceRestFinishQuoteBoundaryTape_move_left_move_right]
+          exact Tape.Equiv.refl _)
+        hquoteBoundary
+
 /-! ## Public construction route -/
+
+theorem assemblySourceRestFinishEquivConstruction_for_assemblySourceRest :
+    AssemblySourceRestFinishEquivConstruction :=
+  assemblySourceRestFinishEquivConstruction_of_innerLiveTail
+    mixedParserStackSourceRestFinishEquivConstruction_for_assemblySourceRest
 
 theorem mixedParserStackDefaultedInternalMarkerFinisherOutputConstruction_for_assemblySourceRest :
     MixedParserStackDefaultedInternalMarkerFinisherOutputConstructionForAssemblySourceRest :=
@@ -631,8 +802,7 @@ theorem assemblySourceRestFinishQuoteBoundaryOutputConstruction_for_assemblySour
 
 theorem assemblySourceRestFinishOutputConstruction_for_assemblySourceRest :
     AssemblySourceRestFinishOutputConstruction :=
-  assemblySourceRestFinishOutputConstruction_of_quoteBoundary
-    assemblySourceRestFinishQuoteBoundaryOutputConstruction_for_assemblySourceRest
+  assemblySourceRestFinishEquivConstruction_for_assemblySourceRest.toOutputConstruction
 
 theorem assemblySourceRestFinishOutputConstruction_of_innerLiveTail
     (hinner : MixedParserStackSourceRestFinishAssemblyOutputConstruction) :

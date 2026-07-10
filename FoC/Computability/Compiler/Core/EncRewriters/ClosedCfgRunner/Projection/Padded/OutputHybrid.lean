@@ -5,12 +5,11 @@ import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScaffoldOutput
 set_option doc.verso true
 
 /-!
-# Hybrid output composition for padded selected projection
+# Equivalence/output composition for padded selected projection
 
-The padded emitter needs the input quoter to hand off an exact source tape for
-the tail phase.  It does not, however, need the tail phase to provide an exact
-final tape when the caller only consumes normalized output.  This module records
-that hybrid route explicitly: exact quoter handoff plus tail-output endpoint.
+The padded emitter accepts the input quoter's canonical handoff up to trailing
+blank equivalence, while the tail phase exposes normalized output. This module
+records that mixed equivalence/output route explicitly.
 -/
 
 namespace FoC
@@ -128,24 +127,24 @@ theorem selectedProjectionCheckedEquivPaddedEmitterHybridOutputSpec_of_component
   · exact SeqViaCanonical_subroutineReady hquoter.left htail.left
   · intro L
     have hquoterRun :
-        quoter.HaltsFromTape
+        quoter.HaltsFromTapeEquiv
           (ParsedLayoutCheckedTape L)
           (SelectedProjectionTailProjector.sourceTape L
             (baseLeft L)) :=
       hquoter.right L
     have hbridge :
-        Tape.move Direction.left
+        Tape.Equiv
+          (Tape.move Direction.left
             (Tape.move Direction.right
               (SelectedProjectionTailProjector.sourceTape L
-                (baseLeft L))) =
-          SelectedProjectionTailProjector.sourceTape L
-            (baseLeft L) := by
-      exact
-        SelectedProjectionTailProjector.sourceTape_move_left_move_right
-          L (baseLeft L)
+                (baseLeft L))))
+          (SelectedProjectionTailProjector.sourceTape L
+            (baseLeft L)) := by
+      rw [SelectedProjectionTailProjector.sourceTape_move_left_move_right]
+      exact Tape.Equiv.refl _
     simpa [SelectedProjectionCheckedEquivPaddedEmitterFromHybridOutputComponents,
       SelectedProjectionCheckedEquivPaddedEmitterFromComponents] using
-      SeqViaCanonical_haltsFromTapeWithOutput_of_haltsFromTape_eq
+      SeqViaCanonical_haltsFromTapeWithOutput_of_haltsFromTapeEquiv
         hquoter.left htail.left hquoterRun hbridge
         (htail.haltsFromTapeWithOutput L)
 

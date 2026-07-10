@@ -6,12 +6,12 @@ import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTGapOutput
 set_option doc.verso true
 
 /-!
-# Live-tail source-rest output route
+# Live-tail source-rest equivalence and output route
 
-This module composes the live-tail source-rest finish phases at normalized
-output level.  The route still requires exact prefix and gap endpoints because
-those phases provide the physical handoff positions for the next machine, but
-the final joiner only needs to expose the final visible output word.
+This module composes the live-tail source-rest finish phases through tape
+equivalence. The prefix and gap endpoints remain exact because they provide
+physical handoff positions; the final joiner may retain trailing blank padding.
+Normalized output is derived from this equivalence-facing route.
 -/
 
 namespace FoC
@@ -32,6 +32,83 @@ def mixedParserStackSourceRestFinishOutputMachine
     MachineDescription :=
   SeqViaCanonical prefixFinish
     (SeqViaCanonical gapFinish joinFinish)
+
+def MixedParserStackSourceRestFinishAssemblyEquivSpec
+    (finish : MachineDescription) : Prop :=
+  finish.SubroutineReady ∧
+    forall (w sourceRestBits : Word Bool) (stage : Nat),
+      finish.HaltsFromTapeEquiv
+        (MixedParserStackRewriterDefaultedInternalMarkerTape
+          w sourceRestBits
+          (preservingCellPassCellBits sourceRestBits)
+          stage)
+        (assemblySourceRestFinishTargetTape
+          w sourceRestBits stage)
+
+def MixedParserStackSourceRestFinishAssemblyEquivConstruction :
+    Prop :=
+  exists finish : MachineDescription,
+    MixedParserStackSourceRestFinishAssemblyEquivSpec finish
+
+def MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsSpec
+    (prefixFinish gapFinish joinFinish : MachineDescription) : Prop :=
+  MixedParserStackPrefixQuotedSeparatedFinisherAssemblySourceRestSpec
+      prefixFinish ∧
+    RightBlankGapPayloadScanAssemblyTapeSpec gapFinish ∧
+    MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestEquivSpec
+      joinFinish
+
+def MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsConstruction :
+    Prop :=
+  exists prefixFinish gapFinish joinFinish : MachineDescription,
+    MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsSpec
+      prefixFinish gapFinish joinFinish
+
+theorem MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsConstruction.toEquivConstruction
+    (h :
+      MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsConstruction) :
+    MixedParserStackSourceRestFinishAssemblyEquivConstruction := by
+  rcases h with ⟨prefixFinish, gapFinish, joinFinish, hprefix, hgap, hjoin⟩
+  refine
+    ⟨mixedParserStackSourceRestFinishOutputMachine
+        prefixFinish gapFinish joinFinish, ?_⟩
+  constructor
+  · exact
+      SeqViaCanonical_subroutineReady hprefix.left
+        (SeqViaCanonical_subroutineReady hgap.subroutineReady hjoin.left)
+  · intro w sourceRestBits stage
+    have hjoinTarget :
+        joinFinish.HaltsFromTapeEquiv
+          (MixedParserStackWholeSourceAfterRawTailScanTape
+            w sourceRestBits stage)
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      simpa [MixedParserStackRewriterWholeSourceTargetTape_eq_quoteRestJoinedTape,
+        assemblySourceRestFinishQuoteRestJoinedTape_eq_targetTape] using
+        hjoin.right w sourceRestBits stage
+    have hinner :
+        (SeqViaCanonical gapFinish joinFinish).HaltsFromTapeEquiv
+          (MixedParserStackWholeSourcePrefixQuotedSeparatedTape
+            w sourceRestBits stage)
+          (assemblySourceRestFinishTargetTape
+            w sourceRestBits stage) := by
+      exact
+        SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+          hgap.subroutineReady hjoin.left
+          (hgap.haltsFromTape w sourceRestBits stage).toEquiv
+          (by
+            rw [MixedParserStackWholeSourceAfterRawTailScanTape_move_left_move_right]
+            exact Tape.Equiv.refl _)
+          hjoinTarget
+    exact
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+        hprefix.left
+        (SeqViaCanonical_subroutineReady hgap.subroutineReady hjoin.left)
+        (hprefix.right w sourceRestBits stage).toEquiv
+        (by
+          rw [MixedParserStackWholeSourcePrefixQuotedSeparatedTape_move_left_move_right]
+          exact Tape.Equiv.refl _)
+        hinner
 
 def MixedParserStackSourceRestFinishAssemblyOutputSpec
     (finish : MachineDescription) : Prop :=
@@ -254,6 +331,48 @@ theorem MixedParserStackSourceRestFinishExactPrefixGapOutputComponentsConstructi
       MixedParserStackSourceRestFinishAssemblyOutputSpec_of_components
         hcomponents⟩
 
+theorem mixedParserStackSourceRestFinishExactPrefixGapEquivComponents_for_assemblySourceRest :
+    MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsConstruction := by
+  rcases
+      mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest
+      with
+    ⟨prefixFinish, hprefix⟩
+  rcases
+      mixedParserStackAfterRawTailScanJoinFinisherEquivConstruction_for_assemblySourceRest
+      with
+    ⟨joinFinish, hjoin⟩
+  exact
+    ⟨prefixFinish,
+      CommonGround.FiniteTransducers.rightBlankGapPayloadScanDescription,
+      joinFinish,
+      hprefix,
+      rightBlankGapPayloadScanDescription_assemblyTapeSpec,
+      hjoin⟩
+
+theorem mixedParserStackSourceRestFinishEquivConstruction_for_assemblySourceRest :
+    MixedParserStackSourceRestFinishAssemblyEquivConstruction :=
+  MixedParserStackSourceRestFinishExactPrefixGapEquivComponentsConstruction.toEquivConstruction
+    mixedParserStackSourceRestFinishExactPrefixGapEquivComponents_for_assemblySourceRest
+
+theorem MixedParserStackSourceRestFinishAssemblyOutputSpec_of_equiv
+    {finish : MachineDescription}
+    (hfinish : MixedParserStackSourceRestFinishAssemblyEquivSpec finish) :
+    MixedParserStackSourceRestFinishAssemblyOutputSpec finish := by
+  refine ⟨hfinish.left, ?_⟩
+  intro w sourceRestBits stage
+  simpa [assemblySourceRestFinishJoinedOutput_eq_targetTape_normalizedOutput]
+    using
+      MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
+        (hfinish.right w sourceRestBits stage)
+
+theorem MixedParserStackSourceRestFinishAssemblyOutputConstruction_of_equiv
+    (hfinish : MixedParserStackSourceRestFinishAssemblyEquivConstruction) :
+    MixedParserStackSourceRestFinishAssemblyOutputConstruction := by
+  rcases hfinish with ⟨finish, hspec⟩
+  exact
+    ⟨finish,
+      MixedParserStackSourceRestFinishAssemblyOutputSpec_of_equiv hspec⟩
+
 theorem mixedParserStackSourceRestFinishExactPrefixGapOutputComponents_for_assemblySourceRest :
     MixedParserStackSourceRestFinishExactPrefixGapOutputComponentsConstruction := by
   rcases
@@ -274,8 +393,8 @@ theorem mixedParserStackSourceRestFinishExactPrefixGapOutputComponents_for_assem
 
 theorem mixedParserStackSourceRestFinishOutputConstruction_for_assemblySourceRest :
     MixedParserStackSourceRestFinishAssemblyOutputConstruction :=
-  MixedParserStackSourceRestFinishExactPrefixGapOutputComponentsConstruction.toOutputConstruction
-    mixedParserStackSourceRestFinishExactPrefixGapOutputComponents_for_assemblySourceRest
+  MixedParserStackSourceRestFinishAssemblyOutputConstruction_of_equiv
+    mixedParserStackSourceRestFinishEquivConstruction_for_assemblySourceRest
 
 end SelectedProjectionInputQuoterFiniteLeaf
 

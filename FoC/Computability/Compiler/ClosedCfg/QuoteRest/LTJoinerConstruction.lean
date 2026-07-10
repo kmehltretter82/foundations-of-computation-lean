@@ -39,6 +39,21 @@ def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     assemblySourceRestLiveTailEmitterRawTail
     assemblySourceRestLiveTailEmitterQuoteRest
 
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec
+    (finish : MachineDescription) : Prop :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyEquivSpec
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+    finish
+
+def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction :
+    Prop :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyEquivConstruction
+    assemblySourceRestLiveTailEmitterEmittedPrefix
+    assemblySourceRestLiveTailEmitterRawTail
+    assemblySourceRestLiveTailEmitterQuoteRest
+
 /-- The old exact assembly family is refuted by the 109-to-107 context drop. -/
 theorem not_MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     ¬ MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :=
@@ -75,6 +90,42 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilySpec_iff_assemblySpec
     cases p with
     | mk w sourceRestBits stage =>
         exact hfinish.right w sourceRestBits stage
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec_iff_assemblyEquivSpec
+    (finish : MachineDescription) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec finish ↔
+      MixedOptionCellQuoteLiveTailJoinerForAssemblySourceRestEquivSpec
+        finish := by
+  constructor
+  · intro hfinish
+    exact
+      ⟨hfinish.left, fun w sourceRestBits stage =>
+        hfinish.right
+          { w := w, sourceRestBits := sourceRestBits, stage := stage }⟩
+  · intro hfinish
+    refine ⟨hfinish.left, ?_⟩
+    intro p
+    cases p with
+    | mk w sourceRestBits stage =>
+        exact hfinish.right w sourceRestBits stage
+
+theorem MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest_of_family
+    (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec_iff_assemblyEquivSpec
+        finish).mp hfinish⟩
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction_of_assembly
+    (h : MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction := by
+  rcases h with ⟨finish, hfinish⟩
+  exact
+    ⟨finish,
+      (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec_iff_assemblyEquivSpec
+        finish).mpr hfinish⟩
 
 theorem MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
     (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction) :
@@ -131,6 +182,18 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_as
       (MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
         finish).mpr hfinish⟩
 
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_of_equiv
+    {finish : MachineDescription}
+    (hfinish :
+      MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivSpec finish) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec finish :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec_of_equiv hfinish
+
+theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_equiv
+    (h : MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction) :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :=
+  MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction_of_equiv h
+
 theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec_of_exact
     {finish : MachineDescription}
     (hfinish :
@@ -171,40 +234,32 @@ theorem MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction_of_stageSou
           w sourceRestBits stage)
         sourceRestBits stage
 
-theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
-    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction := by
+theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction :
+    MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction := by
   -- Remaining obligation: construct the assembly-specific live-tail joiner
-  -- without using the refuted arbitrary stage/source joiner route.
+  -- up to trailing-blank tape equivalence.
   sorry
 
 theorem mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :
     MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction :=
-  MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_exact
-    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
+  MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction_of_equiv
+    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction
+
+theorem mixedOptionCellQuoteLiveTailJoinerEquivConstruction_for_assemblySourceRest :
+    MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest :=
+  MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest_of_family
+    mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyEquivConstruction
 
 theorem mixedOptionCellQuoteLiveTailJoinerOutputConstruction_for_assemblySourceRest :
     MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest :=
   MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest_of_outputFamily
     mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputConstruction
 
-/--
-Specialized finite-table obligation for joining the reusable quote-rest field
-in front of the source-rest live tail.  The arbitrary stage/source version is
-too strong: the separated source tape does not carry a delimiter between an
-arbitrary emitted prefix and the stage prefix, so this construction stays with
-the assembly source-rest family required by the plan.
--/
-theorem mixedOptionCellQuoteLiveTailJoinerConstruction :
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest := by
-  exact
-    MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest_of_family
-      mixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction
-
-def MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec
+def MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestEquivSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall (w sourceRestBits : Word Bool) (stage : Nat),
-      finish.HaltsFromTape
+      finish.HaltsFromTapeEquiv
         (MixedParserStackWholeSourceAfterRawTailScanTape
           w sourceRestBits stage)
         (MixedParserStackRewriterWholeSourceTargetTape
@@ -212,15 +267,16 @@ def MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec
             w sourceRestBits stage)
           (assemblySourceRestFinishRawTailBits sourceRestBits stage))
 
-def MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :
+def MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest :
     Prop :=
   exists finish : MachineDescription,
-    MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestSpec finish
+    MixedParserStackAfterRawTailScanJoinFinisherAssemblySourceRestEquivSpec
+      finish
 
-theorem MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
+theorem MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
     (hjoin :
-      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest := by
+      MixedOptionCellQuoteLiveTailJoinerEquivConstructionForAssemblySourceRest) :
+    MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest := by
   rcases hjoin with ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
   intro w sourceRestBits stage
@@ -230,14 +286,13 @@ theorem MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourc
   exact hfinish.right w sourceRestBits stage
 
 /--
-Finite-machine obligation for Phase 3 of the mixed parser-stack finisher.  It
-joins the already-computed quoted source-rest field onto the emitted prefix and
-leaves {lit}`stageBits ++ sourceRestBits` as the live right tail.
+Equivalence-facing Phase 3 finisher. It joins the quoted source-rest field onto
+the emitted prefix while permitting the unavoidable trailing blank padding.
 -/
-theorem mixedParserStackAfterRawTailScanJoinFinisherConstruction_for_assemblySourceRest :
-    MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest :=
-  MixedParserStackAfterRawTailScanJoinFinisherConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
-    mixedOptionCellQuoteLiveTailJoinerConstruction
+theorem mixedParserStackAfterRawTailScanJoinFinisherEquivConstruction_for_assemblySourceRest :
+    MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest :=
+  MixedParserStackAfterRawTailScanJoinFinisherEquivConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
+    mixedOptionCellQuoteLiveTailJoinerEquivConstruction_for_assemblySourceRest
 
 theorem mixedParserStackAfterRawTailScanJoinFinisherOutputConstruction_for_assemblySourceRest :
     MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest :=

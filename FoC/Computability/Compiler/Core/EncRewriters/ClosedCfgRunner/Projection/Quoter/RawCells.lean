@@ -949,7 +949,7 @@ def SelectedProjectionInputQuoterPostBoundarySpec
     (post : MachineDescription) : Prop :=
   post.SubroutineReady ∧
     forall L : DovetailLayout,
-      post.HaltsFromTape
+      post.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterPostBoundarySourceTape L)
         (SelectedProjectionInputQuoterExactTargetTape L)
 
@@ -1230,7 +1230,7 @@ def SelectedProjectionInputQuoterAfterSourceRestPassSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall L : DovetailLayout,
-      finish.HaltsFromTape
+      finish.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterAfterSourceRestPassTape L)
         (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
 
@@ -1238,7 +1238,7 @@ def SelectedProjectionInputQuoterAfterSourceRestShapeSpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall L : DovetailLayout,
-      finish.HaltsFromTape
+      finish.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterAfterSourceRestSourceShapeTape L)
         (selectedProjectionInputQuoterRawCellQuoteTargetShapeTape L)
 
@@ -1307,7 +1307,8 @@ private theorem assemblySourceRestFinishTargetTape_selected_eq_shapeTape
 
 theorem selectedProjectionInputQuoterAfterSourceRestShapeConstruction :
     SelectedProjectionInputQuoterAfterSourceRestShapeConstruction := by
-  rcases assemblySourceRestFinishConstruction with ⟨finish, hfinish⟩
+  rcases assemblySourceRestFinishEquivConstruction_for_assemblySourceRest with
+    ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
   intro L
   rw [← assemblySourceRestFinishSourceTape_selected_eq_shapeTape,
@@ -1416,7 +1417,7 @@ def SelectedProjectionInputQuoterAfterSourceRestQuoteBoundarySpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall L : DovetailLayout,
-      finish.HaltsFromTape
+      finish.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape L)
         (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
 
@@ -1429,7 +1430,7 @@ def SelectedProjectionInputQuoterAfterSourceRestLeftBoundarySpec
     (finish : MachineDescription) : Prop :=
   finish.SubroutineReady ∧
     forall L : DovetailLayout,
-      finish.HaltsFromTape
+      finish.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape L)
         (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
 
@@ -1451,13 +1452,14 @@ theorem selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryConstruction_of
         hfinish.left
   · intro L
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         scanLeftToBlankLeftDescription_subroutineReady
         hfinish.left
         (scanLeftToBlankLeftDescription_haltsFrom_afterSourceRestQuoteBoundaryTape
-          L)
-        (selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right
-          L)
+          L).toEquiv
+        (by
+          rw [selectedProjectionInputQuoterAfterSourceRestLeftBoundaryTape_move_left_move_right]
+          exact Tape.Equiv.refl _)
         (hfinish.right L)
 
 theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction_of_quoteBoundary
@@ -1473,13 +1475,14 @@ theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction_of_quoteBou
         hfinish.left
   · intro L
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         scanRightToBlankLeftDescription_subroutineReady
         hfinish.left
         (scanRightToBlankLeftDescription_haltsFrom_afterSourceRestPassTape
-          L)
-        (selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right
-          L)
+          L).toEquiv
+        (by
+          rw [selectedProjectionInputQuoterAfterSourceRestQuoteBoundaryTape_move_left_move_right]
+          exact Tape.Equiv.refl _)
         (hfinish.right L)
 
 theorem selectedProjectionInputQuoterAfterSourceRestPassConstruction :
@@ -1496,7 +1499,7 @@ def SelectedProjectionInputQuoterRawCellQuoteSpec
     (raw : MachineDescription) : Prop :=
   raw.SubroutineReady ∧
     forall L : DovetailLayout,
-      raw.HaltsFromTape
+      raw.HaltsFromTapeEquiv
         (selectedProjectionInputQuoterPostBoundarySourceTape L)
         (selectedProjectionInputQuoterRawCellQuoteTargetTape L)
 
@@ -1524,12 +1527,11 @@ theorem selectedProjectionInputQuoterRawCellQuoteConstruction :
         hfinish.left
   · intro L
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         preservingCellPassDescription_subroutineReady
         hfinish.left
-        (preservingCellPassDescription_haltsFrom_postBoundarySourceTape L)
-        (by
-          rfl)
+        (preservingCellPassDescription_haltsFrom_postBoundarySourceTape L).toEquiv
+        (Tape.Equiv.refl _)
         (hfinish.right L)
 
 /--

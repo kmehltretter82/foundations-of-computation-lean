@@ -1726,6 +1726,29 @@ theorem HaltsFromTapeEquiv_of_input_equiv {D : MachineDescription} {Tin Tin' Tou
   · rw [← hn.2]
     exact Tape.Equiv.symm hrun.2
 
+theorem haltsFromTapeWithOutput_of_input_equiv
+    {D : MachineDescription} {Tin Tin' : Tape Bool} {out : Word Bool}
+    (hin : Tape.Equiv Tin Tin')
+    (h : D.HaltsFromTapeWithOutput Tin out) :
+    D.HaltsFromTapeWithOutput Tin' out := by
+  rcases h with ⟨n, hn⟩
+  have hrun :=
+    runConfig_equiv D n
+      (c := { state := D.start, tape := Tin })
+      (d := { state := D.start, tape := Tin' })
+      rfl hin
+  refine ⟨n, ?_⟩
+  constructor
+  · change
+      (D.runConfig n { state := D.start, tape := Tin' }).state = D.halt
+    rw [← hrun.left]
+    exact hn.left
+  · change
+      Tape.normalizedOutput
+          (D.runConfig n { state := D.start, tape := Tin' }).tape = out
+    rw [← Tape.Equiv.normalizedOutput_eq hrun.right]
+    exact hn.right
+
 theorem haltsWithOutput_of_haltsWithTapeEquiv
     {D : MachineDescription} {w : Word Bool} {T : Tape Bool}
     (h : D.HaltsWithTapeEquiv w T) :

@@ -248,7 +248,7 @@ def SelectedProjectionInputQuoterSpec
     (quoter : MachineDescription) : Prop :=
   quoter.SubroutineReady ∧
     forall L : DovetailLayout,
-      quoter.HaltsFromTape
+      quoter.HaltsFromTapeEquiv
         (ParsedLayoutCheckedTape L)
         (SelectedProjectionTailProjector.sourceTape L
           ((SelectedProjectionTailProjector.outputPrefixBits L).reverse.map

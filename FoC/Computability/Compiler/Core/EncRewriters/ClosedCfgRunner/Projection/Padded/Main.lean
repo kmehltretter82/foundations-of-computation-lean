@@ -60,7 +60,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
   · exact SeqViaCanonical_subroutineReady hquoter.left htail.left
   · intro L
     have hquoterRun :
-        quoter.HaltsFromTape
+        quoter.HaltsFromTapeEquiv
           (ParsedLayoutCheckedTape L)
           (SelectedProjectionTailProjector.sourceTape L
             (baseLeft L)) :=
@@ -80,7 +80,7 @@ theorem selectedProjectionCheckedEquivPaddedEmitterSpec_of_components
         exact Tape.Equiv.refl _
     simpa [SelectedProjectionCheckedEquivPaddedEmitterFromComponents] using
       SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
-        hquoter.left htail.left hquoterRun.toEquiv hbridge
+        hquoter.left htail.left hquoterRun hbridge
         (htail.right L)
 
 theorem selectedProjectionCheckedEquivPaddedEmitterSpec_haltsToOutput

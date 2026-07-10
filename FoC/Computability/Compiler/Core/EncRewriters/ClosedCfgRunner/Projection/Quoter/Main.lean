@@ -3,9 +3,9 @@ import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Q
 set_option doc.verso true
 
 /-!
-This module packages the selected-projection input quoter construction. It
-states the exact-shape specification and exposes the scaffold construction used
-by padded projection.
+This module packages the selected-projection input quoter construction. Its
+canonical target is preserved up to trailing-blank tape equivalence, which is
+the handoff currency consumed by padded projection.
 -/
 
 namespace FoC
@@ -16,17 +16,17 @@ open MachineDescription
 
 namespace EncRewriters
 namespace BoundedLayoutRunner
-def SelectedProjectionInputQuoterExactShapeSpec
+def SelectedProjectionInputQuoterEquivShapeSpec
     (quoter : MachineDescription) : Prop :=
   quoter.SubroutineReady ∧
     forall L : DovetailLayout,
-      quoter.HaltsFromTape
+      quoter.HaltsFromTapeEquiv
         (SelectedProjectionInputQuoterExactSourceTape L)
         (SelectedProjectionInputQuoterExactTargetTape L)
 
-theorem selectedProjectionInputQuoterSpec_of_exactShape
+theorem selectedProjectionInputQuoterSpec_of_equivShape
     {quoter : MachineDescription}
-    (hquoter : SelectedProjectionInputQuoterExactShapeSpec quoter) :
+    (hquoter : SelectedProjectionInputQuoterEquivShapeSpec quoter) :
     SelectedProjectionInputQuoterSpec quoter := by
   constructor
   · exact hquoter.left
@@ -51,7 +51,7 @@ theorem selectedProjectionInputQuoterConstruction_scaffold :
     ⟨SeqViaCanonical
         SelectedProjectionInputQuoterFiniteLeaf.AssemblyPrefixDescription
         post,
-      selectedProjectionInputQuoterSpec_of_exactShape ?_⟩
+      selectedProjectionInputQuoterSpec_of_equivShape ?_⟩
   constructor
   · exact
       SeqViaCanonical_subroutineReady
@@ -59,12 +59,12 @@ theorem selectedProjectionInputQuoterConstruction_scaffold :
         hpost.left
   · intro L
     exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
+      SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
         SelectedProjectionInputQuoterFiniteLeaf.assemblyPrefixDescription_subroutineReady
         hpost.left
         (SelectedProjectionInputQuoterFiniteLeaf.assemblyPrefixDescription_haltsFrom_exactSourceTape_to_prefixBoundary
-          L)
-        (by rfl)
+          L).toEquiv
+        (Tape.Equiv.refl _)
         (hpost.right L)
 
 end BoundedLayoutRunner

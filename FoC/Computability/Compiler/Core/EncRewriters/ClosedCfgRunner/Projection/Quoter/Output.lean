@@ -287,29 +287,29 @@ theorem SelectedProjectionInputQuoterOutputSpec.haltsFromTapeWithEncodedOutput
   rw [← SelectedProjectionInputQuoterOutput_eq_encodedHeaderInputSourceSuffix]
   exact hquoter.haltsFromTapeWithOutput L
 
-/-! ## Exact-to-output adapters -/
+/-! ## Equivalence-to-output adapters -/
 
-private theorem haltsFromTapeWithOutput_of_haltsFromTape_target
+private theorem haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
     {D : MachineDescription} {Tin Tout : Tape Bool}
-    (h : D.HaltsFromTape Tin Tout) :
+    (h : D.HaltsFromTapeEquiv Tin Tout) :
     D.HaltsFromTapeWithOutput Tin (Tape.normalizedOutput Tout) :=
-  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape h
+  MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv h
 
-theorem SelectedProjectionInputQuoterExactShapeSpec.toOutputSpec
+theorem SelectedProjectionInputQuoterEquivShapeSpec.toOutputSpec
     {quoter : MachineDescription}
-    (hquoter : SelectedProjectionInputQuoterExactShapeSpec quoter) :
+    (hquoter : SelectedProjectionInputQuoterEquivShapeSpec quoter) :
     SelectedProjectionInputQuoterExactShapeOutputSpec quoter := by
   constructor
   · exact hquoter.left
   · intro L
     simpa [SelectedProjectionInputQuoterOutput_eq_exactTargetTape_normalizedOutput
       L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hquoter.right L)
 
-theorem SelectedProjectionInputQuoterExactShapeOutputConstruction_of_exactShape
+theorem SelectedProjectionInputQuoterExactShapeOutputConstruction_of_equivShape
     (h : exists quoter : MachineDescription,
-      SelectedProjectionInputQuoterExactShapeSpec quoter) :
+      SelectedProjectionInputQuoterEquivShapeSpec quoter) :
     SelectedProjectionInputQuoterExactShapeOutputConstruction := by
   rcases h with ⟨quoter, hquoter⟩
   exact ⟨quoter, hquoter.toOutputSpec⟩
@@ -324,7 +324,7 @@ theorem SelectedProjectionInputQuoterSpec.toCheckedOutputSpec
     simpa [
       SelectedProjectionInputQuoterOutput_eq_sourceTape_outputPrefix_normalizedOutput
         L] using
-      haltsFromTapeWithOutput_of_haltsFromTape_target
+      haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target
         (hquoter.right L)
 
 theorem SelectedProjectionInputQuoterSpec.toOutputSpec
@@ -411,7 +411,8 @@ theorem SelectedProjectionInputQuoterOutputScaffold_haltsFromTapeWithOutput
         L)
       (by rfl)
       (by
-        simpa [SelectedProjectionInputQuoterOutput] using
+        simpa [SelectedProjectionInputQuoterOutput,
+          SelectedProjectionInputQuoterFiniteLeaf.selectedProjectionInputQuoterPostBoundarySourceTape] using
           hpost.haltsFromTapeWithOutput L)
 
 theorem selectedProjectionInputQuoterExactShapeOutputSpec_of_postBoundary
@@ -467,23 +468,11 @@ theorem selectedProjectionInputQuoterOutputConstruction_scaffold :
   selectedProjectionInputQuoterOutputConstruction_of_postBoundary
     SelectedProjectionInputQuoterFiniteLeaf.selectedProjectionInputQuoterPostBoundaryOutputConstruction
 
-/-! ## Compatibility adapters for existing exact constructions -/
-
-theorem selectedProjectionInputQuoterOutputConstruction_of_scaffoldExact :
-    SelectedProjectionInputQuoterOutputConstruction :=
-  SelectedProjectionInputQuoterConstruction.toOutputConstruction
-    selectedProjectionInputQuoterConstruction_scaffold
-
 theorem selectedProjectionInputQuoterCheckedOutputConstruction_of_output
     (h : SelectedProjectionInputQuoterOutputConstruction) :
     SelectedProjectionInputQuoterCheckedOutputConstruction := by
   rcases h with ⟨quoter, hquoter⟩
   exact ⟨quoter, hquoter⟩
-
-theorem selectedProjectionInputQuoterCheckedOutputConstruction_of_scaffoldExact :
-    SelectedProjectionInputQuoterCheckedOutputConstruction :=
-  selectedProjectionInputQuoterCheckedOutputConstruction_of_output
-    selectedProjectionInputQuoterOutputConstruction_of_scaffoldExact
 
 theorem selectedProjectionInputQuoterPostBoundaryOutputComponentConstruction_scaffold :
     SelectedProjectionInputQuoterPostBoundaryOutputComponentConstruction :=
