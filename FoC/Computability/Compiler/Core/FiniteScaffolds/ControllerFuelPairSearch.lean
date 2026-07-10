@@ -62,7 +62,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
     PairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction := by
   intro runner hrunner
   rcases henumerator runner hrunner with
-    ⟨W, _initialized, _lowered, henumeratorEndpoint⟩
+    ⟨W, henumeratorEndpoint⟩
   rcases hemitter with ⟨emitter, hemits⟩
   let enumerator := W.machine
   let classifier := seqSubroutine enumerator emitter Direction.left
@@ -89,11 +89,10 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
             simpa [enumerator, HaltsWithTapeIn, HaltsFromTapeIn,
               MachineDescription.initial] using hn⟩
       rcases
-          Structured3EndpointEquivIndexedFamilySpec.closedIndex
-            henumeratorEndpoint (Tape.input w) Tmid henumFrom with
+          henumeratorEndpoint.closedIndex w Tmid henumFrom with
         ⟨i, hinput, hTmid⟩
-      have hw : w = i.input :=
-        boundedFuelPairEnumeratorInput_eq_of_inputTape_eq hinput
+      have hw : w = i.input := by
+        simpa [boundedFuelPairEnumeratorStructuredInputBits] using hinput
       have hhandoff :
           Tape.Equiv
             (Tape.move Direction.left Tmid)
@@ -144,8 +143,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
           fuel_le_searchLimit := Nat.le_max_right limit fuel
           runner_halts := hrun }
       rcases
-          Structured3EndpointEquivIndexedFamilySpec.forward
-            henumeratorEndpoint i with
+          henumeratorEndpoint.forward i with
         ⟨Tmid, henumFrom, hTmid⟩
       have henumTape :
           enumerator.HaltsWithTape w Tmid := by
@@ -154,7 +152,7 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairSearchConstruction
           ⟨n, by
             simpa [enumerator, HaltsWithTapeIn, HaltsFromTapeIn,
               MachineDescription.initial,
-              boundedFuelPairEnumeratorStructuredInputTape, i] using hn⟩
+              boundedFuelPairEnumeratorStructuredInputBits, i] using hn⟩
       have hemitsOutput :
           emitter.HaltsWithOutput
             (encodeCodeWordAsInput (encodeBoolWord result)) [b] :=

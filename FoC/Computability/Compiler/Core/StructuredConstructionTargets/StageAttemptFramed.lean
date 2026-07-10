@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulator
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.EndpointMacro
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 
 set_option doc.verso true
 
@@ -29,12 +29,14 @@ structure StageAttemptFramedStructuredIndex
         (PairedRecognizerDovetailControllerStageInputCode C))
       (encodeCodeWordAsInput (encodeBoolWord result))
 
+def stageAttemptFramedStructuredInputBits
+    (C : DovetailControllerLayout) : Word Bool :=
+  encodeCodeWordAsInput (DovetailControllerLayout.encode C)
+
 def stageAttemptFramedStructuredInputTape
     {attempt : MachineDescription}
     (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
-  Tape.input
-    (encodeCodeWordAsInput
-      (DovetailControllerLayout.encode i.C))
+  Tape.input (stageAttemptFramedStructuredInputBits i.C)
 
 def stageAttemptFramedStructuredOutputTape
     {attempt : MachineDescription}
@@ -42,21 +44,49 @@ def stageAttemptFramedStructuredOutputTape
   CommonGround.ControllerInvocation.StageAttemptFramedOutputTape
     i.C i.result
 
-declare_structured_endpoint
-  Prefix: StageAttemptFramedStructured
-  lowerPrefix: stageAttemptFramedStructured
-  Param: (attempt : MachineDescription)
-  Index: StageAttemptFramedStructuredIndex attempt
-  InputTape: stageAttemptFramedStructuredInputTape
-  OutputTape: stageAttemptFramedStructuredOutputTape
+def stageAttemptFramedStructuredInitializedTape
+    (C : DovetailControllerLayout) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (Tape.input (stageAttemptFramedStructuredInputBits C))
+    Tape.blank
+
+def stageAttemptFramedStructuredLoweredTape
+    {attempt : MachineDescription}
+    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (stageAttemptFramedStructuredInputTape i)
+    Tape.blank
+    (stageAttemptFramedStructuredOutputTape i)
+
+def StageAttemptFramedStructuredMaterializerConstruction : Prop :=
+  Structured3EndpointWordStartEquivMaterializerConstruction
+    stageAttemptFramedStructuredInputBits
+    stageAttemptFramedStructuredInitializedTape
+
+def StageAttemptFramedStructuredSemanticCoreConstruction
+    (attempt : MachineDescription) : Prop :=
+  Structured3EndpointEquivSemanticCoreConstruction
+    (fun i : StageAttemptFramedStructuredIndex attempt => i.C)
+    stageAttemptFramedStructuredInitializedTape
+    stageAttemptFramedStructuredLoweredTape
+    stageAttemptFramedStructuredOutputTape
+    stageAttemptFramedStructuredInputTape
+    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+
+def StageAttemptFramedStructuredEndpointEquivIndexedConstruction
+    (attempt : MachineDescription) : Prop :=
+  exists W : Structured3EndpointWrapper,
+    Structured3EndpointWordStartEquivIndexedFamilySpec
+      W
+      (fun i : StageAttemptFramedStructuredIndex attempt =>
+        stageAttemptFramedStructuredInputBits i.C)
+      stageAttemptFramedStructuredOutputTape
 
 /--
 Finite-table leaf for the framed-invocation public-input materializer.
 -/
-theorem stageAttemptFramedStructuredIndexedMaterializerConstruction_core
-    (attempt : MachineDescription) :
-    StageAttemptFramedStructuredIndexedMaterializerConstruction
-      attempt := by
+theorem stageAttemptFramedStructuredMaterializerConstruction_core
+    : StageAttemptFramedStructuredMaterializerConstruction := by
   -- Remaining parser/materializer obligation: recognize controller layout
   -- inputs and materialize the guarded three-logical-tape input.
   sorry
@@ -64,12 +94,13 @@ theorem stageAttemptFramedStructuredIndexedMaterializerConstruction_core
 /--
 Finite-table leaf for the lowered framed-invocation structured core.
 -/
-theorem stageAttemptFramedStructuredLoweredCoreConstruction_core
+theorem stageAttemptFramedStructuredSemanticCoreConstruction_core
     (attempt : MachineDescription)
     (_hattempt : attempt.SubroutineReady) :
-    StageAttemptFramedStructuredLoweredCoreConstruction attempt := by
+    StageAttemptFramedStructuredSemanticCoreConstruction attempt := by
   -- Remaining structured-core obligation: install the witnessed
-  -- boolean-word result on logical tape 2.
+  -- boolean-word result on logical tape 2 and recover the semantic witness
+  -- only from successful core runs.
   sorry
 
 /--
@@ -77,60 +108,31 @@ Target-local parser/core obligation for the framed-invocation target.  The
 public endpoint theorem below only composes this with a shared tape-2
 projector.
 -/
-theorem stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
+theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_components
     (attempt : MachineDescription)
-    (hattempt : attempt.SubroutineReady) :
-    StageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction
-      attempt :=
-  stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_of_materializer_loweredCore
-    (stageAttemptFramedStructuredIndexedMaterializerConstruction_core
-      attempt)
-    (stageAttemptFramedStructuredLoweredCoreConstruction_core
-      attempt hattempt)
+    (hmaterializer : StageAttemptFramedStructuredMaterializerConstruction)
+    (hcore : StageAttemptFramedStructuredSemanticCoreConstruction attempt) :
+    StageAttemptFramedStructuredEndpointEquivIndexedConstruction attempt := by
+  simpa [StageAttemptFramedStructuredEndpointEquivIndexedConstruction,
+    StageAttemptFramedStructuredMaterializerConstruction,
+    StageAttemptFramedStructuredSemanticCoreConstruction] using
+    structured3EndpointWordStartEquivIndexedConstruction_of_components
+      hmaterializer hcore
+      structured3EndpointTape2ProjectorConstruction_core
 
 
 
-/--
-Remaining structured-core endpoint obligation for framed stage-attempt
-invocation.  The attempt readiness hypothesis is part of the target contract.
--/
-def StageAttemptFramedStructuredCoreEndpointConstruction : Prop :=
-  forall attempt : MachineDescription,
-    attempt.SubroutineReady ->
-      StageAttemptFramedStructuredEndpointExactIndexedConstruction attempt
-
-/--
-Canonical framed-invocation endpoint obligations imply the existing flexible
-exact-indexed core endpoint obligation.
--/
-theorem stageAttemptFramedStructuredCoreEndpointConstruction_of_canonical
-    (hcanonical :
-      forall attempt : MachineDescription,
-        attempt.SubroutineReady ->
-          StageAttemptFramedStructuredCanonicalEndpointConstruction
-            attempt) :
-    StageAttemptFramedStructuredCoreEndpointConstruction := by
-  intro attempt hattempt
-  exact
-    stageAttemptFramedStructuredEndpointExactIndexedConstruction_of_canonical
-      (hcanonical attempt hattempt)
-
-theorem stageAttemptFramedInput_layout_eq_of_inputTape_eq
+theorem stageAttemptFramedInput_layout_eq_of_inputBits_eq
     {attempt : MachineDescription}
     {C : DovetailControllerLayout}
     {i : StageAttemptFramedStructuredIndex attempt}
     (h :
-      Tape.input
-          (encodeCodeWordAsInput
-            (DovetailControllerLayout.encode C)) =
-        stageAttemptFramedStructuredInputTape i) :
+      stageAttemptFramedStructuredInputBits C =
+        stageAttemptFramedStructuredInputBits i.C) :
     C = i.C := by
   apply DovetailControllerLayout.encode_injective
   apply encodeCodeWordAsInput_injective
-  exact
-    Tape.input_injective
-      (by
-        simpa [stageAttemptFramedStructuredInputTape] using h)
+  simpa [stageAttemptFramedStructuredInputBits] using h
 
 theorem stageAttemptFramedOutput_result_eq_of_tape_eq
     {attempt : MachineDescription}
@@ -220,94 +222,14 @@ theorem stageAttemptFramedOutput_result_eq_of_tape_equiv
   have hresult := congrArg DovetailControllerLayout.result hlayout
   simpa [DovetailControllerLayout.withResult] using hresult
 
-theorem stageAttemptFramedExactSpec_of_endpointExactIndexed
-    {attempt : MachineDescription}
-    {W : Structured3EndpointWrapper}
-    {initialized lowered :
-      StageAttemptFramedStructuredIndex attempt -> Tape Bool}
-    (hspec :
-      Structured3EndpointExactIndexedFamilySpec
-        W
-        stageAttemptFramedStructuredInputTape
-        initialized
-        lowered
-        stageAttemptFramedStructuredOutputTape) :
-    CommonGround.ControllerInvocation.StageAttemptFramedExactSpec
-      attempt W.machine := by
-  constructor
-  · exact W.machine_subroutineReady
-  constructor
-  · intro C result fuel hattempt
-    let i : StageAttemptFramedStructuredIndex attempt :=
-      { C := C
-        result := result
-        fuel := fuel
-        attempt_halts := hattempt }
-    simpa [stageAttemptFramedStructuredInputTape,
-      stageAttemptFramedStructuredOutputTape, i] using
-      haltsWithTape_of_haltsFromTape_input
-        (Structured3EndpointExactIndexedFamilySpec.forward hspec i)
-  · intro C result hhalt
-    let inputBits :=
-      encodeCodeWordAsInput
-        (DovetailControllerLayout.encode C)
-    let outputBits :=
-      encodeCodeWordAsInput
-        (DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult C result))
-    rcases hhalt with ⟨fuel, hhaltFuel⟩
-    let T :=
-      (W.machine.runConfig fuel (W.machine.initial inputBits)).tape
-    have hfrom :
-        W.machine.HaltsFromTape (Tape.input inputBits) T := by
-      exact
-        ⟨fuel,
-          by
-            rcases hhaltFuel with ⟨hstate, _houtput⟩
-            exact ⟨hstate, rfl⟩⟩
-    rcases
-        Structured3EndpointExactIndexedFamilySpec.closedIndex
-          hspec (Tape.input inputBits) T hfrom with
-      ⟨i, hinput, hT⟩
-    have hC : C = i.C := by
-      exact
-        stageAttemptFramedInput_layout_eq_of_inputTape_eq
-          (attempt := attempt)
-          (C := C)
-          (i := i)
-          (by
-            simpa [inputBits] using hinput)
-    have houtput :
-        Tape.normalizedOutput T =
-          encodeCodeWordAsInput
-            (DovetailControllerLayout.encode
-              (DovetailControllerLayout.withResult C result)) := by
-      rcases hhaltFuel with ⟨_hstate, hnormalized⟩
-      simpa [T, outputBits] using hnormalized
-    have hresult : i.result = result :=
-      stageAttemptFramedOutput_result_eq_of_tape_eq
-        (attempt := attempt)
-        (C := C)
-        (result := result)
-        (i := i)
-        (T := T)
-        hT houtput hC
-    exact
-      ⟨i.fuel,
-        by
-          simpa [hC, hresult] using i.attempt_halts⟩
-
 theorem stageAttemptFramedRealizes_of_endpointEquivIndexed
     {attempt : MachineDescription}
     {W : Structured3EndpointWrapper}
-    {initialized lowered :
-      StageAttemptFramedStructuredIndex attempt -> Tape Bool}
     (hspec :
-      Structured3EndpointEquivIndexedFamilySpec
+      Structured3EndpointWordStartEquivIndexedFamilySpec
         W
-        stageAttemptFramedStructuredInputTape
-        initialized
-        lowered
+        (fun i : StageAttemptFramedStructuredIndex attempt =>
+          stageAttemptFramedStructuredInputBits i.C)
         stageAttemptFramedStructuredOutputTape) :
     CommonGround.ControllerInvocation.StageAttemptFramedRealizes
       attempt W.machine := by
@@ -323,12 +245,13 @@ theorem stageAttemptFramedRealizes_of_endpointEquivIndexed
         attempt_halts := hattempt }
     have hforward :=
       MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
-        (Structured3EndpointEquivIndexedFamilySpec.forward hspec i)
+        (hspec.forward i)
     simpa [MachineDescription.HaltsWithOutput,
       MachineDescription.HaltsFromTapeWithOutput,
       MachineDescription.HaltsWithOutputIn,
       MachineDescription.HaltsFromTapeWithOutputIn,
       MachineDescription.initial,
+      stageAttemptFramedStructuredInputBits,
       stageAttemptFramedStructuredInputTape,
       stageAttemptFramedStructuredOutputTape,
       CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput,
@@ -352,17 +275,17 @@ theorem stageAttemptFramedRealizes_of_endpointEquivIndexed
             rcases hhaltFuel with ⟨hstate, _houtput⟩
             exact ⟨hstate, rfl⟩⟩
     rcases
-        Structured3EndpointEquivIndexedFamilySpec.closedIndex
-          hspec (Tape.input inputBits) T hfrom with
+        hspec.closedIndex inputBits T hfrom with
       ⟨i, hinput, hT⟩
     have hC : C = i.C := by
       exact
-        stageAttemptFramedInput_layout_eq_of_inputTape_eq
+        stageAttemptFramedInput_layout_eq_of_inputBits_eq
           (attempt := attempt)
           (C := C)
           (i := i)
           (by
-            simpa [inputBits] using hinput)
+            simpa [inputBits,
+              stageAttemptFramedStructuredInputBits] using hinput)
     have houtput :
         Tape.normalizedOutput T =
           encodeCodeWordAsInput
@@ -391,25 +314,23 @@ theorem stageAttemptFramedConstruction_of_endpointEquivIndexed
             attempt) :
     CommonGround.ControllerInvocation.StageAttemptFramedConstruction := by
   intro attempt hattempt
-  rcases h attempt hattempt with ⟨W, initialized, lowered, hspec⟩
+  rcases h attempt hattempt with ⟨W, hspec⟩
   exact
     ⟨W.machine,
       stageAttemptFramedRealizes_of_endpointEquivIndexed
         (attempt := attempt)
         (W := W)
-        (initialized := initialized)
-        (lowered := lowered)
         hspec⟩
 
 theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
     (attempt : MachineDescription)
     (hattempt : attempt.SubroutineReady) :
     StageAttemptFramedStructuredEndpointEquivIndexedConstruction attempt :=
-  stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_equivSharedProjector
-    (stageAttemptFramedStructuredCanonicalEndpointEquivSharedProjectorConstruction_of_coreComponents
-      (stageAttemptFramedStructuredCanonicalEndpointCoreComponentConstruction_core
-        attempt hattempt)
-      structured3EndpointTape2ProjectorConstruction_core)
+  stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_components
+    attempt
+    stageAttemptFramedStructuredMaterializerConstruction_core
+    (stageAttemptFramedStructuredSemanticCoreConstruction_core
+      attempt hattempt)
 
 end StructuredConstructionTargets
 
