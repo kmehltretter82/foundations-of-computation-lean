@@ -1,5 +1,5 @@
 import FoC.Book.Chapter03.Section07
-import FoC.Book.Chapter04.Section01
+import FoC.Book.Chapter04.Section01.AnBn
 
 set_option doc.verso true
 
@@ -17,7 +17,7 @@ context-free but not regular, so there exist context-free languages which are
 not regular.
 
 The context-free half is {name}`anbn_context_free` from
-{module}`FoC.Book.Chapter04.Section01`. The non-regularity half was proved by
+{module}`FoC.Book.Chapter04.Section01.AnBn`. The non-regularity half was proved by
 a pumping argument in {module}`FoC.Book.Chapter03.Section07`, but over
 Chapter 3's own two-letter alphabet type, which is distinct from (though
 isomorphic to) this chapter's {name}`AB`. The declarations below transport

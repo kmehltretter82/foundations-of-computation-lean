@@ -178,6 +178,16 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Computability.Grammar.MachineHistory.Completeness",
   "FoC.Computability.Grammar.MachineHistory.Construction"
 ]
+"FoC.Book.Chapter04.Section01" = [
+  "FoC.Book.Chapter04.Section01.Basic",
+  "FoC.Book.Chapter04.Section01.Closure",
+  "FoC.Book.Chapter04.Section01.Common",
+  "FoC.Book.Chapter04.Section01.BalancedParentheses",
+  "FoC.Book.Chapter04.Section01.BalancedBrackets",
+  "FoC.Book.Chapter04.Section01.AnBn",
+  "FoC.Book.Chapter04.Section01.Palindromes",
+  "FoC.Book.Chapter04.Section01.RegularBoundary"
+]
 "FoC.Book.Chapter04.Section04" = [
   "FoC.Book.Chapter04.Section04.Basic",
   "FoC.Book.Chapter04.Section04.Conversions",
@@ -539,6 +549,30 @@ title = "Chapter 4: Grammars and Pushdown Automata"
 
 [modules."FoC.Book.Chapter04.Section01"]
 title = "Section 4.1: Context-Free Grammars"
+
+[modules."FoC.Book.Chapter04.Section01.Basic"]
+title = "Section 4.1: Grammar Laws"
+
+[modules."FoC.Book.Chapter04.Section01.Closure"]
+title = "Section 4.1: CFL Closure"
+
+[modules."FoC.Book.Chapter04.Section01.Common"]
+title = "Section 4.1: Example Infrastructure"
+
+[modules."FoC.Book.Chapter04.Section01.BalancedParentheses"]
+title = "Section 4.1: Balanced Parentheses"
+
+[modules."FoC.Book.Chapter04.Section01.BalancedBrackets"]
+title = "Section 4.1: Balanced Brackets"
+
+[modules."FoC.Book.Chapter04.Section01.AnBn"]
+title = "Section 4.1: Equal Two-Block Words"
+
+[modules."FoC.Book.Chapter04.Section01.Palindromes"]
+title = "Section 4.1: Binary Palindromes"
+
+[modules."FoC.Book.Chapter04.Section01.RegularBoundary"]
+title = "Section 4.1: The Regular Boundary"
 
 [modules."FoC.Book.Chapter04.Section02"]
 title = "Section 4.2: BNF"
