@@ -869,7 +869,7 @@ theorem normalizedDeciderToAcceptor_sweepRight_target_blank_cycle
       scannerLeftCrossTape, Tape.read, Tape.move, Tape.moveLeft,
       Tape.write, scannerBlankBlock, scannerZeroBlock,
       List.replicate_succ, List.append_assoc]
-      using
+      using!
         normalizedDeciderToAcceptor_sweepRight_blank_step
           M zero one
           (T := scannerRightTargetTape zero one markedLeft blanksLeft
@@ -906,7 +906,7 @@ theorem normalizedDeciderToAcceptor_sweepRight_target_blank_cycle
           scannerZeroBlock_append_marker, list_replicate_append_self,
           Tape.read, Tape.move, Tape.moveRight, Tape.write,
           List.append_assoc]
-          using
+          using!
             normalizedDeciderToAcceptor_sweepLeft_blank_step
               M zero one
               (T := leftBoundary)
@@ -982,7 +982,7 @@ theorem normalizedDeciderToAcceptor_sweepLeft_target_blank_cycle
       scannerRightCrossTape, Tape.read, Tape.move, Tape.moveRight,
       Tape.write, scannerBlankBlock, scannerZeroBlock,
       List.replicate_succ, List.append_assoc]
-      using
+      using!
         normalizedDeciderToAcceptor_sweepLeft_blank_step
           M zero one
           (T := scannerLeftTargetTape zero one markedRight blanksRight
@@ -1020,7 +1020,7 @@ theorem normalizedDeciderToAcceptor_sweepLeft_target_blank_cycle
           list_replicate_append_self,
           Tape.read, Tape.move, Tape.moveLeft, Tape.write,
           List.append_assoc]
-          using
+          using!
             normalizedDeciderToAcceptor_sweepRight_blank_step
               M zero one
               (T := rightBoundary)

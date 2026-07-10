@@ -31,7 +31,7 @@ private theorem codePrefixParserBranch_computes_needTransition_transition
               ((MachineCodeSymbol.transition :: leftSymbols).map some)
               (none :: prefixLeft.map some))
             (suffix.map some) } := by
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     codePrefixParserBranchMachine_computes_of_normalizer_computes
       (codePrefixParserNormalizerMachine_computes_needTransition
         (List.append (leftSymbols.map some)
@@ -90,7 +90,7 @@ private theorem codePrefixParserBranch_computes_nat_boundary
         (none :: prefixLeft.map some))
       n suffix
   simpa [htokens, List.map_append, List.map_reverse,
-    List.append_assoc] using
+    List.append_assoc] using!
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
 private theorem codePrefixParserBranch_computes_readCell_boundary
@@ -124,7 +124,7 @@ private theorem codePrefixParserBranch_computes_readCell_boundary
         (none :: prefixLeft.map some))
       suffix
   simpa [htokens, List.map_append, List.map_reverse,
-    List.append_assoc] using
+    List.append_assoc] using!
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
 private theorem codePrefixParserBranch_computes_writeCell_boundary
@@ -158,7 +158,7 @@ private theorem codePrefixParserBranch_computes_writeCell_boundary
         (none :: prefixLeft.map some))
       suffix
   simpa [htokens, List.map_append, List.map_reverse,
-    List.append_assoc] using
+    List.append_assoc] using!
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
 private theorem codePrefixParserBranch_computes_moveField_boundary
@@ -193,7 +193,7 @@ private theorem codePrefixParserBranch_computes_moveField_boundary
         (none :: prefixLeft.map some))
       suffix
   simpa [htokens, List.map_append, List.map_reverse,
-    List.append_assoc] using
+    List.append_assoc] using!
     codePrefixParserBranchMachine_computes_of_normalizer_computes hcomp
 
 private theorem codePrefixParserBranch_failure_transitionRecord_boundary
@@ -258,7 +258,7 @@ private theorem codePrefixParserBranch_failure_transitionRecord_boundary
                       (TuringMachine.computes_trans
                           (by
                             simpa [afterSource, List.map_append,
-                              List.map_reverse, List.append_assoc] using
+                              List.map_reverse, List.append_assoc] using!
                               hsourceComp)
                         hcomp)
               | some parsedRead =>
@@ -284,13 +284,13 @@ private theorem codePrefixParserBranch_failure_transitionRecord_boundary
                           (TuringMachine.computes_trans
                               (by
                                 simpa [afterSource, List.map_append,
-                                  List.map_reverse, List.append_assoc] using
+                                  List.map_reverse, List.append_assoc] using!
                                   hsourceComp)
                               (TuringMachine.computes_trans
                                 (by
                                   simpa [afterRead, afterSource,
                                     List.map_append, List.map_reverse,
-                                    List.append_assoc] using hreadComp)
+                                    List.append_assoc] using! hreadComp)
                                 hcomp))
                   | some parsedWrite =>
                       rcases parsedWrite with ⟨write, restAfterWrite⟩
@@ -319,18 +319,18 @@ private theorem codePrefixParserBranch_failure_transitionRecord_boundary
                                   (by
                                     simpa [afterSource, List.map_append,
                                       List.map_reverse,
-                                      List.append_assoc] using hsourceComp)
+                                      List.append_assoc] using! hsourceComp)
                                   (TuringMachine.computes_trans
                                     (by
                                       simpa [afterRead, afterSource,
                                         List.map_append, List.map_reverse,
-                                        List.append_assoc] using hreadComp)
+                                        List.append_assoc] using! hreadComp)
                                     (TuringMachine.computes_trans
                                       (by
                                         simpa [afterWrite, afterRead,
                                           afterSource, List.map_append,
                                           List.map_reverse,
-                                          List.append_assoc] using
+                                          List.append_assoc] using!
                                           hwriteComp)
                                     hcomp)))
                       | some parsedMove =>
@@ -360,20 +360,20 @@ private theorem codePrefixParserBranch_failure_transitionRecord_boundary
                                     (by
                                         simpa [afterSource, List.map_append,
                                           List.map_reverse,
-                                          List.append_assoc] using
+                                          List.append_assoc] using!
                                           hsourceComp)
                                       (TuringMachine.computes_trans
                                         (by
                                           simpa [afterRead, afterSource,
                                             List.map_append,
                                             List.map_reverse,
-                                            List.append_assoc] using hreadComp)
+                                            List.append_assoc] using! hreadComp)
                                         (TuringMachine.computes_trans
                                           (by
                                             simpa [afterWrite, afterRead,
                                               afterSource, List.map_append,
                                               List.map_reverse,
-                                              List.append_assoc] using
+                                              List.append_assoc] using!
                                               hwriteComp)
                                           (TuringMachine.computes_trans
                                             (by
@@ -381,7 +381,7 @@ private theorem codePrefixParserBranch_failure_transitionRecord_boundary
                                                 afterRead, afterSource,
                                                 List.map_append,
                                                 List.map_reverse,
-                                                List.append_assoc] using
+                                                List.append_assoc] using!
                                                 hmoveComp)
                                             hcomp))))
                           | some parsedTarget =>
@@ -531,7 +531,7 @@ private theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_
                   | none => none
                   | some (transitions, suffix) =>
                       some (transition :: transitions, suffix)) = none := by
-              simpa [MachineDescription.decodeTransitions, htransition] using
+              simpa [MachineDescription.decodeTransitions, htransition] using!
                 hdecode
             cases htail :
                 MachineDescription.decodeTransitions (count + 1)
@@ -581,7 +581,7 @@ private theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_
               MachineDescription.encodeCellAppend,
               MachineDescription.encodeDirectionAppend,
               List.reverse_append, List.map_append, List.map_reverse,
-              List.map_replicate, List.append_assoc] using hbranch
+              List.map_replicate, List.append_assoc] using! hbranch
           have htransitionNoHeader :
               transitionListParserNoHeader
                 (MachineDescription.encodeTransition transition) :=
@@ -612,7 +612,7 @@ private theorem codePrefixParserBranch_failure_decodeTransitions_needTransition_
                 have hbranch :=
                   codePrefixParserBranchMachine_computes_of_normalizer_computes
                     hnorm
-                simpa [transitionListParserOptionTape] using hbranch
+                simpa [transitionListParserOptionTape] using! hbranch
             | cons symbol suffix =>
                 have hnorm :=
                   codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition
@@ -671,7 +671,7 @@ private theorem codePrefixParserBranch_failure_decodeTransitions_findInitialCoun
         simpa [codePrefixParserNormalizerMarkedContextLeft,
           MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
           List.reverse_append, List.map_append, List.map_reverse,
-          List.map_replicate, List.append_assoc] using hbranch
+          List.map_replicate, List.append_assoc] using! hbranch
       have hpre : transitionListParserNoHeader ([] : Word MachineCodeSymbol) := by
         simp [transitionListParserNoHeader]
       rcases

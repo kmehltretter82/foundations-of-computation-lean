@@ -121,7 +121,7 @@ theorem fixedDescriptionBoundedSimulatorFragmentRealizes_standard_output
       simpa [MachineDescription.Fragment.toDescription,
         FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorLayoutTape,
-        MachineDescription.SimulatorLayout.tape] using congrArg
+        MachineDescription.SimulatorLayout.tape] using! congrArg
           (fun c : MachineDescription.Configuration => c.state) hn
     have htape :
         (fragment.toDescription.runConfig n
@@ -131,7 +131,7 @@ theorem fixedDescriptionBoundedSimulatorFragmentRealizes_standard_output
       simpa [MachineDescription.Fragment.toDescription,
         FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorLayoutTape,
-        MachineDescription.SimulatorLayout.tape] using congrArg
+        MachineDescription.SimulatorLayout.tape] using! congrArg
           (fun c : MachineDescription.Configuration => c.tape) hn
     constructor
     · simpa [MachineDescription.Fragment.toDescription] using hstate
@@ -150,7 +150,7 @@ theorem fixedDescriptionBoundedSimulatorHandoffPhaseRealizes
   · exact MachineDescription.Fragment.handoff_wellFormed move
   · intro L
     simpa [FixedDescriptionBoundedSimulatorLayoutTape,
-      FixedDescriptionBoundedSimulatorHandoffTape] using
+      FixedDescriptionBoundedSimulatorHandoffTape] using!
       MachineDescription.Fragment.handoff_firstReaches move
         (FixedDescriptionBoundedSimulatorLayoutTape L)
 
@@ -169,7 +169,7 @@ theorem fixedDescriptionBoundedSimulatorReturnFromRightHandoffPhaseRealizes :
       ⟨n, hn, hminimal⟩
     refine ⟨n, ?_, hminimal⟩
     simpa [FixedDescriptionBoundedSimulatorHandoffTape,
-      FixedDescriptionBoundedSimulatorLayoutTape] using hn
+      FixedDescriptionBoundedSimulatorLayoutTape] using! hn
 
 theorem fixedDescriptionBoundedSimulatorHaltPhaseRealizes
     (tape : MachineDescription.SimulatorLayout -> Tape Bool) :
@@ -414,7 +414,7 @@ theorem fixedDescriptionBoundedSimulatorSkeletonPhaseSoundness :
     targets.pipeline_correct L
   simpa [MachineDescription.FixedSimulatorTableSkeleton.toDescription,
     MachineDescription.FixedSimulatorTableSkeleton.toFragment,
-    FixedDescriptionBoundedSimulatorOutput, hpipeline] using hOutput
+    FixedDescriptionBoundedSimulatorOutput, hpipeline] using! hOutput
 
 theorem fixedDescriptionBoundedSimulatorSkeletonCompiler_of_phaseCompiler
     (hsound : FixedDescriptionBoundedSimulatorSkeletonPhaseSoundness)

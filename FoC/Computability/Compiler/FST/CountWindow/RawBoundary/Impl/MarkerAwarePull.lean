@@ -1019,7 +1019,7 @@ theorem markerAwarePullNearestRawBitDescription_haltsFromHeadGap_real
         pullNearestRawBitToHeadMarkerSourceTape,
         pullNearestRawBitToHeadMarkerTargetTape,
         markerAwarePullNearestRawBitSourceTape,
-        markerAwarePullNearestRawBitTargetTape] using
+        markerAwarePullNearestRawBitTargetTape] using!
         markerAwarePullNearestRawBitDescription_haltsFromTape_real
           blankCount leftBit rawBit baseTail headBit right
 
@@ -1045,7 +1045,7 @@ theorem markerAwarePullNearestRawBitDescription_haltsFromHeadGap_boundary
         markerAwarePullNearestBoundaryToHeadMarkerTargetTape,
         pullNearestRawBitToHeadMarkerSourceTape,
         markerAwarePullNearestRawBitSourceTape,
-        markerAwarePullNearestBoundaryTargetTape] using
+        markerAwarePullNearestBoundaryTargetTape] using!
         markerAwarePullNearestRawBitDescription_haltsFromTape_boundary
           blankCount baseTail markerBit headBit right
 

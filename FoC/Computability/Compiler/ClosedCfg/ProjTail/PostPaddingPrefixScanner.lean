@@ -181,7 +181,7 @@ theorem rightMoveAcrossFourBitsDescription_haltsFrom_header
         right) := by
   simpa [postPaddingOutputPrefixHeaderBase, encodeCodeSymbolAsInput,
     CommonGround.FiniteTransducers.tapeAtCells, tapeAtCells]
-    using
+    using!
       CommonGround.FiniteTransducers.rightMoveAcrossFourBitsDescription_haltsFromTape_bits
         false false false false baseLeft right
 
@@ -271,10 +271,10 @@ theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail
   refine ⟨steps, ?_⟩
   constructor
   · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.state hsteps
   · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.tape hsteps
 
 theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail_withRight
@@ -301,10 +301,10 @@ theorem boolWordSuffixScannerDescription_haltsFrom_outputPrefixTail_withRight
   refine ⟨steps, ?_⟩
   constructor
   · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.state hsteps
   · simpa [boolWordBits_eq_encodeBoolWordAppend, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.tape hsteps
 
 theorem postPaddingOutputPrefixScannerDescription_haltsFrom
@@ -385,9 +385,9 @@ theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   constructor
-  · simpa [postPaddingOutputPrefixStageScannerTargetTape] using
+  · simpa [postPaddingOutputPrefixStageScannerTargetTape] using!
       congrArg Configuration.state hsteps
-  · simpa [postPaddingOutputPrefixStageScannerTargetTape] using
+  · simpa [postPaddingOutputPrefixStageScannerTargetTape] using!
       congrArg Configuration.tape hsteps
 
 theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage_withRight
@@ -410,9 +410,9 @@ theorem nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage_withRigh
     ⟨steps, hsteps⟩
   refine ⟨steps, ?_⟩
   constructor
-  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using
+  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using!
       congrArg Configuration.state hsteps
-  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using
+  · simpa [postPaddingOutputPrefixStageScannerTargetTapeWithRight] using!
       congrArg Configuration.tape hsteps
 
 theorem postPaddingOutputPrefixScannerTarget_move_right_eq_stageSource

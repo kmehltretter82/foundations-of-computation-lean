@@ -396,7 +396,7 @@ private theorem scanner_marked_tail_tape_inv
       stageInputMarkedScannerDescription_haltTransitionFree
       hscanner
       (by
-        simpa [markedTailStartConfig, markedStartConfig] using
+        simpa [markedTailStartConfig, markedStartConfig] using!
           hforward)
 
 private theorem scanner_marked_code_tail_inv

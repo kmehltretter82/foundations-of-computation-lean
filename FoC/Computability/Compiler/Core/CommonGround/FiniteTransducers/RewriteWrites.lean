@@ -96,8 +96,8 @@ theorem rewriteTransitionWrite_sameAction
   exact ⟨by
     simpa [rewriteTransitionWrite, rewriteTransitionWriteWith] using
       congrArg f hwrite,
-    by simpa [rewriteTransitionWrite] using hmove,
-    by simpa [rewriteTransitionWrite] using htarget⟩
+    by simpa [rewriteTransitionWrite] using! hmove,
+    by simpa [rewriteTransitionWrite] using! htarget⟩
 
 theorem rewriteTransitionWriteWith_sameAction
     (f : TransitionDescription -> Option Bool)

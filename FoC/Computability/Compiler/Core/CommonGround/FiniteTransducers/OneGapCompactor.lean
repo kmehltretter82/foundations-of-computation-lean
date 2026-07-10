@@ -1138,14 +1138,14 @@ theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replica
             passes)
           (by
             simpa [rightBlankLocalGapBaseLeft, List.replicate_succ,
-              Nat.add_assoc, List.append_assoc] using
+              Nat.add_assoc, List.append_assoc] using!
               rightBlankLocalGapCompactorDescription_haltsFrom_gapBase_succ_to_nextSource
                 passes baseTail current leftRest 2
                 (List.replicate (rightPaddingScratch + passes)
                   (none : Option Bool)))
           (by
             simpa [List.replicate_succ, Nat.add_assoc, Nat.add_comm,
-              Nat.add_left_comm] using
+              Nat.add_left_comm] using!
               rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_move_left_move_right_cons
                 (rightBlankLocalGapBaseLeft passes baseTail)
                 current leftRest 2 (none : Option Bool)
@@ -1157,7 +1157,7 @@ theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replica
               ih (rightPaddingScratch + 2)
             simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
               Nat.mul_succ, Nat.succ_eq_add_one]
-              using hrest)
+              using! hrest)
 
 theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replicate_append
     (passes rightPaddingScratch : Nat)
@@ -1196,7 +1196,7 @@ theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replica
             passes)
           (by
             simpa [rightBlankLocalGapBaseLeft, List.replicate_succ,
-              Nat.add_assoc, List.append_assoc] using
+              Nat.add_assoc, List.append_assoc] using!
               rightBlankLocalGapCompactorDescription_haltsFrom_gapBase_succ_to_nextSource
                 passes baseTail current leftRest 2
                 (List.append
@@ -1205,7 +1205,7 @@ theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replica
                   rightPadding))
           (by
             simpa [List.replicate_succ, Nat.add_assoc, Nat.add_comm,
-              Nat.add_left_comm, List.append_assoc] using
+              Nat.add_left_comm, List.append_assoc] using!
               rightBlankLocalGapCompactorSourceTapeWithBaseAndRight_move_left_move_right_cons
                 (rightBlankLocalGapBaseLeft passes baseTail)
                 current leftRest 2 (none : Option Bool)
@@ -1219,7 +1219,7 @@ theorem repeatedRightBlankLocalGapCompactorDescription_haltsFrom_gapBase_replica
               ih (rightPaddingScratch + 2)
             simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
               Nat.mul_succ, Nat.succ_eq_add_one, List.append_assoc]
-              using hrest)
+              using! hrest)
 
 theorem twoRightBlankLocalGapCompactorDescription_subroutineReady :
     twoRightBlankLocalGapCompactorDescription.SubroutineReady :=

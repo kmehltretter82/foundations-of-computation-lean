@@ -307,7 +307,7 @@ private theorem inRightForm_context_of_eq
   | nil =>
       cases inRightForm_context_only_of_eq
           (left := left) (y := y) (A := A)
-          (by simpa [inLeftForm] using h) with
+          (by simpa [inLeftForm] using! h) with
       | intro uy huy =>
           cases huy with
           | intro vy hvy =>

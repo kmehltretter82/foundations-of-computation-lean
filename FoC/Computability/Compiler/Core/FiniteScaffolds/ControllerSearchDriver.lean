@@ -193,11 +193,11 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutput_bool_
       (by
         simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
           PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h1)
+          PairedRecognizerDovetailStageInputCode] using! h1)
       (by
         simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
           PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h2)
+          PairedRecognizerDovetailStageInputCode] using! h2)
       hraw1 hraw2
 
 private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutputIn_bool_functional
@@ -233,11 +233,11 @@ private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutputIn_boo
       (by
         simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
           PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h1)
+          PairedRecognizerDovetailStageInputCode] using! h1)
       (by
         simpa [pairedRecognizerDovetailFiniteStageLoopStageLayout,
           PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h2)
+          PairedRecognizerDovetailStageInputCode] using! h2)
       hraw1 hraw2
 
 private theorem pairedRecognizerDovetailFiniteStageLoopProtected_rawOutput_true_false_conflict

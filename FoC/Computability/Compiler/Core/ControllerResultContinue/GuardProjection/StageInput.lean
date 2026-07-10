@@ -73,7 +73,7 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithOutput_controlle
           { state := ControllerStageInputProjection.Description.start
             tape := Tape.input inputBits }).tape = Tproj
     constructor
-    · simpa [Tproj, HaltsWithOutputIn] using hnProj.left
+    · simpa [Tproj, HaltsWithOutputIn] using! hnProj.left
     · rfl
   rcases
       HaltsFromTapeEquiv_of_input_equiv
@@ -182,7 +182,7 @@ theorem resultNoneGuardStageInputProjectionDescription_transform_of_haltsWithOut
         inputBits Tclean := by
     rcases hprojClean with ⟨nClean, hnClean⟩
     refine ⟨nClean, ?_⟩
-    simpa [initial] using hnClean
+    simpa [initial] using! hnClean
   have hprojOut :
       ControllerStageInputProjection.Description.HaltsWithOutput
         inputBits (encodeCodeWordAsInput out) := by

@@ -202,14 +202,14 @@ private theorem inputTapeRightCellsDirectCopierDescription_run_checkedQuoteNativ
   · subst b
     simpa [inputTapeRightCellsDirectCopierHeadBits,
       inputTapeRightCellsDirectCopierDoneBits,
-      List.reverse_append, List.map_append, List.append_assoc] using
+      List.reverse_append, List.map_append, List.append_assoc] using!
       inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
         [some false] (List.append pre0 tickBits)
         sourceTailAfterDone tickBits false true true false
   · cases b
     · simpa [inputTapeRightCellsDirectCopierHeadBits,
         inputTapeRightCellsDirectCopierDoneBits,
-        List.reverse_append, List.map_append, List.append_assoc] using
+        List.reverse_append, List.map_append, List.append_assoc] using!
         inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
           [some false] (List.append pre0 tickBits)
           sourceTailAfterDone tickBits false true false true

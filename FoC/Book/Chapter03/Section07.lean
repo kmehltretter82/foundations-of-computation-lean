@@ -194,7 +194,7 @@ private theorem anbanWord_injective {p q r s : Nat}
           simp [Word.Concat, Word.Symbol, Word.RepeatSymbol, List.replicate_succ] at h
           injection h with _ htail
           have htail' : Section03.anbanWord p q = Section03.anbanWord r s := by
-            simpa [Section03.anbanWord, Word.Concat, Word.Symbol, Word.RepeatSymbol] using htail
+            simpa [Section03.anbanWord, Word.Concat, Word.Symbol, Word.RepeatSymbol] using! htail
           cases ih htail' with
           | intro hpr hqs =>
               constructor
@@ -546,7 +546,7 @@ theorem equal_count_no_pumping_property :
                           Word.Count Section01.AB.a (Word.Concat x z) =
                             Word.Count Section01.AB.b (Word.Concat x z) := by
                         simpa [equalCountLanguage, Word.RepeatWord, Word.Concat]
-                          using hpumpZero
+                          using! hpumpZero
                       exact hunequal hcountsZero
 
 theorem equal_count_not_regular :
@@ -702,7 +702,7 @@ private theorem single_b_block_eq_trailing_b {p r s : Nat}
                   (Word.Concat (Word.Symbol Section01.AB.b)
                     (Word.RepeatSymbol Section01.AB.a r)) =
                 Word.Concat (Word.RepeatSymbol Section01.AB.a s) (Word.Symbol Section01.AB.b) := by
-            simpa [Word.Concat, Word.RepeatSymbol, Word.Symbol] using htail
+            simpa [Word.Concat, Word.RepeatSymbol, Word.Symbol] using! htail
           cases ih htail' with
           | intro hps hr =>
               constructor

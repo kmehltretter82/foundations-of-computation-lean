@@ -636,7 +636,7 @@ theorem accepts_succ_transition_iff {stateCount : Nat}
   cases L with
   | mk layoutFuel state left head right =>
       cases hfuel
-      simpa [accepts, config, tape, config_ofConfig] using
+      simpa [accepts, config, tape, ofConfig, config_ofConfig] using
         (TuringMachine.haltsFromIn_succ_transition_iff
           (M := M) (n := fuel)
           (c :=
@@ -660,7 +660,7 @@ theorem accepts_succ_iff_of_transition_eq_some {stateCount : Nat}
   cases L with
   | mk layoutFuel state left head right =>
       cases hfuel
-      simpa [accepts, config, tape, config_ofConfig] using
+      simpa [accepts, config, tape, ofConfig, config_ofConfig] using
         (TuringMachine.haltsFromIn_succ_iff_of_transition_eq_some
           (M := M) (n := fuel)
           (c :=

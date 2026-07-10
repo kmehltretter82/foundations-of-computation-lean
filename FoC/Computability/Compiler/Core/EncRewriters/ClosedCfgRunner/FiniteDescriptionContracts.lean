@@ -220,7 +220,7 @@ theorem selectedProjectionOutputBits_eq_tailProjector_outputAllBits
     encodeCodeWordAsInput
         (SelectedProjectionOutputCode useAccept L) =
       SelectedProjectionTailProjector.outputAllBits useAccept L := by
-  simpa [SelectedProjectionOutputCode] using
+  simpa [SelectedProjectionOutputCode] using!
     SelectedProjectionTailProjector.simulatorLayout_asBoolInput_eq_outputAllBits
       useAccept L
 
@@ -559,7 +559,7 @@ theorem selectedMergeForwardParserSpec_of_simulatorParser
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using!
         hparser.right.left S
     have hhandoff :
         Tape.move Direction.left
@@ -877,7 +877,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using!
         hparser.right.left S
     have hcheckerRun :
         checker.HaltsFromTape
@@ -892,7 +892,7 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
         ⟨n, by
           simpa [
             CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-              S] using hn⟩
+              S] using! hn⟩
   · intro S T hhalt
     rcases
         seqSubroutine_haltsWithTape_inv
@@ -930,11 +930,11 @@ theorem selectedMergeInputValidatorSpec_of_parser_checker
       · simpa [HaltsFromTapeIn,
           initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg Configuration.state hn
+            S] using! congrArg Configuration.state hn
       · simpa [HaltsFromTapeIn,
           initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg Configuration.tape hn
+            S] using! congrArg Configuration.tape hn
     rcases hchecker.right.right S T hcheckerRun with
       ⟨L, hinput, hT⟩
     exact ⟨L, hinput, hT⟩
@@ -980,7 +980,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using!
         hparser.right.left p.S
     have hfieldRun :
         fieldValidator.HaltsFromTape
@@ -995,7 +995,7 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
         ⟨n, by
           simpa [
             CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-              p.S] using hn⟩
+              p.S] using! hn⟩
   · intro code T hhalt
     rcases
         seqSubroutine_haltsWithTape_inv
@@ -1015,11 +1015,11 @@ theorem selectedMergeInputValidatorExactSpec_of_parser_fieldValidator
       · simpa [HaltsFromTapeIn,
           initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg Configuration.state hn
+            S] using! congrArg Configuration.state hn
       · simpa [HaltsFromTapeIn,
           initial, hTmid,
           CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape
-            S] using congrArg Configuration.tape hn
+            S] using! congrArg Configuration.tape hn
     rcases hfield.right.right S T hfieldRun with
       ⟨L, hinput, hT⟩
     exact
@@ -1133,7 +1133,7 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
                 (encodeCodeWordAsInput
                   (SimulatorLayout.encode S)))) =
           SimulatorLayout.tape S := by
-      simpa [SimulatorLayout.tape] using
+      simpa [SimulatorLayout.tape] using!
         CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     have hidentity :
         exists n : Nat,
@@ -1206,7 +1206,7 @@ theorem selectedMergeInputValidatorSpec_of_rightShifted
       exact htape.symm
     have hT : T = SimulatorLayout.tape S := by
       rw [hTleft]
-      simpa [SimulatorLayout.tape] using
+      simpa [SimulatorLayout.tape] using!
         CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape S
     exact ⟨L, hinput, hT⟩
 
@@ -1247,7 +1247,7 @@ theorem selectedMergeParserSpec_of_simulatorParser_validator
       simpa [CommonGround.SimulatorLayouts.bits,
         CommonGround.SimulatorLayouts.encode,
         CommonGround.LayoutTapes.Bits,
-        SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using!
         hparser.right.left S
     have hvalidatorRun :
         validator.HaltsWithTape

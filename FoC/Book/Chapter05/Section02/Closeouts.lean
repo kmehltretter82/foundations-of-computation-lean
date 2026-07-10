@@ -290,10 +290,10 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
         (ConcreteFiniteAcceptorTrace rejectProgram) L := by
     constructor
     · simpa [acceptProgram, ConcreteFiniteAcceptorTrace,
-        Computability.FiniteAcceptorProgram.trace] using
+        Computability.FiniteAcceptorProgram.trace] using!
         concrete_machine_description_acceptance_trace acceptLanguage
     · simpa [rejectProgram, ConcreteFiniteAcceptorTrace,
-        Computability.FiniteAcceptorProgram.trace] using
+        Computability.FiniteAcceptorProgram.trace] using!
         concrete_machine_description_acceptance_trace rejectLanguage
   exact
     concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler

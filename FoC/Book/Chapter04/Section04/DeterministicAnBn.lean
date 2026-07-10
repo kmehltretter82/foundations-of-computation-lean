@@ -159,7 +159,7 @@ theorem detAnBnPDA_accepts_anbn_words (n : Nat) :
             { state := DetAnBnPDAState.pop,
               unread := Word.RepeatSymbol Section01.AB.b n,
               stack := Word.Concat (AnBnPDAStackWord n) [] } := by
-          simpa [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol] using
+          simpa [AnBnPDAStackWord, Word.Concat, Word.RepeatSymbol] using!
             PDA.computes_of_step (detAnBnPDA_first_b
               (Word.RepeatSymbol Section01.AB.b n)
               (Word.Concat (AnBnPDAStackWord n) []))

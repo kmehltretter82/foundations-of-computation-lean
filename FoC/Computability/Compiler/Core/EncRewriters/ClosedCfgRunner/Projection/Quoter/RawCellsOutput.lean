@@ -49,7 +49,7 @@ theorem assemblySourceRestFinishTargetPrefixBits_selected_eq_outputPrefix
       SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
         L := by
   simpa [assemblySourceRestFinishTargetPrefixBits,
-    assemblySourceRestFinishSourceBits] using
+    assemblySourceRestFinishSourceBits] using!
     preservingCellPassHeaderQuoteBits_eq_outputPrefixStageInputSourceRestFieldBits
       L
 

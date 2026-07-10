@@ -411,7 +411,7 @@ theorem rightBlankGapPayloadScanDescription_step_finish_implicit
           tape := tapeAtCells left [] } =
       { state := rightBlankGapPayloadScanDescription.halt
         tape := Tape.move Direction.left (tapeAtCells left []) } := by
-  simpa using
+  simpa using!
     rightBlankGapPayloadScanDescription_step_finish left []
 
 theorem rightBlankGapPayloadScanDescription_run_to_target

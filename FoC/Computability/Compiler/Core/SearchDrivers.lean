@@ -376,10 +376,10 @@ theorem pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocat
         DovetailControllerLayout)
       (by
         simpa [PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h1)
+          PairedRecognizerDovetailStageInputCode] using! h1)
       (by
         simpa [PairedRecognizerDovetailControllerStageInputCode,
-          PairedRecognizerDovetailStageInputCode] using h2)
+          PairedRecognizerDovetailStageInputCode] using! h2)
 
 theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchProgram_haltsWithOutput_iff_of_functional
     (attempt : MachineDescription)

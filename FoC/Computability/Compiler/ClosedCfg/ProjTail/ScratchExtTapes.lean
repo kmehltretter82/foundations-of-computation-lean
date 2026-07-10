@@ -458,7 +458,7 @@ theorem selectedProjectionPaddedTailCleanupOutputPrefixScanner_haltsFrom_baseSou
       selectedProjectionPaddedTailCleanupPrefixBits,
       selectedProjectionPaddedTailCleanupPostPaddingSourceBits_false_eq_unselected_selected,
       SelectedProjectionTailProjector.outputPrefixBits,
-      hstage, List.map_append, List.append_assoc] using
+      hstage, List.map_append, List.append_assoc] using!
         postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
           (ParsedLayoutBits L) stageTail [none]
           (selectedProjectionPaddedTailCleanupRejectAfterStageTailCells
@@ -472,7 +472,7 @@ theorem selectedProjectionPaddedTailCleanupOutputPrefixScanner_haltsFrom_baseSou
       selectedProjectionPaddedTailCleanupPrefixBits,
       selectedProjectionPaddedTailCleanupPostPaddingSourceBits_true_eq_selected_unselected,
       SelectedProjectionTailProjector.outputPrefixBits,
-      hstage, List.map_append, List.append_assoc] using
+      hstage, List.map_append, List.append_assoc] using!
         postPaddingOutputPrefixScannerDescription_haltsFrom_withRight
           (ParsedLayoutBits L) stageTail [none]
           (selectedProjectionPaddedTailCleanupAcceptAfterStageTailCells
@@ -500,7 +500,7 @@ theorem selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape_move_right
       selectedProjectionPaddedTailCleanupAfterStageTailCells,
       boolWordCanonicalHandoffConfigWithBaseAndRight,
       hstage,
-      List.append_assoc] using
+      List.append_assoc] using!
         cellListCanonicalHandoffConfigWithBaseAndRight_move_right
           ((ParsedLayoutBits L).map some)
           (postPaddingOutputPrefixHeaderBase [none])
@@ -512,7 +512,7 @@ theorem selectedProjectionPaddedTailCleanupAfterOutputPrefixScanTape_move_right
       selectedProjectionPaddedTailCleanupAfterStageTailCells,
       boolWordCanonicalHandoffConfigWithBaseAndRight,
       hstage,
-      List.append_assoc] using
+      List.append_assoc] using!
         cellListCanonicalHandoffConfigWithBaseAndRight_move_right
           ((ParsedLayoutBits L).map some)
           (postPaddingOutputPrefixHeaderBase [none])
@@ -548,7 +548,7 @@ theorem selectedProjectionPaddedTailCleanupOutputPrefixStageScanner_haltsFrom_ba
   · rw [
       selectedProjectionPaddedTailCleanupBaseSourceTapeWithExtraScratch_afterStageTail,
       htail]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
         (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
   · rw [

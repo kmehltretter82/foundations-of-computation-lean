@@ -733,7 +733,7 @@ private theorem transitionListParserMachine_computes_markPosition_context_to_nee
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       have hprefix :
           List.append (List.map some leftSymbols).reverse
               [some current] =
@@ -1027,7 +1027,7 @@ private theorem transitionListParserMachine_computes_markPosition_context_to_nee
                     (TuringMachine.computes_trans
                       (by
                         simpa [scanLeft, countLeft, List.map_append,
-                          List.map_reverse, List.append_assoc] using
+                          List.map_reverse, List.append_assoc] using!
                           hmarker)
                       (TuringMachine.Computes.step hheader
                         (TuringMachine.Computes.step henter
@@ -1073,7 +1073,7 @@ private theorem transitionListParserMachine_computes_markPosition_context_empty_
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       have hprefix :
           List.append (List.map some leftSymbols).reverse
               [some current] =
@@ -1334,7 +1334,7 @@ private theorem transitionListParserMachine_computes_markPosition_context_empty_
                     (TuringMachine.computes_trans
                       (by
                         simpa [scanLeft, countLeft, List.map_append,
-                          List.map_reverse, List.append_assoc] using
+                          List.map_reverse, List.append_assoc] using!
                           hmarker)
                       (TuringMachine.Computes.step hheader
                         (TuringMachine.Computes.step henter

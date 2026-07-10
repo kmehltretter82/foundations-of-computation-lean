@@ -1111,7 +1111,7 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTapeEquiv_finalT
         (Tape.input inputBits)
         (ControllerStageInputProjection.finalTape C) := by
     rcases hprojWith with ⟨nProj, hnProj⟩
-    exact ⟨nProj, by simpa [initial] using hnProj⟩
+    exact ⟨nProj, by simpa [initial] using! hnProj⟩
   rcases
       HaltsFromTapeEquiv_of_input_equiv
         (Tape.Equiv.symm hguardMove) hprojFrom with
@@ -1181,7 +1181,7 @@ theorem resultNoneGuardStageInputProjectionDescription_haltsWithTape_inv_finalTa
       ControllerStageInputProjection.Description.HaltsWithTape
         inputBits Tclean := by
     rcases hprojClean with ⟨nClean, hnClean⟩
-    exact ⟨nClean, by simpa [initial] using hnClean⟩
+    exact ⟨nClean, by simpa [initial] using! hnClean⟩
   rcases hprojClean with ⟨nClean, hnClean⟩
   rcases
       ControllerStageInputProjection.decodeComplete_of_halting_run
@@ -1249,7 +1249,7 @@ theorem controllerResultContinueDescription_haltsWithOutput_controllerEncode
         (Tape.move Direction.left
           (ControllerStageInputProjection.finalTape C))
         outputTape := by
-    simpa [C, outputTape, nextCode] using
+    simpa [C, outputTape, nextCode] using!
       projectedStageInputContinueDescription_haltsFromTape_finalTape
         input result stage
   rcases hcontClean with ⟨TcleanOut, hcontCleanExact, hcleanOutEquiv⟩

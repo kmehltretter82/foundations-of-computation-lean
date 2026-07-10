@@ -203,7 +203,7 @@ def tape (L : SimulatorLayout) : Tape Bool :=
 
 theorem tape_normalizedOutput (L : SimulatorLayout) :
     Tape.normalizedOutput (tape L) = asBoolInput L := by
-  simpa [tape, asBoolInput] using
+  simpa [tape, asBoolInput] using!
     (Tape.normalizedOutput_output (encodeCodeWordAsInput (encode L)))
 
 def initial (D : MachineDescription) (w : Word Bool)

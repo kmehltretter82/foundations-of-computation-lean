@@ -700,7 +700,7 @@ theorem tableMachine_deterministic_of_transitionListDeterministic
     {transitions : List TransitionDescription}
     (hdet : TransitionListDeterministic transitions) :
     (tableMachine stateCount start halt transitions).Deterministic := by
-  simpa [tableMachine, MachineDescription.Deterministic] using hdet
+  simpa [tableMachine, MachineDescription.Deterministic] using! hdet
 
 theorem noRowJumpTransitions_subset_noRowJumpAllTransitions
     (D : Description) {state : Nat} {reads : ReadTuple3}
@@ -858,7 +858,7 @@ theorem noRowJumpAllTransitions_runsFromExistingTapeSeparator
           (noRowJumpTransitions_sources_ne_ready
             D reads (activeStateValues_mem_lt hstate)))
       (by
-        simpa [tableMachine, noRowJumpTransitions] using
+        simpa [tableMachine, noRowJumpTransitions] using!
           noRowJumpDescription_runsFromExistingTapeSeparator
             D reads (activeStateValues_mem_lt hstate) hseparator)
 
@@ -1047,7 +1047,7 @@ theorem returnFromTape2SeparatorToCanonicalBlockStart_runs
   have hblockStartEq :
       blockStartPhysical = encodedGuardedStructuredTapes logical := by
     rcases hblockStart with ⟨_hle, heq⟩
-    simpa [encodedGuardedStructuredTapes] using heq
+    simpa [encodedGuardedStructuredTapes] using! heq
   simpa [hblockStartEq] using hrun
 
 theorem selectedRowCoreDescription_subroutineReady
@@ -1155,7 +1155,7 @@ theorem selectedRowSeparatorDescription_runsFromTape2Separator
       (selectedRowSeparatorDescription t refresh).HaltsFromTapeEquiv
         separatorPhysical
         (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes) := by
-    simpa [c, hone] using
+    simpa [c, hone] using!
       canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
         returnFromTape2SeparatorToBlockStartDescription_subroutineReady
         hready hreturn hrow
@@ -1250,7 +1250,7 @@ theorem retargetedSelectedRowSeparatorDescription_runsFromTape2Separator
       htargetBelow hready.right hrun
   constructor
   · exact honeState
-  · simpa [retargetedSelectedRowSeparatorDescription] using hcopy
+  · simpa [retargetedSelectedRowSeparatorDescription] using! hcopy
 
 def selectedRowBranchJumpDescription
     (branchStateCount : Nat) (D : Description)

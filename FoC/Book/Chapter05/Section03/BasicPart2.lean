@@ -217,7 +217,7 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_computable_map
     ConcretePairEncoding, ConcretePairCodeSymbol, ConcreteDiagonalPairMap,
     ConcreteDiagonalPairMapComputable,
     ComputableMapDecidablePreimageConstruction, TuringComputableWordMap]
-    using
+    using!
       PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_computable_map
         (code := ConcreteMachineCodeSymbol) hpreimage hcomputable
 
@@ -237,7 +237,7 @@ theorem concrete_diagonal_pair_decidable_preimage_construction_of_faithful_compu
     FaithfulConcreteDiagonalPairMapComputable,
     FaithfulComputableMapDecidablePreimageConstruction,
     FaithfulTuringComputableWordMap]
-    using
+    using!
       PairCodeSymbol.diagonalPairDecidablePreimagePrinciple_of_concrete_faithful_computable_map
         (code := ConcreteMachineCodeSymbol) hpreimage hcomputable
 

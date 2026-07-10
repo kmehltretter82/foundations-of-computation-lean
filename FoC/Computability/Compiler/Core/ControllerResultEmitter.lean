@@ -508,39 +508,39 @@ private theorem dovetailControllerResultEmitterDescription_run_encoded_symbol
         tape := eraseRightTape (erased + 4) suffix } := by
   cases symbol
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false false false false erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false false false true erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false false true false erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false false true true erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false true false false erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false true false true erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false true true false erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         false true true true erased suffix)
   · simpa [encodeCodeSymbolAsInput,
-      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using
+      controllerResultEmitterCodeOfBits, controllerResultEmitterSymbolCode] using!
       (dovetailControllerResultEmitterDescription_run_bits boundary
         true false false false erased suffix)
 

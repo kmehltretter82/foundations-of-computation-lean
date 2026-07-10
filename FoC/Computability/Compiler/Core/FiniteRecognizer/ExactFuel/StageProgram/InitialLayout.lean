@@ -203,7 +203,7 @@ theorem initialLayoutMaterializerCodePrimitive_stageCode
     (initialLayoutMaterializerCodePrimitive M).transform
         (stageCode input fuel) =
       some (Layout.encode (Layout.initial M input fuel)) := by
-  simpa [initialLayoutMaterializerCodePrimitive, stageCode] using
+  simpa [initialLayoutMaterializerCodePrimitive, stageCode] using!
     Layout.stageCodeToInitialLayoutCode_stageCode M input fuel
 
 theorem initialLayoutMaterializerSpec_of_exact_canonical
@@ -340,7 +340,7 @@ theorem stageCodeToInitialLayoutCode_stageCode_empty {stateCount : Nat}
                 (encodeOptionalCodeSymbolAppend none
                   (encodeOptionalCodeSymbolsAppend [] []))))) := by
   simpa [stageCode, GeneratedCode.stageCode,
-    Layout.encode_initial_empty] using
+    Layout.encode_initial_empty] using!
     Layout.stageCodeToInitialLayoutCode_stageCode
       M ([] : Word MachineCodeSymbol) fuel
 
@@ -358,7 +358,7 @@ theorem stageCodeToInitialLayoutCode_stageCode_empty_expanded
                 (MachineDescription.encodeNatAppend 0
                   (MachineDescription.encodeNatAppend 0 []))))) := by
   simpa [stageCode, GeneratedCode.stageCode,
-    Layout.encode_initial_empty_expanded] using
+    Layout.encode_initial_empty_expanded] using!
     Layout.stageCodeToInitialLayoutCode_stageCode
       M ([] : Word MachineCodeSymbol) fuel
 
@@ -377,7 +377,7 @@ theorem stageCodeToInitialLayoutCode_stageCode_cons {stateCount : Nat}
                   (encodeOptionalCodeSymbolsAppend
                     (rest.map some) []))))) := by
   simpa [stageCode, GeneratedCode.stageCode,
-    Layout.encode_initial_cons] using
+    Layout.encode_initial_cons] using!
     Layout.stageCodeToInitialLayoutCode_stageCode
       M (symbol :: rest) fuel
 
@@ -398,7 +398,7 @@ theorem stageCodeToInitialLayoutCode_stageCode_cons_expanded
                   (encodeOptionalCodeSymbolsAppend
                     (rest.map some) []))))) := by
   simpa [stageCode, GeneratedCode.stageCode,
-    Layout.encode_initial_cons_expanded] using
+    Layout.encode_initial_cons_expanded] using!
     Layout.stageCodeToInitialLayoutCode_stageCode
       M (symbol :: rest) fuel
 
@@ -416,7 +416,7 @@ theorem initialLayoutMaterializerSpec_stageCode_output
     (hmaterializer (stageCode input fuel)
       (Layout.encode (Layout.initial M input fuel))).mpr
       (by
-        simpa [stageCode] using
+        simpa [stageCode] using!
           Layout.stageCodeToInitialLayoutCode_stageCode M input fuel)
 
 theorem initialLayoutExactMaterializerSpec_stageCode_exactOutput
@@ -433,7 +433,7 @@ theorem initialLayoutExactMaterializerSpec_stageCode_exactOutput
     (hmaterializer (stageCode input fuel)
       (Layout.encode (Layout.initial M input fuel))).mpr
       (by
-        simpa [stageCode] using
+        simpa [stageCode] using!
           Layout.stageCodeToInitialLayoutCode_stageCode M input fuel)
 
 theorem initialLayoutExactMaterializerSpec_haltsWithExactOutput_iff

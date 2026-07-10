@@ -603,7 +603,7 @@ theorem markerAwarePullNearestRawBitDescription_haltsFrom_markedCellSuffixLeftEd
           simpa [rawBoundaryLeftMarkedCellSuffixBoundaryMarkerTape,
             rawBoundaryCellSuffixRightAfterHead, preservingCellPassCellBits,
             preservingCellPassZeroBits, preservingCellPassOneBits,
-            List.append_assoc] using
+            List.append_assoc] using!
             markerAwarePullNearestRawBitDescription_haltsFromHeadGap_boundary
               scratchTail ([] : List (Option Bool)) false false
               (rawBoundaryCellSuffixRightAfterHead
@@ -618,7 +618,7 @@ theorem markerAwarePullNearestRawBitDescription_haltsFrom_markedCellSuffixLeftEd
           simpa [rawBoundaryLeftMarkedCellSuffixBoundaryMarkerTape,
             rawBoundaryCellSuffixRightAfterHead, preservingCellPassCellBits,
             preservingCellPassZeroBits, preservingCellPassOneBits,
-            List.append_assoc] using
+            List.append_assoc] using!
             markerAwarePullNearestRawBitDescription_haltsFromHeadGap_boundary
               scratchTail ([] : List (Option Bool)) false false
               (rawBoundaryCellSuffixRightAfterHead

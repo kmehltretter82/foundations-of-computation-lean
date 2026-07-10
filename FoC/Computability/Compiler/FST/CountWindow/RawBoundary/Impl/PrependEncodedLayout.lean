@@ -108,7 +108,7 @@ theorem prependLengthAndCellsLeftOfHeadDescription_haltsFrom
           (prependCellChunksLeftOfHeadDescription_haltsFrom_emptySuffix
             (bit :: rest) tailFirst tail)
           (by
-            simpa using
+            simpa using!
               prependCellChunksLeftOfHeadDescription_target_moveLeftRight
                 bit rest ([] : Word Bool) tailFirst tail)
           (prependLengthChunksLeftOfHeadDescription_haltsFrom_cellSuffix
@@ -201,11 +201,12 @@ theorem prependLengthAndCellsLeftOfHeadDescription_haltsFrom_withScratch
             simpa [prependLengthAndCellsLeftOfHeadDescription,
               List.append_assoc] using hA)
           (by
-            rw [show
-                4 * ((bit :: rest).length + 1) =
-                  4 * (bit :: rest).length + 3 + 1 by
-              lia]
-            simpa using
+            have hscratch :
+                4 * (rest.length + 1 + 1) =
+                  4 * (rest.length + 1) + 3 + 1 := by
+              lia
+            rw [hscratch]
+            simpa only [List.map_reverse] using!
               tapeAtCells_moveRight_moveLeft_withScratchSucc
                 ((preservingCellPassCellBits (bit :: rest)).reverse.map some)
                 baseLeft

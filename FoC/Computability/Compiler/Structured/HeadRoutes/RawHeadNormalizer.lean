@@ -959,7 +959,7 @@ theorem description_haltsWithTapes
     description_reaches_finalConfig target rest encodedPrefix with
     ⟨rewindSteps, hrewind⟩
   refine ⟨(leftSteps + rightSteps) + rewindSteps, ?_⟩
-  simpa [finalConfig] using
+  simpa [finalConfig] using!
     ThreeTape.runConfig_chain3 hleft hright hrewind
 
 theorem loweredDescription_haltsFromTapeEquiv

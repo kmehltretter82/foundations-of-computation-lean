@@ -222,7 +222,7 @@ theorem SelectedMergePaddedEmitterParsedInnerRightStackCurrentRest_reverse
       exact (hbits hnil).elim
   | cons bit rest =>
       have hbitsEq : bits = (bit :: rest).reverse := by
-        simpa using congrArg List.reverse hrev
+        simpa using! congrArg List.reverse hrev
       simp [SelectedMergePaddedEmitterParsedInnerRightStackCurrent,
         SelectedMergePaddedEmitterParsedInnerRightStackRest, hbitsEq]
 
@@ -1190,7 +1190,7 @@ theorem selectedMergePaddedEmitterParsedInnerRemainderDeleteDescription_haltsFro
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteTargetTape]
   rw [SelectedMergePaddedEmitterParsedInnerSourceBits_eq_remainderDeleteSplit]
   simpa [SelectedMergePaddedEmitterParsedInnerRemainderDeleteDescription]
-    using
+    using!
       CommonGround.FiniteTransducers.generatedDeleteWindowDescription_haltsFrom_split_withPadding
         SelectedMergePaddedEmitterParsedInnerRemainderDeletePrefixBits.length
         SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits.length
@@ -1538,7 +1538,7 @@ theorem SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape_move_left_m
     SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape,
     SelectedMergePaddedEmitterParsedInnerRemainderDeleteBits,
     List.replicate]
-    using
+    using!
       CommonGround.FiniteTransducers.leadingBlankLeftShiftTargetTapeWithPadding_move_left_move_right_padding_cons_cons
         ([none] : List (Option Bool))
         (SelectedMergePaddedEmitterParsedInnerPostPrefixSourceBits p)

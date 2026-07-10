@@ -117,7 +117,7 @@ theorem prependEncodedLayoutLeftOfBlankSentinelDescription_haltsFrom
       (prependLengthChunksLeftOfBlankSentinelDescription_target_moveLeftRight
         layout.length (preservingCellPassCellBits layout) tail)
       (by
-        simpa [encodedLayoutChunkBits, List.append_assoc] using
+        simpa [encodedLayoutChunkBits, List.append_assoc] using!
           prependHeaderChunkLeftOfBlankSentinelDescription_haltsFrom_prepend
             (List.append
               (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
@@ -135,7 +135,7 @@ theorem prependEncodedLayoutLeftOfBlankSentinelDescription_target_moveLeftRight
       tapeAtCells
         ((encodedLayoutChunkBits layout).reverse.map some)
         (none :: tail) := by
-  simpa [encodedLayoutChunkBits, List.append_assoc] using
+  simpa [encodedLayoutChunkBits, List.append_assoc] using!
     prependFixedFourBitsLeftOfBlankSentinelDescription_target_moveLeftRight
       false false false false
       (List.append

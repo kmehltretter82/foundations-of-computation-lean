@@ -198,7 +198,7 @@ theorem canonicalIndexedMaterializerSpec_of_canonicalMaterializerSpec
       canonicalIndexedRightPadding,
       canonicalIndexedOutputPadding,
       structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hrun input
 
 theorem canonicalMaterializerSpec_of_canonicalIndexedMaterializerSpec
@@ -218,7 +218,7 @@ theorem canonicalMaterializerSpec_of_canonicalIndexedMaterializerSpec
       canonicalIndexedRightPadding,
       canonicalIndexedOutputPadding,
       structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hrun input
 
 theorem canonicalMaterializerSpec_iff_indexedMaterializerSpec
@@ -582,7 +582,7 @@ theorem canonicalIndexedMaterializerOutputSpec_of_canonicalOutputSpec
       canonicalIndexedRightPadding,
       canonicalIndexedOutputPadding,
       structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hrun input
 
 theorem canonicalOutputSpec_of_canonicalIndexedMaterializerOutputSpec
@@ -602,7 +602,7 @@ theorem canonicalOutputSpec_of_canonicalIndexedMaterializerOutputSpec
       canonicalIndexedRightPadding,
       canonicalIndexedOutputPadding,
       structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hrun input
 
 theorem canonicalIndexedInitializerOutputSpec_of_indexedMaterializerOutputSpec

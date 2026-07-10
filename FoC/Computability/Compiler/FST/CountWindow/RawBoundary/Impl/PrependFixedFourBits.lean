@@ -1339,7 +1339,7 @@ theorem prependLengthTickChunkLeftOfHeadDescription_haltsFrom_stageNatBits
         ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
           (n + 1)).reverse.map some)
         (some tailFirst :: tail)) := by
-  simpa [stageNatBits_reverse_succ_append_tick, List.map_append] using
+  simpa [stageNatBits_reverse_succ_append_tick, List.map_append] using!
     prependLengthTickChunkLeftOfHeadDescription_haltsFrom
       (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
         n)
@@ -1506,7 +1506,7 @@ theorem prependLengthDoneChunkLeftOfHeadDescription_haltsFrom_stageNatBitsZero
         ((DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
           0).reverse.map some)
         (some tailFirst :: tail)) := by
-  simpa [stageNatBits_reverse_zero] using
+  simpa [stageNatBits_reverse_zero] using!
     prependLengthDoneChunkLeftOfHeadDescription_haltsFrom
       ([] : Word Bool) tailFirst tail
 

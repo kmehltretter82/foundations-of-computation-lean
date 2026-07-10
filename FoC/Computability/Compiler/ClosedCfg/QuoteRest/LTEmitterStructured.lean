@@ -992,7 +992,7 @@ theorem structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription_run
             remaining)) := by
   induction remaining generalizing emitted outputBits with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription_run_final
           emitted source outputBits
   | succ remaining ih =>
@@ -1576,7 +1576,7 @@ theorem structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_l
             remaining)) := by
   induction remaining generalizing emitted outputBits with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_length_final
           emitted source outputBits
   | succ remaining ih =>

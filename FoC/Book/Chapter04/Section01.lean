@@ -463,7 +463,7 @@ theorem balanced_parens_start_form_language
   rcases h with ⟨balanced, tail, hbalanced, htail, hwEq⟩
   cases htail
   rw [hwEq]
-  simpa [Word.Concat, Word.Empty] using hbalanced
+  simpa [Word.Concat, Word.Empty] using! hbalanced
 
 theorem balanced_parens_generated_only_balanced {w : Word Paren}
     (h : w ∈ CFG.GeneratedLanguage BalancedParensGrammar) :
@@ -977,7 +977,7 @@ theorem balanced_brackets_start_form_language
   rcases h with ⟨balanced, tail, hbalanced, htail, hwEq⟩
   cases htail
   rw [hwEq]
-  simpa [Word.Concat, Word.Empty] using hbalanced
+  simpa [Word.Concat, Word.Empty] using! hbalanced
 
 theorem balanced_brackets_generated_only_balanced {w : Word Bracket}
     (h : w ∈ CFG.GeneratedLanguage BalancedBracketsGrammar) :
@@ -1742,7 +1742,7 @@ theorem palindrome_start_form_language {w : Word AB}
   rcases h with ⟨pal, tail, hpal, htail, hwEq⟩
   cases htail
   rw [hwEq]
-  simpa [Word.Concat, Word.Empty] using hpal
+  simpa [Word.Concat, Word.Empty] using! hpal
 
 theorem palindrome_generated_only_palindrome {w : Word AB}
     (h : w ∈ CFG.GeneratedLanguage PalindromeGrammar) :

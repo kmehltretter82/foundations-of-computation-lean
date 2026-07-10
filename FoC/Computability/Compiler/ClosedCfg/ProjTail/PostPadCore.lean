@@ -155,7 +155,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_true
         boolFieldBits L.acceptHit (boolFieldBits L.rejectHit []) =
           List.append (boolFieldBits L.acceptHit [])
             (boolFieldBits L.rejectHit []) by
-      simpa [boolFieldBits] using
+      simpa [boolFieldBits] using!
         (cellFieldBits_append_nil (some L.acceptHit)
           (boolFieldBits L.rejectHit [])).symm]
     simp [List.length_append, Nat.add_assoc, Nat.add_comm,
@@ -202,7 +202,7 @@ theorem selectedProjectionPaddedTailCleanupSentinelBaseScratch_le_parsed_false
         boolFieldBits L.acceptHit (boolFieldBits L.rejectHit []) =
           List.append (boolFieldBits L.acceptHit [])
             (boolFieldBits L.rejectHit []) by
-      simpa [boolFieldBits] using
+      simpa [boolFieldBits] using!
         (cellFieldBits_append_nil (some L.acceptHit)
           (boolFieldBits L.rejectHit [])).symm]
     simp [List.length_append, Nat.add_assoc, Nat.add_comm,
@@ -1725,7 +1725,7 @@ theorem sentinelGapCompactorDescription_haltsFromTape_gapBase_zero_cons_right
           (sentinelGapCompactorFinalPadding (Nat.succ gap) 0
             rightPadding)
     rw [leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource]
-    simpa [sentinelGapCompactorFinalPadding] using hn.right
+    simpa [sentinelGapCompactorFinalPadding] using! hn.right
 
 theorem selectedHitOtherFlagErasedRejectAfterPaddingRightEndLeftCells_eq_sourceFields
     (L : DovetailLayout) :

@@ -1289,7 +1289,7 @@ theorem SingletonGuardSlackEndpointShape.canonical_singleton_bits_terminal_cell_
             List.append pfx
               (List.append (logicalCellBits cell)
                 (logicalCellBits none)) := by
-        simpa [logicalCellListBits] using htail
+        simpa [logicalCellListBits] using! htail
       refine
         ⟨List.append
           (List.append

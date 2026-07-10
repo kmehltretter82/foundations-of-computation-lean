@@ -432,7 +432,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_done_restoreForward
             exact
               TuringMachine.Computes.step
                 (by
-                  simpa [List.append_assoc] using
+                  simpa [List.append_assoc] using!
                     codePrefixParserNormalizerMachine_step_restoreLeft_blank
                       (some MachineCodeSymbol.blank)
                       (List.append
@@ -456,7 +456,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_done_restoreForward
                   (none :: prefixLeft))
                 suffix)
           (by
-            simpa [List.append_assoc] using
+            simpa [List.append_assoc] using!
               hrestore (some MachineCodeSymbol.done :: suffix))
 
 theorem codePrefixParserNormalizerMachine_computes_findCount_saved_blanks_done
@@ -492,7 +492,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_saved_blanks_done
       exact
         TuringMachine.Computes.step
           (by
-            simpa [List.append_assoc] using
+            simpa [List.append_assoc] using!
               codePrefixParserNormalizerMachine_step_findCount_blank
                 (TransitionListParserMarker.saved saved)
                 leftRev
@@ -564,7 +564,7 @@ theorem codePrefixParserNormalizerMachine_computes_findInitialCount_zero_halt
             suffix } :=
   TuringMachine.Computes.step
     (by
-      simpa using
+      simpa using!
         codePrefixParserNormalizerMachine_step_findInitialCount_done
           (none :: prefixLeft) suffix)
     (TuringMachine.Computes.step
@@ -698,7 +698,7 @@ theorem codePrefixParserNormalizerMachine_computes_restoreForward_ticks
             suffix } := by
   induction ticks generalizing leftRev with
   | zero =>
-      simpa using
+      simpa using!
         TuringMachine.Computes.step
           (codePrefixParserNormalizerMachine_step_restoreForward_done
             leftRev suffix)
@@ -707,7 +707,7 @@ theorem codePrefixParserNormalizerMachine_computes_restoreForward_ticks
       exact
         TuringMachine.Computes.step
           (by
-            simpa [List.append_assoc] using
+            simpa [List.append_assoc] using!
               codePrefixParserNormalizerMachine_step_restoreForward_tick
                 leftRev
                 (List.append

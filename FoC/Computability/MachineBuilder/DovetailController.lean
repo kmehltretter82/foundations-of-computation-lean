@@ -962,7 +962,7 @@ theorem boundedDovetailOutput_true_iff_of_complementaryTraces
       ⟨limit, hrun⟩
     exists limit
     simpa [boundedDovetailOutput_eq_dovetailProgram_run]
-      using hrun
+      using! hrun
 
 theorem boundedDovetailOutput_false_iff_of_complementaryTraces
     {accept reject : MachineDescription}
@@ -992,7 +992,7 @@ theorem boundedDovetailOutput_false_iff_of_complementaryTraces
       ⟨limit, hrun⟩
     exists limit
     simpa [boundedDovetailOutput_eq_dovetailProgram_run]
-      using hrun
+      using! hrun
 
 theorem boundedDovetailOutput_eventually_classifies_of_complementaryTraces
     {accept reject : MachineDescription}

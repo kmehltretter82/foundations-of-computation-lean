@@ -281,7 +281,7 @@ theorem equalCountGrammar_generated_has_equal_terminal_counts
       GeneralGrammar.Derives EqualCountGrammar [ecN EqualCountNT.start]
         (SententialForm.terminalWord w) := by
     simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, ecN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hbalanced :=
     equalCount_derives_preserves_balanced hderives equalCount_start_balanced
   simpa [equalCountBalanced, equalCountTotalA, equalCountTotalB,
@@ -363,7 +363,7 @@ theorem equalCount_moveB_left_over_as
             EqualCountProduces.swapAB pre (equalCountAForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountAForm, A, B, List.append_assoc] using hall
+      simpa [equalCountAForm, A, B, List.append_assoc] using! hall
 
 theorem equalCount_moveC_left_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -392,7 +392,7 @@ theorem equalCount_moveC_left_over_as
             EqualCountProduces.swapAC pre (equalCountAForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountAForm, A, C, List.append_assoc] using hall
+      simpa [equalCountAForm, A, C, List.append_assoc] using! hall
 
 theorem equalCount_moveC_left_over_bs
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -421,7 +421,7 @@ theorem equalCount_moveC_left_over_bs
             EqualCountProduces.swapBC pre (equalCountBForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountBForm, B, C, List.append_assoc] using hall
+      simpa [equalCountBForm, B, C, List.append_assoc] using! hall
 
 theorem equalCount_moveC_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -449,7 +449,7 @@ theorem equalCount_moveC_right_over_as
             (pre ++ [A] ++ equalCountAForm n ++ [C] ++ suffix) := by
         simpa [A, C, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountAForm, A, C, List.append_assoc] using hall
+      simpa [equalCountAForm, A, C, List.append_assoc] using! hall
 
 theorem equalCount_moveB_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -477,7 +477,7 @@ theorem equalCount_moveB_right_over_as
             (pre ++ [A] ++ equalCountAForm n ++ [B] ++ suffix) := by
         simpa [A, B, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountAForm, A, B, List.append_assoc] using hall
+      simpa [equalCountAForm, A, B, List.append_assoc] using! hall
 
 theorem equalCount_moveC_right_over_bs
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
@@ -505,7 +505,7 @@ theorem equalCount_moveC_right_over_bs
             (pre ++ [B] ++ equalCountBForm n ++ [C] ++ suffix) := by
         simpa [B, C, List.append_assoc] using ih (pre ++ [B])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountBForm, B, C, List.append_assoc] using hall
+      simpa [equalCountBForm, B, C, List.append_assoc] using! hall
 
 /-!
 The equal-count grammar first creates marker symbols and then sorts them into a
@@ -555,7 +555,7 @@ theorem equalCount_sort_repeated_markers_derives (n : Nat) :
               equalCountBForm n ++ equalCountCForm n)
             (equalCountMarkerBag (n + 1) (n + 1) (n + 1)) := by
         simpa [equalCountMarkerBag, equalCountAForm, equalCountBForm,
-          equalCountCForm, A, B, C, List.append_assoc] using
+          equalCountCForm, A, B, C, List.append_assoc] using!
           equalCount_moveC_right_over_bs n
             ([A] ++ equalCountAForm n ++ [B]) (equalCountCForm n)
       exact GeneralGrammar.derives_trans hsortTail
@@ -687,7 +687,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
                     ([ecN EqualCountNT.markB] ++
                       equalCountMarkerBag aCount bRest cCount) := by
                 simpa [equalCountMarkerBag, equalCountBForm,
-                  List.append_assoc] using
+                  List.append_assoc] using!
                   equalCount_moveB_left_over_as aCount []
                     (equalCountBForm bRest ++ equalCountCForm cCount)
               have hrest :=
@@ -734,7 +734,7 @@ theorem equalCount_marker_bag_to_marker_word_derives
                     (equalCountAForm aCount ++ [ecN EqualCountNT.markC] ++
                       equalCountBForm bCount ++ equalCountCForm cRest) := by
                 simpa [equalCountMarkerBag, equalCountCForm,
-                  List.append_assoc] using
+                  List.append_assoc] using!
                   equalCount_moveC_left_over_bs bCount
                     (equalCountAForm aCount) (equalCountCForm cRest)
               have hmoveAs :
@@ -804,7 +804,7 @@ theorem equalCount_marker_word_to_terminal_word_derives
               general_derives_context ih [ecT EqualCountTerminal.a] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using hall
+            SententialForm.terminalWord, ecT] using! hall
       | b =>
           have hstep :
               GeneralGrammar.Yields EqualCountGrammar
@@ -822,7 +822,7 @@ theorem equalCount_marker_word_to_terminal_word_derives
               general_derives_context ih [ecT EqualCountTerminal.b] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using hall
+            SententialForm.terminalWord, ecT] using! hall
       | c =>
           have hstep :
               GeneralGrammar.Yields EqualCountGrammar
@@ -840,7 +840,7 @@ theorem equalCount_marker_word_to_terminal_word_derives
               general_derives_context ih [ecT EqualCountTerminal.c] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using hall
+            SententialForm.terminalWord, ecT] using! hall
 
 theorem equalCount_words_generated_of_equal_counts
     {word : Word EqualCountTerminal}
@@ -876,7 +876,7 @@ theorem equalCount_words_generated_of_equal_counts
   have hall := GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hmarkersClean hemit)
   simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, ecN,
-    ggNonterminal] using hall
+    ggNonterminal] using! hall
 
 theorem equalCount_generated_language_exact
     (word : Word EqualCountTerminal) :
@@ -1002,7 +1002,7 @@ theorem equalCountGrammar_generates_baabcc :
                             (GeneralGrammar.Derives.refl
                               [b, a, a, b, c, c]))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, EqualCountGrammar, baabccWord,
-    SententialForm.terminalWord, S, a, b, c] using hderives
+    SententialForm.terminalWord, S, a, b, c] using! hderives
 
 
 end Section06

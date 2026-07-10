@@ -923,7 +923,7 @@ private theorem rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell_fals
   | nil =>
       have hprefix_nil : emittedPrefix = [] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       exact False.elim (hprefix_ne hprefix_nil)
   | cons last rest =>
       refine ⟨2 * emittedPrefix.length + 12, ?_⟩
@@ -1039,7 +1039,7 @@ private theorem rawBoundaryLengthCursorLoopDescription_run_cursorCheck_cell_true
   | nil =>
       have hprefix_nil : emittedPrefix = [] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       exact False.elim (hprefix_ne hprefix_nil)
   | cons last rest =>
       refine ⟨2 * emittedPrefix.length + 12, ?_⟩
@@ -1156,7 +1156,7 @@ private theorem rawBoundaryLengthCursorLoopDescription_run_cursorCheck_noAnchor
       | nil =>
           have hprefix_nil : emittedPrefix = [] := by
             have h := congrArg List.reverse hrev
-            simpa using h
+            simpa using! h
           exact False.elim (hprefix_ne hprefix_nil)
       | cons last rest =>
           refine ⟨2, ?_⟩

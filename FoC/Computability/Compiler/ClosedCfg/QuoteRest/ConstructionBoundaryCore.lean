@@ -822,7 +822,7 @@ theorem rightEdgeRewindDescription_haltsFrom_defaultedRightBoundaryTape
     DovetailInitialLayoutInitializer.tapeAtCells,
     hbits, List.reverse_append, List.map_append, List.map_reverse,
     List.append_assoc, Tape.move, Tape.moveLeft]
-    using hrew
+    using! hrew
 
 theorem MixedParserStackRewriterDefaultedSourceStartTape_move_left_move_right
     (w sourceRestBits quoteRestBits : Word Bool) (stage : Nat) :

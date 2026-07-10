@@ -90,7 +90,7 @@ private theorem codePrefixParserNormalizerMachine_computes_markPosition_context_
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       have hprefix :
           List.append (leftSymbols.reverse.map some) [some current] =
             leftNormal.map some := by
@@ -355,7 +355,7 @@ theorem codePrefixParserNormalizerMachine_computes_markPosition_context_to_needT
             (codePrefixParserNormalizerMarkedContextLeft
               prefixLeft (blanks + 1) count pre)
             ((symbol :: suffix).map some) } := by
-  simpa using
+  simpa using!
     codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition_saved
       prefixLeft blanks count pre hpre (some symbol) suffix
 
@@ -377,7 +377,7 @@ theorem codePrefixParserNormalizerMachine_computes_markPosition_context_empty_to
             (codePrefixParserNormalizerMarkedContextLeft
               prefixLeft (blanks + 1) count pre)
             [none] } := by
-  simpa using
+  simpa using!
     codePrefixParserNormalizerMachine_computes_markPosition_context_to_needTransition_saved
       prefixLeft blanks count pre hpre none []
 
@@ -415,7 +415,7 @@ private theorem codePrefixParserNormalizerMachine_computes_markPosition_context_
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       have hprefix :
           List.append (List.map some leftSymbols).reverse [some current] =
             leftNormal.map some := by

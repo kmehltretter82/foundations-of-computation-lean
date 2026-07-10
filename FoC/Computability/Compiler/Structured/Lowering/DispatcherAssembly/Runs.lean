@@ -1068,7 +1068,7 @@ theorem afterRead1JumpTape2ReaderTransitions_sources_ne_afterRead
 theorem threeHeadReaderDescription_deterministic
     (D : Description) :
     (threeHeadReaderDescription D).Deterministic := by
-  simpa [threeHeadReaderDescription, MachineDescription.Deterministic] using
+  simpa [threeHeadReaderDescription, MachineDescription.Deterministic] using!
     threeHeadReaderTransitions_deterministic D
 
 theorem readyJumpDescription_runsFromTapeSeparator_in_readyJumpTape0ReaderTransitions
@@ -1222,7 +1222,7 @@ theorem
           StaticDispatcherState.tape0ReaderTarget,
           branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
           branchingSeparatorReadHeadCellTarget,
-          BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+          BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
     | some bit =>
         cases bit <;>
           simpa [tape0ReaderDescription, tape0ReaderStart,
@@ -1233,7 +1233,7 @@ theorem
             StaticDispatcherState.tape0ReaderTarget,
             branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
             branchingSeparatorReadHeadCellTarget,
-            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+            BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape0ReaderOffset D state ≤
@@ -1250,7 +1250,7 @@ theorem
     simpa [tape0ReaderDescription, tape0ReaderStart,
       retargetedBranchingTape0ReadHeadCellAllExitsDescription,
       MachineDescription.readExitRetargetConfiguration,
-      MachineDescription.retargetReadExitState] using
+      MachineDescription.retargetReadExitState] using!
       hcopyStates k hk
   refine ⟨separatorPhysical, hseparator, ?_⟩
   simpa [readyJumpTape0ReaderTransitions] using
@@ -1400,7 +1400,7 @@ theorem
           StaticDispatcherState.tape1ReaderTarget,
           branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
           branchingSeparatorReadHeadCellTarget,
-          BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+          BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
     | some bit =>
         cases bit <;>
           simpa [tape1ReaderDescription, tape1ReaderStart,
@@ -1411,7 +1411,7 @@ theorem
             StaticDispatcherState.tape1ReaderTarget,
             branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
             branchingSeparatorReadHeadCellTarget,
-            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+            BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape1ReaderOffset D state read0 ≤
@@ -1428,7 +1428,7 @@ theorem
     simpa [tape1ReaderDescription, tape1ReaderStart,
       retargetedBranchingTape1ReadHeadCellAllExitsDescription,
       MachineDescription.readExitRetargetConfiguration,
-      MachineDescription.retargetReadExitState] using
+      MachineDescription.retargetReadExitState] using!
       hcopyStates k hk
   refine ⟨separatorPhysical, hseparator, ?_⟩
   simpa [afterRead0JumpTape1ReaderTransitions] using
@@ -1657,7 +1657,7 @@ theorem tape1ReaderDescription_runsFromExistingBlockStart
                 StaticDispatcherState.tape1ReaderTarget,
                 branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                 branchingSeparatorReadHeadCellTarget,
-                BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+                BranchingHeadCellReturn.targetForRead, hread] using! hcopy⟩
 
 theorem branchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromSeparator
     {logical : List (Tape Bool)} {tapeIndex : Nat}
@@ -1783,7 +1783,7 @@ theorem tape2ReaderDescription_runsFromExistingTape1Separator
                 StaticDispatcherState.tape2ReaderTarget,
                 branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                 branchingSeparatorReadHeadCellTarget,
-                BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+                BranchingHeadCellReturn.targetForRead, hread] using! hcopy⟩
 
 theorem
     tape2ReaderDescription_runsFromExistingTape1Separator_in_afterRead1JumpTape2ReaderTransitions
@@ -1873,7 +1873,7 @@ theorem
           StaticDispatcherState.tape2ReaderTarget,
           branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
           branchingSeparatorReadHeadCellTarget,
-          BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+          BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
     | some bit =>
         cases bit <;>
           simpa [tape2ReaderDescription, tape2ReaderStart,
@@ -1884,7 +1884,7 @@ theorem
             StaticDispatcherState.tape2ReaderTarget,
             branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
             branchingSeparatorReadHeadCellTarget,
-            BranchingHeadCellReturn.targetForRead, hread] using hcopyRun
+            BranchingHeadCellReturn.targetForRead, hread] using! hcopyRun
   have hrightStates :
       forall k : Nat, k < n ->
         tape2ReaderOffset D state read0 read1 ≤
@@ -1903,7 +1903,7 @@ theorem
     simpa [tape2ReaderDescription, tape2ReaderStart,
       retargetedBranchingTape1ReadHeadCellAllExitsDescription,
       MachineDescription.readExitRetargetConfiguration,
-      MachineDescription.retargetReadExitState] using
+      MachineDescription.retargetReadExitState] using!
       hcopyStates k hk
   refine ⟨separatorPhysical, hseparator, ?_⟩
   simpa [afterRead1JumpTape2ReaderTransitions] using

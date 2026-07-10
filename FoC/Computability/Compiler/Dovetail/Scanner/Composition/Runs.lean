@@ -143,7 +143,7 @@ theorem run_finalHitFlags_raw_to_handoff_withBase
         (B := BFS)
         (handoffMove := Direction.right)
         hmove
-        (by simpa [config] using hfinal)
+        (by simpa [config] using! hfinal)
   simpa [FinalHitFlagsScannerDescription, Tmid, baseAfterAccept]
     using
       seqSubroutine_runConfig_exists
@@ -246,7 +246,7 @@ private theorem run_finalHitFlags_raw_to_handoff_withBaseAndRight
         (B := BFS)
         (handoffMove := Direction.right)
         hmove
-        (by simpa [config] using hfinal)
+        (by simpa [config] using! hfinal)
   simpa [FinalHitFlagsScannerDescription, Tmid, baseAfterAccept]
     using
       seqSubroutine_runConfig_exists
@@ -304,7 +304,7 @@ private theorem run_cellThenCellList_raw_to_handoff_withBase
                     (false :: suffixTail))).map some) } =
         { state := CSS.halt
           tape := Tmid.tape } := by
-    simpa [Tmid, cellFieldBits, hfieldTail, List.map_append] using
+    simpa [Tmid, cellFieldBits, hfieldTail, List.map_append] using!
       hhead
   have hBReach :
       exists nB : Nat,
@@ -333,7 +333,7 @@ private theorem run_cellThenCellList_raw_to_handoff_withBase
         hmove
         (by
           simpa [CellListSuffixScannerDescription, config,
-            cellListFieldBits, List.map_append, baseAfterHead] using
+            cellListFieldBits, List.map_append, baseAfterHead] using!
             hright)
   simpa [Tmid, baseAfterHead, cellFieldBits, hfieldTail,
     List.map_append] using
@@ -397,7 +397,7 @@ private theorem run_cellThenCellList_raw_to_handoff_withBaseAndRight
         { state := CSS.halt
           tape := Tmid.tape } := by
     simpa [Tmid, cellFieldBits, hfieldTail, List.map_append,
-      List.append_assoc] using hhead
+      List.append_assoc] using! hhead
   have hBReach :
       exists nB : Nat,
         CLSS.runConfig nB
@@ -429,7 +429,7 @@ private theorem run_cellThenCellList_raw_to_handoff_withBaseAndRight
         (by
           simpa [CellListSuffixScannerDescription, config,
             cellListFieldBits, List.map_append, List.append_assoc,
-            baseAfterHead] using hright)
+            baseAfterHead] using! hright)
   simpa [Tmid, baseAfterHead, cellFieldBits, hfieldTail,
     List.map_append, List.append_assoc] using
       seqSubroutine_runConfig_exists
@@ -1449,7 +1449,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
           (List.append (stageNatBits stage)
             (false :: acceptTail)).map some by
       rw [hacceptTail]]
-    simpa [TmidTape] using hstage
+    simpa [TmidTape] using! hstage
   have hBReach :
       exists nB : Nat,
         CFFS.runConfig nB
@@ -1497,7 +1497,7 @@ theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         hmove
         (by simpa [baseAfterStage] using hconfigs)
   simpa [SCFFS, TmidTape,
-    baseAfterStage] using
+    baseAfterStage] using!
       seqSubroutine_runConfig_exists
         (A := NNSS)
         (B := CFFS)
@@ -1574,7 +1574,7 @@ private theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndR
               (false :: acceptTail)).map some)
             (none :: rightPadding) by
       rw [hacceptTail]]
-    simpa [TmidTape] using hstage
+    simpa [TmidTape] using! hstage
   have hBReach :
       exists nB : Nat,
         CFFS.runConfig nB
@@ -1627,7 +1627,7 @@ private theorem run_stageConfigurationsAndFinalFlags_raw_to_handoff_withBaseAndR
         hmove
         (by simpa [baseAfterStage] using hconfigs)
   simpa [SCFFS, TmidTape,
-    baseAfterStage] using
+    baseAfterStage] using!
       seqSubroutine_runConfig_exists
         (A := NNSS)
         (B := CFFS)
@@ -1756,7 +1756,7 @@ theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBase
         hmove
         (by simpa [baseAfterInput, stageSuffix] using hstage)
   simpa [ISCFFS,
-    TmidTape, baseAfterInput] using
+    TmidTape, baseAfterInput] using!
       seqSubroutine_runConfig_exists
         (A := BWSS)
         (B := SCFFS)
@@ -1902,7 +1902,7 @@ private theorem run_inputStageConfigurationsAndFinalFlags_raw_to_handoff_withBas
         hmove
         (by simpa [baseAfterInput, stageSuffix] using hstage)
   simpa [ISCFFS,
-    TmidTape, baseAfterInput] using
+    TmidTape, baseAfterInput] using!
       seqSubroutine_runConfig_exists
         (A := BWSS)
         (B := SCFFS)
@@ -1977,7 +1977,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
         simpa [boolWordFieldBits] using hinputTail
       rw [hinputBits]
       simp [transitionRemainderBits]]
-    simpa [TmidTape] using htransition
+    simpa [TmidTape] using! htransition
   have hBReach :
       exists nB : Nat,
         ISCFFS.runConfig nB
@@ -2016,7 +2016,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
       have hinputCells :
           (false :: inputTail).map some =
             (boolWordFieldBits L.input inputSuffix).map some := by
-        simpa using
+        simpa using!
           congrArg (fun bits => bits.map some) hinputTail.symm
       simp [hinputCells]
     exact
@@ -2026,7 +2026,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBase_phaseChain
         hmove
         (by simpa [baseAfterTransition, inputSuffix] using hinput)
   simpa [MarkedDovetailLayoutBodyScannerDescription, TmidTape,
-    baseAfterTransition] using
+    baseAfterTransition] using!
       rightHandoffSequential_runConfig_exists
         (A := TRP)
         (B := ISCFFS)
@@ -2140,7 +2140,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_pha
         simpa [boolWordFieldBits] using hinputTail
       rw [hinputBits]
       simp [transitionRemainderBits]]
-    simpa [TmidTape] using htransition
+    simpa [TmidTape] using! htransition
   have hBReach :
       exists nB : Nat,
         ISCFFS.runConfig nB
@@ -2183,7 +2183,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_pha
       have hinputCells :
           (false :: inputTail).map some =
             (boolWordFieldBits L.input inputSuffix).map some := by
-        simpa using
+        simpa using!
           congrArg (fun bits => bits.map some) hinputTail.symm
       simp [hinputCells]
     exact
@@ -2193,7 +2193,7 @@ private theorem run_markedDovetailLayoutBody_raw_to_handoff_withBaseAndRight_pha
         hmove
         (by simpa [baseAfterTransition, inputSuffix] using hinput)
   simpa [MarkedDovetailLayoutBodyScannerDescription, TmidTape,
-    baseAfterTransition] using
+    baseAfterTransition] using!
       rightHandoffSequential_runConfig_exists
         (A := TRP)
         (B := ISCFFS)
@@ -2372,7 +2372,7 @@ private theorem run_checkedDovetailLayoutScanner_raw_to_checkedHandoff_phaseChai
           tape := TmidTape } := by
     rw [dovetailLayoutFieldBits_nil_eq_first_body L]
     rw [hbodyTail]
-    simpa [TmidTape] using
+    simpa [TmidTape] using!
       run_markFirstTransitionBit_raw bodyTail
   have hBReach :
       exists nB : Nat,

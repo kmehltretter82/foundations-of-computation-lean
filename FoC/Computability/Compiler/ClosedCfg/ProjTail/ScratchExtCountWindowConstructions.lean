@@ -676,7 +676,7 @@ theorem rejectPostFieldHandoff_rightEdgeRewind_haltsFrom
       (by
         rw [hsource, rejectPostFieldHandoffRewindPadding])
       (by
-        simpa [rejectPostFieldHandoffRewoundTape] using
+        simpa [rejectPostFieldHandoffRewoundTape] using!
           rightEdgeRewindDescription_haltsFromTapeWithBase
             ([] : List (Option Bool))
             (rejectPostFieldHandoffRewindBits L pref leftBit)
@@ -2031,7 +2031,7 @@ theorem scratchCountSuffixExtraBlankRightGapScanner_haltsFrom
           using rightEdgeScanDescription_haltsFromTape
             [none] bits padding)
       (by
-        simpa [bits, padding] using
+        simpa [bits, padding] using!
           rightEdgeScanTargetTapeFromLeft_move_left_move_right
             [none] bits padding)
       (by
@@ -2074,7 +2074,7 @@ theorem scratchCountSuffixExtraBlankRightGapScanner_haltsFrom
                     Tape.move, Tape.moveLeft, Tape.moveRight,
                     hleft, hstack, List.reverse_cons, List.map_append,
                     List.append_assoc]
-        simpa [htarget] using
+        simpa [htarget] using!
           rightMoveOnceDescription_haltsFromTape
             (rightEdgeScanTargetTapeFromLeft [none] bits padding))
 

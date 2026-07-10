@@ -215,7 +215,7 @@ theorem concrete_diagonal_pair_map_computable_noninjective :
     Computability.ConcreteDiagonalPairMap,
     Computability.ConcretePairCodeSymbol,
     Computability.ConcreteMachineCodeSymbol]
-    using Computability.concrete_diagonal_pair_map_computable_noninjective
+    using! Computability.concrete_diagonal_pair_map_computable_noninjective
 
 theorem faithful_concrete_diagonal_pair_map_computable :
     FaithfulConcreteDiagonalPairMapComputable := by
@@ -226,7 +226,7 @@ theorem faithful_concrete_diagonal_pair_map_computable :
     Computability.ConcreteDiagonalPairMap,
     Computability.ConcretePairCodeSymbol,
     Computability.ConcreteMachineCodeSymbol]
-    using Computability.faithful_concrete_diagonal_pair_map_computable
+    using! Computability.faithful_concrete_diagonal_pair_map_computable
 
 theorem concrete_diagonal_pair_map_computable :
     ConcreteDiagonalPairMapComputable :=
@@ -313,7 +313,7 @@ theorem concrete_code_prefix_recognizer_program_accepts_language :
       ConcreteMachineCodePrefixAcceptedLanguage := by
   simpa [ConcreteCodePrefixRecognizerProgram,
     ConcreteMachineCodePrefixAcceptedLanguage]
-    using Computability.codePrefixRecognizerProgram_acceptsLanguage
+    using! Computability.codePrefixRecognizerProgram_acceptsLanguage
 
 theorem concrete_code_prefix_accepted_language_program_acceptable :
     ProgramAcceptable ConcreteMachineCodePrefixAcceptedLanguage :=
@@ -346,7 +346,7 @@ theorem concrete_code_prefix_parser_branch_success
       some (MachineDescription.encodeBoolWordAppend [true] tokens) :=
   Computability.codePrefixParser_branch_success
     (by
-      simpa [ConcreteMachineDecodePrefix] using h)
+      simpa [ConcreteMachineDecodePrefix] using! h)
 
 theorem concrete_code_prefix_parser_branch_failure
     {tokens : Word ConcreteMachineCodeSymbol}
@@ -355,7 +355,7 @@ theorem concrete_code_prefix_parser_branch_failure
       some (MachineDescription.encodeBoolWord [false]) :=
   Computability.codePrefixParser_branch_failure
     (by
-      simpa [ConcreteMachineDecodePrefix] using h)
+      simpa [ConcreteMachineDecodePrefix] using! h)
 
 theorem concrete_code_prefix_parser_branch_total
     (tokens : Word ConcreteMachineCodeSymbol) :
@@ -442,7 +442,7 @@ theorem concrete_code_prefix_accepted_language_compiled_by_description_of_progra
   simpa [ConcreteMachineDescriptionAcceptsEncodedInputLanguage,
     ConcreteMachineCodePrefixAcceptedLanguage,
     ConcreteEncodedInputProgramAcceptorCompilationConstruction]
-    using
+    using!
       Computability.codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
         hcompile
 
@@ -908,7 +908,7 @@ theorem concrete_machine_decode_prefix_eq_some_encode_append
     encoded = Languages.Word.Concat (ConcreteMachineEncode D) input := by
   simpa [ConcreteMachineDecodePrefix, ConcreteMachineEncode,
     Languages.Word.Concat]
-    using
+    using!
       MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
         h
 

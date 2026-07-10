@@ -66,7 +66,7 @@ theorem postPaddingOutputPrefixStageScannerDescription_rejectSourceBits_handoff_
         (configurationFieldBits L.rejectConfig
           (boolFieldBits L.rejectHit []))]
     rw [hfieldTail]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageScannerDescription_haltsFrom_raw_withRight
         (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
   · have hmove :=
@@ -121,7 +121,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_acceptSou
   rw [
     CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
       L.acceptConfig (false :: suffixTail)]
-  simpa [List.map_append, List.append_assoc] using
+  simpa [List.map_append, List.append_assoc] using!
     postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
       (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
 
@@ -193,7 +193,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_ha
     rw [
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
         L.acceptConfig (false :: suffixTail)]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
         (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
   · rw [hsuffix]
@@ -313,7 +313,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_acceptSourceBits_ha
     rw [
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
         L.acceptConfig (false :: scannerTail)]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw_withRight
         (ParsedLayoutBits L) L.stage L.acceptConfig [none]
         scannerTail rightPadding
@@ -509,7 +509,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_rejectSou
   rw [
     CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
       L.acceptConfig (false :: suffixTail)]
-  simpa [List.map_append, List.append_assoc] using
+  simpa [List.map_append, List.append_assoc] using!
     postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
       (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
 
@@ -582,7 +582,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_ha
     rw [
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
         L.acceptConfig (false :: suffixTail)]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw
         (ParsedLayoutBits L) L.stage L.acceptConfig [none] suffixTail
   · rw [hsuffix]
@@ -593,7 +593,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_ha
     simpa [selectedProjectionPaddedTailCleanupKeptPrefixBits,
       selectedProjectionPaddedTailCleanupSelectedConfigBits,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits,
-      List.append_assoc] using hmove
+      List.append_assoc] using! hmove
 
 theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_handoff_withRight
     (L : DovetailLayout) (rightPadding : List (Option Bool)) :
@@ -642,7 +642,7 @@ theorem postPaddingOutputPrefixStageConfigScannerDescription_rejectSourceBits_ha
     rw [
       CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits_append_nil
         L.acceptConfig (false :: suffixTail)]
-    simpa [List.map_append, List.append_assoc] using
+    simpa [List.map_append, List.append_assoc] using!
       postPaddingOutputPrefixStageConfigScannerDescription_haltsFrom_raw_withRight
         (ParsedLayoutBits L) L.stage L.acceptConfig [none]
         suffixTail rightPadding

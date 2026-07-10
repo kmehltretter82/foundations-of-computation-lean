@@ -273,7 +273,7 @@ theorem tailHeadLocalGapCompactorDescription_haltsFrom_tailHeadHandoffTape
             ([] : List (Option Bool)) rawBit pref.reverse
             (count.length + 2) (some tailFirst) tail
         simpa [tailHeadOneGapCompactedTape, List.reverse_cons,
-          List.append_assoc] using hcompact)
+          List.append_assoc] using! hcompact)
 
 theorem sourceFirstThreeRawBitCellsLeftEdgeEmissionDescription_haltsFrom_sourceTape_cellSuffixLeftEdge_of_count_lengths
     (skipped count pref : Word Bool) (scratchOne scratchTail : Nat)

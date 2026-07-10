@@ -113,7 +113,7 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerOutputSpec_of_m
     structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
     structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
     structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
-    structured3InputMaterializerTargetTape] using
+    structured3InputMaterializerTargetTape] using!
     hrun (bits, suffixTail)
 
 theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputSpec_of_initializerOutputSpec
@@ -133,7 +133,7 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputSpec_of_
     structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
     structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
     structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
-    structured3InputMaterializerTargetTape] using
+    structured3InputMaterializerTargetTape] using!
     hrun bits suffixTail
 
 theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerOutputConstruction_of_materializerOutput

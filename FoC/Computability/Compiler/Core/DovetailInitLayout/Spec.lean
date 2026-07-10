@@ -488,7 +488,7 @@ theorem outputCode_eq_stageInput_append_suffix
       (SuffixCode accept reject w)
   rw [← hnat] at hbool
   simpa [DovetailLayout.stageInputCode,
-    DovetailLayout.stageInputCodeAppend] using hbool
+    DovetailLayout.stageInputCodeAppend] using! hbool
 
 theorem encodeTapeAppend_input_nil
     (suffix : Word MachineCodeSymbol) :

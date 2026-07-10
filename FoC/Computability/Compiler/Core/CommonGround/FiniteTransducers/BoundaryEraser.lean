@@ -170,10 +170,10 @@ theorem leftBoundaryEraserDescription_run_loop
           lookupTransition, Matches, transition, Tape.read, Tape.write,
           Tape.move, Tape.moveLeft, tapeAtCells]
       · simpa [List.replicate_succ, Nat.add_assoc,
-          Nat.add_comm, Nat.add_left_comm, List.append_assoc] using
+          Nat.add_comm, Nat.add_left_comm, List.append_assoc] using!
           ih next (erased + 1)
       · simpa [List.replicate_succ, Nat.add_assoc,
-          Nat.add_comm, Nat.add_left_comm, List.append_assoc] using
+          Nat.add_comm, Nat.add_left_comm, List.append_assoc] using!
           ih next (erased + 1)
 
 theorem leftBoundaryEraserDescription_run_nonempty
@@ -232,7 +232,7 @@ theorem leftBoundaryEraserDescription_haltsFromTape
   cases hrev : field.reverse with
   | nil =>
       have hfield : field = [] := by
-        simpa using congrArg List.reverse hrev
+        simpa using! congrArg List.reverse hrev
       have hsource :
           leftBoundaryEraserSourceTape
               baseLeft field suffixHead suffixTail =

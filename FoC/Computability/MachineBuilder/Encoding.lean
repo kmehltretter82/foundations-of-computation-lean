@@ -494,7 +494,7 @@ theorem decodeBoolWord_encodeBoolWordAppend
 
 theorem decodeBoolWord_encodeBoolWord (w : Word Bool) :
     decodeBoolWord (encodeBoolWord w) = some (w, []) := by
-  simpa [encodeBoolWord] using
+  simpa [encodeBoolWord] using!
     decodeBoolWord_encodeBoolWordAppend w []
 
 theorem decodeBoolWord_eq_some_encodeBoolWordAppend

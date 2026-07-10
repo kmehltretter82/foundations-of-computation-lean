@@ -138,7 +138,7 @@ export SimulatorLayout
 theorem handoffTape_normalizedOutput (L : Layout) :
     Tape.normalizedOutput (handoffTape L) =
       encodeCodeWordAsInput (encode L) := by
-  simpa [bits, encode, LayoutTapes.Bits] using
+  simpa [bits, encode, LayoutTapes.Bits] using!
     LayoutTapes.handoffTape_normalizedOutput encode L
 
 theorem handoffTape_handoff (L : Layout) :
@@ -152,7 +152,7 @@ theorem handoffTape_move_left_eq_tape (L : Layout) :
       Tape.input (SimulatorLayout.asBoolInput L) := by
   simpa [handoffTape, inputTape, encode, LayoutTapes.HandoffTape,
     LayoutTapes.InputTape, SimulatorLayout.asBoolInput,
-    tapeCodePrimitiveCodeWordHandoffMove] using
+    tapeCodePrimitiveCodeWordHandoffMove] using!
     handoffTape_handoff L
 
 theorem runCodePrimitive_transform_eq_some_cons

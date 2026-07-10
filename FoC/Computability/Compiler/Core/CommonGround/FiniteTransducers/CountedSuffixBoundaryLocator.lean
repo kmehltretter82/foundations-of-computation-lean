@@ -887,7 +887,7 @@ private theorem countedSuffixBoundaryLeftAdvanceDescription_run_loop_step
     | nil =>
         have hnil : processedRev = [] := by
           have h := congrArg List.reverse hrev
-          simpa using h
+          simpa using! h
         subst processedRev
         cases current <;> cases last <;> cases guardBit <;>
           simp [countedSuffixBoundaryLeftAdvanceLoopTape,
@@ -1317,7 +1317,7 @@ private theorem countedSuffixBoundaryLeftAdvanceDescription_run_done
     | nil =>
         have hnil : processedRev = [] := by
           have h := congrArg List.reverse hrev
-          simpa using h
+          simpa using! h
         subst processedRev
         cases last <;> cases guardBit <;> cases tailFirst <;>
           simp [countedSuffixBoundaryLeftAdvanceLoopTape,
@@ -2265,7 +2265,7 @@ private theorem countedSuffixBoundaryRightRestoreDescription_run_continue
   simpa [countedSuffixBoundaryRestoreLoopTape, baseLeft,
     afterCurrentLeft, afterNextLeft, List.reverse_cons,
     List.map_append, List.reverse_append, List.append_assoc,
-    List.replicate_succ] using
+    List.replicate_succ] using!
     countedSuffixBoundaryRightRestoreDescription_run_return_to_separator
       afterCurrentLeft rest next guardBit
       (none ::
@@ -2292,7 +2292,7 @@ private theorem countedSuffixBoundaryRightRestoreDescription_run_loop
   induction suffixRest generalizing processed suffixFirst with
   | nil =>
       refine ⟨7, ?_⟩
-      simpa using
+      simpa using!
         countedSuffixBoundaryRightRestoreDescription_run_final
           pref processed suffixFirst guardBit tail
   | cons next rest ih =>

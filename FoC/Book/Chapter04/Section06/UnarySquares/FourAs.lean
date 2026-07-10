@@ -173,7 +173,7 @@ theorem squareGrammar_generates_four_as :
                                           (GeneralGrammar.Derives.refl
                                             [a, a, a, a])))))))))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, fourAsWord,
-    SententialForm.terminalWord, S, a] using hderives
+    SententialForm.terminalWord, S, a] using! hderives
 
 end Section06
 end Chapter04

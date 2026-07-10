@@ -162,7 +162,7 @@ theorem markFirstTransitionBitDescription_haltsWithTape_inv
                               config MFTB.halt []
                                 (none :: some false :: tail.map some) := by
                           simpa [initial, config,
-                            tapeAtCells] using
+                            tapeAtCells] using!
                             run_markFirstTransitionBit_raw tail
                         rw [h2]
                         exact
@@ -272,7 +272,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_marker_inv
         markedDovetailLayoutBodyReturnDescription_subroutineReady
         (by
           simpa [CheckedDovetailLayoutScannerDescription,
-            MDBR] using h) with
+            MDBR] using! h) with
     ⟨Tmid, hmark, nB, hbody⟩
   rcases markFirstTransitionBitDescription_haltsWithTape_inv hmark with
     ⟨tail, hbits, hTmid⟩
@@ -551,7 +551,7 @@ theorem transitionRemainderPrefixScannerDescription_markedTail_inv
                             (transitionRemainderHandoffConfigWithBase [none]
                               (b :: suffixTail)).tape } := by
                     simpa [start, config,
-                      transitionRemainderHandoffConfigWithBase] using hsteps
+                      transitionRemainderHandoffConfigWithBase] using! hsteps
                   exact
                     (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
                       transitionRemainderPrefixScannerDescription_haltTransitionFree

@@ -933,39 +933,39 @@ theorem resultNoneGuardScannerDescription_run_encoded_symbol
             suffix } := by
   cases symbol
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false false false false leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false false false true leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false false true false leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false false true true leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false true false false leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false true false true leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false true true false leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         false true true true leftRev suffix)
   · simpa [encodeCodeSymbolAsInput,
-      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using
+      resultNoneGuardCodeOfBits, resultNoneGuardSymbolCode] using!
       (resultNoneGuardScannerDescription_run_bits boundary
         true false false false leftRev suffix)
 

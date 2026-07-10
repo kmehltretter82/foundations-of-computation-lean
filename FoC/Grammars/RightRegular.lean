@@ -307,11 +307,11 @@ theorem leftRegularLanguage_iff_reverse_rightRegular {L : Language terminal} :
               · intro hw
                 have hrr := (hG.right w).mp hw
                 change Word.Reverse (Word.Reverse w) ∈ L at hrr
-                simpa [Word.Reverse, List.reverse_reverse] using hrr
+                simpa [Word.Reverse, List.reverse_reverse] using! hrr
               · intro hw
                 apply (hG.right w).mpr
                 change Word.Reverse (Word.Reverse w) ∈ L
-                simpa [Word.Reverse, List.reverse_reverse] using hw
+                simpa [Word.Reverse, List.reverse_reverse] using! hw
 
 theorem rightRegularLanguage_regular (alphabet : List terminal)
     (halphabet : forall a, a ∈ alphabet) {L : Language terminal}
@@ -355,11 +355,11 @@ theorem leftRegularLanguage_regular (alphabet : List terminal)
       · intro hw
         have hmem := (hr w).mp hw
         change Word.Reverse (Word.Reverse w) ∈ L at hmem
-        simpa [Word.Reverse, List.reverse_reverse] using hmem
+        simpa [Word.Reverse, List.reverse_reverse] using! hmem
       · intro hw
         apply (hr w).mpr
         change Word.Reverse (Word.Reverse w) ∈ L
-        simpa [Word.Reverse, List.reverse_reverse] using hw
+        simpa [Word.Reverse, List.reverse_reverse] using! hw
 
 /-!
 The reverse construction turns an NFA into a right-regular grammar. Transitions

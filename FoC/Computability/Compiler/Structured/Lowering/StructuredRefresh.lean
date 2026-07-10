@@ -264,7 +264,7 @@ theorem structuredSegment1RefreshDescription_contract
             have hlocalRun :
                 localRefresh.HaltsFromTapeEquiv selectedSeparator
                   modifiedSeparator := by
-              simpa [selectedSeparator, modified] using
+              simpa [selectedSeparator, modified] using!
                 hlocal.realizes
                   (target := target)
                   (actual := actual0 :: actual1 :: actualTailRest)
@@ -403,7 +403,7 @@ theorem structuredSegment2RefreshDescription_contract
                 have hlocalRun :
                     localRefresh.HaltsFromTapeEquiv selectedSeparator
                       modifiedSeparator := by
-                  simpa [selectedSeparator, modified] using
+                  simpa [selectedSeparator, modified] using!
                     hlocal.realizes
                       (target := target)
                       (actual := actual0 :: actual1 :: actual2 ::

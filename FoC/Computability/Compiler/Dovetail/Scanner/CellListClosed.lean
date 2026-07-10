@@ -949,7 +949,7 @@ theorem cellListSuffixScannerDescription_runConfig_state120_tick_decodeCellList_
           decodeCells (remainingTail + 1)
             tokensAfterLen with
       | none =>
-          simpa [cellListMarkingTailConfig] using
+          simpa [cellListMarkingTailConfig] using!
             cellListMarkingTail_decodeCells_none_ne_halt
               baseLeft ([] : List (Option Bool)) (remainingTail + 1)
               tokensAfterLen hcells n
@@ -1028,7 +1028,7 @@ theorem cellListSuffixScannerDescription_runConfig_code_inv
             CLSS.runConfig 4 c0 = c1 := by
           dsimp [c0, c1]
           simpa [encodeCodeWordAsInput,
-            encodeCodeSymbolAsInput, tickBits] using
+            encodeCodeSymbolAsInput, tickBits] using!
             run_cellList_state100_tick baseLeft
               ((encodeCodeWordAsInput rest).map some)
         have hhalt :

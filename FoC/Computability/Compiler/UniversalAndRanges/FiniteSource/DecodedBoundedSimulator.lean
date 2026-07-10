@@ -143,7 +143,7 @@ theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff
             some (D, input) ∧
           D.HaltsIn stage
             (MachineDescription.encodeCodeWordAsInput input) := by
-  simpa using
+  simpa using!
     (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
       tokens ([] : Word MachineCodeSymbol))
 
@@ -205,7 +205,7 @@ theorem codePrefixDecodedBoundedSimulatorCode_transform_eq_some_nil_iff_decodeNa
       MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
         hdecode
     exact
-      ⟨stage, D, input, by simpa [hencoded] using hstage, hhalts⟩
+      ⟨stage, D, input, by simpa [hencoded] using! hstage, hhalts⟩
   · intro h
     rcases h with ⟨stage, D, input, hstage, hhalts⟩
     exact
@@ -305,7 +305,7 @@ theorem codePrefixDecodedBoundedSimulatorNormalizedInputTape_cells
             (CodePrefixRecognizerStageCode
               (List.append (MachineDescription.encodeDescription D) input)
               stage).map some := by
-  simpa using
+  simpa using!
     codePrefixRecognizerStageCode_input_cells
       (List.append (MachineDescription.encodeDescription D) input)
       stage

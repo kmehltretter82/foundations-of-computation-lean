@@ -37,7 +37,7 @@ theorem selectedProjectionPaddedTailCleanupKeptPrefix_true_append_last
   cases hrev : tail.reverse with
   | nil =>
       have htailNil : tail = [] := by
-        simpa using congrArg List.reverse hrev
+        simpa using! congrArg List.reverse hrev
       refine ⟨selectedProjectionPaddedTailCleanupPrefixBits L, false, ?_⟩
       rw [selectedProjectionPaddedTailCleanupKeptPrefixBits]
       simp [selectedProjectionPaddedTailCleanupSelectedConfigBits,
@@ -87,7 +87,7 @@ theorem selectedProjectionPaddedTailCleanupSelectedConfig_false_append_last
   cases hrev : tail.reverse with
   | nil =>
       have htailNil : tail = [] := by
-        simpa using congrArg List.reverse hrev
+        simpa using! congrArg List.reverse hrev
       refine ⟨[], false, ?_⟩
       simp [selectedProjectionPaddedTailCleanupSelectedConfigBits,
         htail, htailNil]

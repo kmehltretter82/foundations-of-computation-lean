@@ -438,7 +438,7 @@ theorem prependCellZeroChunkLeftOfBlankSentinelDescription_haltsFrom_prepend
       (tapeAtCells
         ((List.append preservingCellPassZeroBits emitted).reverse.map some)
         (none :: tail)) := by
-  simpa [preservingCellPassZeroBits] using
+  simpa [preservingCellPassZeroBits] using!
     prependFixedFourBitsLeftOfBlankSentinelDescription_haltsFrom_prepend
       false true false true emitted tail
 
@@ -458,7 +458,7 @@ theorem prependCellOneChunkLeftOfBlankSentinelDescription_haltsFrom_prepend
       (tapeAtCells
         ((List.append preservingCellPassOneBits emitted).reverse.map some)
         (none :: tail)) := by
-  simpa [preservingCellPassOneBits] using
+  simpa [preservingCellPassOneBits] using!
     prependFixedFourBitsLeftOfBlankSentinelDescription_haltsFrom_prepend
       false true true false emitted tail
 

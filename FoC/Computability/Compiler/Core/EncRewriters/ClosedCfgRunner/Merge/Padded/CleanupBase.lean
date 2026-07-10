@@ -701,7 +701,7 @@ theorem sourceLeftBitsRev_reverse_eq_sourceBits
   rw [SelectedMergePaddedEmitterAfterHitTape_eq_rewindSourceTape p] at hnorm
   simpa [sourceBits, rewindSourceTape,
     DovetailInitialLayoutInitializer.tapeAtCells,
-    Tape.normalizedOutput, Tape.cells, Function.comp_def] using hnorm
+    Tape.normalizedOutput, Tape.cells, Function.comp_def] using! hnorm
 
 theorem sourceRewindDescription_haltsFrom_afterHitTape
     (p : SelectedMergeEmitterPayload) :
@@ -727,7 +727,7 @@ theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff
       SelectedMergePaddedEmitterOuterHitSuffixBits,
       SelectedMergePaddedEmitterOuterHitSuffixCode,
       DovetailInitialLayoutInitializer.config]
-      using
+      using!
         congrArg MachineDescription.Configuration.state
           (selectedMergePaddedEmitterHitScanner_runConfig
             p.S.hit
@@ -745,7 +745,7 @@ theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigHandoff
       SelectedMergePaddedEmitterOuterHitSuffixBits,
       SelectedMergePaddedEmitterOuterHitSuffixCode,
       DovetailInitialLayoutInitializer.config]
-      using
+      using!
         congrArg MachineDescription.Configuration.tape
           (selectedMergePaddedEmitterHitScanner_runConfig
             p.S.hit
@@ -1291,7 +1291,7 @@ theorem selectedMergePaddedEmitterStageScanner_haltsFromAfterInputHandoff
       SelectedMergePaddedEmitterOuterSuffixBits_eq_stageFieldBits,
       hsuffix,
       DovetailInitialLayoutInitializer.config]
-      using congrArg MachineDescription.Configuration.state hsteps
+      using! congrArg MachineDescription.Configuration.state hsteps
   · simpa [MachineDescription.HaltsFromTapeIn,
       SelectedMergePaddedEmitterStageScannerDescription,
       CanonicalLayouts.DovetailStagePrefix.NonemptyNatSuffixScannerDescription,
@@ -1325,7 +1325,7 @@ theorem selectedMergePaddedEmitterInputScanner_haltsFromPayload
       CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
       hsuffix,
       DovetailInitialLayoutInitializer.config]
-      using congrArg MachineDescription.Configuration.state hsteps
+      using! congrArg MachineDescription.Configuration.state hsteps
   · simpa [MachineDescription.HaltsFromTapeIn,
       SelectedMergePaddedEmitterInputScannerDescription,
       SelectedMergePaddedEmitterAfterHeaderTape,
@@ -1335,7 +1335,7 @@ theorem selectedMergePaddedEmitterInputScanner_haltsFromPayload
       CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
       hsuffix,
       DovetailInitialLayoutInitializer.config]
-      using congrArg MachineDescription.Configuration.tape hsteps
+      using! congrArg MachineDescription.Configuration.tape hsteps
 
 theorem selectedMergePaddedEmitterSourceScanner_haltsFromPayload
     (p : SelectedMergeEmitterPayload) :

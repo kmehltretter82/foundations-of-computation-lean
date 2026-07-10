@@ -207,7 +207,7 @@ theorem loop_run
       (repeatMoveLeft (left + 1) target) := by
   induction left generalizing passed target with
   | zero =>
-      simpa using loop_step_zero bits padding passed target
+      simpa using! loop_step_zero bits padding passed target
   | succ left ih =>
       rw [show left + 1 + 1 = 1 + (left + 1) by lia]
       rw [Description.runConfig_add]

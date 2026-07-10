@@ -1068,7 +1068,7 @@ theorem exists_nat_mul_pos_gt (z : QRat) {c : QRat} (hc : 0 < c) :
   have hkn : (k : Rat) < (n : Rat) := by
     have h :=
       (Rat.intCast_lt_intCast (a := k) (b := Int.ofNat n)).mpr hkltInt
-    simpa using h
+    simpa using! h
   have hrn : r < (n : Rat) := by
     grind
   have hzc : toRat z < (n : Rat) * toRat c := by

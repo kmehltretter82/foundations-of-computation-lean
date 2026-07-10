@@ -642,7 +642,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
   | none =>
       simpa [cellCodeBits, encodeCell,
         encodeCodeWordAsInput,
-        encodeCodeSymbolAsInput, List.append_assoc] using
+        encodeCodeSymbolAsInput, List.append_assoc] using!
         FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
@@ -652,7 +652,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
       · simpa [cellCodeBits, encodeCell,
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
-          using
+          using!
             FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
@@ -660,7 +660,7 @@ theorem cellSuffixHandoffConfigWithBase_move_right
       · simpa [cellCodeBits, encodeCell,
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
-          using
+          using!
             FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some false)
               (some true :: some true :: some false :: baseLeft)
@@ -681,7 +681,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
   | none =>
       simpa [cellCodeBits, encodeCell,
         encodeCodeWordAsInput,
-        encodeCodeSymbolAsInput, List.append_assoc] using
+        encodeCodeSymbolAsInput, List.append_assoc] using!
         FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           (some false)
           (some false :: some true :: some false :: baseLeft)
@@ -692,7 +692,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
       · simpa [cellCodeBits, encodeCell,
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
-          using
+          using!
             FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some true)
               (some false :: some true :: some false :: baseLeft)
@@ -701,7 +701,7 @@ theorem cellSuffixHandoffConfigWithBaseAndRight_move_right
       · simpa [cellCodeBits, encodeCell,
           encodeCodeWordAsInput,
           encodeCodeSymbolAsInput, List.append_assoc]
-          using
+          using!
             FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
               (some false)
               (some true :: some true :: some false :: baseLeft)
@@ -842,14 +842,14 @@ theorem boolOnlySuffixHandoffConfigWithBase_move_right
   cases flag
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput, List.append_assoc] using
+      encodeCodeSymbolAsInput, List.append_assoc] using!
       FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (suffixTail.map some)
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput, List.append_assoc] using
+      encodeCodeSymbolAsInput, List.append_assoc] using!
       FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
@@ -870,14 +870,14 @@ theorem boolOnlySuffixHandoffConfigWithBaseAndRight_move_right
   cases flag
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput, List.append_assoc] using
+      encodeCodeSymbolAsInput, List.append_assoc] using!
       FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some true)
         (some false :: some true :: some false :: baseLeft)
         (some b) (List.append (suffixTail.map some) rightPadding)
   · simpa [cellCodeBits, encodeCell,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput, List.append_assoc] using
+      encodeCodeSymbolAsInput, List.append_assoc] using!
       FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
         (some false)
         (some true :: some true :: some false :: baseLeft)
@@ -1123,7 +1123,7 @@ theorem run_cellList_state120_stageNat
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         run_cellList_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
@@ -1492,7 +1492,7 @@ private theorem run_cellList_raw_mark_current_to_state100_withBaseRightCells
       simpa [scanRev,
         cellListMarkingReturnScanRev, markedCellCodeBits,
         cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-        List.map_append, List.reverse_append, List.append_assoc] using hreturn
+        List.map_append, List.reverse_append, List.append_assoc] using! hreturn
   | some b =>
       cases b
       · have hreturn :=
@@ -1506,7 +1506,7 @@ private theorem run_cellList_raw_mark_current_to_state100_withBaseRightCells
         simpa [scanRev,
           cellListMarkingReturnScanRev, markedCellCodeBits,
           cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
+          List.map_append, List.reverse_append, List.append_assoc] using!
             hreturn
       · have hreturn :=
           run_cellList_state140_returnToLengthMarker scanRev true
@@ -1519,7 +1519,7 @@ private theorem run_cellList_raw_mark_current_to_state100_withBaseRightCells
         simpa [scanRev,
           cellListMarkingReturnScanRev, markedCellCodeBits,
           cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-          List.map_append, List.reverse_append, List.append_assoc] using
+          List.map_append, List.reverse_append, List.append_assoc] using!
             hreturn
 
 private theorem run_cellList_raw_mark_current_to_state100_withBase
@@ -1769,7 +1769,7 @@ private theorem run_cellList_canonical_finish_to_handoff_withBaseRightTail
         transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
+      simpa [config, tapeAtCells, hleft] using!
         run_cellList_state150_handoff_false cell left
           rightTail
 
@@ -1826,7 +1826,7 @@ theorem run_cellList_raw_to_canonical_handoff_withBase
                 (some false :: suffixTail.map some)))) =
         cellListCanonicalFinishStartConfigWithBase cells baseLeft
           (false :: suffixTail) := by
-    simpa using hmark
+    simpa using! hmark
   rcases run_cellList_canonical_finish_to_handoff_withBase
       cells baseLeft suffixTail with
     ⟨finishSteps, hfinish⟩
@@ -1860,7 +1860,7 @@ theorem run_cellList_raw_to_canonical_handoff_withBaseAndRight
                   List.append (suffixTail.map some) rightPadding)))) =
         cellListCanonicalFinishStartConfigWithBaseAndRight cells baseLeft
           (false :: suffixTail) rightPadding := by
-    simpa using hmark
+    simpa using! hmark
   rcases run_cellList_canonical_finish_to_handoff_withBaseAndRight
       cells baseLeft suffixTail rightPadding with
     ⟨finishSteps, hfinish⟩
@@ -1908,7 +1908,7 @@ theorem cellListCanonicalHandoffConfigWithBase_move_right
       exact cellListCanonicalRestoredLeftWithBase_ne_nil cells baseLeft
         hleft
   | cons cell left =>
-      simpa [hleft] using
+      simpa [hleft] using!
         FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           cell left (some b) (suffixTail.map some)
 
@@ -1930,7 +1930,7 @@ theorem cellListCanonicalHandoffConfigWithBaseAndRight_move_right
       exact cellListCanonicalRestoredLeftWithBase_ne_nil cells baseLeft
         hleft
   | cons cell left =>
-      simpa [hleft, List.append_assoc] using
+      simpa [hleft, List.append_assoc] using!
         FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
           cell left (some b)
           (List.append (suffixTail.map some) rightPadding)

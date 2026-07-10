@@ -253,7 +253,7 @@ theorem selectedHitOtherFlagErasedAcceptAfterPaddingTape_move_left_move_right
         (Tape.move Direction.right
           (selectedHitOtherFlagErasedAcceptAfterPaddingTape L)) =
       selectedHitOtherFlagErasedAcceptAfterPaddingTape L := by
-  simpa [selectedHitOtherFlagErasedAcceptAfterPaddingTape] using
+  simpa [selectedHitOtherFlagErasedAcceptAfterPaddingTape] using!
     tapeAtCells_move_left_move_right_cons_cons
       (selectedHitOtherFlagErasedAcceptHitRestLeftRev L)
       (some (selectedHitOtherFlagErasedAcceptHitHead L.acceptHit))
@@ -271,13 +271,13 @@ theorem selectedHitOtherFlagErasedRejectAfterPaddingTape_move_left_move_right
   rw [selectedHitOtherFlagErasedRejectAfterPaddingTape, hcells]
   cases hitTail with
   | nil =>
-      simpa using
+      simpa using!
         tapeAtCells_move_left_move_right_cons_cons
           (List.append (List.replicate 4 (none : Option Bool))
             (selectedHitOtherFlagErasedRejectBaseLeftRev L))
           (some false) none []
   | cons bit rest =>
-      simpa [List.append_assoc] using
+      simpa [List.append_assoc] using!
         tapeAtCells_move_left_move_right_cons_cons
           (List.append (List.replicate 4 (none : Option Bool))
             (selectedHitOtherFlagErasedRejectBaseLeftRev L))

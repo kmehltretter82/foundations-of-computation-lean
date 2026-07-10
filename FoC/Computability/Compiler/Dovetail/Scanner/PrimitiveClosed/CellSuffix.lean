@@ -580,7 +580,7 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff
         have hbits :=
           cellBits_eq_encodeCellAppend
             cell (symbol :: rest)
-        simpa [c0, hbits, hsuffix, List.map_append] using hforward
+        simpa [c0, hbits, hsuffix, List.map_append] using! hforward
       exact
         (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
           cellSuffixScannerDescription_haltTransitionFree
@@ -631,7 +631,7 @@ theorem cellSuffixScannerDescription_runConfig_encodeCellAppend_handoff_withRigh
     have hbits :=
       cellBits_eq_encodeCellAppend cell suffix
     simpa [c0, hbits, hsuffix, List.map_append,
-      List.append_assoc] using hforward
+      List.append_assoc] using! hforward
   exact
     (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
       cellSuffixScannerDescription_haltTransitionFree

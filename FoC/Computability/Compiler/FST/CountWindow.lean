@@ -482,7 +482,7 @@ theorem countWindowRawSourceEncoderTargetTapeNoCountPadding_equiv_leftPadding
       Tape.dropTrailingNone
           (List.replicate padding (none : Option Bool)) =
         [] := by
-    simpa using
+    simpa using!
       (FoC.Computability.dropTrailingNone_append_replicate_none
         ([] : List (Option Bool)) padding)
   have hone :
@@ -585,7 +585,7 @@ private theorem countWindowRawSourceEncoderHeaderGapEmitterOutput_bits_eq
       DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits
           layout =
         encodeCodeWordAsInput (encodeCellsAppend (layout.map some) []) := by
-    simpa [encodeCodeWordAsInput] using
+    simpa [encodeCodeWordAsInput] using!
       DovetailInitialLayoutInitializer.controllerInitialRawBoolWordHeaderEmitterCellBits_append_suffix
         layout ([] : Word MachineCodeSymbol)
   rw [hcells]
@@ -785,14 +785,14 @@ theorem countWindowRawSourceEncoderRightBoundaryLayout_rewind_haltsFromTape
   | nil =>
       have hlayout : layout = [] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       simpa [hlayout, List.append_assoc] using
         rightEdgeRewindDescription_haltsFrom_emptyBoundaryBase_noDelimiter
           ([] : List (Option Bool)) right
   | cons current leftBits =>
       have hlayout : layout = List.append leftBits.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa [List.reverse_cons] using h
+        simpa [List.reverse_cons] using! h
       simpa [hlayout, List.map_append, List.append_assoc] using
         rightEdgeRewindDescription_haltsFrom_rightBoundaryBase_noDelimiter
           ([] : List (Option Bool)) leftBits current right
@@ -855,7 +855,7 @@ theorem countWindowRawSourceEncoderRightEdgeTape_moveRight_eq_countedSuffixExtra
       countedSuffixExtraBlankRightGapSourceTape
         skipped suffixRest suffixFirst tail := by
   simpa [countedSuffixExtraBlankRightGapSourceTape,
-    rightEdgeRewindSourceTapeWithBase, List.append_assoc] using
+    rightEdgeRewindSourceTapeWithBase, List.append_assoc] using!
     countWindowRawSourceEncoderRightEdgeTape_moveRight_threeBlankSource
       skipped (suffixFirst :: suffixRest) tail
 

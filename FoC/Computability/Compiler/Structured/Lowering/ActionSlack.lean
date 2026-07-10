@@ -292,7 +292,7 @@ theorem action0StayDescription_haltsFromEncodedStructuredTapes_of_guardCells
           PhysicalPrimitive.apply, HeadMove.apply] using
           replaceTapeAt_tapeAt_eq_self_of_atHasGuardCells hguards
       rw [htarget]
-      simpa [action0StayDescription] using
+      simpa [action0StayDescription] using!
         canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
           (canonicalPrimitiveSeqDescription_subroutineReady
             cursorNoopDescription_subroutineReady
@@ -383,7 +383,7 @@ theorem action0StayDescription_haltsFromEncodedStructuredTapes_of_guardCells
           replaceTapeAt_tapeAt_eq_self_of_atHasGuardCells
             hguardsWritten
       rw [htarget]
-      simpa [action0StayDescription] using
+      simpa [action0StayDescription] using!
         canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
           (canonicalPrimitiveSeqDescription_subroutineReady
             (canonicalPrimitiveSeqDescription_subroutineReady

@@ -165,7 +165,7 @@ theorem returnFromTape1SeparatorToBlockStartDescription_contract :
           have hbounce :
               Tape.move Direction.left (Tape.move Direction.right Tmid) =
                 Tmid := by
-            simpa [Tmid, hsuffix] using
+            simpa [Tmid, hsuffix] using!
               tapeAtCells_move_left_move_right_cons_cons
                 ((init.map some).reverse ++ tapeSeparatorCells)
                 (some last) none suffix
@@ -282,7 +282,7 @@ theorem returnFromNextSeparatorToCurrentSeparatorDescription_contract
       have hbounce :
           Tape.move Direction.left (Tape.move Direction.right Tmid) =
             Tmid := by
-        simpa [Tmid, hsuffix, List.append_assoc] using
+        simpa [Tmid, hsuffix, List.append_assoc] using!
           tapeAtCells_move_left_move_right_cons_cons
             ((init.map some).reverse ++
               tapeSeparatorCells ++ pfx.reverse)
@@ -303,7 +303,7 @@ theorem returnFromNextSeparatorToCurrentSeparatorDescription_contract
           List.map_append, List.map_reverse, List.reverse_reverse,
           List.append_assoc] using hscan
       simpa [returnFromNextSeparatorToCurrentSeparatorDescription]
-        using
+        using!
           canonicalPrimitiveSeqDescription_haltsFromTape_of_haltsFromTape
             (cursorMoveOnceDescription_subroutineReady Direction.left)
             returnToOpeningSeparatorDescription_subroutineReady

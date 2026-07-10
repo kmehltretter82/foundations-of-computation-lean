@@ -305,7 +305,7 @@ theorem scanRightToBlankDescription_run_rawWordTape
       oneTapeConfig 1 (afterRawWordTape left w) := by
   induction w generalizing left with
   | nil =>
-      simpa [afterRawWordTape] using
+      simpa [afterRawWordTape] using!
         scanRightToBlankDescription_run_blank left
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by
@@ -547,7 +547,7 @@ theorem copyUntilBlankDescription_run_rawWordTape
         (afterRawWordTape destLeft w) := by
   induction w generalizing sourceLeft destLeft with
   | nil =>
-      simpa [afterRawWordTape] using
+      simpa [afterRawWordTape] using!
         copyUntilBlankDescription_run_blank sourceLeft destLeft
   | cons bit rest ih =>
       rw [show (bit :: rest).length + 1 = 1 + (rest.length + 1) by

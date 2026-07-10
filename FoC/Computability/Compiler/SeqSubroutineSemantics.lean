@@ -721,7 +721,7 @@ theorem seq_firstReaches
               _ =
                 offsetConfiguration A.stateCount
                   (B.toDescription.runConfig j startB) := by
-                    simpa [startB] using
+                    simpa [startB] using!
                       runConfig_seq_right
                         (A := A) (B := B)
                         (handoffMove := handoffMove)
@@ -850,7 +850,7 @@ theorem seq_reaches_inv
             { state := A.stateCount + B.entry,
               tape := Tape.move handoffMove Tmid } := by
             symm
-            simpa [startB] using
+            simpa [startB] using!
               runConfig_seq_right
                 (A := A) (B := B) (handoffMove := handoffMove)
                 hA nB
@@ -1930,7 +1930,7 @@ theorem seqSubroutine_reaches
             tape := Tin } =
         { state := (seqSubroutine A B handoffMove).halt,
           tape := Tout } := by
-  simpa [seqSubroutine, asFragment] using
+  simpa [seqSubroutine, asFragment] using!
     Fragment.seq_reaches
       (A := A.asFragment) (B := B.asFragment)
       (handoffMove := handoffMove)
@@ -1999,17 +1999,17 @@ theorem seqSubroutine_reaches_right_state_of_runConfig_eq
       (targetState := targetState)
       ⟨m,
         by
-          simpa [asFragment_toDescription, asFragment] using hmrun,
+          simpa [asFragment_toDescription, asFragment] using! hmrun,
         by
           intro k hk
-          simpa [asFragment_toDescription, asFragment] using
+          simpa [asFragment_toDescription, asFragment] using!
             hmfirst k hk⟩
       ⟨nB,
         by
-          simpa [asFragment_toDescription, asFragment] using hBRun⟩
+          simpa [asFragment_toDescription, asFragment] using! hBRun⟩
   rcases hfrag with ⟨n, hn⟩
   exact ⟨n, by
-    simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
+    simpa [seqSubroutine, asFragment, Fragment.seq] using! hn⟩
 
 theorem seqSubroutine_runConfig_inv
     {A B : MachineDescription} {handoffMove : Direction}
@@ -2042,7 +2042,7 @@ theorem seqSubroutine_runConfig_inv
           { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
             tape := Tout } := by
     exact ⟨n, by
-      simpa [seqSubroutine, asFragment, Fragment.seq] using hseq⟩
+      simpa [seqSubroutine, asFragment, Fragment.seq] using! hseq⟩
   rcases Fragment.seq_reaches_inv
       (A := A.asFragment) (B := B.asFragment)
       (handoffMove := handoffMove)
@@ -2054,12 +2054,12 @@ theorem seqSubroutine_runConfig_inv
   rcases hBReach with ⟨nB, hBrunB⟩
   exact ⟨Tmid,
     ⟨⟨nA, by
-        simpa [asFragment_toDescription, asFragment] using hArunA,
+        simpa [asFragment_toDescription, asFragment] using! hArunA,
       by
         intro k hk
-        simpa [asFragment_toDescription, asFragment] using hAfirst k hk⟩,
+        simpa [asFragment_toDescription, asFragment] using! hAfirst k hk⟩,
       ⟨nB, by
-        simpa [asFragment_toDescription, asFragment] using hBrunB⟩⟩⟩
+        simpa [asFragment_toDescription, asFragment] using! hBrunB⟩⟩⟩
 
 theorem seqSubroutine_haltsWithTape_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
@@ -2081,9 +2081,9 @@ theorem seqSubroutine_haltsWithTape_of_haltsWithTape
     ⟨n, hn⟩
   exact ⟨n, by
     constructor
-    · simpa [MachineDescription.HaltsWithTapeIn] using
+    · simpa [MachineDescription.HaltsWithTapeIn] using!
         congrArg MachineDescription.Configuration.state hn
-    · simpa [MachineDescription.HaltsWithTapeIn] using
+    · simpa [MachineDescription.HaltsWithTapeIn] using!
         congrArg MachineDescription.Configuration.tape hn⟩
 
 theorem seqSubroutine_haltsFromTape_of_haltsFromTape
@@ -2139,7 +2139,7 @@ theorem seqSubroutine_haltsWithTape_inv
           { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
             tape := Tout } := by
     exact ⟨n, by
-      simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
+      simpa [seqSubroutine, asFragment, Fragment.seq] using! hn⟩
   rcases Fragment.seq_reaches_inv
       (A := A.asFragment) (B := B.asFragment)
       (handoffMove := handoffMove)
@@ -2152,11 +2152,11 @@ theorem seqSubroutine_haltsWithTape_inv
   exact ⟨Tmid,
     ⟨⟨nA, by
         constructor
-        · simpa [HaltsWithTapeIn, asFragment] using
+        · simpa [HaltsWithTapeIn, asFragment] using!
             congrArg Configuration.state hArunA
-        · simpa [HaltsWithTapeIn, asFragment] using
+        · simpa [HaltsWithTapeIn, asFragment] using!
             congrArg Configuration.tape hArunA⟩,
-      ⟨nB, by simpa [asFragment] using hBrunB⟩⟩⟩
+      ⟨nB, by simpa [asFragment] using! hBrunB⟩⟩⟩
 
 theorem seqSubroutine_haltsFromTape_inv
     {A B : MachineDescription} {handoffMove : Direction}
@@ -2180,7 +2180,7 @@ theorem seqSubroutine_haltsFromTape_inv
           { state := (Fragment.seq A.asFragment B.asFragment handoffMove).exit,
             tape := Tout } := by
     exact ⟨n, by
-      simpa [seqSubroutine, asFragment, Fragment.seq] using hn⟩
+      simpa [seqSubroutine, asFragment, Fragment.seq] using! hn⟩
   rcases Fragment.seq_reaches_inv
       (A := A.asFragment) (B := B.asFragment)
       (handoffMove := handoffMove)
@@ -2193,11 +2193,11 @@ theorem seqSubroutine_haltsFromTape_inv
   exact ⟨Tmid,
     ⟨⟨nA, by
         constructor
-        · simpa [HaltsFromTapeIn, asFragment] using
+        · simpa [HaltsFromTapeIn, asFragment] using!
             congrArg Configuration.state hArunA
-        · simpa [HaltsFromTapeIn, asFragment] using
+        · simpa [HaltsFromTapeIn, asFragment] using!
             congrArg Configuration.tape hArunA⟩,
-      ⟨nB, by simpa [asFragment] using hBrunB⟩⟩⟩
+      ⟨nB, by simpa [asFragment] using! hBrunB⟩⟩⟩
 
 theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     {A B : MachineDescription} {handoffMove : Direction}
@@ -2220,9 +2220,9 @@ theorem seqSubroutine_haltsWithOutput_of_haltsWithTape
     ⟨n, hn⟩
   exact ⟨n, by
     constructor
-    · simpa [MachineDescription.HaltsWithOutputIn] using
+    · simpa [MachineDescription.HaltsWithOutputIn] using!
         congrArg MachineDescription.Configuration.state hn
-    · simpa [MachineDescription.HaltsWithOutputIn] using
+    · simpa [MachineDescription.HaltsWithOutputIn] using!
         congrArg (fun c => Tape.normalizedOutput c.tape) hn⟩
 
 theorem seqSubroutine_haltsWithOutput_forward

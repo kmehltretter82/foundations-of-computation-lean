@@ -405,7 +405,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_c
       simpa [FixedDescriptionBoundedSimulatorInput,
         CommonGround.SimulatorLayouts.bits,
         CommonGround.LayoutTapes.Bits,
-        CommonGround.SimulatorLayouts.encode] using
+        CommonGround.SimulatorLayouts.encode] using!
         hparser.right.left L
     have hemitterRun :
         emitter.HaltsWithTape
@@ -418,7 +418,7 @@ theorem fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_c
           (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) := by
       rcases hemitterRun with ⟨n, hn⟩
       exact ⟨n, by
-        simpa [HaltsWithTapeIn, HaltsFromTapeIn] using hn⟩
+        simpa [HaltsWithTapeIn, HaltsFromTapeIn] using! hn⟩
     exact
       seqSubroutine_haltsWithTape_of_haltsWithTape_eq
         hparser.left hemitter.left hparserRun

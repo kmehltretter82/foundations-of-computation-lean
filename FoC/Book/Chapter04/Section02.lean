@@ -478,7 +478,7 @@ theorem bnf_declaration_without_initializer_expands :
       [bnfNonterminal BNFExampleNT.type, bnfNonterminal BNFExampleNT.variable,
         bnfTerminal BNFExampleTerminal.semicolon] := by
   unfold declarationExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.type))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
@@ -496,7 +496,7 @@ theorem bnf_declaration_with_initializer_expands :
         bnfNonterminal BNFExampleNT.expression,
         bnfTerminal BNFExampleTerminal.semicolon] := by
   unfold declarationExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.type))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
@@ -512,7 +512,7 @@ theorem bnf_declaration_with_initializer_expands :
 theorem bnf_integer_one_digit_expands :
     BNF.Expr.Expands integerExpr [bnfNonterminal BNFExampleNT.digit] := by
   unfold integerExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))
     (BNF.Expr.Expands.manyZero
       (bnfNonterminalExpr BNFExampleNT.digit))
@@ -522,7 +522,7 @@ theorem bnf_integer_three_digits_expands :
       [bnfNonterminal BNFExampleNT.digit, bnfNonterminal BNFExampleNT.digit,
         bnfNonterminal BNFExampleNT.digit] := by
   unfold integerExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))
     (BNF.Expr.repeat_cons
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digit))
@@ -536,7 +536,7 @@ theorem bnf_english_sentence_with_and_expands :
         bnfTerminal BNFExampleTerminal.andTok,
         bnfNonterminal BNFExampleNT.simpleSentence] := by
   unfold englishSentenceExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.simpleSentence))
     (BNF.Expr.repeat_cons
       (BNF.Expr.Expands.seq
@@ -553,7 +553,7 @@ theorem bnf_english_noun_part_with_relative_clause_expands :
         bnfTerminal BNFExampleTerminal.who,
         bnfNonterminal BNFExampleNT.verbPart] := by
   unfold englishNounPartExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.article))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.noun))
@@ -611,7 +611,7 @@ theorem bnf_java_block_two_statements_expands :
         bnfNonterminal BNFExampleNT.statement,
         bnfTerminal BNFExampleTerminal.rbrace] := by
   unfold javaBlockStatementExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lbrace))
     (BNF.Expr.Expands.seq
       (BNF.Expr.repeat_cons
@@ -632,7 +632,7 @@ theorem bnf_java_if_with_else_expands :
         bnfTerminal BNFExampleTerminal.elseTok,
         bnfNonterminal BNFExampleNT.statement] := by
   unfold javaIfStatementExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.ifTok))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lparen))
@@ -657,7 +657,7 @@ theorem bnf_java_assignment_expands :
         bnfNonterminal BNFExampleNT.expression,
         bnfTerminal BNFExampleTerminal.semicolon] := by
   unfold javaAssignmentStatementExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.variable))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.equals))
@@ -674,7 +674,7 @@ theorem bnf_java_expression_three_terms_expands :
         bnfTerminal BNFExampleTerminal.minus,
         bnfNonterminal BNFExampleNT.term] := by
   unfold javaExpressionExpr javaAdditiveTermExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.term))
     (BNF.Expr.repeat_cons
       (BNF.Expr.Expands.seq
@@ -700,7 +700,7 @@ theorem bnf_java_term_two_factors_expands :
         bnfTerminal BNFExampleTerminal.times,
         bnfNonterminal BNFExampleNT.factor] := by
   unfold javaTermExpr javaMultiplicativeFactorExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.factor))
     (BNF.Expr.repeat_cons
       (BNF.Expr.Expands.seq
@@ -748,7 +748,7 @@ theorem bnf_real_number_decimal_with_exponent_expands :
         [bnfTerminal BNFExampleTerminal.dot,
           bnfNonterminal BNFExampleNT.digitSeq] := by
     unfold realFractionExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dot))
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digitSeq))
   have hExponent :
@@ -757,14 +757,14 @@ theorem bnf_real_number_decimal_with_exponent_expands :
           bnfTerminal BNFExampleTerminal.plus,
           bnfNonterminal BNFExampleNT.digitSeq] := by
     unfold realExponentExpr realExponentMarkerExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.altLeft
         (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.eTok)))
       (BNF.Expr.Expands.seq
         (BNF.Expr.Expands.optionalSome bnf_sign_plus_expands)
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digitSeq)))
   unfold realNumberExpr realMantissaExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.optionalSome bnf_sign_minus_expands)
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.altLeft
@@ -782,7 +782,7 @@ theorem bnf_real_number_leading_decimal_expands :
         [bnfTerminal BNFExampleTerminal.dot,
           bnfNonterminal BNFExampleNT.digitSeq] := by
     unfold realFractionExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.dot))
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digitSeq))
   unfold realNumberExpr realMantissaExpr
@@ -801,7 +801,7 @@ theorem bnf_real_number_upper_exponent_expands :
       BNF.Expr.Expands realMantissaExpr
         [bnfNonterminal BNFExampleNT.digitSeq] := by
     unfold realMantissaExpr
-    simpa using BNF.Expr.Expands.altLeft
+    simpa using! BNF.Expr.Expands.altLeft
       (BNF.Expr.Expands.seq
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.digitSeq))
         (BNF.Expr.Expands.optionalNone realFractionExpr))
@@ -810,7 +810,7 @@ theorem bnf_real_number_upper_exponent_expands :
         [bnfTerminal BNFExampleTerminal.upperETok,
           bnfNonterminal BNFExampleNT.digitSeq] := by
     unfold realExponentExpr realExponentMarkerExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.altRight
         (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.upperETok)))
       (BNF.Expr.Expands.seq
@@ -828,7 +828,7 @@ theorem bnf_java_identifier_letter_digit_underscore_expands :
         bnfNonterminal BNFExampleNT.digit,
         bnfTerminal BNFExampleTerminal.underscore] := by
   unfold javaIdentifierExpr javaVariableTailAtomExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.letter))
     (BNF.Expr.repeat_cons
       (BNF.Expr.Expands.altRight
@@ -863,7 +863,7 @@ theorem bnf_java_variable_field_expands :
       BNF.Expr.Expands javaIdentifierExpr
         [bnfTerminal BNFExampleTerminal.letter] := by
     unfold javaIdentifierExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.letter))
       (BNF.Expr.repeat_empty javaVariableTailAtomExpr)
   have hField :
@@ -891,7 +891,7 @@ theorem bnf_java_variable_index_expands :
       BNF.Expr.Expands javaIdentifierExpr
         [bnfTerminal BNFExampleTerminal.letter] := by
     unfold javaIdentifierExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.letter))
       (BNF.Expr.repeat_empty javaVariableTailAtomExpr)
   have hIndex :
@@ -926,7 +926,7 @@ theorem bnf_java_variable_field_index_field_expands :
       BNF.Expr.Expands javaIdentifierExpr
         [bnfTerminal BNFExampleTerminal.letter] := by
     unfold javaIdentifierExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.letter))
       (BNF.Expr.repeat_empty javaVariableTailAtomExpr)
   have hField :
@@ -974,12 +974,12 @@ theorem bnf_java_try_catch_without_finally_expands :
       BNF.Expr.Expands javaCatchClausesExpr
         [bnfNonterminal BNFExampleNT.catchClause] := by
     unfold javaCatchClausesExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.catchClause))
       (BNF.Expr.repeat_empty
         (bnfNonterminalExpr BNFExampleNT.catchClause))
   unfold javaTryCatchExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.tryTok))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol
@@ -1002,14 +1002,14 @@ theorem bnf_java_try_two_catches_with_finally_expands :
         [bnfNonterminal BNFExampleNT.catchClause,
           bnfNonterminal BNFExampleNT.catchClause] := by
     unfold javaCatchClausesExpr
-    simpa using BNF.Expr.Expands.seq
+    simpa using! BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.catchClause))
       (BNF.Expr.repeat_cons
         (BNF.Expr.Expands.symbol (bnfNonterminal BNFExampleNT.catchClause))
         (BNF.Expr.repeat_empty
           (bnfNonterminalExpr BNFExampleNT.catchClause)))
   unfold javaTryCatchExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.tryTok))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol
@@ -1030,7 +1030,7 @@ theorem bnf_java_catch_clause_expands :
         bnfTerminal BNFExampleTerminal.rparen,
         bnfNonterminal BNFExampleNT.blockStatement] := by
   unfold javaCatchClauseExpr
-  simpa using BNF.Expr.Expands.seq
+  simpa using! BNF.Expr.Expands.seq
     (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.catchTok))
     (BNF.Expr.Expands.seq
       (BNF.Expr.Expands.symbol (bnfTerminal BNFExampleTerminal.lparen))

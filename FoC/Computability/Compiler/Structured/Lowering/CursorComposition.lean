@@ -94,7 +94,7 @@ theorem atTapeSegmentEntry_moveLeft_moveRight
         (encodedStructuredTapeCells rest))
   simpa only [hphysical, tapeAtEncodedSplit, hcode,
     List.append_assoc, List.reverse_append]
-    using hmove
+    using! hmove
 
 theorem atExistingTapeSeparator_moveLeft_moveRight
     {logical : List (Tape Bool)} {tapeIndex : Nat}

@@ -216,7 +216,7 @@ theorem cleanupCell_yields {D : MachineDescription}
             have hh := hclean (b :: suffix) horig
             simpa [Word.Concat, List.append_assoc] using hh
           simpa [cleanupForm, SententialForm.terminalWord, Word.Concat,
-            List.append_assoc] using hnext
+            List.append_assoc] using! hnext
 
  /-- {name}`cleanupEnd_yields` captures the core lemma for this local construction. -/
 theorem cleanupEnd_yields {D : MachineDescription}

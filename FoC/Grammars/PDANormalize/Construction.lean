@@ -111,7 +111,7 @@ theorem popNormalizeHelperPairs_tail_mem {M : PDA input stack state}
       | cons second more =>
           have htail :
               A :: rest ∈ suffixesWithNil (second :: more) := by
-            simpa [popNormalizeHelperRemainders] using hremaining
+            simpa [popNormalizeHelperRemainders] using! hremaining
           exact suffixesWithNil_tail_mem htail
 
 abbrev PopNormalizedState {M : PDA input stack state}

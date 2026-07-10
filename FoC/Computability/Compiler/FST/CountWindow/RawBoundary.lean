@@ -373,7 +373,7 @@ theorem structuredRawBoundaryOutputTape_normalizedOutput
     Tape.normalizedOutput (structuredRawBoundaryOutputTape bits) = bits := by
   rw [Tape.normalizedOutput, structuredRawBoundaryOutputTape_cells,
     List.filterMap_append]
-  simpa using Tape.filterMap_id_map_some bits
+  simpa using! Tape.filterMap_id_map_some bits
 
 theorem structuredRawBoundaryRightEdgeEmitterOutputTape_normalizedOutput
     (layout : Word Bool) :
@@ -565,14 +565,14 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_count
       simpa [structuredRawBoundarySourceScanTape,
         structuredRawBoundaryCountMarkerTape,
         structuredRawBoundaryLengthReadTape,
-        Tape.input, Tape.blank] using
+        Tape.input, Tape.blank] using!
         structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
           [] [] 0 outputBits
   | cons bit rest =>
       simpa [structuredRawBoundarySourceScanTape,
         structuredRawBoundaryCountMarkerTape,
         structuredRawBoundaryLengthReadTape,
-        Tape.input, Tape.blank] using
+        Tape.input, Tape.blank] using!
         structuredRawBoundaryRightEdgeEmitterDescription_run_count_loop
           [] (bit :: rest) 0 outputBits
 
@@ -663,7 +663,7 @@ private theorem structuredRawBoundaryRightEdgeEmitterDescription_run_length_loop
                   remaining)) ] } := by
   induction remaining generalizing emitted outputBits with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         structuredRawBoundaryRightEdgeEmitterDescription_run_length_final
           emitted sourceLeft outputBits
   | succ remaining ih =>

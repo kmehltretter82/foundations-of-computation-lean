@@ -227,14 +227,14 @@ theorem codePrefixParserNormalizerCode_transform_eq_some_iff
         MachineDescription.decodeDescriptionPrefix tokens =
             some (D, input) ∧
           out = List.append (MachineDescription.encodeDescription D) input := by
-  simpa [CodePrefixParserNormalizerCode] using
+  simpa [CodePrefixParserNormalizerCode] using!
     MachineDescription.PrefixParser.normalizeCode_eq_some_iff tokens out
 
 theorem codePrefixParserNormalizerCode_transform_eq_none_iff
     (tokens : Word MachineCodeSymbol) :
     CodePrefixParserNormalizerCode.transform tokens = none <->
       MachineDescription.decodeDescriptionPrefix tokens = none := by
-  simpa [CodePrefixParserNormalizerCode] using
+  simpa [CodePrefixParserNormalizerCode] using!
     MachineDescription.PrefixParser.normalizeCode_eq_none_iff tokens
 
 theorem codePrefixParser_branch_success
@@ -271,14 +271,14 @@ theorem codePrefixParserBranchCode_transform_eq_some_iff
           out =
             MachineDescription.encodeBoolWordAppend [true]
               (List.append (MachineDescription.encodeDescription D) input) := by
-  simpa [CodePrefixParserBranchCode] using
+  simpa [CodePrefixParserBranchCode] using!
     MachineDescription.PrefixParser.branchCode_eq_some_iff tokens out
 
 theorem codePrefixParserBranchCode_total
     (tokens : Word MachineCodeSymbol) :
     exists out : Word MachineCodeSymbol,
       CodePrefixParserBranchCode.transform tokens = some out := by
-  simpa [CodePrefixParserBranchCode] using
+  simpa [CodePrefixParserBranchCode] using!
     MachineDescription.PrefixParser.branchCode_total tokens
 
 /-!
@@ -327,7 +327,7 @@ theorem codePrefixParserNormalizerMachineSpec_of_codeMachineSpec
       CodePrefixParserNormalizerCodeMachineSpec normalizer) :
     CodePrefixParserNormalizerMachineSpec normalizer := by
   intro tokens out
-  simpa [CodePrefixParserNormalizerCode] using hnormalizer tokens out
+  simpa [CodePrefixParserNormalizerCode] using! hnormalizer tokens out
 
 theorem codePrefixParserNormalizerMachineConstruction_of_codeMachine
     (hcode : CodePrefixParserNormalizerCodeMachineConstruction) :
@@ -365,7 +365,7 @@ theorem codePrefixParserBranchMachineSpec_of_codeMachineSpec
     (hbranch : CodePrefixParserBranchCodeMachineSpec branch) :
     CodePrefixParserBranchMachineSpec branch := by
   intro tokens out
-  simpa [CodePrefixParserBranchCode] using hbranch tokens out
+  simpa [CodePrefixParserBranchCode] using! hbranch tokens out
 
 theorem codePrefixParserBranchMachineConstruction_of_codeMachine
     (hcode : CodePrefixParserBranchCodeMachineConstruction) :

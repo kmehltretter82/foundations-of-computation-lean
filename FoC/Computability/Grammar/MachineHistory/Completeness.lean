@@ -25,7 +25,7 @@ theorem leftGenerator_derives (D : MachineDescription)
       (cellForm xs ++ [nt MachineHistoryNonterminal.genLeft]) := by
   induction xs with
   | nil =>
-      simpa [cellForm] using
+      simpa [cellForm] using!
         (GeneralGrammar.Derives.refl
           [nt MachineHistoryNonterminal.genLeft] :
           GeneralGrammar.Derives (grammar D)
@@ -36,7 +36,7 @@ theorem leftGenerator_derives (D : MachineDescription)
           GeneralGrammar.Derives (grammar D)
             [nt MachineHistoryNonterminal.genLeft]
             [cell x, nt MachineHistoryNonterminal.genLeft] := by
-        simpa using
+        simpa using!
           production_derives_context
             (D := D) (rule :=
               prod
@@ -48,7 +48,7 @@ theorem leftGenerator_derives (D : MachineDescription)
             [cell x, nt MachineHistoryNonterminal.genLeft]
             (cell x :: (cellForm xs ++
               [nt MachineHistoryNonterminal.genLeft])) := by
-        simpa [cellForm, List.append_assoc] using
+        simpa [cellForm, List.append_assoc] using!
           GeneralGrammar.derives_context
             (G := grammar D)
             [cell x] [] ih
@@ -62,7 +62,7 @@ theorem rightGenerator_derives (D : MachineDescription)
       ([nt MachineHistoryNonterminal.genRight] ++ cellForm xs) := by
   induction xs with
   | nil =>
-      simpa [cellForm] using
+      simpa [cellForm] using!
         (GeneralGrammar.Derives.refl
           [nt MachineHistoryNonterminal.genRight] :
           GeneralGrammar.Derives (grammar D)
@@ -79,14 +79,14 @@ theorem rightGenerator_derives (D : MachineDescription)
             ([nt MachineHistoryNonterminal.genRight] ++ cellForm xs)
             ([nt MachineHistoryNonterminal.genRight, cell x] ++
               cellForm xs) := by
-        simpa using
+        simpa using!
           production_derives_context
             (D := D) (rule :=
               prod
                 [nt MachineHistoryNonterminal.genRight]
                 [nt MachineHistoryNonterminal.genRight, cell x])
             (rightGeneratorCell_mem D x) [] (cellForm xs)
-      simpa [cellForm, List.append_assoc] using
+      simpa [cellForm, List.append_assoc] using!
         GeneralGrammar.derives_trans htail hadd
 
  /-- {name}`start_derives_halting_config` establishes the halting condition in this construction. -/
@@ -104,7 +104,7 @@ theorem start_derives_halting_config
           nt MachineHistoryNonterminal.genLeft,
           lockedState (D.stateOfNat D.halt),
           rightBoundary] := by
-    simpa [startProduction] using
+    simpa [startProduction] using!
       production_derives_context
         (D := D) (rule := startProduction D)
         (startProduction_mem D) [] []
@@ -118,7 +118,7 @@ theorem start_derives_halting_config
           [nt MachineHistoryNonterminal.genLeft,
             lockedState (D.stateOfNat D.halt),
             rightBoundary]) := by
-    simpa [cellForm, List.append_assoc] using
+    simpa [cellForm, List.append_assoc] using!
       GeneralGrammar.derives_context
         (G := grammar D)
         [leftBoundary]
@@ -169,7 +169,7 @@ theorem start_derives_halting_config
             [rightBoundary]) := by
       simp [List.append_assoc]
     rw [hsrc, htgt]
-    simpa [List.append_assoc] using hraw
+    simpa [List.append_assoc] using! hraw
   have hright :
       GeneralGrammar.Derives (grammar D)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
@@ -207,7 +207,7 @@ theorem start_derives_halting_config
             cellForm c.tape.right ++ [rightBoundary]) := by
       simp [List.append_assoc]
     rw [hsrc, htgt]
-    simpa [List.append_assoc] using hraw
+    simpa [List.append_assoc] using! hraw
   have hactivate :
       GeneralGrammar.Derives (grammar D)
         ([leftBoundary] ++ cellForm c.tape.left.reverse ++
@@ -226,7 +226,7 @@ theorem start_derives_halting_config
         (activation_mem D (D.stateOfNat D.halt) c.tape.head)
         ([leftBoundary] ++ cellForm c.tape.left.reverse)
         (cellForm c.tape.right ++ [rightBoundary])
-    simpa [configForm, cellForm, hstate, List.append_assoc] using hraw
+    simpa [configForm, cellForm, hstate, List.append_assoc] using! hraw
   exact GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hleft
       (GeneralGrammar.derives_trans hhead
@@ -270,7 +270,7 @@ theorem reverse_step_derives {D : MachineDescription}
                   (right.map cell ++ [rightBoundary])
               simpa [configForm, Tape.move, Tape.moveLeft, Tape.write,
                 hmatches.left, hmatches.right, cellForm,
-                List.append_assoc] using hprod
+                List.append_assoc] using! hprod
           | cons l rest =>
               have hprod :=
                 production_derives_context
@@ -284,7 +284,7 @@ theorem reverse_step_derives {D : MachineDescription}
                   (right.map cell ++ [rightBoundary])
               simpa [configForm, Tape.move, Tape.moveLeft, Tape.write,
                 hmatches.left, hmatches.right, List.map_append,
-                List.append_assoc] using hprod
+                List.append_assoc] using! hprod
       | right =>
           cases right with
           | nil =>
@@ -302,7 +302,7 @@ theorem reverse_step_derives {D : MachineDescription}
                   []
               simpa [configForm, Tape.move, Tape.moveRight, Tape.write,
                 hmatches.left, hmatches.right, List.map_append,
-                List.append_assoc] using hprod
+                List.append_assoc] using! hprod
           | cons r rest =>
               have hprod :=
                 production_derives_context
@@ -316,7 +316,7 @@ theorem reverse_step_derives {D : MachineDescription}
                   (rest.map cell ++ [rightBoundary])
               simpa [configForm, Tape.move, Tape.moveRight, Tape.write,
                 hmatches.left, hmatches.right, List.map_append,
-                List.append_assoc] using hprod
+                List.append_assoc] using! hprod
 
  /-- {name}`reverse_run_derives` states the corresponding theorem run form. -/
 theorem reverse_run_derives (D : MachineDescription)
@@ -351,7 +351,7 @@ theorem cleanup_tail_derives (D : MachineDescription)
       (SententialForm.terminalWord w) := by
   induction w with
   | nil =>
-      simpa [inputCellForm, SententialForm.terminalWord] using
+      simpa [inputCellForm, SententialForm.terminalWord] using!
         production_derives_context
           (D := D) (rule :=
             prod [nt MachineHistoryNonterminal.cleanup, rightBoundary] [])
@@ -363,7 +363,7 @@ theorem cleanup_tail_derives (D : MachineDescription)
               inputCellForm (D := D) (b :: rest) ++ [rightBoundary])
             ([tm b, nt MachineHistoryNonterminal.cleanup] ++
               inputCellForm (D := D) rest ++ [rightBoundary]) := by
-        simpa [inputCellForm, List.append_assoc] using
+        simpa [inputCellForm, List.append_assoc] using!
           production_derives_context
             (D := D) (rule :=
               prod
@@ -378,7 +378,7 @@ theorem cleanup_tail_derives (D : MachineDescription)
               inputCellForm (D := D) rest ++ [rightBoundary])
             (SententialForm.terminalWord (b :: rest)) := by
         simpa [inputCellForm, SententialForm.terminalWord,
-          List.append_assoc] using
+          List.append_assoc] using!
           GeneralGrammar.derives_context
             (G := grammar D)
             [tm b] [] ih
@@ -393,7 +393,7 @@ theorem cleanup_initial_derives (D : MachineDescription)
   cases w with
   | nil =>
       simpa [MachineDescription.initial, Tape.input, Tape.blank,
-        configForm, SententialForm.terminalWord] using
+        configForm, SententialForm.terminalWord] using!
         production_derives_context
           (D := D) (rule :=
             prod
@@ -408,7 +408,7 @@ theorem cleanup_initial_derives (D : MachineDescription)
             ([tm b, nt MachineHistoryNonterminal.cleanup] ++
               inputCellForm (D := D) rest ++ [rightBoundary]) := by
         simpa [MachineDescription.initial, Tape.input, configForm,
-          inputCellForm, List.append_assoc] using
+          inputCellForm, List.append_assoc] using!
           production_derives_context
             (D := D) (rule :=
               prod
@@ -423,7 +423,7 @@ theorem cleanup_initial_derives (D : MachineDescription)
             ([tm b, nt MachineHistoryNonterminal.cleanup] ++
               inputCellForm (D := D) rest ++ [rightBoundary])
             (SententialForm.terminalWord (b :: rest)) := by
-        simpa [SententialForm.terminalWord, List.append_assoc] using
+        simpa [SententialForm.terminalWord, List.append_assoc] using!
           GeneralGrammar.derives_context
             (G := grammar D)
             [tm b] []
@@ -445,7 +445,7 @@ theorem complete {D : MachineDescription} {w : Word Bool}
       GeneralGrammar.Derives (grammar D)
         (configForm D final)
         (configForm D (D.initial w)) := by
-    simpa [final] using reverse_run_derives D n (D.initial w)
+    simpa [final] using! reverse_run_derives D n (D.initial w)
   exact GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hrun
       (cleanup_initial_derives D w))

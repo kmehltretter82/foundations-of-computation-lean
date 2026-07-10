@@ -148,7 +148,7 @@ theorem seqSubroutine_haltsWithOutput_of_haltsWithTape_eq
     exact
       ⟨nA, by
         simpa [HaltsWithTapeIn, HaltsFromTapeIn]
-          using hnA⟩
+          using! hnA⟩
   have hseq :
       (seqSubroutine A B handoffMove).HaltsFromTapeWithOutput
         (Tape.input input) out :=

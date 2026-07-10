@@ -256,7 +256,7 @@ theorem SeqViaCanonical_haltsFromTape_of_haltsWithTape_equiv
     (Tin' := Tape.move Direction.left (Tape.move Direction.right Tmid))
     (Tout := Tout)
     (Tape.Equiv.symm hbridge)
-    ⟨nB, by simpa [HaltsWithTapeIn, HaltsFromTapeIn] using hnB⟩
+    ⟨nB, by simpa [HaltsWithTapeIn, HaltsFromTapeIn] using! hnB⟩
   rcases hB_equiv with ⟨Tactual, hB_actual_halt, hB_actual_equiv⟩
 
   have hseq_actual := seqSubroutine_haltsFromTape_of_haltsFromTape

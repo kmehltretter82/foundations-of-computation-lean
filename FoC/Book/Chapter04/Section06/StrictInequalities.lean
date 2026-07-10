@@ -205,7 +205,7 @@ theorem strictMoreBGrammar_generated_has_fewer_as_than_bs
         [moreBN StrictMoreBNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hmargin :=
     strictMoreB_derives_preserves_margin hderives
       strictMoreB_start_margin
@@ -279,7 +279,7 @@ theorem strictMoreB_tail_one_derives :
       general_yields_of_production (G := StrictMoreBGrammar)
         StrictMoreBProduces.tailOne [] []
   simpa [strictMoreBTailWord, SententialForm.terminalWord,
-    Word.RepeatSymbol, moreBT] using
+    Word.RepeatSymbol, moreBT] using!
     GeneralGrammar.yields_derives hstep
 
 theorem strictMoreB_tail_more_derives {word : Word EqualCountTerminal}
@@ -300,7 +300,7 @@ theorem strictMoreB_tail_more_derives {word : Word EqualCountTerminal}
     simpa [moreBT] using
       general_derives_context h [moreBT EqualCountTerminal.b] []
   exact GeneralGrammar.Derives.step hstep (by
-    simpa [SententialForm.terminalWord, moreBT] using hcontext)
+    simpa [SententialForm.terminalWord, moreBT] using! hcontext)
 
 theorem strictMoreB_tail_words_derives (extra : Nat) :
     GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.tail]
@@ -352,7 +352,7 @@ theorem strictMoreB_wrap_derives {word : Word EqualCountTerminal}
     [moreBN StrictMoreBNT.start]
     (SententialForm.terminalWord
       (EqualCountTerminal.a :: Word.Concat word [EqualCountTerminal.b]))
-  simpa [SententialForm.terminalWord, Word.Concat, moreBT] using hall
+  simpa [SententialForm.terminalWord, Word.Concat, moreBT] using! hall
 
 theorem strictMoreB_words_generated (n extra : Nat) :
     strictMoreBWord n extra ∈
@@ -360,7 +360,7 @@ theorem strictMoreB_words_generated (n extra : Nat) :
   induction n with
   | zero =>
       simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
-        ggNonterminal] using strictMoreB_zero_words_derives extra
+        ggNonterminal] using! strictMoreB_zero_words_derives extra
   | succ n ih =>
       have hderives :
           GeneralGrammar.Derives StrictMoreBGrammar [moreBN StrictMoreBNT.start]
@@ -370,9 +370,9 @@ theorem strictMoreB_words_generated (n extra : Nat) :
                   [EqualCountTerminal.b])) := by
         exact strictMoreB_wrap_derives (by
           simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
-            ggNonterminal] using ih)
+            ggNonterminal] using! ih)
       simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
-        ggNonterminal, strictMoreB_wrap_word n extra] using hderives
+        ggNonterminal, strictMoreB_wrap_word n extra] using! hderives
 
 /-!
 The strict-more-b grammar uses a margin invariant instead of equality. Its
@@ -402,7 +402,7 @@ theorem strictMoreB_production_sound
         ⟨n + 1, extra, rfl⟩, rfl, ?_⟩
       rw [hwordEq, hfirst, htailEq, hmiddleEq, hlastPartEq, hlast,
         hempty]
-      simpa [Word.Symbol, Word.Concat, Word.Empty] using
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using!
         strictMoreB_wrap_word n extra
   | toTail =>
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
@@ -424,7 +424,7 @@ theorem strictMoreB_production_sound
       refine ⟨strictMoreBTailWord (extra + 1), Word.Empty,
         ⟨extra + 1, rfl⟩, rfl, ?_⟩
       rw [hwordEq, hfirst, htailEq, hmiddleEq, hempty]
-      simpa [Word.Symbol, Word.Concat, Word.Empty] using
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using!
         strictMoreB_tail_more_word extra
   | tailOne =>
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
@@ -443,7 +443,7 @@ theorem strictMoreB_generated_only_language {word : Word EqualCountTerminal}
         [moreBN StrictMoreBNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, moreBN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hs := general_derives_sound_for_symbol_language
     strictMoreBSymbolLanguage (by intro token; rfl)
     strictMoreB_production_sound hderives
@@ -515,7 +515,7 @@ theorem strictMoreBGrammar_generates_aabbb :
           (GeneralGrammar.Derives.step h4
             (GeneralGrammar.Derives.refl [a, a, b, b, b]))))
   simpa [GeneralGrammar.GeneratedLanguage, StrictMoreBGrammar, aabbbWord,
-    SententialForm.terminalWord, S, a, b] using hderives
+    SententialForm.terminalWord, S, a, b] using! hderives
 
 /-!
 # Strict Three-Way Counts
@@ -897,7 +897,7 @@ theorem strictABCGreaterGrammar_generated_has_strict_counts
         [strictABCGreaterN StrictABCGreaterNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
-      strictABCGreaterN, ggNonterminal] using h
+      strictABCGreaterN, ggNonterminal] using! h
   have hmargin :=
     strictABCGreater_derives_preserves_margin hderives
       strictABCGreater_start_margin
@@ -979,7 +979,7 @@ theorem strictABCGreaterGrammar_generates_aab :
                 (GeneralGrammar.Derives.step h7
                   (GeneralGrammar.Derives.refl [a, a, b])))))))
   simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
-    strictABCGreaterAABWord, SententialForm.terminalWord, S, a, b] using
+    strictABCGreaterAABWord, SententialForm.terminalWord, S, a, b] using!
     hderives
 
 def strictABCGreaterAAABBCWord : Word EqualCountTerminal :=
@@ -1088,7 +1088,7 @@ theorem strictABCGreaterGrammar_generates_aaabbc :
                             (GeneralGrammar.Derives.refl
                               [a, a, a, b, b, c]))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, StrictABCGreaterGrammar,
-    strictABCGreaterAAABBCWord, SententialForm.terminalWord, S, a, b, c] using
+    strictABCGreaterAAABBCWord, SententialForm.terminalWord, S, a, b, c] using!
     hderives
 
 

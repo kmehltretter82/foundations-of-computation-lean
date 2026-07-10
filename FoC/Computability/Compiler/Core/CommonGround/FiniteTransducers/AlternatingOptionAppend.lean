@@ -611,14 +611,14 @@ theorem generatedAlternatingOptionAppendDescription_statefulContract
     cases state with
     | zero =>
         simpa [alternatingNatNext, alternatingNatEmit,
-          alternatingScanState, alternatingEmit] using
+          alternatingScanState, alternatingEmit] using!
           generatedAlternatingOptionAppendDescription_step_blank
             emit0 emit1 final false left
     | succ state =>
         cases state with
         | zero =>
             simpa [alternatingNatNext, alternatingNatEmit,
-              alternatingScanState, alternatingEmit] using
+              alternatingScanState, alternatingEmit] using!
               generatedAlternatingOptionAppendDescription_step_blank
                 emit0 emit1 final true left
         | succ state =>

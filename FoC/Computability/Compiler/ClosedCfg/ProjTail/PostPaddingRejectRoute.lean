@@ -314,7 +314,7 @@ theorem selectedProjectionPaddedTailCleanupRejectPrefixEraseDescription_haltsFro
           simpa [DovetailInitialLayoutInitializer.tapeAtCells, tapeAtCells,
             selectedProjectionPaddedTailCleanupPrefixBits,
             SelectedProjectionTailProjector.outputPrefixBits,
-            List.map_append, List.append_assoc] using htail
+            List.map_append, List.append_assoc] using! htail
         rw [hsource]
         exact hraw)
       (by

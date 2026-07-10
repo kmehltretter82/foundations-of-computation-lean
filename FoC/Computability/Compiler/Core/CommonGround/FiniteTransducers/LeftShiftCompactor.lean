@@ -701,7 +701,7 @@ theorem leadingBlankLeftShiftTargetTape_cells_eq_compacted_source
   rw [leadingBlankLeftShiftTargetTape_cells,
     leadingBlankLeftShiftSourceTape_cells]
   simpa [List.replicate, List.append_assoc,
-    Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using
+    Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using!
     (compactedCellsWithScratch_twoChunks
       1 0 1 1 ([] : Word Bool) bits).symm
 

@@ -444,7 +444,7 @@ theorem popNormalize_accepts_of_accepts
   rcases h with ⟨q, hqAccept, hcomputes⟩
   refine ⟨Sum.inl q, ?_, ?_⟩
   · exact hqAccept
-  · simpa [initial, popNormalizeConfiguration] using
+  · simpa [initial, popNormalizeConfiguration] using!
       popNormalize_simulates_computes (M := M)
         (presentation := presentation) hcomputes
 

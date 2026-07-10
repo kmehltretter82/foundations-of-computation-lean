@@ -566,7 +566,7 @@ theorem appendInputTapeHeadRouterDescription_spec :
         encodeCellsAppend,
         encodeCellAppend,
         encodeCell,
-        List.map_append, List.reverse_append, List.append_assoc] using
+        List.map_append, List.reverse_append, List.append_assoc] using!
         hscan
     · let beforeRevBits : Word Bool :=
         [false, true, false, false, true, false]
@@ -663,7 +663,7 @@ theorem appendInputTapeHeadRouterDescription_spec :
         encodeCellsAppend,
         encodeCellAppend,
         encodeCell,
-        List.map_append, List.reverse_append, List.append_assoc] using
+        List.map_append, List.reverse_append, List.append_assoc] using!
         hscan
 
 def AppendInputTapeHeadTaggedBrancherSpec

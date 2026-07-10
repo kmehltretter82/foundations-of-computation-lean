@@ -241,7 +241,7 @@ theorem StructuredRawTailInsertionJoinerAssemblyCopyTailSpec_of_copyTailSpec
   refine ⟨hD, ?_⟩
   intro p
   simpa [structuredRawTailInsertionJoinerInitialConfig]
-    using
+    using!
       hD.run
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
         (assemblySourceRestLiveTailEmitterRawTail p)
@@ -311,7 +311,7 @@ theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindTailSpec_of_copyRewind
       hD, ?_⟩
   intro p
   simpa [structuredRawTailInsertionJoinerInitialConfig]
-    using
+    using!
       hD.run
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
         (assemblySourceRestLiveTailEmitterRawTail p)
@@ -383,7 +383,7 @@ theorem StructuredRawTailInsertionJoinerAssemblyCopyRewindScratchSpec_of_copyRew
       hD, ?_⟩
   intro p
   simpa [structuredRawTailInsertionJoinerInitialConfig]
-    using
+    using!
       hD.run
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
         (assemblySourceRestLiveTailEmitterRawTail p)
@@ -484,7 +484,7 @@ theorem structuredRawTailInsertionJoinerInitialConfig_source_cells_eq_separated
           (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
   simpa [structuredRawTailInsertionJoinerInitialConfig,
     Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.initialConfig]
-    using
+    using!
       structuredRawTailInsertionSource_cells_eq_separated
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
         (assemblySourceRestLiveTailEmitterRawTail p)
@@ -748,7 +748,7 @@ theorem structuredRawTailInsertionJoinerFinalConfig_source_normalizedOutput_eq_j
           (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
   simpa [structuredRawTailInsertionJoinerFinalConfig,
     Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.finalConfig]
-    using
+    using!
       structuredRawTailInsertionRestoredSource_normalizedOutput_eq_joined
         (assemblySourceRestLiveTailEmitterEmittedPrefix p)
         (assemblySourceRestLiveTailEmitterRawTail p)
@@ -774,7 +774,7 @@ theorem structuredRawTailInsertionJoinerFinalConfig_scratch_normalizedOutput
       assemblySourceRestLiveTailEmitterQuoteRest p := by
   simpa [structuredRawTailInsertionJoinerFinalConfig,
     Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.finalConfig]
-    using
+    using!
       Structured.MultiTapeLowering.ThreeTape.RawTailInsertion.finalScratchTape_normalizedOutput
         (assemblySourceRestLiveTailEmitterQuoteRest p)
 

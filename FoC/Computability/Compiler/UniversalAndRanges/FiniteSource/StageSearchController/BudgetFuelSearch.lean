@@ -257,7 +257,7 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
   refine ⟨selectedState, selected, ?_⟩
   intro encoded limit fuel
   simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
-    using
+    using!
       codePrefixExactFuelRunner_haltsOnNested_iff
         hselected encoded limit fuel
 
@@ -271,7 +271,7 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
   refine ⟨selectedState, selected, ?_⟩
   intro encoded limit fuel
   simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
-    using
+    using!
       codePrefixExactFuelRunner_haltsOnNested_iff
         hselected encoded limit fuel
 

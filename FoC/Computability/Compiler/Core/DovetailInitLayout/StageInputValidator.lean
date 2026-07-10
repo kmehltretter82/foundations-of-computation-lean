@@ -760,7 +760,7 @@ theorem stageInputMarkedCoreSpec_of_markedScanner
       rcases hscanner.right.left w stage with ⟨nB, hB⟩
       refine ⟨nB, ?_⟩
       simpa [B, Tmid,
-        stageInputSecondBitMarkedCheckedHandoffTape] using hB
+        stageInputSecondBitMarkedCheckedHandoffTape] using! hB
     rcases
         seqSubroutine_reaches_of_runConfig_eq
           (A := A) (B := B) (handoffMove := Direction.right)
@@ -951,7 +951,7 @@ private theorem stageInputIdentityDescription_spec_of_recognizer
                     (PairedRecognizerDovetailStageInputCode w stage)) } =
           { state := A.halt
             tape := stageInputCheckedInputTape w stage } := by
-      simpa [A, stageInputBits] using hA
+      simpa [A, stageInputBits] using! hA
     have hBReach :
         exists nB : Nat,
           B.runConfig nB

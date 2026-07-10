@@ -390,7 +390,7 @@ theorem codePrefixParserNormalizerMachine_restoreSeekMarker_scan_noHeader
       exact
         TuringMachine.Computes.step
           (by
-            simpa [List.append_assoc] using
+            simpa [List.append_assoc] using!
               codePrefixParserNormalizerMachine_step_restoreSeekMarker_nonHeader
                 saved hsymbol leftRev
                 ((List.append rest
@@ -493,7 +493,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_blanks_tick
       exact
         TuringMachine.Computes.step
           (by
-            simpa [List.append_assoc] using
+            simpa [List.append_assoc] using!
               codePrefixParserNormalizerMachine_step_findCount_blank
                 marker leftRev
                 (List.append
@@ -556,7 +556,7 @@ theorem codePrefixParserNormalizerMachine_computes_findCount_initial_blanks_done
         exact
           TuringMachine.Computes.step
             (by
-              simpa [List.append_assoc] using
+              simpa [List.append_assoc] using!
                 codePrefixParserNormalizerMachine_step_findCount_blank
                   TransitionListParserMarker.initial
                   leftRev

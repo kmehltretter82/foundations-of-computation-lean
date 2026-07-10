@@ -429,7 +429,7 @@ theorem toPDA_running_computes_sound_config
                         Word (Symbol terminal nonterminal)) restStack)
                     (SententialForm.terminalWord (nt := nonterminal) [a] ++
                       SententialForm.terminalWord unread) := by
-                simpa using derives_context htail' [Symbol.terminal a] []
+                simpa using! derives_context htail' [Symbol.terminal a] []
               simpa [SententialForm.terminalWord] using hctx
       | epsilon htrans =>
           rename_i q r unread pop push restStack

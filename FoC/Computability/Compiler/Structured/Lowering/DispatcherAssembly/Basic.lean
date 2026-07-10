@@ -2248,7 +2248,7 @@ theorem threeHeadReaderDescription_transitions_wellFormed
       t ∈ (threeHeadReaderDescription D).transitions ->
         TransitionDescription.WellFormed
           (threeHeadReaderDescription D).stateCount t := by
-  simpa [threeHeadReaderDescription] using
+  simpa [threeHeadReaderDescription] using!
     threeHeadReaderTransitions_wellFormed D
 
 theorem structuredStateCount_le_threeHeadReaderStateLimit
@@ -2348,7 +2348,7 @@ theorem threeHeadReaderTransitions_sources_ne_halt
 theorem threeHeadReaderDescription_haltTransitionFree
     (D : Description) (hhalt : D.halt < D.stateCount) :
     (threeHeadReaderDescription D).HaltTransitionFree := by
-  simpa [threeHeadReaderDescription] using
+  simpa [threeHeadReaderDescription] using!
     threeHeadReaderTransitions_sources_ne_halt D hhalt
 
 theorem readyJumpDescription_runsFromTapeSeparator

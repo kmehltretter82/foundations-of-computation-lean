@@ -58,7 +58,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_after_oneCoun
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       cases suffix with
       | nil =>
           have hreturn :=
@@ -393,7 +393,7 @@ private theorem transitionListParserMachine_computes_markPosition_canonicalConte
       have hleft :
           leftNormal = List.append leftSymbols.reverse [current] := by
         have h := congrArg List.reverse hrev
-        simpa using h
+        simpa using! h
       have hreturn :=
         transitionListParserMachine_markPosition_returnLeft_noBoundary
           (some MachineCodeSymbol.transition) leftSymbols current
@@ -516,7 +516,7 @@ private theorem transitionListParserMachine_computes_markPosition_canonicalConte
         intro h
         have hpempty : parsedPrefix = [] := by
           have h' := congrArg List.reverse h
-          simpa using h'
+          simpa using! h'
         have htransitionNonempty :
             MachineDescription.encodeTransition t ≠ [] := by
           simp [MachineDescription.encodeTransition,
@@ -539,7 +539,7 @@ private theorem transitionListParserMachine_computes_markPosition_canonicalConte
               parsedPrefix =
                 List.append prefixLeft.reverse [prefixCurrent] := by
             have h := congrArg List.reverse hprefRev
-            simpa using h
+            simpa using! h
           have hheader :
               TuringMachine.Step transitionListParserMachine
                 { state :=
@@ -675,7 +675,7 @@ private theorem transitionListParserMachine_computes_markPosition_canonicalConte
                         List.map_append, List.append_assoc] using hseek)
                     (TuringMachine.computes_trans
                       (by
-                        simpa [List.map_append, List.append_assoc] using
+                        simpa [List.map_append, List.append_assoc] using!
                           hmarker)
                       (TuringMachine.Computes.step hheader
                         (TuringMachine.Computes.step henter
@@ -784,7 +784,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoun
           have hleft :
               leftNormal = List.append leftSymbols.reverse [current] := by
             have h := congrArg List.reverse hrev
-            simpa using h
+            simpa using! h
           cases suffix with
           | nil =>
               have hreturn :=
@@ -848,7 +848,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoun
               exact
                 TuringMachine.halts_from_of_computes_prefix
                   (by
-                    simpa [leftNormal, hrev] using hreturn)
+                    simpa [leftNormal, hrev] using! hreturn)
                   (by
                     change
                       TuringMachine.HaltsFrom transitionListParserMachine
@@ -935,7 +935,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalBoun
               exact
                 TuringMachine.halts_from_of_computes_prefix
                   (by
-                    simpa [leftNormal, hrev] using hreturn)
+                    simpa [leftNormal, hrev] using! hreturn)
                   (by
                     change
                       TuringMachine.HaltsFrom transitionListParserMachine
@@ -1058,7 +1058,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalCont
           have hleft :
               leftNormal = List.append leftSymbols.reverse [current] := by
             have h := congrArg List.reverse hrev
-            simpa using h
+            simpa using! h
           cases suffix with
           | nil =>
               have hreturn :=
@@ -1122,7 +1122,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalCont
               exact
                 TuringMachine.halts_from_of_computes_prefix
                   (by
-                    simpa [leftNormal, hrev] using hreturn)
+                    simpa [leftNormal, hrev] using! hreturn)
                   (by
                     change
                       TuringMachine.HaltsFrom transitionListParserMachine
@@ -1208,7 +1208,7 @@ private theorem transitionListParserMachine_haltsFrom_markPosition_canonicalCont
               exact
                 TuringMachine.halts_from_of_computes_prefix
                   (by
-                    simpa [leftNormal, hrev] using hreturn)
+                    simpa [leftNormal, hrev] using! hreturn)
                   (by
                     change
                       TuringMachine.HaltsFrom transitionListParserMachine

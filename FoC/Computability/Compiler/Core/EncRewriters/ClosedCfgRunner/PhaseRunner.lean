@@ -158,12 +158,12 @@ theorem AcceptProjectionSpec_of_selected
         hrunner.left hid
   constructor
   · intro L
-    simpa [SelectedProjectionSimulatorLayout] using
+    simpa [SelectedProjectionSimulatorLayout] using!
       selectedProjectionPhaseFromOutputTape_forward
         hrunner L
         (Tape.Equiv.symm (checkedInputTape_equiv_input _))
   · intro L
-    simpa [SelectedProjectionSimulatorLayout] using
+    simpa [SelectedProjectionSimulatorLayout] using!
       selectedProjectionPhaseFromOutputTape_closed
         hrunner L
         (Tape.Equiv.symm (checkedInputTape_equiv_input _))
@@ -388,7 +388,7 @@ theorem acceptMergeEquivSpec_of_exact
             (SimulatorLayout.run
               accept L.stage (AcceptSimulatorLayout L)))
           (ParsedLayoutTape (ConfigRunnerAfterAccept accept L)) := by
-      simpa [SimulatorLayout.tape] using h.right.left L
+      simpa [SimulatorLayout.tape] using! h.right.left L
     exact HaltsFromTape.toEquiv hrun
   · intro L T hhalt
     have hhaltWith :
@@ -418,7 +418,7 @@ theorem rejectMergeEquivSpec_of_exact
             (SimulatorLayout.run
               reject L.stage (RejectSimulatorLayout L)))
           (ParsedLayoutTape (ConfigRunnerAfterReject reject L)) := by
-      simpa [SimulatorLayout.tape] using h.right.left L
+      simpa [SimulatorLayout.tape] using! h.right.left L
     exact HaltsFromTape.toEquiv hrun
   · intro L T hhalt
     have hhaltWith :
@@ -515,7 +515,7 @@ theorem AcceptProjectionSpec_of_closedHandoff
   · intro L
     simpa [ParsedLayoutCheckedTape,
       SimulatorLayout.tape,
-      SimulatorLayout.asBoolInput] using
+      SimulatorLayout.asBoolInput] using!
       TapeCodeCheckedPhaseFromClosedHandoff_forward
         hclosed (AcceptProjectionPrimitive_encode L)
   · intro L T hhalt
@@ -523,7 +523,7 @@ theorem AcceptProjectionSpec_of_closedHandoff
         (TapeCodeCheckedPhaseFromClosedHandoff closed).HaltsFromTape
           (checkedInputTape (encodeCodeWordAsInput
             (DovetailLayout.encode L))) T := by
-      simpa [ParsedLayoutCheckedTape] using hhalt
+      simpa [ParsedLayoutCheckedTape] using! hhalt
     have hT :=
       TapeCodeCheckedPhaseFromClosedHandoff_closed_equiv
         hclosed (AcceptProjectionPrimitive_encode L) hhalt'
@@ -549,7 +549,7 @@ theorem RejectProjectionSpec_of_closedHandoff
             (RejectSimulatorLayout L)) := by
       simpa [ParsedLayoutTape, ParsedLayoutBits,
         SimulatorLayout.tape,
-        SimulatorLayout.asBoolInput] using
+        SimulatorLayout.asBoolInput] using!
         TapeCodeExactPhaseFromClosedHandoff_forward
           hclosed (RejectProjectionPrimitive_encode L)
     exact HaltsFromTape.toEquiv hrun
@@ -558,7 +558,7 @@ theorem RejectProjectionSpec_of_closedHandoff
         (TapeCodeExactPhaseFromClosedHandoff closed).HaltsWithTape
           (encodeCodeWordAsInput
             (DovetailLayout.encode L)) T := by
-      simpa [ParsedLayoutTape, ParsedLayoutBits] using hhalt
+      simpa [ParsedLayoutTape, ParsedLayoutBits] using! hhalt
     have hT :=
       TapeCodeExactPhaseFromClosedHandoff_closed_eq
         hclosed (RejectProjectionPrimitive_encode L) hhalt'
@@ -857,12 +857,12 @@ theorem configRunnerPhaseRunner_spec
     · exact hrejectSim.left
     · intro L
       simpa [rejectProjected, rejectSimulated,
-        FixedDescriptionBoundedSimulatorCanonicalOutputTape] using
+        FixedDescriptionBoundedSimulatorCanonicalOutputTape] using!
         hrejectSim.haltsFromTapeEquiv
           (RejectSimulatorLayout (ConfigRunnerAfterAccept accept L))
     · intro L
       simpa [rejectProjected, rejectSimulated,
-        FixedDescriptionBoundedSimulatorCanonicalOutputTape] using
+        FixedDescriptionBoundedSimulatorCanonicalOutputTape] using!
         fixedDescriptionBoundedSimulatorEquivSpec_closedFromTapeEquiv
           hrejectSim
           (RejectSimulatorLayout (ConfigRunnerAfterAccept accept L))
@@ -1006,7 +1006,7 @@ theorem configRunnerPhaseRunner_spec
     PhaseChain.spec hAPASMRPRSSpec hRejectMergeSpec
       hRejectSimBridge
   constructor
-  · simpa [ConfigRunnerPhaseRunner, PhaseChain.append] using
+  · simpa [ConfigRunnerPhaseRunner, PhaseChain.append] using!
       hrunnerSpec.ready
   constructor
   · intro L

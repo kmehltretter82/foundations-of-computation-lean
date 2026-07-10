@@ -909,7 +909,7 @@ theorem exactIdentityDescription_haltsWithExactOutput_iff
     rcases h with ⟨n, hn⟩
     have htape : Tape.input w = Tape.output out := by
       simpa [HaltsWithExactOutputIn,
-        exactIdentityDescription_runConfig_initial] using hn.right
+        exactIdentityDescription_runConfig_initial] using! hn.right
     have hw : w = out := Tape.input_injective
       (by simpa [Tape.output] using htape)
     exact hw.symm
@@ -925,7 +925,7 @@ theorem exactIdentityDescription_haltsWithOutput_iff
     rcases h with ⟨n, hn⟩
     have hout : Tape.normalizedOutput (Tape.input w) = out := by
       simpa [HaltsWithOutputIn,
-        exactIdentityDescription_runConfig_initial] using hn.right
+        exactIdentityDescription_runConfig_initial] using! hn.right
     have hw : Tape.normalizedOutput (Tape.input w) = w := by
       simpa [Tape.output] using (Tape.normalizedOutput_output w)
     exact hout.symm.trans hw

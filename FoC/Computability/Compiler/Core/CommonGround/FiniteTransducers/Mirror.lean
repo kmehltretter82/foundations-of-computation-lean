@@ -136,7 +136,7 @@ theorem mirroredDescription_wellFormed
   · intro row hrow
     rw [mirroredDescription] at hrow
     rcases List.mem_map.mp hrow with ⟨base, hbase, rfl⟩
-    simpa [mirroredTransition, TransitionDescription.WellFormed] using
+    simpa [mirroredTransition, TransitionDescription.WellFormed] using!
       hrows base hbase
   · intro t u ht hu hkey
     rw [mirroredDescription] at ht hu

@@ -190,7 +190,7 @@ private theorem run_scan340_cells_to_boundary
     cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     run_scan340_boundary
       base (List.append cellsRev.reverse tail)
 private theorem run_state300_marked_tick
@@ -698,7 +698,7 @@ private theorem run_scan360_cells_to_boundary
     cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     run_scan360_boundary
       base (List.append cellsRev.reverse tail)
 private theorem run_state350_blank_to_scan360
@@ -1003,7 +1003,7 @@ theorem run_result_mark_one_tail
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc, rest, hrestLen] using
+      List.reverse_append, List.append_assoc, rest, hrestLen] using!
         (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
@@ -1020,7 +1020,7 @@ theorem run_result_mark_one_tail
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc, rest, hrestLen] using
+      List.reverse_append, List.append_assoc, rest, hrestLen] using!
         (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
@@ -1271,7 +1271,7 @@ theorem run_input_mark_one_tail
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc, rest, hrestLen] using
+      List.reverse_append, List.append_assoc, rest, hrestLen] using!
         (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
@@ -1288,7 +1288,7 @@ theorem run_input_mark_one_tail
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc, rest, hrestLen] using
+      List.reverse_append, List.append_assoc, rest, hrestLen] using!
         (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
@@ -1492,7 +1492,7 @@ theorem run_result_mark_one
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc] using
+      List.reverse_append, List.append_assoc] using!
         (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
@@ -1509,7 +1509,7 @@ theorem run_result_mark_one
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc] using
+      List.reverse_append, List.append_assoc] using!
         (run_scan340_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
@@ -1675,7 +1675,7 @@ theorem run_result_bool_word
     run_result_bool_word_acc
       ([] : Word Bool) w baseLeftRev
   simpa [projectionResultRemainingCost, projectionResultBoolWordCost,
-    projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using h
+    projectionBoolWordWorkCells_nil_eq_encodeBoolWordAppend] using! h
 
 end ControllerStageInputProjection
 end Computability

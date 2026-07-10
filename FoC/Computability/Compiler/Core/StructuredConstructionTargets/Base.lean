@@ -83,7 +83,7 @@ theorem Structured3EndpointWrapper.lowered_subroutineReady
 theorem Structured3EndpointWrapper.machine_subroutineReady
     (W : Structured3EndpointWrapper) :
     W.machine.SubroutineReady := by
-  simpa [Structured3EndpointWrapper.machine] using
+  simpa [Structured3EndpointWrapper.machine] using!
     structured3EndpointBridgeDescription_subroutineReady
       W.initializerSubroutineReady
       W.lowered_subroutineReady
@@ -111,7 +111,7 @@ theorem Structured3EndpointWrapper.haltsFromTapeEquivGeneral
       W.lowered_subroutineReady
       hinitializerRun
       hloweredRun
-  simpa [Structured3EndpointWrapper.machine] using
+  simpa [Structured3EndpointWrapper.machine] using!
     canonicalPrimitiveSeqDescription_haltsFromTapeEquiv
       (canonicalPrimitiveSeqDescription_subroutineReady
         W.initializerSubroutineReady
@@ -142,7 +142,7 @@ theorem Structured3EndpointWrapper.closedFromTapeEquivGeneral
       W.lowered_subroutineReady
       hinitializerClosed
       hloweredClosed
-  simpa [Structured3EndpointWrapper.machine] using
+  simpa [Structured3EndpointWrapper.machine] using!
     canonicalPrimitiveSeqDescription_closedFromTapeEquiv
       (canonicalPrimitiveSeqDescription_subroutineReady
         W.initializerSubroutineReady
@@ -1336,7 +1336,7 @@ theorem closedRecognizerStructuredEquivInputMaterializerSpec_of_parts
             Tmid := by
         refine ⟨nR, ?_⟩
         simpa [EncRewriters.CanonicalLayouts.InputTape,
-          EncRewriters.CanonicalLayouts.Bits, Tmid] using hR
+          EncRewriters.CanonicalLayouts.Bits, Tmid] using! hR
       have hhandoff :
           Tape.move tapeCodePrimitiveCodeWordHandoffMove Tmid =
             EncRewriters.CanonicalLayouts.InputTape encode a := by
@@ -1695,7 +1695,7 @@ theorem closedIndex
           W.initializerSubroutineReady W.lowered_subroutineReady)
         W.projectorSubroutineReady
         (by
-          simpa [Structured3EndpointWrapper.machine] using hhalt) with
+          simpa [Structured3EndpointWrapper.machine] using! hhalt) with
     ⟨TloweredActual, hfirst, hprojectorActual⟩
   rcases
       canonicalPrimitiveSeqDescription_haltsFromTape_inv
@@ -1807,7 +1807,7 @@ theorem closedIndex
           W.initializerSubroutineReady W.lowered_subroutineReady)
         W.projectorSubroutineReady
         (by
-          simpa [Structured3EndpointWrapper.machine] using hhalt) with
+          simpa [Structured3EndpointWrapper.machine] using! hhalt) with
     ⟨TloweredActual, hfirst, hprojectorActual⟩
   rcases
       canonicalPrimitiveSeqDescription_haltsFromTape_inv

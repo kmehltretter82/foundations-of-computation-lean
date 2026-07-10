@@ -312,7 +312,7 @@ theorem star_generates_cons (G : CFG terminal nt)
       Derives (StarGrammar G)
         (SententialForm.terminalWord x ++ [Symbol.nonterminal StarNT.start])
         (SententialForm.terminalWord x ++ SententialForm.terminalWord y) := by
-    simpa using derives_context hy (SententialForm.terminalWord x) []
+    simpa using! derives_context hy (SententialForm.terminalWord x) []
   have hAll : Derives (StarGrammar G) [Symbol.nonterminal StarNT.start]
       (SententialForm.terminalWord x ++ SententialForm.terminalWord y) :=
     Derives.step hStart (derives_trans hBodyContext hTailContext)

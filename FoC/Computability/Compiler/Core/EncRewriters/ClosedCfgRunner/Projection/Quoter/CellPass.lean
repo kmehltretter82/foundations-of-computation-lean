@@ -1100,7 +1100,7 @@ private theorem preservingCellPassCellBits_eq_encodeCellsAppend
     preservingCellPassCellBits cells =
       encodeCodeWordAsInput
         (encodeCellsAppend (cells.map some) []) := by
-  simpa [encodeCodeWordAsInput] using
+  simpa [encodeCodeWordAsInput] using!
     preservingCellPassCellBits_append_suffix
       cells ([] : Word MachineCodeSymbol)
 

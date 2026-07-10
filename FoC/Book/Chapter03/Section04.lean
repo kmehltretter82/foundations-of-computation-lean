@@ -135,7 +135,7 @@ theorem atLeastTwoOnes_runFrom_accept_iff (w : Word Section01.Bit) :
 theorem atLeastTwoOnes_accepts_exact (w : Word Section01.Bit) :
     DFA.Accepts atLeastTwoOnesDFA w <->
       2 <= Word.Count Section01.Bit.one w := by
-  simpa [DFA.Accepts, DFA.Run, onesRecorded] using
+  simpa [DFA.Accepts, DFA.Run, onesRecorded] using!
     atLeastTwoOnes_runFrom_accept_iff w TwoOnesState.noneSeen
 
 /-!

@@ -746,7 +746,7 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSource
         ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
           (fun cell => cell)) := by
   simpa [
-    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape] using
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape] using!
     selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_normalizedOutput
       (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
@@ -760,7 +760,7 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTarget
         ((postFieldDecodedPrefixScanPadding useAccept L).filterMap
           (fun cell => cell)) := by
   simpa [
-    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape] using
+    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape] using!
     selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape_normalizedOutput
       (ParsedLayoutBits L)
       (postFieldDecodedPrefixScanPadding useAccept L)
@@ -1056,7 +1056,7 @@ theorem structuredCountWindowPostFieldDecodedPrefixExtractor_run
   rw [
     countWindowPostFieldDecodedPrefixMaterializerSourceTape_eq_boolWordSource
       useAccept L pref leftBit deletedTail hpayload]
-  simpa [structuredCountWindowPostFieldDecodedPrefixOutputTape] using
+  simpa [structuredCountWindowPostFieldDecodedPrefixOutputTape] using!
     structuredBoolWordRawBitsDecoderDescription_run_withOutputPadding
       (ParsedLayoutBits L)
       (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)

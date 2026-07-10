@@ -337,7 +337,7 @@ theorem toCFGChain_formLanguage_computes
   | nil q =>
       intro restInput tail
       cases hw
-      simpa [Word.Concat] using
+      simpa [Word.Concat] using!
         Computes.refl
           ({ state := q, unread := restInput, stack := tail } :
             Configuration _ _ _)
@@ -377,7 +377,7 @@ theorem inputPrefix_formLanguage_step
   | none =>
       intro restInput tail
       cases hprefix
-      simpa [inputPrefix, Word.Concat] using
+      simpa [inputPrefix, Word.Concat] using!
         computes_of_step
           (Step.epsilon (M := M) (unread := restInput)
             (restStack := tail) htransition)
@@ -387,7 +387,7 @@ theorem inputPrefix_formLanguage_step
       cases hfirst
       cases htail
       rw [hprefixEq]
-      simpa [inputPrefix, Word.Concat] using
+      simpa [inputPrefix, Word.Concat] using!
         computes_of_step
           (Step.read (M := M) (unread := restInput)
             (restStack := tail) htransition)

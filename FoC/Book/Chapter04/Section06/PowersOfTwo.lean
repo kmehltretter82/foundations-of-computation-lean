@@ -214,7 +214,7 @@ this grammar. A {name}`PowerTwoNT.d` marker scans right and doubles every
 theorem powerTwoMarkerForm_succ_eq_append (n : Nat) :
     powerTwoMarkerForm (n + 1) =
       powerTwoMarkerForm n ++ [powN PowerTwoNT.markA] := by
-  simpa [powerTwoMarkerForm] using
+  simpa [powerTwoMarkerForm] using!
     repeatSymbol_succ_eq_append (powN PowerTwoNT.markA) n
 
 theorem powerTwo_duplicate_markers_derives
@@ -251,7 +251,7 @@ theorem powerTwo_duplicate_markers_derives
             [A, A] ++ powerTwoMarkerForm (n + n) := by
         have hnat : (n + 1) + (n + 1) = 2 + (n + n) := by lia
         rw [hnat]
-        simpa [powerTwoMarkerForm, A] using
+        simpa [powerTwoMarkerForm, A] using!
           repeatSymbol_add_eq_concat (powN PowerTwoNT.markA) 2 (n + n)
       have hsuccFront :
           powerTwoMarkerForm (n + 1) = [A] ++ powerTwoMarkerForm n := by
@@ -422,7 +422,7 @@ theorem powerTwo_emit_markers_derives_context
       have hall := GeneralGrammar.Derives.step hemit hrest
       simpa [powerTwoMarkerForm, Word.RepeatSymbol,
         SententialForm.terminalWord, A, a, powT, ggTerminal,
-        List.append_assoc] using hall
+        List.append_assoc] using! hall
 
 theorem powerTwo_finish_control_derives (n : Nat) :
     GeneralGrammar.Derives PowerTwoGrammar
@@ -462,7 +462,7 @@ theorem powerTwo_words_generated (n : Nat) :
   have hfinish := powerTwo_finish_control_derives (2 ^ n)
   have hall := GeneralGrammar.derives_trans hcontrol hfinish
   simpa [GeneralGrammar.GeneratedLanguage, PowerTwoGrammar, powerTwoWord,
-    powN, ggNonterminal] using hall
+    powN, ggNonterminal] using! hall
 
 /-!
 **Power-of-two closeout.** The constructive direction covers the full family:

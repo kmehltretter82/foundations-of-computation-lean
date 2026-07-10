@@ -726,7 +726,7 @@ theorem generatedDeleteWindowDescription_haltsFrom_split_withPadding
         leftScratch padding) := by
   simpa [generatedDeleteWindowDescription,
     FSTStatefulOptionAppendSourceTapeWithPadding,
-    FSTStatefulOptionAppendTargetTapeWithPadding] using
+    FSTStatefulOptionAppendTargetTapeWithPadding] using!
     generatedStatefulOptionAppendDescription_haltsFrom_tapeAtCells_nil_withPadding
       (deleteWindowScanStateCount keep delete)
       0

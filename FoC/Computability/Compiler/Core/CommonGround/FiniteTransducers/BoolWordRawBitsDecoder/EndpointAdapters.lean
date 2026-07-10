@@ -84,7 +84,7 @@ theorem structuredBoolWordRawBitsDecoderInputInitializerConstruction_impossible 
   have htargets : Tape.Equiv Tnil Tone := by
     exact
       Tape.Equiv.trans (Tape.Equiv.symm hequivNil)
-        (by simpa [hactual] using hequivOne)
+        (by simpa [hactual] using! hequivOne)
   have hnorm := Tape.Equiv.normalizedOutput_eq htargets
   have hne : Tape.normalizedOutput Tnil ≠ Tape.normalizedOutput Tone := by
     decide
@@ -428,7 +428,7 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerSpec_of_structu
     structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
     structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
     structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
-    structured3InputMaterializerTargetTape] using
+    structured3InputMaterializerTargetTape] using!
     hrun (bits, suffixTail)
 
 theorem structuredBoolWordRawBitsDecoderCanonicalInputInitializerConstruction_of_structured3InputMaterializer
@@ -458,7 +458,7 @@ theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerSpec_of_initia
     structuredBoolWordRawBitsDecoderCanonicalInputMaterializerOutputTape,
     structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
     structuredBoolWordRawBitsDecoderInputInitializerTargetTape,
-    structured3InputMaterializerTargetTape] using
+    structured3InputMaterializerTargetTape] using!
     hrun bits suffixTail
 
 theorem structuredBoolWordRawBitsDecoderCanonicalInputMaterializerConstruction_of_initializer
@@ -1032,7 +1032,7 @@ theorem structuredBoolWordRawBitsDecoderCanonicalEndpointSpec_of_inputInitialize
           simpa [structuredBoolWordRawBitsDecoderCanonicalInputInitializerTargetTape,
             structuredBoolWordRawBitsDecoderCanonicalEndpointTargetTape,
             structuredBoolWordRawBitsDecoderCanonicalSourceTape,
-            Structured.MultiTapeLowering.encodedGuardedStructured3Tapes] using
+            Structured.MultiTapeLowering.encodedGuardedStructured3Tapes] using!
             loweredStructuredBoolWordRawBitsDecoderDescription_haltsFromTapeWithOutputPadding
               bits suffixTail []
               (boolWordRawBitsDecoderPreservedPadding suffixTail []))
@@ -1195,12 +1195,12 @@ theorem boolWordSuffixScannerDescription_haltsFrom_rawBitsDecoderAfterHeader
   · simpa [boolWordRawBitsDecoderAfterHeaderTape,
       boolWordRawBitsDecoderPrefixHandoffTape,
       boolWordRawBitsDecoderEncodedFieldBits, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.state hsteps
   · simpa [boolWordRawBitsDecoderAfterHeaderTape,
       boolWordRawBitsDecoderPrefixHandoffTape,
       boolWordRawBitsDecoderEncodedFieldBits, List.map_append,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg Configuration.tape hsteps
 
 theorem boolWordRawBitsDecoderPrefixScannerDescription_haltsFromTape

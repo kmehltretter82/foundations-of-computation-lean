@@ -245,7 +245,7 @@ theorem pairParityEraserDropTrailingNone_append_replicate
       Tape.dropTrailingNone xs := by
   induction xs with
   | nil =>
-      simpa using pairParityEraserDropTrailingNone_replicate n
+      simpa using! pairParityEraserDropTrailingNone_replicate n
   | cons x xs ih =>
       rw [List.cons_append]
       rw [Tape.dropTrailingNone_cons, Tape.dropTrailingNone_cons]

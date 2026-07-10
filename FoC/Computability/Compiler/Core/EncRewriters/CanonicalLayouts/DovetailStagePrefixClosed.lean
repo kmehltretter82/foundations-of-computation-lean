@@ -568,7 +568,7 @@ theorem sims_marked_code_tail_reach210_decodeStageInput
                   tape :=
                     stageInputSecondBitMarkedCheckedHandoffTape w limit } := by
             simpa [markedTailStartConfig, markedStartConfig,
-              checkedHaltConfig] using hforward
+              checkedHaltConfig] using! hforward
           exact scanner_halt_no_reach210_bit hforward' h210 hread
   | none =>
       exfalso

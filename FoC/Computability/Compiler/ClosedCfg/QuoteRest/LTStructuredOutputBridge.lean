@@ -966,7 +966,7 @@ theorem StructuredLiveTailEmitterOrdinaryOutputBridgeSpec.haltsFromTapeWithOutpu
     structuredLiveTailEmitterAssemblySourceTape,
     structuredLiveTailEmitterAssemblyTargetTape,
     MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputSpec]
-    using h.ordinary.right p
+    using! h.ordinary.right p
 
 theorem StructuredLiveTailEmitterOrdinaryOutputBridgeSpec.haltsFromTargetOutput
     {structured : Structured.Description} {finish : MachineDescription}

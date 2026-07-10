@@ -1372,7 +1372,7 @@ private theorem inputTapeRightCellsDirectCopierDescription_run_core
       simpa [headBits, inputTapeRightCellsDirectCopierHeadBits,
         doneBits, inputTapeRightCellsDirectCopierDoneBits,
         sourceTailAfterDone, outputAfterDone, preAfterDone,
-        List.reverse_append, List.map_append, List.append_assoc] using
+        List.reverse_append, List.map_append, List.append_assoc] using!
         inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
           [some false] (List.append pre0 tickBits)
           sourceTailAfterDone tickBits false true true false
@@ -1380,7 +1380,7 @@ private theorem inputTapeRightCellsDirectCopierDescription_run_core
       · simpa [headBits, inputTapeRightCellsDirectCopierHeadBits,
           doneBits, inputTapeRightCellsDirectCopierDoneBits,
           sourceTailAfterDone, outputAfterDone, preAfterDone,
-          List.reverse_append, List.map_append, List.append_assoc] using
+          List.reverse_append, List.map_append, List.append_assoc] using!
           inputTapeRightCellsDirectCopierDescription_run_copy_done_skip_four
             [some false] (List.append pre0 tickBits)
             sourceTailAfterDone tickBits false true false true
@@ -1541,7 +1541,7 @@ theorem inputTapeRightCellsDirectReturnDescription_run_core
         { state := A.halt, tape := Tmid.tape } := by
     simpa [A, Tmid, sourceBits,
       encodeCodeSymbolAsInput, config,
-      tapeAtCells, List.map_append, List.append_assoc] using
+      tapeAtCells, List.map_append, List.append_assoc] using!
       rightCellsCopierStartHandoffDescription_run
         (sourceBits.map some)
   have hBReach :

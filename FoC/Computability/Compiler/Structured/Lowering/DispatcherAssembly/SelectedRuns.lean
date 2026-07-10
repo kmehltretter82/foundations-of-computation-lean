@@ -324,7 +324,7 @@ theorem threeHeadReaderNoRowSelectedTransitions_runsSelectedFromExistingTapeSepa
     simpa [tableMachine, threeHeadReaderNoRowSelectedTransitions] using
       Or.inr
         (selectedRowBranchTransitions_subset_selectedRowAllTransitions
-          D rowBlockSize hstate hlookupReads u (by simpa using hu))
+          D rowBlockSize hstate hlookupReads u (by simpa using! hu))
   exact ⟨honeState,
     runsFromStateTapeEquiv_of_subset_deterministic_of_transitionFree
       hsubset hdet hfree hrun⟩

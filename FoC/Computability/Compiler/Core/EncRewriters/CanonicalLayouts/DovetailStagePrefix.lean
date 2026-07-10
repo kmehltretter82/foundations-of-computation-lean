@@ -247,7 +247,7 @@ private theorem markedPrefix_run_state200_stageNat_to_state210
   | zero =>
       simpa [MarkedPrefixScannerDescription,
         stageNatBits_zero]
-        using
+        using!
           run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
@@ -277,7 +277,7 @@ private theorem markedPrefix_run_state200_stageNat_to_state210
             config 200
               (List.append (tickBits.reverse.map some) left)
               (List.append ((stageNatBits stage).map some) right) := by
-        simpa [MarkedPrefixScannerDescription] using
+        simpa [MarkedPrefixScannerDescription] using!
           run_state200_tick left
             (List.append ((stageNatBits stage).map some) right)
       rw [htick]
@@ -405,7 +405,7 @@ private theorem markedPrefix_run_state120_stageNat
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         markedPrefix_run_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by
@@ -1140,7 +1140,7 @@ theorem run_markedPrefix_raw_to_handoff_withBase
   rw [markedPrefix_run_state200_stageNat_to_state210]
   rw [htail]
   unfold natSuffixHandoffConfigWithBase
-  simpa [config, tapeAtCells, htail, List.append_assoc] using
+  simpa [config, tapeAtCells, htail, List.append_assoc] using!
     markedPrefix_run_state210_handoff b (some true)
       (List.append tail baseLeft) (suffixTail.map some)
 
@@ -1251,7 +1251,7 @@ theorem nonemptyNatSuffix_run_state200_stageNat_to_state210
         right := by
   induction stage generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         nonemptyNatSuffix_run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 = 4 + (4 * stage + 4) by
@@ -1319,7 +1319,7 @@ theorem run_nonemptyNatSuffix_raw_to_handoff_withBase
   rw [nonemptyNatSuffix_run_state200_stageNat_to_state210]
   rw [htail]
   unfold nonemptyNatSuffixHandoffConfigWithBase
-  simpa [config, tapeAtCells, htail, List.append_assoc] using
+  simpa [config, tapeAtCells, htail, List.append_assoc] using!
     nonemptyNatSuffix_run_state210_handoff b (some true)
       (List.append tail baseLeft) (suffixTail.map some)
 
@@ -1343,7 +1343,7 @@ theorem run_nonemptyNatSuffix_raw_to_handoff_withBaseAndRight
   rw [nonemptyNatSuffix_run_state200_stageNat_to_state210]
   rw [htail]
   unfold nonemptyNatSuffixHandoffConfigWithBaseAndRight
-  simpa [config, tapeAtCells, htail, List.append_assoc] using
+  simpa [config, tapeAtCells, htail, List.append_assoc] using!
     nonemptyNatSuffix_run_state210_handoff b (some true)
       (List.append tail baseLeft)
       (List.append (suffixTail.map some) rightPadding)
@@ -1361,7 +1361,7 @@ theorem nonemptyNatSuffixHandoffConfigWithBase_move_right
     ⟨tail, htail⟩
   unfold nonemptyNatSuffixHandoffConfigWithBase
   rw [htail]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
 
@@ -1379,7 +1379,7 @@ theorem nonemptyNatSuffixHandoffConfigWithBaseAndRight_move_right
     ⟨tail, htail⟩
   unfold nonemptyNatSuffixHandoffConfigWithBaseAndRight
   rw [htail]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b)
       (List.append (suffixTail.map some) rightPadding)
@@ -1423,8 +1423,8 @@ theorem nonemptyNatSuffixScannerDescription_runConfig_stageNat_handoff
     exact
       (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
         nonemptyNatSuffixScannerDescription_haltTransitionFree
-        (by simpa [c0] using hforward)
-        (by simpa [c0] using h)).symm
+        (by simpa [c0] using! hforward)
+        (by simpa [c0] using! h)).symm
   rw [hTout]
   exact
     nonemptyNatSuffixHandoffConfigWithBase_move_right
@@ -1931,7 +1931,7 @@ theorem run_natSuffix_raw_to_handoff_withBase
   rw [natSuffix_run_state200_stageNat_to_state210]
   rw [htail]
   unfold natSuffixHandoffConfigWithBase
-  simpa [config, tapeAtCells, htail, List.append_assoc] using
+  simpa [config, tapeAtCells, htail, List.append_assoc] using!
     natSuffix_run_state210_handoff b (some true)
       (List.append tail baseLeft) (suffixTail.map some)
 
@@ -1955,7 +1955,7 @@ theorem run_natSuffix_raw_to_handoff_withBaseAndRight
   rw [natSuffix_run_state200_stageNat_to_state210]
   rw [htail]
   unfold natSuffixHandoffConfigWithBaseAndRight
-  simpa [config, tapeAtCells, htail, List.append_assoc] using
+  simpa [config, tapeAtCells, htail, List.append_assoc] using!
     natSuffix_run_state210_handoff b (some true)
       (List.append tail baseLeft)
       (List.append (suffixTail.map some) rightPadding)
@@ -1973,7 +1973,7 @@ theorem natSuffixHandoffConfigWithBase_move_right
     ⟨tail, htail⟩
   unfold natSuffixHandoffConfigWithBase
   rw [htail]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b) (suffixTail.map some)
 
@@ -1991,7 +1991,7 @@ theorem natSuffixHandoffConfigWithBaseAndRight_move_right
     ⟨tail, htail⟩
   unfold natSuffixHandoffConfigWithBaseAndRight
   rw [htail]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons (some true)
       (List.append tail baseLeft) (some b)
       (List.append (suffixTail.map some) rightPadding)
@@ -2158,7 +2158,7 @@ theorem natSuffixScannerDescription_runConfig_decodeNat_none_ne_halt
                         some))
               · simpa [tickBits, encodeCodeWordAsInput,
                   encodeCodeSymbolAsInput,
-                  NatSuffixScannerDescription] using
+                  NatSuffixScannerDescription] using!
                   run_state200_tick leftRev
                     ((encodeCodeWordAsInput rest).map some)
               · intro m

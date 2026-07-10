@@ -414,7 +414,7 @@ theorem budgetCheckerDescriptionRunnerMachine_haltsOnInput_stage_iff
                 (CodePrefixRecognizerStageCode encoded budget) } := by
       simpa [TuringMachine.HaltsOnInputIn, TuringMachine.initial,
         BCRM,
-        budgetCheckerDescriptionRunnerTape_nil_eq_input] using hsteps
+        budgetCheckerDescriptionRunnerTape_nil_eq_input] using! hsteps
     have hdescFrom :=
       budgetCheckerDescriptionRunnerMachine_halts_scan_only
         descriptionDecoder hfrom
@@ -490,7 +490,7 @@ theorem budgetCheckerDescriptionRunnerMachine_haltsOnInput_stage_iff
         (TuringMachine.computes_trans hscan hrun) hhalt'
     simpa [TuringMachine.HaltsOnInput, TuringMachine.initial,
       BCRM,
-      budgetCheckerDescriptionRunnerTape_nil_eq_input] using hrunnerFrom
+      budgetCheckerDescriptionRunnerTape_nil_eq_input] using! hrunnerFrom
 
 /--
 Finite-machine leaf for stripping the stage budget before invoking the

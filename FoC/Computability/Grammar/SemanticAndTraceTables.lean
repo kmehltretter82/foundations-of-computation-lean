@@ -152,7 +152,7 @@ theorem semanticLanguageGrammar_generates
           have hto := congrArg SententialForm.toWord? hforms
           simp [SententialForm.terminalWord_toWord] at hto
           exact hto
-        simpa [hword] using hw₀
+        simpa [hword] using! hw₀
   · intro hw
     exact GeneralGrammar.Derives.step
       (by

@@ -330,7 +330,7 @@ private theorem run_finish_tail_blank_dead
     rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using!
       congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
@@ -368,7 +368,7 @@ private theorem run_finish_tail_zero_dead
     rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using!
       congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
@@ -406,7 +406,7 @@ private theorem run_finish_tail_one_dead
     rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using!
       congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
@@ -444,7 +444,7 @@ private theorem run_finish_tail_moveLeft_dead
     rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using!
       congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
@@ -482,7 +482,7 @@ private theorem run_finish_tail_moveRight_dead
     rw [runConfig_add]
     simpa [stuck, finishStartConfigWithTailBits,
       encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput] using
+      encodeCodeSymbolAsInput] using!
       congrArg (SIMS.runConfig 1)
         (run_state150_markedCells (b :: rest)
           (finishStartLeft (b :: rest))
@@ -880,7 +880,7 @@ private theorem state120_tick_tail_stageSuffixDecoder_inv
             (finishStartConfigWithTailBits (b :: restW)
               ([] : Word Bool))).state =
             SIMS.halt := by
-        simpa using
+        simpa using!
           congrArg Configuration.state hscannerFinish
       exact False.elim (hno hhalt)
   | cons symbol suffixTail =>
@@ -1141,7 +1141,7 @@ private theorem state120_tick_tail_code_inv
   rw [show
       decodeNat (encodeNat stage) =
         some (stage, []) by
-    simpa [encodeNatAppend] using
+    simpa [encodeNatAppend] using!
       decodeNat_encodeNatAppend stage []]
 private theorem scanner_marked_tick_tail_code_inv
     {rest : Word MachineCodeSymbol} {T : Tape Bool}

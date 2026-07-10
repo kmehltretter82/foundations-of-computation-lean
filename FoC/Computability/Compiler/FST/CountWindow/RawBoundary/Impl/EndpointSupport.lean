@@ -993,7 +993,7 @@ theorem pullNearestRawBitToTailMarkerDescription_haltsFrom_tailHeadHandoffTape
   rw [tailHeadHandoffTape_eq_tapeAtCells_scratchBase]
   rw [tailHeadRawBaseLeft_eq_splitLast skipped count pref rawBit hlayout]
   simpa [tailHeadPulledNearestRawBitTape,
-    tailHeadImmediateScratchCellCount, Nat.add_assoc] using
+    tailHeadImmediateScratchCellCount, Nat.add_assoc] using!
     pullNearestRawBitToTailMarkerDescription_haltsFromTape
       (count.length + 2)
       (List.append (pref.reverse.map some) [none])

@@ -1163,7 +1163,7 @@ theorem leftBoundaryGuardSlackRefreshDescription_haltsFromPayload
           (none ::
             List.append (shifted.map some) [none])) := by
     simpa [Trewound, rightEdgeRewindTargetTape, tapeAtCells,
-      Tape.move, Tape.moveLeft] using
+      Tape.move, Tape.moveLeft] using!
       leftMoveOnceDescription_haltsFromTape Trewound
   simpa [leftBoundaryGuardSlackRefreshDescription, shifted] using
     canonicalPrimitiveSeqDescription_haltsFromTapeEquiv

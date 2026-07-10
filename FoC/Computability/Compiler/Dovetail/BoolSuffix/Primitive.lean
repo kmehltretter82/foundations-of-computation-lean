@@ -702,7 +702,7 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
                 baseLeft false rest
                 (by
                   simpa [encodeBoolAppend,
-                    encodeCellAppend] using h) with
+                    encodeCellAppend] using! h) with
             ⟨_b, _suffixTail, baseAfter, _hsuffixBits, hmove⟩
           exact ⟨false, rest, baseAfter, rfl, hmove⟩
       | one =>
@@ -711,7 +711,7 @@ theorem boolSuffixScannerDescription_runConfig_code_handoff
                 baseLeft true rest
                 (by
                   simpa [encodeBoolAppend,
-                    encodeCellAppend] using h) with
+                    encodeCellAppend] using! h) with
             ⟨_b, _suffixTail, baseAfter, _hsuffixBits, hmove⟩
           exact ⟨true, rest, baseAfter, rfl, hmove⟩
       | moveLeft =>
@@ -1070,7 +1070,7 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
                 baseLeft false rest
                 (by
                   simpa [encodeBoolAppend,
-                    encodeCellAppend] using h) with
+                    encodeCellAppend] using! h) with
             ⟨hrest, hmove⟩
           subst rest
           exact ⟨false, rfl, hmove⟩
@@ -1080,7 +1080,7 @@ theorem boolFinalScannerDescription_runConfig_code_terminal_inv
                 baseLeft true rest
                 (by
                   simpa [encodeBoolAppend,
-                    encodeCellAppend] using h) with
+                    encodeCellAppend] using! h) with
             ⟨hrest, hmove⟩
           subst rest
           exact ⟨true, rfl, hmove⟩

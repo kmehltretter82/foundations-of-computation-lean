@@ -116,13 +116,13 @@ theorem squareGrowForm_count_start (n : Nat) :
     SententialCountNonterminal SquareNT.start (squareGrowForm n) = 0 := by
   have hb :
       SententialCountNonterminal SquareNT.start (squareBForm n) = 0 := by
-    simpa [squareBForm] using
+    simpa [squareBForm] using!
       (sententialCountNonterminal_repeat_nonterminal_of_ne
         (terminal := SquareTerminal) (A := SquareNT.start) (B := SquareNT.b)
         (by intro h; cases h) n)
   have ha :
       SententialCountNonterminal SquareNT.start (squareMarkerAForm n) = 0 := by
-    simpa [squareMarkerAForm] using
+    simpa [squareMarkerAForm] using!
       (sententialCountNonterminal_repeat_nonterminal_of_ne
         (terminal := SquareTerminal) (A := SquareNT.start)
         (B := SquareNT.markA) (by intro h; cases h) n)
@@ -156,7 +156,7 @@ theorem squareGrowForm_yields_reachable
       have hocc := squareGrowForm_t_occurrence n hxstep
       rw [hocc.left, hocc.right]
       simpa [squareGrowForm, squareBForm_succ_eq_append,
-        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using
+        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using!
         SquareReachableState.grow (n + 1)
   | stop =>
       exact SquareReachableState.post n
@@ -529,7 +529,7 @@ theorem square_generated_only_language
       GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   exact squareReachableState_terminal_square
     (squareReachableState_derives hderives SquareReachableState.start)
 

@@ -450,7 +450,8 @@ private theorem uniqueOutputAt_surjective [DecidableEq alpha]
   | inr hle =>
       have hprefix := uniqueOutputs_prefix_of_le f hle
       have hsame := hprefix.getElem hi
-      simpa only [UniqueOutputAt] using hsame.symm.trans hget
+      change (UniqueOutputs f (UniqueOutputStage hf hA i))[i] = x
+      exact hsame.symm.trans hget
 
 theorem countablyInfinite_of_setBijection_nat {A : FSet alpha}
     (hA : CountablyInfiniteByBijection A) : CountablyInfinite A := by

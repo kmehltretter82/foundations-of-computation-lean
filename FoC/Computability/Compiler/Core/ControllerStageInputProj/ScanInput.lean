@@ -381,7 +381,7 @@ theorem run_scan140_cells_to_boundary
     cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     run_scan140_boundary
       base (List.append cellsRev.reverse tail)
 
@@ -562,7 +562,7 @@ theorem run_scan160_cells_to_boundary
     cellsRev 0 (by lia) hsafe
     (List.append ([none, none, none] : List (Option Bool)) base) none tail]
   rw [hcount]
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     run_scan160_boundary
       base (List.append cellsRev.reverse tail)
 

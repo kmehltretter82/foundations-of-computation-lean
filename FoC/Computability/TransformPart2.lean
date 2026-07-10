@@ -190,7 +190,7 @@ theorem normalizedOutputScannerComplete
                 left.reverse.filterMap (fun cell => cell) ++
                     right.filterMap (fun cell => cell) = [one] := by
               simpa [Tape.normalizedOutput, Tape.cells,
-                List.filterMap_append] using hout
+                List.filterMap_append] using! hout
             exact List.append_eq_singleton_iff.mp hfull
           cases hsplit with
           | inl hright =>
@@ -441,7 +441,7 @@ theorem normalizedOutputScannerComplete
             have houtCells :
                 (left.reverse ++ some a :: right).filterMap
                     (fun cell => cell) = [one] := by
-              simpa [Tape.normalizedOutput, Tape.cells] using hout
+              simpa [Tape.normalizedOutput, Tape.cells] using! hout
             rw [houtCells] at haMem
             simp at haMem
             exact False.elim (ha haMem)

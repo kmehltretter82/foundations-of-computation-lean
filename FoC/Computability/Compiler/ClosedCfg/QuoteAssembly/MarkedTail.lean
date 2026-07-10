@@ -283,7 +283,7 @@ theorem assemblySkeletonDescription_run_state200_stageNat_to_state210
         right := by
   induction stage generalizing left with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         assemblySkeletonDescription_run_state200_done_to_state210
           left right
   | succ stage ih =>
@@ -399,7 +399,7 @@ theorem assemblyPrefixDescription_run_state200_stageNat_to_state210
         right := by
   induction stage generalizing left with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         assemblyPrefixDescription_run_state200_done_to_state210
           left right
   | succ stage ih =>

@@ -387,7 +387,7 @@ private theorem faithfulDiagonalPairMap_rewind_computes
               faithfulDiagonalPairMapLeftCells,
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveRight,
               Tape.write]
-              using TuringMachine.Computes.refl
+              using! TuringMachine.Computes.refl
                 (M := FaithfulConcreteDiagonalPairMapMachine)
                 (faithfulDiagonalPairMapConfig
                   FaithfulDiagonalPairMapMachineState.process nextTape)
@@ -595,7 +595,7 @@ private theorem faithfulDiagonalPairMap_seek_computes
               faithfulDiagonalPairMapScanCellEncode,
               faithfulDiagonalPairMapConfig, Tape.move, Tape.moveLeft,
               Tape.write, List.reverse_cons, List.append_assoc]
-              using ih (cell :: crossed)
+              using! ih (cell :: crossed)
         | cons next tail =>
             simpa [nextTape, faithfulDiagonalPairMapSeekTape,
               faithfulDiagonalPairMapProcessScanTape,

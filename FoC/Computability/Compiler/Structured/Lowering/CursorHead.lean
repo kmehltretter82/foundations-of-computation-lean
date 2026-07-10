@@ -866,7 +866,7 @@ theorem atTapeHeadCellCode_left_cases
       | nil =>
           right
           exact ⟨head, right, rest, hdrop, by
-            simpa using hphysical⟩
+            simpa using! hphysical⟩
       | cons previous leftRest =>
           left
           exact ⟨previous, leftRest, head, right, rest, hdrop,
@@ -885,7 +885,7 @@ theorem atTapeHeadCellCode_right_cases
       | nil =>
           right
           exact ⟨head, left, rest, hdrop, by
-            simpa using hphysical⟩
+            simpa using! hphysical⟩
       | cons next rightRest =>
           left
           exact ⟨head, next, left, rightRest, rest, hdrop,

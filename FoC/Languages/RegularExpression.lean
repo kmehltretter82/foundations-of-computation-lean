@@ -129,6 +129,7 @@ theorem reverse_denote (r : RegExp alpha) :
         rfl
       · intro hw
         have hrev := congrArg Word.Reverse hw
+        change w = Word.Empty
         simpa [Word.Reverse, Word.Empty] using hrev
   | sym a =>
       intro w
@@ -138,6 +139,7 @@ theorem reverse_denote (r : RegExp alpha) :
         rfl
       · intro hw
         have hrev := congrArg Word.Reverse hw
+        change w = Word.Symbol a
         simpa [Word.Reverse, Word.Symbol] using hrev
   | alt r s ihr ihs =>
       intro w

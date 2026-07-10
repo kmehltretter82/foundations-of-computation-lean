@@ -392,7 +392,7 @@ theorem toCFG_emptyRead_of_step_emptyStack
       ⟨p', q', unread, pop, push, restStack,
         _htransition, hc, hd⟩
     have hunreadSource : a :: restInput = unread := by
-      simpa using congrArg
+      simpa using! congrArg
         (fun c : Configuration input stack state => c.unread) hc
     have hunreadTarget : restInput = unread := by
       simpa using congrArg
@@ -546,7 +546,7 @@ theorem toCFG_betweenRead_of_step_topPop
       ⟨p', q', unread, pop, push, restStack,
         _htransition, hc, hd⟩
     have hunreadSource : a :: restInput = unread := by
-      simpa using congrArg
+      simpa using! congrArg
         (fun c : Configuration input stack state => c.unread) hc
     have hunreadTarget : restInput = unread := by
       simpa using congrArg

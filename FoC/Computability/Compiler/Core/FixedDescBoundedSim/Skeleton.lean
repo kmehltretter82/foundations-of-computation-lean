@@ -37,12 +37,12 @@ theorem fixedDescriptionBoundedSimulatorFragmentRealizes_standard_tape
   · simpa [Fragment.toDescription,
       FixedDescriptionBoundedSimulatorInput,
       FixedDescriptionBoundedSimulatorLayoutTape,
-      SimulatorLayout.tape] using congrArg
+      SimulatorLayout.tape] using! congrArg
         (fun c : Configuration => c.state) hn
   · simpa [Fragment.toDescription,
       FixedDescriptionBoundedSimulatorInput,
       FixedDescriptionBoundedSimulatorLayoutTape,
-      SimulatorLayout.tape] using congrArg
+      SimulatorLayout.tape] using! congrArg
         (fun c : Configuration => c.tape) hn
 
 theorem fixedDescriptionBoundedSimulatorCanonicalSpec_of_skeletonPhaseRealizes

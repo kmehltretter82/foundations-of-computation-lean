@@ -54,7 +54,7 @@ theorem anbnCstar_production_sound
       rcases hmiddle with ⟨k, hk⟩
       exists k + 1
       rw [hwEq, hfirst, htailEq, hk, hempty]
-      simpa [Word.Symbol, Word.Concat, Word.Empty] using abcCstar_cons_word k
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using! abcCstar_cons_word k
   | cStop =>
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw
@@ -361,7 +361,7 @@ theorem astarBnCn_production_sound
       rcases hmiddle with ⟨k, hk⟩
       exists k + 1
       rw [hwEq, hfirst, htailEq, hk, hempty]
-      simpa [Word.Symbol, Word.Concat, Word.Empty] using abcAstar_cons_word k
+      simpa [Word.Symbol, Word.Concat, Word.Empty] using! abcAstar_cons_word k
   | aStop =>
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw

@@ -174,7 +174,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         ⟨n, by
           simpa [HaltsWithTapeIn, HaltsFromTapeIn,
             FixedDescriptionBoundedSimulatorOutput,
-            MachineDescription.initial] using hn⟩
+            MachineDescription.initial] using! hn⟩
     rcases
         EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
           hsimulatorReady hextractorReady
@@ -274,7 +274,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsFromTape_equiv_input
           hextractor
           (hin := by
-            simpa [FixedDescriptionBoundedSimulatorOutput] using
+            simpa [FixedDescriptionBoundedSimulatorOutput] using!
               hbridgeActual)
           hextractorHalt
           hTsimExtractorOutput
@@ -373,7 +373,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         ⟨n, by
           simpa [HaltsWithTapeIn, HaltsFromTapeIn,
             FixedDescriptionBoundedSimulatorOutput,
-            MachineDescription.initial] using hn⟩
+            MachineDescription.initial] using! hn⟩
     rcases
         EncRewriters.BoundedLayoutRunner.SeqViaCanonical_haltsFromTapeEquiv_of_haltsWithTape
           hsimulatorReady hextractorReady
@@ -509,7 +509,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         tapeCodePrimitiveOutputCompiledSubroutineByDescription_transform_eq_some_of_haltsFromTape_equiv_input
           hextractor
           (hin := by
-            simpa [FixedDescriptionBoundedSimulatorOutput] using
+            simpa [FixedDescriptionBoundedSimulatorOutput] using!
               hbridgeActual)
           hextractorHalt
           hTsimExtractorFromLayoutOutput

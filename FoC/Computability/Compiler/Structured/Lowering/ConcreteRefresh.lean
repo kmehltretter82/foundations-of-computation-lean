@@ -161,7 +161,7 @@ theorem lowerStructured3Description_haltsFromConfigWithTapes
     simpa [L, lowerStructured3StaticDescription,
       lowerStructured3Description, hcStart, hrun] using hsim
   simpa [L, lowerStructured3StaticDescription,
-    lowerStructured3Description] using
+    lowerStructured3Description] using!
     hrunToHalt.toHaltsFromTapeEquiv L.start_eq L.halt_eq
 
 theorem lowerStructured3Description_haltsWithTapes

@@ -508,7 +508,7 @@ theorem generatedLanguage_equal_ofGrammarRules [DecidableEq nonterminal]
           [Symbol.nonterminal P.start]
           (SententialForm.terminalWord w) := by
       simpa [P, ofGrammarRules,
-        SententialForm.mapNonterminal_terminalWord] using hMapped
+        SententialForm.mapNonterminal_terminalWord] using! hMapped
     exact GeneralGrammar.derivesIn_derives
       ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
         (P.toGrammar_produces_iff)).mp hPList)

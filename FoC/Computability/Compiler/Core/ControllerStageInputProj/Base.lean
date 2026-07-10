@@ -303,7 +303,7 @@ theorem encodeCodeWordAsInput_encodeNat
 theorem projectionDoneCodeCells_filterMap :
     projectionDoneCodeCells.filterMap (fun cell => cell) =
       encodeCodeWordAsInput [MachineCodeSymbol.done] := by
-  simpa [projectionDoneCodeCells] using
+  simpa [projectionDoneCodeCells] using!
     projectionCodeCells_filterMap [MachineCodeSymbol.done]
 
 theorem projectionCodeCells_replicate_tick

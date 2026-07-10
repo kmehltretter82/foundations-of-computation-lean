@@ -375,7 +375,7 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_s
         [] (List.replicate n (none : Option Bool))) := by
   induction n with
   | zero =>
-      simpa using
+      simpa using!
         selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_nil_source_equiv_target
   | succ n _ih =>
       simp [Tape.Equiv,
@@ -392,7 +392,7 @@ theorem selectedSegmentLogicalTapeDecoderDensifierFootprint_nil_replicate_none_s
         selectedSegmentLogicalTapeDecoderEmit,
         FoC.Computability.dropTrailingNone_replicate_none,
         Tape.dropTrailingNone]
-      simpa using
+      simpa using!
         selectedSegmentLogicalTapeDecoder_statefulCells_logicalCellListBits_replicate_none_dropTrailingNone
           (n + 1) 9
 

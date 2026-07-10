@@ -415,7 +415,7 @@ theorem outputBits_true_eq_fields
       List.append (stageNatBits L.stage)
         (configurationFieldBits L.acceptConfig
           (boolFieldBits L.acceptHit [])) := by
-  simpa [outputFieldBits] using outputBits_eq_fields true L
+  simpa [outputFieldBits] using! outputBits_eq_fields true L
 
 theorem outputBits_false_eq_fields
     (L : DovetailLayout) :
@@ -423,7 +423,7 @@ theorem outputBits_false_eq_fields
       List.append (stageNatBits L.stage)
         (configurationFieldBits L.rejectConfig
           (boolFieldBits L.rejectHit [])) := by
-  simpa [outputFieldBits] using outputBits_eq_fields false L
+  simpa [outputFieldBits] using! outputBits_eq_fields false L
 
 theorem selectedProjectionSimulatorLayout_eq_fields
     (useAccept : Bool)

@@ -231,7 +231,7 @@ theorem run_input_mark_one
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc] using
+      List.reverse_append, List.append_assoc] using!
         (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest false)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest false)
@@ -248,7 +248,7 @@ theorem run_input_mark_one
       projectionMarkedBoolPayloadCells_append,
       projectionMarkedBoolPayloadCells, projectionBoolPayloadCells,
       projectionCodeCells_replicate_tick, projectionRepeatedCells_succ_right,
-      List.reverse_append, List.append_assoc] using
+      List.reverse_append, List.append_assoc] using!
         (run_scan140_cells_to_boundary
           (cellsRev := projectionInputMarkScanBackCellsRev marked rest true)
           (hsafe := projectionInputMarkScanBackCellsRev_scanSafe marked rest true)
@@ -870,7 +870,7 @@ theorem run_input_bool_word_acc_false_false_suffix
   induction rest generalizing marked baseLeftRev with
   | nil =>
       simpa [projectionInputRemainingCost, projectionBoolWordWorkCells,
-        projectionResultTailWorkCells, projectionRepeatedCells, hsuffix] using
+        projectionResultTailWorkCells, projectionRepeatedCells, hsuffix] using!
         run_input_finish_marked_false_false_tail
           marked tail baseLeftRev
   | cons b rest ih =>

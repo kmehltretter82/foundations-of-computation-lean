@@ -136,7 +136,7 @@ macro "declare_structured_endpoint"
         $CanonicalEndpointConstruction $param := by
       simpa [$CanonicalEndpointConstruction:ident,
         $CanonicalEndpointSpec:ident,
-        $CanonicalEndpointComponentConstruction:ident] using
+        $CanonicalEndpointComponentConstruction:ident] using!
         structured3CanonicalExactIndexedEndpointConstruction_of_components
           hcomponents
 

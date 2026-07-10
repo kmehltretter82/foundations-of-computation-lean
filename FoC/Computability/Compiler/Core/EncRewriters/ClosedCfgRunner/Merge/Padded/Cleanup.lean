@@ -41,7 +41,7 @@ theorem selectedMergePaddedEmitterAfterHeaderScanner_haltsFromPayload
       (SelectedMergePaddedEmitterCleanup.leftMoveOnceDescription_haltsFromTape
         (SelectedMergePaddedEmitterAfterHeaderRightHandoffTape p))
       (by
-        simpa [SelectedMergePaddedEmitterAfterHeaderRightHandoffTape] using
+        simpa [SelectedMergePaddedEmitterAfterHeaderRightHandoffTape] using!
           selectedMergePaddedEmitterAfterHeaderTape_move_left_move_right p)
       (selectedMergePaddedEmitterSourceScanner_haltsFromPayload p)
 

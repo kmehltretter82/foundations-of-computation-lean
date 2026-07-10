@@ -82,7 +82,7 @@ theorem structuredTape0ProjectorSpec_of_segmentNormalizerSpec
       hnormalizer.right T0 T1 T2
         (encodedGuardedStructured3Tapes T0 T1 T2)
         (by
-          simpa [encodedGuardedStructured3Tapes] using
+          simpa [encodedGuardedStructured3Tapes] using!
             atEncodedBlockStart_self (guardLogicalTapes [T0, T1, T2]))
 
 theorem structuredTape0ProjectorConstruction_of_segmentNormalizerConstruction
@@ -159,7 +159,7 @@ theorem structuredTape1ProjectorSpec_of_segmentNormalizerSpec
         AtExistingTapeSeparator (guardLogicalTapes [T0, T1, T2]) 0
           (encodedGuardedStructured3Tapes T0 T1 T2) := by
       constructor
-      · simpa [encodedGuardedStructured3Tapes] using
+      · simpa [encodedGuardedStructured3Tapes] using!
           atEncodedBlockStart_self (guardLogicalTapes [T0, T1, T2])
       · refine
           ⟨guardLogicalTape T0,

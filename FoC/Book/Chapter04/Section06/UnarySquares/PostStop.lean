@@ -428,7 +428,7 @@ theorem squareSeparatedTail_no_B_pair
         have hmarkers :
             SententialCountNonterminal SquareNT.b
               (squareMarkerAForm aCount) = 0 := by
-          simpa [squareMarkerAForm] using
+          simpa [squareMarkerAForm] using!
             (sententialCountNonterminal_repeat_nonterminal_of_ne
               (terminal := SquareTerminal) (A := SquareNT.b)
               (B := SquareNT.markA) (by intro hba; cases hba) aCount)
@@ -436,7 +436,7 @@ theorem squareSeparatedTail_no_B_pair
           sententialCountNonterminal_append, hmarkers,
           SententialCountNonterminal, squareN, ggNonterminal]
       exact sentential_no_nonterminal_occurrence_absurd hcount (by
-        simpa [List.append_assoc] using
+        simpa [List.append_assoc] using!
           (show squareBForm 0 ++ [squareN SquareNT.t] ++
               squareMarkerAForm aCount ++ [squareN SquareNT.e] =
             u ++ [squareN SquareNT.b] ++ (second :: v) by
@@ -547,7 +547,7 @@ theorem squarePostStopState_step_moveBA
     exact hbalance
   have hstate := squarePostStop_moveBA hleft hright hbalance'
   rw [hu, hafterEq, hv]
-  simpa [squarePostStopForm, List.append_assoc] using hstate
+  simpa [squarePostStopForm, List.append_assoc] using! hstate
 
 private theorem squarePostStopLocal_moveBA
     {n emitted : Nat}
@@ -648,7 +648,7 @@ theorem squarePostStopState_step_moveBa
     exact hbalance
   have hstate := squarePostStop_moveBa hleft hright hbalance'
   rw [hu, hafterEq, hv]
-  simpa [squarePostStopForm, List.append_assoc] using hstate
+  simpa [squarePostStopForm, List.append_assoc] using! hstate
 
 private theorem squarePostStopLocal_moveBa
     {n emitted : Nat}
@@ -722,7 +722,7 @@ theorem squarePostStopState_step_removeBE
     exact hbalance
   have hstate := squarePostStop_removeBE hlocalClean hbalance'
   rw [hu, hafterEq, hv]
-  simpa [squarePostStopForm, List.append_assoc] using hstate
+  simpa [squarePostStopForm, List.append_assoc] using! hstate
 
 private theorem squarePostStopLocal_removeBE
     {n emitted : Nat}

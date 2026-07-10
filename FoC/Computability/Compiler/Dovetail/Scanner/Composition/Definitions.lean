@@ -243,7 +243,7 @@ theorem transitionRemainderHandoffConfigWithBase_move_right
           baseLeft)
         ((b :: suffixTail).map some) := by
   unfold transitionRemainderHandoffConfigWithBase transitionRemainderBits
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
       (some true)
       (some false :: some false :: baseLeft)
@@ -260,7 +260,7 @@ theorem transitionRemainderHandoffConfigWithBaseAndRight_move_right
           baseLeft)
         (List.append ((b :: suffixTail).map some) rightPadding) := by
   unfold transitionRemainderHandoffConfigWithBaseAndRight transitionRemainderBits
-  simpa [List.append_assoc] using
+  simpa [List.append_assoc] using!
     FoC.Computability.CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_cons
       (some true)
       (some false :: some false :: baseLeft)

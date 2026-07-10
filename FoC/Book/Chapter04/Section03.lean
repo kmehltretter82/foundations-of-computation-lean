@@ -261,7 +261,7 @@ theorem LL1Parser.run_sound [DecidableEq terminal]
     w ∈ CFG.GeneratedLanguage G := by
   have hfrontier := LL1Parser.run_frontier parser fuel w tree h
   have hderives := CFG.ParseTree.derives tree
-  simpa [CFG.GeneratedLanguage, hfrontier] using hderives
+  simpa [CFG.GeneratedLanguage, hfrontier] using! hderives
 
 structure LL1TableEntry (terminal : Type u) (nonterminal : Type v) where
   lhs : nonterminal

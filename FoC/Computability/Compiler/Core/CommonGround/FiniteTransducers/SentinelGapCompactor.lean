@@ -755,12 +755,12 @@ theorem sentinelGapCompactorDescription_haltsFromTape_final_pass
   refine ⟨(paddingScratch + leftRest.length + 3) +
     (1 + (3 * (current :: leftRest).length + 2)), ?_⟩
   constructor
-  · simpa using
+  · simpa using!
       congrArg
         (fun c : Configuration => c.state)
         (sentinelGapCompactorDescription_run_final_pass
           baseTail leftBit current leftRest paddingScratch rightPadding)
-  · simpa using
+  · simpa using!
       congrArg
         (fun c : Configuration => c.tape)
         (sentinelGapCompactorDescription_run_final_pass
@@ -878,7 +878,7 @@ private theorem sentinelGapCompactorFinalPadding_cons_cons
   have h := sentinelGapCompactorFinalPadding_replicate
     gap (Nat.succ paddingTail) 0
   simpa [replicate_add_two_none, Nat.add_assoc,
-    Nat.add_comm, Nat.add_left_comm] using h
+    Nat.add_comm, Nat.add_left_comm] using! h
 
 theorem sentinelGapCompactorFinalPadding_cons_cons_right
     (gap paddingTail : Nat) (rightPadding : List (Option Bool)) :
@@ -892,7 +892,7 @@ theorem sentinelGapCompactorFinalPadding_cons_cons_right
     sentinelGapCompactorFinalPadding_eq_replicate_append
       gap (Nat.succ paddingTail) rightPadding
   simpa [replicate_add_two_none, Nat.add_assoc,
-    Nat.add_comm, Nat.add_left_comm, List.append_assoc] using h
+    Nat.add_comm, Nat.add_left_comm, List.append_assoc] using! h
 
 theorem sentinelGapCompactorDescription_haltsFromTape_gapBase
     (gap : Nat) (baseTail : List (Option Bool))
@@ -986,7 +986,7 @@ theorem sentinelGapCompactorDescription_haltsFromTape_gapBase
             (replicate_none_append_none_cons paddingTail rightPadding).symm]
         rw [
           leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_append]
-        simpa [sentinelGapCompactorFinalPadding, nextRightPadding] using hn.right
+        simpa [sentinelGapCompactorFinalPadding, nextRightPadding] using! hn.right
 
 def rightEndSentinelGapCompactorSourceLeftCells
     (baseTail : List (Option Bool)) (leftBit current : Bool)
@@ -1193,7 +1193,7 @@ theorem sentinelGapCompactorDescription_haltsFromTape_gapBase_zero
               (sentinelGapCompactorFinalPadding (Nat.succ gap) 0 [])
         rw [
           leadingBlankLeftShiftTargetTapeWithPadding_eq_nextRightBlankLocalGapSource_nil]
-        simpa [sentinelGapCompactorFinalPadding] using hn.right
+        simpa [sentinelGapCompactorFinalPadding] using! hn.right
 
 private theorem sentinelGapTarget_move_left_left_eq_rightEdgeRewindSourceWithBoundary
     (pref bits : Word Bool) (leftBit : Bool)
@@ -1415,7 +1415,7 @@ theorem sentinelRightEndGapCompactorDescription_haltsFrom_rightEndGapSource
         rw [sentinelGapCompactorFinalPadding_cons_cons])
       (by
         simpa [sentinelGapCompactorFinalPadding_cons_cons,
-          leadingBlankLeftShiftTargetVisiblePadding] using
+          leadingBlankLeftShiftTargetVisiblePadding] using!
           sentinelBoundaryCleanupDescription_haltsFrom_sentinelTarget
             pref (current :: leftRest).reverse leftBit
             (sentinelGapCompactorFinalPadding gap
@@ -1447,7 +1447,7 @@ theorem sentinelRightEndGapCompactorDescription_haltsFrom_rightEndGapSourceWithR
         rw [sentinelGapCompactorFinalPadding_cons_cons_right])
       (by
         simpa [sentinelGapCompactorFinalPadding_cons_cons_right,
-          leadingBlankLeftShiftTargetVisiblePadding] using
+          leadingBlankLeftShiftTargetVisiblePadding] using!
           sentinelBoundaryCleanupDescription_haltsFrom_sentinelTarget
             pref (current :: leftRest).reverse leftBit
             (sentinelGapCompactorFinalPadding gap
@@ -1696,7 +1696,7 @@ theorem sentinelFalseMarkerRightEndGapCompactorDescription_haltsFrom_rightEndGap
         rw [sentinelGapCompactorFinalPadding_cons_cons_right])
       (by
         simpa [sentinelGapCompactorFinalPadding_cons_cons_right,
-          leadingBlankLeftShiftTargetVisiblePadding] using
+          leadingBlankLeftShiftTargetVisiblePadding] using!
           sentinelFalseMarkerBoundaryCleanupDescription_haltsFrom_sentinelTarget
             pref (current :: leftRest).reverse rest leftBit
             (sentinelGapCompactorFinalPadding gap

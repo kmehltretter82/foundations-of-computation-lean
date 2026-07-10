@@ -1012,7 +1012,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_
           decodeCells (remainingTail + 1)
             tokensAfterLen with
       | none =>
-          simpa [boolWordMarkingTailConfig] using
+          simpa [boolWordMarkingTailConfig] using!
             boolWordMarkingTail_decodeCells_none_ne_halt
               baseLeft ([] : Word Bool) (remainingTail + 1)
               tokensAfterLen hcells n
@@ -1029,7 +1029,7 @@ theorem boolWordSuffixScannerDescription_runConfig_state120_tick_decodeBoolWord_
               have hlengthTail : cells.length - 1 = remainingTail := by
                 lia
               rw [hcellsShape.right]
-              simpa [boolWordMarkingTailConfig, hlengthTail] using
+              simpa [boolWordMarkingTailConfig, hlengthTail] using!
                 boolWordMarkingTail_cellsToWord_none_ne_halt
                   baseLeft ([] : Word Bool) cells suffix hword n
           | some decoded =>
@@ -1108,7 +1108,7 @@ theorem boolWordSuffixScannerDescription_runConfig_code_inv
             BWSS.runConfig 4 c0 = c1 := by
           dsimp [c0, c1]
           simpa [encodeCodeWordAsInput,
-            encodeCodeSymbolAsInput, tickBits] using
+            encodeCodeSymbolAsInput, tickBits] using!
             run_boolWordSuffix_state100_tick baseLeft
               ((encodeCodeWordAsInput rest).map some)
         have hhalt :
@@ -1327,7 +1327,7 @@ theorem boolWordSuffixScannerDescription_runConfig_encodeBoolWordAppend_empty_su
     rw [boolWordBits_eq_encodeBoolWordAppend]
     simpa [encodeCodeWordAsInput, markedCellsCodeBits,
       cellListCanonicalLengthPrefixRev, List.map_append,
-      List.append_assoc] using hmark
+      List.append_assoc] using! hmark
   exact
     boolWordSuffixScannerDescription_ne_halt_of_reaches_ne_halt_region
       (k := markSteps)

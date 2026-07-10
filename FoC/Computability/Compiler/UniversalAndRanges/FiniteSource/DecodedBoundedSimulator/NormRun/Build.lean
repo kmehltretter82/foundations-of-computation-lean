@@ -428,7 +428,7 @@ theorem decodedBoundedSimulatorStageProgramRun_iff_haltsInBool
           List.append (MachineDescription.encodeDescription D) input :=
       MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
         hdecode
-    exact ⟨stage, D, input, by simpa [hencoded] using hstage, hhalts⟩
+    exact ⟨stage, D, input, by simpa [hencoded] using! hstage, hhalts⟩
   · intro h
     rcases h with ⟨stage, D, input, hstage, hhalts⟩
     exact
@@ -555,11 +555,11 @@ theorem decodedBoundedSimulatorTransitionLoopRun_iff_runConfig
   · intro h
     rcases h with ⟨stage, D, input, hstage, hhalt⟩
     exact ⟨stage, D, input, hstage, by
-      simpa [decodedBoundedSimulatorTransitionLoopConfig] using hhalt⟩
+      simpa [decodedBoundedSimulatorTransitionLoopConfig] using! hhalt⟩
   · intro h
     rcases h with ⟨stage, D, input, hstage, hhalt⟩
     exact ⟨stage, D, input, hstage, by
-      simpa [decodedBoundedSimulatorTransitionLoopConfig] using hhalt⟩
+      simpa [decodedBoundedSimulatorTransitionLoopConfig] using! hhalt⟩
 
 /--
 The exact layout wrapper and the transition-loop leaf expose the same

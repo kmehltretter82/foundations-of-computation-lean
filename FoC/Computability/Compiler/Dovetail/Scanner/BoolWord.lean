@@ -215,7 +215,7 @@ theorem run_boolWordSuffix_state120_stageNat
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         run_boolWordSuffix_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
@@ -431,7 +431,7 @@ private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
     simpa [cellListRawState100AfterMarkedWithBase, scanRev,
       cellListMarkingReturnScanRev, markedCellCodeBits,
       cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-      List.map_append, List.reverse_append, List.append_assoc] using
+      List.map_append, List.reverse_append, List.append_assoc] using!
         hreturn
   · have hreturn :=
       run_boolWordSuffix_state140_returnToLengthMarker scanRev true
@@ -445,7 +445,7 @@ private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBase
     simpa [cellListRawState100AfterMarkedWithBase, scanRev,
       cellListMarkingReturnScanRev, markedCellCodeBits,
       cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-      List.map_append, List.reverse_append, List.append_assoc] using
+      List.map_append, List.reverse_append, List.append_assoc] using!
         hreturn
 
 private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
@@ -486,7 +486,7 @@ private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
     simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
       cellListMarkingReturnScanRev, markedCellCodeBits,
       cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-      List.map_append, List.reverse_append, List.append_assoc] using
+      List.map_append, List.reverse_append, List.append_assoc] using!
         hreturn
   · have hreturn :=
       run_boolWordSuffix_state140_returnToLengthMarker scanRev true
@@ -500,7 +500,7 @@ private theorem run_boolWordSuffix_raw_mark_current_to_state100_withBaseAndRight
     simpa [cellListRawState100AfterMarkedWithBaseAndRight, scanRev,
       cellListMarkingReturnScanRev, markedCellCodeBits,
       cellCodeTailCells, cellListCanonicalLengthPrefixRev,
-      List.map_append, List.reverse_append, List.append_assoc] using
+      List.map_append, List.reverse_append, List.append_assoc] using!
         hreturn
 
 theorem run_boolWordSuffix_raw_marking_loop_from_state100_withBase
@@ -796,7 +796,7 @@ private theorem run_boolWordSuffix_canonical_finish_to_handoff_withBase
         transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
+      simpa [config, tapeAtCells, hleft] using!
         run_boolWordSuffix_state150_handoff_false cell left
           (suffixTail.map some)
 
@@ -836,7 +836,7 @@ private theorem run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
         transition, Tape.read, Tape.write,
         Tape.move, Tape.moveLeft]
   | cons cell left =>
-      simpa [config, tapeAtCells, hleft] using
+      simpa [config, tapeAtCells, hleft] using!
         run_boolWordSuffix_state150_handoff_false cell left
           (List.append (suffixTail.map some) rightPadding)
 
@@ -864,7 +864,7 @@ theorem run_boolWordSuffix_raw_to_canonical_handoff_withBase
                 (some false :: suffixTail.map some)))) =
         cellListCanonicalFinishStartConfigWithBase
           (w.map some) baseLeft (false :: suffixTail) := by
-    simpa using hmark
+    simpa using! hmark
   rcases run_boolWordSuffix_canonical_finish_to_handoff_withBase
       w baseLeft suffixTail with
     ⟨finishSteps, hfinish⟩
@@ -899,7 +899,7 @@ theorem run_boolWordSuffix_raw_to_canonical_handoff_withBaseAndRight
                   List.append (suffixTail.map some) rightPadding)))) =
         cellListCanonicalFinishStartConfigWithBaseAndRight
           (w.map some) baseLeft (false :: suffixTail) rightPadding := by
-    simpa using hmark
+    simpa using! hmark
   rcases run_boolWordSuffix_canonical_finish_to_handoff_withBaseAndRight
       w baseLeft suffixTail rightPadding with
     ⟨finishSteps, hfinish⟩

@@ -234,7 +234,7 @@ def squareProcessForm (remaining rowWidth rows : Nat) :
 theorem squareBForm_succ_eq_append (n : Nat) :
     squareBForm (n + 1) =
       squareBForm n ++ [squareN SquareNT.b] := by
-  simpa [squareBForm] using
+  simpa [squareBForm] using!
     repeatSymbol_succ_eq_append (squareN SquareNT.b) n
 
 /-!
@@ -270,7 +270,7 @@ theorem square_t_grow_derives (n : Nat) :
         (GeneralGrammar.Derives.refl _)
       have htail := GeneralGrammar.derives_trans ih hall
       simpa [squareGrowForm, squareBForm_succ_eq_append,
-        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using htail
+        squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using! htail
 
 theorem square_start_to_process_zero_derives (n : Nat) :
     GeneralGrammar.Derives SquareGrammar [squareN SquareNT.start]
@@ -324,7 +324,7 @@ theorem square_move_b_right_over_terminal_as
         simpa [B, a, List.append_assoc] using ih (pre ++ [a])
       have hall := GeneralGrammar.Derives.step hstep hrest
       simpa [squareTerminalAForm, Word.RepeatSymbol,
-        SententialForm.terminalWord, B, a, List.append_assoc] using hall
+        SententialForm.terminalWord, B, a, List.append_assoc] using! hall
 
 theorem square_move_b_right_over_rows
     (rowWidth rows : Nat)
@@ -369,12 +369,12 @@ theorem square_move_b_right_over_rows
             (pre ++ [A, a] ++ squareTerminalAForm rowWidth ++
               squareRows (rowWidth + 1) rows ++ [B] ++ suffix) := by
         simpa [A, B, a, squareTerminalAForm, Word.RepeatSymbol,
-          SententialForm.terminalWord, List.append_assoc] using
+          SententialForm.terminalWord, List.append_assoc] using!
           ih (pre ++ [A] ++ squareTerminalAForm (rowWidth + 1))
       have hall := GeneralGrammar.Derives.step hstep
         (GeneralGrammar.derives_trans hmoveAs hrest)
       simpa [squareRows, A, B, a, squareTerminalAForm, Word.RepeatSymbol,
-        SententialForm.terminalWord, List.append_assoc] using hall
+        SententialForm.terminalWord, List.append_assoc] using! hall
 
 /-!
 The square-language construction uses marker rows. Processing one {lit}`b`
@@ -463,7 +463,7 @@ theorem square_move_d_right_over_terminal_as
         simpa [D, a, List.append_assoc] using ih (pre ++ [a])
       have hall := GeneralGrammar.Derives.step hstep hrest
       simpa [squareTerminalAForm, Word.RepeatSymbol,
-        SententialForm.terminalWord, D, a, List.append_assoc] using hall
+        SententialForm.terminalWord, D, a, List.append_assoc] using! hall
 
 theorem square_terminal_rows_append (rowWidth rows : Nat) :
     squareTerminalAForm rowWidth ++
@@ -545,11 +545,11 @@ theorem square_words_generated (n : Nat) :
       GeneralGrammar.Derives SquareGrammar
         (squareProcessForm n 0 n)
         ([squareN SquareNT.d] ++ squareRows n n ++ [squareN SquareNT.e]) := by
-    simpa [squareProcessForm] using hprocess
+    simpa [squareProcessForm] using! hprocess
   have hall := GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hprocess' hfinish)
   simpa [GeneralGrammar.GeneratedLanguage, SquareGrammar, squareWord,
-    squareN, ggNonterminal] using hall
+    squareN, ggNonterminal] using! hall
 
 theorem square_language_subset_generated {word : Word SquareTerminal}
     (h : word ∈ squareLanguage) :

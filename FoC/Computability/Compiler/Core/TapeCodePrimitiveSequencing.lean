@@ -176,7 +176,7 @@ theorem tapeCodePrimitiveHandoffSubroutineRealizedByDescription_compose_output
                   { state := B.start,
                     tape := Tape.move handoffMove Tmid } =
                 { state := B.halt, tape := Tout }
-            simpa [hPmove] using hBRunInput
+            simpa [hPmove] using! hBRunInput
           have hSeqTape :
               (seqSubroutine A B handoffMove).HaltsWithTape
                 (encodeCodeWordAsInput code) Tout :=
@@ -319,7 +319,7 @@ theorem tapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription_compose_ou
                       simpa [HaltsWithOutputIn,
                         hfinal] using hBOut.left
                     simp [Tout, hfinal, hstate]
-              simpa [hTmidMove] using hBRun
+              simpa [hTmidMove] using! hBRun
             have hseqTape :
                 (seqSubroutine A B handoffMove).HaltsWithTape
                   (encodeCodeWordAsInput code) Tout :=

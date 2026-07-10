@@ -69,7 +69,7 @@ private theorem codePrefixParserBranch_failure_nat_noBoundary
                         transitionListParserOptionTape
                           ((MachineCodeSymbol.tick :: leftRev).map some)
                           (rest.map some) } := by
-                simpa using
+                simpa using!
                   codePrefixParserBranchMachine_step_of_normalizer_step
                     (htick (leftRev.map some) (rest.map some))
               rcases ih (MachineCodeSymbol.tick :: leftRev) htail with
@@ -329,7 +329,7 @@ private theorem codePrefixParserBranch_failure_nat_boundary
                               some)
                             (none :: prefixLeft.map some))
                           (rest.map some) } := by
-                simpa [List.append_assoc] using
+                simpa [List.append_assoc] using!
                   codePrefixParserBranchMachine_step_of_normalizer_step
                     (htick
                       (List.append (leftSymbols.map some)
@@ -681,7 +681,7 @@ theorem codePrefixParserBranch_failure_findInitialCount_boundary
                               some)
                             (none :: prefixLeft.map some))
                           (rest.map some) } := by
-                simpa [List.append_assoc] using
+                simpa [List.append_assoc] using!
                   codePrefixParserBranchMachine_step_of_normalizer_step
                     (codePrefixParserNormalizerMachine_step_findInitialCount_tick
                       (List.append (leftSymbols.map some)

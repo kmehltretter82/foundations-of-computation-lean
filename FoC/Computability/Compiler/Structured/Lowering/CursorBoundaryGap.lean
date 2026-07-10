@@ -274,7 +274,7 @@ theorem singletonHeadTerminalTarget_lt_probeOffset
       simpa [singletonHeadTerminalTarget,
         singletonHeadTerminalProbeOffset,
         singletonHeadRightRepairLimit,
-        singletonHeadRightRepairDescription] using hhalt
+        singletonHeadRightRepairDescription] using! hhalt
   | some bit =>
       cases bit with
       | false =>
@@ -292,7 +292,7 @@ theorem singletonHeadTerminalTarget_lt_probeOffset
           simpa [singletonHeadTerminalTarget,
             singletonHeadTerminalProbeOffset,
             singletonHeadRightRepairLimit,
-            singletonHeadRightRepairDescription] using hhalt
+            singletonHeadRightRepairDescription] using! hhalt
 
 theorem singletonHeadTerminalProbeDescription_subroutineReady
     {gapCreator : MachineDescription}
@@ -317,9 +317,9 @@ theorem singletonHeadRefreshOpeningDescription_sources_below_leftRepairOffset
   simp [singletonHeadRefreshOpeningDescription,
     singletonOpeningProbeDescription] at ht
   rcases ht with rfl | rfl | rfl
-  · simpa using (by decide : 0 < singletonHeadLeftRepairOffset)
-  · simpa using (by decide : 1 < singletonHeadLeftRepairOffset)
-  · simpa using (by decide : 1 < singletonHeadLeftRepairOffset)
+  · simpa using! (by decide : 0 < singletonHeadLeftRepairOffset)
+  · simpa using! (by decide : 1 < singletonHeadLeftRepairOffset)
+  · simpa using! (by decide : 1 < singletonHeadLeftRepairOffset)
 
 theorem singletonHeadLeftRepairDescription_sources_in_block
     {gapCreator : MachineDescription}
@@ -470,7 +470,7 @@ theorem singletonHeadRefreshFinalHalt_lt_stateCount
       hgap).left.right.right.left
   simpa [singletonHeadRefreshDescription,
     singletonHeadTerminalProbeDescription,
-    singletonHeadTerminalTarget] using hhalt
+    singletonHeadTerminalTarget] using! hhalt
 
 theorem singletonHeadTerminalProbeOffset_lt_stateCount
     (gapCreator : MachineDescription) :
@@ -597,18 +597,18 @@ theorem singletonHeadRefreshDescription_transitions_wellFormed
     · constructor
       · exact Nat.lt_trans
           (by
-            simpa using
+            simpa using!
               (by decide : 0 < singletonHeadRefreshFinalHalt))
           (singletonHeadRefreshFinalHalt_lt_stateCount hgap)
       · exact Nat.lt_trans
           (by
-            simpa using
+            simpa using!
               (by decide : 1 < singletonHeadRefreshFinalHalt))
           (singletonHeadRefreshFinalHalt_lt_stateCount hgap)
     · constructor
       · exact Nat.lt_trans
           (by
-            simpa using
+            simpa using!
               (by decide : 1 < singletonHeadRefreshFinalHalt))
           (singletonHeadRefreshFinalHalt_lt_stateCount hgap)
       · exact
@@ -617,7 +617,7 @@ theorem singletonHeadRefreshDescription_transitions_wellFormed
     · constructor
       · exact Nat.lt_trans
           (by
-            simpa using
+            simpa using!
               (by decide : 1 < singletonHeadRefreshFinalHalt))
           (singletonHeadRefreshFinalHalt_lt_stateCount hgap)
       · exact
@@ -733,11 +733,11 @@ theorem singletonHeadRefreshDescription_haltTransitionFree
   · simp [singletonHeadRefreshOpeningDescription,
       singletonOpeningProbeDescription] at hopening
     rcases hopening with rfl | rfl | rfl
-    · simpa [singletonHeadRefreshDescription] using
+    · simpa [singletonHeadRefreshDescription] using!
         (by decide : 0 ≠ singletonHeadRefreshFinalHalt)
-    · simpa [singletonHeadRefreshDescription] using
+    · simpa [singletonHeadRefreshDescription] using!
         (by decide : 1 ≠ singletonHeadRefreshFinalHalt)
-    · simpa [singletonHeadRefreshDescription] using
+    · simpa [singletonHeadRefreshDescription] using!
         (by decide : 1 ≠ singletonHeadRefreshFinalHalt)
   · exact
       (singletonHeadLeftRepairDescription_subroutineReady
@@ -1496,7 +1496,7 @@ theorem singletonHeadTerminalProbeDescription_reaches_canonical
       singletonHeadTerminalProbeStart, singletonHeadTerminalLocalDescription,
       singletonHeadTerminalLocalTarget, singletonHeadTerminalTarget,
       MachineDescription.readExitRetargetConfiguration,
-      MachineDescription.retargetReadExitState] using hcopy
+      MachineDescription.retargetReadExitState] using! hcopy
   exact
     ⟨steps,
       singletonHeadRefreshDescription_runConfig_eq_to_halt hgap
@@ -1560,7 +1560,7 @@ theorem singletonHeadTerminalProbeDescription_reaches_rightBoundary
       singletonHeadTerminalProbeStart, singletonHeadTerminalLocalDescription,
       singletonHeadTerminalLocalTarget, singletonHeadTerminalTarget,
       MachineDescription.readExitRetargetConfiguration,
-      MachineDescription.retargetReadExitState] using hcopy
+      MachineDescription.retargetReadExitState] using! hcopy
   have hexists :
       exists steps : Nat,
         (singletonHeadTerminalProbeDescription gapCreator).runConfig

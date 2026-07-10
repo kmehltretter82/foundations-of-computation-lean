@@ -356,7 +356,7 @@ theorem fourCountGrammar_generated_has_equal_terminal_counts
       GeneralGrammar.Derives FourCountGrammar [fcN FourCountNT.start]
         (SententialForm.terminalWord w) := by
     simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, fcN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hbalanced :=
     fourCount_derives_preserves_balanced hderives fourCount_start_balanced
   simpa [fourCountBalanced, fourCountTotalA, fourCountTotalB,
@@ -446,7 +446,7 @@ theorem fourCount_moveB_left_over_as
             FourCountProduces.swapAB pre (fourCountAForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, B, List.append_assoc] using hall
+      simpa [fourCountAForm, A, B, List.append_assoc] using! hall
 
 theorem fourCount_moveC_left_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -475,7 +475,7 @@ theorem fourCount_moveC_left_over_as
             FourCountProduces.swapAC pre (fourCountAForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, C, List.append_assoc] using hall
+      simpa [fourCountAForm, A, C, List.append_assoc] using! hall
 
 theorem fourCount_moveD_left_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -504,7 +504,7 @@ theorem fourCount_moveD_left_over_as
             FourCountProduces.swapAD pre (fourCountAForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, D, List.append_assoc] using hall
+      simpa [fourCountAForm, A, D, List.append_assoc] using! hall
 
 theorem fourCount_moveC_left_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -533,7 +533,7 @@ theorem fourCount_moveC_left_over_bs
             FourCountProduces.swapBC pre (fourCountBForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountBForm, B, C, List.append_assoc] using hall
+      simpa [fourCountBForm, B, C, List.append_assoc] using! hall
 
 theorem fourCount_moveD_left_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -562,7 +562,7 @@ theorem fourCount_moveD_left_over_bs
             FourCountProduces.swapBD pre (fourCountBForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountBForm, B, D, List.append_assoc] using hall
+      simpa [fourCountBForm, B, D, List.append_assoc] using! hall
 
 theorem fourCount_moveD_left_over_cs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -591,7 +591,7 @@ theorem fourCount_moveD_left_over_cs
             FourCountProduces.swapCD pre (fourCountCForm n ++ suffix)
       have hall := GeneralGrammar.derives_trans htail
         (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountCForm, C, D, List.append_assoc] using hall
+      simpa [fourCountCForm, C, D, List.append_assoc] using! hall
 
 theorem fourCount_moveD_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -619,7 +619,7 @@ theorem fourCount_moveD_right_over_as
             (pre ++ [A] ++ fourCountAForm n ++ [D] ++ suffix) := by
         simpa [A, D, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, D, List.append_assoc] using hall
+      simpa [fourCountAForm, A, D, List.append_assoc] using! hall
 
 theorem fourCount_moveC_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -647,7 +647,7 @@ theorem fourCount_moveC_right_over_as
             (pre ++ [A] ++ fourCountAForm n ++ [C] ++ suffix) := by
         simpa [A, C, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, C, List.append_assoc] using hall
+      simpa [fourCountAForm, A, C, List.append_assoc] using! hall
 
 theorem fourCount_moveB_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -675,7 +675,7 @@ theorem fourCount_moveB_right_over_as
             (pre ++ [A] ++ fourCountAForm n ++ [B] ++ suffix) := by
         simpa [A, B, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, B, List.append_assoc] using hall
+      simpa [fourCountAForm, A, B, List.append_assoc] using! hall
 
 theorem fourCount_moveD_right_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -703,7 +703,7 @@ theorem fourCount_moveD_right_over_bs
             (pre ++ [B] ++ fourCountBForm n ++ [D] ++ suffix) := by
         simpa [B, D, List.append_assoc] using ih (pre ++ [B])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountBForm, B, D, List.append_assoc] using hall
+      simpa [fourCountBForm, B, D, List.append_assoc] using! hall
 
 theorem fourCount_moveC_right_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -731,7 +731,7 @@ theorem fourCount_moveC_right_over_bs
             (pre ++ [B] ++ fourCountBForm n ++ [C] ++ suffix) := by
         simpa [B, C, List.append_assoc] using ih (pre ++ [B])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountBForm, B, C, List.append_assoc] using hall
+      simpa [fourCountBForm, B, C, List.append_assoc] using! hall
 
 theorem fourCount_moveD_right_over_cs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
@@ -759,7 +759,7 @@ theorem fourCount_moveD_right_over_cs
             (pre ++ [C] ++ fourCountCForm n ++ [D] ++ suffix) := by
         simpa [C, D, List.append_assoc] using ih (pre ++ [C])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountCForm, C, D, List.append_assoc] using hall
+      simpa [fourCountCForm, C, D, List.append_assoc] using! hall
 
 theorem fourCount_sort_repeated_markers_derives (n : Nat) :
     GeneralGrammar.Derives FourCountGrammar
@@ -841,7 +841,7 @@ theorem fourCount_sort_repeated_markers_derives (n : Nat) :
             (fourCountMarkerBag (n + 1) (n + 1) (n + 1) (n + 1)) := by
         simpa [fourCountMarkerBag, fourCountAForm, fourCountBForm,
           fourCountCForm, fourCountDForm, A, B, C, D,
-          List.append_assoc] using
+          List.append_assoc] using!
           fourCount_moveD_right_over_cs n
             ([A] ++ fourCountAForm n ++ [B] ++ fourCountBForm n ++
               [C])
@@ -981,7 +981,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                     ([fcN FourCountNT.markB] ++
                       fourCountMarkerBag aCount bRest cCount dCount) := by
                 simpa [fourCountMarkerBag, fourCountBForm,
-                  List.append_assoc] using
+                  List.append_assoc] using!
                   fourCount_moveB_left_over_as aCount []
                     (fourCountBForm bRest ++ fourCountCForm cCount ++
                       fourCountDForm dCount)
@@ -1034,7 +1034,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                       fourCountBForm bCount ++ fourCountCForm cRest ++
                       fourCountDForm dCount) := by
                 simpa [fourCountMarkerBag, fourCountCForm,
-                  List.append_assoc] using
+                  List.append_assoc] using!
                   fourCount_moveC_left_over_bs bCount
                     (fourCountAForm aCount)
                     (fourCountCForm cRest ++ fourCountDForm dCount)
@@ -1099,7 +1099,7 @@ theorem fourCount_marker_bag_to_marker_word_derives
                       [fcN FourCountNT.markD] ++ fourCountCForm cCount ++
                       fourCountDForm dRest) := by
                 simpa [fourCountMarkerBag, fourCountDForm,
-                  List.append_assoc] using
+                  List.append_assoc] using!
                   fourCount_moveD_left_over_cs cCount
                     (fourCountAForm aCount ++ fourCountBForm bCount)
                     (fourCountDForm dRest)
@@ -1180,7 +1180,7 @@ theorem fourCount_marker_word_to_terminal_word_derives
               general_derives_context ih [fcT FourCountTerminal.a] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using hall
+            SententialForm.terminalWord, fcT] using! hall
       | b =>
           have hstep :
               GeneralGrammar.Yields FourCountGrammar
@@ -1198,7 +1198,7 @@ theorem fourCount_marker_word_to_terminal_word_derives
               general_derives_context ih [fcT FourCountTerminal.b] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using hall
+            SententialForm.terminalWord, fcT] using! hall
       | c =>
           have hstep :
               GeneralGrammar.Yields FourCountGrammar
@@ -1216,7 +1216,7 @@ theorem fourCount_marker_word_to_terminal_word_derives
               general_derives_context ih [fcT FourCountTerminal.c] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using hall
+            SententialForm.terminalWord, fcT] using! hall
       | d =>
           have hstep :
               GeneralGrammar.Yields FourCountGrammar
@@ -1234,7 +1234,7 @@ theorem fourCount_marker_word_to_terminal_word_derives
               general_derives_context ih [fcT FourCountTerminal.d] []
           have hall := GeneralGrammar.Derives.step hstep hcontext
           simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using hall
+            SententialForm.terminalWord, fcT] using! hall
 
 theorem fourCount_words_generated_of_equal_counts
     {word : Word FourCountTerminal}
@@ -1280,7 +1280,7 @@ theorem fourCount_words_generated_of_equal_counts
   have hall := GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hmarkersClean hemit)
   simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, fcN,
-    ggNonterminal] using hall
+    ggNonterminal] using! hall
 
 theorem fourCount_generated_language_exact
     (word : Word FourCountTerminal) :
@@ -1392,7 +1392,7 @@ theorem fourCountGrammar_generates_dacb :
                       (GeneralGrammar.Derives.step h10
                         (GeneralGrammar.Derives.refl [d, a, c, b]))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, FourCountGrammar, dacbWord,
-    SententialForm.terminalWord, S, a, b, c, d] using hderives
+    SententialForm.terminalWord, S, a, b, c, d] using! hderives
 
 
 end Section06

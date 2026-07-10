@@ -148,7 +148,7 @@ theorem irrational_scalePos {x : Real} {c : QRat} (hc : 0 < c)
         have hr : (qreal r).lower (c * p) :=
           (lower_congr hxr (c * p)).mp hscale
         have hpc : p * c < r := by
-          simpa [QRat.mul_comm] using hr
+          simpa [QRat.mul_comm] using! hr
         exact (qreal_lower_iff (r / c) p).mpr
           ((QRat.lt_div_iff (x := p) (y := r) (c := c) hc).mpr hpc)
       · intro hpr

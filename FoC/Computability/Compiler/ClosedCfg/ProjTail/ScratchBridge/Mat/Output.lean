@@ -213,7 +213,7 @@ theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerOutputSpe
     countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding,
     StructuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputSpec,
     structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hmaterializer
 
 theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerOutputSpec_of_boolWordSpec
@@ -234,7 +234,7 @@ theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerOu
     countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding,
     StructuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputSpec,
     structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource,
-    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using
+    structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hmaterializer
 
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerOutputSpec_iff_indexedSpec

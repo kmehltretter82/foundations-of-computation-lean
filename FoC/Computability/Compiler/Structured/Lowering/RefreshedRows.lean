@@ -646,7 +646,7 @@ theorem readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh_lowers
                   hrowHalts hrefreshHalts
               simpa [row, transition,
                 readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh]
-                using hcomposed
+                using! hcomposed
 
 theorem readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh_lowersGuardedTransitionEquiv_of_supports
     (D : Description) (t : Transition)
@@ -731,7 +731,7 @@ theorem readActionSlackRow3DescriptionOfRowWithStructuredSingleton3Refresh_lower
                   hrowHalts hrefreshHalts
               simpa [row, transition,
                 readActionSlackRow3DescriptionOfRowWithStructuredSingletonRefresh]
-                using hcomposed
+                using! hcomposed
 
 theorem readActionSlackRow3DescriptionOfRowWithStructuredSingleton3Refresh_lowersGuardedTransitionEquiv_of_supports
     (D : Description) (t : Transition)

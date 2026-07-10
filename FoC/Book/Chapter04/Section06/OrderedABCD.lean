@@ -364,7 +364,7 @@ theorem orderedABCDGrammar_generated_has_equal_terminal_counts
         [ordered4N OrderedABCDNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, ordered4N,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hbalanced :=
     orderedABCD_derives_preserves_balanced hderives
       orderedABCD_start_balanced
@@ -423,7 +423,7 @@ theorem orderedABCDGrammar_generates_empty :
             (GeneralGrammar.Derives.step h5
               (GeneralGrammar.Derives.refl [])))))
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, Word.Empty,
-    SententialForm.terminalWord, S, ordered4N, ggNonterminal] using hderives
+    SententialForm.terminalWord, S, ordered4N, ggNonterminal] using! hderives
 
 theorem orderedABCDGrammar_generates_aabbccdd :
     aabbccddWord ∈ GeneralGrammar.GeneratedLanguage OrderedABCDGrammar := by
@@ -612,7 +612,7 @@ theorem orderedABCDGrammar_generates_aabbccdd :
                                                 [a, a, b, b, c, c, d,
                                                   d])))))))))))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCDGrammar, aabbccddWord,
-    SententialForm.terminalWord, S, a, b, c, d] using hderives
+    SententialForm.terminalWord, S, a, b, c, d] using! hderives
 
 
 end Section06

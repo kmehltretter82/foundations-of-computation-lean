@@ -640,7 +640,7 @@ theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalize
     CanonicalLayouts.DovetailLayoutScanner.boolBits_eq_encodeBoolAppend,
     encodeCodeWordAsInput, encodeCodeSymbolAsInput, Function.comp_def,
     List.append_assoc]
-    using hcfgWithHit
+    using! hcfgWithHit
 
 theorem SelectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedTape_normalizedOutput_eq_sourceBits
     (p : SelectedMergeEmitterPayload) :

@@ -353,7 +353,7 @@ theorem structuredTape2RepresentativeSegmentOutputTape_contextLength_ge_source
           T0 T1 T2 physical) := by
   rw [hseparator.2]
   simpa [structuredTape2RepresentativeSegmentOutputTape,
-    encodedSuffixFromTape] using
+    encodedSuffixFromTape] using!
     structuredSelectedHeadSegmentDecoderRepresentativeOutputTape_contextLength_ge_source
       T2 [] (encodedPrefixBeforeTape (guardLogicalTapes [T0, T1, T2]) 2)
 

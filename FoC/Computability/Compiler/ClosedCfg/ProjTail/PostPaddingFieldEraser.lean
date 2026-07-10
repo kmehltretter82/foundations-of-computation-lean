@@ -109,9 +109,9 @@ theorem configurationSuffixScannerDescription_haltsFrom_boundary
     rw [hcfg]
   refine ⟨steps, ?_⟩
   constructor
-  · simpa using congrArg Configuration.state hsteps
+  · simpa using! congrArg Configuration.state hsteps
   · exact Eq.trans
-      (by simpa using congrArg Configuration.tape hsteps)
+      (by simpa using! congrArg Configuration.tape hsteps)
       htarget
 
 theorem configurationSuffixScannerDescription_haltsFrom_boundary_withRight
@@ -179,9 +179,9 @@ theorem configurationSuffixScannerDescription_haltsFrom_boundary_withRight
     rw [hcfg]
   refine ⟨steps, ?_⟩
   constructor
-  · simpa using congrArg Configuration.state hsteps
+  · simpa using! congrArg Configuration.state hsteps
   · exact Eq.trans
-      (by simpa using congrArg Configuration.tape hsteps)
+      (by simpa using! congrArg Configuration.tape hsteps)
       htarget
 
 theorem configurationFieldBoundaryEraserDescription_haltsFrom
@@ -924,7 +924,7 @@ theorem leftBoundaryBitConfigurationFieldEraseAndPayloadScanDescription_haltsFro
             (none :: padding))))
       (by
         rw [hfield]
-        simpa [Tin2, List.map_append, List.append_assoc] using
+        simpa [Tin2, List.map_append, List.append_assoc] using!
           boundaryBitSourceTape_move_left_move_right
             bit baseLeft
             (List.append (fieldRest.map some) (none :: padding)))

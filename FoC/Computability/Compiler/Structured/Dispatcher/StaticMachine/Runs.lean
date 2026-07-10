@@ -48,7 +48,7 @@ theorem retargetedNoRowReturnDescription_runsFromTape2Separator
   have hrun :=
     returnFromTape2SeparatorToCanonicalBlockStart_runs
       hlength hseparator
-  simpa [retargetedNoRowReturnDescription] using
+  simpa [retargetedNoRowReturnDescription] using!
     runsFromStateTapeEquiv_offsetRetargetDescription
       (offset := noRowReturnOffset D rowBlockSize state reads)
       (target := StaticDispatcherState.ready state)
@@ -326,7 +326,7 @@ theorem returnedNoRowBranchTransitions_runsFromExistingTapeSeparator
             returnedNoRowBranchTransitions, jumpMachine] using Or.inl hu)
         hdet
         (by
-          simpa [jumpMachine, returnMachine] using
+          simpa [jumpMachine, returnMachine] using!
             (returnedNoRowJumpDescription_subroutineReady
               D reads hstate).right)
         hjumpRaw
@@ -357,7 +357,7 @@ theorem returnedNoRowBranchTransitions_runsFromExistingTapeSeparator
             returnedNoRowBranchTransitions, returnMachine] using Or.inr hu)
         hdet
         (by
-          simpa [returnMachine] using
+          simpa [returnMachine] using!
             (retargetedNoRowReturnDescription_subroutineReady
               (D := D) (rowBlockSize := rowBlockSize)
               (state := state) (reads := reads) hstate).right)
@@ -653,7 +653,7 @@ theorem threeHeadReaderReturnedNoRowSelectedTransitions_runsSelectedFromExisting
     have hselected :
         u ∈ selectedRowAllTransitions D refresh rowBlockSize :=
       selectedRowBranchTransitions_subset_selectedRowAllTransitions
-        D rowBlockSize hstate hlookupReads u (by simpa using hu)
+        D rowBlockSize hstate hlookupReads u (by simpa using! hu)
     simpa [tableMachine,
       threeHeadReaderReturnedNoRowSelectedTransitions,
       threeHeadReaderReturnedNoRowTransitions] using
@@ -945,14 +945,14 @@ theorem staticLoweredDescription_wellFormed
         hDwf.right.right.right.left
     exact Nat.lt_of_lt_of_le hready
       (selectedRowBranchLimit_le_noRowReturnLimit D rowBlockSize)
-  · simpa [staticLoweredDescription, rowBlockSize] using
+  · simpa [staticLoweredDescription, rowBlockSize] using!
       threeHeadReaderReturnedNoRowSelectedTransitions_wellFormed
         hDwf hrows hrefresh rowBlockSize
         (by
           intro item hitem t hlookup
           exact selectedRowBlockSize_fits D refresh hitem hlookup)
   · simpa [staticLoweredDescription, rowBlockSize,
-      MachineDescription.Deterministic] using
+      MachineDescription.Deterministic] using!
       threeHeadReaderReturnedNoRowSelectedTransitions_deterministic
         hDwf hrows hrefresh rowBlockSize
         (by
@@ -966,7 +966,7 @@ theorem staticLoweredDescription_haltTransitionFree
     (hrefresh : StructuredSingletonGuardSlackRefresh3Contract refresh) :
     (staticLoweredDescription D refresh).HaltTransitionFree := by
   let rowBlockSize := selectedRowBlockSize D refresh
-  simpa [staticLoweredDescription, rowBlockSize] using
+  simpa [staticLoweredDescription, rowBlockSize] using!
     threeHeadReaderReturnedNoRowSelectedTransitions_sources_ne_halt
       hrows hrefresh rowBlockSize hDwf.right.right.right.left
 

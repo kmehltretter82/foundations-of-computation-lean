@@ -511,7 +511,7 @@ theorem boolWordSource_cells
                 (bits useAccept input))
               (false :: suffixTail useAccept input))).map some)
           (none :: sourcePadding useAccept input) := by
-  simpa [boolWordSource, bits, suffixTail, sourcePadding] using
+  simpa [boolWordSource, bits, suffixTail, sourcePadding] using!
     BoolWordRawBitsDecoderInputMaterializerEndpoint.indexedSource_cells
       (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
         useAccept)
@@ -549,7 +549,7 @@ theorem outputTape_cells
           (List.replicate ((bits useAccept input).length + 1)
             (none : Option Bool))
           (outputPadding useAccept input) := by
-  simpa [outputTape, bits, outputPadding] using
+  simpa [outputTape, bits, outputPadding] using!
     BoolWordRawBitsDecoderInputMaterializerEndpoint.indexedOutput_cells
       (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
         useAccept)

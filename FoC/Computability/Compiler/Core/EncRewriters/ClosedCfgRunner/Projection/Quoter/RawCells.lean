@@ -165,7 +165,7 @@ theorem assemblyPrefixDescription_run_state120_stageNat
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         assemblyPrefixDescription_run_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by
@@ -1260,7 +1260,7 @@ private theorem assemblySourceRestFinishTargetPrefixBits_eq_outputPrefix
       SelectedProjectionTailProjector.outputPrefixStageInputSourceRestFieldBits
         L := by
   simpa [assemblySourceRestFinishTargetPrefixBits,
-    assemblySourceRestFinishSourceBits] using
+    assemblySourceRestFinishSourceBits] using!
     preservingCellPassHeaderQuoteBits_eq_outputPrefixStageInputSourceRestFieldBits
       L
 

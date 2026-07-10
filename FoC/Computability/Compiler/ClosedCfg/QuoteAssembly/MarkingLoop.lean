@@ -505,7 +505,7 @@ theorem assemblyPrefixDescription_run_state120_stageNat_core
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         assemblyPrefixDescription_run_state120_done_core left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 = 4 + (4 * n + 4) by lia]

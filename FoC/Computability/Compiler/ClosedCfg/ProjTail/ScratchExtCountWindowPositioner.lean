@@ -489,7 +489,7 @@ theorem scratchCountSuffixMarkedBoundarySeparatorRewind_haltsFrom
         rightEdgeScanTargetTapeFromLeft,
         rightEdgeRewindTargetTape,
         hsuffix, List.reverse_append, List.map_append,
-        List.append_assoc] using hrun
+        List.append_assoc] using! hrun
 
 theorem scratchCountSuffixMarkedBoundarySeparatorLeftBoundaryTape_move_left_move_right
     (pref suffix : Word Bool) (first : Bool)
@@ -1818,7 +1818,7 @@ theorem prefixGapRestorer_restoreFromFetched
     simpa [scratchCountSuffixMarkedBoundarySeparatorScanSourceTape,
       scratchCountSuffixMarkedBoundarySeparatorPadding,
       rightEdgeScanSourceTapeFromLeft, List.map_reverse,
-      List.append_assoc] using
+      List.append_assoc] using!
       congrArg MachineDescription.Configuration.tape
         (prefixGapRestorer_run_restore_from_leftStack
           (none :: pref.reverse.map some)

@@ -229,7 +229,7 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_bit
           0 processedRev (bit :: rest) markers outputBits) =
       structuredMixedOptionCellQuoteLiveTailCountConfig
         0 (bit :: processedRev) rest markers.succ outputBits := by
-  simpa [structuredMixedOptionCellQuoteLiveTailEmitterDescription] using
+  simpa [structuredMixedOptionCellQuoteLiveTailEmitterDescription] using!
     structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_bit
       bit processedRev rest markers outputBits
 
@@ -241,7 +241,7 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_count_done
           0 processedRev [] markers outputBits) =
       structuredMixedOptionCellQuoteLiveTailCountLengthHeaderAfterCountConfig
         processedRev markers outputBits := by
-  simpa [structuredMixedOptionCellQuoteLiveTailEmitterDescription] using
+  simpa [structuredMixedOptionCellQuoteLiveTailEmitterDescription] using!
     structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription_run_count_done
       processedRev markers outputBits
 
@@ -489,7 +489,7 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_length_loop
             remaining)) := by
   induction remaining generalizing emitted outputBits with
   | zero =>
-      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using
+      simpa [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_zero] using!
         structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_length_final
           emitted source outputBits
   | succ remaining ih =>
@@ -1248,7 +1248,7 @@ theorem structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_fullSource
       structuredMixedOptionCellQuoteLiveTailCellPassAfterRewindConfig,
       structuredMixedOptionCellQuoteLiveTailEmitterFullSourceOutputBits,
       structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits,
-      List.append_assoc] using
+      List.append_assoc] using!
       structuredMixedOptionCellQuoteLiveTailEmitterDescription_run_quote
         bits bits.length
         (structuredMixedOptionCellQuoteLiveTailEmitterCountLengthOutputBits

@@ -1060,7 +1060,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
             tape := Tape.input (b :: rest) } =
         { state := A.halt, tape := Tmid } := by
     simpa [A, Tmid, initial,
-      config, tapeAtCells, Tape.input] using
+      config, tapeAtCells, Tape.input] using!
       writeMarkedTransitionPrefixDescription_run
         b (rest.map some)
   have hBReach :
@@ -1081,7 +1081,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run
       ⟨nB, hB⟩
     refine ⟨nB, ?_⟩
     simpa [B, Tmid,
-      writeMarkedTransitionPrefixDescription_handoff_to_append] using hB
+      writeMarkedTransitionPrefixDescription_handoff_to_append] using! hB
   rcases
       seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)
@@ -1125,7 +1125,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
               tapeAtCells []
                 (List.append (some b :: rest.map some) [none]) } =
         { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, config, tapeAtCells] using
+    simpa [A, Tmid, config, tapeAtCells] using!
       writeMarkedTransitionPrefixDescription_run
         b (List.append (rest.map some) [none])
   have hBReach :
@@ -1146,7 +1146,7 @@ theorem markedPrefixThenAppendCodeWordLastDescription_run_checked
       ⟨nB, hB⟩
     refine ⟨nB, ?_⟩
     simpa [B, Tmid,
-      writeMarkedTransitionPrefixDescription_handoff_to_append_checked] using hB
+      writeMarkedTransitionPrefixDescription_handoff_to_append_checked] using! hB
   rcases
       seqSubroutine_reaches_of_runConfig_eq
         (A := A) (B := B) (handoffMove := Direction.right)

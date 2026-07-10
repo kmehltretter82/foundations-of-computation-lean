@@ -129,7 +129,7 @@ private theorem pathVia_prepend (M : DFA alpha state) (allowed : List state)
   | nil =>
       cases hpath with
       | empty _ =>
-          simpa [hstep] using PathVia.symbol (M := M) (allowed := allowed) q a
+          simpa [hstep] using! PathVia.symbol (M := M) (allowed := allowed) q a
   | cons b rest =>
       exact PathVia.cons (by intro h; cases h) hmid hstep hpath
 
@@ -423,7 +423,7 @@ theorem dfaRegex_complete [DecidableEq state]
     · apply List.mem_filter.mpr
       constructor
       · exact M.statesFinite.complete (DFA.Run M w)
-      · simpa using hw
+      · simpa using! hw
     · rfl
   · exact pathRegex_complete alphabet M M.statesFinite.elems
       (by
@@ -452,7 +452,7 @@ theorem finite_alphabet_universal_regular (alphabet : List alpha)
         have hconcat := Language.star_concat
           (Language.star_of_mem (RegExp.Denote (RegExp.CharClass alphabet)) hhead)
           (ih True.intro)
-        simpa [Word.Concat] using hconcat
+        simpa [Word.Concat] using! hconcat
 
 /-- Every regular language is NFA-recognizable by Thompson construction. -/
 theorem regular_is_nfa_recognizable {L : Language alpha}

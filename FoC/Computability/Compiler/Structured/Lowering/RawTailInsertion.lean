@@ -1633,7 +1633,7 @@ theorem rewindTailHandoffConfig_source_normalizedOutput
         (Description.tapeAt
           (rewindTailHandoffConfig pref tail insert).tapes 0) =
       List.append pref insert := by
-  simpa [rewindTailHandoffConfig] using
+  simpa [rewindTailHandoffConfig] using!
     rewindTailHandoffSourceTape_normalizedOutput pref tail insert
 
 theorem rewindTailHandoffConfig_scratch_normalizedOutput
@@ -1642,7 +1642,7 @@ theorem rewindTailHandoffConfig_scratch_normalizedOutput
         (Description.tapeAt
           (rewindTailHandoffConfig pref tail insert).tapes 1) =
       insert := by
-  simpa [rewindTailHandoffConfig, scratchTape] using
+  simpa [rewindTailHandoffConfig, scratchTape] using!
     outputFromBits_normalizedOutput insert
 
 theorem rewindTailHandoffConfig_work_normalizedOutput
@@ -1651,7 +1651,7 @@ theorem rewindTailHandoffConfig_work_normalizedOutput
         (Description.tapeAt
           (rewindTailHandoffConfig pref tail insert).tapes 2) =
       tail := by
-  simpa [rewindTailHandoffConfig] using
+  simpa [rewindTailHandoffConfig] using!
     rewindTailHandoffWorkTape_normalizedOutput tail
 
 theorem writeInsertScratchTape_normalizedOutput
@@ -1666,7 +1666,7 @@ theorem rewindScratchHandoffConfig_source_normalizedOutput
         (Description.tapeAt
           (rewindScratchHandoffConfig pref tail insert).tapes 0) =
       List.append pref insert := by
-  simpa [rewindScratchHandoffConfig] using
+  simpa [rewindScratchHandoffConfig] using!
     rewindTailHandoffSourceTape_normalizedOutput pref tail insert
 
 theorem rewindScratchHandoffConfig_scratch_normalizedOutput
@@ -1675,7 +1675,7 @@ theorem rewindScratchHandoffConfig_scratch_normalizedOutput
         (Description.tapeAt
           (rewindScratchHandoffConfig pref tail insert).tapes 1) =
       insert := by
-  simpa [rewindScratchHandoffConfig] using
+  simpa [rewindScratchHandoffConfig] using!
     writeInsertScratchTape_normalizedOutput insert
 
 theorem rewindScratchHandoffConfig_work_normalizedOutput
@@ -1684,7 +1684,7 @@ theorem rewindScratchHandoffConfig_work_normalizedOutput
         (Description.tapeAt
           (rewindScratchHandoffConfig pref tail insert).tapes 2) =
       tail := by
-  simpa [rewindScratchHandoffConfig] using
+  simpa [rewindScratchHandoffConfig] using!
     rewindTailHandoffWorkTape_normalizedOutput tail
 
 theorem writeInsertSourceTapeFromLeft_normalizedOutput
@@ -1744,7 +1744,7 @@ theorem writeInsertHandoffConfig_source_normalizedOutput
         (List.append insert
           ((writeInsertHandoffRightCells tail insert).filterMap
             (fun cell => cell))) := by
-  simpa [writeInsertHandoffConfig] using
+  simpa [writeInsertHandoffConfig] using!
     writeInsertHandoffSourceTape_normalizedOutput pref tail insert
 
 theorem writeInsertHandoffConfig_scratch_normalizedOutput
@@ -1763,7 +1763,7 @@ theorem writeInsertHandoffConfig_work_normalizedOutput
         (Description.tapeAt
           (writeInsertHandoffConfig pref tail insert).tapes 2) =
       tail := by
-  simpa [writeInsertHandoffConfig] using
+  simpa [writeInsertHandoffConfig] using!
     rewindTailHandoffWorkTape_normalizedOutput tail
 
 theorem restoreTailHandoffSourceTapeFromLeft_normalizedOutput
@@ -1808,7 +1808,7 @@ theorem restoreTailHandoffConfig_source_normalizedOutput
         (Description.tapeAt
           (restoreTailHandoffConfig pref tail insert).tapes 0) =
       List.append pref (List.append insert tail) := by
-  simpa [restoreTailHandoffConfig] using
+  simpa [restoreTailHandoffConfig] using!
     restoreTailHandoffSourceTape_normalizedOutput pref tail insert
 
 theorem restoreTailHandoffConfig_scratch_normalizedOutput
@@ -1827,7 +1827,7 @@ theorem restoreTailHandoffConfig_work_normalizedOutput
         (Description.tapeAt
           (restoreTailHandoffConfig pref tail insert).tapes 2) =
       [] := by
-  simpa [restoreTailHandoffConfig] using
+  simpa [restoreTailHandoffConfig] using!
     finalWorkTape_normalizedOutput tail
 
 theorem sourceTape_normalizedOutput
@@ -1873,7 +1873,7 @@ theorem initialConfig_source_normalizedOutput
     Tape.normalizedOutput
         (Description.tapeAt (initialConfig pref tail insert).tapes 0) =
       List.append pref (List.append tail insert) := by
-  simpa [initialConfig] using
+  simpa [initialConfig] using!
     sourceTape_normalizedOutput pref tail insert
 
 theorem initialConfig_scratch_normalizedOutput
@@ -1881,7 +1881,7 @@ theorem initialConfig_scratch_normalizedOutput
     Tape.normalizedOutput
         (Description.tapeAt (initialConfig pref tail insert).tapes 1) =
       insert := by
-  simpa [initialConfig] using
+  simpa [initialConfig] using!
     scratchTape_normalizedOutput insert
 
 theorem initialConfig_work_normalizedOutput
@@ -1898,7 +1898,7 @@ theorem copyTailHandoffConfig_source_normalizedOutput
         (Description.tapeAt
           (copyTailHandoffConfig pref tail insert).tapes 0) =
       List.append pref insert := by
-  simpa [copyTailHandoffConfig] using
+  simpa [copyTailHandoffConfig] using!
     erasedTailSourceTape_normalizedOutput pref tail insert
 
 theorem copyTailHandoffConfig_scratch_normalizedOutput
@@ -1907,7 +1907,7 @@ theorem copyTailHandoffConfig_scratch_normalizedOutput
         (Description.tapeAt
           (copyTailHandoffConfig pref tail insert).tapes 1) =
       insert := by
-  simpa [copyTailHandoffConfig] using
+  simpa [copyTailHandoffConfig] using!
     scratchTape_normalizedOutput insert
 
 theorem copyTailHandoffConfig_work_normalizedOutput
@@ -1916,7 +1916,7 @@ theorem copyTailHandoffConfig_work_normalizedOutput
         (Description.tapeAt
           (copyTailHandoffConfig pref tail insert).tapes 2) =
       tail := by
-  simpa [copyTailHandoffConfig] using
+  simpa [copyTailHandoffConfig] using!
     outputFromBits_normalizedOutput tail
 
 theorem restoredSourceTape_normalizedOutput
@@ -1932,7 +1932,7 @@ theorem finalConfig_source_normalizedOutput
     Tape.normalizedOutput
         (Description.tapeAt (finalConfig pref tail insert).tapes 0) =
       List.append pref (List.append insert tail) := by
-  simpa [finalConfig] using
+  simpa [finalConfig] using!
     restoredSourceTape_normalizedOutput pref tail insert
 
 theorem finalConfig_work_normalizedOutput

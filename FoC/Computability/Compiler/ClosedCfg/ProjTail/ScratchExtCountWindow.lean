@@ -645,7 +645,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
                   useAccept L extraScratch)))) := by
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail,
-    List.append_assoc] using
+    List.append_assoc] using!
     gapTape_eq
       useAccept L extraScratch [none, none]
 
@@ -672,7 +672,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
                   useAccept L extraScratch)))) := by
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank,
-    List.append_assoc] using
+    List.append_assoc] using!
     gapTape_eq
       useAccept L extraScratch [none, none, none]
 
@@ -1133,7 +1133,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCoun
         useAccept L extraScratch := by
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithPostCountTail]
-    using
+    using!
       gapTape_move_left_move_right
         useAccept L extraScratch [none, none]
 
@@ -1147,7 +1147,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCou
         useAccept L extraScratch := by
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRawSourceTapeWithExtraCountBlank]
-    using
+    using!
       gapTape_move_left_move_right
         useAccept L extraScratch [none, none, none]
 
@@ -1225,7 +1225,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountDecodedPrefixStageScanner
       htail]
     simpa [mid, postPaddingOutputPrefixStageHandoffBase,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      tapeAtCells, List.map_append, List.append_assoc] using
+      tapeAtCells, List.map_append, List.append_assoc] using!
       nonemptyNatSuffixScannerDescription_haltsFrom_outputPrefixStage_withRight
         (ParsedLayoutBits L) L.stage [none] fieldTail rightPadding
   have hmove :
@@ -1318,7 +1318,7 @@ theorem selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_c
   simpa [
     selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
     selectedProjectionPaddedTailCleanupSelectedConfigBits]
-    using hpayloadRest
+    using! hpayloadRest
 
 theorem selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_append_last
     (L : DovetailLayout) :
@@ -1377,7 +1377,7 @@ private theorem rejectField
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload,
       selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayloadRest,
       selectedProjectionPaddedTailCleanupSelectedConfigBits]
-      using
+      using!
         (selectedProjectionPaddedTailCleanupScratchCountRejectFirstFieldPayload_cons_false
           L).symm]
   exact
@@ -1403,7 +1403,7 @@ private theorem acceptField
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload,
       selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayloadRest,
       selectedProjectionPaddedTailCleanupUnselectedConfigBits]
-      using
+      using!
         (selectedProjectionPaddedTailCleanupScratchCountAcceptFirstFieldPayload_cons_false
           L).symm]
   exact

@@ -605,7 +605,7 @@ theorem finite_presentation_pda_recognizable_diff_dfa
       hL (DFA.Complement D) hComplement
   simpa [Language.Diff, Language.Inter, Language.Compl,
     Foundation.FSet.Diff, Foundation.FSet.Inter, Foundation.FSet.Compl]
-    using hInter
+    using! hInter
 
 theorem finite_presentation_pda_recognizable_diff_dfa_recognizable
     {L R : Language input}

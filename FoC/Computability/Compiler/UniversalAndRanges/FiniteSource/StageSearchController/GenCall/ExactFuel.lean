@@ -51,13 +51,13 @@ theorem codePrefixExactFuelRunnerConstruction_iff_runnerConstruction
     rcases h with ⟨runnerState, runner, hrunner⟩
     exact ⟨runnerState, runner, by
       intro input fuel
-      simpa [FiniteRecognizer.GeneratedCode.stageCode] using
+      simpa [FiniteRecognizer.GeneratedCode.stageCode] using!
         hrunner input fuel⟩
   · intro h
     rcases h with ⟨runnerState, runner, hrunner⟩
     exact ⟨runnerState, runner, by
       intro input fuel
-      simpa [FiniteRecognizer.GeneratedCode.stageCode] using
+      simpa [FiniteRecognizer.GeneratedCode.stageCode] using!
         hrunner input fuel⟩
 
 theorem codePrefixExactFuelRunnerConstruction_of_runnerConstruction

@@ -211,7 +211,7 @@ theorem decodedBoundedSimulatorNormalizedInput_decodeNat
         (decodedBoundedSimulatorNormalizedInput stage D input) =
       some (stage,
         List.append (MachineDescription.encodeDescription D) input) := by
-  simpa [decodedBoundedSimulatorNormalizedInput] using
+  simpa [decodedBoundedSimulatorNormalizedInput] using!
     codePrefixRecognizerStageCode_decodeNat
       (List.append (MachineDescription.encodeDescription D) input) stage
 
@@ -275,7 +275,7 @@ theorem decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
       MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
         hdecode
     exact
-      ⟨stage, D, input, by simpa [hencoded] using hstage, hhalts⟩
+      ⟨stage, D, input, by simpa [hencoded] using! hstage, hhalts⟩
   · intro h
     rcases h with ⟨stage, D, input, hstage, hhalts⟩
     exact
@@ -518,7 +518,7 @@ theorem decodedBoundedSimulatorTransitionLoopFromConfig_succ_eq_scan
               tape :=
                 Tape.move transition.move
                   (Tape.write transition.write config.tape) } := by
-  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using!
     (MachineDescription.runConfig_succ_eq_scanTransitionTable
       (D := D) (c := config) (n := stage))
 
@@ -1351,7 +1351,7 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff_loo
         some ([] : Word MachineCodeSymbol) <->
       (decodedBoundedSimulatorTransitionLoopFromConfig 0 D config).state =
         D.halt := by
-  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using!
     decodedBoundedSimulatorTransitionLoopFinalAcceptCode_encode_zero_iff
       D config
 
@@ -1412,7 +1412,8 @@ theorem decodedBoundedSimulatorTransitionLoopFinalAcceptCode_iterate_self_output
         hdecode hiter with
     ⟨finalConfig, hfinalDecode, hpres⟩
   rw [hpres]
-  simpa [decodedBoundedSimulatorTransitionLoopFromConfig] using
+  simpa [decodedBoundedSimulatorTransitionLoopFromConfig,
+    MachineDescription.runConfig] using!
     decodedBoundedSimulatorTransitionLoopFinalAcceptCode_of_decode_zero_iff
       hfinalDecode
 
@@ -1845,7 +1846,7 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
     have hpipelineNil :
         decodedBoundedSimulatorTransitionLoopPipelineCode tokens =
           some ([] : Word MachineCodeSymbol) := by
-      simpa [hout] using hpipeline
+      simpa [hout] using! hpipeline
     rcases
         (decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
           tokens).mp hpipelineNil with
@@ -1862,7 +1863,7 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
       (decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
         tokens).mpr
         ⟨stage, D, input, hdecode, hhalts⟩
-    simpa [hout] using hcodeNil
+    simpa [hout] using! hcodeNil
   · intro hcode
     rcases
         (codePrefixDecodedBoundedSimulatorCode_transform_eq_some_iff
@@ -1882,7 +1883,7 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
             List.append (MachineDescription.encodeDescription D) input :=
         MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
           hdescription
-      simpa [hencoded] using hstage
+      simpa [hencoded] using! hstage
     have hhalt :
         (decodedBoundedSimulatorTransitionLoopConfig stage D input).state =
           D.halt := by
@@ -1895,7 +1896,7 @@ theorem decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_iff_code
       (decodedBoundedSimulatorTransitionLoopPipelineCode_eq_some_nil_iff
         tokens).mpr
         ⟨stage, D, input, hdecode, hhalt⟩
-    simpa [hout] using hpipelineNil
+    simpa [hout] using! hpipelineNil
 
 theorem decodedBoundedSimulatorTransitionLoopPipelineIterateCode_eq_some_iff_code
     (tokens out : Word MachineCodeSymbol) :

@@ -37,14 +37,14 @@ theorem squareTerminalAForm_count_nonterminal (A : SquareNT) (n : Nat) :
 
 theorem squareBForm_count_d (n : Nat) :
     SententialCountNonterminal SquareNT.d (squareBForm n) = 0 := by
-  simpa [squareBForm] using
+  simpa [squareBForm] using!
     (sententialCountNonterminal_repeat_nonterminal_of_ne
       (terminal := SquareTerminal) (A := SquareNT.d) (B := SquareNT.b)
       (by intro h; cases h) n)
 
 theorem squareMarkerAForm_count_d (n : Nat) :
     SententialCountNonterminal SquareNT.d (squareMarkerAForm n) = 0 := by
-  simpa [squareMarkerAForm] using
+  simpa [squareMarkerAForm] using!
     (sententialCountNonterminal_repeat_nonterminal_of_ne
       (terminal := SquareTerminal) (A := SquareNT.d)
       (B := SquareNT.markA) (by intro h; cases h) n)
@@ -67,14 +67,14 @@ theorem square_no_t_occurrence_absurd
 
 theorem squareBForm_count_t (n : Nat) :
     SententialCountNonterminal SquareNT.t (squareBForm n) = 0 := by
-  simpa [squareBForm] using
+  simpa [squareBForm] using!
     (sententialCountNonterminal_repeat_nonterminal_of_ne
       (terminal := SquareTerminal) (A := SquareNT.t) (B := SquareNT.b)
       (by intro h; cases h) n)
 
 theorem squareMarkerAForm_count_t (n : Nat) :
     SententialCountNonterminal SquareNT.t (squareMarkerAForm n) = 0 := by
-  simpa [squareMarkerAForm] using
+  simpa [squareMarkerAForm] using!
     (sententialCountNonterminal_repeat_nonterminal_of_ne
       (terminal := SquareTerminal) (A := SquareNT.t)
       (B := SquareNT.markA) (by intro h; cases h) n)

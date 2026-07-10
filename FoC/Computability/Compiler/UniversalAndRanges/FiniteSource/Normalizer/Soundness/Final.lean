@@ -231,7 +231,7 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppen
                   List.append
                     (MachineDescription.encodeTransitionsAppend transitions [])
                     input := by
-              simpa using
+              simpa using!
                 (MachineDescription.encodeTransitionsAppend_append
                   transitions [] input).symm
             have hheader' :
@@ -289,14 +289,12 @@ theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescriptionAppen
                 MachineDescription.encodeNatAppend,
                 MachineDescription.encodeCellAppend,
                 MachineDescription.encodeDirectionAppend,
-                MachineDescription.encodeNat,
                 codePrefixParserNormalizer_encodeNat_eq_replicate_tick_done,
                 codePrefixParserNormalizerRestoredTicksLeft_eq,
                 codePrefixParserNormalizerRestoredTail_normalized,
                 transitionListParserOptionTape_normalizedOutput,
                 List.reverse_append, List.map_replicate,
                 List.append_assoc, hlen, htransAppend]
-              simp [List.replicate_succ]
 
 theorem codePrefixParserNormalizerMachine_haltsWithOutput_encodeDescription_append
     (D : MachineDescription) (input : Word MachineCodeSymbol) :

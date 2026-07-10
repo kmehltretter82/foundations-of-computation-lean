@@ -702,11 +702,11 @@ theorem natSuffixScannerDescription_runConfig_nonblank_suffix_inv
             (List.append ((stageNatBits stage).reverse.map some)
               baseLeft)
             (some b :: suffixTail) by
-      simpa [c0] using hprefix]
+      simpa [c0] using! hprefix]
     rw [htail]
     unfold Tfinal
     rw [htail]
-    simpa [List.append_assoc] using
+    simpa [List.append_assoc] using!
       DovetailStagePrefix.natSuffix_run_state210_handoff b (some true)
         (List.append tail baseLeft) suffixTail
   have htape :=
@@ -755,8 +755,8 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff
     exact
       (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
         DovetailStagePrefix.natSuffixScannerDescription_haltTransitionFree
-        (by simpa [c0] using hforward)
-        (by simpa [c0] using h)).symm
+        (by simpa [c0] using! hforward)
+        (by simpa [c0] using! h)).symm
   rw [hTout]
   exact
     DovetailStagePrefix.natSuffixHandoffConfigWithBase_move_right
@@ -803,8 +803,8 @@ theorem natSuffixScannerDescription_runConfig_stageNat_handoff_withRight
     exact
       (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
         DovetailStagePrefix.natSuffixScannerDescription_haltTransitionFree
-        (by simpa [c0] using hforward)
-        (by simpa [c0] using h)).symm
+        (by simpa [c0] using! hforward)
+        (by simpa [c0] using! h)).symm
   rw [hTout]
   exact
     DovetailStagePrefix.natSuffixHandoffConfigWithBaseAndRight_move_right
@@ -917,8 +917,8 @@ theorem boolWordSuffixScannerDescription_runConfig_canonical_false_suffix_inv
   have htape :=
     runConfig_halt_tape_functional_from_config
       boolWordSuffixScannerDescription_haltTransitionFree
-      (by simpa [c0] using hforward)
-      (by simpa [c0] using h)
+      (by simpa [c0] using! hforward)
+      (by simpa [c0] using! h)
   exact htape.symm
 
 theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
@@ -946,8 +946,8 @@ theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv
   have htape :=
     runConfig_halt_tape_functional_from_config
       cellListSuffixScannerDescription_haltTransitionFree
-      (by simpa [c0] using hforward)
-      (by simpa [c0] using h)
+      (by simpa [c0] using! hforward)
+      (by simpa [c0] using! h)
   exact htape.symm
 
 theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv_withRight
@@ -978,8 +978,8 @@ theorem cellListSuffixScannerDescription_runConfig_canonical_false_suffix_inv_wi
   have htape :=
     runConfig_halt_tape_functional_from_config
       cellListSuffixScannerDescription_haltTransitionFree
-      (by simpa [c0] using hforward)
-      (by simpa [c0] using h)
+      (by simpa [c0] using! hforward)
+      (by simpa [c0] using! h)
   exact htape.symm
 
 theorem tapeSuffixScannerDescription_runConfig_canonical_false_suffix_inv

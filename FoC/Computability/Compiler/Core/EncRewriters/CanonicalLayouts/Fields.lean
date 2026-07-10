@@ -64,7 +64,7 @@ theorem decodeNatComplete_encode (n : Nat) :
   have hdecode :
       decodeNat (encodeNat n) =
         some (n, []) := by
-    simpa using decodeNat_encodeNat_append n []
+    simpa using! decodeNat_encodeNat_append n []
   rw [decodeNatComplete, hdecode]
 
 theorem decodeNatComplete_eq_some_encode

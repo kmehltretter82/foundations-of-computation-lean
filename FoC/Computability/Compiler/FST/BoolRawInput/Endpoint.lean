@@ -265,7 +265,7 @@ theorem canonicalOutput_cells
           (List.replicate (bits.length + 1) (none : Option Bool))
           (List.append ((false :: suffixTail).map some) [none]) := by
   simpa [canonicalOutput, canonicalOutput_eq_initialOutputTape,
-    boolWordRawBitsDecoderPreservedPadding] using
+    boolWordRawBitsDecoderPreservedPadding] using!
     structuredBoolWordRawBitsDecoderCanonicalInitialOutputTape_cells
       bits suffixTail
 

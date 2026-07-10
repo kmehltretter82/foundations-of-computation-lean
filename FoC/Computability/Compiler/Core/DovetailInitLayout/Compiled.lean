@@ -32,11 +32,14 @@ private theorem descriptionWithValidatorCopier_subroutineReady
     (hvalidator : StageInputValidatorSpec validator)
     (hcopier : AppendInputTapeReturnSpec copier) :
     (DescriptionWithValidatorCopier
-      accept reject validator copier).SubroutineReady :=
-  seqSubroutine_subroutineReady
-    hvalidator.left
-    (descriptionWithCopier_subroutineReady
-      hcopier)
+      accept reject validator copier).SubroutineReady := by
+      change
+        (seqSubroutine validator
+          (DescriptionWithCopier accept reject copier)
+          Direction.left).SubroutineReady
+      exact seqSubroutine_subroutineReady
+        hvalidator.left
+        (descriptionWithCopier_subroutineReady hcopier)
      /-- {name}`descriptionWithValidatorCopier_run_bits` states the corresponding theorem run form. -/
 
 private theorem descriptionWithValidatorCopier_run_bits
@@ -56,7 +59,8 @@ private theorem descriptionWithValidatorCopier_run_bits
               accept reject validator copier).halt
           tape :=
             OutputTape
-              accept reject w stage } := by
+              accept reject w stage }
+:= (by
   let A := validator
   let B :=
     DescriptionWithCopier
@@ -77,7 +81,7 @@ private theorem descriptionWithValidatorCopier_run_bits
                   (PairedRecognizerDovetailStageInputCode w stage)) } =
         { state := A.halt, tape := Tmid } := by
     simpa [A, Tmid, stageInputBits,
-      initial] using hA
+      initial] using! hA
   have hBReach :
       exists nB : Nat,
         B.runConfig nB
@@ -118,7 +122,7 @@ private theorem descriptionWithValidatorCopier_run_bits
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [DescriptionWithValidatorCopier,
-    A, B, initial, stageInputBits] using hn
+    A, B, initial, stageInputBits] using! hn)
      /-- {name}`descriptionWithValidatorCopier_forward` captures the core lemma for this local construction. -/
 
 private theorem descriptionWithValidatorCopier_forward
@@ -128,7 +132,7 @@ private theorem descriptionWithValidatorCopier_forward
     ForwardSpec
       accept reject
       (DescriptionWithValidatorCopier
-        accept reject validator copier) := by
+        accept reject validator copier) := (by
   intro w stage
   rcases
       descriptionWithValidatorCopier_run_bits
@@ -137,10 +141,10 @@ private theorem descriptionWithValidatorCopier_forward
     ⟨n, hn⟩
   exact ⟨n, by
     constructor
-    · simpa [HaltsWithTapeIn] using
+    · simpa [HaltsWithTapeIn] using!
         congrArg Configuration.state hn
-    · simpa [HaltsWithTapeIn] using
-        congrArg Configuration.tape hn⟩
+    · simpa [HaltsWithTapeIn] using!
+        congrArg Configuration.tape hn⟩)
      /-- {name}`descriptionWithValidatorCopier_closed` captures the core lemma for this local construction. -/
 
 private theorem descriptionWithValidatorCopier_closed
@@ -150,7 +154,7 @@ private theorem descriptionWithValidatorCopier_closed
     ClosedSpec
       accept reject
       (DescriptionWithValidatorCopier
-        accept reject validator copier) := by
+        accept reject validator copier) := (by
   intro code T hhalt
   let A := validator
   let B :=
@@ -173,7 +177,7 @@ private theorem descriptionWithValidatorCopier_closed
           { state := B.start
             tape := stageInputCheckedInputTape w stage } =
         { state := B.halt, tape := T } := by
-    simpa [hhandoff] using hBrun
+    simpa [hhandoff] using! hBrun
   rcases
       descriptionWithCopier_run_bits_checked
         (accept := accept) (reject := reject)
@@ -194,7 +198,7 @@ private theorem descriptionWithValidatorCopier_closed
         OutputTape accept reject w stage :=
     MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
       hBready.right hBrun' hBexpected
-  exact ⟨w, stage, rfl, hT⟩
+  exact ⟨w, stage, rfl, hT⟩)
 
  /-- {name}`rightShiftedSpec_of_rightShiftedOutputCompiled` states the finite-machine specification. -/
 private theorem rightShiftedSpec_of_rightShiftedOutputCompiled
@@ -204,7 +208,7 @@ private theorem rightShiftedSpec_of_rightShiftedOutputCompiled
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
         initializer) :
     RightShiftedSpec
-      accept reject initializer := by
+      accept reject initializer := (by
   constructor
   · exact ⟨hinit.left, hinit.right.left⟩
   constructor
@@ -255,19 +259,19 @@ private theorem rightShiftedSpec_of_rightShiftedOutputCompiled
       ⟨w, stage, hcode, hout⟩
     refine ⟨w, stage, hcode, ?_⟩
     rw [hT, hout]
-    rfl
+    rfl)
 
  /-- {name}`concreteMachineConstruction_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
 private theorem concreteMachineConstruction_of_rightShiftedOutputCompiled
     (hcompile :
       RightShiftedOutputCompiledConstruction) :
-    ConcreteMachineConstruction := by
+    ConcreteMachineConstruction := (by
   intro accept reject
   rcases hcompile accept reject with ⟨initializer, hinit⟩
   exact
     ⟨initializer,
       rightShiftedSpec_of_rightShiftedOutputCompiled
-        hinit⟩
+        hinit⟩)
 
  /-- {name}`rightShiftedSpec_haltsWithOutput_iff` states the finite-machine specification. -/
 private theorem rightShiftedSpec_haltsWithOutput_iff
@@ -280,7 +284,7 @@ private theorem rightShiftedSpec_haltsWithOutput_iff
         (encodeCodeWordAsInput code)
         (encodeCodeWordAsInput out) <->
       (PairedRecognizerDovetailInitialLayoutCode accept reject).transform
-        code = some out := by
+        code = some out := (by
   constructor
   · intro hhalt
     rcases hhalt with ⟨n, hn⟩
@@ -330,7 +334,7 @@ private theorem rightShiftedSpec_haltsWithOutput_iff
       OutputCode,
       tape_normalizedOutput_move_right_input] using
       haltsWithOutput_of_haltsWithTape
-        (hinit.right.left w stage)
+        (hinit.right.left w stage))
 
  /-- {name}`tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec` states the finite-machine specification. -/
 private theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
@@ -340,7 +344,7 @@ private theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLa
         accept reject initializer) :
     TapeCodePrimitiveRightShiftedOutputCompiledSubroutineByDescription
       (PairedRecognizerDovetailInitialLayoutCode accept reject)
-      initializer := by
+      initializer := (by
   constructor
   · exact hinit.left.left
   · constructor
@@ -362,7 +366,7 @@ private theorem tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLa
               (DovetailLayout.encode
                 (DovetailLayout.initial
                   accept reject w stage))).mpr
-            ⟨w, stage, hcode, rfl⟩
+            ⟨w, stage, hcode, rfl⟩)
 
  /-- {name}`tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled` captures the core lemma for this local construction. -/
 private theorem tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
@@ -388,7 +392,7 @@ private theorem finiteDescription_realizer
     (accept reject : MachineDescription) :
     exists initializer : MachineDescription,
       RightShiftedSpec
-        accept reject initializer := by
+        accept reject initializer := (by
   rcases stageInputValidatorSpec_realizer with
     ⟨validator, hvalidator⟩
   rcases appendInputTapeReturnSpec_realizer with
@@ -406,19 +410,19 @@ private theorem finiteDescription_realizer
         hvalidator hcopier
   · exact
       descriptionWithValidatorCopier_closed
-        hvalidator hcopier
+        hvalidator hcopier)
 
  /-- {name}`finiteDescriptionConstruction_scaffold` describes append/fold behavior used by later composition. -/
 private theorem finiteDescriptionConstruction_scaffold :
-    FiniteDescriptionConstruction := by
+    FiniteDescriptionConstruction := (by
   intro accept reject
   exact
     finiteDescription_realizer
-      accept reject
+      accept reject)
 
  /-- {name}`rightShiftedOutputCompiledConstruction` captures the core lemma for this local construction. -/
 private theorem rightShiftedOutputCompiledConstruction :
-    RightShiftedOutputCompiledConstruction := by
+    RightShiftedOutputCompiledConstruction := (by
   intro accept reject
   rcases
       finiteDescriptionConstruction_scaffold
@@ -427,7 +431,7 @@ private theorem rightShiftedOutputCompiledConstruction :
   exact
     ⟨initializer,
       tapeCodePrimitiveRightShiftedOutputCompiled_of_dovetailInitialLayoutSpec
-        hinit⟩
+        hinit⟩)
 
  /-- {name}`concreteMachineConstruction` captures the core lemma for this local construction. -/
 private theorem concreteMachineConstruction :
@@ -437,19 +441,19 @@ private theorem concreteMachineConstruction :
 
  /-- {name}`machineConstruction` captures the core lemma for this local construction. -/
 theorem machineConstruction :
-    MachineConstruction := by
+    MachineConstruction := (by
   intro accept reject
   exact
     concreteMachineConstruction
-      accept reject
+      accept reject)
 
  /-- {name}`pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction` states the finite-machine specification. -/
 theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedSpecConstruction :
-    PairedRecognizerDovetailInitialLayoutCodeRightShiftedSpecConstruction := by
+    PairedRecognizerDovetailInitialLayoutCodeRightShiftedSpecConstruction := (by
   intro accept reject
   exact
     finiteDescriptionConstruction_scaffold
-      accept reject
+      accept reject)
 
  /-- {name}`pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine` captures the core lemma for this local construction. -/
 theorem pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine
@@ -467,7 +471,7 @@ theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutin
     exists initializer : MachineDescription,
       TapeCodePrimitiveClosedHandoffCompiledSubroutineByDescription
         (PairedRecognizerDovetailInitialLayoutCode accept reject)
-        initializer tapeCodePrimitiveCodeWordHandoffMove := by
+        initializer tapeCodePrimitiveCodeWordHandoffMove := (by
   rcases
       pairedRecognizerDovetailInitialLayoutCode_rightShiftedOutputCompiledSubroutine
         accept reject with
@@ -487,7 +491,7 @@ theorem pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutin
     exact ⟨MachineCodeSymbol.transition, tail, hout⟩
   exact
     tapeCodePrimitiveClosedHandoffCompiled_of_rightShiftedOutputCompiled
-      hinitializer houtCons
+      hinitializer houtCons)
 
 end DovetailInitialLayoutInitializer
 

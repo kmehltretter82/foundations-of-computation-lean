@@ -973,14 +973,14 @@ theorem concrete_finite_trace_recognizer_compiled_by_description
       exists n
       have htrace : ConcreteFiniteAcceptorTrace P w n := by
         simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
-          using hn
+          using! hn
       simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram, htrace]
     · intro hprog
       rcases hprog with ⟨n, hn⟩
       by_cases htrace : ConcreteFiniteAcceptorTrace P w n
       · exact ⟨n, by
           simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
-            using htrace⟩
+            using! htrace⟩
       · simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram,
           htrace] at hn
 
@@ -1082,7 +1082,7 @@ theorem concrete_finite_dovetail_program_bool_decidable_by_description
     (hcompiled : ConcreteFiniteDovetailCompiled P) :
     ConcreteProgramBoolDecidableByDescription L := by
   simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
-    using
+    using!
       Computability.FiniteDovetailProgram.programBoolDecidableByDescription
         P htraces hcompiled
 
@@ -1095,7 +1095,7 @@ theorem concrete_finite_dovetail_program_turing_decidable
     (hcompiled : ConcreteFiniteDovetailCompiled P) :
     RecursiveLanguage L := by
   simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
-    using Computability.FiniteDovetailProgram.turingDecidable
+    using! Computability.FiniteDovetailProgram.turingDecidable
       P htraces hcompiled
 
 theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
@@ -1108,7 +1108,7 @@ theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_constructi
     RecursiveLanguage L := by
   simpa [ConcreteFiniteDovetailCompilerConstruction,
     ConcreteFiniteAcceptorTrace]
-    using
+    using!
       Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
         hcompile htraces
 

@@ -110,7 +110,7 @@ private theorem transitionPrefixedThenAppendCodeWordLastDescription_run
                 (some false ::
                   ((List.append [false, true] payload).map some)) } =
         { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, config] using
+    simpa [A, Tmid, config] using!
       markTransitionSecondBitDescription_run payload
   have hBReach :
       exists nB : Nat,
@@ -228,7 +228,7 @@ private theorem returnToCurrentMarkerDescription_run_after_append_four_atCells
         (some false :: leftOfMarker)
         ((List.append pre [b0, b1, b2, b3]).map some) := by
   simpa [appendRightLastTapeAtCells, config,
-    Tape.move, Tape.moveLeft, List.append_assoc] using
+    Tape.move, Tape.moveLeft, List.append_assoc] using!
     returnToCurrentMarkerDescription_run
       (List.append [b1, b0] pre.reverse) b2
       leftOfMarker [some b3]
@@ -408,7 +408,7 @@ private theorem appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
     ⟨n, hn⟩
   refine ⟨n, ?_⟩
   simpa [AppendCodeWordReturnToCurrentMarkerDescription,
-    A, B, preAll] using hn
+    A, B, preAll] using! hn
 
 def RightCellsCopierStartDescription :
     MachineDescription where
@@ -1023,7 +1023,7 @@ private theorem returnToTransitionMarkerDescription_run_after_append_four_atCell
             (some false ::
               ((List.append pre [b0, b1, b2, b3]).map some)) } := by
   simpa [appendRightLastTapeAtCells, tapeAtCells,
-    Tape.move, Tape.moveLeft, List.append_assoc] using
+    Tape.move, Tape.moveLeft, List.append_assoc] using!
     returnToTransitionMarkerDescription_run
       (List.append [b1, b0] pre.reverse) b2 [some b3]
 

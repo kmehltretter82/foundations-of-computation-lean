@@ -278,7 +278,7 @@ theorem orderedABCGrammar_generated_has_equal_terminal_counts
       GeneralGrammar.Derives OrderedABCGrammar [orderedN OrderedABCNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, orderedN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hbalanced :=
     orderedABC_derives_preserves_balanced hderives
       orderedABC_start_balanced
@@ -354,7 +354,7 @@ theorem orderedABC_moveC_right_over_as
             (pre ++ [A] ++ orderedABCAForm n ++ [C] ++ suffix) := by
         simpa [A, C, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [orderedABCAForm, A, C, List.append_assoc] using hall
+      simpa [orderedABCAForm, A, C, List.append_assoc] using! hall
 
 theorem orderedABC_moveB_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
@@ -385,7 +385,7 @@ theorem orderedABC_moveB_right_over_as
             (pre ++ [A] ++ orderedABCAForm n ++ [B] ++ suffix) := by
         simpa [A, B, List.append_assoc] using ih (pre ++ [A])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [orderedABCAForm, A, B, List.append_assoc] using hall
+      simpa [orderedABCAForm, A, B, List.append_assoc] using! hall
 
 theorem orderedABC_moveC_right_over_bs
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
@@ -416,7 +416,7 @@ theorem orderedABC_moveC_right_over_bs
             (pre ++ [B] ++ orderedABCBForm n ++ [C] ++ suffix) := by
         simpa [B, C, List.append_assoc] using ih (pre ++ [B])
       have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [orderedABCBForm, B, C, List.append_assoc] using hall
+      simpa [orderedABCBForm, B, C, List.append_assoc] using! hall
 
 /-!
 The ordered {lit}`a^n b^n c^n` construction repeats the marker strategy, but the
@@ -464,7 +464,7 @@ theorem orderedABC_sort_markers_derives (n : Nat) :
               orderedABCBForm n ++ orderedABCCForm n)
             (orderedABCSortedMarkers (n + 1)) := by
         simpa [orderedABCSortedMarkers, orderedABCAForm, orderedABCBForm,
-          orderedABCCForm, A, B, C, List.append_assoc] using
+          orderedABCCForm, A, B, C, List.append_assoc] using!
           orderedABC_moveC_right_over_bs n
             ([A] ++ orderedABCAForm n ++ [B]) (orderedABCCForm n)
       exact GeneralGrammar.derives_trans hsortTail
@@ -548,7 +548,7 @@ theorem orderedABC_convert_x_as_derives
         simpa [X, a, List.append_assoc] using ih (pre ++ [a])
       have hall := GeneralGrammar.Derives.step hstep hrest
       simpa [orderedABCAForm, X, A, a, Word.RepeatSymbol,
-        SententialForm.terminalWord, List.append_assoc] using hall
+        SententialForm.terminalWord, List.append_assoc] using! hall
 
 theorem orderedABC_convert_y_bs_derives
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
@@ -585,7 +585,7 @@ theorem orderedABC_convert_y_bs_derives
         simpa [Y, b, List.append_assoc] using ih (pre ++ [b])
       have hall := GeneralGrammar.Derives.step hstep hrest
       simpa [orderedABCBForm, Y, B, b, Word.RepeatSymbol,
-        SententialForm.terminalWord, List.append_assoc] using hall
+        SententialForm.terminalWord, List.append_assoc] using! hall
 
 theorem orderedABC_convert_z_cs_derives
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal OrderedABCNT) :
@@ -622,7 +622,7 @@ theorem orderedABC_convert_z_cs_derives
         simpa [Z, c, List.append_assoc] using ih (pre ++ [c])
       have hall := GeneralGrammar.Derives.step hstep hrest
       simpa [orderedABCCForm, Z, C, c, Word.RepeatSymbol,
-        SententialForm.terminalWord, List.append_assoc] using hall
+        SententialForm.terminalWord, List.append_assoc] using! hall
 
 /-!
 The sorted-marker-to-word theorem is the terminal conversion step for the
@@ -723,7 +723,7 @@ theorem orderedABC_words_generated (n : Nat) :
   have hall := GeneralGrammar.derives_trans hstart
     (GeneralGrammar.derives_trans hsort hconvert)
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, orderedN,
-    ggNonterminal] using hall
+    ggNonterminal] using! hall
 
 theorem orderedABC_language_subset_generated {word : Word EqualCountTerminal}
     (h : word ∈ orderedABCLanguage) :
@@ -983,7 +983,7 @@ theorem orderedABCGrammar_generated_has_ordered_shape
       GeneralGrammar.Derives OrderedABCGrammar [orderedN OrderedABCNT.start]
         (SententialForm.terminalWord word) := by
     simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, orderedN,
-      ggNonterminal] using h
+      ggNonterminal] using! h
   have hs := general_derives_sound_for_symbol_language
     orderedABCSymbolLanguage (by intro token; rfl)
     (by
@@ -1149,7 +1149,7 @@ theorem orderedABCGrammar_generates_aabbcc :
                                   (GeneralGrammar.Derives.refl
                                     [a, a, b, b, c, c])))))))))))))))
   simpa [GeneralGrammar.GeneratedLanguage, OrderedABCGrammar, aabbccWord,
-    SententialForm.terminalWord, S, a, b, c] using hderives
+    SententialForm.terminalWord, S, a, b, c] using! hderives
 
 
 end Section06

@@ -98,7 +98,7 @@ theorem normalizeCode_eq_some_self_iff
         tokens = List.append (encodeDescription D) input :=
       decodeDescriptionPrefix_eq_some_encodeDescription_append hdecode
     have hnormalize := normalizeCode_of_decodeDescriptionPrefix hdecode
-    simpa [htokens] using hnormalize
+    simpa [htokens] using! hnormalize
 
 def normalizeCodePrimitive : TapeCodePrimitive where
   transform := normalizeCode

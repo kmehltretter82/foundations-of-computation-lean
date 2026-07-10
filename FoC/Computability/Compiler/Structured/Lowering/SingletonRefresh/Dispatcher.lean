@@ -176,7 +176,7 @@ theorem singletonShapeTerminalTarget_lt_probeOffset :
       simpa [singletonShapeTerminalTarget,
         singletonShapeTerminalProbeOffset,
         singletonShapeRightRepairLimit,
-        singletonShapeRightRepairDescription] using hhalt
+        singletonShapeRightRepairDescription] using! hhalt
   | some bit =>
       cases bit with
       | false =>
@@ -192,7 +192,7 @@ theorem singletonShapeTerminalTarget_lt_probeOffset :
           simpa [singletonShapeTerminalTarget,
             singletonShapeTerminalProbeOffset,
             singletonShapeRightRepairLimit,
-            singletonShapeRightRepairDescription] using hhalt
+            singletonShapeRightRepairDescription] using! hhalt
 
 theorem singletonShapeTerminalProbeDescription_subroutineReady :
     singletonShapeTerminalProbeDescription.SubroutineReady :=
@@ -287,7 +287,7 @@ theorem singletonShapeLeftRepairOffset_lt_rightRepairOffset :
     singletonShapeLeftRepairDescription_subroutineReady.left.right.left
   simpa [singletonShapeRightRepairOffset, singletonShapeLeftRepairLimit,
     singletonShapeLeftRepairDescription,
-    MachineDescription.offsetRetargetDescription] using hstart
+    MachineDescription.offsetRetargetDescription] using! hstart
 
 theorem singletonShapeLeftRepairOffset_le_rightRepairOffset :
     singletonShapeLeftRepairOffset ≤ singletonShapeRightRepairOffset :=
@@ -299,7 +299,7 @@ theorem singletonShapeRightRepairOffset_lt_terminalProbeOffset :
     singletonShapeRightRepairDescription_subroutineReady.left.right.left
   simpa [singletonShapeTerminalProbeOffset, singletonShapeRightRepairLimit,
     singletonShapeRightRepairDescription,
-    MachineDescription.offsetRetargetDescription] using hstart
+    MachineDescription.offsetRetargetDescription] using! hstart
 
 theorem singletonShapeRightRepairOffset_le_terminalProbeOffset :
     singletonShapeRightRepairOffset ≤ singletonShapeTerminalProbeOffset :=
@@ -322,7 +322,7 @@ theorem singletonShapeRefreshFinalHalt_lt_stateCount :
     singletonShapeTerminalProbeDescription_subroutineReady.left.right.right.left
   simpa [singletonShapeRefreshDescription,
     singletonShapeTerminalProbeDescription,
-    singletonShapeTerminalTarget] using hhalt
+    singletonShapeTerminalTarget] using! hhalt
 
 theorem singletonShapeTerminalProbeOffset_lt_stateCount :
     singletonShapeTerminalProbeOffset <
@@ -580,7 +580,7 @@ theorem singletonShapeTerminalProbeDescription_reaches_canonical
     singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
     singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 theorem singletonShapeTerminalProbeDescription_reaches_canonical_cons
     (target : Tape Bool) (rest : List (Tape Bool)) :
@@ -610,7 +610,7 @@ theorem singletonShapeTerminalProbeDescription_reaches_canonical_cons
     singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
     singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary
     (left : List (Option Bool)) (head : Option Bool) :
@@ -646,7 +646,7 @@ theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary
     singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
     singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary_cons
     (left : List (Option Bool)) (head : Option Bool)
@@ -683,7 +683,7 @@ theorem singletonShapeTerminalProbeDescription_reaches_rightBoundary_cons
     singletonShapeTerminalProbeStart, singletonShapeTerminalLocalDescription,
     singletonShapeTerminalLocalTarget, singletonShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 theorem singletonShapeLeftRepairDescription_haltsFrom_leftBoundary
     (head : Option Bool) (right : List (Option Bool)) :

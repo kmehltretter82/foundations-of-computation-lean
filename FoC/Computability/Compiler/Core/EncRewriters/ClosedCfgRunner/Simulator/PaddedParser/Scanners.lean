@@ -221,9 +221,9 @@ theorem fixedDescriptionBoundedSimulatorHeaderPrefixScannerConstruction_scaffold
     exact
       ⟨steps, by
         constructor
-        · simpa [HaltsFromTapeIn] using
+        · simpa [HaltsFromTapeIn] using!
             congrArg Configuration.state hsteps
-        · simpa [HaltsFromTapeIn] using
+        · simpa [HaltsFromTapeIn] using!
             congrArg Configuration.tape hsteps⟩
 
 /--
@@ -329,7 +329,7 @@ theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBase_co
         (B := BoolFinalScannerDescription)
         (handoffMove := Direction.right)
         hmove
-        (by simpa [DovetailInitialLayoutInitializer.config] using hfinal)
+        (by simpa [DovetailInitialLayoutInitializer.config] using! hfinal)
   simpa [FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner,
     TmidTape] using
       seqSubroutine_runConfig_exists
@@ -438,7 +438,7 @@ theorem run_fixedDescriptionBoundedSimulatorConfigHit_raw_to_handoff_withBaseAnd
         (B := BoolFinalScannerDescription)
         (handoffMove := Direction.right)
         hmove
-        (by simpa [DovetailInitialLayoutInitializer.config] using hfinal)
+        (by simpa [DovetailInitialLayoutInitializer.config] using! hfinal)
   simpa [FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner,
     TmidTape] using
       seqSubroutine_runConfig_exists
@@ -618,7 +618,7 @@ theorem run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBa
           (List.append (stageNatBits stage)
             (false :: cfgTail)).map some by
       rw [hcfgTail]]
-    simpa [TmidTape] using hstage
+    simpa [TmidTape] using! hstage
   have hBReach :
       exists nB : Nat,
         FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
@@ -724,7 +724,7 @@ theorem run_fixedDescriptionBoundedSimulatorStageConfigHit_raw_to_handoff_withBa
               (false :: cfgTail)).map some)
             (none :: rightPadding) by
       rw [hcfgTail]]
-    simpa [TmidTape] using hstage
+    simpa [TmidTape] using! hstage
   have hBReach :
       exists nB : Nat,
         FixedDescriptionBoundedSimulatorConfigHitScannerDescription_configRunner.runConfig
@@ -980,7 +980,7 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBas
       rw [hstageTail]
       simp [boolWordFieldBits, cellListFieldBits, inputSuffixTail,
         stageSuffix, List.map_append]]
-    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBase] using
+    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBase] using!
       hinput
   have hBReach :
       exists nB : Nat,
@@ -1108,7 +1108,7 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutPayload_raw_to_handoff_withBas
       rw [hstageTail]
       simp [boolWordFieldBits, cellListFieldBits, inputSuffixTail,
         stageSuffix, List.map_append, List.append_assoc]]
-    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBaseAndRight] using
+    simpa [TmidTape, boolWordCanonicalHandoffConfigWithBaseAndRight] using!
       hinput
   have hBReach :
       exists nB : Nat,
@@ -1435,7 +1435,7 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBas
         { state :=
             FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
           tape := TmidTape }
-    simpa [TmidTape] using hheader
+    simpa [TmidTape] using! hheader
   have hBReach :
       exists nB : Nat,
         FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
@@ -1558,7 +1558,7 @@ theorem run_fixedDescriptionBoundedSimulatorLayoutScanner_raw_to_handoff_withBas
         { state :=
             FixedDescriptionBoundedSimulatorHeaderPrefixScannerDescription_configRunner.halt
           tape := TmidTape }
-    simpa [TmidTape] using hheader
+    simpa [TmidTape] using! hheader
   have hBReach :
       exists nB : Nat,
         FixedDescriptionBoundedSimulatorLayoutPayloadScannerDescription_configRunner.runConfig
@@ -1623,7 +1623,7 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerDescription_haltsWithOutput
   · simpa [MachineDescription.HaltsWithOutputIn,
       MachineDescription.initial,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.input] using congrArg Configuration.state hsteps
+      Tape.input] using! congrArg Configuration.state hsteps
   · have htape :
         (FixedDescriptionBoundedSimulatorLayoutScannerDescription_configRunner.runConfig
             steps
@@ -1633,7 +1633,7 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerDescription_haltsWithOutput
             L [] := by
       simpa [MachineDescription.initial,
         DovetailInitialLayoutInitializer.tapeAtCells,
-        Tape.input] using congrArg Configuration.tape hsteps
+        Tape.input] using! congrArg Configuration.tape hsteps
     rw [htape]
     simpa using
       fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_normalizedOutput_configRunner

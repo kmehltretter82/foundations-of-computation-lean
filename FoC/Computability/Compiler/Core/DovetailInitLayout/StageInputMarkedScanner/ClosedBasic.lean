@@ -1416,7 +1416,7 @@ private theorem run_state200_stageNat_to_state210
         right := by
   induction stage generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         run_state200_done_to_state210 left right
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 4 =

@@ -706,14 +706,14 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetail
       exact
         ⟨limit, by
           simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-            using hlimit⟩
+            using! hlimit⟩
     · intro hlimit
       rcases hlimit with ⟨limit, hlimit⟩
       apply (hdecider.right w b).mpr
       exact
         ⟨limit, by
           simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-            using hlimit⟩
+            using! hlimit⟩
 
 theorem pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler :
     PairedRecognizerBoundedDovetailTableCompilerConstruction <->

@@ -704,7 +704,7 @@ theorem concrete_finite_partial_unary_range_equal_description_outputs
       (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
   simpa [ConcreteFinitePartialUnaryOutputRange,
     ConcreteFinitePartialUnaryDescriptionOutputRange]
-    using
+    using!
       Computability.FinitePartialUnaryRangeProgram.outputRange_equal_descriptionOutputRange
         P
 
@@ -718,7 +718,7 @@ theorem concrete_finite_partial_unary_output_function_compiled_by_description
       P.description := by
   simpa [ConcreteFinitePartialUnaryOutputFunction,
     ConcreteFinitePartialUnaryOutputComplete]
-    using
+    using!
       Computability.FinitePartialUnaryRangeProgram.outputFunction_compiledByDescription
         P hD hcomplete
 
@@ -746,7 +746,7 @@ theorem concrete_finite_partial_unary_output_listing_partially_lists_description
   simpa [ConcreteFinitePartialUnaryOutputListing,
     ConcreteFinitePartialUnaryDescriptionOutputRange,
     ConcreteFinitePartialUnaryOutputFunctional]
-    using
+    using!
       Computability.FinitePartialUnaryRangeProgram.outputListing_partiallyListedBy_descriptionOutputRange
         P hfunctional
 

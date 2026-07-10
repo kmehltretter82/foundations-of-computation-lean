@@ -553,7 +553,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_computes_scan
         (by
           simpa [CodePrefixRecognizerStageCode,
             MachineDescription.encodeNatAppend,
-            MachineDescription.encodeNat] using
+            MachineDescription.encodeNat] using!
             boundedSimulatorCanonicalInputParserMachine_step_scan_done
               pairRunner leftRev encoded)
         (TuringMachine.Computes.refl _)
@@ -567,7 +567,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_computes_scan
               pairRunner leftRev
               (CodePrefixRecognizerStageCode encoded stage))
         (by
-          simpa [boundedSimulatorCanonicalInputParserScannedLeftRev] using
+          simpa [boundedSimulatorCanonicalInputParserScannedLeftRev] using!
             ih (MachineCodeSymbol.tick :: leftRev))
 
 theorem boundedSimulatorCanonicalInputParserMachine_computes_rewindPrefix_to_none
@@ -848,7 +848,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_computes_rewindFirst
                   (boundedSimulatorCanonicalInputParserNoneBeforePrefixTape
                     stage encoded) } := by
         simpa [boundedSimulatorCanonicalInputParserNoneBeforePrefixTape,
-          right] using
+          right] using!
           (boundedSimulatorCanonicalInputParserMachine_step_rewindPrefix_none
             pairRunner right)
     exact
@@ -1089,7 +1089,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_halts_rewindPrefix_generic_o
                     subst hwrite
                     subst hdir
                     cases hnext
-                    simpa [List.replicate] using
+                    simpa [List.replicate] using!
                       boundedSimulatorCanonicalInputParserMachine_halts_noneBeforePrefix_generic_only
                         pairRunner
                         (steps := steps)
@@ -1101,7 +1101,7 @@ theorem boundedSimulatorCanonicalInputParserMachine_halts_rewindPrefix_generic_o
                     subst hwrite
                     subst hdir
                     cases hnext
-                    simpa [List.replicate] using
+                    simpa [List.replicate] using!
                       boundedSimulatorCanonicalInputParserMachine_halts_noneBeforePrefix_generic_only
                         pairRunner
                         (steps := steps)

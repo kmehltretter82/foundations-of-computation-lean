@@ -44,7 +44,7 @@ theorem toCFG_production_sound
       change EmptySummary M q q w
       intro restInput tail
       cases hw
-      simpa [Word.Concat] using
+      simpa [Word.Concat] using!
         Computes.refl
           ({ state := q, unread := restInput, stack := tail } :
             Configuration _ _ _)

@@ -1094,7 +1094,7 @@ theorem actionPrimitivesAt_zero_left_guardedTarget_eq_boundaryLeftCanonical_sing
         [({ left := [none], head := none,
             right := tapeActionWrittenHead write? head ::
               (right ++ [none]) } : Tape Bool)] := by
-  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using!
     congrArg (fun U => encodedStructuredTapes [U])
       (guardLogicalTape_tapeAction_left_apply_eq_boundaryLeftCanonical
         write? head right)
@@ -1265,7 +1265,7 @@ theorem actionPrimitivesAt_zero_right_guardedTarget_eq_boundaryRightCanonical_si
         [({ left := tapeActionWrittenHead write? head ::
               (left ++ [none]),
             head := none, right := [none] } : Tape Bool)] := by
-  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using
+  simpa [encodedGuardedStructuredTapes, guardLogicalTapes] using!
     congrArg (fun U => encodedStructuredTapes [U])
       (guardLogicalTape_tapeAction_right_apply_eq_boundaryRightCanonical
         write? left head)

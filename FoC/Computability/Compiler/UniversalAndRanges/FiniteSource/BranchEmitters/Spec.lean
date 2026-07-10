@@ -111,7 +111,7 @@ theorem codePrefixParserBranchMachine_haltsWithOutput_encodeDescriptionAppend
             MachineDescription.encodeTransitionsAppend,
             MachineDescription.encodeNatAppend,
             codePrefixParserNormalizer_encodeNat_eq_replicate_tick_done,
-            List.reverse_append, List.append_assoc] using hout
+            List.reverse_append, List.append_assoc] using! hout
       | cons transition rest =>
           let D0 : MachineDescription :=
             { stateCount := stateCount
@@ -234,7 +234,7 @@ theorem codePrefixParserBranchMachine_haltsWithOutput_encodeDescriptionAppend
                 List.append
                   (MachineDescription.encodeTransitionsAppend rest [])
                   input := by
-            simpa using
+            simpa using!
               (MachineDescription.encodeTransitionsAppend_append
                 rest [] input).symm
           simpa [D0, prefixLeft, prefixLeftSymbols, parsedPrefix, leftSymbols,
@@ -251,7 +251,7 @@ theorem codePrefixParserBranchMachine_haltsWithOutput_encodeDescriptionAppend
             codePrefixParserNormalizer_encodeNat_eq_replicate_tick_done,
             codePrefixParserNormalizerRestoredTail_normalized,
             List.reverse_append, List.map_replicate,
-            List.append_assoc, hlen, htransAppend] using hout
+            List.append_assoc, hlen, htransAppend] using! hout
 
 theorem codePrefixParserBranchMachine_haltsWithOutput_decodeDescriptionPrefix
     {tokens : Word MachineCodeSymbol} {D : MachineDescription}

@@ -904,7 +904,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy
           | true =>
               simpa
                 [retargetedBranchingTape0ReadHeadCellAllExitsDescription,
@@ -912,7 +912,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape0ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy⟩
 
 theorem
     retargetedBranchingTape0ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
@@ -1170,7 +1170,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy
           | true =>
               simpa
                 [retargetedBranchingTape1ReadHeadCellAllExitsDescription,
@@ -1178,7 +1178,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape1ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy⟩
 
 theorem
     retargetedBranchingTape1ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart
@@ -1439,7 +1439,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy
           | true =>
               simpa
                 [retargetedBranchingTape2ReadHeadCellAllExitsDescription,
@@ -1447,7 +1447,7 @@ theorem
                   MachineDescription.retargetReadExitState,
                   branchingTape2ReadHeadCellAndReturnToSeparatorTarget,
                   branchingSeparatorReadHeadCellTarget,
-                  BranchingHeadCellReturn.targetForRead, hread] using hcopy⟩
+                  BranchingHeadCellReturn.targetForRead, hread] using! hcopy⟩
 
 theorem
     retargetedBranchingTape2ReadHeadCellAndReturnToSeparatorDescription_runsFromGuardedBlockStart

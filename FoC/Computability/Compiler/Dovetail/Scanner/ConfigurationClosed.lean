@@ -134,7 +134,7 @@ theorem configurationSuffixScannerDescription_runConfig_canonical_false_suffix_i
     (MachineDescription.runConfig_halt_tape_functional_of_haltTransitionFree
       configurationSuffixScannerDescription_subroutineReady.right
       (by simpa [c0] using hforward)
-      (by simpa [c0] using h)).symm
+      (by simpa [c0] using! h)).symm
 
 theorem configurationSuffixScannerDescription_runConfig_encodeNat_empty_ne_halt
     (state : Nat) (baseLeft : List (Option Bool)) (n : Nat) :

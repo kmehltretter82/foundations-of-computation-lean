@@ -167,7 +167,7 @@ theorem fixedDescriptionBoundedSimulator_reverse_two_split_configRunner
           have hlen : w.length = 1 := by
             have := congrArg List.length hr
             simp [hrest] at this
-            simpa using this
+            simpa using! this
           lia
       | cons penult middleRev =>
           refine ⟨last, penult, middleRev, ?_, ?_⟩
@@ -175,7 +175,7 @@ theorem fixedDescriptionBoundedSimulator_reverse_two_split_configRunner
           · have hrev : w.reverse = last :: penult :: middleRev := by
               simpa [hrest] using hr
             have := congrArg List.reverse hrev
-            simpa using this
+            simpa using! this
 
 theorem fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_eq_terminal_left_configRunner
     (L : SimulatorLayout) :
@@ -277,7 +277,7 @@ theorem haltsFromTapeEquiv_scannerHandoff_configRunner
   have hout :
       List.append middleRev.reverse [penult, last] =
         encodeCodeWordAsInput (SimulatorLayout.encode L) := by
-    simpa [SimulatorLayout.asBoolInput] using hw.symm
+    simpa [SimulatorLayout.asBoolInput] using! hw.symm
   have hscanner :=
     fixedDescriptionBoundedSimulatorLayoutScannerHandoffTapeWithBase_eq_terminal_left_configRunner
       L
@@ -325,11 +325,11 @@ theorem fixedDescriptionBoundedSimulatorLayoutScannerDescription_haltsWithTape_c
   · simpa [HaltsWithTapeIn, initial,
       FixedDescriptionBoundedSimulatorInput,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.input] using congrArg Configuration.state hsteps
+      Tape.input] using! congrArg Configuration.state hsteps
   · simpa [HaltsWithTapeIn, initial,
       FixedDescriptionBoundedSimulatorInput,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.input] using congrArg Configuration.tape hsteps
+      Tape.input] using! congrArg Configuration.tape hsteps
 
 theorem fixedDescriptionBoundedSimulatorPaddedParserEquivRunner_haltsWithTapeEquiv_configRunner
     (L : SimulatorLayout) :

@@ -682,7 +682,7 @@ theorem run_state120_stageNat
         right := by
   induction n generalizing left with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         run_state120_done left right
   | succ n ih =>
       rw [show 4 * (n + 1) + 4 =
@@ -953,7 +953,7 @@ private theorem run_state200_stageNat_end
         boundary leftTail [none] := by
   induction stage generalizing pre with
   | zero =>
-      simpa [stageNatBits_zero] using
+      simpa [stageNatBits_zero] using!
         run_state200_done_end pre boundary leftTail
   | succ stage ih =>
       rw [show 4 * (stage + 1) + 5 =

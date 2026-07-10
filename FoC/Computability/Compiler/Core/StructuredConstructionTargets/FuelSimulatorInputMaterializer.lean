@@ -244,7 +244,7 @@ theorem fuelSimulatorStructuredEquivIndexedMaterializerConstruction_of_inputMate
     FuelSimulatorStructuredEquivInputMaterializerConstruction,
     FuelSimulatorStructuredEquivIndexedMaterializerConstruction,
     Structured3EndpointEquivInputMaterializerInitialized,
-    fuelSimulatorStructuredInitializedTape] using
+    fuelSimulatorStructuredInitializedTape] using!
     structured3EndpointEquivIndexedMaterializerConstruction_of_inputMaterializer
       hmaterializer
 
@@ -1039,13 +1039,13 @@ theorem fuelSimulatorInputRecognizerDescription_forward_checked
       fuelSimulatorStructuredInputTape,
       fuelSimulatorInputBits,
       EncRewriters.CanonicalLayouts.Bits,
-      A, B, initial] using
+      A, B, initial] using!
       congrArg MachineDescription.Configuration.state hsteps
   · simpa [fuelSimulatorInputRecognizerDescription,
       fuelSimulatorStructuredInputTape,
       fuelSimulatorInputBits,
       EncRewriters.CanonicalLayouts.Bits,
-      A, B, initial] using
+      A, B, initial] using!
       congrArg Configuration.tape hsteps
 
 theorem fuelSimulatorInputRecognizerDescription_ready :
@@ -1332,7 +1332,7 @@ theorem fuelSimulatorInputRecognizerCoreDescription_closedDecode
             state200_code_tail_nat_inv (T := Tmid) ⟨nNat, hSIMS⟩
           refine ⟨⟨w, limit, fuel⟩, ?_⟩
           have hfuel' : symbol :: rest' = encodeNatAppend fuel [] := by
-            simpa [encodeNatAppend] using hfuel
+            simpa [encodeNatAppend] using! hfuel
           simp [decodeFuelSimulatorStructuredInputCode, hdec, hfuel',
             decodeNat_encodeNatAppend]
 

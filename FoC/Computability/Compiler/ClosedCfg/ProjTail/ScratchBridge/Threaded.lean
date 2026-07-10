@@ -280,7 +280,7 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
           guardLogicalTape T2, ?_, ?_⟩
       · simp [guardLogicalTapes]
       · simpa [T0, T1, T2,
-          countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape] using
+          countWindowPostFieldDecodedPrefixStructuredEncodedOutputTape] using!
           atEncodedBlockStart_self (guardLogicalTapes [T0, T1, T2])
     rcases
         seekTape2Description_contract_three.realizes

@@ -259,13 +259,13 @@ theorem reverseGrammar_generates {G : CFG terminal nonterminal}
     {w : Word terminal} (h : w ∈ GeneratedLanguage G) :
     Word.Reverse w ∈ GeneratedLanguage (ReverseGrammar G) := by
   have hrev := reverseGrammar_derives h
-  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using hrev
+  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using! hrev
 
 theorem reverseGrammar_generates_inv {G : CFG terminal nonterminal}
     {w : Word terminal} (h : w ∈ GeneratedLanguage (ReverseGrammar G)) :
     Word.Reverse w ∈ GeneratedLanguage G := by
   have hrev := reverseGrammar_derives_inv h
-  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using hrev
+  simpa [GeneratedLanguage, SententialForm.terminalWord_reverse] using! hrev
 
 theorem reverseGrammar_language_exact (G : CFG terminal nonterminal) :
     Language.Equal (GeneratedLanguage (ReverseGrammar G))
@@ -275,7 +275,7 @@ theorem reverseGrammar_language_exact (G : CFG terminal nonterminal) :
   · exact reverseGrammar_generates_inv
   · intro hw
     have hgen := reverseGrammar_generates (G := G) hw
-    simpa [Word.Reverse] using hgen
+    simpa [Word.Reverse] using! hgen
 
 theorem leftRegular_reverseGrammar_rightRegular
     {G : CFG terminal nonterminal}
@@ -494,7 +494,7 @@ theorem formLanguage_replace_sound
     (hw : w ∈ FormLanguage symbolLanguage (u ++ rhs ++ v)) :
     w ∈ FormLanguage symbolLanguage (u ++ [Symbol.nonterminal A] ++ v) := by
   have hu := (formLanguage_append symbolLanguage u (rhs ++ v) w).mp (by
-    simpa [List.append_assoc] using hw)
+    simpa [List.append_assoc] using! hw)
   cases hu with
   | intro pref hp =>
       cases hp with

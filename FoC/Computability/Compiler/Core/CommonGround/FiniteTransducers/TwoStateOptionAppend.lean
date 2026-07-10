@@ -374,14 +374,14 @@ theorem generatedTwoStateOptionAppendDescription_statefulContract
     cases state with
     | zero =>
         simpa [twoStateOptionNext, twoStateOptionEmit,
-          boolState] using
+          boolState] using!
           generatedTwoStateOptionAppendDescription_step_blank
             start next0 next1 emit0 emit1 final false left
     | succ state =>
         cases state with
         | zero =>
             simpa [twoStateOptionNext, twoStateOptionEmit,
-              boolState] using
+              boolState] using!
               generatedTwoStateOptionAppendDescription_step_blank
                 start next0 next1 emit0 emit1 final true left
         | succ state =>

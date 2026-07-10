@@ -124,7 +124,7 @@ theorem selectedShapeLeftRepairOffset_lt_rightRepairOffset :
     selectedShapeLeftRepairDescription_subroutineReady.left.right.left
   simpa [selectedShapeRightRepairOffset, selectedShapeLeftRepairLimit,
     selectedShapeLeftRepairDescription,
-    MachineDescription.offsetRetargetDescription] using hstart
+    MachineDescription.offsetRetargetDescription] using! hstart
 
 theorem selectedShapeRefreshFinalHalt_lt_rightRepairOffset :
     selectedShapeRefreshFinalHalt < selectedShapeRightRepairOffset :=
@@ -181,7 +181,7 @@ theorem selectedShapeTerminalTarget_lt_probeOffset :
       simpa [selectedShapeTerminalTarget,
         selectedShapeTerminalProbeOffset,
         selectedShapeRightRepairLimit,
-        selectedShapeRightRepairDescription] using hhalt
+        selectedShapeRightRepairDescription] using! hhalt
   | some bit =>
       cases bit with
       | false =>
@@ -197,7 +197,7 @@ theorem selectedShapeTerminalTarget_lt_probeOffset :
           simpa [selectedShapeTerminalTarget,
             selectedShapeTerminalProbeOffset,
             selectedShapeRightRepairLimit,
-            selectedShapeRightRepairDescription] using hhalt
+            selectedShapeRightRepairDescription] using! hhalt
 
 theorem selectedShapeTerminalProbeDescription_subroutineReady :
     selectedShapeTerminalProbeDescription.SubroutineReady :=
@@ -292,7 +292,7 @@ theorem selectedShapeRightRepairOffset_lt_terminalProbeOffset :
     selectedShapeRightRepairDescription_subroutineReady.left.right.left
   simpa [selectedShapeTerminalProbeOffset, selectedShapeRightRepairLimit,
     selectedShapeRightRepairDescription,
-    MachineDescription.offsetRetargetDescription] using hstart
+    MachineDescription.offsetRetargetDescription] using! hstart
 
 theorem selectedShapeRightRepairOffset_le_terminalProbeOffset :
     selectedShapeRightRepairOffset ≤ selectedShapeTerminalProbeOffset :=
@@ -315,7 +315,7 @@ theorem selectedShapeRefreshFinalHalt_lt_stateCount :
     selectedShapeTerminalProbeDescription_subroutineReady.left.right.right.left
   simpa [selectedShapeRefreshDescription,
     selectedShapeTerminalProbeDescription,
-    selectedShapeTerminalTarget] using hhalt
+    selectedShapeTerminalTarget] using! hhalt
 
 theorem selectedShapeTerminalProbeOffset_lt_stateCount :
     selectedShapeTerminalProbeOffset <
@@ -625,7 +625,7 @@ theorem selectedShapeTerminalProbeDescription_reaches_selectedCanonical
     selectedShapeTerminalProbeStart, selectedShapeTerminalLocalDescription,
     selectedShapeTerminalLocalTarget, selectedShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 theorem selectedShapeTerminalProbeDescription_reaches_selectedRightBoundary
     (encodedPrefix : List (Option Bool))
@@ -665,7 +665,7 @@ theorem selectedShapeTerminalProbeDescription_reaches_selectedRightBoundary
     selectedShapeTerminalProbeStart, selectedShapeTerminalLocalDescription,
     selectedShapeTerminalLocalTarget, selectedShapeTerminalTarget,
     MachineDescription.readExitRetargetConfiguration,
-    MachineDescription.retargetReadExitState] using hcopy
+    MachineDescription.retargetReadExitState] using! hcopy
 
 
 end MultiTapeLowering

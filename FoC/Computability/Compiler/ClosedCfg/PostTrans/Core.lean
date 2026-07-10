@@ -320,7 +320,7 @@ theorem selectedMergePaddedEmitterInputScanner_haltsFrom_afterTransitionPadded
       hsuffix,
       DovetailInitialLayoutInitializer.config,
       List.append_assoc]
-      using congrArg MachineDescription.Configuration.state hsteps
+      using! congrArg MachineDescription.Configuration.state hsteps
   · simpa [MachineDescription.HaltsFromTapeIn,
       SelectedMergePaddedEmitterInputScannerDescription,
       SelectedMergePaddedEmitterAfterTransitionPaddedTape,
@@ -331,7 +331,7 @@ theorem selectedMergePaddedEmitterInputScanner_haltsFrom_afterTransitionPadded
       hsuffix,
       DovetailInitialLayoutInitializer.config,
       List.append_assoc]
-      using congrArg MachineDescription.Configuration.tape hsteps
+      using! congrArg MachineDescription.Configuration.tape hsteps
 
 theorem selectedMergePaddedEmitterAfterInputPaddedTape_move_right
     (p : SelectedMergeEmitterPayload) :
@@ -403,7 +403,7 @@ theorem selectedMergePaddedEmitterStageScanner_haltsFromAfterInputPaddedHandoff
       hsuffix,
       DovetailInitialLayoutInitializer.config,
       List.append_assoc]
-      using congrArg MachineDescription.Configuration.state hsteps
+      using! congrArg MachineDescription.Configuration.state hsteps
   · simpa [MachineDescription.HaltsFromTapeIn,
       SelectedMergePaddedEmitterStageScannerDescription,
       CanonicalLayouts.DovetailStagePrefix.NonemptyNatSuffixScannerDescription,
@@ -599,7 +599,7 @@ theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigPaddedHandoff
       SelectedMergePaddedEmitterOuterHitSuffixCode,
       DovetailInitialLayoutInitializer.config,
       List.append_assoc]
-      using
+      using!
         congrArg MachineDescription.Configuration.state
           (selectedMergePaddedEmitterHitScanner_runConfig_withRight
             p.S.hit
@@ -621,7 +621,7 @@ theorem selectedMergePaddedEmitterHitScanner_haltsFromAfterConfigPaddedHandoff
       SelectedMergePaddedEmitterOuterHitSuffixCode,
       DovetailInitialLayoutInitializer.config,
       List.append_assoc]
-      using
+      using!
         congrArg MachineDescription.Configuration.tape
           (selectedMergePaddedEmitterHitScanner_runConfig_withRight
             p.S.hit

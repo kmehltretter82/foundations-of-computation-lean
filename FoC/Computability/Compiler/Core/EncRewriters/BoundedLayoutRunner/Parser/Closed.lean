@@ -52,7 +52,7 @@ theorem layoutIdentityPrimitive_transform_eq_some_iff
       exists L : DovetailLayout,
         code = DovetailLayout.encode L ∧
           out = DovetailLayout.encode L := by
-  simpa [LayoutIdentityPrimitive] using
+  simpa [LayoutIdentityPrimitive] using!
     CommonGround.DovetailLayouts.identityPrimitive_transform_eq_some_iff
       code out
 
@@ -61,7 +61,7 @@ theorem layoutIdentityPrimitive_encode
     LayoutIdentityPrimitive.transform
         (DovetailLayout.encode L) =
       some (DovetailLayout.encode L) := by
-  simpa [LayoutIdentityPrimitive] using
+  simpa [LayoutIdentityPrimitive] using!
     CommonGround.DovetailLayouts.identityPrimitive_encode L
 
 def ParsedLayoutHandoffTape
@@ -133,7 +133,7 @@ theorem parsedLayoutBits_eq_dovetailLayoutFieldBits_nil
     (L : DovetailLayout) :
     ParsedLayoutBits L =
       CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits L [] := by
-  simpa [ParsedLayoutBits, DovetailLayout.encode] using
+  simpa [ParsedLayoutBits, DovetailLayout.encode] using!
     CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits_eq_encodeAppend
       L []
 
@@ -183,7 +183,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape
     rw [parsedLayoutBits_eq_dovetailLayoutFieldBits_nil L]
     rw [parsedLayoutCheckedHandoffTape_eq_scanner_handoff L]
     simpa [initial,
-      DovetailInitialLayoutInitializer.tapeAtCells] using hsteps
+      DovetailInitialLayoutInitializer.tapeAtCells] using! hsteps
   constructor
   · simpa using congrArg Configuration.state hrun
   · simpa using congrArg Configuration.tape hrun
@@ -230,7 +230,7 @@ theorem layoutIdentityClosedHandoffConstruction_of_closedRecognizer
         CanonicalLayouts.Dovetail.handoffTape,
         CanonicalLayouts.Bits, CanonicalLayouts.HandoffTape,
         CanonicalLayouts.InputTape, ParsedLayoutBits,
-        ParsedLayoutHandoffTape, ParsedLayoutTape] using
+        ParsedLayoutHandoffTape, ParsedLayoutTape] using!
         hrecognizer.right.left L
     · intro code T hhalt
       rcases hrecognizer.right.right code T hhalt with
@@ -239,7 +239,7 @@ theorem layoutIdentityClosedHandoffConstruction_of_closedRecognizer
       simpa [CanonicalLayouts.Dovetail.handoffTape,
         CanonicalLayouts.HandoffTape, CanonicalLayouts.InputTape,
         CanonicalLayouts.Bits, ParsedLayoutHandoffTape, ParsedLayoutTape,
-        ParsedLayoutBits] using hT
+        ParsedLayoutBits] using! hT
   exact
     CommonGround.DovetailLayouts.identityClosedHandoffConstruction_of_closedRecognizer
       hcanonical
@@ -588,7 +588,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
             encodeBoolWordAppend inputWord
               stageRest :=
       hcode.symm.trans h_input
-    simpa using congrArg List.tail hcons
+    simpa using! congrArg List.tail hcons
   have hinputRunCode :
       CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.runConfig
           nInput
@@ -686,7 +686,7 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv
             encodeBoolWordAppend inputWord
               (encodeNatAppend stage bodyRest) :=
       hcode.symm.trans h_input
-    simpa using congrArg List.tail hcons
+    simpa using! congrArg List.tail hcons
   have hinputRunCode :
       CommonGround.ScannerInversions.BoolWordSuffixScannerDescription.runConfig
           nInput

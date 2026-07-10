@@ -1121,7 +1121,7 @@ theorem stageProgramFuelLoopCodePrimitive_eq_some_empty_iff
         have hloop :
             layoutFuelLoopCode M mid =
               some ([] : Word MachineCodeSymbol) := by
-          simpa [layoutFuelLoopCodePrimitive] using h
+          simpa [layoutFuelLoopCodePrimitive] using! h
         rcases
             (stageCodeToInitialLayoutCode_eq_some_iff
               M tokens mid).mp hmat' with
@@ -1226,7 +1226,7 @@ theorem exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
   · simpa [stageProgramFuelLoopCodePrimitive,
       initialLayoutMaterializerCodePrimitive,
       layoutFuelLoopCodePrimitive,
-      MachineDescription.TapeCodePrimitive.compose] using
+      MachineDescription.TapeCodePrimitive.compose] using!
       (outputThenRecognizePipeline_compose_exactOutputSpec
         hmaterializerStop hmaterializer hmaterializerCanonical
         hlayoutStop hlayout
@@ -1240,7 +1240,7 @@ theorem exactOutputPrimitiveConstruction_of_exactMaterializer_layoutFuelLoop
   · simpa [stageProgramFuelLoopCodePrimitive,
       initialLayoutMaterializerCodePrimitive,
       layoutFuelLoopCodePrimitive,
-      MachineDescription.TapeCodePrimitive.compose] using
+      MachineDescription.TapeCodePrimitive.compose] using!
       (outputThenRecognizePipeline_compose_exactOutputCanonicalSpec
         hmaterializerStop hmaterializerCanonical
         hlayoutStop hlayoutCanonical

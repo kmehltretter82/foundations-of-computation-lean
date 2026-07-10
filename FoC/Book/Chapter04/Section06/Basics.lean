@@ -194,7 +194,7 @@ theorem general_formLanguage_replace_sound
     (hw : w ∈ CFG.FormLanguage symbolLanguage (u ++ rhs ++ v)) :
     w ∈ CFG.FormLanguage symbolLanguage (u ++ lhs ++ v) := by
   have hu := (CFG.formLanguage_append symbolLanguage u (rhs ++ v) w).mp (by
-    simpa [List.append_assoc] using hw)
+    simpa [List.append_assoc] using! hw)
   rcases hu with ⟨pref, suffix, hpref, hsuffix, hwEq⟩
   have hsSplit :=
     (CFG.formLanguage_append symbolLanguage rhs v suffix).mp hsuffix

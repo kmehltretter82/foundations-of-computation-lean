@@ -362,7 +362,7 @@ private theorem concreteDiagonalPairMap_returnMarker_computes
               concreteDiagonalPairMapRawCells,
               concreteDiagonalPairMapConfig, Tape.move, Tape.moveLeft,
               Tape.write]
-              using TuringMachine.Computes.refl
+              using! TuringMachine.Computes.refl
                 (M := ConcreteDiagonalPairMapMachine)
                 (concreteDiagonalPairMapConfig
                   ConcreteDiagonalPairMapMachineState.return nextTape)
@@ -373,7 +373,7 @@ private theorem concreteDiagonalPairMap_returnMarker_computes
               concreteDiagonalPairMapRawCells,
               concreteDiagonalPairMapConfig, Tape.move, Tape.moveLeft,
               Tape.write]
-              using TuringMachine.Computes.refl
+              using! TuringMachine.Computes.refl
                 (M := ConcreteDiagonalPairMapMachine)
                 (concreteDiagonalPairMapConfig
                   ConcreteDiagonalPairMapMachineState.return nextTape)
@@ -399,7 +399,7 @@ private theorem concreteDiagonalPairMap_returnMarker_computes
           concreteDiagonalPairMapMarkerCells, concreteDiagonalPairMapConfig,
           Tape.move, Tape.moveLeft, Tape.write, Nat.add_assoc,
           Nat.add_comm, Nat.add_left_comm]
-          using ih (markersRight + 1)
+          using! ih (markersRight + 1)
 
 private theorem concreteDiagonalPairMap_markerCells_append_marker_raw
     (n : Nat) (leftRaw : Word ConcreteMachineCodeSymbol) :
@@ -549,14 +549,14 @@ private theorem concreteDiagonalPairMap_appendScan_computes
               concreteDiagonalPairMapRawCells,
               concreteDiagonalPairMapConfig, Tape.move, Tape.moveRight,
               Tape.write, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-              using ih (markersSeen + 1)
+              using! ih (markersSeen + 1)
         | succ rest =>
             simpa [nextTape, concreteDiagonalPairMapAppendScanTape,
               concreteDiagonalPairMapMarkerCells,
               concreteDiagonalPairMapRawCells,
               concreteDiagonalPairMapConfig, Tape.move, Tape.moveRight,
               Tape.write, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
-              using ih (markersSeen + 1)
+              using! ih (markersSeen + 1)
 
 private theorem concreteDiagonalPairMap_returnBlank_moveRight (markers : Nat) :
     Tape.move Direction.right

@@ -241,7 +241,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedParserPrimitiveConstruct
               encodeCodeWordAsInput
                 (SimulatorLayout.encode L) := by
                 rw [hT]
-                simpa [CommonGround.SimulatorLayouts.encode] using
+                simpa [CommonGround.SimulatorLayouts.encode] using!
                   CommonGround.SimulatorLayouts.handoffTape_normalizedOutput L
       have hout :
           out = SimulatorLayout.encode L :=
@@ -444,7 +444,7 @@ theorem fixedDescriptionBoundedSimulatorCodeRightShiftedSpec_of_parser_emitter
       simpa [FixedDescriptionBoundedSimulatorInput,
         CommonGround.SimulatorLayouts.bits,
         CommonGround.LayoutTapes.Bits,
-        CommonGround.SimulatorLayouts.encode] using
+        CommonGround.SimulatorLayouts.encode] using!
         hparser.right.left L
     have hemitterRun :
         emitter.HaltsWithTape
@@ -557,7 +557,7 @@ theorem fixedDescriptionBoundedSimulatorCode_outputRealized_of_equivSpec
       FixedDescriptionBoundedSimulatorCanonicalOutputTape,
       FixedDescriptionBoundedSimulatorCodeRightShiftedOutputCode,
       fixedDescriptionBoundedSimulatorCodeRightShiftedRunLayout_eq_run,
-      SimulatorLayout.tape_normalizedOutput] using hhalt
+      SimulatorLayout.tape_normalizedOutput] using! hhalt
 
 theorem fixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction_of_equiv
     (h :
@@ -657,7 +657,7 @@ theorem fixedDescriptionBoundedSimulatorHandoffTape_move_left_right
     SimulatorLayout.tape,
     CommonGround.SimulatorLayouts.handoffTape,
     CommonGround.LayoutTapes.HandoffTape,
-    CommonGround.LayoutTapes.InputTape] using
+    CommonGround.LayoutTapes.InputTape] using!
     CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape L
 
 theorem fixedDescriptionBoundedSimulatorFragmentRealizes_of_canonicalSpec
@@ -685,7 +685,7 @@ theorem fixedDescriptionBoundedSimulatorFragmentRealizes_of_canonicalSpec
         FixedDescriptionBoundedSimulatorInput,
         FixedDescriptionBoundedSimulatorCanonicalOutputTape,
         FixedDescriptionBoundedSimulatorLayoutTape,
-        SimulatorLayout.tape] using hrun
+        SimulatorLayout.tape] using! hrun
     rcases firstReaches_halt_of_runConfig_eq
         (D := sim.asFragment.toDescription)
         (c :=

@@ -129,7 +129,7 @@ theorem fuelSimulatorStructuredCanonicalEndpointConstruction_of_components
     FuelSimulatorStructuredCanonicalEndpointConstruction attempt := by
   simpa [FuelSimulatorStructuredCanonicalEndpointConstruction,
     FuelSimulatorStructuredCanonicalEndpointSpec,
-    FuelSimulatorStructuredCanonicalEndpointComponentConstruction] using
+    FuelSimulatorStructuredCanonicalEndpointComponentConstruction] using!
     structured3CanonicalExactIndexedEndpointConstruction_of_components
       hcomponents
 

@@ -462,7 +462,7 @@ theorem StructuredLiveTailEmitterEndpointBridgeSpec.toOutputSpec
     have hrun := hfinish.right p
     simpa [MixedOptionCellQuoteLiveTailEmitterAssemblyFamilyOutputSpec,
       structuredLiveTailEmitterAssemblySourceTape,
-      structuredLiveTailEmitterAssemblyTargetTape] using
+      structuredLiveTailEmitterAssemblyTargetTape] using!
       haltsFromTapeWithOutput_of_haltsFromTapeEquiv_target hrun
 
 theorem StructuredLiveTailEmitterEndpointBridgeConstruction.toOutputConstruction
