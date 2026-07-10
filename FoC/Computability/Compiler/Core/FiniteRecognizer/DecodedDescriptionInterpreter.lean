@@ -272,6 +272,41 @@ def DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction
         runner decodedDescriptionInterpreterRun ∧
       TuringMachine.HaltingTransitionsDisabled runner
 
+private def decodedDescriptionInterpreterExactOutputCounterexample :
+    MachineDescription :=
+  { stateCount := 1, start := 0, halt := 0, transitions := [] }
+
+private theorem decodedDescriptionInterpreterExactOutputCounterexample_haltsIn :
+    decodedDescriptionInterpreterExactOutputCounterexample.HaltsIn 0
+      (MachineDescription.encodeCodeWordAsInput
+        ([] : Word MachineCodeSymbol)) := by
+  rfl
+
+/--
+The decoded interpreter cannot promise a literal empty final tape on every
+generated input: its stored input context is nonempty and tape context never
+shrinks. This theorem guards the ordinary/normalized replacement contract.
+-/
+theorem not_decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction :
+    ¬ DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction := by
+  intro hconstruction
+  rcases hconstruction with
+    ⟨_n, runner, hspec, _hcanonical, _hstop⟩
+  have hhalt :=
+    (hspec.left decodedDescriptionInterpreterExactOutputCounterexample
+      ([] : Word MachineCodeSymbol) 0).mpr
+      decodedDescriptionInterpreterExactOutputCounterexample_haltsIn
+  apply
+    TuringMachine.not_haltsWithExactOutput_empty_of_input_contextLength_pos
+      (M := runner) (w :=
+        GeneratedCode.stageCode
+          (List.append
+            (MachineDescription.encodeDescription
+              decodedDescriptionInterpreterExactOutputCounterexample)
+            ([] : Word MachineCodeSymbol))
+          0) ?_ hhalt
+  decide
+
 theorem decodedDescriptionInterpreterExactOutputSpec_iff_decoded
     (runner : TuringMachine MachineCodeSymbol runnerState) :
     FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
@@ -354,6 +389,15 @@ theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_if
     exact
       (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
         runner).mpr hspec
+
+/-- The older transformer-shaped exact-output target is refuted as well. -/
+theorem not_decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction :
+    ¬ DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction := by
+  intro hconstruction
+  exact
+    not_decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction
+      ((decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded).mp
+        hconstruction)
 
 /--
 Canonical generated-input behavior for the uniform decoded-description
@@ -628,58 +672,27 @@ theorem decodedDescriptionInterpreterConstruction_iff_finState :
   · exact decodedDescriptionInterpreterConstruction_of_finState
 
 /--
-Remaining concrete finite-state decoded exact-output primitive obligation for
-the uniform decoded-description interpreter.
+Remaining finite-state interpreter construction. Its contract observes
+ordinary halting and decoded input shape; it deliberately makes no claim that
+the runner erases its complete physical tape.
 -/
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction := by
-  sorry
-
-/--
-Compatibility exact-output primitive leaf for the uniform decoded-description
-interpreter, derived from the decoded exact-output target above.
--/
-theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf :
-    DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction := by
-  exact
-    decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded.mpr
-      decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf
-
-/--
-Exact-output primitive construction for the uniform decoded-description
-interpreter, derived from the concrete finite-state primitive leaf above.
--/
-theorem decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf :
-    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction := by
-  exact
-    decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
-      decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf
-
-/--
-Concrete component construction for the uniform decoded-description
-interpreter, derived from the sharper exact-output primitive boundary above.
--/
-theorem decodedDescriptionInterpreterComponentsFiniteLeaf :
-    DecodedDescriptionInterpreterComponentsConstruction := by
-  exact
-    decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimitive
-      decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf
-
-/--
-Remaining concrete finite-table leaf for the uniform decoded-description
-interpreter.
--/
-theorem decodedDescriptionInterpreterFiniteLeaf :
-    DecodedDescriptionInterpreterConstruction := by
-  exact
-    decodedDescriptionInterpreterConstruction_of_components
-      decodedDescriptionInterpreterComponentsFiniteLeaf
-
 theorem decodedDescriptionInterpreterFinStateFiniteLeaf :
     DecodedDescriptionInterpreterFinStateConstruction := by
+  sorry
+
+theorem decodedDescriptionInterpreterFiniteLeaf :
+    DecodedDescriptionInterpreterConstruction :=
+  decodedDescriptionInterpreterConstruction_of_finState
+    decodedDescriptionInterpreterFinStateFiniteLeaf
+
+theorem decodedDescriptionInterpreterComponentsFiniteLeaf :
+    DecodedDescriptionInterpreterComponentsConstruction := by
+  rcases decodedDescriptionInterpreterFiniteLeaf with
+    ⟨runnerState, runner, htotal⟩
   exact
-    decodedDescriptionInterpreterFinStateConstruction_of_construction
-      decodedDescriptionInterpreterFiniteLeaf
+    ⟨runnerState, runner,
+      decodedDescriptionCanonicalStageSpec_of_total htotal,
+      decodedDescriptionTotalShapeSpec_of_total htotal⟩
 
 end FiniteRecognizer
 

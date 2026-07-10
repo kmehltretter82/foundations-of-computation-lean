@@ -5,13 +5,14 @@ set_option doc.verso true
 /-!
 # Decoded-description interpreter route contracts
 
-This module packages the semantic and construction-chain surfaces for the
-uniform decoded-description interpreter.  The concrete finite-table leaf
+This module packages the semantic and ordinary-halting construction surfaces
+for the uniform decoded-description interpreter. The concrete finite-table leaf
 remains in
 {module}`FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter`;
 the route contracts here record the reusable path from canonical generated
-inputs, through exact-output decoding, to the ordinary total interpreter
-contract used by generated-program and controller code.
+inputs to the total interpreter contract used by generated-program and
+controller code. Literal exact-empty-output routes are intentionally absent:
+the input context is nonempty and tape context cannot shrink.
 -/
 
 namespace FoC
@@ -206,235 +207,6 @@ theorem decodedDescriptionInterpreterRun_tokens_shape
   decodedDescriptionInterpreterRun_eq_some_shape hrun
 
 /-!
-## Exact-output primitive route
--/
-
-structure DecodedDescriptionInterpreterExactOutputPrimitiveRoute
-    (runnerState : Type)
-    (runner : TuringMachine MachineCodeSymbol runnerState) :
-    Prop where
-  exactSpec :
-    ExactFuel.StageProgram.ExactOutputSpec
-      runner decodedDescriptionInterpreterRun
-  canonical :
-    ExactFuel.StageProgram.ExactOutputCanonicalSpec
-      runner decodedDescriptionInterpreterRun
-  haltingTransitionsDisabled :
-    TuringMachine.HaltingTransitionsDisabled runner
-  haltsWithExactOutputIff :
-    forall tokens output : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithExactOutput runner tokens output <->
-        decodedDescriptionInterpreterRun tokens = some output
-  haltsWithEmptyIff :
-    forall tokens : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithExactOutput runner tokens
-          ([] : Word MachineCodeSymbol) <->
-        decodedDescriptionInterpreterRun tokens =
-          some ([] : Word MachineCodeSymbol)
-  acceptsIffEmptyRun :
-    forall tokens : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput runner tokens <->
-        decodedDescriptionInterpreterRun tokens =
-          some ([] : Word MachineCodeSymbol)
-  acceptsCanonicalStageIff :
-    forall D : MachineDescription,
-    forall input : Word MachineCodeSymbol,
-    forall fuel : Nat,
-      TuringMachine.HaltsOnInput runner
-          (GeneratedCode.stageCode
-            (List.append (MachineDescription.encodeDescription D) input)
-            fuel) <->
-        D.HaltsIn fuel
-          (MachineDescription.encodeCodeWordAsInput input)
-
-def DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction :
-    Prop :=
-  exists runnerState : Type,
-  exists runner : TuringMachine MachineCodeSymbol runnerState,
-    DecodedDescriptionInterpreterExactOutputPrimitiveRoute
-      runnerState runner
-
-theorem decodedDescriptionInterpreterExactOutputPrimitiveRoute_of_construction
-    (h :
-      DecodedDescriptionInterpreterExactOutputPrimitiveConstruction) :
-    DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction := by
-  rcases h with
-    ⟨runnerState, runner, hexact, hcanonical, hstop⟩
-  have haccepts :
-      forall tokens : Word MachineCodeSymbol,
-        TuringMachine.HaltsOnInput runner tokens <->
-          decodedDescriptionInterpreterRun tokens =
-            some ([] : Word MachineCodeSymbol) :=
-    ExactFuel.StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
-      hexact hcanonical
-      (by
-        intro tokens output hrun
-        exact
-          decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
-            hrun)
-  refine ⟨runnerState, runner, ?_⟩
-  exact
-    { exactSpec := hexact
-      canonical := hcanonical
-      haltingTransitionsDisabled := hstop
-      haltsWithExactOutputIff := by
-        intro tokens output
-        exact hexact tokens output
-      haltsWithEmptyIff := by
-        intro tokens
-        exact hexact tokens ([] : Word MachineCodeSymbol)
-      acceptsIffEmptyRun := haccepts
-      acceptsCanonicalStageIff := by
-        intro D input fuel
-        exact Iff.trans
-          (haccepts
-            (GeneratedCode.stageCode
-              (List.append (MachineDescription.encodeDescription D) input)
-              fuel))
-          (decodedDescriptionInterpreterRun_stageCode_eq_some_iff
-            D input fuel) }
-
-theorem decodedDescriptionInterpreterExactOutputPrimitiveRoute_of_finState
-    (h :
-      DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction) :
-    DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction :=
-  decodedDescriptionInterpreterExactOutputPrimitiveRoute_of_construction
-    (decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
-      h)
-
-/-!
-## Decoded exact-output route
--/
-
-structure DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute
-    (runnerState : Type)
-    (runner : TuringMachine MachineCodeSymbol runnerState) :
-    Prop where
-  decodedSpec :
-    DecodedDescriptionInterpreterDecodedExactOutputSpec runner
-  exactSpec :
-    ExactFuel.StageProgram.ExactOutputSpec
-      runner decodedDescriptionInterpreterRun
-  canonical :
-    ExactFuel.StageProgram.ExactOutputCanonicalSpec
-      runner decodedDescriptionInterpreterRun
-  haltingTransitionsDisabled :
-    TuringMachine.HaltingTransitionsDisabled runner
-  forward :
-    DecodedDescriptionInterpreterDecodedExactOutputForwardSpec runner
-  closed :
-    DecodedDescriptionInterpreterDecodedExactOutputClosedSpec runner
-  acceptsCanonicalStageIff :
-    forall D : MachineDescription,
-    forall input : Word MachineCodeSymbol,
-    forall fuel : Nat,
-      TuringMachine.HaltsOnInput runner
-          (GeneratedCode.stageCode
-            (List.append (MachineDescription.encodeDescription D) input)
-            fuel) <->
-        D.HaltsIn fuel
-          (MachineDescription.encodeCodeWordAsInput input)
-  haltedTokensShape :
-    forall tokens : Word MachineCodeSymbol,
-      TuringMachine.HaltsOnInput runner tokens ->
-        exists fuel : Nat,
-        exists D : MachineDescription,
-        exists input : Word MachineCodeSymbol,
-          MachineDescription.decodeNat tokens =
-            some (fuel,
-              List.append (MachineDescription.encodeDescription D) input)
-
-def DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction :
-    Prop :=
-  exists runnerState : Type,
-  exists runner : TuringMachine MachineCodeSymbol runnerState,
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute
-      runnerState runner
-
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_of_construction
-    (h :
-      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveConstruction) :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction := by
-  rcases h with
-    ⟨runnerState, runner, hdecoded, hcanonical, hstop⟩
-  let hexact :
-      ExactFuel.StageProgram.ExactOutputSpec
-        runner decodedDescriptionInterpreterRun :=
-    (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
-      runner).mpr hdecoded
-  have haccepts :
-      forall tokens : Word MachineCodeSymbol,
-        TuringMachine.HaltsOnInput runner tokens <->
-          decodedDescriptionInterpreterRun tokens =
-            some ([] : Word MachineCodeSymbol) :=
-    ExactFuel.StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
-      hexact hcanonical
-      (by
-        intro tokens output hrun
-        exact
-          decodedDescriptionInterpreterRun_eq_some_empty_of_eq_some
-            hrun)
-  refine ⟨runnerState, runner, ?_⟩
-  exact
-    { decodedSpec := hdecoded
-      exactSpec := hexact
-      canonical := hcanonical
-      haltingTransitionsDisabled := hstop
-      forward := hdecoded.left
-      closed := hdecoded.right
-      acceptsCanonicalStageIff := by
-        intro D input fuel
-        exact Iff.trans
-          (haccepts
-            (GeneratedCode.stageCode
-              (List.append (MachineDescription.encodeDescription D) input)
-              fuel))
-          (decodedDescriptionInterpreterRun_stageCode_eq_some_iff
-            D input fuel)
-      haltedTokensShape := by
-        intro tokens hhalt
-        exact decodedDescriptionInterpreterRun_eq_some_shape
-          ((haccepts tokens).mp hhalt) }
-
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_of_exactRoute
-    {runnerState : Type}
-    {runner : TuringMachine MachineCodeSymbol runnerState}
-    (hroute :
-      DecodedDescriptionInterpreterExactOutputPrimitiveRoute
-        runnerState runner) :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute
-      runnerState runner :=
-  { decodedSpec :=
-      (decodedDescriptionInterpreterExactOutputSpec_iff_decoded
-        runner).mp hroute.exactSpec
-    exactSpec := hroute.exactSpec
-    canonical := hroute.canonical
-    haltingTransitionsDisabled := hroute.haltingTransitionsDisabled
-    forward :=
-      ((decodedDescriptionInterpreterExactOutputSpec_iff_decoded
-        runner).mp hroute.exactSpec).left
-    closed :=
-      ((decodedDescriptionInterpreterExactOutputSpec_iff_decoded
-        runner).mp hroute.exactSpec).right
-    acceptsCanonicalStageIff :=
-      hroute.acceptsCanonicalStageIff
-    haltedTokensShape := by
-      intro tokens hhalt
-      exact decodedDescriptionInterpreterRun_eq_some_shape
-        ((hroute.acceptsIffEmptyRun tokens).mp hhalt) }
-
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_of_finState
-    (h :
-      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction) :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction := by
-  exact
-    decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_of_construction
-      ((decodedDescriptionInterpreterExactOutputPrimitiveConstruction_iff_decoded).mp
-        (decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
-          ((decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded).mpr
-            h)))
-
-/-!
 ## Ordinary total-interpreter component routes
 -/
 
@@ -527,22 +299,6 @@ theorem decodedDescriptionInterpreterComponentsRoute_of_construction
       haltedTokensShape :=
         decodedDescriptionTotalShapeSpec_of_total htotal
       acceptsTokensIff := htotal }
-
-theorem decodedDescriptionInterpreterComponentsRoute_of_exactOutputPrimitive
-    (h :
-      DecodedDescriptionInterpreterExactOutputPrimitiveConstruction) :
-    DecodedDescriptionInterpreterComponentsRouteConstruction :=
-  decodedDescriptionInterpreterComponentsRoute_of_components
-    (decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimitive
-      h)
-
-theorem decodedDescriptionInterpreterComponentsRoute_of_decodedExactOutputPrimitive
-    (h :
-      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveConstruction) :
-    DecodedDescriptionInterpreterComponentsRouteConstruction :=
-  decodedDescriptionInterpreterComponentsRoute_of_exactOutputPrimitive
-    ((decodedDescriptionInterpreterExactOutputPrimitiveConstruction_iff_decoded).mpr
-      h)
 
 /-!
 ## Runner route projections
@@ -655,26 +411,14 @@ theorem decodedDescriptionInterpreterRunnerRoute_of_finState
 -/
 
 structure DecodedDescriptionInterpreterFiniteRoute : Prop where
-  decodedExactOutputPrimitiveFinState :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction
-  exactOutputPrimitiveFinState :
-    DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction
-  exactOutputPrimitive :
-    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction
-  decodedExactOutputRoute :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction
-  exactOutputRoute :
-    DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction
-  components :
-    DecodedDescriptionInterpreterComponentsConstruction
-  componentsRoute :
-    DecodedDescriptionInterpreterComponentsRouteConstruction
-  construction :
-    DecodedDescriptionInterpreterConstruction
-  runnerRoute :
-    DecodedDescriptionInterpreterRunnerRouteConstruction
   finStateConstruction :
     DecodedDescriptionInterpreterFinStateConstruction
+  construction :
+    DecodedDescriptionInterpreterConstruction
+  componentsRoute :
+    DecodedDescriptionInterpreterComponentsRouteConstruction
+  runnerRoute :
+    DecodedDescriptionInterpreterRunnerRouteConstruction
   semanticShape :
     forall D : MachineDescription,
     forall input : Word MachineCodeSymbol,
@@ -684,57 +428,29 @@ structure DecodedDescriptionInterpreterFiniteRoute : Prop where
 def DecodedDescriptionInterpreterFiniteRouteConstruction : Prop :=
   DecodedDescriptionInterpreterFiniteRoute
 
-theorem decodedDescriptionInterpreterFiniteRoute_of_decodedExactOutput
-    (hdecoded :
-      DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction) :
+theorem decodedDescriptionInterpreterFiniteRoute_of_finState
+    (hfin : DecodedDescriptionInterpreterFinStateConstruction) :
     DecodedDescriptionInterpreterFiniteRoute := by
-  let hexactFin :
-      DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction :=
-    (decodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction_iff_decoded).mpr
-      hdecoded
-  let hexact :
-      DecodedDescriptionInterpreterExactOutputPrimitiveConstruction :=
-    decodedDescriptionInterpreterExactOutputPrimitiveConstruction_of_finState
-      hexactFin
-  let hcomponents :
-      DecodedDescriptionInterpreterComponentsConstruction :=
-    decodedDescriptionInterpreterComponentsConstruction_of_exactOutputPrimitive
-      hexact
   let hconstruction :
       DecodedDescriptionInterpreterConstruction :=
-    decodedDescriptionInterpreterConstruction_of_components
-      hcomponents
-  let hfin :
-      DecodedDescriptionInterpreterFinStateConstruction :=
-    decodedDescriptionInterpreterFinStateConstruction_of_construction
-      hconstruction
+    decodedDescriptionInterpreterConstruction_of_finState hfin
   exact
-    { decodedExactOutputPrimitiveFinState := hdecoded
-      exactOutputPrimitiveFinState := hexactFin
-      exactOutputPrimitive := hexact
-      decodedExactOutputRoute :=
-        decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_of_finState
-          hdecoded
-      exactOutputRoute :=
-        decodedDescriptionInterpreterExactOutputPrimitiveRoute_of_finState
-          hexactFin
-      components := hcomponents
-      componentsRoute :=
-        decodedDescriptionInterpreterComponentsRoute_of_components
-          hcomponents
+    { finStateConstruction := hfin
       construction := hconstruction
+      componentsRoute :=
+        decodedDescriptionInterpreterComponentsRoute_of_construction
+          hconstruction
       runnerRoute :=
         decodedDescriptionInterpreterRunnerRoute_of_construction
           hconstruction
-      finStateConstruction := hfin
       semanticShape := by
         intro D input fuel
         exact decodedDescriptionInterpreterStageShape D input fuel }
 
 theorem decodedDescriptionInterpreterFiniteRoute_finiteLeaf :
     DecodedDescriptionInterpreterFiniteRoute :=
-  decodedDescriptionInterpreterFiniteRoute_of_decodedExactOutput
-    decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf
+  decodedDescriptionInterpreterFiniteRoute_of_finState
+    decodedDescriptionInterpreterFinStateFiniteLeaf
 
 theorem decodedDescriptionInterpreterFiniteRouteConstruction_finiteLeaf :
     DecodedDescriptionInterpreterFiniteRouteConstruction :=
@@ -750,26 +466,6 @@ theorem DecodedDescriptionInterpreterFiniteRoute.finState
     DecodedDescriptionInterpreterFinStateConstruction :=
   hroute.finStateConstruction
 
-theorem DecodedDescriptionInterpreterFiniteRoute.componentsConstruction
-    (hroute : DecodedDescriptionInterpreterFiniteRoute) :
-    DecodedDescriptionInterpreterComponentsConstruction :=
-  hroute.components
-
-theorem DecodedDescriptionInterpreterFiniteRoute.exactOutputConstruction
-    (hroute : DecodedDescriptionInterpreterFiniteRoute) :
-    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction :=
-  hroute.exactOutputPrimitive
-
-theorem DecodedDescriptionInterpreterFiniteRoute.decodedExactOutputRouteConstruction
-    (hroute : DecodedDescriptionInterpreterFiniteRoute) :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction :=
-  hroute.decodedExactOutputRoute
-
-theorem DecodedDescriptionInterpreterFiniteRoute.exactOutputRouteConstruction
-    (hroute : DecodedDescriptionInterpreterFiniteRoute) :
-    DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction :=
-  hroute.exactOutputRoute
-
 theorem DecodedDescriptionInterpreterFiniteRoute.componentsRouteConstruction
     (hroute : DecodedDescriptionInterpreterFiniteRoute) :
     DecodedDescriptionInterpreterComponentsRouteConstruction :=
@@ -779,60 +475,6 @@ theorem DecodedDescriptionInterpreterFiniteRoute.runnerRouteConstruction
     (hroute : DecodedDescriptionInterpreterFiniteRoute) :
     DecodedDescriptionInterpreterRunnerRouteConstruction :=
   hroute.runnerRoute
-
-/-!
-## Public finite-leaf aliases
--/
-
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateFiniteLeaf_route :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveFinStateConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.decodedExactOutputPrimitiveFinState
-
-theorem decodedDescriptionInterpreterExactOutputPrimitiveFinStateFiniteLeaf_route :
-    DecodedDescriptionInterpreterExactOutputPrimitiveFinStateConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.exactOutputPrimitiveFinState
-
-theorem decodedDescriptionInterpreterExactOutputPrimitiveFiniteLeaf_route :
-    DecodedDescriptionInterpreterExactOutputPrimitiveConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.exactOutputPrimitive
-
-theorem decodedDescriptionInterpreterComponentsFiniteLeaf_route :
-    DecodedDescriptionInterpreterComponentsConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.components
-
-theorem decodedDescriptionInterpreterFiniteLeaf_route :
-    DecodedDescriptionInterpreterConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.construction
-
-theorem decodedDescriptionInterpreterFinStateFiniteLeaf_route :
-    DecodedDescriptionInterpreterFinStateConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.finStateConstruction
-
-theorem decodedDescriptionInterpreterRunnerRoute_finiteLeaf :
-    DecodedDescriptionInterpreterRunnerRouteConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.runnerRoute
-
-theorem decodedDescriptionInterpreterComponentsRoute_finiteLeaf :
-    DecodedDescriptionInterpreterComponentsRouteConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.componentsRoute
-
-theorem decodedDescriptionInterpreterExactOutputPrimitiveRoute_finiteLeaf :
-    DecodedDescriptionInterpreterExactOutputPrimitiveRouteConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.exactOutputRoute
-
-theorem decodedDescriptionInterpreterDecodedExactOutputPrimitiveRoute_finiteLeaf :
-    DecodedDescriptionInterpreterDecodedExactOutputPrimitiveRouteConstruction :=
-  decodedDescriptionInterpreterFiniteRoute_finiteLeaf
-    |>.decodedExactOutputRoute
 
 end FiniteRecognizer
 

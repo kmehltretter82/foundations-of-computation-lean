@@ -129,7 +129,7 @@ theorem stageProgramSemanticShape
     initialLayoutEncodedDecodes :=
       Layout.decode_encode (Layout.initial M input fuel)
     stageCodeToInitialLayoutCode := by
-      simpa [StageProgram.stageCode] using
+      simpa [StageProgram.stageCode, GeneratedCode.stageCode] using
         Layout.stageCodeToInitialLayoutCode_stageCode M input fuel
     materializerPrimitiveStageCode :=
       StageProgram.initialLayoutMaterializerCodePrimitive_stageCode

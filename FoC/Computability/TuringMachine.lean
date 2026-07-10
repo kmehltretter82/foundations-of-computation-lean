@@ -417,6 +417,15 @@ theorem computesIn_contextLength_mono {M : TuringMachine symbol state}
   | succ hstep _ ih =>
       exact Nat.le_trans (step_contextLength_mono hstep) ih
 
+theorem computes_contextLength_mono {M : TuringMachine symbol state}
+    {c d : Configuration symbol state}
+    (h : Computes M c d) :
+    Tape.contextLength c.tape ≤ Tape.contextLength d.tape := by
+  induction h with
+  | refl c => exact Nat.le_refl _
+  | step hstep _ ih =>
+      exact Nat.le_trans (step_contextLength_mono hstep) ih
+
 theorem step_from_empty_contextLength_pos {M : TuringMachine symbol state}
     {d : Configuration symbol state}
     (h : Step M (initial M ([] : Word symbol)) d) :
@@ -503,6 +512,18 @@ def HaltsWithOutputIn (M : TuringMachine symbol state) (n : Nat)
     ComputesIn M n (initial M w) final ∧
       Halted M final ∧
       Tape.normalizedOutput final.tape = out
+
+/-- A nonempty stored input context cannot be erased to the literal blank tape. -/
+theorem not_haltsWithExactOutput_empty_of_input_contextLength_pos
+    {M : TuringMachine symbol state} {w : Word symbol}
+    (hctx : 0 < Tape.contextLength (Tape.input w)) :
+    ¬ HaltsWithExactOutput M w [] := by
+  intro hhalt
+  rcases hhalt with ⟨final, hcomp, _hhalt, htape⟩
+  have hmono := computes_contextLength_mono hcomp
+  have hzero : Tape.contextLength (Tape.input w) ≤ 0 := by
+    simpa [initial, htape, Tape.output_empty, Tape.contextLength_blank] using hmono
+  exact (Nat.not_lt_of_ge hzero) hctx
 
 def Accepts (M : TuringMachine symbol state) (w : Word symbol) : Prop :=
   HaltsOnInput M w
