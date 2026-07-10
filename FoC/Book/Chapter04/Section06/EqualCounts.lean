@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.Basics
+import FoC.Book.Chapter04.Section06.EqualCountCommon
 
 set_option doc.verso true
 
@@ -315,6 +315,36 @@ def equalCountMarkerOfTerminal :
   | EqualCountTerminal.b => EqualCountNT.markB
   | EqualCountTerminal.c => EqualCountNT.markC
 
+private def equalCountMarkerSymbol (token : EqualCountTerminal) :
+    Symbol EqualCountTerminal EqualCountNT :=
+  ecN (equalCountMarkerOfTerminal token)
+
+private theorem equalCountMarkerSymbol_swap
+    (left right : EqualCountTerminal) (hne : left ≠ right) :
+    EqualCountGrammar.produces
+      [equalCountMarkerSymbol left, equalCountMarkerSymbol right]
+      [equalCountMarkerSymbol right, equalCountMarkerSymbol left] := by
+  cases left <;> cases right
+  all_goals simp at hne
+  all_goals simp only [equalCountMarkerSymbol, equalCountMarkerOfTerminal]
+  all_goals first
+    | exact EqualCountProduces.swapAB
+    | exact EqualCountProduces.swapAC
+    | exact EqualCountProduces.swapBA
+    | exact EqualCountProduces.swapBC
+    | exact EqualCountProduces.swapCA
+    | exact EqualCountProduces.swapCB
+
+private theorem equalCountMarkerSymbol_emit (token : EqualCountTerminal) :
+    EqualCountGrammar.produces
+      [equalCountMarkerSymbol token] [ecT token] := by
+  cases token
+  all_goals simp only [equalCountMarkerSymbol, equalCountMarkerOfTerminal]
+  all_goals first
+    | exact EqualCountProduces.emitA
+    | exact EqualCountProduces.emitB
+    | exact EqualCountProduces.emitC
+
 def equalCountMarkerWord (w : Word EqualCountTerminal) :
     SententialForm EqualCountTerminal EqualCountNT :=
   w.map (fun token => ecN (equalCountMarkerOfTerminal token))
@@ -331,171 +361,66 @@ theorem equalCount_moveB_left_over_as
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ equalCountAForm n ++ [ecN EqualCountNT.markB] ++ suffix)
       (pre ++ [ecN EqualCountNT.markB] ++ equalCountAForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountAForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markB] ++ suffix))
-  | succ n ih =>
-      let A := ecN EqualCountNT.markA
-      let B := ecN EqualCountNT.markB
-      have htail :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [A] ++ equalCountAForm n ++ [B] ++ suffix)
-            (pre ++ [A] ++ [B] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using ih (pre ++ [A])
-      have hswap :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [A] ++ [B] ++ equalCountAForm n ++ suffix)
-            (pre ++ [B] ++ [A] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapAB pre (equalCountAForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountAForm, A, B, List.append_assoc] using! hall
+  simpa [equalCountAForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.b EqualCountTerminal.a n pre suffix
 
 theorem equalCount_moveC_left_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ equalCountAForm n ++ [ecN EqualCountNT.markC] ++ suffix)
       (pre ++ [ecN EqualCountNT.markC] ++ equalCountAForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountAForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let A := ecN EqualCountNT.markA
-      let C := ecN EqualCountNT.markC
-      have htail :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [A] ++ equalCountAForm n ++ [C] ++ suffix)
-            (pre ++ [A] ++ [C] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using ih (pre ++ [A])
-      have hswap :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [A] ++ [C] ++ equalCountAForm n ++ suffix)
-            (pre ++ [C] ++ [A] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapAC pre (equalCountAForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountAForm, A, C, List.append_assoc] using! hall
+  simpa [equalCountAForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.c EqualCountTerminal.a n pre suffix
 
 theorem equalCount_moveC_left_over_bs
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ equalCountBForm n ++ [ecN EqualCountNT.markC] ++ suffix)
       (pre ++ [ecN EqualCountNT.markC] ++ equalCountBForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountBForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let B := ecN EqualCountNT.markB
-      let C := ecN EqualCountNT.markC
-      have htail :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [B] ++ equalCountBForm n ++ [C] ++ suffix)
-            (pre ++ [B] ++ [C] ++ equalCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using ih (pre ++ [B])
-      have hswap :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [B] ++ [C] ++ equalCountBForm n ++ suffix)
-            (pre ++ [C] ++ [B] ++ equalCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapBC pre (equalCountBForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [equalCountBForm, B, C, List.append_assoc] using! hall
+  simpa [equalCountBForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.c EqualCountTerminal.b n pre suffix
 
 theorem equalCount_moveC_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ [ecN EqualCountNT.markC] ++ equalCountAForm n ++ suffix)
       (pre ++ equalCountAForm n ++ [ecN EqualCountNT.markC] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountAForm] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let A := ecN EqualCountNT.markA
-      let C := ecN EqualCountNT.markC
-      have hstep :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [C, A] ++ equalCountAForm n ++ suffix)
-            (pre ++ [A, C] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapCA pre (equalCountAForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [A, C] ++ equalCountAForm n ++ suffix)
-            (pre ++ [A] ++ equalCountAForm n ++ [C] ++ suffix) := by
-        simpa [A, C, List.append_assoc] using ih (pre ++ [A])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountAForm, A, C, List.append_assoc] using! hall
+  simpa [equalCountAForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.c EqualCountTerminal.a n pre suffix
 
 theorem equalCount_moveB_right_over_as
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ [ecN EqualCountNT.markB] ++ equalCountAForm n ++ suffix)
       (pre ++ equalCountAForm n ++ [ecN EqualCountNT.markB] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountAForm] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markB] ++ suffix))
-  | succ n ih =>
-      let A := ecN EqualCountNT.markA
-      let B := ecN EqualCountNT.markB
-      have hstep :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [B, A] ++ equalCountAForm n ++ suffix)
-            (pre ++ [A, B] ++ equalCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapBA pre (equalCountAForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [A, B] ++ equalCountAForm n ++ suffix)
-            (pre ++ [A] ++ equalCountAForm n ++ [B] ++ suffix) := by
-        simpa [A, B, List.append_assoc] using ih (pre ++ [A])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountAForm, A, B, List.append_assoc] using! hall
+  simpa [equalCountAForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.b EqualCountTerminal.a n pre suffix
 
 theorem equalCount_moveC_right_over_bs
     (n : Nat) (pre suffix : SententialForm EqualCountTerminal EqualCountNT) :
     GeneralGrammar.Derives EqualCountGrammar
       (pre ++ [ecN EqualCountNT.markC] ++ equalCountBForm n ++ suffix)
       (pre ++ equalCountBForm n ++ [ecN EqualCountNT.markC] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [equalCountBForm] using
-        (GeneralGrammar.Derives.refl (G := EqualCountGrammar)
-          (pre ++ [ecN EqualCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let B := ecN EqualCountNT.markB
-      let C := ecN EqualCountNT.markC
-      have hstep :
-          GeneralGrammar.Yields EqualCountGrammar
-            (pre ++ [C, B] ++ equalCountBForm n ++ suffix)
-            (pre ++ [B, C] ++ equalCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using
-          general_yields_of_production (G := EqualCountGrammar)
-            EqualCountProduces.swapCB pre (equalCountBForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives EqualCountGrammar
-            (pre ++ [B, C] ++ equalCountBForm n ++ suffix)
-            (pre ++ [B] ++ equalCountBForm n ++ [C] ++ suffix) := by
-        simpa [B, C, List.append_assoc] using ih (pre ++ [B])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [equalCountBForm, B, C, List.append_assoc] using! hall
+  simpa [equalCountBForm, equalCountMarkerSymbol,
+    equalCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := EqualCountGrammar)
+      equalCountMarkerSymbol equalCountMarkerSymbol_swap
+      EqualCountTerminal.c EqualCountTerminal.b n pre suffix
 
 /-!
 The equal-count grammar first creates marker symbols and then sorts them into a
@@ -772,65 +697,10 @@ theorem equalCount_marker_word_to_terminal_word_derives
     GeneralGrammar.Derives EqualCountGrammar
       (equalCountMarkerWord word)
       (SententialForm.terminalWord word) := by
-  induction word with
-  | nil =>
-      exact GeneralGrammar.Derives.refl []
-  | cons token rest ih =>
-      cases token with
-      | a =>
-          have hstep :
-              GeneralGrammar.Yields EqualCountGrammar
-                ([ecN EqualCountNT.markA] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.a] ++ equalCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := EqualCountGrammar)
-                EqualCountProduces.emitA [] (equalCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives EqualCountGrammar
-                ([ecT EqualCountTerminal.a] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.a] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [ecT EqualCountTerminal.a] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using! hall
-      | b =>
-          have hstep :
-              GeneralGrammar.Yields EqualCountGrammar
-                ([ecN EqualCountNT.markB] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.b] ++ equalCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := EqualCountGrammar)
-                EqualCountProduces.emitB [] (equalCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives EqualCountGrammar
-                ([ecT EqualCountTerminal.b] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.b] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [ecT EqualCountTerminal.b] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using! hall
-      | c =>
-          have hstep :
-              GeneralGrammar.Yields EqualCountGrammar
-                ([ecN EqualCountNT.markC] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.c] ++ equalCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := EqualCountGrammar)
-                EqualCountProduces.emitC [] (equalCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives EqualCountGrammar
-                ([ecT EqualCountTerminal.c] ++ equalCountMarkerWord rest)
-                ([ecT EqualCountTerminal.c] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [ecT EqualCountTerminal.c] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [equalCountMarkerWord, equalCountMarkerOfTerminal,
-            SententialForm.terminalWord, ecT] using! hall
+  change GeneralGrammar.Derives EqualCountGrammar
+    (word.map equalCountMarkerSymbol) (word.map ecT)
+  exact GeneralGrammar.derives_map_of_pointwise_produces
+    equalCountMarkerSymbol ecT equalCountMarkerSymbol_emit word
 
 theorem equalCount_words_generated_of_equal_counts
     {word : Word EqualCountTerminal}

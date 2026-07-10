@@ -206,6 +206,7 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
 ]
 "FoC.Book.Chapter04.Section06" = [
   "FoC.Book.Chapter04.Section06.Basics",
+  "FoC.Book.Chapter04.Section06.EqualCountCommon",
   "FoC.Book.Chapter04.Section06.EqualCounts",
   "FoC.Book.Chapter04.Section06.FourCounts",
   "FoC.Book.Chapter04.Section06.OrderedABC",
@@ -713,6 +714,9 @@ title = "Section 4.5: Nonclosure"
 
 [modules."FoC.Book.Chapter04.Section06.Basics"]
 title = "Section 4.6: General Grammar Basics"
+
+[modules."FoC.Book.Chapter04.Section06.EqualCountCommon"]
+title = "Section 4.6: Equal-Count Marker Permutations"
 
 [modules."FoC.Book.Chapter04.Section06.EqualCounts"]
 title = "Section 4.6: Equal Counts Grammar"

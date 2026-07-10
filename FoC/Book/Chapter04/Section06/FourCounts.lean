@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.Basics
+import FoC.Book.Chapter04.Section06.EqualCountCommon
 
 set_option doc.verso true
 
@@ -390,6 +390,43 @@ def fourCountMarkerOfTerminal :
   | FourCountTerminal.c => FourCountNT.markC
   | FourCountTerminal.d => FourCountNT.markD
 
+private def fourCountMarkerSymbol (token : FourCountTerminal) :
+    Symbol FourCountTerminal FourCountNT :=
+  fcN (fourCountMarkerOfTerminal token)
+
+private theorem fourCountMarkerSymbol_swap
+    (left right : FourCountTerminal) (hne : left ≠ right) :
+    FourCountGrammar.produces
+      [fourCountMarkerSymbol left, fourCountMarkerSymbol right]
+      [fourCountMarkerSymbol right, fourCountMarkerSymbol left] := by
+  cases left <;> cases right
+  all_goals simp at hne
+  all_goals simp only [fourCountMarkerSymbol, fourCountMarkerOfTerminal]
+  all_goals first
+    | exact FourCountProduces.swapAB
+    | exact FourCountProduces.swapAC
+    | exact FourCountProduces.swapAD
+    | exact FourCountProduces.swapBA
+    | exact FourCountProduces.swapBC
+    | exact FourCountProduces.swapBD
+    | exact FourCountProduces.swapCA
+    | exact FourCountProduces.swapCB
+    | exact FourCountProduces.swapCD
+    | exact FourCountProduces.swapDA
+    | exact FourCountProduces.swapDB
+    | exact FourCountProduces.swapDC
+
+private theorem fourCountMarkerSymbol_emit (token : FourCountTerminal) :
+    FourCountGrammar.produces
+      [fourCountMarkerSymbol token] [fcT token] := by
+  cases token
+  all_goals simp only [fourCountMarkerSymbol, fourCountMarkerOfTerminal]
+  all_goals first
+    | exact FourCountProduces.emitA
+    | exact FourCountProduces.emitB
+    | exact FourCountProduces.emitC
+    | exact FourCountProduces.emitD
+
 def fourCountMarkerWord (w : Word FourCountTerminal) :
     SententialForm FourCountTerminal FourCountNT :=
   w.map (fun token => fcN (fourCountMarkerOfTerminal token))
@@ -406,342 +443,132 @@ theorem fourCount_moveB_left_over_as
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markB] ++ suffix)
       (pre ++ [fcN FourCountNT.markB] ++ fourCountAForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markB] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let B := fcN FourCountNT.markB
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A] ++ fourCountAForm n ++ [B] ++ suffix)
-            (pre ++ [A] ++ [B] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using ih (pre ++ [A])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [A] ++ [B] ++ fourCountAForm n ++ suffix)
-            (pre ++ [B] ++ [A] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapAB pre (fourCountAForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, B, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.b FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveC_left_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markC] ++ suffix)
       (pre ++ [fcN FourCountNT.markC] ++ fourCountAForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let C := fcN FourCountNT.markC
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A] ++ fourCountAForm n ++ [C] ++ suffix)
-            (pre ++ [A] ++ [C] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using ih (pre ++ [A])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [A] ++ [C] ++ fourCountAForm n ++ suffix)
-            (pre ++ [C] ++ [A] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapAC pre (fourCountAForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, C, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.c FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveD_left_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markD] ++ suffix)
       (pre ++ [fcN FourCountNT.markD] ++ fourCountAForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let D := fcN FourCountNT.markD
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A] ++ fourCountAForm n ++ [D] ++ suffix)
-            (pre ++ [A] ++ [D] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, D, List.append_assoc] using ih (pre ++ [A])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [A] ++ [D] ++ fourCountAForm n ++ suffix)
-            (pre ++ [D] ++ [A] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapAD pre (fourCountAForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountAForm, A, D, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveC_left_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountBForm n ++ [fcN FourCountNT.markC] ++ suffix)
       (pre ++ [fcN FourCountNT.markC] ++ fourCountBForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountBForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let B := fcN FourCountNT.markB
-      let C := fcN FourCountNT.markC
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [B] ++ fourCountBForm n ++ [C] ++ suffix)
-            (pre ++ [B] ++ [C] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using ih (pre ++ [B])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [B] ++ [C] ++ fourCountBForm n ++ suffix)
-            (pre ++ [C] ++ [B] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapBC pre (fourCountBForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountBForm, B, C, List.append_assoc] using! hall
+  simpa [fourCountBForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.c FourCountTerminal.b n pre suffix
 
 theorem fourCount_moveD_left_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountBForm n ++ [fcN FourCountNT.markD] ++ suffix)
       (pre ++ [fcN FourCountNT.markD] ++ fourCountBForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountBForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let B := fcN FourCountNT.markB
-      let D := fcN FourCountNT.markD
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [B] ++ fourCountBForm n ++ [D] ++ suffix)
-            (pre ++ [B] ++ [D] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, D, List.append_assoc] using ih (pre ++ [B])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [B] ++ [D] ++ fourCountBForm n ++ suffix)
-            (pre ++ [D] ++ [B] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapBD pre (fourCountBForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountBForm, B, D, List.append_assoc] using! hall
+  simpa [fourCountBForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.b n pre suffix
 
 theorem fourCount_moveD_left_over_cs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ fourCountCForm n ++ [fcN FourCountNT.markD] ++ suffix)
       (pre ++ [fcN FourCountNT.markD] ++ fourCountCForm n ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountCForm, List.append_assoc] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let C := fcN FourCountNT.markC
-      let D := fcN FourCountNT.markD
-      have htail :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [C] ++ fourCountCForm n ++ [D] ++ suffix)
-            (pre ++ [C] ++ [D] ++ fourCountCForm n ++ suffix) := by
-        simpa [C, D, List.append_assoc] using ih (pre ++ [C])
-      have hswap :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [C] ++ [D] ++ fourCountCForm n ++ suffix)
-            (pre ++ [D] ++ [C] ++ fourCountCForm n ++ suffix) := by
-        simpa [C, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapCD pre (fourCountCForm n ++ suffix)
-      have hall := GeneralGrammar.derives_trans htail
-        (GeneralGrammar.yields_derives hswap)
-      simpa [fourCountCForm, C, D, List.append_assoc] using! hall
+  simpa [fourCountCForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesLeftOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.c n pre suffix
 
 theorem fourCount_moveD_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markD] ++ fourCountAForm n ++ suffix)
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markD] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let D := fcN FourCountNT.markD
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [D, A] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A, D] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapDA pre (fourCountAForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A, D] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A] ++ fourCountAForm n ++ [D] ++ suffix) := by
-        simpa [A, D, List.append_assoc] using ih (pre ++ [A])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, D, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveC_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markC] ++ fourCountAForm n ++ suffix)
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markC] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let C := fcN FourCountNT.markC
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [C, A] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A, C] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, C, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapCA pre (fourCountAForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A, C] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A] ++ fourCountAForm n ++ [C] ++ suffix) := by
-        simpa [A, C, List.append_assoc] using ih (pre ++ [A])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, C, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.c FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveB_right_over_as
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markB] ++ fourCountAForm n ++ suffix)
       (pre ++ fourCountAForm n ++ [fcN FourCountNT.markB] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountAForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markB] ++ suffix))
-  | succ n ih =>
-      let A := fcN FourCountNT.markA
-      let B := fcN FourCountNT.markB
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [B, A] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A, B] ++ fourCountAForm n ++ suffix) := by
-        simpa [A, B, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapBA pre (fourCountAForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [A, B] ++ fourCountAForm n ++ suffix)
-            (pre ++ [A] ++ fourCountAForm n ++ [B] ++ suffix) := by
-        simpa [A, B, List.append_assoc] using ih (pre ++ [A])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountAForm, A, B, List.append_assoc] using! hall
+  simpa [fourCountAForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.b FourCountTerminal.a n pre suffix
 
 theorem fourCount_moveD_right_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markD] ++ fourCountBForm n ++ suffix)
       (pre ++ fourCountBForm n ++ [fcN FourCountNT.markD] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountBForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let B := fcN FourCountNT.markB
-      let D := fcN FourCountNT.markD
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [D, B] ++ fourCountBForm n ++ suffix)
-            (pre ++ [B, D] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapDB pre (fourCountBForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [B, D] ++ fourCountBForm n ++ suffix)
-            (pre ++ [B] ++ fourCountBForm n ++ [D] ++ suffix) := by
-        simpa [B, D, List.append_assoc] using ih (pre ++ [B])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountBForm, B, D, List.append_assoc] using! hall
+  simpa [fourCountBForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.b n pre suffix
 
 theorem fourCount_moveC_right_over_bs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markC] ++ fourCountBForm n ++ suffix)
       (pre ++ fourCountBForm n ++ [fcN FourCountNT.markC] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountBForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markC] ++ suffix))
-  | succ n ih =>
-      let B := fcN FourCountNT.markB
-      let C := fcN FourCountNT.markC
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [C, B] ++ fourCountBForm n ++ suffix)
-            (pre ++ [B, C] ++ fourCountBForm n ++ suffix) := by
-        simpa [B, C, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapCB pre (fourCountBForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [B, C] ++ fourCountBForm n ++ suffix)
-            (pre ++ [B] ++ fourCountBForm n ++ [C] ++ suffix) := by
-        simpa [B, C, List.append_assoc] using ih (pre ++ [B])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountBForm, B, C, List.append_assoc] using! hall
+  simpa [fourCountBForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.c FourCountTerminal.b n pre suffix
 
 theorem fourCount_moveD_right_over_cs
     (n : Nat) (pre suffix : SententialForm FourCountTerminal FourCountNT) :
     GeneralGrammar.Derives FourCountGrammar
       (pre ++ [fcN FourCountNT.markD] ++ fourCountCForm n ++ suffix)
       (pre ++ fourCountCForm n ++ [fcN FourCountNT.markD] ++ suffix) := by
-  induction n generalizing pre with
-  | zero =>
-      simpa [fourCountCForm] using
-        (GeneralGrammar.Derives.refl (G := FourCountGrammar)
-          (pre ++ [fcN FourCountNT.markD] ++ suffix))
-  | succ n ih =>
-      let C := fcN FourCountNT.markC
-      let D := fcN FourCountNT.markD
-      have hstep :
-          GeneralGrammar.Yields FourCountGrammar
-            (pre ++ [D, C] ++ fourCountCForm n ++ suffix)
-            (pre ++ [C, D] ++ fourCountCForm n ++ suffix) := by
-        simpa [C, D, List.append_assoc] using
-          general_yields_of_production (G := FourCountGrammar)
-            FourCountProduces.swapDC pre (fourCountCForm n ++ suffix)
-      have hrest :
-          GeneralGrammar.Derives FourCountGrammar
-            (pre ++ [C, D] ++ fourCountCForm n ++ suffix)
-            (pre ++ [C] ++ fourCountCForm n ++ [D] ++ suffix) := by
-        simpa [C, D, List.append_assoc] using ih (pre ++ [C])
-      have hall := GeneralGrammar.Derives.step hstep hrest
-      simpa [fourCountCForm, C, D, List.append_assoc] using! hall
+  simpa [fourCountCForm, fourCountMarkerSymbol,
+    fourCountMarkerOfTerminal] using
+    markerMovesRightOverRepeat (G := FourCountGrammar)
+      fourCountMarkerSymbol fourCountMarkerSymbol_swap
+      FourCountTerminal.d FourCountTerminal.c n pre suffix
 
 theorem fourCount_sort_repeated_markers_derives (n : Nat) :
     GeneralGrammar.Derives FourCountGrammar
@@ -1140,83 +967,10 @@ theorem fourCount_marker_word_to_terminal_word_derives
     GeneralGrammar.Derives FourCountGrammar
       (fourCountMarkerWord word)
       (SententialForm.terminalWord word) := by
-  induction word with
-  | nil =>
-      exact GeneralGrammar.Derives.refl []
-  | cons token rest ih =>
-      cases token with
-      | a =>
-          have hstep :
-              GeneralGrammar.Yields FourCountGrammar
-                ([fcN FourCountNT.markA] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.a] ++ fourCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := FourCountGrammar)
-                FourCountProduces.emitA [] (fourCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives FourCountGrammar
-                ([fcT FourCountTerminal.a] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.a] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [fcT FourCountTerminal.a] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using! hall
-      | b =>
-          have hstep :
-              GeneralGrammar.Yields FourCountGrammar
-                ([fcN FourCountNT.markB] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.b] ++ fourCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := FourCountGrammar)
-                FourCountProduces.emitB [] (fourCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives FourCountGrammar
-                ([fcT FourCountTerminal.b] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.b] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [fcT FourCountTerminal.b] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using! hall
-      | c =>
-          have hstep :
-              GeneralGrammar.Yields FourCountGrammar
-                ([fcN FourCountNT.markC] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.c] ++ fourCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := FourCountGrammar)
-                FourCountProduces.emitC [] (fourCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives FourCountGrammar
-                ([fcT FourCountTerminal.c] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.c] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [fcT FourCountTerminal.c] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using! hall
-      | d =>
-          have hstep :
-              GeneralGrammar.Yields FourCountGrammar
-                ([fcN FourCountNT.markD] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.d] ++ fourCountMarkerWord rest) := by
-            simpa [List.append_assoc] using
-              general_yields_of_production (G := FourCountGrammar)
-                FourCountProduces.emitD [] (fourCountMarkerWord rest)
-          have hcontext :
-              GeneralGrammar.Derives FourCountGrammar
-                ([fcT FourCountTerminal.d] ++ fourCountMarkerWord rest)
-                ([fcT FourCountTerminal.d] ++
-                  SententialForm.terminalWord rest) := by
-            simpa [List.append_assoc] using
-              general_derives_context ih [fcT FourCountTerminal.d] []
-          have hall := GeneralGrammar.Derives.step hstep hcontext
-          simpa [fourCountMarkerWord, fourCountMarkerOfTerminal,
-            SententialForm.terminalWord, fcT] using! hall
+  change GeneralGrammar.Derives FourCountGrammar
+    (word.map fourCountMarkerSymbol) (word.map fcT)
+  exact GeneralGrammar.derives_map_of_pointwise_produces
+    fourCountMarkerSymbol fcT fourCountMarkerSymbol_emit word
 
 theorem fourCount_words_generated_of_equal_counts
     {word : Word FourCountTerminal}
