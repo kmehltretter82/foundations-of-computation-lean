@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.EqualCounts
+import FoC.Book.Chapter04.Section06.Basics
 
 set_option doc.verso true
 
@@ -18,7 +18,7 @@ open Languages
 open Grammars
 
 /-!
-# Equal Counts over Four Symbols
+## Equal Counts over Four Symbols
 
 This is the four-symbol analogue of the previous construction. The same marker
 and swapping strategy proves that equal counts of {lit}`a`, {lit}`b`, {lit}`c`, and {lit}`d` are
@@ -261,7 +261,8 @@ theorem fourCountGrammar_finite_production_generated :
   exists FourCountNT
   exists FourCountGrammar
   constructor
-  · exact fourCountGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      fourCountGrammar_has_finite_productions
   · intro w
     rfl
 
@@ -1296,7 +1297,8 @@ theorem fourCountLanguage_finite_production_generated :
   exists FourCountNT
   exists FourCountGrammar
   constructor
-  · exact fourCountGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      fourCountGrammar_has_finite_productions
   · intro word
     exact fourCount_generated_language_exact word
 

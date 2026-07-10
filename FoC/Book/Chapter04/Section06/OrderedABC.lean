@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.FourCounts
+import FoC.Book.Chapter04.Section06.EqualCounts
 
 set_option doc.verso true
 
@@ -19,7 +19,7 @@ open Languages
 open Grammars
 
 /-!
-# Ordered {lit}`a^n b^n c^n`
+## Ordered {lit}`a^n b^n c^n`
 
 The ordered construction first creates equal markers, then uses swapping and
 phase nonterminals to force all {lit}`a`s before all {lit}`b`s before all {lit}`c`s. The
@@ -189,7 +189,8 @@ theorem orderedABCGrammar_finite_production_generated :
   exists OrderedABCNT
   exists OrderedABCGrammar
   constructor
-  · exact orderedABCGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      orderedABCGrammar_has_finite_productions
   · intro w
     rfl
 
@@ -1016,7 +1017,8 @@ theorem orderedABCLanguage_finite_production_generated :
   exists OrderedABCNT
   exists OrderedABCGrammar
   constructor
-  · exact orderedABCGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      orderedABCGrammar_has_finite_productions
   · intro word
     exact orderedABC_generated_language_exact word
 

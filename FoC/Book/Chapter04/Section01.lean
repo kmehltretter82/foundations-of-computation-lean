@@ -575,7 +575,8 @@ theorem balanced_parens_context_free :
   exists BalancedParensNT
   exists BalancedParensGrammar
   constructor
-  · exact balanced_parens_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      balanced_parens_has_finite_productions
   · exact balanced_parens_generated_language_exact
 
 /-!
@@ -772,7 +773,8 @@ theorem balanced_parens_count_context_free :
   exists BalancedParensNT
   exists BalancedParensGrammar
   constructor
-  · exact balanced_parens_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      balanced_parens_has_finite_productions
   · exact balanced_parens_generated_iff_count
 
 /-!
@@ -1150,7 +1152,8 @@ theorem balanced_brackets_context_free :
   exists BalancedBracketsNT
   exists BalancedBracketsGrammar
   constructor
-  · exact balanced_brackets_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      balanced_brackets_has_finite_productions
   · exact balanced_brackets_generated_language_exact
 
 /-!
@@ -1524,7 +1527,8 @@ theorem anbn_context_free : ContextFreeLanguage AnBnLanguage := by
   exists AnBnNT
   exists AnBnGrammar
   constructor
-  · exact anbn_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      anbn_has_finite_productions
   · exact anbn_generated_language_exact
 
 /-!
@@ -1908,7 +1912,8 @@ theorem palindrome_context_free :
   exists PalindromeNT
   exists PalindromeGrammar
   constructor
-  · exact palindrome_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      palindrome_has_finite_productions
   · exact palindrome_generated_language_exact
 
 /-!
@@ -1994,7 +1999,8 @@ theorem palindrome_reverse_language_context_free :
   exists PalindromeNT
   exists PalindromeGrammar
   constructor
-  · exact palindrome_has_finite_productions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      palindrome_has_finite_productions
   · exact palindrome_generated_iff_reverse
 
 end Section01

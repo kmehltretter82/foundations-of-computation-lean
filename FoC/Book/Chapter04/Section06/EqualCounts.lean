@@ -19,7 +19,7 @@ open Languages
 open Grammars
 
 /-!
-# Equal Counts over Three Symbols
+## Equal Counts over Three Symbols
 
 The first unrestricted grammar generates all words with the same number of
 {lit}`a`, {lit}`b`, and {lit}`c` symbols, regardless of order. It grows one marker of each
@@ -195,7 +195,8 @@ theorem equalCountGrammar_finite_production_generated :
   exists EqualCountNT
   exists EqualCountGrammar
   constructor
-  · exact equalCountGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      equalCountGrammar_has_finite_productions
   · intro w
     rfl
 
@@ -892,7 +893,8 @@ theorem equalCountLanguage_finite_production_generated :
   exists EqualCountNT
   exists EqualCountGrammar
   constructor
-  · exact equalCountGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      equalCountGrammar_has_finite_productions
   · intro word
     exact equalCount_generated_language_exact word
 

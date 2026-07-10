@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04
+import FoC.Book.Chapter04.Section04.Conversions
 import FoC.Grammars.CFL
 
 set_option doc.verso true
@@ -19,14 +19,14 @@ and context-free language wrappers from {module}`FoC.Grammars.CFL`.
 The section has two complementary methods. Closure under intersection with a
 regular language lets us filter a context-free language by a finite-state
 property. The context-free Pumping Lemma gives a direct obstruction to being
-context-free, used here for the language `{ a^n b^n c^n | n >= 0 }`.
+context-free, used here for the language {lit}`{ a^n b^n c^n | n >= 0 }`.
 -/
 
 open Languages
 open Grammars
 
 /-!
-# Intersecting PDAs with DFAs
+## Intersecting PDAs with DFAs
 
 The product construction runs a PDA and DFA in parallel. It is the main
 closure tool for intersecting a PDA language with a regular language, and for
@@ -45,7 +45,7 @@ def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
     | none => P.transition q.1 none pop r.1 push ∧ r.2 = q.2
     | some a => P.transition q.1 (some a) pop r.1 push ∧ r.2 = D.step q.2 a
   accept := fun q => P.accept q.1 ∧ D.accept q.2
-  statesFinite := FiniteType.product P.statesFinite D.statesFinite
+  statesFinite := Foundation.FiniteType.product P.statesFinite D.statesFinite
 
 structure DFAAcceptingPresentation (D : DFA input dstate) where
   acceptingStates : List dstate
@@ -263,7 +263,7 @@ def pdaIntersectDFA_finitePresentation_auto
     (dfaAcceptingPresentation D)
 
 /-!
-# Product Exactness
+## Product Exactness
 
 The lifting and projection lemmas relate computations of the product PDA to
 computations of the original PDA and runs of the DFA. Their language-level
@@ -405,7 +405,7 @@ theorem pda_intersect_dfa_accepted_language_exact
             pda_intersect_dfa_lift_to_empty P D hq.right rfl D.start
 
 /-!
-# Context-Free Closure
+## Context-Free Closure
 
 Once the product PDA has a finite presentation, the PDA-to-CFG theorem turns
 intersection and difference with DFA languages into context-free languages.
@@ -527,7 +527,7 @@ theorem finite_presentation_pda_language_diff_dfa_context_free
         exact hw.right ((hD w).mp hDfa)
 
 /-!
-# Recognizability Wrappers
+## Recognizability Wrappers
 
 The final group states the automaton-side closure theorems:
 finite-presentation PDA-recognizable languages are closed under intersection
@@ -634,7 +634,8 @@ theorem finite_production_context_free_finite_presentation_pda_recognizable
   exists CFG.ToPDAState
   exists CFG.ToPDA G
   exists CFG.toPDA_finitePresentation_of_hasFiniteProductions
-    G inputFinite hG.left
+    G inputFinite
+      (CFG.hasFiniteProductions_of_hasFinitePresentation hG.left)
   exact FoC.Foundation.FSet.equal_trans (CFG.toPDA_acceptedLanguage_exact G) hG.right
 
 theorem finite_production_context_free_pda_recognizable {input : Type}
@@ -833,11 +834,11 @@ theorem context_free_diff_finite_language_context_free
     (finite_language_dfa_recognizable hM)
 
 /-!
-# The {lit}`a^n b^n c^n` Witness Setup
+## The {lit}`a^n b^n c^n` Witness Setup
 
-The language `{ a^n b^n c^n | n >= 0 }` is the standard example that is not
-context-free. The auxiliary languages `{ a^n b^n c^* }` and
-`{ a^* b^n c^n }` are context-free, and their intersection is exactly
+The language {lit}`{ a^n b^n c^n | n >= 0 }` is the standard example that is not
+context-free. The auxiliary languages {lit}`{ a^n b^n c^* }` and
+{lit}`{ a^* b^n c^n }` are context-free, and their intersection is exactly
 {lit}`{ a^n b^n c^n }`. This gives the closure-based nonclosure argument after the
 pumping proof establishes the target language is not context-free.
 -/

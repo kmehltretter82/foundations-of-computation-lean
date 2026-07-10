@@ -23,43 +23,8 @@ namespace Grammars
 open Foundation
 open Languages
 
-namespace FiniteType
-
 /-!
-# Finite product states
-
-PDA constructions often add control information by taking products of finite
-state types. This helper supplies the required finite witness.
--/
-
-def PairElems : List alpha -> List beta -> List (alpha × beta)
-  | [], _ => []
-  | x :: xs, ys => (ys.map fun y => (x, y)) ++ PairElems xs ys
-
-theorem pair_mem {xs : List alpha} {ys : List beta}
-    {x : alpha} {y : beta} (hx : x ∈ xs) (hy : y ∈ ys) :
-    (x, y) ∈ PairElems xs ys := by
-  induction xs with
-  | nil =>
-      cases hx
-  | cons z zs ih =>
-      cases hx with
-      | head =>
-          simp [PairElems, hy]
-      | tail _ htail =>
-          exact List.mem_append.mpr (Or.inr (ih htail))
-
-def product (left : FiniteType alpha) (right : FiniteType beta) :
-    FiniteType (alpha × beta) where
-  elems := PairElems left.elems right.elems
-  complete := by
-    intro p
-    exact pair_mem (left.complete p.1) (right.complete p.2)
-
-end FiniteType
-
-/-!
-# PDA structure
+## PDA structure
 
 A PDA is given by a start state, a transition relation over optional input and
 stack words, an accepting-state predicate, and a finite-state witness.
@@ -70,6 +35,12 @@ record. The finite-presentation layer below supplies rule lists and accepting
 state data for book-style finite PDA descriptions.
 -/
 
+/--
+A semantic pushdown automaton with finite control.
+
+The later {lit}`HasFinitePresentation` predicate supplies explicit finite
+transition and stack data when required.
+-/
 structure PDA (input : Type u) (stack : Type v) (state : Type w) where
   start : state
   transition : state -> Option input -> Word stack -> state -> Word stack -> Prop
@@ -79,7 +50,7 @@ structure PDA (input : Type u) (stack : Type v) (state : Type w) where
 namespace PDA
 
 /-!
-# Finite presentations
+## Finite presentations
 
 The finite-presentation layer turns an arbitrary transition relation into the
 book's finite list of transition rules and accepting states.
@@ -88,6 +59,7 @@ Use this layer, rather than the bare {name}`PDA` record, when a theorem needs
 explicit finite transition data.
 -/
 
+/-- A concrete transition in a finite PDA presentation. -/
 structure TransitionRule (input : Type u) (stack : Type v) (state : Type w) where
   source : state
   input? : Option input
@@ -102,6 +74,7 @@ def TransitionRule.Applies
   rule.source = q ∧ rule.input? = a? ∧ rule.pop = pop ∧
     rule.target = r ∧ rule.push = push
 
+/-- Finite transition, accepting-state, and stack-alphabet data presenting a PDA. -/
 structure FinitePresentation
     (M : PDA input stack state) where
   stackFinite : FiniteType stack
@@ -133,13 +106,14 @@ def PopsAtMostOne (M : PDA input stack state) : Prop :=
       pop = [] ∨ exists A : stack, pop = [A]
 
 /-!
-# Configurations and steps
+## Configurations and steps
 
 Configurations record the current state, unread input, and stack. A step either
 reads one symbol or takes an epsilon transition while replacing the matched
 stack prefix.
 -/
 
+/-- The control state, unread input, and stack of a PDA computation. -/
 structure Configuration (input : Type u) (stack : Type v) (state : Type w) where
   state : state
   unread : Word input
@@ -151,6 +125,7 @@ def initial (M : PDA input stack state) (w : Word input) :
   unread := w
   stack := []
 
+/-- One input-consuming or epsilon transition between PDA configurations. -/
 inductive Step (M : PDA input stack state) :
     Configuration input stack state -> Configuration input stack state -> Prop where
   | read {q r : state} {a : input} {unread : Word input}
@@ -166,6 +141,7 @@ inductive Step (M : PDA input stack state) :
         { state := q, unread := unread, stack := Word.Concat pop restStack }
         { state := r, unread := unread, stack := Word.Concat push restStack }
 
+/-- The reflexive-transitive closure of PDA steps. -/
 inductive Computes (M : PDA input stack state) :
     Configuration input stack state -> Configuration input stack state -> Prop where
   | refl (c : Configuration input stack state) : Computes M c c
@@ -181,7 +157,7 @@ inductive ComputesIn (M : PDA input stack state) :
       Step M c d -> ComputesIn M n d e -> ComputesIn M (n + 1) c e
 
 /-!
-# Acceptance modes
+## Acceptance modes
 
 The default accepted language uses final state and empty stack. The companion
 predicates keep the final-state-only and empty-stack-only variants available.
@@ -190,6 +166,7 @@ proved in this module; the standard constructions showing the acceptance modes
 equivalent are not formalized here.
 -/
 
+/-- Acceptance after consuming the input, reaching a final state, and emptying the stack. -/
 def Accepts (M : PDA input stack state) (w : Word input) : Prop :=
   exists q : state,
     M.accept q ∧
@@ -208,7 +185,7 @@ def AcceptedLanguage (M : PDA input stack state) : Language input :=
   fun w => Accepts M w
 
 /-!
-# Recognizability and determinism
+## Recognizability and determinism
 
 {lit}`FinitePresentationRecognizable` is the class of languages accepted by a
 PDA that carries an explicit finite presentation: a finite stack alphabet, a
@@ -240,16 +217,17 @@ def FinitePresentationRecognizable (L : Language input) : Prop :=
 def Recognizable (L : Language input) : Prop :=
   FinitePresentationRecognizable L
 
-theorem recognizable_iff_finitePresentationRecognizable
-    {L : Language input} :
-    Recognizable L <-> FinitePresentationRecognizable L :=
-  Iff.rfl
-
 def Deterministic (M : PDA input stack state) : Prop :=
   forall c d e, Step M c d -> Step M c e -> d = e
 
+/-- Languages recognized by deterministic PDAs with explicit finite presentations. -/
+def DeterministicRecognizable (L : Language input) : Prop :=
+  exists stack : Type, exists state : Type, exists M : PDA input stack state,
+    HasFinitePresentation M ∧ Deterministic M ∧
+      Language.Equal (AcceptedLanguage M) L
+
 /-!
-# Computation algebra
+## Computation algebra
 
 The reflexive-transitive computation relation and its length-indexed variant
 are interconvertible and compose in the expected way.
@@ -429,7 +407,7 @@ theorem computes_consumes_prefix {M : PDA input stack state}
   exact computesIn_consumes_prefix hn
 
 /-!
-# Acceptance-mode implications
+## Acceptance-mode implications
 
 Acceptance in the default mode, final state with empty stack, trivially
 implies each single-condition variant. These one-way implications are the

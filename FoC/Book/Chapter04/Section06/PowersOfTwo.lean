@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.UnarySquares
+import FoC.Book.Chapter04.Section06.UnarySquares.Basic
 
 set_option doc.verso true
 
@@ -19,7 +19,7 @@ open Languages
 open Grammars
 
 /-!
-# Powers of Two
+## Powers of Two
 
 This grammar uses a doubling phase: each pass duplicates the current markers
 and returns to the left before either doubling again or finishing.
@@ -186,7 +186,8 @@ theorem powerTwoGrammar_finite_production_generated :
   exists PowerTwoNT
   exists PowerTwoGrammar
   constructor
-  · exact powerTwoGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      powerTwoGrammar_has_finite_productions
   · intro word
     rfl
 
@@ -500,9 +501,11 @@ The theorem {name}`powerTwo_words_generated` proves the intended family: after
 -/
 
 theorem powerTwoGrammar_generates_four_as :
-    fourAsWord ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
-  simpa [fourAsWord, powerTwoWord, Word.RepeatSymbol] using
-    powerTwo_words_generated 2
+    ([SquareTerminal.a, SquareTerminal.a, SquareTerminal.a, SquareTerminal.a] :
+      Word SquareTerminal) ∈
+      GeneralGrammar.GeneratedLanguage PowerTwoGrammar := by
+  change powerTwoWord 2 ∈ GeneralGrammar.GeneratedLanguage PowerTwoGrammar
+  exact powerTwo_words_generated 2
 
 
 end Section06

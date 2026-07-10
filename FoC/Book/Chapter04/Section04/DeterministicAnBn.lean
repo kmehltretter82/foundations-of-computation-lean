@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04.HalfRange
+import FoC.Book.Chapter04.Section04.Common
 
 set_option doc.verso true
 
@@ -293,7 +293,7 @@ def AnBnBlockLanguage : Language Section01.AB :=
   fun w => exists n, w = Section01.AnBnWord n
 
 theorem detAnBnPDA_deterministic :
-    DeterministicPDA DetAnBnPDA := by
+    PDA.Deterministic DetAnBnPDA := by
   intro c d e hd he
   rcases PDA.step_cases hd with hreadD | hepsD
   · rcases hreadD with
@@ -321,13 +321,6 @@ The deterministic language class also demands an explicit finite
 presentation. The machine has a one-symbol stack alphabet and exactly the
 three transition rules listed below, so the presentation is immediate.
 -/
-
-def anBnPDAStackFinite : Foundation.FiniteType AnBnPDAStack where
-  elems := [AnBnPDAStack.marker]
-  complete := by
-    intro s
-    cases s
-    simp
 
 def detAnBnReadARule :
     PDA.TransitionRule Section01.AB AnBnPDAStack DetAnBnPDAState where
@@ -359,7 +352,7 @@ def detAnBnPDATransitionRules :
 
 def detAnBnPDA_finitePresentation :
     PDA.FinitePresentation DetAnBnPDA where
-  stackFinite := anBnPDAStackFinite
+  stackFinite := AnBnPDAStack.finite
   transitionRules := detAnBnPDATransitionRules
   transition_complete := by
     intro q a? pop r push
@@ -397,7 +390,7 @@ def detAnBnPDA_finitePresentation :
     cases q <;> simp [DetAnBnPDA]
 
 theorem anbn_block_language_deterministic_pda_recognizable :
-    DeterministicPDARecognizable AnBnBlockLanguage := by
+    PDA.DeterministicRecognizable AnBnBlockLanguage := by
   exists AnBnPDAStack
   exists DetAnBnPDAState
   exists DetAnBnPDA

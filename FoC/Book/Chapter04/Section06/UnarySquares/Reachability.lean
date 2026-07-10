@@ -551,7 +551,8 @@ theorem squareGrammar_finite_production_squareLanguage :
   exists SquareNT
   exists SquareGrammar
   constructor
-  · exact squareGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      squareGrammar_has_finite_productions
   · exact square_generated_language_exact
 
 end Section06

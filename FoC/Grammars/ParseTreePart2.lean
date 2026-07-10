@@ -7,6 +7,14 @@ namespace Grammars
 namespace CFG
 open Languages
 
+/-!
+# Parse-Tree Pumping and Derivation Correspondence
+
+This continuation proves the nonempty loop needed by pumping, reconstructs
+parse forests from terminal derivations, and establishes the correspondence
+between parse trees and leftmost derivation traces.
+-/
+
 theorem ParseTree.loop_derivation_from_repeated_selected_subtrees_nonempty
     {G : CFG terminal nonterminal}
     {s : Symbol terminal nonterminal} (tree : ParseTree G s)
@@ -1008,7 +1016,7 @@ theorem parseTree_leftDerivationTrace_correspondence
                     simpa [ParseForest.frontier, Word.Concat] using hfront
 
 /-!
-# Left derivations and ambiguity
+## Left derivations and ambiguity
 
 The rest of the module proves the book's Theorem 4.5: parse trees rooted at a
 symbol and leftmost derivation traces of a terminal word correspond one to
@@ -1399,7 +1407,7 @@ theorem ParseForest.leftStates_expand {G : CFG terminal nonterminal}
   simp only [ParseTree.leftStates, List.map_cons,
     List.dropLast_cons_of_ne_nil hmap_ne, List.cons_append]
 
-/-
+/--
 Theorem 4.5, forest form. Every leftmost derivation trace of a terminal word
 is the canonical derivation of exactly one parse forest: the state sequence of
 a trace determines the forest, and every trace's state sequence is realized.
@@ -1528,7 +1536,7 @@ theorem ParseTree.eq_of_leftStates_eq {G : CFG terminal nonterminal}
       (SententialForm.terminalWord_allTerminals _) _ _ h1 h2
   injection hforest
 
-/-
+/--
 Theorem 4.5, tree form. Fixing the derived word, a parse tree with that
 frontier determines a leftmost derivation trace of the word, the assignment is
 injective, and every trace arises from exactly one such tree.

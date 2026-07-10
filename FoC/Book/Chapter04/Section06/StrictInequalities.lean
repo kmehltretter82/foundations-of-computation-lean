@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.OrderedABCD
+import FoC.Book.Chapter04.Section06.EqualCounts
 
 set_option doc.verso true
 
@@ -21,7 +21,7 @@ open Languages
 open Grammars
 
 /-!
-# Strict Block Inequalities (warm-up)
+## Strict Block Inequalities (warm-up)
 
 The strict-more-{lit}`b` grammar generates ordered block words with more {lit}`b`s than
 {lit}`a`s. The proof uses a tail phase that adds at least one extra {lit}`b` after all
@@ -130,7 +130,8 @@ theorem strictMoreBGrammar_finite_production_generated :
   exists StrictMoreBNT
   exists StrictMoreBGrammar
   constructor
-  · exact strictMoreBGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      strictMoreBGrammar_has_finite_productions
   · intro word
     rfl
 
@@ -469,7 +470,8 @@ theorem strictMoreBLanguage_finite_production_generated :
   exists StrictMoreBNT
   exists StrictMoreBGrammar
   constructor
-  · exact strictMoreBGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      strictMoreBGrammar_has_finite_productions
   · intro word
     exact strictMoreB_generated_language_exact word
 
@@ -518,7 +520,7 @@ theorem strictMoreBGrammar_generates_aabbb :
     SententialForm.terminalWord, S, a, b] using! hderives
 
 /-!
-# Strict Three-Way Counts
+## Strict Three-Way Counts
 
 Book: Section 4.6, Exercise 4f. This grammar targets the language of words
 over {lit}`{a, b, c}` whose counts satisfy {lit}`n_a > n_b > n_c`. The
@@ -803,7 +805,8 @@ theorem strictABCGreaterGrammar_finite_production_generated :
   exists StrictABCGreaterNT
   exists StrictABCGreaterGrammar
   constructor
-  · exact strictABCGreaterGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      strictABCGreaterGrammar_has_finite_productions
   · intro word
     rfl
 

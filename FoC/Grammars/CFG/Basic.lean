@@ -29,44 +29,14 @@ namespace Grammars
 open Foundation
 open Languages
 
-namespace FiniteType
-
 /-!
-# Finite helper types
-
-Closure constructions introduce unit and sum nonterminal types. These helpers
-carry the finite-witness bookkeeping required by the grammar structures.
--/
-
-def unit : FiniteType Unit where
-  elems := [()]
-  complete := by
-    intro x
-    cases x
-    exact List.Mem.head []
-
-def sum (left : FiniteType alpha) (right : FiniteType beta) :
-    FiniteType (Sum alpha beta) where
-  elems := (left.elems.map Sum.inl) ++ (right.elems.map Sum.inr)
-  complete := by
-    intro x
-    cases x with
-    | inl a =>
-        apply List.mem_append_left
-        exact List.mem_map.mpr (Exists.intro a (And.intro (left.complete a) rfl))
-    | inr b =>
-        apply List.mem_append_right
-        exact List.mem_map.mpr (Exists.intro b (And.intro (right.complete b) rfl))
-
-end FiniteType
-
-/-!
-# Symbols
+## Symbols
 
 A sentential form contains terminals and nonterminals in one tagged type. The
 encoding lemmas support the countability arguments for grammars.
 -/
 
+/-- A terminal or nonterminal occurring in a sentential form. -/
 inductive Symbol (terminal : Type u) (nonterminal : Type v) where
   | terminal : terminal -> Symbol terminal nonterminal
   | nonterminal : nonterminal -> Symbol terminal nonterminal
@@ -112,12 +82,13 @@ theorem encodable
 end Symbol
 
 /-!
-# Sentential forms
+## Sentential forms
 
 Sentential forms are lists of symbols. This section defines terminal words,
 nonterminal maps, terminal-only checks, and conversion back to words.
 -/
 
+/-- A word containing both terminal and nonterminal grammar symbols. -/
 abbrev SententialForm (terminal : Type u) (nonterminal : Type v) :=
   List (Symbol terminal nonterminal)
 
@@ -283,7 +254,7 @@ theorem toWord?_some_eq_terminalWord {x : SententialForm term nt}
 end SententialForm
 
 /-!
-# Grammar structures and finite presentations
+## Grammar structures and finite presentations
 
 A CFG consists of a start nonterminal, a production predicate, and finite
 nonterminal data. The finite-presentation records and encodings package the
@@ -295,6 +266,13 @@ finite witness. Use {lit}`CFG.HasFiniteProductions` and the presentation
 records below when a theorem needs the book-style finite production data.
 -/
 
+/--
+A semantic context-free grammar.
+
+The production component is an arbitrary relation. The later
+{lit}`HasFinitePresentation` predicate supplies the textbook's finite
+presentation condition.
+-/
 structure CFG (terminal : Type u) (nonterminal : Type v) where
   start : nonterminal
   produces : nonterminal -> SententialForm terminal nonterminal -> Prop
@@ -302,6 +280,7 @@ structure CFG (terminal : Type u) (nonterminal : Type v) where
 
 namespace CFG
 
+/-- A concrete context-free production with one nonterminal on the left. -/
 structure Production (terminal : Type u) (nonterminal : Type v) where
   lhs : nonterminal
   rhs : SententialForm terminal nonterminal
@@ -345,6 +324,7 @@ theorem encodable
 
 end Production
 
+/-- Raw finite CFG data, suitable for coding independently of a semantic grammar. -/
 structure FinitePresentationCode (terminal : Type u) (nonterminal : Type v) where
   start : nonterminal
   rules : List (Production terminal nonterminal)
@@ -397,6 +377,21 @@ theorem countable
 
 end FinitePresentationCode
 
+/-- A clearer name for raw, unverified finite CFG data. -/
+abbrev Description := FinitePresentationCode
+
+namespace Description
+
+theorem countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet (Description terminal nonterminal)) :=
+  FinitePresentationCode.countable hterminal hnonterminal
+
+end Description
+
 namespace ProductionList
 
 def MaxRhsLength : List (Production terminal nonterminal) -> Nat
@@ -426,8 +421,60 @@ def HasFiniteProductions (G : CFG terminal nonterminal) : Prop :=
       G.produces A rhs <->
         exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs
 
+/-- A finite rule list that presents exactly the production relation of {lean}`G`. -/
+structure Presentation (G : CFG terminal nonterminal) where
+  rules : List (Production terminal nonterminal)
+  complete : forall A rhs,
+    G.produces A rhs <->
+      exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs
+
+/-- The textbook finiteness condition for a semantic CFG. -/
+def HasFinitePresentation (G : CFG terminal nonterminal) : Prop :=
+  Nonempty (Presentation G)
+
+theorem hasFinitePresentation_iff_hasFiniteProductions
+    {G : CFG terminal nonterminal} :
+    HasFinitePresentation G <-> HasFiniteProductions G := by
+  constructor
+  · rintro ⟨presentation⟩
+    exact ⟨presentation.rules, presentation.complete⟩
+  · rintro ⟨rules, complete⟩
+    exact ⟨{ rules := rules, complete := complete }⟩
+
+theorem hasFinitePresentation_of_hasFiniteProductions
+    {G : CFG terminal nonterminal} (h : HasFiniteProductions G) :
+    HasFinitePresentation G :=
+  hasFinitePresentation_iff_hasFiniteProductions.mpr h
+
+theorem hasFiniteProductions_of_hasFinitePresentation
+    {G : CFG terminal nonterminal} (h : HasFinitePresentation G) :
+    HasFiniteProductions G :=
+  hasFinitePresentation_iff_hasFiniteProductions.mp h
+
+namespace ProductionList
+
+/-- The semantic CFG presented directly by a concrete rule list. -/
+def toCFG (start : nonterminal) (finite : FiniteType nonterminal)
+    (rules : List (Production terminal nonterminal)) :
+    CFG terminal nonterminal where
+  start := start
+  produces := fun A rhs =>
+    exists rule, rule ∈ rules ∧ rule.lhs = A ∧ rule.rhs = rhs
+  nonterminalsFinite := finite
+
+/-- The rule list used by {name}`toCFG` is an exact presentation of the result. -/
+def presentation (start : nonterminal) (finite : FiniteType nonterminal)
+    (rules : List (Production terminal nonterminal)) :
+    Presentation (toCFG start finite rules) where
+  rules := rules
+  complete := by
+    intro A rhs
+    rfl
+
+end ProductionList
+
 /-!
-# Production bounds
+## Production bounds
 
 Finite production lists have a maximum right-hand-side length. That bound is
 used later in pumping and finite-presentation arguments.

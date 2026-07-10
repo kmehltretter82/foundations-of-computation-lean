@@ -1,11 +1,20 @@
 import FoC.Book.Chapter04.Section05.BasicPart1
 
+set_option doc.verso true
+
 namespace FoC
 namespace Book
 namespace Chapter04
 namespace Section05
 open Languages
 open Grammars
+
+/-!
+# Non-Context-Free Languages: Grammar and Pumping Proofs
+
+This continuation supplies the concrete grammar soundness arguments and the
+pumping obstructions used by Chapter 4, Section 4.5.
+-/
 
 theorem anbnCstar_production_sound
     (A : AnBnCstarNT) (rhs : SententialForm ABC AnBnCstarNT)
@@ -15,7 +24,7 @@ theorem anbnCstar_production_sound
   intro w hw
   cases hprod with
   | startRule =>
-      simp [CFG.FormLanguage, anbnCstarSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨pairWord, tail, hpair, htail, _hwEq⟩
       rcases hpair with ⟨n, hn⟩
       rcases htail with ⟨cWord, empty, hcWord, _hempty, _htailEq⟩
@@ -29,7 +38,7 @@ theorem anbnCstar_production_sound
       subst w
       simp [anbnCstarWord, Word.Concat, Word.Empty]
   | pairWrap =>
-      simp [CFG.FormLanguage, anbnCstarSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, _hfirst, htail, _hwEq⟩
       rcases htail with ⟨middle, last, hmiddle, hlast, _htailEq⟩
       rcases hmiddle with ⟨n, hn⟩
@@ -48,7 +57,7 @@ theorem anbnCstar_production_sound
       have hwEmpty : w = Word.Empty := hw
       exists 0
   | cMore =>
-      simp [CFG.FormLanguage, anbnCstarSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
       rcases htail with ⟨middle, empty, hmiddle, hempty, htailEq⟩
       rcases hmiddle with ⟨k, hk⟩
@@ -65,7 +74,7 @@ theorem anbnCstar_generated_only_language {w : Word ABC}
     w ∈ anbnCstarLanguage := by
   have hs := cfg_derives_sound_for_symbol_language anbnCstarSymbolLanguage
     (by intro t; rfl) anbnCstar_production_sound h
-  simp [CFG.FormLanguage, anbnCstarSymbolLanguage] at hs
+  simp [CFG.FormLanguage] at hs
   rcases hs with ⟨first, empty, hfirst, hempty, hEq⟩
   rw [hEq]
   have hemptyEq : empty = Word.Empty := hempty
@@ -130,7 +139,8 @@ theorem anbnCstar_finite_production_context_free :
   exists AnBnCstarNT
   exists AnBnCstarGrammar
   constructor
-  · exact anbnCstar_hasFiniteProductions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      anbnCstar_hasFiniteProductions
   · exact anbnCstar_generated_language_exact
 
 /-!
@@ -341,7 +351,7 @@ theorem astarBnCn_production_sound
   intro w hw
   cases hprod with
   | startRule =>
-      simp [CFG.FormLanguage, astarBnCnSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨aWord, tail, haWord, htail, _hwEq⟩
       rcases haWord with ⟨k, hk⟩
       rcases htail with ⟨pairWord, empty, hpairWord, _hempty, _htailEq⟩
@@ -355,7 +365,7 @@ theorem astarBnCn_production_sound
       subst w
       simp [astarBnCnWord, Word.Concat, Word.Empty]
   | aMore =>
-      simp [CFG.FormLanguage, astarBnCnSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
       rcases htail with ⟨middle, empty, hmiddle, hempty, htailEq⟩
       rcases hmiddle with ⟨k, hk⟩
@@ -367,7 +377,7 @@ theorem astarBnCn_production_sound
       have hwEmpty : w = Word.Empty := hw
       exists 0
   | pairWrap =>
-      simp [CFG.FormLanguage, astarBnCnSymbolLanguage] at hw
+      simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, _hfirst, htail, _hwEq⟩
       rcases htail with ⟨middle, last, hmiddle, hlast, _htailEq⟩
       rcases hmiddle with ⟨n, hn⟩
@@ -391,7 +401,7 @@ theorem astarBnCn_generated_only_language {w : Word ABC}
     w ∈ astarBnCnLanguage := by
   have hs := cfg_derives_sound_for_symbol_language astarBnCnSymbolLanguage
     (by intro t; rfl) astarBnCn_production_sound h
-  simp [CFG.FormLanguage, astarBnCnSymbolLanguage] at hs
+  simp [CFG.FormLanguage] at hs
   rcases hs with ⟨first, empty, hfirst, hempty, hEq⟩
   rw [hEq]
   have hemptyEq : empty = Word.Empty := hempty
@@ -456,7 +466,8 @@ theorem astarBnCn_finite_production_context_free :
   exists AstarBnCnNT
   exists AstarBnCnGrammar
   constructor
-  · exact astarBnCn_hasFiniteProductions
+  · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+      astarBnCn_hasFiniteProductions
   · exact astarBnCn_generated_language_exact
 
 /-!
@@ -587,7 +598,7 @@ theorem anbnCstar_inter_astarBnCn_exact :
       exists n
 
 /-!
-# Finite-Production CFLs and Pumping Vocabulary
+## Finite-Production CFLs and Pumping Vocabulary
 
 The book-facing context-free predicate requires a finite production list. The
 CFL Pumping Lemma uses a five-part decomposition {lit}`u x y z v`, where pumping
@@ -662,7 +673,8 @@ theorem finite_production_grammar_pumping_property
     {terminal nonterminal : Type} {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     CFLHasPumpingProperty (CFG.GeneratedLanguage G) :=
-  CFL.finiteProduction_generated_hasPumpingProperty hG
+  CFL.finiteProduction_generated_hasPumpingProperty
+    (CFG.hasFinitePresentation_of_hasFiniteProductions hG)
 
 theorem finite_production_pumping_property {terminal : Type}
     {L : Language terminal}
@@ -779,7 +791,7 @@ theorem cfl_pumped_two_count_symbol [DecidableEq terminal]
   lia
 
 /-!
-# Pumping {lit}`a^n b^n c^n`
+## Pumping {lit}`a^n b^n c^n`
 
 For a proposed CFL pumping length {lit}`K`, choose {lit}`a^K b^K c^K`. The bounded
 middle region {lit}`x y z` cannot cover all three block boundaries at once, so
@@ -1105,20 +1117,21 @@ theorem anbncn_not_context_free :
   not_context_free_of_no_pumping_property anbncn_no_pumping_property
 
 /-!
-# The Duplicate-Word Language
+## The Duplicate-Word Language
 
-The book's second pumping example is `{ w w | w in {a,b}* }`. This module
+The book's second pumping example is {lit}`{ w w | w in {a,b}* }`. This module
 proves the counting core of the argument: every duplicate word has an even
-number of any fixed symbol, so a pumped word with five `b`s cannot be a
-duplicate. That closes every decomposition whose pumped block `x z` contains a
-`b` (see `duplicate_pump_two_not_mem_of_middle_count_b_le_one`).
+number of any fixed symbol, so a pumped word with five {lit}`b`s cannot be a
+duplicate. That closes every decomposition whose pumped block {lit}`x z`
+contains a {lit}`b`; see the later
+{lit}`duplicate_pump_two_not_mem_of_middle_count_b_le_one` theorem.
 
-The complementary case, where `x z` consists entirely of `a`s, cannot be closed
-by any symbol count: duplicating an all-`a` block leaves every symbol count
-even. Settling it needs the book's position argument over the four `a`-blocks
-of `a^K b a^K b a^K b a^K b`, which is not formalized here. The reusable count
-lemmas below are the honest partial result; the full non-context-freeness
-theorem for `{ w w }` is left as future work.
+The complementary case, where {lit}`x z` consists entirely of {lit}`a`s, cannot
+be closed by any symbol count: duplicating an all-{lit}`a` block leaves every
+symbol count even. Settling it needs the book's position argument over the four
+{lit}`a`-blocks of {lit}`a^K b a^K b a^K b a^K b`, which is not formalized
+here. The reusable count lemmas below are the honest partial result; the full
+non-context-freeness theorem for {lit}`{ w w }` is left as future work.
 -/
 
 def duplicateWordLanguage : Language Section01.AB :=
@@ -1229,7 +1242,7 @@ theorem duplicate_pump_two_not_mem_of_middle_count_b_le_one
     (Nat.le_trans (duplicate_xz_count_b_le_middle_count_b x y z) hmiddle)
 
 /-!
-# Nonclosure Consequences
+## Nonclosure Consequences
 
 Because `{ a^n b^n c^* }` and `{ a^* b^n c^n }` are context-free but their
 intersection is {lit}`{ a^n b^n c^n }`, finite-production context-free languages

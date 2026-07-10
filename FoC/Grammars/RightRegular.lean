@@ -739,7 +739,8 @@ theorem regular_contextFreeLanguage (alphabet : List terminal)
           exists state
           exists NFARightRegularGrammar M
           constructor
-          · exact nfaRightRegularGrammar_hasFiniteProductions alphabet halphabet M
+          · exact CFG.hasFinitePresentation_of_hasFiniteProductions
+              (nfaRightRegularGrammar_hasFiniteProductions alphabet halphabet M)
           · exact FoC.Foundation.FSet.equal_trans
               (nfaRightRegularGrammar_language_exact M) hM
 

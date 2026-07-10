@@ -52,36 +52,20 @@ proof obligations behind the textbook equivalence between context-free
 grammars and pushdown automata. {module}`FoC.Grammars.GeneralGrammar` supplies
 the unrestricted grammar vocabulary used at the computability boundary.
 
-## Status Notes
+## Coverage at a Glance
 
-The formal core is covered. The CFG sections include derivation/context laws,
-closure under union, concatenation, star, and reversal, exact generated-language
-theorems for representative grammars, and the right/left-regular boundary,
-including the finite-production witness that makes every regular language
-context-free over a covering alphabet. The balanced-parenthesis and palindrome
-grammars are bridged to the book's independent characterizations (prefix
-counts and word reversal), and the {lit}`a^n b^n` corollary separating
-context-free from regular languages is assembled in
-{module}`FoC.Book.Chapter04.Section01.RegularBoundary`.
-The BNF page records the notation semantics and many concrete expansion
-examples; small helper rules now cover both sides of alternatives and
-single-use repetition directly.
+| Source section | Canonical Lean surface | Status |
+|---|---|---|
+| 4.1 CFGs | {module}`FoC.Grammars.CFG`, {module}`FoC.Grammars.CFL` | Core laws, closures, regular boundary, and representative exact grammars complete |
+| 4.2 BNF | {module}`FoC.Grammars.BNF` | Expansion semantics and representative applications complete; exhaustive application listings deferred |
+| 4.3 Parsing | {module}`FoC.Grammars.ParseTree`, {module}`FoC.Book.Chapter04.Section03` | Parse-tree/derivation correspondence complete; LL(1) successful-run soundness complete; generic FIRST/FOLLOW and parser completeness not claimed |
+| 4.4 PDAs | {module}`FoC.Grammars.PDA`, {module}`FoC.Grammars.CFGToPDA`, {module}`FoC.Grammars.PDAToCFG` | Exact CFG/PDA equivalence for finite presentations complete |
+| 4.5 Non-CFLs | {module}`FoC.Grammars.CFL`, {module}`FoC.Book.Chapter04.Section05` | Pumping and the {lit}`a^n b^n c^n` result complete; the duplicate-word position argument remains partial |
+| 4.6 General grammars | {module}`FoC.Grammars.GeneralGrammar`, {module}`FoC.Book.Chapter04.Section06` | Core semantics, exact CFG embedding, and principal examples complete; selected exercise converses remain deferred |
 
-The parse-tree section connects generated-language membership, parse trees,
-and leftmost derivation traces in both directions. The PDA sections include
-computation APIs, CFG-to-PDA conversion, exact normalized PDA-to-CFG conversion,
-exact PDA examples, intersection/difference with DFA and regular languages,
-CFL pumping, and nonclosure proofs. General grammars include finite-presentation
-countability, CFG embedding, substantial counting/order examples, constructive
-square-word generation, and family-level generation of the power-of-two unary
-language. The LL(1) page also includes an executable runner, a certified finite
-table generator, conflict detection, and fixed-point {lit}`FIRST`/{lit}`FOLLOW`
-machinery that fills much of the parser-generator side.
-
-Remaining deferrals are large purely application-oriented BNF enumerations,
-optional exercise families whose mathematical pattern is already represented by
-the general closure, pumping, or exact-language theorem schemas, and the final
-soundness direction for the power-of-two unrestricted grammar. The unary-square
-grammar now has the constructive exact-language closeout that older status
-notes treated as deferred.
+The executable LL(1) development proves that every successful run returns a
+valid parse tree. Its conflict and fixed-point checks do not yet prove semantic
+completeness of the supplied production list or computed {lit}`FIRST` and
+{lit}`FOLLOW` sets. Section 4.3 includes the source's concrete {lit}`G1`
+ambiguity for {lit}`x+y*z` and a successful {lit}`G2` LL(1) run.
 -/

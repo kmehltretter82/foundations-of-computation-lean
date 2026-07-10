@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04.Range12
+import FoC.Book.Chapter04.Section04.Common
 
 set_option doc.verso true
 
@@ -13,7 +13,8 @@ open Grammars
 /-!
 # The Half-Range Variant
 
-This machine recognizes the complementary block-range pattern `m <= n <= 2m`.
+This machine recognizes the complementary block-range pattern
+{lit}`m <= n <= 2m`.
 It nondeterministically groups some {lit}`a`s in pairs before switching to the
 {lit}`b`-popping phase.
 -/

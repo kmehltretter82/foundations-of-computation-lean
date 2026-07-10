@@ -51,7 +51,7 @@ def SemanticLanguageGrammar (L : Language terminal) :
     intro lhs rhs h
     rw [h.left]
     exact SententialForm.containsNonterminal_singleton ()
-  nonterminalsFinite := Grammars.FiniteType.unit
+  nonterminalsFinite := Foundation.FiniteType.unit
 
 theorem semanticLanguageGrammar_nonterminal_not_mem_terminalWord
     (w : Word terminal) :

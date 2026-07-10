@@ -10,6 +10,13 @@ open Languages
 
 namespace PDA
 
+/-!
+# Pop Normalization: Reverse Simulation
+
+Normalized helper-state computations are compressed back into computations of
+the original PDA, completing exact language preservation for pop normalization.
+-/
+
 private theorem popNormalize_original_transition_cases
     {M : PDA input stack state} {presentation : FinitePresentation M}
     {q : state} {a? : Option input} {pop : Word stack}

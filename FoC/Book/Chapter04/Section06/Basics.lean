@@ -29,7 +29,7 @@ open Languages
 open Grammars
 
 /-!
-# General Derivations
+## General Derivations
 
 General-grammar yields generate derivations, derivations compose, and CFG
 productions embed as unrestricted grammar productions.
@@ -56,16 +56,17 @@ def GeneralGrammarFromCFG (G : CFG terminal nonterminal) :
 
 def FiniteProductionGeneralGrammar
     (G : GeneralGrammar terminal nonterminal) : Prop :=
-  GeneralGrammar.HasFiniteProductions G
+  GeneralGrammar.HasFinitePresentation G
 
 def FiniteProductionGeneralLanguage (L : Language terminal) : Prop :=
-  GeneralGrammar.FiniteProductionGenerated L
+  GeneralGrammar.FinitePresentationGenerated L
 
 theorem finite_production_cfg_is_finite_production_general
     {G : CFG terminal nonterminal}
     (hG : CFG.HasFiniteProductions G) :
     FiniteProductionGeneralGrammar (GeneralGrammarFromCFG G) :=
-  GeneralGrammar.fromCFG_hasFiniteProductions hG
+  GeneralGrammar.hasFinitePresentation_iff_hasFiniteProductions.mpr
+    (GeneralGrammar.fromCFG_hasFiniteProductions hG)
 
 theorem cfg_derivation_is_general_derivation {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
@@ -85,8 +86,15 @@ theorem cfg_generated_language_subset_general_generated
   intro w hw
   exact cfg_generated_word_is_general_generated G hw
 
+theorem cfg_generated_language_eq_general_generated
+    (G : CFG terminal nonterminal) :
+    Language.Equal
+      (CFG.GeneratedLanguage G)
+      (GeneralGrammar.GeneratedLanguage (GeneralGrammar.FromCFG G)) :=
+  Foundation.FSet.equal_symm (GeneralGrammar.cfg_generated_language_eq G)
+
 /-!
-# Finite Presentations and Countability
+## Finite Presentations and Countability
 
 The chapter's countability discussion is represented by finite presentation
 codes. If terminal and nonterminal symbols are encodable by natural numbers,
@@ -100,20 +108,14 @@ grammar, is not formalized here; only the countability of the presentation
 codes themselves is proved.
 -/
 
-def CFGFinitePresentationCode (terminal nonterminal : Type) :=
-  CFG.FinitePresentationCode terminal nonterminal
-
-def GeneralGrammarFinitePresentationCode (terminal nonterminal : Type) :=
-  GeneralGrammar.FinitePresentationCode terminal nonterminal
-
 theorem cfg_finite_presentation_codes_countable
     (hterminal : Foundation.Countability.EncodableByNat terminal)
     (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
     Foundation.FSet.Countable
       (Foundation.FSet.Univ :
         Foundation.FSet
-          (CFGFinitePresentationCode terminal nonterminal)) :=
-  CFG.FinitePresentationCode.countable hterminal hnonterminal
+          (CFG.Description terminal nonterminal)) :=
+  CFG.Description.countable hterminal hnonterminal
 
 theorem general_grammar_finite_presentation_codes_countable
     (hterminal : Foundation.Countability.EncodableByNat terminal)
@@ -121,11 +123,11 @@ theorem general_grammar_finite_presentation_codes_countable
     Foundation.FSet.Countable
       (Foundation.FSet.Univ :
         Foundation.FSet
-          (GeneralGrammarFinitePresentationCode terminal nonterminal)) :=
-  GeneralGrammar.FinitePresentationCode.countable hterminal hnonterminal
+          (GeneralGrammar.Description terminal nonterminal)) :=
+  GeneralGrammar.Description.countable hterminal hnonterminal
 
 /-!
-# Rewriting in Context
+## Rewriting in Context
 
 A production application embeds into any surrounding sentential context. The
 next lemmas package the one-step yield obtained from a production and the
@@ -136,44 +138,25 @@ example derivations later in the section use them constantly.
 theorem general_yields_of_production {G : GeneralGrammar terminal nonterminal}
     {lhs rhs : SententialForm terminal nonterminal}
     (hprod : G.produces lhs rhs) (u v : SententialForm terminal nonterminal) :
-    GeneralGrammar.Yields G (u ++ lhs ++ v) (u ++ rhs ++ v) := by
-  exists u
-  exists v
-  exists lhs
-  exists rhs
+    GeneralGrammar.Yields G (u ++ lhs ++ v) (u ++ rhs ++ v) :=
+  GeneralGrammar.yields_of_produces hprod u v
 
 theorem general_yields_context {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : GeneralGrammar.Yields G x y)
     (u v : SententialForm terminal nonterminal) :
-    GeneralGrammar.Yields G (u ++ x ++ v) (u ++ y ++ v) := by
-  rcases h with ⟨u₀, v₀, lhs, rhs, hprod, hx, hy⟩
-  exists u ++ u₀
-  exists v₀ ++ v
-  exists lhs
-  exists rhs
-  constructor
-  · exact hprod
-  constructor
-  · rw [hx]
-    simp [List.append_assoc]
-  · rw [hy]
-    simp [List.append_assoc]
+    GeneralGrammar.Yields G (u ++ x ++ v) (u ++ y ++ v) :=
+  GeneralGrammar.yields_context u v h
 
 theorem general_derives_context {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : GeneralGrammar.Derives G x y)
     (u v : SententialForm terminal nonterminal) :
-    GeneralGrammar.Derives G (u ++ x ++ v) (u ++ y ++ v) := by
-  induction h with
-  | refl z =>
-      exact GeneralGrammar.Derives.refl (G := G) (u ++ z ++ v)
-  | step hstep _ ih =>
-      exact GeneralGrammar.Derives.step
-        (general_yields_context hstep u v) ih
+    GeneralGrammar.Derives G (u ++ x ++ v) (u ++ y ++ v) :=
+  GeneralGrammar.derives_context u v h
 
 /-!
-# Soundness Helpers and Examples
+## Soundness Helpers and Examples
 
 The remaining helper lemmas interpret sentential forms as languages and count
 symbols in sentential forms. They support the concrete unrestricted-grammar

@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04.Conversions
+import FoC.Book.Chapter04.Section04.Common
 
 set_option doc.verso true
 
@@ -26,10 +26,6 @@ This standard PDA pushes one marker for each {lit}`a`, then pops one marker for
 each {lit}`b`. Acceptance requires the input and stack to be empty, so the counts
 must match.
 -/
-
-inductive AnBnPDAStack where
-  | marker
-deriving DecidableEq
 
 inductive AnBnPDAState where
   | push
@@ -68,14 +64,6 @@ def AnBnPDA : PDA Section01.AB AnBnPDAStack AnBnPDAState where
   transition := AnBnPDATransition
   accept := fun q => q = AnBnPDAState.accept
   statesFinite := AnBnPDAState.finite
-
-def AnBnPDAStackWord (n : Nat) : Word AnBnPDAStack :=
-  Word.RepeatSymbol AnBnPDAStack.marker n
-
-theorem anbnPDAStackWord_succ (n : Nat) :
-    AnBnPDAStack.marker :: AnBnPDAStackWord n =
-      AnBnPDAStackWord (n + 1) :=
-  rfl
 
 /-!
 The acceptance direction is constructive. The lemmas below show how to run the

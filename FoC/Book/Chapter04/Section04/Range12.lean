@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04.AnBn
+import FoC.Book.Chapter04.Section04.Common
 
 set_option doc.verso true
 
@@ -15,7 +15,7 @@ open Grammars
 
 The next PDA recognizes block words {lit}`a^n b^m` where each {lit}`a` contributes one
 or two stack markers. Popping one marker per {lit}`b` allows exactly the range
-between {lit}`n` and `2n`.
+between {lit}`n` and {lit}`2n`.
 -/
 
 inductive Range12PDAState where
@@ -54,10 +54,6 @@ def Range12PDA : PDA Section01.AB AnBnPDAStack Range12PDAState where
   transition := Range12PDATransition
   accept := fun q => q = Range12PDAState.pop
   statesFinite := Range12PDAState.finite
-
-def AnBmWord (n m : Nat) : Word Section01.AB :=
-  Word.Concat (Word.RepeatSymbol Section01.AB.a n)
-    (Word.RepeatSymbol Section01.AB.b m)
 
 def Range12Language : Language Section01.AB :=
   fun w => exists n m, n <= m ∧ m <= 2 * n ∧ w = AnBmWord n m

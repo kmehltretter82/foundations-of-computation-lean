@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section04.DeterministicAnBn
+import FoC.Book.Chapter04.Section04.Common
 
 set_option doc.verso true
 
@@ -13,7 +13,7 @@ open Grammars
 /-!
 # Copy Across a Center Marker
 
-The final example recognizes words of the form `w c reverse(w)`. The stack
+The final example recognizes words of the form {lit}`w c reverse(w)`. The stack
 stores the first half, the center marker switches modes, and the second half
 must pop matching symbols in reverse order.
 -/
@@ -295,7 +295,7 @@ theorem copyPDA_accepted_language_exact (input : Word CopyInput) :
         exact copyPDA_accepts_centered_reverse w
 
 theorem copyPDA_deterministic :
-    DeterministicPDA CopyPDA := by
+    PDA.Deterministic CopyPDA := by
   intro c d e hd he
   rcases PDA.step_cases hd with hreadD | hepsD
   · rcases hreadD with
@@ -419,7 +419,7 @@ def copyPDA_finitePresentation :
     cases q <;> simp [CopyPDA]
 
 theorem copy_centered_language_deterministic_pda_recognizable :
-    DeterministicPDARecognizable CopyCenteredLanguage := by
+    PDA.DeterministicRecognizable CopyCenteredLanguage := by
   exists Section01.AB
   exists CopyPDAState
   exists CopyPDA

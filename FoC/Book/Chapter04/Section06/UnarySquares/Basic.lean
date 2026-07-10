@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.StrictInequalities
+import FoC.Book.Chapter04.Section06.Basics
 
 set_option doc.verso true
 
@@ -172,7 +172,8 @@ theorem squareGrammar_finite_production_generated :
   exists SquareNT
   exists SquareGrammar
   constructor
-  · exact squareGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      squareGrammar_has_finite_productions
   · intro w
     rfl
 

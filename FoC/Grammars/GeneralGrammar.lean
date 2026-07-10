@@ -31,7 +31,7 @@ namespace Grammars
 open Languages
 
 /-!
-# Left-hand side condition
+## Left-hand side condition
 
 An unrestricted grammar rule may replace a whole sentential form, not just one
 nonterminal.  The only side condition is that the left-hand side must contain at
@@ -51,6 +51,11 @@ theorem containsNonterminal_singleton (A : nonterminal) :
 
 end SententialForm
 
+/--
+A semantic unrestricted grammar whose production left sides contain a
+nonterminal. The later {lit}`HasFinitePresentation` predicate supplies
+explicit finite rule data when required.
+-/
 structure GeneralGrammar (terminal : Type u) (nonterminal : Type v) where
   start : nonterminal
   produces : SententialForm terminal nonterminal ->
@@ -62,7 +67,7 @@ structure GeneralGrammar (terminal : Type u) (nonterminal : Type v) where
 namespace GeneralGrammar
 
 /-!
-# Finite presentations
+## Finite presentations
 
 The textbook later compares grammars with machines, so this file records a
 countable coding of finite grammar presentations.  A production is coded by
@@ -73,6 +78,7 @@ These definitions are the finite-data layer for results that need a concrete
 grammar presentation rather than an arbitrary production predicate.
 -/
 
+/-- A concrete unrestricted-grammar production. -/
 structure Production (terminal : Type u) (nonterminal : Type v) where
   lhs : SententialForm terminal nonterminal
   rhs : SententialForm terminal nonterminal
@@ -119,6 +125,7 @@ theorem encodable
 
 end Production
 
+/-- Raw finite general-grammar data, independent of a semantic grammar. -/
 structure FinitePresentationCode (terminal : Type u) (nonterminal : Type v) where
   start : nonterminal
   rules : List (Production terminal nonterminal)
@@ -171,6 +178,21 @@ theorem countable
 
 end FinitePresentationCode
 
+/-- A clearer name for raw, unverified finite general-grammar data. -/
+abbrev Description := FinitePresentationCode
+
+namespace Description
+
+theorem countable
+    (hterminal : Foundation.Countability.EncodableByNat terminal)
+    (hnonterminal : Foundation.Countability.EncodableByNat nonterminal) :
+    Foundation.FSet.Countable
+      (Foundation.FSet.Univ :
+        Foundation.FSet (Description terminal nonterminal)) :=
+  FinitePresentationCode.countable hterminal hnonterminal
+
+end Description
+
 def HasFiniteProductions (G : GeneralGrammar terminal nonterminal) : Prop :=
   exists rules : List (Production terminal nonterminal),
     forall lhs rhs,
@@ -181,6 +203,72 @@ def ProductionListProduces
     (rules : List (Production terminal nonterminal))
     (lhs rhs : SententialForm terminal nonterminal) : Prop :=
   exists rule, rule ∈ rules ∧ rule.lhs = lhs ∧ rule.rhs = rhs
+
+/-- A finite rule list that presents exactly the production relation of {lean}`G`. -/
+structure Presentation (G : GeneralGrammar terminal nonterminal) where
+  rules : List (Production terminal nonterminal)
+  complete : forall lhs rhs,
+    G.produces lhs rhs <-> ProductionListProduces rules lhs rhs
+
+/-- The finite-presentation condition for a semantic general grammar. -/
+def HasFinitePresentation (G : GeneralGrammar terminal nonterminal) : Prop :=
+  Nonempty (Presentation G)
+
+theorem hasFinitePresentation_iff_hasFiniteProductions
+    {G : GeneralGrammar terminal nonterminal} :
+    HasFinitePresentation G <-> HasFiniteProductions G := by
+  constructor
+  · rintro ⟨presentation⟩
+    exact ⟨presentation.rules, by
+      intro lhs rhs
+      simpa [ProductionListProduces] using presentation.complete lhs rhs⟩
+  · rintro ⟨rules, complete⟩
+    exact ⟨{
+      rules := rules
+      complete := by
+        intro lhs rhs
+        simpa [ProductionListProduces] using complete lhs rhs
+    }⟩
+
+theorem hasFinitePresentation_of_hasFiniteProductions
+    {G : GeneralGrammar terminal nonterminal} (h : HasFiniteProductions G) :
+    HasFinitePresentation G :=
+  hasFinitePresentation_iff_hasFiniteProductions.mpr h
+
+theorem hasFiniteProductions_of_hasFinitePresentation
+    {G : GeneralGrammar terminal nonterminal} (h : HasFinitePresentation G) :
+    HasFiniteProductions G :=
+  hasFinitePresentation_iff_hasFiniteProductions.mp h
+
+namespace ProductionList
+
+/-- Build a semantic general grammar directly from a valid finite rule list. -/
+def toGeneralGrammar (start : nonterminal) (finite : Foundation.FiniteType nonterminal)
+    (rules : List (Production terminal nonterminal))
+    (valid : forall rule, rule ∈ rules ->
+      SententialForm.containsNonterminal rule.lhs) :
+    GeneralGrammar terminal nonterminal where
+  start := start
+  produces := ProductionListProduces rules
+  lhsContainsNonterminal := by
+    intro lhs rhs hprod
+    rcases hprod with ⟨rule, hrule, hlhs, _⟩
+    rw [← hlhs]
+    exact valid rule hrule
+  nonterminalsFinite := finite
+
+/-- The source rule list exactly presents the grammar built by {name}`toGeneralGrammar`. -/
+def presentation (start : nonterminal) (finite : Foundation.FiniteType nonterminal)
+    (rules : List (Production terminal nonterminal))
+    (valid : forall rule, rule ∈ rules ->
+      SententialForm.containsNonterminal rule.lhs) :
+    Presentation (toGeneralGrammar start finite rules valid) where
+  rules := rules
+  complete := by
+    intro lhs rhs
+    rfl
+
+end ProductionList
 
 theorem hasFiniteProductions_productionListProduces
     {G : GeneralGrammar terminal nonterminal}
@@ -196,7 +284,7 @@ theorem hasFiniteProductions_productionListProduces
       simpa [ProductionListProduces] using hrules lhs rhs⟩
 
 /-!
-# Derivations and generated languages
+## Derivations and generated languages
 
 One step of a general derivation rewrites an occurrence of a left-hand side
 inside a larger sentential form.  The reflexive-transitive closure of those
@@ -204,6 +292,7 @@ steps defines derivability, and the generated language consists of terminal
 words derivable from the start nonterminal.
 -/
 
+/-- One unrestricted production application inside a sentential context. -/
 def Yields (G : GeneralGrammar terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u, exists v, exists lhs, exists rhs,
@@ -215,6 +304,7 @@ def ProductionListYields
   exists u, exists v, exists rule,
     rule ∈ rules ∧ x = u ++ rule.lhs ++ v ∧ y = u ++ rule.rhs ++ v
 
+/-- The reflexive-transitive closure of unrestricted production steps. -/
 inductive Derives (G : GeneralGrammar terminal nonterminal) :
     SententialForm terminal nonterminal -> SententialForm terminal nonterminal -> Prop where
   | refl (x : SententialForm terminal nonterminal) : Derives G x x
@@ -239,6 +329,7 @@ inductive ProductionListDerivesIn
       ProductionListDerivesIn rules n y z ->
       ProductionListDerivesIn rules (n + 1) x z
 
+/-- The terminal words derivable from the start symbol. -/
 def GeneratedLanguage (G : GeneralGrammar terminal nonterminal) : Language terminal :=
   fun w => Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w)
 
@@ -250,8 +341,24 @@ def FiniteProductionGenerated (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : GeneralGrammar terminal nonterminal,
     HasFiniteProductions G ∧ Language.Equal (GeneratedLanguage G) L
 
+/-- A language generated by a general grammar with a proof-relevant finite presentation. -/
+def FinitePresentationGenerated (L : Language terminal) : Prop :=
+  exists nonterminal : Type, exists G : GeneralGrammar terminal nonterminal,
+    HasFinitePresentation G ∧ Language.Equal (GeneratedLanguage G) L
+
+theorem finitePresentationGenerated_iff_finiteProductionGenerated
+    {L : Language terminal} :
+    FinitePresentationGenerated L <-> FiniteProductionGenerated L := by
+  constructor
+  · rintro ⟨nonterminal, G, hfinite, hG⟩
+    exact ⟨nonterminal, G,
+      hasFiniteProductions_of_hasFinitePresentation hfinite, hG⟩
+  · rintro ⟨nonterminal, G, hfinite, hG⟩
+    exact ⟨nonterminal, G,
+      hasFinitePresentation_of_hasFiniteProductions hfinite, hG⟩
+
 /-!
-# Derivation algebra
+## Derivation algebra
 
 The basic proof API mirrors the context-free grammar layer: every single yield
 is a derivation, and derivations compose transitively.
@@ -306,6 +413,14 @@ theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :
     Derives G x y :=
   Derives.step h (Derives.refl y)
+
+/-- Apply a production in explicitly supplied left and right contexts. -/
+theorem yields_of_produces {G : GeneralGrammar terminal nonterminal}
+    {lhs rhs : SententialForm terminal nonterminal}
+    (hprod : G.produces lhs rhs)
+    (pre suf : SententialForm terminal nonterminal) :
+    Yields G (pre ++ lhs ++ suf) (pre ++ rhs ++ suf) :=
+  ⟨pre, suf, lhs, rhs, hprod, rfl, rfl⟩
 
 theorem yields_context {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
@@ -371,7 +486,7 @@ theorem derives_trans {G : GeneralGrammar terminal nonterminal}
   | step hstep _ ih => exact Derives.step hstep (ih hyz)
 
 /-!
-# Embedding context-free grammars
+## Embedding context-free grammars
 
 Every context-free grammar is a general grammar whose left-hand sides are
 single nonterminals.  The embedding preserves finite production lists,
@@ -455,6 +570,14 @@ theorem cfg_yields_embeds {G : CFG terminal nonterminal}
                           · exact hx
                           · exact hy
 
+theorem cfg_yields_of_fromCFG {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Yields (FromCFG G) x y) : CFG.Yields G x y := by
+  rcases h with ⟨u, v, lhs, rhs, hprod, hx, hy⟩
+  rcases hprod with ⟨A, hlhs, hprod⟩
+  rw [hlhs] at hx
+  exact ⟨u, v, A, rhs, hprod, hx, hy⟩
+
 theorem cfg_derives_embeds {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal}
     (h : CFG.Derives G x y) : Derives (FromCFG G) x y := by
@@ -462,10 +585,28 @@ theorem cfg_derives_embeds {G : CFG terminal nonterminal}
   | refl _ => exact Derives.refl _
   | step hstep _ ih => exact Derives.step (cfg_yields_embeds hstep) ih
 
+theorem cfg_derives_of_fromCFG {G : CFG terminal nonterminal}
+    {x y : SententialForm terminal nonterminal}
+    (h : Derives (FromCFG G) x y) : CFG.Derives G x y := by
+  induction h with
+  | refl _ => exact CFG.Derives.refl _
+  | step hstep _ ih =>
+      exact CFG.Derives.step (cfg_yields_of_fromCFG hstep) ih
+
 theorem cfg_generated_language_embeds (G : CFG terminal nonterminal)
     {w : Word terminal} (h : w ∈ CFG.GeneratedLanguage G) :
     w ∈ GeneratedLanguage (FromCFG G) :=
   cfg_derives_embeds h
+
+/-- Embedding a CFG as a general grammar preserves its generated language exactly. -/
+theorem cfg_generated_language_eq (G : CFG terminal nonterminal) :
+    Language.Equal
+      (GeneratedLanguage (FromCFG G))
+      (CFG.GeneratedLanguage G) := by
+  intro w
+  constructor
+  · exact cfg_derives_of_fromCFG
+  · exact cfg_derives_embeds
 
 end GeneralGrammar
 

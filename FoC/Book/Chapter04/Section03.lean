@@ -32,19 +32,22 @@ of table entries and to connect parsing vocabulary to grammar generation.
 
 The formalization records the objects and soundness obligations needed to state
 the book's parsing concepts precisely, together with a fuel-bounded executable
-LL(1) runner whose successful runs return parse trees, a certified finite table
-generator, executable conflict detection, and a fixed-point {lit}`FIRST`/
-{lit}`FOLLOW` generator that automatically supplies lookahead cells.
+LL(1) runner whose successful runs return parse trees, a finite table generator,
+executable conflict detection, and a fixed-point {lit}`FIRST`/{lit}`FOLLOW`
+approximant that supplies candidate lookahead cells.
+
+The LL(1) results in this module are deliberately one-sided: successful runs
+are sound. They do not yet prove semantic completeness of the computed
+{lit}`FIRST`/{lit}`FOLLOW` sets or completeness of the generated parser. The
+LR(1) declarations at the end of the parser section are vocabulary only, not
+an operational shift/reduce semantics.
 -/
 
+/-- An LL(1)-style table whose populated cells contain grammar productions. -/
 structure LL1Parser (G : CFG terminal nonterminal) where
   table : nonterminal -> Option terminal -> Option (SententialForm terminal nonterminal)
   tableSound :
     forall A lookahead rhs, table A lookahead = some rhs -> G.produces A rhs
-
-def LL1Parses (G : CFG terminal nonterminal) (_parser : LL1Parser G)
-    (w : Word terminal) : Prop :=
-  w ∈ CFG.GeneratedLanguage G
 
 theorem ll1_table_entry_is_production {G : CFG terminal nonterminal}
     (parser : LL1Parser G) {A : nonterminal} {lookahead : Option terminal}
@@ -53,22 +56,16 @@ theorem ll1_table_entry_is_production {G : CFG terminal nonterminal}
     G.produces A rhs :=
   parser.tableSound A lookahead rhs h
 
-theorem ll1_parse_sound {G : CFG terminal nonterminal}
-    (parser : LL1Parser G) {w : Word terminal}
-    (h : LL1Parses G parser w) :
-    w ∈ CFG.GeneratedLanguage G :=
-  h
-
-/-
+/-!
 **Executable LL(1) runner.**  The table vocabulary above is intentionally
 semantic: it records the productions licensed by a table entry.  The following
 fuel-bounded runner is operational.  It consumes a word from left to right and,
 on success, returns a parse tree whose frontier is exactly the consumed input.
 
-This is the operational parser layer.  The finite table generator below turns
+This is the operational parser layer. The finite table generator below turns
 lookahead cells into executable parser code, and the fixed-point
-{lit}`FIRST`/{lit}`FOLLOW` generator later in the file supplies those cells
-automatically.
+{lit}`FIRST`/{lit}`FOLLOW` approximant later in the file supplies candidate
+cells. Only successful-run soundness is claimed.
 -/
 
 def LL1Lookahead : Word terminal -> Option terminal
@@ -758,12 +755,15 @@ end LL1ParserCode
 /-!
 ## Executable FIRST/FOLLOW Generation
 
-The generator below fills the missing parser-generator side of the LL(1)
-pipeline. It computes finite approximants for nullable nonterminals,
+The generator below computes finite approximants for nullable nonterminals,
 {lit}`FIRST` cells, and {lit}`FOLLOW` cells by iterating the usual data-flow
-rules over a finite production list. The certified entry point checks that the
-iteration has reached a fixed point and that the generated LL(1) table has no
-conflicting cells before returning an executable parser.
+rules over a finite production list. The sound, conflict-checked entry point
+checks that the iteration has reached a fixed point and that the generated
+LL(1) table has no conflicting cells before returning an executable parser.
+
+This check does not prove that the supplied production list is complete for the
+semantic grammar or that the approximants coincide with semantic
+{lit}`FIRST`/{lit}`FOLLOW` sets.
 -/
 
 namespace LL1FirstFollow
@@ -1000,7 +1000,7 @@ theorem computedCode_lookup_complete_of_noConflict
     (computedCode_conflictFree_of_noConflict productions fuel hfree)
     hprod hlook
 
-def certifiedParser? [DecidableEq terminal] [DecidableEq nonterminal]
+def soundConflictFreeParser? [DecidableEq terminal] [DecidableEq nonterminal]
     {G : CFG terminal nonterminal}
     (productions : List (LL1ProductionEntry G)) (fuel : Nat) :
     Option (LL1Parser G) :=
@@ -1014,25 +1014,25 @@ def certifiedParser? [DecidableEq terminal] [DecidableEq nonterminal]
         some (LL1ParserCode.generatedParser productions
           (productionLookaheads state))
 
-def certifiedRun? [DecidableEq terminal] [DecidableEq nonterminal]
+def soundConflictFreeRun? [DecidableEq terminal] [DecidableEq nonterminal]
     {G : CFG terminal nonterminal}
     (productions : List (LL1ProductionEntry G))
     (generatorFuel parserFuel : Nat) (w : Word terminal) :
     Option (CFG.ParseTree G (Symbol.nonterminal G.start)) :=
-  match certifiedParser? productions generatorFuel with
+  match soundConflictFreeParser? productions generatorFuel with
   | none => none
   | some parser => LL1Parser.run parser parserFuel w
 
-theorem certifiedRun?_sound
+theorem soundConflictFreeRun?_sound
     [DecidableEq terminal] [DecidableEq nonterminal]
     {G : CFG terminal nonterminal}
     (productions : List (LL1ProductionEntry G))
     (generatorFuel parserFuel : Nat) (w : Word terminal)
     (tree : CFG.ParseTree G (Symbol.nonterminal G.start))
-    (h : certifiedRun? productions generatorFuel parserFuel w = some tree) :
+    (h : soundConflictFreeRun? productions generatorFuel parserFuel w = some tree) :
     w ∈ CFG.GeneratedLanguage G := by
-  unfold certifiedRun? at h
-  cases hparser : certifiedParser? productions generatorFuel with
+  unfold soundConflictFreeRun? at h
+  cases hparser : soundConflictFreeParser? productions generatorFuel with
   | none =>
       simp [hparser] at h
   | some parser =>
@@ -1049,14 +1049,6 @@ structure LR1Item (G : CFG terminal nonterminal) where
   production :
     G.produces lhs (beforeDot ++ afterDot)
 
-def LR1ItemComplete {G : CFG terminal nonterminal} (item : LR1Item G) : Prop :=
-  item.afterDot = []
-
-theorem lr1_item_complete_iff_after_dot_empty {G : CFG terminal nonterminal}
-    (item : LR1Item G) :
-    LR1ItemComplete item <-> item.afterDot = [] :=
-  Iff.rfl
-
 inductive ShiftReduceAction (terminal : Type u) (state : Type v)
     (nonterminal : Type w) where
   | shift : state -> ShiftReduceAction terminal state nonterminal
@@ -1064,10 +1056,10 @@ inductive ShiftReduceAction (terminal : Type u) (state : Type v)
       ShiftReduceAction terminal state nonterminal
   | accept : ShiftReduceAction terminal state nonterminal
 
-structure ShiftReduceConfiguration (terminal : Type u) (state : Type v) where
-  stack : List state
-  unread : Word terminal
-
+/--
+Static LR(1) table vocabulary. This record does not yet provide an operational
+shift/reduce runner or a completeness theorem.
+-/
 structure LR1Parser (G : CFG terminal nonterminal) (state : Type v) where
   startState : state
   statesFinite : Foundation.FiniteType state
@@ -1456,97 +1448,282 @@ theorem ambiguous_grammar_iff_ambiguous_by_left_derivations
     AmbiguousGrammar G <-> AmbiguousGrammarByLeftDerivations G :=
   CFG.ambiguousByParseTrees_iff_leftDerivations G
 
-inductive AmbiguousExampleTerminal where
-  | a
+/-!
+## The Book's Ambiguous Arithmetic Grammar
+
+The source grammar {lit}`G1` has one expression nonterminal and productions
+for addition, multiplication, parentheses, and the variables {lit}`x`,
+{lit}`y`, and {lit}`z`. The word {lit}`x+y*z` has two parse trees: one with
+addition at the root and one with multiplication at the root.
+
+The grammar is built directly from its displayed production list. Its finite
+presentation is therefore available by construction, without a second proof
+that an inductive production relation is equivalent to the same list.
+-/
+
+inductive G1Terminal where
+  | x
+  | y
+  | z
+  | plus
+  | times
+  | leftParen
+  | rightParen
 deriving DecidableEq
 
-inductive AmbiguousExampleNT where
-  | start
-  | left
-  | right
+inductive G1NT where
+  | expression
 deriving DecidableEq
 
-namespace AmbiguousExampleNT
+namespace G1NT
 
-def finite : Foundation.FiniteType AmbiguousExampleNT where
-  elems := [start, left, right]
+def finite : Foundation.FiniteType G1NT where
+  elems := [expression]
   complete := by
-    intro x
-    cases x <;> simp
+    intro symbol
+    cases symbol
+    simp
 
-end AmbiguousExampleNT
+end G1NT
 
-inductive AmbiguousExampleProduces :
-    AmbiguousExampleNT ->
-      SententialForm AmbiguousExampleTerminal AmbiguousExampleNT -> Prop where
-  | chooseLeft :
-      AmbiguousExampleProduces AmbiguousExampleNT.start
-        [Symbol.nonterminal AmbiguousExampleNT.left]
-  | chooseRight :
-      AmbiguousExampleProduces AmbiguousExampleNT.start
-        [Symbol.nonterminal AmbiguousExampleNT.right]
-  | leftTerminal :
-      AmbiguousExampleProduces AmbiguousExampleNT.left
-        [Symbol.terminal AmbiguousExampleTerminal.a]
-  | rightTerminal :
-      AmbiguousExampleProduces AmbiguousExampleNT.right
-        [Symbol.terminal AmbiguousExampleTerminal.a]
+def G1Rules : List (CFG.Production G1Terminal G1NT) :=
+  [{ lhs := G1NT.expression,
+     rhs := [Symbol.nonterminal G1NT.expression,
+       Symbol.terminal G1Terminal.plus,
+       Symbol.nonterminal G1NT.expression] },
+   { lhs := G1NT.expression,
+     rhs := [Symbol.nonterminal G1NT.expression,
+       Symbol.terminal G1Terminal.times,
+       Symbol.nonterminal G1NT.expression] },
+   { lhs := G1NT.expression,
+     rhs := [Symbol.terminal G1Terminal.leftParen,
+       Symbol.nonterminal G1NT.expression,
+       Symbol.terminal G1Terminal.rightParen] },
+   { lhs := G1NT.expression, rhs := [Symbol.terminal G1Terminal.x] },
+   { lhs := G1NT.expression, rhs := [Symbol.terminal G1Terminal.y] },
+   { lhs := G1NT.expression, rhs := [Symbol.terminal G1Terminal.z] }]
 
-def ambiguousExampleGrammar :
-    CFG AmbiguousExampleTerminal AmbiguousExampleNT where
-  start := AmbiguousExampleNT.start
-  produces := AmbiguousExampleProduces
-  nonterminalsFinite := AmbiguousExampleNT.finite
+def G1Grammar : CFG G1Terminal G1NT :=
+  CFG.ProductionList.toCFG G1NT.expression G1NT.finite G1Rules
 
-def ambiguousExampleLeftTree :
-    CFG.ParseTree ambiguousExampleGrammar
-      (Symbol.nonterminal ambiguousExampleGrammar.start) :=
-  CFG.ParseTree.node AmbiguousExampleNT.start
-    [Symbol.nonterminal AmbiguousExampleNT.left]
-    AmbiguousExampleProduces.chooseLeft
-    (CFG.ParseForest.cons
-      (Symbol.nonterminal AmbiguousExampleNT.left)
-      []
-      (CFG.ParseTree.node AmbiguousExampleNT.left
-        [Symbol.terminal AmbiguousExampleTerminal.a]
-        AmbiguousExampleProduces.leftTerminal
-        (CFG.ParseForest.cons
-          (Symbol.terminal AmbiguousExampleTerminal.a)
-          []
-          (CFG.ParseTree.leaf AmbiguousExampleTerminal.a)
-          CFG.ParseForest.nil))
-      CFG.ParseForest.nil)
+def G1Presentation : CFG.Presentation G1Grammar :=
+  CFG.ProductionList.presentation G1NT.expression G1NT.finite G1Rules
 
-def ambiguousExampleRightTree :
-    CFG.ParseTree ambiguousExampleGrammar
-      (Symbol.nonterminal ambiguousExampleGrammar.start) :=
-  CFG.ParseTree.node AmbiguousExampleNT.start
-    [Symbol.nonterminal AmbiguousExampleNT.right]
-    AmbiguousExampleProduces.chooseRight
-    (CFG.ParseForest.cons
-      (Symbol.nonterminal AmbiguousExampleNT.right)
-      []
-      (CFG.ParseTree.node AmbiguousExampleNT.right
-        [Symbol.terminal AmbiguousExampleTerminal.a]
-        AmbiguousExampleProduces.rightTerminal
-        (CFG.ParseForest.cons
-          (Symbol.terminal AmbiguousExampleTerminal.a)
-          []
-          (CFG.ParseTree.leaf AmbiguousExampleTerminal.a)
-          CFG.ParseForest.nil))
-      CFG.ParseForest.nil)
+theorem g1_hasFinitePresentation : CFG.HasFinitePresentation G1Grammar :=
+  ⟨G1Presentation⟩
 
-theorem ambiguous_grammar_example :
-    AmbiguousGrammar ambiguousExampleGrammar := by
-  exists [AmbiguousExampleTerminal.a]
-  exists ambiguousExampleLeftTree
-  exists ambiguousExampleRightTree
-  constructor
-  · rfl
-  constructor
-  · rfl
-  · intro h
-    cases h
+theorem g1_produces_plus : G1Grammar.produces G1NT.expression
+    [Symbol.nonterminal G1NT.expression, Symbol.terminal G1Terminal.plus,
+      Symbol.nonterminal G1NT.expression] := by
+  simp [G1Grammar, CFG.ProductionList.toCFG, G1Rules]
+
+theorem g1_produces_times : G1Grammar.produces G1NT.expression
+    [Symbol.nonterminal G1NT.expression, Symbol.terminal G1Terminal.times,
+      Symbol.nonterminal G1NT.expression] := by
+  simp [G1Grammar, CFG.ProductionList.toCFG, G1Rules]
+
+theorem g1_produces_x : G1Grammar.produces G1NT.expression
+    [Symbol.terminal G1Terminal.x] := by
+  simp [G1Grammar, CFG.ProductionList.toCFG, G1Rules]
+
+theorem g1_produces_y : G1Grammar.produces G1NT.expression
+    [Symbol.terminal G1Terminal.y] := by
+  simp [G1Grammar, CFG.ProductionList.toCFG, G1Rules]
+
+theorem g1_produces_z : G1Grammar.produces G1NT.expression
+    [Symbol.terminal G1Terminal.z] := by
+  simp [G1Grammar, CFG.ProductionList.toCFG, G1Rules]
+
+def g1AtomTree (token : G1Terminal)
+    (hprod : G1Grammar.produces G1NT.expression [Symbol.terminal token]) :
+    CFG.ParseTree G1Grammar (Symbol.nonterminal G1NT.expression) :=
+  CFG.ParseTree.node G1NT.expression [Symbol.terminal token] hprod
+    (CFG.ParseForest.cons (Symbol.terminal token) []
+      (CFG.ParseTree.leaf token) CFG.ParseForest.nil)
+
+def g1BinaryTree (operator : G1Terminal)
+    (hprod : G1Grammar.produces G1NT.expression
+      [Symbol.nonterminal G1NT.expression, Symbol.terminal operator,
+        Symbol.nonterminal G1NT.expression])
+    (left right :
+      CFG.ParseTree G1Grammar (Symbol.nonterminal G1NT.expression)) :
+    CFG.ParseTree G1Grammar (Symbol.nonterminal G1NT.expression) :=
+  CFG.ParseTree.node G1NT.expression
+    [Symbol.nonterminal G1NT.expression, Symbol.terminal operator,
+      Symbol.nonterminal G1NT.expression]
+    hprod
+    (CFG.ParseForest.cons (Symbol.nonterminal G1NT.expression)
+      [Symbol.terminal operator, Symbol.nonterminal G1NT.expression]
+      left
+      (CFG.ParseForest.cons (Symbol.terminal operator)
+        [Symbol.nonterminal G1NT.expression]
+        (CFG.ParseTree.leaf operator)
+        (CFG.ParseForest.cons (Symbol.nonterminal G1NT.expression) []
+          right CFG.ParseForest.nil)))
+
+def g1XTree := g1AtomTree G1Terminal.x g1_produces_x
+def g1YTree := g1AtomTree G1Terminal.y g1_produces_y
+def g1ZTree := g1AtomTree G1Terminal.z g1_produces_z
+
+def g1PlusRootTree :=
+  g1BinaryTree G1Terminal.plus g1_produces_plus g1XTree
+    (g1BinaryTree G1Terminal.times g1_produces_times g1YTree g1ZTree)
+
+def g1TimesRootTree :=
+  g1BinaryTree G1Terminal.times g1_produces_times
+    (g1BinaryTree G1Terminal.plus g1_produces_plus g1XTree g1YTree) g1ZTree
+
+def g1AmbiguousWord : Word G1Terminal :=
+  [G1Terminal.x, G1Terminal.plus, G1Terminal.y,
+    G1Terminal.times, G1Terminal.z]
+
+theorem g1_plusRootTree_frontier :
+    CFG.ParseTree.frontier g1PlusRootTree = g1AmbiguousWord := by
+  rfl
+
+theorem g1_timesRootTree_frontier :
+    CFG.ParseTree.frontier g1TimesRootTree = g1AmbiguousWord := by
+  rfl
+
+theorem g1_parse_trees_distinct : g1PlusRootTree ≠ g1TimesRootTree := by
+  intro h
+  cases h
+
+theorem g1_ambiguous_on_x_plus_y_times_z :
+    AmbiguousGrammar G1Grammar := by
+  exact ⟨g1AmbiguousWord, g1PlusRootTree, g1TimesRootTree,
+    g1_plusRootTree_frontier, g1_timesRootTree_frontier,
+    g1_parse_trees_distinct⟩
+
+theorem g1_ambiguous_by_left_derivations :
+    AmbiguousGrammarByLeftDerivations G1Grammar :=
+  (ambiguous_grammar_iff_ambiguous_by_left_derivations G1Grammar).mp
+    g1_ambiguous_on_x_plus_y_times_z
+
+/-!
+## The Book's Precedence Grammar and an Executable Parse
+
+The source grammar {lit}`G2` separates expressions, terms, and factors so that
+multiplication binds more tightly than addition. The table below implements
+the corresponding LL(1) choices. Its successful run on {lit}`x+y*z` returns a
+parse tree, and the general runner theorem turns that computation into a proof
+that {lit}`G2` generates the word.
+
+This is a concrete successful-run result. It does not claim the still-missing
+global completeness theorem for the generic FIRST/FOLLOW generator above.
+-/
+
+inductive G2NT where
+  | expression
+  | expressionTail
+  | term
+  | termTail
+  | factor
+deriving DecidableEq
+
+namespace G2NT
+
+def finite : Foundation.FiniteType G2NT where
+  elems := [expression, expressionTail, term, termTail, factor]
+  complete := by
+    intro symbol
+    cases symbol <;> simp
+
+end G2NT
+
+def g2N (A : G2NT) : Symbol G1Terminal G2NT :=
+  Symbol.nonterminal A
+
+def g2T (token : G1Terminal) : Symbol G1Terminal G2NT :=
+  Symbol.terminal token
+
+def G2Rules : List (CFG.Production G1Terminal G2NT) :=
+  [{ lhs := G2NT.expression,
+     rhs := [g2N G2NT.term, g2N G2NT.expressionTail] },
+   { lhs := G2NT.expressionTail,
+     rhs := [g2T G1Terminal.plus, g2N G2NT.term,
+       g2N G2NT.expressionTail] },
+   { lhs := G2NT.expressionTail, rhs := [] },
+   { lhs := G2NT.term, rhs := [g2N G2NT.factor, g2N G2NT.termTail] },
+   { lhs := G2NT.termTail,
+     rhs := [g2T G1Terminal.times, g2N G2NT.factor, g2N G2NT.termTail] },
+   { lhs := G2NT.termTail, rhs := [] },
+   { lhs := G2NT.factor,
+     rhs := [g2T G1Terminal.leftParen, g2N G2NT.expression,
+       g2T G1Terminal.rightParen] },
+   { lhs := G2NT.factor, rhs := [g2T G1Terminal.x] },
+   { lhs := G2NT.factor, rhs := [g2T G1Terminal.y] },
+   { lhs := G2NT.factor, rhs := [g2T G1Terminal.z] }]
+
+def G2Grammar : CFG G1Terminal G2NT :=
+  CFG.ProductionList.toCFG G2NT.expression G2NT.finite G2Rules
+
+def G2Presentation : CFG.Presentation G2Grammar :=
+  CFG.ProductionList.presentation G2NT.expression G2NT.finite G2Rules
+
+theorem g2_hasFinitePresentation : CFG.HasFinitePresentation G2Grammar :=
+  ⟨G2Presentation⟩
+
+def G2Table : G2NT -> Option G1Terminal ->
+    Option (SententialForm G1Terminal G2NT)
+  | G2NT.expression, some G1Terminal.x =>
+      some [g2N G2NT.term, g2N G2NT.expressionTail]
+  | G2NT.expression, some G1Terminal.y =>
+      some [g2N G2NT.term, g2N G2NT.expressionTail]
+  | G2NT.expression, some G1Terminal.z =>
+      some [g2N G2NT.term, g2N G2NT.expressionTail]
+  | G2NT.expression, some G1Terminal.leftParen =>
+      some [g2N G2NT.term, g2N G2NT.expressionTail]
+  | G2NT.expressionTail, some G1Terminal.plus =>
+      some [g2T G1Terminal.plus, g2N G2NT.term, g2N G2NT.expressionTail]
+  | G2NT.expressionTail, some G1Terminal.rightParen => some []
+  | G2NT.expressionTail, none => some []
+  | G2NT.term, some G1Terminal.x =>
+      some [g2N G2NT.factor, g2N G2NT.termTail]
+  | G2NT.term, some G1Terminal.y =>
+      some [g2N G2NT.factor, g2N G2NT.termTail]
+  | G2NT.term, some G1Terminal.z =>
+      some [g2N G2NT.factor, g2N G2NT.termTail]
+  | G2NT.term, some G1Terminal.leftParen =>
+      some [g2N G2NT.factor, g2N G2NT.termTail]
+  | G2NT.termTail, some G1Terminal.times =>
+      some [g2T G1Terminal.times, g2N G2NT.factor, g2N G2NT.termTail]
+  | G2NT.termTail, some G1Terminal.plus => some []
+  | G2NT.termTail, some G1Terminal.rightParen => some []
+  | G2NT.termTail, none => some []
+  | G2NT.factor, some G1Terminal.leftParen =>
+      some [g2T G1Terminal.leftParen, g2N G2NT.expression,
+        g2T G1Terminal.rightParen]
+  | G2NT.factor, some G1Terminal.x => some [g2T G1Terminal.x]
+  | G2NT.factor, some G1Terminal.y => some [g2T G1Terminal.y]
+  | G2NT.factor, some G1Terminal.z => some [g2T G1Terminal.z]
+  | _, _ => none
+
+theorem g2_table_sound : forall (A : G2NT) (lookahead : Option G1Terminal)
+    (rhs : SententialForm G1Terminal G2NT),
+    G2Table A lookahead = some rhs -> G2Grammar.produces A rhs := by
+  intro A lookahead rhs h
+  cases A <;> cases lookahead with
+  | none =>
+      simp [G2Table] at h <;> subst rhs <;>
+        simp [G2Grammar, CFG.ProductionList.toCFG, G2Rules]
+  | some token =>
+      cases token <;> simp [G2Table] at h <;> subst rhs <;>
+        simp [G2Grammar, CFG.ProductionList.toCFG, G2Rules]
+
+def G2Parser : LL1Parser G2Grammar where
+  table := G2Table
+  tableSound := g2_table_sound
+
+theorem g2_parser_accepts_x_plus_y_times_z :
+    (G2Parser.run 30 g1AmbiguousWord).isSome = true := by
+  rfl
+
+theorem g2_generates_x_plus_y_times_z :
+    g1AmbiguousWord ∈ CFG.GeneratedLanguage G2Grammar := by
+  rcases Option.isSome_iff_exists.mp g2_parser_accepts_x_plus_y_times_z with
+    ⟨tree, htree⟩
+  exact LL1Parser.run_sound G2Parser 30 g1AmbiguousWord tree htree
 
 end Section03
 end Chapter04

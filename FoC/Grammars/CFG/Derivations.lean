@@ -18,6 +18,7 @@ Derivations are the reflexive-transitive closure, and generated languages are
 terminal words reachable from the start nonterminal.
 -/
 
+/-- One application of a CFG production inside a sentential context. -/
 def Yields (G : CFG terminal nonterminal)
     (x y : SententialForm terminal nonterminal) : Prop :=
   exists u, exists v, exists A, exists rhs,
@@ -25,12 +26,14 @@ def Yields (G : CFG terminal nonterminal)
       x = u ++ [Symbol.nonterminal A] ++ v ∧
       y = u ++ rhs ++ v
 
+/-- The reflexive-transitive closure of context-free production steps. -/
 inductive Derives (G : CFG terminal nonterminal) :
     SententialForm terminal nonterminal -> SententialForm terminal nonterminal -> Prop where
   | refl (x : SententialForm terminal nonterminal) : Derives G x x
   | step {x y z : SententialForm terminal nonterminal} :
       Yields G x y -> Derives G y z -> Derives G x z
 
+/-- The terminal words derivable from the start nonterminal. -/
 def GeneratedLanguage (G : CFG terminal nonterminal) : Language terminal :=
   fun w => Derives G [Symbol.nonterminal G.start] (SententialForm.terminalWord w)
 
@@ -42,12 +45,14 @@ def DerivationSymbolLanguage (G : CFG terminal nonterminal) :
   | Symbol.terminal a => Language.Singleton (Word.Symbol a)
   | Symbol.nonterminal A => GeneratedFrom G A
 
+/-- The concatenation language denoted by the symbols of a sentential form. -/
 def FormLanguage (symbolLanguage : Symbol terminal nonterminal -> Language terminal) :
     SententialForm terminal nonterminal -> Language terminal
   | [] => Language.Singleton Word.Empty
   | s :: rest => Language.Concat (symbolLanguage s) (FormLanguage symbolLanguage rest)
 
-def ContextFree (L : Language terminal) : Prop :=
+/-- Generation by a semantic CFG, without a finite-presentation requirement. -/
+def GeneratedByCFG (L : Language terminal) : Prop :=
   exists nonterminal : Type, exists G : CFG terminal nonterminal,
     Language.Equal (GeneratedLanguage G) L
 
@@ -55,7 +60,7 @@ def Equivalent (G H : CFG terminal nonterminal) : Prop :=
   Language.Equal (GeneratedLanguage G) (GeneratedLanguage H)
 
 /-!
-# Regular grammar shapes
+## Regular grammar shapes
 
 Right-regular and left-regular grammars are classified by the shape of every
 production right-hand side.
@@ -82,7 +87,7 @@ def LeftRegular (G : CFG terminal nonterminal) : Prop :=
   forall A rhs, G.produces A rhs -> LeftRegularRHS rhs
 
 /-!
-# Reverse grammars and derivation algebra
+## Reverse grammars and derivation algebra
 
 Reversing each production right-hand side defines the reverse grammar. The
 following derivation lemmas provide context, transitivity, and word-level
@@ -104,6 +109,16 @@ theorem yields_derives {G : CFG terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :
     Derives G x y :=
   Derives.step h (Derives.refl y)
+
+/-- Apply a production in explicitly supplied left and right contexts. -/
+theorem yields_of_produces {G : CFG terminal nonterminal}
+    {A : nonterminal} {rhs : SententialForm terminal nonterminal}
+    (hprod : G.produces A rhs)
+    (pre suf : SententialForm terminal nonterminal) :
+    Yields G
+      (pre ++ [Symbol.nonterminal A] ++ suf)
+      (pre ++ rhs ++ suf) :=
+  ⟨pre, suf, A, rhs, hprod, rfl, rfl⟩
 
 theorem derives_trans {G : CFG terminal nonterminal}
     {x y z : SententialForm terminal nonterminal}
@@ -581,8 +596,8 @@ theorem formLanguage_derives {G : CFG terminal nonterminal}
                   rw [SententialForm.terminalWord_append]
                   exact derives_trans hleft hright
 
-theorem context_free_of_equal {L M : Language terminal}
-    (hL : ContextFree L) (hEq : Language.Equal L M) : ContextFree M := by
+theorem generatedByCFG_of_equal {L M : Language terminal}
+    (hL : GeneratedByCFG L) (hEq : Language.Equal L M) : GeneratedByCFG M := by
   cases hL with
   | intro nt hnt =>
       cases hnt with
@@ -592,6 +607,13 @@ theorem context_free_of_equal {L M : Language terminal}
           exact FoC.Foundation.FSet.equal_trans hG hEq
 
 end CFG
+
+namespace SententialForm
+
+/-- Grammar-independent spelling of the language denoted by a sentential form. -/
+abbrev Language := @CFG.FormLanguage
+
+end SententialForm
 
 end Grammars
 end FoC

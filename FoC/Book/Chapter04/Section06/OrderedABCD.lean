@@ -1,4 +1,4 @@
-import FoC.Book.Chapter04.Section06.OrderedABC
+import FoC.Book.Chapter04.Section06.FourCounts
 
 set_option doc.verso true
 
@@ -18,7 +18,7 @@ open Languages
 open Grammars
 
 /-!
-# Ordered Four-Block Counts
+## Ordered Four-Block Counts
 
 This example extends the ordered-block method of the second sample grammar to
 four terminals. The grammar is intended to generate the words
@@ -28,9 +28,8 @@ either direction. What is proved: every generated word has equal counts of
 which does not constrain the order of the letters), together with concrete
 witness derivations of the empty word and of {lit}`aabbccdd`. Neither the
 soundness inclusion (every generated word is ordered) nor the generation
-inclusion (every {lit}`a^n b^n c^n d^n` is generated) is formalized; compare
-{module}`FoC.Book.Chapter04.Section06.OrderedABC`, where the three-letter
-analogue is proved exactly.
+inclusion (every {lit}`a^n b^n c^n d^n` is generated) is formalized. The
+separate three-letter ordered example proves its analogue exactly.
 -/
 
 inductive OrderedABCDNT where
@@ -272,7 +271,8 @@ theorem orderedABCDGrammar_finite_production_generated :
   exists OrderedABCDNT
   exists OrderedABCDGrammar
   constructor
-  · exact orderedABCDGrammar_has_finite_productions
+  · exact GeneralGrammar.hasFinitePresentation_of_hasFiniteProductions
+      orderedABCDGrammar_has_finite_productions
   · intro word
     rfl
 
