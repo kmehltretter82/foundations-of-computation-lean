@@ -1038,4 +1038,3 @@ theorem ambiguousByParseTrees_iff_leftDerivations
 end CFG
 end Grammars
 end FoC
-

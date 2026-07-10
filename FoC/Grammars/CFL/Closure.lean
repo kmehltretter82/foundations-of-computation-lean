@@ -451,4 +451,3 @@ theorem context_free_diff_finite_language_context_free
 
 end Grammars
 end FoC
-

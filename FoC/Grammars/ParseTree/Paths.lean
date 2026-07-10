@@ -566,4 +566,3 @@ theorem ParseTree.exists_minimal_for_frontier
 end CFG
 end Grammars
 end FoC
-

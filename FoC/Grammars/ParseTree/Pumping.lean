@@ -511,4 +511,3 @@ theorem parseTree_generates_language {G : CFG terminal nonterminal}
 end CFG
 end Grammars
 end FoC
-

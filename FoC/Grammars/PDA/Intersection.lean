@@ -388,4 +388,3 @@ theorem pda_intersect_dfa_accepted_language_exact
 
 end Grammars
 end FoC
-
