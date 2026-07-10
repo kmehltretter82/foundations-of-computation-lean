@@ -961,7 +961,9 @@ theorem pullLoopJ1_run
                           (none :: R)))))) } := by
   have hrun1Rev : run1.reverse ≠ [] := by
     intro h
-    exact hrun1 (by simpa using congrArg List.reverse h)
+    apply hrun1
+    unfold Word
+    simpa using congrArg List.reverse h
   have s1 := crossBitsRightThenRight
     (D := pullLoopJ1Description) (s := 0) (t := 1)
     (by decide) (by decide) (by decide)
