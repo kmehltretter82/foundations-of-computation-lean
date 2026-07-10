@@ -55,50 +55,6 @@ def orderedT (tok : EqualCountTerminal) :
     Symbol EqualCountTerminal OrderedABCNT :=
   ggTerminal tok
 
-inductive OrderedABCProduces :
-    SententialForm EqualCountTerminal OrderedABCNT ->
-      SententialForm EqualCountTerminal OrderedABCNT -> Prop where
-  | grow :
-      OrderedABCProduces [orderedN OrderedABCNT.start]
-        [orderedN OrderedABCNT.start, orderedN OrderedABCNT.markA,
-          orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC]
-  | startX :
-      OrderedABCProduces [orderedN OrderedABCNT.start] [orderedN OrderedABCNT.x]
-  | swapBA :
-      OrderedABCProduces [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markA]
-        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markB]
-  | swapCA :
-      OrderedABCProduces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markA]
-        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markC]
-  | swapCB :
-      OrderedABCProduces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markB]
-        [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC]
-  | convertXA :
-      OrderedABCProduces [orderedN OrderedABCNT.x, orderedN OrderedABCNT.markA]
-        [orderedT EqualCountTerminal.a, orderedN OrderedABCNT.x]
-  | xToY :
-      OrderedABCProduces [orderedN OrderedABCNT.x] [orderedN OrderedABCNT.y]
-  | convertYB :
-      OrderedABCProduces [orderedN OrderedABCNT.y, orderedN OrderedABCNT.markB]
-        [orderedT EqualCountTerminal.b, orderedN OrderedABCNT.y]
-  | yToZ :
-      OrderedABCProduces [orderedN OrderedABCNT.y] [orderedN OrderedABCNT.z]
-  | convertZC :
-      OrderedABCProduces [orderedN OrderedABCNT.z, orderedN OrderedABCNT.markC]
-        [orderedT EqualCountTerminal.c, orderedN OrderedABCNT.z]
-  | finish :
-      OrderedABCProduces [orderedN OrderedABCNT.z] []
-
-def OrderedABCGrammar :
-    GeneralGrammar EqualCountTerminal OrderedABCNT where
-  start := OrderedABCNT.start
-  produces := OrderedABCProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, orderedN,
-      ggNonterminal]
-  nonterminalsFinite := OrderedABCNT.finite
-
 def OrderedABCProductionList :
     List (GeneralGrammar.Production EqualCountTerminal OrderedABCNT) :=
   [{ lhs := [orderedN OrderedABCNT.start],
@@ -125,64 +81,94 @@ def OrderedABCProductionList :
    { lhs := [orderedN OrderedABCNT.z],
      rhs := [] }]
 
-theorem orderedABCGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions OrderedABCGrammar := by
-  exists OrderedABCProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [OrderedABCProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [OrderedABCProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.grow
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.startX
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.swapBA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.swapCA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.swapCB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.convertXA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.xToY
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.convertYB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.yToZ
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.convertZC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCProduces.finish
+theorem orderedABCProductionList_valid :
+    forall rule, rule ∈ OrderedABCProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [OrderedABCProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, orderedN, ggNonterminal]
 
+def OrderedABCGrammar :
+    GeneralGrammar EqualCountTerminal OrderedABCNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar OrderedABCNT.start
+    OrderedABCNT.finite OrderedABCProductionList orderedABCProductionList_valid
+
+def orderedABCPresentation : GeneralGrammar.Presentation OrderedABCGrammar :=
+  GeneralGrammar.ProductionList.presentation OrderedABCNT.start
+    OrderedABCNT.finite OrderedABCProductionList orderedABCProductionList_valid
+
+namespace OrderedABCProduces
+
+theorem grow :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.start]
+        [orderedN OrderedABCNT.start, orderedN OrderedABCNT.markA,
+          orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem startX :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.start] [orderedN OrderedABCNT.x] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem swapBA :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markA]
+        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markB] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem swapCA :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markA]
+        [orderedN OrderedABCNT.markA, orderedN OrderedABCNT.markC] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem swapCB :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.markC, orderedN OrderedABCNT.markB]
+        [orderedN OrderedABCNT.markB, orderedN OrderedABCNT.markC] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem convertXA :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.x, orderedN OrderedABCNT.markA]
+        [orderedT EqualCountTerminal.a, orderedN OrderedABCNT.x] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem xToY :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.x] [orderedN OrderedABCNT.y] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem convertYB :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.y, orderedN OrderedABCNT.markB]
+        [orderedT EqualCountTerminal.b, orderedN OrderedABCNT.y] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem yToZ :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.y] [orderedN OrderedABCNT.z] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem convertZC :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.z, orderedN OrderedABCNT.markC]
+        [orderedT EqualCountTerminal.c, orderedN OrderedABCNT.z] := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+theorem finish :
+      OrderedABCGrammar.produces [orderedN OrderedABCNT.z] []
+ := by
+  simp [OrderedABCGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCProductionList]
+
+end OrderedABCProduces
+
+theorem orderedABCGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions OrderedABCGrammar :=
+  orderedABCPresentation.hasFiniteProductions
 theorem orderedABCGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage OrderedABCGrammar) := by
@@ -246,7 +232,11 @@ theorem orderedABC_yields_preserves_balanced
                       | intro hx hy =>
                           rw [hx] at hbalanced
                           rw [hy]
-                          cases hprod <;>
+                          change GeneralGrammar.ProductionListProduces
+                            OrderedABCProductionList lhs rhs at hprod
+                          rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+                          simp [OrderedABCProductionList] at hmem
+                          rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
                             simp [orderedABCBalanced, orderedABCTotalA,
                               orderedABCTotalB, orderedABCTotalC,
                               sententialCountTerminal_append,
@@ -915,7 +905,11 @@ theorem orderedABC_production_shape_sound
             (Language.Concat eps (Language.Concat eps eps)) ->
         suffix = Word.Empty :=
     language_concat_empty_only hepsOnly heps3Only
-  cases hprod
+  change GeneralGrammar.ProductionListProduces
+    OrderedABCProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [OrderedABCProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · simp [CFG.FormLanguage, orderedABCSymbolLanguage, orderedN,
       ggNonterminal] at hw ⊢
     have hshape :=

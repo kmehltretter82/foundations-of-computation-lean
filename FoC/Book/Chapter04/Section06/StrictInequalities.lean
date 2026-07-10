@@ -57,33 +57,6 @@ def moreBT (tok : EqualCountTerminal) :
     Symbol EqualCountTerminal StrictMoreBNT :=
   ggTerminal tok
 
-inductive StrictMoreBProduces :
-    SententialForm EqualCountTerminal StrictMoreBNT ->
-      SententialForm EqualCountTerminal StrictMoreBNT -> Prop where
-  | wrapPair :
-      StrictMoreBProduces [moreBN StrictMoreBNT.start]
-        [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
-          moreBT EqualCountTerminal.b]
-  | toTail :
-      StrictMoreBProduces [moreBN StrictMoreBNT.start]
-        [moreBN StrictMoreBNT.tail]
-  | tailMore :
-      StrictMoreBProduces [moreBN StrictMoreBNT.tail]
-        [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail]
-  | tailOne :
-      StrictMoreBProduces [moreBN StrictMoreBNT.tail]
-        [moreBT EqualCountTerminal.b]
-
-def StrictMoreBGrammar :
-    GeneralGrammar EqualCountTerminal StrictMoreBNT where
-  start := StrictMoreBNT.start
-  produces := StrictMoreBProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, moreBN,
-      ggNonterminal]
-  nonterminalsFinite := StrictMoreBNT.finite
-
 def StrictMoreBProductionList :
     List (GeneralGrammar.Production EqualCountTerminal StrictMoreBNT) :=
   [{ lhs := [moreBN StrictMoreBNT.start],
@@ -96,34 +69,55 @@ def StrictMoreBProductionList :
    { lhs := [moreBN StrictMoreBNT.tail],
      rhs := [moreBT EqualCountTerminal.b] }]
 
-theorem strictMoreBGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions StrictMoreBGrammar := by
-  exists StrictMoreBProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [StrictMoreBProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [StrictMoreBProductionList] at hmem
-    rcases hmem with hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictMoreBProduces.wrapPair
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictMoreBProduces.toTail
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictMoreBProduces.tailMore
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictMoreBProduces.tailOne
+theorem strictMoreBProductionList_valid :
+    forall rule, rule ∈ StrictMoreBProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [StrictMoreBProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, moreBN, ggNonterminal]
 
+def StrictMoreBGrammar : GeneralGrammar EqualCountTerminal StrictMoreBNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar StrictMoreBNT.start
+    StrictMoreBNT.finite StrictMoreBProductionList strictMoreBProductionList_valid
+
+def strictMoreBPresentation : GeneralGrammar.Presentation StrictMoreBGrammar :=
+  GeneralGrammar.ProductionList.presentation StrictMoreBNT.start
+    StrictMoreBNT.finite StrictMoreBProductionList strictMoreBProductionList_valid
+
+namespace StrictMoreBProduces
+
+theorem wrapPair :
+      StrictMoreBGrammar.produces [moreBN StrictMoreBNT.start]
+        [moreBT EqualCountTerminal.a, moreBN StrictMoreBNT.start,
+          moreBT EqualCountTerminal.b] := by
+  simp [StrictMoreBGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictMoreBProductionList]
+
+theorem toTail :
+      StrictMoreBGrammar.produces [moreBN StrictMoreBNT.start]
+        [moreBN StrictMoreBNT.tail] := by
+  simp [StrictMoreBGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictMoreBProductionList]
+
+theorem tailMore :
+      StrictMoreBGrammar.produces [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b, moreBN StrictMoreBNT.tail] := by
+  simp [StrictMoreBGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictMoreBProductionList]
+
+theorem tailOne :
+      StrictMoreBGrammar.produces [moreBN StrictMoreBNT.tail]
+        [moreBT EqualCountTerminal.b]
+ := by
+  simp [StrictMoreBGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictMoreBProductionList]
+
+end StrictMoreBProduces
+
+theorem strictMoreBGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions StrictMoreBGrammar :=
+  strictMoreBPresentation.hasFiniteProductions
 theorem strictMoreBGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage StrictMoreBGrammar) := by
@@ -174,7 +168,11 @@ theorem strictMoreB_yields_preserves_margin
                       | intro hx hy =>
                           rw [hx] at hmargin
                           rw [hy]
-                          cases hprod <;>
+                          change GeneralGrammar.ProductionListProduces
+                            StrictMoreBProductionList lhs rhs at hprod
+                          rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+                          simp [StrictMoreBProductionList] at hmem
+                          rcases hmem with rfl | rfl | rfl | rfl <;>
                             simp [strictMoreBMargin, strictMoreBCountA,
                               strictMoreBCountBWithCredits,
                               sententialCountTerminal_append,
@@ -388,8 +386,12 @@ theorem strictMoreB_production_sound
       word ∈ CFG.FormLanguage strictMoreBSymbolLanguage rhs ->
         word ∈ CFG.FormLanguage strictMoreBSymbolLanguage lhs := by
   intro word hword
-  cases hprod with
-  | wrapPair =>
+  change GeneralGrammar.ProductionListProduces
+    StrictMoreBProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [StrictMoreBProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl
+  ·
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
         moreBN, moreBT, ggNonterminal, ggTerminal] at hword
       rcases hword with
@@ -405,7 +407,7 @@ theorem strictMoreB_production_sound
         hempty]
       simpa [Word.Symbol, Word.Concat, Word.Empty] using!
         strictMoreB_wrap_word n extra
-  | toTail =>
+  ·
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
         moreBN, ggNonterminal] at hword
       rcases hword with ⟨tailWord, empty, htailWord, hempty, hwordEq⟩
@@ -414,7 +416,7 @@ theorem strictMoreB_production_sound
         ⟨0, extra, rfl⟩, rfl, ?_⟩
       rw [hwordEq, htailWordEq, hempty]
       simp [Word.Concat, Word.Empty, strictMoreB_word_zero extra]
-  | tailMore =>
+  ·
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
         moreBN, moreBT, ggNonterminal, ggTerminal] at hword
       rcases hword with
@@ -427,7 +429,7 @@ theorem strictMoreB_production_sound
       rw [hwordEq, hfirst, htailEq, hmiddleEq, hempty]
       simpa [Word.Symbol, Word.Concat, Word.Empty] using!
         strictMoreB_tail_more_word extra
-  | tailOne =>
+  ·
       simp [CFG.FormLanguage, strictMoreBSymbolLanguage,
         moreBT, ggTerminal] at hword
       rcases hword with ⟨first, empty, hfirst, hempty, hwordEq⟩
@@ -564,94 +566,6 @@ def strictABCGreaterT (tok : EqualCountTerminal) :
     Symbol EqualCountTerminal StrictABCGreaterNT :=
   ggTerminal tok
 
-inductive StrictABCGreaterProduces :
-    SententialForm EqualCountTerminal StrictABCGreaterNT ->
-      SententialForm EqualCountTerminal StrictABCGreaterNT -> Prop where
-  | growTriple :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.start]
-        [strictABCGreaterN StrictABCGreaterNT.start,
-          strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markB,
-          strictABCGreaterN StrictABCGreaterNT.markC]
-  | toPair :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.start]
-        [strictABCGreaterN StrictABCGreaterNT.pair]
-  | growPair :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.pair]
-        [strictABCGreaterN StrictABCGreaterNT.pair,
-          strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-  | endPair :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.pair]
-        [strictABCGreaterN StrictABCGreaterNT.extraA,
-          strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-  | growExtraA :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.extraA]
-        [strictABCGreaterN StrictABCGreaterNT.extraA,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-  | endExtraA :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.extraA]
-        [strictABCGreaterN StrictABCGreaterNT.done,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-  | finish :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.done] []
-  | swapAB :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-        [strictABCGreaterN StrictABCGreaterNT.markB,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-  | swapBA :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markB,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-        [strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-  | swapAC :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markC]
-        [strictABCGreaterN StrictABCGreaterNT.markC,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-  | swapCA :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markC,
-          strictABCGreaterN StrictABCGreaterNT.markA]
-        [strictABCGreaterN StrictABCGreaterNT.markA,
-          strictABCGreaterN StrictABCGreaterNT.markC]
-  | swapBC :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markB,
-          strictABCGreaterN StrictABCGreaterNT.markC]
-        [strictABCGreaterN StrictABCGreaterNT.markC,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-  | swapCB :
-      StrictABCGreaterProduces
-        [strictABCGreaterN StrictABCGreaterNT.markC,
-          strictABCGreaterN StrictABCGreaterNT.markB]
-        [strictABCGreaterN StrictABCGreaterNT.markB,
-          strictABCGreaterN StrictABCGreaterNT.markC]
-  | emitA :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markA]
-        [strictABCGreaterT EqualCountTerminal.a]
-  | emitB :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markB]
-        [strictABCGreaterT EqualCountTerminal.b]
-  | emitC :
-      StrictABCGreaterProduces [strictABCGreaterN StrictABCGreaterNT.markC]
-        [strictABCGreaterT EqualCountTerminal.c]
-
-def StrictABCGreaterGrammar :
-    GeneralGrammar EqualCountTerminal StrictABCGreaterNT where
-  start := StrictABCGreaterNT.start
-  produces := StrictABCGreaterProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal,
-      strictABCGreaterN, ggNonterminal]
-  nonterminalsFinite := StrictABCGreaterNT.finite
-
 def StrictABCGreaterProductionList :
     List (GeneralGrammar.Production EqualCountTerminal StrictABCGreaterNT) :=
   [{ lhs := [strictABCGreaterN StrictABCGreaterNT.start],
@@ -708,6 +622,149 @@ def StrictABCGreaterProductionList :
    { lhs := [strictABCGreaterN StrictABCGreaterNT.markC],
      rhs := [strictABCGreaterT EqualCountTerminal.c] }]
 
+theorem strictABCGreaterProductionList_valid :
+    forall rule, rule ∈ StrictABCGreaterProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [StrictABCGreaterProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, strictABCGreaterN, ggNonterminal]
+
+def StrictABCGreaterGrammar : GeneralGrammar EqualCountTerminal StrictABCGreaterNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar StrictABCGreaterNT.start
+    StrictABCGreaterNT.finite StrictABCGreaterProductionList strictABCGreaterProductionList_valid
+
+def strictABCGreaterPresentation : GeneralGrammar.Presentation StrictABCGreaterGrammar :=
+  GeneralGrammar.ProductionList.presentation StrictABCGreaterNT.start
+    StrictABCGreaterNT.finite StrictABCGreaterProductionList strictABCGreaterProductionList_valid
+
+namespace StrictABCGreaterProduces
+
+theorem growTriple :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.start]
+        [strictABCGreaterN StrictABCGreaterNT.start,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem toPair :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.start]
+        [strictABCGreaterN StrictABCGreaterNT.pair] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem growPair :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.pair]
+        [strictABCGreaterN StrictABCGreaterNT.pair,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem endPair :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.pair]
+        [strictABCGreaterN StrictABCGreaterNT.extraA,
+          strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem growExtraA :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.extraA]
+        [strictABCGreaterN StrictABCGreaterNT.extraA,
+          strictABCGreaterN StrictABCGreaterNT.markA] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem endExtraA :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.extraA]
+        [strictABCGreaterN StrictABCGreaterNT.done,
+          strictABCGreaterN StrictABCGreaterNT.markA] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem finish :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.done] [] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapAB :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markA] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapBA :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markB] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapAC :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markA] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapCA :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterN StrictABCGreaterNT.markA,
+          strictABCGreaterN StrictABCGreaterNT.markC] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapBC :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markB] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem swapCB :
+      StrictABCGreaterGrammar.produces
+        [strictABCGreaterN StrictABCGreaterNT.markC,
+          strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterN StrictABCGreaterNT.markB,
+          strictABCGreaterN StrictABCGreaterNT.markC] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem emitA :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.markA]
+        [strictABCGreaterT EqualCountTerminal.a] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem emitB :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.markB]
+        [strictABCGreaterT EqualCountTerminal.b] := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+theorem emitC :
+      StrictABCGreaterGrammar.produces [strictABCGreaterN StrictABCGreaterNT.markC]
+        [strictABCGreaterT EqualCountTerminal.c]
+ := by
+  simp [StrictABCGreaterGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, StrictABCGreaterProductionList]
+
+end StrictABCGreaterProduces
+
 /-!
 The strict-count grammar records inequalities rather than equalities. Its
 production list and margin invariant are separated so the non-context-free
@@ -715,90 +772,8 @@ witnesses can reuse the generated-language facts without reopening the grammar.
 -/
 
 theorem strictABCGreaterGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions StrictABCGreaterGrammar := by
-  exists StrictABCGreaterProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [StrictABCGreaterProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [StrictABCGreaterProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.growTriple
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.toPair
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.growPair
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.endPair
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.growExtraA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.endExtraA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.finish
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapAB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapBA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapAC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapCA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapBC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.swapCB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.emitA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.emitB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact StrictABCGreaterProduces.emitC
-
-/-!
-After finite production bookkeeping, the strict grammar proves that every
-generated terminal word has the required margin property. This is the semantic
-half used by the closure counterexamples.
--/
-
+    GeneralGrammar.HasFiniteProductions StrictABCGreaterGrammar :=
+  strictABCGreaterPresentation.hasFiniteProductions
 theorem strictABCGreaterGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage StrictABCGreaterGrammar) := by
@@ -862,7 +837,11 @@ theorem strictABCGreater_yields_preserves_margin
                       | intro hx hy =>
                           rw [hx] at hmargin
                           rw [hy]
-                          cases hprod <;>
+                          change GeneralGrammar.ProductionListProduces
+                            StrictABCGreaterProductionList lhs rhs at hprod
+                          rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+                          simp [StrictABCGreaterProductionList] at hmem
+                          rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
                             simp [strictABCGreaterMargin,
                               strictABCGreaterTotalA,
                               strictABCGreaterTotalB,

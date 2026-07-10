@@ -61,45 +61,6 @@ def powN (A : PowerTwoNT) : Symbol SquareTerminal PowerTwoNT :=
 def powT (tok : SquareTerminal) : Symbol SquareTerminal PowerTwoNT :=
   ggTerminal tok
 
-inductive PowerTwoProduces :
-    SententialForm SquareTerminal PowerTwoNT ->
-      SententialForm SquareTerminal PowerTwoNT -> Prop where
-  | start :
-      PowerTwoProduces [powN PowerTwoNT.start]
-        [powN PowerTwoNT.left, powN PowerTwoNT.h, powN PowerTwoNT.markA,
-          powN PowerTwoNT.boundary]
-  | beginDouble :
-      PowerTwoProduces [powN PowerTwoNT.h] [powN PowerTwoNT.d]
-  | duplicate :
-      PowerTwoProduces [powN PowerTwoNT.d, powN PowerTwoNT.markA]
-        [powN PowerTwoNT.markA, powN PowerTwoNT.markA,
-          powN PowerTwoNT.d]
-  | turnAround :
-      PowerTwoProduces [powN PowerTwoNT.d, powN PowerTwoNT.boundary]
-        [powN PowerTwoNT.r, powN PowerTwoNT.boundary]
-  | returnLeft :
-      PowerTwoProduces [powN PowerTwoNT.markA, powN PowerTwoNT.r]
-        [powN PowerTwoNT.r, powN PowerTwoNT.markA]
-  | ready :
-      PowerTwoProduces [powN PowerTwoNT.left, powN PowerTwoNT.r]
-        [powN PowerTwoNT.left, powN PowerTwoNT.h]
-  | finishH :
-      PowerTwoProduces [powN PowerTwoNT.left, powN PowerTwoNT.h] []
-  | finishBoundary :
-      PowerTwoProduces [powN PowerTwoNT.boundary] []
-  | emitA :
-      PowerTwoProduces [powN PowerTwoNT.markA]
-        [powT SquareTerminal.a]
-
-def PowerTwoGrammar : GeneralGrammar SquareTerminal PowerTwoNT where
-  start := PowerTwoNT.start
-  produces := PowerTwoProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, powN,
-      ggNonterminal]
-  nonterminalsFinite := PowerTwoNT.finite
-
 def PowerTwoProductionList :
     List (GeneralGrammar.Production SquareTerminal PowerTwoNT) :=
   [{ lhs := [powN PowerTwoNT.start],
@@ -124,6 +85,77 @@ def PowerTwoProductionList :
    { lhs := [powN PowerTwoNT.markA],
      rhs := [powT SquareTerminal.a] }]
 
+theorem powerTwoProductionList_valid :
+    forall rule, rule ∈ PowerTwoProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [PowerTwoProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, powN, ggNonterminal]
+
+def PowerTwoGrammar : GeneralGrammar SquareTerminal PowerTwoNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar PowerTwoNT.start
+    PowerTwoNT.finite PowerTwoProductionList powerTwoProductionList_valid
+
+def powerTwoPresentation : GeneralGrammar.Presentation PowerTwoGrammar :=
+  GeneralGrammar.ProductionList.presentation PowerTwoNT.start
+    PowerTwoNT.finite PowerTwoProductionList powerTwoProductionList_valid
+
+namespace PowerTwoProduces
+
+theorem start : PowerTwoGrammar.produces [powN PowerTwoNT.start]
+    [powN PowerTwoNT.left, powN PowerTwoNT.h, powN PowerTwoNT.markA,
+      powN PowerTwoNT.boundary] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem beginDouble : PowerTwoGrammar.produces [powN PowerTwoNT.h]
+    [powN PowerTwoNT.d] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem duplicate : PowerTwoGrammar.produces
+    [powN PowerTwoNT.d, powN PowerTwoNT.markA]
+    [powN PowerTwoNT.markA, powN PowerTwoNT.markA,
+      powN PowerTwoNT.d] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem turnAround : PowerTwoGrammar.produces
+    [powN PowerTwoNT.d, powN PowerTwoNT.boundary]
+    [powN PowerTwoNT.r, powN PowerTwoNT.boundary] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem returnLeft : PowerTwoGrammar.produces
+    [powN PowerTwoNT.markA, powN PowerTwoNT.r]
+    [powN PowerTwoNT.r, powN PowerTwoNT.markA] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem ready : PowerTwoGrammar.produces
+    [powN PowerTwoNT.left, powN PowerTwoNT.r]
+    [powN PowerTwoNT.left, powN PowerTwoNT.h] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem finishH : PowerTwoGrammar.produces
+    [powN PowerTwoNT.left, powN PowerTwoNT.h] [] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem finishBoundary : PowerTwoGrammar.produces
+    [powN PowerTwoNT.boundary] [] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+theorem emitA : PowerTwoGrammar.produces [powN PowerTwoNT.markA]
+    [powT SquareTerminal.a] := by
+  simp [PowerTwoGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, PowerTwoProductionList]
+
+end PowerTwoProduces
+
 /-!
 As above, the finite-production theorem only checks that the displayed rules
 are exactly the grammar's rules. The final concrete derivation shows the
@@ -131,54 +163,8 @@ intended doubling behavior on the word of length four.
 -/
 
 theorem powerTwoGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions PowerTwoGrammar := by
-  exists PowerTwoProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [PowerTwoProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [PowerTwoProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.start
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.beginDouble
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.duplicate
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.turnAround
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.returnLeft
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.ready
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.finishH
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.finishBoundary
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PowerTwoProduces.emitA
+    GeneralGrammar.HasFiniteProductions PowerTwoGrammar :=
+  powerTwoPresentation.hasFiniteProductions
 
 theorem powerTwoGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage

@@ -56,44 +56,6 @@ def squareT (tok : SquareTerminal) : Symbol SquareTerminal SquareNT :=
 def squareN (A : SquareNT) : Symbol SquareTerminal SquareNT :=
   ggNonterminal A
 
-inductive SquareProduces :
-    SententialForm SquareTerminal SquareNT ->
-      SententialForm SquareTerminal SquareNT -> Prop where
-  | start :
-      SquareProduces [squareN SquareNT.start]
-        [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e]
-  | grow :
-      SquareProduces [squareN SquareNT.t]
-        [squareN SquareNT.b, squareN SquareNT.t, squareN SquareNT.markA]
-  | stop :
-      SquareProduces [squareN SquareNT.t] []
-  | moveBA :
-      SquareProduces [squareN SquareNT.b, squareN SquareNT.markA]
-        [squareN SquareNT.markA, squareT SquareTerminal.a, squareN SquareNT.b]
-  | moveBa :
-      SquareProduces [squareN SquareNT.b, squareT SquareTerminal.a]
-        [squareT SquareTerminal.a, squareN SquareNT.b]
-  | removeBE :
-      SquareProduces [squareN SquareNT.b, squareN SquareNT.e]
-        [squareN SquareNT.e]
-  | removeDA :
-      SquareProduces [squareN SquareNT.d, squareN SquareNT.markA]
-        [squareN SquareNT.d]
-  | moveDa :
-      SquareProduces [squareN SquareNT.d, squareT SquareTerminal.a]
-        [squareT SquareTerminal.a, squareN SquareNT.d]
-  | finish :
-      SquareProduces [squareN SquareNT.d, squareN SquareNT.e] []
-
-def SquareGrammar : GeneralGrammar SquareTerminal SquareNT where
-  start := SquareNT.start
-  produces := SquareProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, squareN,
-      ggNonterminal]
-  nonterminalsFinite := SquareNT.finite
-
 def SquareProductionList :
     List (GeneralGrammar.Production SquareTerminal SquareNT) :=
   [{ lhs := [squareN SquareNT.start],
@@ -116,55 +78,77 @@ def SquareProductionList :
    { lhs := [squareN SquareNT.d, squareN SquareNT.e],
      rhs := [] }]
 
+theorem squareProductionList_valid :
+    forall rule, rule ∈ SquareProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [SquareProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, squareN, ggNonterminal]
+
+def SquareGrammar : GeneralGrammar SquareTerminal SquareNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar SquareNT.start
+    SquareNT.finite SquareProductionList squareProductionList_valid
+
+def squarePresentation : GeneralGrammar.Presentation SquareGrammar :=
+  GeneralGrammar.ProductionList.presentation SquareNT.start
+    SquareNT.finite SquareProductionList squareProductionList_valid
+
+namespace SquareProduces
+
+theorem start : SquareGrammar.produces [squareN SquareNT.start]
+    [squareN SquareNT.d, squareN SquareNT.t, squareN SquareNT.e] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem grow : SquareGrammar.produces [squareN SquareNT.t]
+    [squareN SquareNT.b, squareN SquareNT.t, squareN SquareNT.markA] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem stop : SquareGrammar.produces [squareN SquareNT.t] [] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem moveBA : SquareGrammar.produces
+    [squareN SquareNT.b, squareN SquareNT.markA]
+    [squareN SquareNT.markA, squareT SquareTerminal.a,
+      squareN SquareNT.b] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem moveBa : SquareGrammar.produces
+    [squareN SquareNT.b, squareT SquareTerminal.a]
+    [squareT SquareTerminal.a, squareN SquareNT.b] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem removeBE : SquareGrammar.produces
+    [squareN SquareNT.b, squareN SquareNT.e] [squareN SquareNT.e] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem removeDA : SquareGrammar.produces
+    [squareN SquareNT.d, squareN SquareNT.markA] [squareN SquareNT.d] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem moveDa : SquareGrammar.produces
+    [squareN SquareNT.d, squareT SquareTerminal.a]
+    [squareT SquareTerminal.a, squareN SquareNT.d] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+theorem finish : SquareGrammar.produces
+    [squareN SquareNT.d, squareN SquareNT.e] [] := by
+  simp [SquareGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, SquareProductionList]
+
+end SquareProduces
+
 theorem squareGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions SquareGrammar := by
-  exists SquareProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [SquareProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [SquareProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.start
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.grow
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.stop
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.moveBA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.moveBa
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.removeBE
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.removeDA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.moveDa
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact SquareProduces.finish
+    GeneralGrammar.HasFiniteProductions SquareGrammar :=
+  squarePresentation.hasFiniteProductions
 
 theorem squareGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage

@@ -62,79 +62,6 @@ def ordered4T (tok : FourCountTerminal) :
     Symbol FourCountTerminal OrderedABCDNT :=
   ggTerminal tok
 
-inductive OrderedABCDProduces :
-    SententialForm FourCountTerminal OrderedABCDNT ->
-      SententialForm FourCountTerminal OrderedABCDNT -> Prop where
-  | grow :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.start]
-        [ordered4N OrderedABCDNT.start, ordered4N OrderedABCDNT.markA,
-          ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markC,
-          ordered4N OrderedABCDNT.markD]
-  | startX :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.start]
-        [ordered4N OrderedABCDNT.x]
-  | swapBA :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markA]
-        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markB]
-  | swapCA :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markA]
-        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markC]
-  | swapDA :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markA]
-        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markD]
-  | swapCB :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markB]
-        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markC]
-  | swapDB :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markB]
-        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markD]
-  | swapDC :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markC]
-        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markD]
-  | convertXA :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.x, ordered4N OrderedABCDNT.markA]
-        [ordered4T FourCountTerminal.a, ordered4N OrderedABCDNT.x]
-  | xToY :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.x]
-        [ordered4N OrderedABCDNT.y]
-  | convertYB :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.y, ordered4N OrderedABCDNT.markB]
-        [ordered4T FourCountTerminal.b, ordered4N OrderedABCDNT.y]
-  | yToZ :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.y]
-        [ordered4N OrderedABCDNT.z]
-  | convertZC :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.z, ordered4N OrderedABCDNT.markC]
-        [ordered4T FourCountTerminal.c, ordered4N OrderedABCDNT.z]
-  | zToQ :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.z]
-        [ordered4N OrderedABCDNT.q]
-  | convertQD :
-      OrderedABCDProduces
-        [ordered4N OrderedABCDNT.q, ordered4N OrderedABCDNT.markD]
-        [ordered4T FourCountTerminal.d, ordered4N OrderedABCDNT.q]
-  | finish :
-      OrderedABCDProduces [ordered4N OrderedABCDNT.q] []
-
-def OrderedABCDGrammar :
-    GeneralGrammar FourCountTerminal OrderedABCDNT where
-  start := OrderedABCDNT.start
-  produces := OrderedABCDProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, ordered4N,
-      ggNonterminal]
-  nonterminalsFinite := OrderedABCDNT.finite
-
 def OrderedABCDProductionList :
     List (GeneralGrammar.Production FourCountTerminal OrderedABCDNT) :=
   [{ lhs := [ordered4N OrderedABCDNT.start],
@@ -172,6 +99,135 @@ def OrderedABCDProductionList :
    { lhs := [ordered4N OrderedABCDNT.q],
      rhs := [] }]
 
+theorem orderedABCDProductionList_valid :
+    forall rule, rule ∈ OrderedABCDProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [OrderedABCDProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, ordered4N, ggNonterminal]
+
+def OrderedABCDGrammar :
+    GeneralGrammar FourCountTerminal OrderedABCDNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar OrderedABCDNT.start
+    OrderedABCDNT.finite OrderedABCDProductionList orderedABCDProductionList_valid
+
+def orderedABCDPresentation : GeneralGrammar.Presentation OrderedABCDGrammar :=
+  GeneralGrammar.ProductionList.presentation OrderedABCDNT.start
+    OrderedABCDNT.finite OrderedABCDProductionList orderedABCDProductionList_valid
+
+namespace OrderedABCDProduces
+
+theorem grow :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.start]
+        [ordered4N OrderedABCDNT.start, ordered4N OrderedABCDNT.markA,
+          ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markC,
+          ordered4N OrderedABCDNT.markD] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem startX :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.start]
+        [ordered4N OrderedABCDNT.x] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapBA :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markA]
+        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markB] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapCA :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markA]
+        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markC] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapDA :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markA]
+        [ordered4N OrderedABCDNT.markA, ordered4N OrderedABCDNT.markD] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapCB :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markB]
+        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markC] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapDB :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markB]
+        [ordered4N OrderedABCDNT.markB, ordered4N OrderedABCDNT.markD] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem swapDC :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.markD, ordered4N OrderedABCDNT.markC]
+        [ordered4N OrderedABCDNT.markC, ordered4N OrderedABCDNT.markD] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem convertXA :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.x, ordered4N OrderedABCDNT.markA]
+        [ordered4T FourCountTerminal.a, ordered4N OrderedABCDNT.x] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem xToY :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.x]
+        [ordered4N OrderedABCDNT.y] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem convertYB :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.y, ordered4N OrderedABCDNT.markB]
+        [ordered4T FourCountTerminal.b, ordered4N OrderedABCDNT.y] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem yToZ :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.y]
+        [ordered4N OrderedABCDNT.z] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem convertZC :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.z, ordered4N OrderedABCDNT.markC]
+        [ordered4T FourCountTerminal.c, ordered4N OrderedABCDNT.z] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem zToQ :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.z]
+        [ordered4N OrderedABCDNT.q] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem convertQD :
+      OrderedABCDGrammar.produces
+        [ordered4N OrderedABCDNT.q, ordered4N OrderedABCDNT.markD]
+        [ordered4T FourCountTerminal.d, ordered4N OrderedABCDNT.q] := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+theorem finish :
+      OrderedABCDGrammar.produces [ordered4N OrderedABCDNT.q] []
+ := by
+  simp [OrderedABCDGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, OrderedABCDProductionList]
+
+end OrderedABCDProduces
+
 /-!
 The ordered four-block example repeats the ordered three-block pattern at
 larger scale. The long production list consists of grow rules, marker-sorting
@@ -179,92 +235,8 @@ rules, phase-change rules, terminal-emission rules, and one final cleanup rule.
 -/
 
 theorem orderedABCDGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions OrderedABCDGrammar := by
-  exists OrderedABCDProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [OrderedABCDProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [OrderedABCDProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.grow
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.startX
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapBA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapCA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapDA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapCB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapDB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.swapDC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.convertXA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.xToY
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.convertYB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.yToZ
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.convertZC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.zToQ
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.convertQD
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact OrderedABCDProduces.finish
-
-/-!
-The four-symbol ordered grammar is the same construction one dimension higher.
-The following block records finite production data and count preservation;
-witness derivations for the empty word and {lit}`aabbccdd` close the file.
-Count preservation is the only invariant proved about generated words, so
-these theorems do not establish that generated words are ordered.
--/
-
+    GeneralGrammar.HasFiniteProductions OrderedABCDGrammar :=
+  orderedABCDPresentation.hasFiniteProductions
 theorem orderedABCDGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage OrderedABCDGrammar) := by
@@ -327,7 +299,11 @@ theorem orderedABCD_yields_preserves_balanced
                       | intro hx hy =>
                           rw [hx] at hbalanced
                           rw [hy]
-                          cases hprod <;>
+                          change GeneralGrammar.ProductionListProduces
+                            OrderedABCDProductionList lhs rhs at hprod
+                          rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+                          simp [OrderedABCDProductionList] at hmem
+                          rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
                             simp [orderedABCDBalanced, orderedABCDTotalA,
                               orderedABCDTotalB, orderedABCDTotalC,
                               orderedABCDTotalD,

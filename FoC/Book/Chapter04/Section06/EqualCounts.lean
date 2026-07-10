@@ -58,53 +58,6 @@ def ecN (A : EqualCountNT) :
     Symbol EqualCountTerminal EqualCountNT :=
   ggNonterminal A
 
-inductive EqualCountProduces :
-    SententialForm EqualCountTerminal EqualCountNT ->
-      SententialForm EqualCountTerminal EqualCountNT -> Prop where
-  | grow :
-      EqualCountProduces [ecN EqualCountNT.start]
-        [ecN EqualCountNT.start, ecN EqualCountNT.markA,
-          ecN EqualCountNT.markB, ecN EqualCountNT.markC]
-  | stop :
-      EqualCountProduces [ecN EqualCountNT.start] []
-  | swapAB :
-      EqualCountProduces [ecN EqualCountNT.markA, ecN EqualCountNT.markB]
-        [ecN EqualCountNT.markB, ecN EqualCountNT.markA]
-  | swapBA :
-      EqualCountProduces [ecN EqualCountNT.markB, ecN EqualCountNT.markA]
-        [ecN EqualCountNT.markA, ecN EqualCountNT.markB]
-  | swapAC :
-      EqualCountProduces [ecN EqualCountNT.markA, ecN EqualCountNT.markC]
-        [ecN EqualCountNT.markC, ecN EqualCountNT.markA]
-  | swapCA :
-      EqualCountProduces [ecN EqualCountNT.markC, ecN EqualCountNT.markA]
-        [ecN EqualCountNT.markA, ecN EqualCountNT.markC]
-  | swapBC :
-      EqualCountProduces [ecN EqualCountNT.markB, ecN EqualCountNT.markC]
-        [ecN EqualCountNT.markC, ecN EqualCountNT.markB]
-  | swapCB :
-      EqualCountProduces [ecN EqualCountNT.markC, ecN EqualCountNT.markB]
-        [ecN EqualCountNT.markB, ecN EqualCountNT.markC]
-  | emitA :
-      EqualCountProduces [ecN EqualCountNT.markA]
-        [ecT EqualCountTerminal.a]
-  | emitB :
-      EqualCountProduces [ecN EqualCountNT.markB]
-        [ecT EqualCountTerminal.b]
-  | emitC :
-      EqualCountProduces [ecN EqualCountNT.markC]
-        [ecT EqualCountTerminal.c]
-
-def EqualCountGrammar :
-    GeneralGrammar EqualCountTerminal EqualCountNT where
-  start := EqualCountNT.start
-  produces := EqualCountProduces
-  lhsContainsNonterminal := by
-    intro lhs rhs h
-    cases h <;> simp [SententialForm.containsNonterminal, ecN,
-      ggNonterminal]
-  nonterminalsFinite := EqualCountNT.finite
-
 def EqualCountProductionList :
     List (GeneralGrammar.Production EqualCountTerminal EqualCountNT) :=
   [{ lhs := [ecN EqualCountNT.start],
@@ -131,64 +84,96 @@ def EqualCountProductionList :
    { lhs := [ecN EqualCountNT.markC],
      rhs := [ecT EqualCountTerminal.c] }]
 
-theorem equalCountGrammar_has_finite_productions :
-    GeneralGrammar.HasFiniteProductions EqualCountGrammar := by
-  exists EqualCountProductionList
-  intro lhs rhs
-  constructor
-  · intro h
-    cases h <;> simp [EqualCountProductionList]
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [EqualCountProductionList] at hmem
-    rcases hmem with
-      hrule | hrule | hrule | hrule | hrule | hrule |
-      hrule | hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.grow
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.stop
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapAB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapBA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapAC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapCA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapBC
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.swapCB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.emitA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.emitB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact EqualCountProduces.emitC
+theorem equalCountProductionList_valid :
+    forall rule, rule ∈ EqualCountProductionList ->
+      SententialForm.containsNonterminal rule.lhs := by
+  intro rule h
+  simp [EqualCountProductionList] at h
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+    simp [SententialForm.containsNonterminal, ecN, ggNonterminal]
 
+def EqualCountGrammar : GeneralGrammar EqualCountTerminal EqualCountNT :=
+  GeneralGrammar.ProductionList.toGeneralGrammar EqualCountNT.start
+    EqualCountNT.finite EqualCountProductionList equalCountProductionList_valid
+
+def equalCountPresentation : GeneralGrammar.Presentation EqualCountGrammar :=
+  GeneralGrammar.ProductionList.presentation EqualCountNT.start
+    EqualCountNT.finite EqualCountProductionList equalCountProductionList_valid
+
+namespace EqualCountProduces
+
+theorem grow :
+      EqualCountGrammar.produces [ecN EqualCountNT.start]
+        [ecN EqualCountNT.start, ecN EqualCountNT.markA,
+          ecN EqualCountNT.markB, ecN EqualCountNT.markC] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem stop :
+      EqualCountGrammar.produces [ecN EqualCountNT.start] [] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapAB :
+      EqualCountGrammar.produces [ecN EqualCountNT.markA, ecN EqualCountNT.markB]
+        [ecN EqualCountNT.markB, ecN EqualCountNT.markA] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapBA :
+      EqualCountGrammar.produces [ecN EqualCountNT.markB, ecN EqualCountNT.markA]
+        [ecN EqualCountNT.markA, ecN EqualCountNT.markB] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapAC :
+      EqualCountGrammar.produces [ecN EqualCountNT.markA, ecN EqualCountNT.markC]
+        [ecN EqualCountNT.markC, ecN EqualCountNT.markA] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapCA :
+      EqualCountGrammar.produces [ecN EqualCountNT.markC, ecN EqualCountNT.markA]
+        [ecN EqualCountNT.markA, ecN EqualCountNT.markC] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapBC :
+      EqualCountGrammar.produces [ecN EqualCountNT.markB, ecN EqualCountNT.markC]
+        [ecN EqualCountNT.markC, ecN EqualCountNT.markB] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem swapCB :
+      EqualCountGrammar.produces [ecN EqualCountNT.markC, ecN EqualCountNT.markB]
+        [ecN EqualCountNT.markB, ecN EqualCountNT.markC] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem emitA :
+      EqualCountGrammar.produces [ecN EqualCountNT.markA]
+        [ecT EqualCountTerminal.a] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem emitB :
+      EqualCountGrammar.produces [ecN EqualCountNT.markB]
+        [ecT EqualCountTerminal.b] := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+theorem emitC :
+      EqualCountGrammar.produces [ecN EqualCountNT.markC]
+        [ecT EqualCountTerminal.c]
+ := by
+  simp [EqualCountGrammar, GeneralGrammar.ProductionList.toGeneralGrammar,
+    GeneralGrammar.ProductionListProduces, EqualCountProductionList]
+
+end EqualCountProduces
+
+theorem equalCountGrammar_has_finite_productions :
+    GeneralGrammar.HasFiniteProductions EqualCountGrammar :=
+  equalCountPresentation.hasFiniteProductions
 theorem equalCountGrammar_finite_production_generated :
     FiniteProductionGeneralLanguage
       (GeneralGrammar.GeneratedLanguage EqualCountGrammar) := by
@@ -251,7 +236,11 @@ theorem equalCount_yields_preserves_balanced
                       | intro hx hy =>
                           rw [hx] at hbalanced
                           rw [hy]
-                          cases hprod <;>
+                          change GeneralGrammar.ProductionListProduces
+                            EqualCountProductionList lhs rhs at hprod
+                          rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+                          simp [EqualCountProductionList] at hmem
+                          rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
                             simp [equalCountBalanced, equalCountTotalA,
                               equalCountTotalB, equalCountTotalC,
                               sententialCountTerminal_append,

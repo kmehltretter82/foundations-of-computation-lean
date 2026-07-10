@@ -75,35 +75,39 @@ theorem squarePostStopState_yields_reachable
   rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
   rw [hx] at hxstep
   rw [hystep]
-  cases hprod with
-  | start =>
+  change GeneralGrammar.ProductionListProduces
+    SquareProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [SquareProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (squarePostStopForm_count_start hclean) hxstep)
-  | grow =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (squarePostStopForm_count_t hclean) hxstep)
-  | stop =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (squarePostStopForm_count_t hclean) hxstep)
-  | moveBA =>
+  ·
       exact SquareReachableState.post n
         (squarePostStopState_step_moveBA hclean hbalance hxstep)
-  | moveBa =>
+  ·
       exact SquareReachableState.post n
         (squarePostStopState_step_moveBa hclean hbalance hxstep)
-  | removeBE =>
+  ·
       exact SquareReachableState.post n
         (squarePostStopState_step_removeBE hclean hbalance hxstep)
-  | removeDA =>
+  ·
       exact SquareReachableState.post n
         (squarePostStopState_step_removeDA hclean hbalance hxstep)
-  | moveDa =>
+  ·
       exact SquareReachableState.post n
         (squarePostStopState_step_moveDa hclean hbalance hxstep)
-  | finish =>
+  ·
       rcases squarePostStopState_step_finish_square hclean hbalance hxstep with
         ⟨word, hy, hword⟩
       have hterminal : SquareReachableState (u ++ v) := by
@@ -147,21 +151,25 @@ theorem squareGrowForm_yields_reachable
     SquareReachableState y := by
   rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
   rw [hystep]
-  cases hprod with
-  | start =>
+  change GeneralGrammar.ProductionListProduces
+    SquareProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [SquareProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (squareGrowForm_count_start n) hxstep)
-  | grow =>
+  ·
       have hocc := squareGrowForm_t_occurrence n hxstep
       rw [hocc.left, hocc.right]
       simpa [squareGrowForm, squareBForm_succ_eq_append,
         squareMarkerAForm, Word.RepeatSymbol, List.append_assoc] using!
         SquareReachableState.grow (n + 1)
-  | stop =>
+  ·
       exact SquareReachableState.post n
         (squareGrowForm_stop_post_state n (by simpa using hxstep))
-  | moveBA =>
+  ·
       have hafter := sentential_pair_after_nonterminal_delimiter
         (terminal := SquareTerminal) (nonterminal := SquareNT)
         (A := SquareNT.b) (C := SquareNT.d)
@@ -178,7 +186,7 @@ theorem squareGrowForm_yields_reachable
           (by intro htm; cases htm)
           (by intro hbm; cases hbm)
           htail)
-  | moveBa =>
+  ·
       exact False.elim
         (sentential_no_terminal_occurrence_absurd
           (squareGrowForm_count_terminal_a n) (by
@@ -187,7 +195,7 @@ theorem squareGrowForm_yields_reachable
                   (u ++ [squareN SquareNT.b]) ++
                     [ggTerminal SquareTerminal.a] ++ v by
                 simpa [squareT, List.append_assoc] using hxstep)))
-  | removeBE =>
+  ·
       have hafter := sentential_pair_after_nonterminal_delimiter
         (terminal := SquareTerminal) (nonterminal := SquareNT)
         (A := SquareNT.b) (C := SquareNT.d)
@@ -204,7 +212,7 @@ theorem squareGrowForm_yields_reachable
           (by intro hte; cases hte)
           (by intro hbe; cases hbe)
           htail)
-  | removeDA =>
+  ·
       have htailCount :
           SententialCountNonterminal SquareNT.d
             (squareBForm n ++ [squareN SquareNT.t] ++
@@ -231,7 +239,7 @@ theorem squareGrowForm_yields_reachable
               (squareBForm n ++ [squareN SquareNT.t] ++
                 squareMarkerAForm (n + 1) ++ [squareN SquareNT.e]) at htail
           simp [squareN, ggNonterminal] at htail
-  | moveDa =>
+  ·
       exact False.elim
         (sentential_no_terminal_occurrence_absurd
           (squareGrowForm_count_terminal_a n) (by
@@ -240,7 +248,7 @@ theorem squareGrowForm_yields_reachable
                   (u ++ [squareN SquareNT.d]) ++
                     [ggTerminal SquareTerminal.a] ++ v by
                 simpa [squareT, List.append_assoc] using hxstep)))
-  | finish =>
+  ·
       have htailCount :
           SententialCountNonterminal SquareNT.d
             (squareBForm n ++ [squareN SquareNT.t] ++
@@ -276,8 +284,12 @@ theorem squareStart_yields_reachable
     SquareReachableState y := by
   rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
   rw [hystep]
-  cases hprod with
-  | start =>
+  change GeneralGrammar.ProductionListProduces
+    SquareProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [SquareProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  ·
       have huniq := sentential_unique_nonterminal_occurrence
         (terminal := SquareTerminal) (nonterminal := SquareNT)
         (A := SquareNT.start)
@@ -290,19 +302,19 @@ theorem squareStart_yields_reachable
       simpa [squareGrowForm, squareBForm, squareMarkerAForm,
         Word.RepeatSymbol, List.append_assoc] using
         SquareReachableState.grow 0
-  | grow =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
             SententialCountNonterminal SquareNT.t [squareN SquareNT.start] = 0)
           (by simpa [squareN] using hxstep))
-  | stop =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
             SententialCountNonterminal SquareNT.t [squareN SquareNT.start] = 0)
           (by simpa [squareN] using hxstep))
-  | moveBA =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -312,7 +324,7 @@ theorem squareStart_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareN SquareNT.markA] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | moveBa =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -322,7 +334,7 @@ theorem squareStart_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareT SquareTerminal.a] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | removeBE =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -332,7 +344,7 @@ theorem squareStart_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | removeDA =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -342,7 +354,7 @@ theorem squareStart_yields_reachable
                 u ++ [squareN SquareNT.d] ++
                   ([squareN SquareNT.markA] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | moveDa =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -352,7 +364,7 @@ theorem squareStart_yields_reachable
                 u ++ [squareN SquareNT.d] ++
                   ([squareT SquareTerminal.a] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | finish =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (by simp [SententialCountNonterminal, squareN, ggNonterminal] :
@@ -373,23 +385,27 @@ theorem squareTerminalState_yields_reachable
       (SententialForm.terminalWord word) y) :
     SquareReachableState y := by
   rcases hstep with ⟨u, v, lhs, rhs, hprod, hxstep, hystep⟩
-  cases hprod with
-  | start =>
+  change GeneralGrammar.ProductionListProduces
+    SquareProductionList lhs rhs at hprod
+  rcases hprod with ⟨rule, hmem, rfl, rfl⟩
+  simp [SquareProductionList] at hmem
+  rcases hmem with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.start word)
           (by simpa [squareN] using hxstep))
-  | grow =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.t word)
           (by simpa [squareN] using hxstep))
-  | stop =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.t word)
           (by simpa [squareN] using hxstep))
-  | moveBA =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.b word)
@@ -398,7 +414,7 @@ theorem squareTerminalState_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareN SquareNT.markA] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | moveBa =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.b word)
@@ -407,7 +423,7 @@ theorem squareTerminalState_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareT SquareTerminal.a] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | removeBE =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.b word)
@@ -416,7 +432,7 @@ theorem squareTerminalState_yields_reachable
                 u ++ [squareN SquareNT.b] ++
                   ([squareN SquareNT.e] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | removeDA =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.d word)
@@ -425,7 +441,7 @@ theorem squareTerminalState_yields_reachable
                 u ++ [squareN SquareNT.d] ++
                   ([squareN SquareNT.markA] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | moveDa =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.d word)
@@ -434,7 +450,7 @@ theorem squareTerminalState_yields_reachable
                 u ++ [squareN SquareNT.d] ++
                   ([squareT SquareTerminal.a] ++ v) by
               simpa [List.append_assoc] using hxstep)))
-  | finish =>
+  ·
       exact False.elim
         (sentential_no_nonterminal_occurrence_absurd
           (sententialCountNonterminal_terminalWord SquareNT.d word)
