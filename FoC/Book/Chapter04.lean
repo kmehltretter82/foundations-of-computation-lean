@@ -58,7 +58,7 @@ the unrestricted grammar vocabulary used at the computability boundary.
 |---|---|---|
 | 4.1 CFGs | {module}`FoC.Grammars.CFG`, {module}`FoC.Grammars.CFL` | Core laws, closures, regular boundary, and representative exact grammars complete |
 | 4.2 BNF | {module}`FoC.Grammars.BNF` | Expansion semantics and representative applications complete; exhaustive application listings deferred |
-| 4.3 Parsing | {module}`FoC.Grammars.ParseTree`, {module}`FoC.Book.Chapter04.Section03` | Parse-tree/derivation correspondence complete; LL(1) successful-run soundness complete; generic FIRST/FOLLOW and parser completeness not claimed |
+| 4.3 Parsing | {module}`FoC.Grammars.ParseTree`, {module}`FoC.Grammars.Parsing.LL1`, {module}`FoC.Book.Chapter04.Section03` | Parse-tree/derivation correspondence complete; LL(1) successful-run soundness complete; generic FIRST/FOLLOW and parser completeness not claimed |
 | 4.4 PDAs | {module}`FoC.Grammars.PDA`, {module}`FoC.Grammars.CFGToPDA`, {module}`FoC.Grammars.PDAToCFG` | Exact CFG/PDA equivalence for finite presentations complete |
 | 4.5 Non-CFLs | {module}`FoC.Grammars.CFL`, {module}`FoC.Book.Chapter04.Section05` | Pumping and the {lit}`a^n b^n c^n` result complete; the duplicate-word position argument remains partial |
 | 4.6 General grammars | {module}`FoC.Grammars.GeneralGrammar`, {module}`FoC.Book.Chapter04.Section06` | Core semantics, exact CFG embedding, and principal examples complete; selected exercise converses remain deferred |

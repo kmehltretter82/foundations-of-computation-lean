@@ -520,7 +520,9 @@ completed:
         status: "sound_parser_core_partial_generator_correctness"
         formalized:
           - artifact: "FoC.Book.Chapter04.Section03"
-            reason: "LL(1)/LR(1) table vocabulary, finite LL(1) table code, sound table-entry generation from supplied production/lookahead entries, executable conflict detection, fixed-point nullable/FIRST/FOLLOW approximants, a sound conflict-checked parser entry point, a fuel-bounded executable LL(1) runner with frontier and generated-language soundness, the source's G1 ambiguity witness for x+y*z, a successful G2 LL(1) table run, parse-tree/frontier derivation bridges, height/frontier bounds, selected subtree/spine machinery, ambiguity equivalence, canonical left-derivation traces, and parse-tree/left-derivation trace correspondence. Generic semantic correctness of FIRST/FOLLOW and parser completeness are not claimed."
+            reason: "Static LR(1) table vocabulary, the source's G1 ambiguity witness for x+y*z, a successful concrete G2 LL(1) table run, and book-facing parse-tree/frontier, height, subtree, ambiguity, and derivation-trace consequences."
+          - artifact: "FoC.Grammars.Parsing.LL1"
+            reason: "Reusable LL(1) table vocabulary, finite table code, sound table-entry generation from supplied production/lookahead entries, executable conflict detection, fixed-point nullable/FIRST/FOLLOW approximants, a sound conflict-checked parser entry point, and a fuel-bounded executable runner with frontier and generated-language soundness. Generic semantic correctness of FIRST/FOLLOW and parser completeness are not claimed."
           - artifact: "FoC.Grammars.ParseTree"
             reason: "Parse trees, forests, frontier computation, node/height measures, derivation bridges, ambiguity infrastructure, and pumping-support subtree machinery."
         missing: []

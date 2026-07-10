@@ -58,6 +58,7 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Grammars.RightRegular",
   "FoC.Grammars.BNF",
   "FoC.Grammars.ParseTree",
+  "FoC.Grammars.Parsing",
   "FoC.Grammars.PDA",
   "FoC.Grammars.PDANormalize",
   "FoC.Grammars.CFGToPDA",
@@ -142,6 +143,9 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Grammars.PDANormalize.Construction",
   "FoC.Grammars.PDANormalize.Forward",
   "FoC.Grammars.PDANormalize.Reverse"
+]
+"FoC.Grammars.Parsing" = [
+  "FoC.Grammars.Parsing.LL1"
 ]
 "FoC.Computability.Grammar" = [
   "FoC.Computability.Grammar.DerivationTraces",
@@ -338,6 +342,12 @@ title = "PDA to CFG"
 
 [modules."FoC.Grammars.ParseTree"]
 title = "Parse Trees"
+
+[modules."FoC.Grammars.Parsing"]
+title = "Parsing"
+
+[modules."FoC.Grammars.Parsing.LL1"]
+title = "Sound LL(1) Parsing"
 
 [modules."FoC.Grammars.RightRegular"]
 title = "Right-Regular Grammars"

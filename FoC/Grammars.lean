@@ -3,6 +3,7 @@ import FoC.Grammars.CFL
 import FoC.Grammars.RightRegular
 import FoC.Grammars.BNF
 import FoC.Grammars.ParseTree
+import FoC.Grammars.Parsing
 import FoC.Grammars.PDA
 import FoC.Grammars.PDANormalize
 import FoC.Grammars.CFGToPDA
@@ -32,7 +33,9 @@ vocabulary.  {module}`FoC.Grammars.CFL` packages the corresponding
 context-free-language predicates, while {module}`FoC.Grammars.BNF` records the
 small BNF conveniences that the book expands into ordinary productions.
 {module}`FoC.Grammars.ParseTree` relates parse trees and frontiers back to
-derivations.
+derivations. {module}`FoC.Grammars.Parsing` provides the sound executable
+LL(1) parser, finite table and conflict checks, and fixed-point
+{lit}`FIRST`/{lit}`FOLLOW` approximants.
 
 Parse trees do more than present derivations visually. They also supply the
 height, frontier, subtree, and repetition machinery needed for the
@@ -70,7 +73,7 @@ modules to state the book definitions, examples, and conversion theorems in
 textbook order.
 
 For a conceptual pass, read {module}`FoC.Grammars.CFG`,
-{module}`FoC.Grammars.ParseTree`, and {module}`FoC.Grammars.PDA` first. Then
-read the conversion modules when you want the formal content behind the
-equivalence theorems.
+{module}`FoC.Grammars.ParseTree`, and {module}`FoC.Grammars.PDA` first. Read
+{module}`FoC.Grammars.Parsing` for the executable parser layer, then the
+conversion modules for the formal content behind the equivalence theorems.
 -/
