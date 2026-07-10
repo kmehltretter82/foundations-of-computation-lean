@@ -598,6 +598,143 @@ theorem pullOneBitJ2_run
              simp [List.append_eq, List.reverse_reverse, List.reverse_append,
                List.append_assoc, replicate_none_comm'])
 
+/-- One pull across one interior run, from the block's leftmost bit. -/
+theorem pullOneBitJ1_run
+    (b1 : Bool) (blkT : Word Bool)
+    (r1 : Bool) (run1T : Word Bool) (g1 : Nat)
+    (fld : Word Bool) (x : Bool) (R : List (Option Bool)) :
+    Reaches pullOneBitJ1Description
+      { state := 0
+        tape := tapeAtCells [none]
+          (List.append ((b1 :: blkT).map some)
+            (none ::
+              List.append ((r1 :: run1T).map some)
+                (none ::
+                  List.append (List.replicate g1 none)
+                    (List.append ((List.append fld [x]).map some)
+                      (none :: R))))) }
+      { state := 14
+        tape := tapeAtCells [none]
+          (some x ::
+            List.append ((b1 :: blkT).map some)
+              (none ::
+                List.append ((r1 :: run1T).map some)
+                  (List.append (List.replicate g1 none)
+                    (none ::
+                      List.append (fld.map some)
+                        (none :: none :: R))))) } := by
+  have s1 := crossBitsRightThenRight
+    (D := pullOneBitJ1Description) (s := 0) (t := 1)
+    (by decide) (by decide) (by decide)
+    (b1 :: blkT) [none]
+    (List.append ((r1 :: run1T).map some)
+      (none ::
+        List.append (List.replicate g1 none)
+          (List.append ((List.append fld [x]).map some) (none :: R))))
+  have s2 := crossBitsRightThenRight
+    (D := pullOneBitJ1Description) (s := 1) (t := 2)
+    (by decide) (by decide) (by decide)
+    (r1 :: run1T)
+    (none :: List.append ((b1 :: blkT).reverse.map some) [none])
+    (List.append (List.replicate g1 none)
+      (List.append ((List.append fld [x]).map some) (none :: R)))
+  have s3 := crossBlanksBitsRightThenLeft
+    (D := pullOneBitJ1Description) (s := 2) (s2 := 3) (t := 4)
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    g1 (List.append fld [x]) (by cases fld <;> simp)
+    (none ::
+      List.append ((r1 :: run1T).reverse.map some)
+        (none :: List.append ((b1 :: blkT).reverse.map some) [none]))
+    R
+  have s3' : Reaches pullOneBitJ1Description
+      { state := 4
+        tape := tapeSeenLeft
+          (List.append ((List.append fld [x]).reverse.map some)
+            (List.append (List.replicate g1 none)
+              (none ::
+                List.append ((r1 :: run1T).reverse.map some)
+                  (none ::
+                    List.append ((b1 :: blkT).reverse.map some)
+                      [none]))))
+          (none :: R) }
+      { state := 4
+        tape := tapeSeenLeft
+          (some x ::
+            List.append (fld.reverse.map some)
+              (none ::
+                List.append (List.replicate g1 none)
+                  (List.append ((r1 :: run1T).reverse.map some)
+                    (none ::
+                      List.append ((b1 :: blkT).reverse.map some)
+                        (none :: [])))))
+          (none :: R) } := by
+    refine Reaches.of_eq ?_
+    simp only [Configuration.mk.injEq, and_true, true_and, eq_self_iff_true]
+    congr 1
+    simp [List.append_eq, List.reverse_append, List.append_assoc,
+      replicate_none_comm']
+  cases x with
+  | false =>
+      have s4 := pullStepLeft
+        (D := pullOneBitJ1Description) (s := 4) (t := 5) (x := false)
+        (by decide)
+        (List.append (fld.reverse.map some)
+          (none ::
+            List.append (List.replicate g1 none)
+              (List.append ((r1 :: run1T).reverse.map some)
+                (none ::
+                  List.append ((b1 :: blkT).reverse.map some)
+                    (none :: [])))))
+        (none :: R)
+      have s5 := carryJ1_run
+        (D := pullOneBitJ1Description)
+        (a0 := 5) (aG1 := 7) (aR1 := 9)
+        (aB := 11) (aP := 13) (aH := 14) (x := false)
+        (by decide) (by decide) (by decide) (by decide) (by decide)
+        (by decide) (by decide) (by decide) (by decide) (by decide)
+        (by decide) (by decide) (by decide)
+        fld.reverse (r1 :: run1T).reverse (b1 :: blkT).reverse g1
+        (by intro h; simpa using congrArg List.length h)
+        (none :: none :: R)
+      refine (s1.trans (s2.trans (s3.trans (s3'.trans
+        (s4.trans (Reaches.trans (Reaches.of_eq ?_) (s5.trans
+          (Reaches.of_eq ?_)))))))) <;>
+        first
+          | rfl
+          | (congr 1
+             simp [List.append_eq, List.reverse_reverse, List.reverse_append,
+               List.append_assoc, replicate_none_comm'])
+  | true =>
+      have s4 := pullStepLeft
+        (D := pullOneBitJ1Description) (s := 4) (t := 6) (x := true)
+        (by decide)
+        (List.append (fld.reverse.map some)
+          (none ::
+            List.append (List.replicate g1 none)
+              (List.append ((r1 :: run1T).reverse.map some)
+                (none ::
+                  List.append ((b1 :: blkT).reverse.map some)
+                    (none :: [])))))
+        (none :: R)
+      have s5 := carryJ1_run
+        (D := pullOneBitJ1Description)
+        (a0 := 6) (aG1 := 8) (aR1 := 10)
+        (aB := 12) (aP := 13) (aH := 14) (x := true)
+        (by decide) (by decide) (by decide) (by decide) (by decide)
+        (by decide) (by decide) (by decide) (by decide) (by decide)
+        (by decide) (by decide) (by decide)
+        fld.reverse (r1 :: run1T).reverse (b1 :: blkT).reverse g1
+        (by intro h; simpa using congrArg List.length h)
+        (none :: none :: R)
+      refine (s1.trans (s2.trans (s3.trans (s3'.trans
+        (s4.trans (Reaches.trans (Reaches.of_eq ?_) (s5.trans
+          (Reaches.of_eq ?_)))))))) <;>
+        first
+          | rfl
+          | (congr 1
+             simp [List.append_eq, List.reverse_reverse, List.reverse_append,
+               List.append_assoc, replicate_none_comm'])
+
 /-- Bit-run crossing leftward to the window edge, exiting on the phantom
 blank beyond the leftmost cell. -/
 theorem runConfig_bitsRun_exitBlank_left_edge
