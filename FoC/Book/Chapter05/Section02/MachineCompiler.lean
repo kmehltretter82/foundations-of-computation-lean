@@ -13,7 +13,6 @@ namespace Section02
 
 open Languages
 open Computability
-open Grammars
 
 universe u v
 
@@ -108,14 +107,14 @@ all follow.
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
     (hcompile :
-      ConcreteFixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
+      FixedDescriptionBoundedSimulatorCodeCompilerConstruction) :
     FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeCompiler
     hcompile
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_output_realizer
     (hcompile :
-      ConcreteFixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction) :
+      FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction) :
     FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_codeOutputRealizer
     hcompile
@@ -170,29 +169,29 @@ theorem concrete_seq_subroutine_reaches_of_runConfig_eq
     hA hB hArun hBReach
 
 theorem concrete_bool_output_description_wellFormed (b : Bool) :
-    (ConcreteBoolOutputDescription b).WellFormed :=
+    (MachineDescription.BoolOutputDescription b).WellFormed :=
   MachineDescription.boolOutputDescription_wellFormed b
 
 theorem concrete_bool_output_description_haltTransitionFree (b : Bool) :
-    (ConcreteBoolOutputDescription b).HaltTransitionFree :=
+    (MachineDescription.BoolOutputDescription b).HaltTransitionFree :=
   MachineDescription.boolOutputDescription_haltTransitionFree b
 
 theorem concrete_bool_output_description_haltsWithOutput
     (b : Bool) (w : Word Bool) :
-    (ConcreteBoolOutputDescription b).HaltsWithOutput w [b] :=
+    (MachineDescription.BoolOutputDescription b).HaltsWithOutput w [b] :=
   MachineDescription.boolOutputDescription_haltsWithOutput b w
 
 theorem concrete_bool_output_description_haltsWithOutput_iff
     (b : Bool) (w out : Word Bool) :
-    (ConcreteBoolOutputDescription b).HaltsWithOutput w out <-> out = [b] :=
+    (MachineDescription.BoolOutputDescription b).HaltsWithOutput w out <-> out = [b] :=
   MachineDescription.boolOutputDescription_haltsWithOutput_iff b w out
 
 theorem concrete_tape_code_exact_compiler_construction_impossible :
-    ¬ ConcreteTapeCodeExactCompilerConstruction :=
+    ¬ MachineDescriptionTapeCodeExactCompilerConstruction :=
   Computability.not_machineDescriptionTapeCodeExactCompilerConstruction
 
 def concrete_machine_description_compiler_closeout_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
     MachineDescriptionCompilerCloseout :=
   Computability.machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     hcompile
@@ -202,8 +201,8 @@ namespace ConcreteFixedDescriptionStepCode
 namespace ConfigurationRealizerConstruction
 
 theorem of_tapeCodeOutputCompiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_tapeCodeOutputCompiler
     hcompile
 
@@ -212,32 +211,32 @@ end ConfigurationRealizerConstruction
 end ConcreteFixedDescriptionStepCode
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
     FixedDescriptionBoundedSimulatorTableCompilerConstruction :=
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_layout_code_output_realizer_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_initial_layout_code_output_realizer_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailInitialLayoutCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_output_code_output_realizer_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailOutputCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailOutputCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
 theorem concrete_paired_recognizer_dovetail_stage_attempt_code_output_realizer_of_tape_code_output_compiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
@@ -246,8 +245,8 @@ namespace ConcretePairedRecognizerDovetail
 namespace TotalStageAttemptCodeOutputRealizer
 
 theorem of_tapeCodeOutputCompiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
@@ -256,8 +255,8 @@ end TotalStageAttemptCodeOutputRealizer
 namespace TotalThenRawOutputCodeOutputRealizer
 
 theorem of_tapeCodeOutputCompiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
@@ -266,8 +265,8 @@ end TotalThenRawOutputCodeOutputRealizer
 namespace ControllerContinueCodeOutputRealizer
 
 theorem of_tapeCodeOutputCompiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailControllerContinueCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
@@ -276,8 +275,8 @@ end ControllerContinueCodeOutputRealizer
 namespace ControllerEmitCodeOutputRealizer
 
 theorem of_tapeCodeOutputCompiler
-    (hcompile : ConcreteTapeCodeOutputCompilerConstruction) :
-    ConcretePairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :=
+    (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
+    PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailControllerEmitCodeOutputRealizer_of_tapeCodeOutputCompiler
     hcompile
 
@@ -287,8 +286,8 @@ end ConcretePairedRecognizerDovetail
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_output_realizer_of_subroutine_realizer
     (hcompile :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCodeOutputRealizer_of_subroutineRealizer
     hcompile
 
@@ -298,15 +297,15 @@ namespace StageAttemptCodeOutputRealizer
 
 theorem of_totalThenRawOutput
     (hcompile :
-      ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction) :
-    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+      PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction) :
+    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
   Computability.PairedRecognizerDovetail.StageAttemptCodeOutputRealizer.of_totalThenRawOutputConstruction
     hcompile
 
 theorem of_totalStageAttemptOutput
     (hcompile :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
-    ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction) :
+    PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction :=
   Computability.Search.stageOutputConstructionOfTotal
     hcompile
 
@@ -316,7 +315,7 @@ end ConcretePairedRecognizerDovetail
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
     (accept reject : MachineDescription) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
+    PairedRecognizerDovetailTotalStageAttemptControllerResultRealizes
       accept reject
       (PairedRecognizerDovetailTotalStageAttemptCode accept reject) :=
   Computability.pairedRecognizerDovetailTotalStageAttemptCode_controllerResultRealizes
@@ -342,13 +341,13 @@ theorem concrete_paired_recognizer_dovetail_total_stage_attempt_controller_raw_o
     hattempt w limit b
 
 theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_realizes :
-    ConcretePairedRecognizerDovetailControllerRawOutputCodeRealizes
-      ConcretePairedRecognizerDovetailControllerRawOutputCode :=
+    PairedRecognizerDovetailControllerRawOutputCodeRealizes
+      PairedRecognizerDovetailControllerRawOutputCode :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_realizes
 
 theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_encodeBoolWord_singleton_iff
     {tokens : Word MachineCodeSymbol} {b : Bool} :
-    ConcretePairedRecognizerDovetailControllerRawOutputCode.transform
+    PairedRecognizerDovetailControllerRawOutputCode.transform
         tokens =
         some (MachineDescription.encodeBoolWord [b]) <->
       MachineDescription.DovetailControllerLayout.decodeAttemptResultCode
@@ -358,31 +357,31 @@ theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_e
 theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_eq_some_self
     {code out : Word MachineCodeSymbol}
     (h :
-      ConcretePairedRecognizerDovetailControllerRawOutputCode.transform
+      PairedRecognizerDovetailControllerRawOutputCode.transform
         code = some out) :
     out = code :=
   Computability.pairedRecognizerDovetailControllerRawOutputCode_eq_some_self h
 
 theorem concrete_paired_recognizer_dovetail_controller_raw_output_code_output_realized_by_exact_identity :
     TapeCodePrimitiveOutputRealizedByDescription
-      ConcretePairedRecognizerDovetailControllerRawOutputCode
+      PairedRecognizerDovetailControllerRawOutputCode
       MachineDescription.ExactIdentityDescription :=
   Computability.pairedRecognizerDovetailControllerRawOutputCodeOutputRealizedByDescription
 
 theorem concrete_paired_recognizer_dovetail_controller_continue_code_realizes
     (accept reject : MachineDescription) :
-    ConcretePairedRecognizerDovetailControllerContinueCodeRealizes
+    PairedRecognizerDovetailControllerContinueCodeRealizes
       accept reject
-      (ConcretePairedRecognizerDovetailControllerContinueCode
+      (PairedRecognizerDovetailControllerContinueCode
         accept reject) :=
   Computability.pairedRecognizerDovetailControllerContinueCode_realizes
     accept reject
 
 theorem concrete_paired_recognizer_dovetail_controller_emit_code_realizes
     (accept reject : MachineDescription) :
-    ConcretePairedRecognizerDovetailControllerEmitCodeRealizes
+    PairedRecognizerDovetailControllerEmitCodeRealizes
       accept reject
-      (ConcretePairedRecognizerDovetailControllerEmitCode
+      (PairedRecognizerDovetailControllerEmitCode
         accept reject) :=
   Computability.pairedRecognizerDovetailControllerEmitCode_realizes
     accept reject
@@ -391,7 +390,7 @@ theorem concrete_paired_recognizer_dovetail_controller_continue_code_encode_eq_s
     {accept reject : MachineDescription}
     {C : MachineDescription.DovetailControllerLayout}
     {out : Word MachineCodeSymbol} :
-    (ConcretePairedRecognizerDovetailControllerContinueCode
+    (PairedRecognizerDovetailControllerContinueCode
       accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
         some out <->
@@ -406,7 +405,7 @@ theorem concrete_paired_recognizer_dovetail_controller_emit_code_encode_eq_some_
     {accept reject : MachineDescription}
     {C : MachineDescription.DovetailControllerLayout}
     {outCode : Word MachineCodeSymbol} :
-    (ConcretePairedRecognizerDovetailControllerEmitCode
+    (PairedRecognizerDovetailControllerEmitCode
       accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
         some outCode <->
@@ -420,7 +419,7 @@ theorem concrete_paired_recognizer_dovetail_controller_emit_code_encode_eq_encod
     {accept reject : MachineDescription}
     {C : MachineDescription.DovetailControllerLayout}
     {out : Word Bool} :
-    (ConcretePairedRecognizerDovetailControllerEmitCode
+    (PairedRecognizerDovetailControllerEmitCode
       accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
         some (MachineDescription.encodeBoolWord out) <->
@@ -433,12 +432,12 @@ theorem concrete_paired_recognizer_dovetail_controller_continue_emit_code_exclus
     {C : MachineDescription.DovetailControllerLayout}
     {next out : Word MachineCodeSymbol}
     (hcontinue :
-      (ConcretePairedRecognizerDovetailControllerContinueCode
+      (PairedRecognizerDovetailControllerContinueCode
         accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
           some next)
     (hemit :
-      (ConcretePairedRecognizerDovetailControllerEmitCode
+      (PairedRecognizerDovetailControllerEmitCode
         accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
           some out) :
@@ -449,22 +448,22 @@ theorem concrete_paired_recognizer_dovetail_controller_continue_emit_code_exclus
 theorem concrete_paired_recognizer_dovetail_controller_continue_emit_code_branch
     (accept reject : MachineDescription)
     (C : MachineDescription.DovetailControllerLayout) :
-    ((ConcretePairedRecognizerDovetailControllerContinueCode
+    ((PairedRecognizerDovetailControllerContinueCode
         accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) =
         some
           (MachineDescription.DovetailControllerLayout.encode
             (MachineDescription.DovetailControllerLayout.nextStage C)) ∧
-      (ConcretePairedRecognizerDovetailControllerEmitCode
+      (PairedRecognizerDovetailControllerEmitCode
         accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) = none) ∨
-      ((ConcretePairedRecognizerDovetailControllerContinueCode
+      ((PairedRecognizerDovetailControllerContinueCode
           accept reject).transform
         (MachineDescription.DovetailControllerLayout.encode C) = none ∧
         exists out : Word Bool,
           MachineDescription.boundedDovetailOutput
             accept reject C.input C.stage = some out ∧
-            (ConcretePairedRecognizerDovetailControllerEmitCode
+            (PairedRecognizerDovetailControllerEmitCode
               accept reject).transform
               (MachineDescription.DovetailControllerLayout.encode C) =
                 some (MachineDescription.encodeBoolWord out)) :=
@@ -475,7 +474,7 @@ theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_realizes
     (accept reject : MachineDescription) :
     PairedRecognizerDovetailStageAttemptCodeRealizes
       accept reject
-      (ConcretePairedRecognizerDovetailTotalThenRawOutputCode
+      (PairedRecognizerDovetailTotalThenRawOutputCode
         accept reject) :=
   Computability.pairedRecognizerDovetailTotalThenRawOutputCode_realizes
     accept reject
@@ -483,7 +482,7 @@ theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_realizes
 theorem concrete_paired_recognizer_dovetail_total_then_raw_output_code_eq_stage_attempt_code
     (accept reject : MachineDescription)
     (tokens : Word MachineCodeSymbol) :
-    (ConcretePairedRecognizerDovetailTotalThenRawOutputCode
+    (PairedRecognizerDovetailTotalThenRawOutputCode
       accept reject).transform tokens =
       (PairedRecognizerDovetailStageAttemptCode
         accept reject).transform tokens :=
@@ -557,8 +556,8 @@ namespace OutputRealizerConstruction
 
 theorem of_configurationRealizerConstruction
     (hcompile :
-      ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction) :
-    ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
+      FixedDescriptionStepCodeConfigurationRealizerConstruction) :
+    FixedDescriptionStepCodeOutputRealizerConstruction :=
   Computability.fixedDescriptionStepCodeOutputRealizerConstruction_of_configurationRealizerConstruction
     hcompile
 
@@ -568,14 +567,14 @@ namespace ConfigurationRealizerConstruction
 
 theorem of_outputRealizerConstruction
     (hcompile :
-      ConcreteFixedDescriptionStepCodeOutputRealizerConstruction) :
-    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction :=
+      FixedDescriptionStepCodeOutputRealizerConstruction) :
+    FixedDescriptionStepCodeConfigurationRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_of_outputRealizerConstruction
     hcompile
 
 theorem iff_outputRealizerConstruction :
-    ConcreteFixedDescriptionStepCodeConfigurationRealizerConstruction <->
-      ConcreteFixedDescriptionStepCodeOutputRealizerConstruction :=
+    FixedDescriptionStepCodeConfigurationRealizerConstruction <->
+      FixedDescriptionStepCodeOutputRealizerConstruction :=
   Computability.fixedDescriptionStepCodeConfigurationRealizerConstruction_iff_outputRealizerConstruction
 
 end ConfigurationRealizerConstruction

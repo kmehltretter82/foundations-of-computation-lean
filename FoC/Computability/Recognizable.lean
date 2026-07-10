@@ -106,17 +106,11 @@ def StoppedTuringDecidableByHeadOutput (L : Language input) : Prop :=
         exists zero : symbol, exists one : symbol,
           StoppedDecidesLanguageByHeadOutput M encodeInput zero one L
 
-def Recursive (L : Language input) : Prop :=
-  TuringDecidable L
-
-def RecursivelyEnumerable (L : Language input) : Prop :=
-  TuringAcceptable L
-
 def CoRecursivelyEnumerable (L : Language input) : Prop :=
-  RecursivelyEnumerable (Language.Compl L)
+  TuringAcceptable (Language.Compl L)
 
 def RecursivelyEnumerableWithComplement (L : Language input) : Prop :=
-  RecursivelyEnumerable L ∧ CoRecursivelyEnumerable L
+  TuringAcceptable L ∧ CoRecursivelyEnumerable L
 
 /-!
 # Trace-search principles
@@ -244,9 +238,9 @@ def ReCoReToDecidablePrinciple (input : Type u) : Prop :=
   forall L : Language input,
     RecursivelyEnumerableWithComplement L -> TuringDecidable L
 
-def RecursiveIffReCoRePrinciple (input : Type u) : Prop :=
+def TuringDecidableIffReCoRePrinciple (input : Type u) : Prop :=
   forall L : Language input,
-    Recursive L <-> RecursivelyEnumerableWithComplement L
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L
 
 /-!
 # Extensionality and accepted languages
@@ -408,12 +402,6 @@ theorem turingComputablePartial_domain_acceptable
   rcases h with ⟨symbol, state, M, encodeInput, _encodeOutput, hcomp⟩
   exact ⟨symbol, state, M, encodeInput,
     computesPartialFunction_accepts_domain hcomp⟩
-
-theorem turingComputablePartial_domain_recursivelyEnumerable
-    {f : Word input -> Option (Word output)}
-    (h : TuringComputablePartial f) :
-    RecursivelyEnumerable (PartialFunctionDomain f) :=
-  turingComputablePartial_domain_acceptable h
 
 theorem acceptanceTrace_sound {trace : Word input -> Nat -> Prop}
     {L : Language input}
@@ -693,17 +681,6 @@ theorem turing_acceptable_has_decidableAcceptanceTrace {L : Language input}
     HasDecidableAcceptanceTrace L := by
   rcases h with ⟨_symbol, _state, M, _encodeInput, hacc⟩
   exact acceptsLanguage_hasDecidableAcceptanceTrace_of_indexed hacc
-
-theorem recursivelyEnumerable_has_acceptanceTrace {L : Language input}
-    (h : RecursivelyEnumerable L) :
-    exists trace : Word input -> Nat -> Prop, AcceptanceTrace trace L :=
-  turing_acceptable_has_acceptanceTrace h
-
-theorem recursivelyEnumerable_has_decidableAcceptanceTrace
-    {L : Language input}
-    (h : RecursivelyEnumerable L) :
-    HasDecidableAcceptanceTrace L :=
-  turing_acceptable_has_decidableAcceptanceTrace h
 
 theorem turing_acceptable_with_complement_has_complementaryTraces
     {L : Language input}
@@ -1110,52 +1087,30 @@ theorem turing_decidable_complement_iff {L : Language input} :
   · exact turing_decidable_of_complement
   · exact turing_decidable_complement
 
-theorem recursive_complement {L : Language input}
-    (h : Recursive L) : Recursive (Language.Compl L) :=
-  turing_decidable_complement h
-
-theorem recursive_of_complement {L : Language input}
-    (h : Recursive (Language.Compl L)) : Recursive L :=
-  turing_decidable_of_complement h
-
-theorem recursive_complement_iff {L : Language input} :
-    Recursive (Language.Compl L) <-> Recursive L :=
-  turing_decidable_complement_iff
-
-theorem recursive_reCoRe_of_decidableToAcceptable
+theorem turingDecidable_reCoRe_of_decidableToAcceptable
     (haccept : DecidableToAcceptablePrinciple input)
     {L : Language input}
-    (h : Recursive L) :
+    (h : TuringDecidable L) :
     RecursivelyEnumerableWithComplement L := by
   constructor
   · exact haccept L h
   · exact haccept (Language.Compl L) (turing_decidable_complement h)
 
-theorem recursive_iff_reCoRe_of_principles
+theorem turingDecidable_iff_reCoRe_of_principles
     (haccept : DecidableToAcceptablePrinciple input)
     (hdovetail : ReCoReToDecidablePrinciple input)
     (L : Language input) :
-    Recursive L <-> RecursivelyEnumerableWithComplement L := by
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L := by
   constructor
-  · exact recursive_reCoRe_of_decidableToAcceptable haccept
+  · exact turingDecidable_reCoRe_of_decidableToAcceptable haccept
   · intro h
     exact hdovetail L h
 
-theorem recursiveIffReCoRePrinciple_of_principles
+theorem turingDecidableIffReCoRePrinciple_of_principles
     (haccept : DecidableToAcceptablePrinciple input)
     (hdovetail : ReCoReToDecidablePrinciple input) :
-    RecursiveIffReCoRePrinciple input :=
-  recursive_iff_reCoRe_of_principles haccept hdovetail
-
-theorem recursive_of_equal {L K : Language input}
-    (h : Recursive L) (hEq : Language.Equal L K) :
-    Recursive K :=
-  turing_decidable_of_equal h hEq
-
-theorem recursivelyEnumerable_of_equal {L K : Language input}
-    (h : RecursivelyEnumerable L) (hEq : Language.Equal L K) :
-    RecursivelyEnumerable K :=
-  turing_acceptable_of_equal h hEq
+    TuringDecidableIffReCoRePrinciple input :=
+  turingDecidable_iff_reCoRe_of_principles haccept hdovetail
 
 end Computability
 end FoC

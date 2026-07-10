@@ -1,4 +1,6 @@
-import FoC.Computability.Compiler
+import FoC.Computability.Compiler.Core.BoundedTrace
+import FoC.Computability.Compiler.Core.Language
+import FoC.Computability.Compiler.UniversalAndRanges.Ranges
 
 set_option doc.verso true
 
@@ -439,9 +441,9 @@ engineering; once supplied, the bridge to recursive languages is concrete.
 
 The equivalence theorems below identify this wrapper-level construction with
 the paired {name}`MachineDescription` compiler target from
-{module}`FoC.Computability.Compiler`.  Thus the finite program record does not
-add another assumption; it packages exactly the transition-level dovetailing
-compiler for two concrete recognizer descriptions.
+{module}`FoC.Computability.Compiler.Core.BoundedTrace`.  Thus the finite program
+record does not add another assumption; it packages exactly the
+transition-level dovetailing compiler for two concrete recognizer descriptions.
 -/
 
 structure FiniteDovetailProgram where

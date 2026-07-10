@@ -69,7 +69,8 @@ see {module}`FoC.Computability.Computable`,
 {module}`FoC.Computability.Recognizable`, and
 {module}`FoC.Computability.Enumerable`. For staged programs and grammar
 recognizers, see {module}`FoC.Computability.Program` and
-{module}`FoC.Computability.Grammar`. For finite table execution, encoded-code
+{module}`FoC.Computability.Grammar.SemanticAndTraceTables`. For finite table
+execution, encoded-code
 languages, encodings, compiler bridges, and undecidability, inspect
 {module}`FoC.Computability.MachineDescription`,
 {module}`FoC.Computability.DescriptionLanguages`,

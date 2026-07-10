@@ -195,27 +195,27 @@ theorem finitePresentationBooleanGeneralGrammarRecognizerCompilerPrinciple_of_de
       hcompile)
 
 def GeneralGrammarAcceptabilityEquivalence (L : Language terminal) : Prop :=
-  GeneralGrammar.Generated L <-> RecursivelyEnumerable L
+  GeneralGrammar.Generated L <-> TuringAcceptable L
 
 def GeneralGrammarToRecursivelyEnumerablePrinciple
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
-    GeneralGrammar.Generated L -> RecursivelyEnumerable L
+    GeneralGrammar.Generated L -> TuringAcceptable L
 
 def RecursivelyEnumerableToGeneralGrammarPrinciple
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
-    RecursivelyEnumerable L -> GeneralGrammar.Generated L
+    TuringAcceptable L -> GeneralGrammar.Generated L
 
 def RecursivelyEnumerableToFiniteGeneralGrammarPrinciple
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
-    RecursivelyEnumerable L -> GeneralGrammar.FiniteProductionGenerated L
+    TuringAcceptable L -> GeneralGrammar.FiniteProductionGenerated L
 
 def RecursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
-    RecursivelyEnumerable L -> GeneralGrammar.FinitePresentationGenerated L
+    TuringAcceptable L -> GeneralGrammar.FinitePresentationGenerated L
 
 theorem recursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple_bool_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
@@ -226,7 +226,7 @@ theorem recursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple_bool_of
       (machineDescriptionAcceptsToFiniteGeneralGrammarPresentationConstruction_of_machineConstruction
         machineDescriptionToFiniteGeneralGrammarPresentationConstruction))
       L
-      (recursivelyEnumerable_programAcceptableByDescription_of_descriptionCompiler
+      (turingAcceptable_programAcceptableByDescription_of_descriptionCompiler
         hcompile hL)
 
 theorem recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
@@ -244,11 +244,11 @@ def GeneralGrammarREEquivalencePrinciple
 
 def FiniteGeneralGrammarAcceptabilityEquivalence
     (L : Language terminal) : Prop :=
-  GeneralGrammar.FiniteProductionGenerated L <-> RecursivelyEnumerable L
+  GeneralGrammar.FiniteProductionGenerated L <-> TuringAcceptable L
 
 def FinitePresentationGeneralGrammarAcceptabilityEquivalence
     (L : Language terminal) : Prop :=
-  GeneralGrammar.FinitePresentationGenerated L <-> RecursivelyEnumerable L
+  GeneralGrammar.FinitePresentationGenerated L <-> TuringAcceptable L
 
 def FiniteGeneralGrammarREEquivalencePrinciple
     (terminal : Type u) : Prop :=

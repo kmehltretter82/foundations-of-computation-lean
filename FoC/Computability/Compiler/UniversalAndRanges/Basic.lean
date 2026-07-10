@@ -42,7 +42,7 @@ def EncodedInputProgramAcceptorCompilationPrinciple : Prop :=
 
 def EncodedInputDescriptionCompilerPrinciple : Prop :=
   forall L : Language MachineCodeSymbol,
-    RecursivelyEnumerable L ->
+    TuringAcceptable L ->
       exists D : MachineDescription,
         MachineDescriptionAcceptsEncodedInputLanguage D L
 
@@ -122,7 +122,7 @@ def CodeUniversalPrefixMachineRowLanguage
 
 def CodeUniversalPrefixRowsCoverAcceptableLanguages
     (universal : TuringMachine MachineCodeSymbol state) : Prop :=
-  forall L : Language MachineCodeSymbol, RecursivelyEnumerable L ->
+  forall L : Language MachineCodeSymbol, TuringAcceptable L ->
     exists machine : Word MachineCodeSymbol,
       Language.Equal
         (CodeUniversalPrefixMachineRowLanguage universal machine) L

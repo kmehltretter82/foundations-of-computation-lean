@@ -697,7 +697,7 @@ theorem semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
     (hcompile : EncodedInputProgramAcceptorCompilationPrinciple) :
     EncodedInputDescriptionCompilerPrinciple := by
   intro L hL
-  cases recursivelyEnumerable_has_acceptanceTrace hL with
+  cases turing_acceptable_has_acceptanceTrace hL with
   | intro trace htrace =>
       classical
       exact encodedInputDescriptionCompilerPrinciple_of_programCompiler

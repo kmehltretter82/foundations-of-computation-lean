@@ -177,7 +177,7 @@ theorem semanticLanguageGrammar_generated
 theorem recursivelyEnumerableToGeneralGrammarPrinciple_semantic
     (terminal : Type u) :
     forall L : Language terminal,
-      RecursivelyEnumerable L -> GeneralGrammar.Generated L := by
+      TuringAcceptable L -> GeneralGrammar.Generated L := by
   intro L _hL
   exact semanticLanguageGrammar_generated L
 

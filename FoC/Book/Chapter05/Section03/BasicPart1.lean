@@ -1,5 +1,7 @@
 import FoC.Computability.Coding
 import FoC.Computability.Compiler
+import FoC.Computability.Compiler.UniversalAndRanges.Basic
+import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
 import FoC.Computability.DescriptionLanguages
 import FoC.Computability.DiagonalPairMachine
 
@@ -67,10 +69,10 @@ def UndecidableTuringLanguage (L : Language alpha) : Prop :=
   UndecidableLanguage L
 
 def RecursiveTuringLanguage (L : Language alpha) : Prop :=
-  Recursive L
+  TuringDecidable L
 
 def RecursivelyEnumerableTuringLanguage (L : Language alpha) : Prop :=
-  RecursivelyEnumerable L
+  TuringAcceptable L
 
 def DecidableToAcceptableConstruction (alpha : Type u) : Prop :=
   DecidableToAcceptablePrinciple alpha

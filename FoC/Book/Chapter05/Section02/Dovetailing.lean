@@ -1,4 +1,5 @@
-import FoC.Book.Chapter05.Section02.Vocabulary
+import FoC.Book.Chapter05.Section02.ConstructionStatus
+import FoC.Computability.Compiler.Skeletons
 
 set_option doc.verso true
 
@@ -13,7 +14,6 @@ namespace Section02
 
 open Languages
 open Computability
-open Grammars
 
 universe u v
 
@@ -57,38 +57,38 @@ machine.
 -/
 
 theorem recursive_language_complement {L : Language alpha}
-    (h : RecursiveLanguage L) : RecursiveLanguage (Language.Compl L) :=
-  Computability.recursive_complement h
+    (h : TuringDecidable L) : TuringDecidable (Language.Compl L) :=
+  Computability.turing_decidable_complement h
 
 theorem recursive_language_of_recursive_complement {L : Language alpha}
-    (h : RecursiveLanguage (Language.Compl L)) : RecursiveLanguage L :=
-  Computability.recursive_of_complement h
+    (h : TuringDecidable (Language.Compl L)) : TuringDecidable L :=
+  Computability.turing_decidable_of_complement h
 
 theorem recursive_language_complement_iff {L : Language alpha} :
-    RecursiveLanguage (Language.Compl L) <-> RecursiveLanguage L :=
-  Computability.recursive_complement_iff
+    TuringDecidable (Language.Compl L) <-> TuringDecidable L :=
+  Computability.turing_decidable_complement_iff
 
 theorem stopped_turing_decidable_language_is_recursive
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L) :
-    RecursiveLanguage L :=
+    (h : StoppedTuringDecidable L) :
+    TuringDecidable L :=
   Computability.stoppedTuringDecidable_to_turingDecidable h
 
 theorem stopped_turing_decidable_language_complement
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L) :
-    StoppedTuringDecidableLanguage (Language.Compl L) :=
+    (h : StoppedTuringDecidable L) :
+    StoppedTuringDecidable (Language.Compl L) :=
   Computability.stoppedTuringDecidable_complement h
 
 theorem recursive_language_of_equal {L K : Language alpha}
-    (h : RecursiveLanguage L) (hEq : Language.Equal L K) :
-    RecursiveLanguage K :=
-  Computability.recursive_of_equal h hEq
+    (h : TuringDecidable L) (hEq : Language.Equal L K) :
+    TuringDecidable K :=
+  Computability.turing_decidable_of_equal h hEq
 
 theorem recursively_enumerable_language_of_equal {L K : Language alpha}
-    (h : RecursivelyEnumerableLanguage L) (hEq : Language.Equal L K) :
-    RecursivelyEnumerableLanguage K :=
-  Computability.recursivelyEnumerable_of_equal h hEq
+    (h : TuringAcceptable L) (hEq : Language.Equal L K) :
+    TuringAcceptable K :=
+  Computability.turing_acceptable_of_equal h hEq
 
 /-!
 **Traces and Dovetailing.**
@@ -111,33 +111,33 @@ setting.
 theorem partial_computable_function_domain_is_recursively_enumerable
     {f : Word input -> Option (Word output)}
     (h : TuringComputablePartial f) :
-    RecursivelyEnumerableLanguage (PartialFunctionDomainLanguage f) :=
-  Computability.turingComputablePartial_domain_recursivelyEnumerable h
+    TuringAcceptable (PartialFunctionDomain f) :=
+  Computability.turingComputablePartial_domain_acceptable h
 
 theorem recursively_enumerable_language_has_acceptance_trace
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguage L) :
+    (h : TuringAcceptable L) :
     exists trace : Word alpha -> Nat -> Prop,
-      LanguageAcceptanceTrace trace L :=
-  Computability.recursivelyEnumerable_has_acceptanceTrace h
+      AcceptanceTrace trace L :=
+  Computability.turing_acceptable_has_acceptanceTrace h
 
 theorem program_accepts_language_has_acceptance_trace
     {P : StagedProgram alpha Unit} {L : Language alpha}
     (h : ProgramAcceptsLanguage P L) :
-    LanguageAcceptanceTrace (LanguageProgramAcceptanceTrace P) L :=
+    AcceptanceTrace (LanguageProgramAcceptanceTrace P) L :=
   Computability.programAcceptsLanguage_acceptanceTrace h
 
 theorem program_acceptable_language_has_acceptance_trace
     {L : Language alpha}
-    (h : ProgramAcceptableLanguage L) :
+    (h : ProgramAcceptable L) :
     exists trace : Word alpha -> Nat -> Prop,
-      LanguageAcceptanceTrace trace L :=
+      AcceptanceTrace trace L :=
   Computability.programAcceptable_has_acceptanceTrace h
 
 theorem acceptance_trace_staged_recognizer_accepts_language
     {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
     [∀ w n, Decidable (trace w n)]
-    (h : LanguageAcceptanceTrace trace L) :
+    (h : AcceptanceTrace trace L) :
     ProgramAcceptsLanguage
       (AcceptanceTraceStagedRecognizer trace) L := by
   exact Computability.traceRecognizerProgram_acceptsLanguage h
@@ -145,24 +145,24 @@ theorem acceptance_trace_staged_recognizer_accepts_language
 theorem acceptance_trace_has_program_acceptable_language
     {trace : Word alpha -> Nat -> Prop} {L : Language alpha}
     [∀ w n, Decidable (trace w n)]
-    (h : LanguageAcceptanceTrace trace L) :
-    ProgramAcceptableLanguage L := by
+    (h : AcceptanceTrace trace L) :
+    ProgramAcceptable L := by
   exact Computability.acceptanceTrace_programAcceptable h
 
 theorem program_acceptable_language_iff_has_acceptance_trace
     (L : Language alpha) :
-    ProgramAcceptableLanguage L <->
+    ProgramAcceptable L <->
       exists trace : Word alpha -> Nat -> Prop,
         (exists _ : (forall w n, Decidable (trace w n)),
-          LanguageAcceptanceTrace trace L) :=
+          AcceptanceTrace trace L) :=
   Computability.programAcceptable_iff_has_acceptanceTrace L
 
 theorem recursively_enumerable_language_is_program_acceptable
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguage L) :
-  ProgramAcceptableLanguage L :=
+    (h : TuringAcceptable L) :
+  ProgramAcceptable L :=
   Computability.hasDecidableAcceptanceTrace_programAcceptable
-    (Computability.recursivelyEnumerable_has_decidableAcceptanceTrace h)
+    (Computability.turing_acceptable_has_decidableAcceptanceTrace h)
 
 /-!
 Complementary traces are the finite evidence supplied by recognizers for a
@@ -173,15 +173,15 @@ input.
 
 theorem re_and_co_re_have_complementary_acceptance_traces
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    (h : RecursivelyEnumerableWithComplement L) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L :=
+      ComplementaryAcceptanceTraces accept reject L :=
   Computability.recursivelyEnumerable_with_complement_has_complementaryTraces h
 
 theorem complementary_trace_accept_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     {w : Word alpha} {n : Nat}
     (hn : accept w n) :
     w ∈ L :=
@@ -190,7 +190,7 @@ theorem complementary_trace_accept_sound
 theorem complementary_trace_reject_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     {w : Word alpha} {n : Nat}
     (hn : reject w n) :
     ¬ w ∈ L :=
@@ -199,7 +199,7 @@ theorem complementary_trace_reject_sound
 theorem complementary_traces_eventually_hit
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     (w : Word alpha) :
     exists n : Nat, accept w n ∨ reject w n :=
   Computability.complementaryAcceptanceTraces_eventually_hits_classical h w
@@ -208,65 +208,65 @@ theorem language_trace_hit_mono
     {trace : Word alpha -> Nat -> Prop}
     {w : Word alpha} {m n : Nat}
     (hmn : m ≤ n)
-    (h : LanguageTraceHitsBy trace w m) :
-    LanguageTraceHitsBy trace w n :=
+    (h : TraceHitsBy trace w m) :
+    TraceHitsBy trace w n :=
   Computability.traceHitsBy_mono hmn h
 
 theorem complementary_trace_accepts_by_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     {w : Word alpha} {limit : Nat}
-    (hit : LanguageTraceHitsBy accept w limit) :
+    (hit : TraceHitsBy accept w limit) :
     w ∈ L :=
   Computability.complementaryTraceAcceptsBy_sound h hit
 
 theorem complementary_trace_rejects_by_sound
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     {w : Word alpha} {limit : Nat}
-    (hit : LanguageTraceHitsBy reject w limit) :
+    (hit : TraceHitsBy reject w limit) :
     ¬ w ∈ L :=
   Computability.complementaryTraceRejectsBy_sound h hit
 
 theorem complementary_trace_search_no_conflict
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     {w : Word alpha} {acceptLimit rejectLimit : Nat}
-    (ha : LanguageTraceHitsBy accept w acceptLimit)
-    (hr : LanguageTraceHitsBy reject w rejectLimit) :
+    (ha : TraceHitsBy accept w acceptLimit)
+    (hr : TraceHitsBy reject w rejectLimit) :
     False :=
   Computability.complementaryTraceSearch_no_conflict h ha hr
 
 theorem complementary_trace_search_eventually_hits_by
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     (w : Word alpha) :
-    exists limit : Nat, LanguageDovetailSearchHit accept reject w limit :=
+    exists limit : Nat, ComplementaryTraceSearchHit accept reject w limit :=
   Computability.complementaryTraceSearch_eventually_hits_by h w
 
 theorem complementary_trace_search_eventually_classifies
     {accept reject : Word alpha -> Nat -> Prop}
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L)
+    (h : ComplementaryAcceptanceTraces accept reject L)
     (w : Word alpha) :
     exists limit : Nat,
-      (LanguageTraceHitsBy accept w limit ∧ w ∈ L) ∨
-        (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
+      (TraceHitsBy accept w limit ∧ w ∈ L) ∨
+        (TraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.complementaryTraceSearch_eventually_classifies h w
 
 theorem re_and_co_re_bounded_search_eventually_classifies
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L)
+    (h : RecursivelyEnumerableWithComplement L)
     (w : Word alpha) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L ∧
+      ComplementaryAcceptanceTraces accept reject L ∧
         exists limit : Nat,
-          (LanguageTraceHitsBy accept w limit ∧ w ∈ L) ∨
-            (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) := by
+          (TraceHitsBy accept w limit ∧ w ∈ L) ∨
+            (TraceHitsBy reject w limit ∧ ¬ w ∈ L) := by
   cases re_and_co_re_have_complementary_acceptance_traces h with
   | intro accept haccept =>
       cases haccept with
@@ -282,20 +282,20 @@ theorem complementary_traces_dovetailing_program_decides
     [∀ w n, Decidable (accept w n)]
     [∀ w n, Decidable (reject w n)]
     {L : Language alpha}
-    (h : LanguageComplementaryAcceptanceTraces accept reject L) :
-    ProgramBoolDecidesLanguage
-      (TraceDovetailProgram accept reject) L := by
+    (h : ComplementaryAcceptanceTraces accept reject L) :
+    ProgramBoolDecides
+      (Computability.DovetailProgram accept reject) L := by
   exact Computability.dovetailProgram_decides h
 
 theorem re_and_co_re_have_dovetailing_program
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    (h : RecursivelyEnumerableWithComplement L) :
     exists accept reject : Word alpha -> Nat -> Prop,
       (exists _ : (forall w n, Decidable (accept w n)),
         exists _ : (forall w n, Decidable (reject w n)),
-          LanguageComplementaryAcceptanceTraces accept reject L ∧
-            ProgramBoolDecidesLanguage
-              (TraceDovetailProgram accept reject) L) :=
+          ComplementaryAcceptanceTraces accept reject L ∧
+            ProgramBoolDecides
+              (Computability.DovetailProgram accept reject) L) :=
   by
     rcases
       Computability.recursivelyEnumerable_with_complement_has_decidableComplementaryTraces
@@ -308,25 +308,25 @@ theorem re_and_co_re_have_dovetailing_program
 
 theorem re_and_co_re_have_paired_bounded_search_decider
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
+    (h : RecursivelyEnumerableWithComplement L) :
     exists accept reject : Word alpha -> Nat -> Prop,
       (exists _ : (forall w n, Decidable (accept w n)),
         exists _ : (forall w n, Decidable (reject w n)),
-          LanguageComplementaryAcceptanceTraces accept reject L ∧
-            ProgramBoolDecidesLanguage
-              (TraceDovetailProgram accept reject) L) :=
+          ComplementaryAcceptanceTraces accept reject L ∧
+            ProgramBoolDecides
+              (Computability.DovetailProgram accept reject) L) :=
   re_and_co_re_have_dovetailing_program h
 
 theorem re_and_co_re_have_program_bool_decider
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
-    ProgramBoolDecidableLanguage L :=
+    (h : RecursivelyEnumerableWithComplement L) :
+    ProgramBoolDecidable L :=
   Computability.reCoRe_programBoolDecidable h
 
 theorem re_and_co_re_have_program_bool_decider_by_paired_bounded_search
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
-    ProgramBoolDecidableLanguage L :=
+    (h : RecursivelyEnumerableWithComplement L) :
+    ProgramBoolDecidable L :=
   re_and_co_re_have_program_bool_decider h
 
 /-!
@@ -349,7 +349,7 @@ output from {module}`FoC.Computability.MachineBuilder`.
 -/
 
 theorem bounded_trace_search_construction :
-    BoundedTraceSearchConstruction :=
+    Computability.BoundedTraceSearchConstruction :=
   Computability.boundedTraceSearchConstruction
 
 theorem concrete_machine_halts_in_bool_correct
@@ -367,11 +367,11 @@ theorem concrete_bounded_dovetail_output_correct
     (accept reject : MachineDescription)
     (w : Word Bool) (limit : Nat) :
     MachineDescription.boundedDovetailOutput accept reject w limit =
-      (TraceDovetailProgram
+      (Computability.DovetailProgram
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w)).run w limit :=
   by
-    simpa [TraceDovetailProgram]
+    simpa [Computability.DovetailProgram]
       using MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run
         accept reject w limit
 
@@ -379,7 +379,7 @@ theorem concrete_machine_bounded_dovetail_true_iff_of_complementary_traces
     {accept reject : MachineDescription}
     {L : Language Bool}
     (htraces :
-      LanguageComplementaryAcceptanceTraces
+      ComplementaryAcceptanceTraces
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w) L)
     (w : Word Bool) :
@@ -394,7 +394,7 @@ theorem concrete_machine_bounded_dovetail_false_iff_of_complementary_traces
     {accept reject : MachineDescription}
     {L : Language Bool}
     (htraces :
-      LanguageComplementaryAcceptanceTraces
+      ComplementaryAcceptanceTraces
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w) L)
     (w : Word Bool) :
@@ -409,7 +409,7 @@ theorem concrete_machine_bounded_dovetail_eventually_classifies
     {accept reject : MachineDescription}
     {L : Language Bool}
     (htraces :
-      LanguageComplementaryAcceptanceTraces
+      ComplementaryAcceptanceTraces
         (fun w n => accept.HaltsIn n w)
         (fun w n => reject.HaltsIn n w) L)
     (w : Word Bool) :
@@ -433,25 +433,25 @@ theorem concrete_checks_encoded_run_canonical
   MachineDescription.checksEncodedRun_encodeConfiguration D steps c
 
 theorem dovetailing_decidable_construction_of_staged_program_compiler
-    (hcompile : StagedBoolDeciderCompilationConstruction alpha) :
-    DovetailingDecidableConstruction alpha :=
+    (hcompile : ProgramBoolDeciderCompilationPrinciple alpha) :
+    ReCoReToDecidablePrinciple alpha :=
   Computability.reCoReToDecidablePrinciple_of_programBoolCompiler hcompile
 
 theorem staged_acceptor_compilation_construction_of_concrete_descriptions
     (hcompile : SemanticDescriptionAcceptorCompilationAssumption) :
-    StagedAcceptorCompilationConstruction Bool :=
+    ProgramAcceptorCompilationPrinciple Bool :=
   Computability.programAcceptorCompilationPrinciple_of_descriptionCompiler
     hcompile
 
 theorem staged_bool_decider_compilation_construction_of_concrete_descriptions
     (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    StagedBoolDeciderCompilationConstruction Bool :=
+    ProgramBoolDeciderCompilationPrinciple Bool :=
   Computability.programBoolDeciderCompilationPrinciple_of_descriptionCompiler
     hcompile
 
 theorem dovetailing_decidable_construction_of_concrete_description_compiler
     (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    DovetailingDecidableConstruction Bool :=
+    ReCoReToDecidablePrinciple Bool :=
   dovetailing_decidable_construction_of_staged_program_compiler
     (staged_bool_decider_compilation_construction_of_concrete_descriptions
       hcompile)
@@ -464,63 +464,63 @@ theorem concrete_dovetail_description_compiler_of_concrete_bool_description_comp
 
 theorem paired_recognizer_dovetail_compiler_of_concrete_bool_description_compiler
     (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
     hcompile
 
 theorem paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
     (hcompile :
-      ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerBoundedDovetailTableCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     hcompile
 
 theorem bounded_dovetail_table_compiler_of_paired_recognizer_dovetail_compiler
-    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler
     hcompile
 
 theorem bounded_dovetail_table_compiler_iff_paired_recognizer_dovetail_compiler :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction <->
-      ConcretePairedRecognizerDovetailCompilerConstruction :=
+    PairedRecognizerBoundedDovetailTableCompilerConstruction <->
+      PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler
 
 namespace BoundedDovetailTableCompiler
 
 theorem of_layoutOutput_and_searchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_layoutCodeOutputRealizer_and_searchDriver
     hrunner hdriver
 
 theorem of_stageAttemptOutput_and_searchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.PairedRecognizerBoundedDovetailTableCompiler.of_stageAttemptOutput_and_search
     hattempt hdriver
 
 theorem of_totalThenRawOutput_and_searchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailTotalThenRawOutputCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.PairedRecognizerBoundedDovetailTableCompiler.of_totalThenRawOutput_and_search
     hattempt hdriver
 
 theorem of_totalStageAttemptOutput_and_searchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.PairedRecognizerBoundedDovetailTableCompiler.of_totalStageAttemptOutput_and_search
     hattempt hdriver
 
@@ -531,8 +531,8 @@ namespace PairedRecognizerDovetail
 namespace StageAttemptSearchDriver
 
 theorem of_descriptionBoolDeciderCompiler
-    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=
+    (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction :=
   Computability.Search.stageCompilerOfDecider
     hcompile
 
@@ -541,8 +541,8 @@ end StageAttemptSearchDriver
 namespace TotalStageAttemptSearchDriver
 
 theorem of_descriptionBoolDeciderCompiler
-    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :=
+    (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction :=
   Computability.Search.totalStageCompilerOfDecider
     hcompile
 
@@ -551,15 +551,15 @@ end TotalStageAttemptSearchDriver
 namespace TotalStageAttemptControllerSearchDriver
 
 theorem of_descriptionBoolDeciderCompiler
-    (hcompile : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
+    (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
   Computability.Search.controllerCompilerOfGeneratedCallSearch
     hcompile
 
 theorem of_finiteStageLoopController
     (hloop :
-      ConcretePairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
-    ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
+      PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
+    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_of_finiteStageLoopController
     hloop
 
@@ -570,9 +570,9 @@ end PairedRecognizerDovetail
 namespace BoundedDovetailTableCompiler
 
 theorem of_tapeCodeCompiler_and_descriptionBoolDeciderCompiler
-    (htape : ConcreteTapeCodeOutputCompilerConstruction)
-    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+    (htape : MachineDescriptionTapeCodeOutputCompilerConstruction)
+    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   of_stageAttemptOutput_and_searchDriver
     (Computability.pairedRecognizerDovetailStageAttemptCodeOutputRealizer_of_tapeCodeOutputCompiler
       htape)
@@ -581,45 +581,45 @@ theorem of_tapeCodeCompiler_and_descriptionBoolDeciderCompiler
 
 theorem of_totalStageAttemptSubroutine_and_totalSearchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.Search.boundedCompilerOfSubroutineAndTotalSearch
     hattempt hdriver
 
 theorem of_compiledSubroutine_and_controllerSearchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.Search.boundedCompilerOfCompiledSubroutineAndController
     hattempt hdriver
 
 theorem of_controllerCloseout
-    (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+    (hclose : PairedRecognizerDovetailControllerCompilerCloseout) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_controllerCompilerCloseout
     hclose
 
 theorem of_finiteControllerCloseout
     (hclose :
-      ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
     hclose
 
 theorem of_pairedRecognizerSurface
     (h : PairedRecognizerDovetailSurface) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   h.boundedTableCompiler
 
 theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
-    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.Search.boundedCompilerOfCompiledSubroutineAndDecider
     hattempt hbool
 
@@ -631,8 +631,8 @@ namespace LayoutCodeOutputRealizer
 
 theorem of_subroutineRealizer
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
-    ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction) :
+    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
   Computability.pairedRecognizerDovetailLayoutCodeOutputRealizer_of_subroutineRealizer
     hrunner
 
@@ -644,10 +644,10 @@ namespace BoundedDovetailTableCompiler
 
 theorem of_layoutSubroutine_and_subroutineSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.PairedRecognizerBoundedDovetailTableCompiler.of_layoutSubroutine_and_subroutineSearch
     hrunner hdriver
 
@@ -657,80 +657,80 @@ namespace PairedRecognizerDovetailCompiler
 
 theorem of_layoutOutput_and_searchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.DescriptionCompiler.ofLayoutAndSearch
     hrunner hdriver
 
 theorem of_stageAttemptOutput_and_searchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailStageAttemptCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.DescriptionCompiler.ofStageAttemptAndSearch
     hattempt hdriver
 
 theorem of_tapeCodeCompiler_and_descriptionBoolDeciderCompiler
-    (htape : ConcreteTapeCodeOutputCompilerConstruction)
-    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    (htape : MachineDescriptionTapeCodeOutputCompilerConstruction)
+    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.DescriptionCompiler.ofTapeCodeAndDecider
     htape hbool
 
 theorem of_totalStageAttemptSubroutine_and_totalSearchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.DescriptionCompiler.ofTotalStageSubroutineAndSearch
     hattempt hdriver
 
 theorem of_compiledSubroutine_and_controllerSearchDriver
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
     (BoundedDovetailTableCompiler.of_compiledSubroutine_and_controllerSearchDriver
       hattempt hdriver)
 
 theorem of_controllerCloseout
-    (hclose : ConcretePairedRecognizerDovetailControllerCompilerCloseout) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    (hclose : PairedRecognizerDovetailControllerCompilerCloseout) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_controllerCompilerCloseout
     hclose
 
 theorem of_finiteControllerCloseout
     (hclose :
-      ConcretePairedRecognizerDovetailFiniteControllerCompilerCloseout) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailFiniteControllerCompilerCloseout) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     hclose
 
 theorem of_surface
     (h : PairedRecognizerDovetailSurface) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   h.finiteSourceCompiler
 
 theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
     (hattempt :
-      ConcretePairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
-    (hbool : ConcreteDescriptionBoolDeciderCompilationConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
+    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.DescriptionCompiler.ofCompiledSubroutineAndDecider
     hattempt hbool
 
 theorem of_layoutSubroutine_and_subroutineSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   paired_recognizer_dovetail_compiler_of_bounded_dovetail_table_compiler
     (BoundedDovetailTableCompiler.of_layoutSubroutine_and_subroutineSearchDriver
       hrunner hdriver)
@@ -743,8 +743,8 @@ namespace SearchDriver
 
 theorem of_runnerSearchDriver
     (hdriver :
-      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailSearchDriverCompilerConstruction :=
+      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailSearchDriverCompiler_of_runnerSearchDriverCompiler
     hdriver
 
@@ -754,8 +754,8 @@ namespace SubroutineSearchDriver
 
 theorem of_subroutineRunnerSearchDriver
     (hdriver :
-      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :=
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailSubroutineSearchDriverCompilerConstruction :=
   Computability.pairedRecognizerDovetailSubroutineSearchDriverCompiler_of_subroutineRunnerSearchDriverCompiler
     hdriver
 
@@ -767,10 +767,10 @@ namespace BoundedDovetailTableCompiler
 
 theorem of_layoutOutput_and_runnerSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   of_layoutOutput_and_searchDriver
     hrunner
     (PairedRecognizerDovetail.SearchDriver.of_runnerSearchDriver
@@ -778,10 +778,10 @@ theorem of_layoutOutput_and_runnerSearchDriver
 
 theorem of_layoutSubroutine_and_runnerSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction :=
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   of_layoutSubroutine_and_subroutineSearchDriver
     hrunner
     (PairedRecognizerDovetail.SubroutineSearchDriver.of_subroutineRunnerSearchDriver
@@ -793,10 +793,10 @@ namespace PairedRecognizerDovetailCompiler
 
 theorem of_layoutOutput_and_runnerSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   of_layoutOutput_and_searchDriver
     hrunner
     (PairedRecognizerDovetail.SearchDriver.of_runnerSearchDriver
@@ -804,10 +804,10 @@ theorem of_layoutOutput_and_runnerSearchDriver
 
 theorem of_layoutSubroutine_and_runnerSearchDriver
     (hrunner :
-      ConcretePairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
+      PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction)
     (hdriver :
-      ConcretePairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+      PairedRecognizerDovetailSubroutineRunnerSearchDriverCompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   of_layoutSubroutine_and_subroutineSearchDriver
     hrunner
     (PairedRecognizerDovetail.SubroutineSearchDriver.of_subroutineRunnerSearchDriver
@@ -817,49 +817,49 @@ end PairedRecognizerDovetailCompiler
 
 theorem dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
-    DovetailingDecidableConstruction Bool :=
+    ReCoReToDecidablePrinciple Bool :=
   Computability.reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
     hcompile
 
 theorem paired_recognizer_dovetail_compiler_of_concrete_dovetail_description_compiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
     hcompile
 
 theorem finite_dovetail_compiler_construction_of_paired_recognizer_dovetail_compiler
-    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction) :
-    ConcreteFiniteDovetailCompilerConstruction :=
+    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple) :
+    FiniteDovetailProgram.CompilerConstruction :=
   Computability.FiniteDovetailProgram.compilerConstruction_of_pairedRecognizerDescriptionCompiler
     hcompile
 
 theorem paired_recognizer_dovetail_compiler_of_finite_dovetail_compiler
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction) :
-    ConcretePairedRecognizerDovetailCompilerConstruction :=
+    (hcompile : FiniteDovetailProgram.CompilerConstruction) :
+    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.FiniteDovetailProgram.pairedRecognizerDescriptionCompiler_of_compilerConstruction
     hcompile
 
 theorem finite_dovetail_compiler_construction_iff_paired_recognizer_dovetail_compiler :
-    ConcreteFiniteDovetailCompilerConstruction <->
-      ConcretePairedRecognizerDovetailCompilerConstruction :=
+    FiniteDovetailProgram.CompilerConstruction <->
+      PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.FiniteDovetailProgram.compilerConstruction_iff_pairedRecognizerDescriptionCompiler
 
 theorem finite_dovetail_compiler_construction_of_concrete_dovetail_description_compiler
     (hcompile : DovetailDescriptionCompilerPrinciple) :
-    ConcreteFiniteDovetailCompilerConstruction :=
+    FiniteDovetailProgram.CompilerConstruction :=
   Computability.FiniteDovetailProgram.compilerConstruction_of_dovetailDescriptionCompiler
     hcompile
 
 theorem finite_dovetail_compiler_construction_of_concrete_bool_description_compiler
     (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    ConcreteFiniteDovetailCompilerConstruction :=
+    FiniteDovetailProgram.CompilerConstruction :=
   Computability.FiniteDovetailProgram.compilerConstruction_of_descriptionBoolDeciderCompiler
     hcompile
 
 theorem finite_dovetail_compiler_construction_of_bounded_dovetail_table_compiler
     (hcompile :
-      ConcretePairedRecognizerBoundedDovetailTableCompilerConstruction) :
-    ConcreteFiniteDovetailCompilerConstruction :=
+      PairedRecognizerBoundedDovetailTableCompilerConstruction) :
+    FiniteDovetailProgram.CompilerConstruction :=
   Computability.FiniteDovetailProgram.compilerConstruction_of_boundedDovetailTableCompiler
     hcompile
 
@@ -869,25 +869,25 @@ theorem complementary_traces_recursive_language_of_concrete_dovetail_description
     {accept reject : Word Bool -> Nat -> Prop}
     [∀ w n, Decidable (accept w n)]
     [∀ w n, Decidable (reject w n)]
-    (htraces : LanguageComplementaryAcceptanceTraces accept reject L) :
-    RecursiveLanguage L :=
+    (htraces : ComplementaryAcceptanceTraces accept reject L) :
+    TuringDecidable L :=
   Computability.complementaryTraces_turingDecidable_of_dovetailDescriptionCompiler
     hcompile htraces
 
 theorem re_and_co_re_recursive_language_of_concrete_dovetail_description_compiler
     (hcompile : DovetailDescriptionCompilerPrinciple)
     {L : Language Bool}
-    (h : RecursivelyEnumerableLanguageWithComplement L) :
-    RecursiveLanguage L :=
+    (h : RecursivelyEnumerableWithComplement L) :
+    TuringDecidable L :=
   Computability.reCoRe_turingDecidable_of_dovetailDescriptionCompiler
     hcompile h
 
 theorem recursive_language_iff_re_and_co_re_of_concrete_dovetail_description_compiler
-    (haccept : DecidableToAcceptableConstruction Bool)
+    (haccept : DecidableToAcceptablePrinciple Bool)
     (hcompile : DovetailDescriptionCompilerPrinciple)
     (L : Language Bool) :
-    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
-  Computability.recursive_iff_reCoRe_of_principles
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L :=
+  Computability.turingDecidable_iff_reCoRe_of_principles
     haccept
     (Computability.reCoReToDecidablePrinciple_of_dovetailDescriptionCompiler
       hcompile)
@@ -902,68 +902,68 @@ classification follows.
 
 theorem concrete_machine_description_accepts_turing_acceptable
     {D : MachineDescription} {L : Language Bool}
-    (h : ConcreteMachineDescriptionAccepts D L) :
-    RecursivelyEnumerableLanguage L :=
+    (h : MachineDescriptionAcceptsLanguage D L) :
+    TuringAcceptable L :=
   Computability.machineDescriptionAcceptsLanguage_turingAcceptable h
 
 theorem concrete_machine_description_decides_turing_decidable
     {D : MachineDescription} {L : Language Bool}
-    (h : ConcreteMachineDescriptionDecides D L) :
-    RecursiveLanguage L :=
+    (h : MachineDescriptionDecidesLanguage D L) :
+    TuringDecidable L :=
   Computability.machineDescriptionDecidesLanguage_turingDecidable h
 
 theorem concrete_program_acceptable_by_description_turing_acceptable
     {L : Language Bool}
-    (h : ConcreteProgramAcceptableByDescription L) :
-    RecursivelyEnumerableLanguage L :=
+    (h : ProgramAcceptableByDescription L) :
+    TuringAcceptable L :=
   Computability.programAcceptableByDescription_turingAcceptable h
 
 theorem concrete_program_bool_decidable_by_description_turing_decidable
     {L : Language Bool}
-    (h : ConcreteProgramBoolDecidableByDescription L) :
-    RecursiveLanguage L :=
+    (h : ProgramBoolDecidableByDescription L) :
+    TuringDecidable L :=
   Computability.programBoolDecidableByDescription_turingDecidable h
 
 theorem concrete_finite_acceptor_compiled_by_description
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed) :
-    ConcreteProgramCompiledByDescription
-      (ConcreteFiniteAcceptorStagedProgram P)
-      (ConcreteFiniteAcceptorDescription P) :=
+    ProgramCompiledByDescription
+      (FiniteAcceptorProgram.toStagedProgram P)
+      (FiniteAcceptorProgram.compile P) :=
   Computability.FiniteAcceptorProgram.compiledByDescription P hD
 
 theorem concrete_finite_acceptor_program_acceptable_by_description
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
     (haccepts :
       ProgramAcceptsLanguage
-        (ConcreteFiniteAcceptorStagedProgram P) L) :
-    ConcreteProgramAcceptableByDescription L := by
-  exists ConcreteFiniteAcceptorStagedProgram P
-  exists ConcreteFiniteAcceptorDescription P
+        (FiniteAcceptorProgram.toStagedProgram P) L) :
+    ProgramAcceptableByDescription L := by
+  exists FiniteAcceptorProgram.toStagedProgram P
+  exists FiniteAcceptorProgram.compile P
   exact And.intro haccepts
     (concrete_finite_acceptor_compiled_by_description P hD)
 
 theorem concrete_finite_acceptor_recursively_enumerable
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
     (haccepts :
       ProgramAcceptsLanguage
-        (ConcreteFiniteAcceptorStagedProgram P) L) :
-    RecursivelyEnumerableLanguage L :=
+        (FiniteAcceptorProgram.toStagedProgram P) L) :
+    TuringAcceptable L :=
   concrete_program_acceptable_by_description_turing_acceptable
     (concrete_finite_acceptor_program_acceptable_by_description
       P hD haccepts)
 
 theorem concrete_finite_trace_recognizer_compiled_by_description
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed) :
-    ConcreteProgramCompiledByDescription
+    ProgramCompiledByDescription
       (AcceptanceTraceStagedRecognizer
-        (ConcreteFiniteAcceptorTrace P))
-      (ConcreteFiniteAcceptorDescription P) := by
+        (FiniteAcceptorProgram.trace P))
+      (FiniteAcceptorProgram.compile P) := by
   constructor
   · exact hD
   · intro w
@@ -971,51 +971,51 @@ theorem concrete_finite_trace_recognizer_compiled_by_description
     · intro hhalt
       rcases hhalt with ⟨n, hn⟩
       exists n
-      have htrace : ConcreteFiniteAcceptorTrace P w n := by
-        simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
+      have htrace : FiniteAcceptorProgram.trace P w n := by
+        simpa [FiniteAcceptorProgram.trace, FiniteAcceptorProgram.compile]
           using! hn
       simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram, htrace]
     · intro hprog
       rcases hprog with ⟨n, hn⟩
-      by_cases htrace : ConcreteFiniteAcceptorTrace P w n
+      by_cases htrace : FiniteAcceptorProgram.trace P w n
       · exact ⟨n, by
-          simpa [ConcreteFiniteAcceptorTrace, ConcreteFiniteAcceptorDescription]
+          simpa [FiniteAcceptorProgram.trace, FiniteAcceptorProgram.compile]
             using! htrace⟩
       · simp [AcceptanceTraceStagedRecognizer, TraceRecognizerProgram,
           htrace] at hn
 
 theorem concrete_finite_trace_recognizer_acceptable_by_description
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
-    (htrace : LanguageAcceptanceTrace
-      (ConcreteFiniteAcceptorTrace P) L) :
-    ConcreteProgramAcceptableByDescription L :=
+    (htrace : AcceptanceTrace
+      (FiniteAcceptorProgram.trace P) L) :
+    ProgramAcceptableByDescription L :=
   Computability.FiniteAcceptorProgram.traceRecognizer_programAcceptableByDescription
     P hD htrace
 
 theorem concrete_finite_trace_recognizer_recursively_enumerable
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
-    (htrace : LanguageAcceptanceTrace
-      (ConcreteFiniteAcceptorTrace P) L) :
-    RecursivelyEnumerableLanguage L :=
+    (htrace : AcceptanceTrace
+      (FiniteAcceptorProgram.trace P) L) :
+    TuringAcceptable L :=
       Computability.FiniteAcceptorProgram.traceRecognizer_turingAcceptable
     P hD htrace
 
 theorem concrete_finite_acceptor_recognizes_language_recursively_enumerable
-    (P : ConcreteFiniteAcceptorProgram)
+    (P : FiniteAcceptorProgram)
     {L : Language Bool}
     (h : ConcreteFiniteAcceptorRecognizesLanguage P L) :
-    RecursivelyEnumerableLanguage L :=
+    TuringAcceptable L :=
   concrete_finite_trace_recognizer_recursively_enumerable
     P h.left h.right
 
 theorem concrete_finite_recognizable_language_recursively_enumerable
     {L : Language Bool}
     (h : ConcreteFiniteRecognizableLanguage L) :
-    RecursivelyEnumerableLanguage L := by
+    TuringAcceptable L := by
   cases h with
   | intro P hP =>
       exact
@@ -1025,7 +1025,7 @@ theorem concrete_finite_recognizable_language_recursively_enumerable
 theorem concrete_finite_complementary_recognizers_have_re_and_co_re
     {L : Language Bool}
     (h : ConcreteFiniteComplementaryRecognizers L) :
-    RecursivelyEnumerableLanguageWithComplement L := by
+    RecursivelyEnumerableWithComplement L := by
   cases h with
   | intro accept haccept =>
       cases haccept with
@@ -1045,124 +1045,124 @@ combine two finite acceptor traces into one Boolean decision procedure.
 -/
 
 theorem concrete_finite_bool_program_compiled_by_description
-    (P : ConcreteFiniteBoolProgram)
+    (P : FiniteBoolProgram)
     (hD : P.description.WellFormed) :
-    ConcreteBoolProgramCompiledByDescription
-      (ConcreteFiniteBoolStagedProgram P)
-      (ConcreteFiniteBoolDescription P) :=
+    BoolProgramCompiledByDescription
+      (FiniteBoolProgram.toStagedProgram P)
+      (FiniteBoolProgram.compile P) :=
   Computability.FiniteBoolProgram.compiledByDescription P hD
 
 theorem concrete_finite_bool_program_bool_decidable_by_description
-    (P : ConcreteFiniteBoolProgram)
+    (P : FiniteBoolProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
     (hdecides :
-      ProgramBoolDecidesLanguage
-        (ConcreteFiniteBoolStagedProgram P) L) :
-    ConcreteProgramBoolDecidableByDescription L :=
+      ProgramBoolDecides
+        (FiniteBoolProgram.toStagedProgram P) L) :
+    ProgramBoolDecidableByDescription L :=
   Computability.FiniteBoolProgram.programBoolDecidableByDescription
     P hD hdecides
 
 theorem concrete_finite_bool_program_turing_decidable
-    (P : ConcreteFiniteBoolProgram)
+    (P : FiniteBoolProgram)
     (hD : P.description.WellFormed)
     {L : Language Bool}
     (hdecides :
-      ProgramBoolDecidesLanguage
-        (ConcreteFiniteBoolStagedProgram P) L) :
-    RecursiveLanguage L :=
+      ProgramBoolDecides
+        (FiniteBoolProgram.toStagedProgram P) L) :
+    TuringDecidable L :=
   Computability.FiniteBoolProgram.turingDecidable P hD hdecides
 
 theorem concrete_finite_dovetail_program_bool_decidable_by_description
-    (P : ConcreteFiniteDovetailProgram)
+    (P : FiniteDovetailProgram)
     {L : Language Bool}
-    (htraces : LanguageComplementaryAcceptanceTraces
-      (ConcreteFiniteAcceptorTrace P.accept)
-      (ConcreteFiniteAcceptorTrace P.reject) L)
-    (hcompiled : ConcreteFiniteDovetailCompiled P) :
-    ConcreteProgramBoolDecidableByDescription L := by
-  simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
+    (htraces : ComplementaryAcceptanceTraces
+      (FiniteAcceptorProgram.trace P.accept)
+      (FiniteAcceptorProgram.trace P.reject) L)
+    (hcompiled : FiniteDovetailProgram.Compiled P) :
+    ProgramBoolDecidableByDescription L := by
+  simpa [FiniteDovetailProgram.Compiled, FiniteAcceptorProgram.trace]
     using!
       Computability.FiniteDovetailProgram.programBoolDecidableByDescription
         P htraces hcompiled
 
 theorem concrete_finite_dovetail_program_turing_decidable
-    (P : ConcreteFiniteDovetailProgram)
+    (P : FiniteDovetailProgram)
     {L : Language Bool}
-    (htraces : LanguageComplementaryAcceptanceTraces
-      (ConcreteFiniteAcceptorTrace P.accept)
-      (ConcreteFiniteAcceptorTrace P.reject) L)
-    (hcompiled : ConcreteFiniteDovetailCompiled P) :
-    RecursiveLanguage L := by
-  simpa [ConcreteFiniteDovetailCompiled, ConcreteFiniteAcceptorTrace]
+    (htraces : ComplementaryAcceptanceTraces
+      (FiniteAcceptorProgram.trace P.accept)
+      (FiniteAcceptorProgram.trace P.reject) L)
+    (hcompiled : FiniteDovetailProgram.Compiled P) :
+    TuringDecidable L := by
+  simpa [FiniteDovetailProgram.Compiled, FiniteAcceptorProgram.trace]
     using! Computability.FiniteDovetailProgram.turingDecidable
       P htraces hcompiled
 
 theorem concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
-    {accept reject : ConcreteFiniteAcceptorProgram}
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
+    {accept reject : FiniteAcceptorProgram}
     {L : Language Bool}
-    (htraces : LanguageComplementaryAcceptanceTraces
-      (ConcreteFiniteAcceptorTrace accept)
-      (ConcreteFiniteAcceptorTrace reject) L) :
-    RecursiveLanguage L := by
-  simpa [ConcreteFiniteDovetailCompilerConstruction,
-    ConcreteFiniteAcceptorTrace]
+    (htraces : ComplementaryAcceptanceTraces
+      (FiniteAcceptorProgram.trace accept)
+      (FiniteAcceptorProgram.trace reject) L) :
+    TuringDecidable L := by
+  simpa [FiniteDovetailProgram.CompilerConstruction,
+    FiniteAcceptorProgram.trace]
     using!
       Computability.FiniteDovetailProgram.turingDecidable_of_compilerConstruction
         hcompile htraces
 
 theorem concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler
-    (hcompile : ConcretePairedRecognizerDovetailCompilerConstruction)
-    {accept reject : ConcreteFiniteAcceptorProgram}
+    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple)
+    {accept reject : FiniteAcceptorProgram}
     {L : Language Bool}
-    (htraces : LanguageComplementaryAcceptanceTraces
-      (ConcreteFiniteAcceptorTrace accept)
-      (ConcreteFiniteAcceptorTrace reject) L) :
-    RecursiveLanguage L :=
+    (htraces : ComplementaryAcceptanceTraces
+      (FiniteAcceptorProgram.trace accept)
+      (FiniteAcceptorProgram.trace reject) L) :
+    TuringDecidable L :=
   concrete_finite_dovetail_program_turing_decidable_of_compiler_construction
     (finite_dovetail_compiler_construction_of_paired_recognizer_dovetail_compiler
       hcompile)
     htraces
 
 theorem concrete_finite_dovetail_program_exists_of_compiler_construction
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
-    (accept reject : ConcreteFiniteAcceptorProgram) :
-    exists P : ConcreteFiniteDovetailProgram,
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
+    (accept reject : FiniteAcceptorProgram) :
+    exists P : FiniteDovetailProgram,
       P.accept = accept ∧ P.reject = reject ∧
-        ConcreteFiniteDovetailCompiled P := by
+        FiniteDovetailProgram.Compiled P := by
   cases hcompile accept reject with
   | intro decider hcompiled =>
       exact Exists.intro
         ({ accept := accept, reject := reject, decider := decider } :
-          ConcreteFiniteDovetailProgram)
+          FiniteDovetailProgram)
         (And.intro rfl (And.intro rfl hcompiled))
 
 theorem concrete_finite_dovetail_program_bool_decidable_by_description_of_compiler_construction
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
-    {accept reject : ConcreteFiniteAcceptorProgram}
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
+    {accept reject : FiniteAcceptorProgram}
     {L : Language Bool}
-    (htraces : LanguageComplementaryAcceptanceTraces
-      (ConcreteFiniteAcceptorTrace accept)
-      (ConcreteFiniteAcceptorTrace reject) L) :
-    ConcreteProgramBoolDecidableByDescription L := by
+    (htraces : ComplementaryAcceptanceTraces
+      (FiniteAcceptorProgram.trace accept)
+      (FiniteAcceptorProgram.trace reject) L) :
+    ProgramBoolDecidableByDescription L := by
   cases hcompile accept reject with
   | intro decider hcompiled =>
-      simpa [ConcreteFiniteAcceptorTrace]
+      simpa [FiniteAcceptorProgram.trace]
         using
           concrete_finite_dovetail_program_bool_decidable_by_description
             ({ accept := accept, reject := reject, decider := decider } :
-              ConcreteFiniteDovetailProgram)
+              FiniteDovetailProgram)
             htraces hcompiled
 
 theorem finite_complementary_traces_recursive_language_of_finite_dovetail_compiler
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
     {L : Language Bool}
-    (h : exists accept reject : ConcreteFiniteAcceptorProgram,
-      LanguageComplementaryAcceptanceTraces
-        (ConcreteFiniteAcceptorTrace accept)
-        (ConcreteFiniteAcceptorTrace reject) L) :
-    RecursiveLanguage L := by
+    (h : exists accept reject : FiniteAcceptorProgram,
+      ComplementaryAcceptanceTraces
+        (FiniteAcceptorProgram.trace accept)
+        (FiniteAcceptorProgram.trace reject) L) :
+    TuringDecidable L := by
   cases h with
   | intro accept haccept =>
       cases haccept with
@@ -1172,10 +1172,10 @@ theorem finite_complementary_traces_recursive_language_of_finite_dovetail_compil
               hcompile htraces
 
 theorem concrete_finite_complementary_recognizers_recursive_language_of_finite_dovetail_compiler
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
     {L : Language Bool}
     (h : ConcreteFiniteComplementaryRecognizers L) :
-    RecursiveLanguage L := by
+    TuringDecidable L := by
   cases h with
   | intro accept haccept =>
       cases haccept with
@@ -1185,13 +1185,13 @@ theorem concrete_finite_complementary_recognizers_recursive_language_of_finite_d
               hcompile hreject.right.right
 
 theorem concrete_finite_complementary_recognizers_have_compiled_dovetail_program
-    (hcompile : ConcreteFiniteDovetailCompilerConstruction)
+    (hcompile : FiniteDovetailProgram.CompilerConstruction)
     {L : Language Bool}
     (h : ConcreteFiniteComplementaryRecognizers L) :
-    exists P : ConcreteFiniteDovetailProgram,
-      ProgramBoolDecidesLanguage
-        (ConcreteFiniteDovetailStagedProgram P) L ∧
-        ConcreteFiniteDovetailCompiled P := by
+    exists P : FiniteDovetailProgram,
+      ProgramBoolDecides
+        (FiniteDovetailProgram.toStagedProgram P) L ∧
+        FiniteDovetailProgram.Compiled P := by
   cases h with
   | intro accept haccept =>
       cases haccept with
@@ -1222,7 +1222,7 @@ theorem stopped_decider_has_complementary_output_traces
     (hstop : TuringMachine.HaltingTransitionsDisabled M)
     (hzeroOne : zero ≠ one)
     (h : DecidesLanguage M encodeInput zero one L) :
-    LanguageComplementaryAcceptanceTraces
+    ComplementaryAcceptanceTraces
       (fun w n =>
         TuringMachine.HaltsWithOutputIn
           M n (EncodeWord encodeInput w) [one])
@@ -1240,7 +1240,7 @@ theorem stopped_decider_acceptance_trace
     (hstop : TuringMachine.HaltingTransitionsDisabled M)
     (hzeroOne : zero ≠ one)
     (h : DecidesLanguage M encodeInput zero one L) :
-    LanguageAcceptanceTrace
+    AcceptanceTrace
       (fun w n =>
         TuringMachine.HaltsWithOutputIn
           M n (EncodeWord encodeInput w) [one])
@@ -1254,7 +1254,7 @@ theorem stopped_decider_complement_acceptance_trace
     (hstop : TuringMachine.HaltingTransitionsDisabled M)
     (hzeroOne : zero ≠ one)
     (h : DecidesLanguage M encodeInput zero one L) :
-    LanguageAcceptanceTrace
+    AcceptanceTrace
       (fun w n =>
         TuringMachine.HaltsWithOutputIn
           M n (EncodeWord encodeInput w) [zero])
@@ -1271,12 +1271,12 @@ theorem stopped_decider_bounded_search_eventually_classifies
     (h : DecidesLanguage M encodeInput zero one L)
     (w : Word alpha) :
     exists limit : Nat,
-      (LanguageTraceHitsBy
+      (TraceHitsBy
         (fun x n =>
           TuringMachine.HaltsWithOutputIn
             M n (EncodeWord encodeInput x) [one])
         w limit ∧ w ∈ L) ∨
-        (LanguageTraceHitsBy
+        (TraceHitsBy
           (fun x n =>
             TuringMachine.HaltsWithOutputIn
               M n (EncodeWord encodeInput x) [zero])
@@ -1286,55 +1286,55 @@ theorem stopped_decider_bounded_search_eventually_classifies
 
 theorem stopped_turing_decidable_language_has_complementary_output_traces
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L) :
+    (h : StoppedTuringDecidable L) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L :=
+      ComplementaryAcceptanceTraces accept reject L :=
   Computability.stoppedTuringDecidable_has_complementary_output_traces h
 
 theorem stopped_turing_decidable_language_has_acceptance_trace
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L) :
+    (h : StoppedTuringDecidable L) :
     exists trace : Word alpha -> Nat -> Prop,
-      LanguageAcceptanceTrace trace L :=
+      AcceptanceTrace trace L :=
   Computability.stoppedTuringDecidable_has_acceptanceTrace h
 
 theorem stopped_turing_decidable_language_complement_has_acceptance_trace
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L) :
+    (h : StoppedTuringDecidable L) :
     exists trace : Word alpha -> Nat -> Prop,
-      LanguageAcceptanceTrace trace (Language.Compl L) :=
+      AcceptanceTrace trace (Language.Compl L) :=
   Computability.stoppedTuringDecidable_complement_has_acceptanceTrace h
 
 theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
     {L : Language alpha}
-    (h : StoppedTuringDecidableLanguage L)
+    (h : StoppedTuringDecidable L)
     (w : Word alpha) :
     exists accept reject : Word alpha -> Nat -> Prop,
-      LanguageComplementaryAcceptanceTraces accept reject L ∧
+      ComplementaryAcceptanceTraces accept reject L ∧
         exists limit : Nat,
-          (LanguageTraceHitsBy accept w limit ∧ w ∈ L) ∨
-            (LanguageTraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
+          (TraceHitsBy accept w limit ∧ w ∈ L) ∨
+            (TraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.stoppedTuringDecidable_bounded_search_eventually_classifies h w
 
 theorem recursive_language_re_and_co_re_of_decidable_to_acceptable
-    (haccept : DecidableToAcceptableConstruction alpha)
+    (haccept : DecidableToAcceptablePrinciple alpha)
     {L : Language alpha}
-    (h : RecursiveLanguage L) :
-    RecursivelyEnumerableLanguageWithComplement L :=
-  Computability.recursive_reCoRe_of_decidableToAcceptable haccept h
+    (h : TuringDecidable L) :
+    RecursivelyEnumerableWithComplement L :=
+  Computability.turingDecidable_reCoRe_of_decidableToAcceptable haccept h
 
 theorem recursive_language_iff_re_and_co_re_of_constructions
-    (haccept : DecidableToAcceptableConstruction alpha)
-    (hdovetail : DovetailingDecidableConstruction alpha)
+    (haccept : DecidableToAcceptablePrinciple alpha)
+    (hdovetail : ReCoReToDecidablePrinciple alpha)
     (L : Language alpha) :
-    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
-  Computability.recursive_iff_reCoRe_of_principles haccept hdovetail L
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L :=
+  Computability.turingDecidable_iff_reCoRe_of_principles haccept hdovetail L
 
 theorem recursive_iff_re_co_re_construction_of_principles
-    (haccept : DecidableToAcceptableConstruction alpha)
-    (hdovetail : DovetailingDecidableConstruction alpha) :
-    RecursiveIffReCoREConstruction alpha :=
-  Computability.recursiveIffReCoRePrinciple_of_principles
+    (haccept : DecidableToAcceptablePrinciple alpha)
+    (hdovetail : ReCoReToDecidablePrinciple alpha) :
+    TuringDecidableIffReCoRePrinciple alpha :=
+  Computability.turingDecidableIffReCoRePrinciple_of_principles
     haccept hdovetail
 
 

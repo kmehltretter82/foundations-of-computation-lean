@@ -189,11 +189,6 @@ theorem turingAcceptable_programAcceptable
   hasDecidableAcceptanceTrace_programAcceptable
     (turing_acceptable_has_decidableAcceptanceTrace h)
 
-theorem recursivelyEnumerable_programAcceptable
-    {L : Language input} (h : RecursivelyEnumerable L) :
-    ProgramAcceptable L :=
-  turingAcceptable_programAcceptable h
-
 /-!
 # Dovetailing complementary traces
 
@@ -390,13 +385,6 @@ theorem turingAcceptable_of_programCompiler
     {L : Language input}
     (h : ProgramAcceptable L) :
     TuringAcceptable L :=
-  hcompile L h
-
-theorem recursivelyEnumerable_of_programCompiler
-    (hcompile : ProgramAcceptorCompilationPrinciple input)
-    {L : Language input}
-    (h : ProgramAcceptable L) :
-    RecursivelyEnumerable L :=
   hcompile L h
 
 /-!

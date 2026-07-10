@@ -734,35 +734,35 @@ theorem finiteProductionGenerated_programAcceptable
     (GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mpr
       h)
 
-theorem generalGrammar_generatedLanguage_recursivelyEnumerable_of_programCompiler
+theorem generalGrammar_generatedLanguage_turingAcceptable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     (G : GeneralGrammar terminal nonterminal) :
-    RecursivelyEnumerable (GeneralGrammar.GeneratedLanguage G) :=
-  recursivelyEnumerable_of_programCompiler hcompile
+    TuringAcceptable (GeneralGrammar.GeneratedLanguage G) :=
+  turingAcceptable_of_programCompiler hcompile
     (generalGrammar_generatedLanguage_programAcceptable G)
 
-theorem generalGrammar_generated_recursivelyEnumerable_of_programCompiler
+theorem generalGrammar_generated_turingAcceptable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     {L : Language terminal}
     (h : GeneralGrammar.Generated L) :
-    RecursivelyEnumerable L :=
-  recursivelyEnumerable_of_programCompiler hcompile
+    TuringAcceptable L :=
+  turingAcceptable_of_programCompiler hcompile
     (generalGrammar_generated_programAcceptable h)
 
-theorem finitePresentationGenerated_recursivelyEnumerable_of_programCompiler
+theorem finitePresentationGenerated_turingAcceptable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     {L : Language terminal}
     (h : GeneralGrammar.FinitePresentationGenerated L) :
-    RecursivelyEnumerable L :=
-  recursivelyEnumerable_of_programCompiler hcompile
+    TuringAcceptable L :=
+  turingAcceptable_of_programCompiler hcompile
     (finitePresentationGenerated_programAcceptable h)
 
-theorem finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
+theorem finiteProductionGenerated_turingAcceptable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     {L : Language terminal}
     (h : GeneralGrammar.FiniteProductionGenerated L) :
-    RecursivelyEnumerable L :=
-  finitePresentationGenerated_recursivelyEnumerable_of_programCompiler
+    TuringAcceptable L :=
+  finitePresentationGenerated_turingAcceptable_of_programCompiler
     hcompile
     (GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mpr
       h)

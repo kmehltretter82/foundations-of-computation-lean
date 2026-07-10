@@ -13,7 +13,6 @@ namespace Section02
 
 open Languages
 open Computability
-open Grammars
 
 universe u v
 
@@ -105,7 +104,7 @@ theorem bounded_acceptance_trace_listing_partially_lists
     [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : LanguageWordStreamCovers candidates)
-    (htrace : LanguageAcceptanceTrace trace L) :
+    (htrace : AcceptanceTrace trace L) :
     LanguagePartiallyListedBy
       (BoundedAcceptanceTraceListing candidates trace) L :=
   acceptanceTrace_boundedTraceListing_partiallyListedBy hcovers htrace
@@ -130,7 +129,7 @@ theorem acceptance_trace_partially_listable_by_bounded_search
     [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
     (hcovers : LanguageWordStreamCovers candidates)
-    (htrace : LanguageAcceptanceTrace trace L) :
+    (htrace : AcceptanceTrace trace L) :
     LanguagePartiallyListable L :=
   acceptanceTrace_partiallyListable_of_word_stream hcovers htrace
 
@@ -140,7 +139,7 @@ theorem acceptance_trace_partially_listable_by_code_bounded_search
     {trace : Word alpha -> Nat -> Prop}
     [∀ w n, Decidable (trace w n)]
     {L : Language alpha}
-    (htrace : LanguageAcceptanceTrace trace L) :
+    (htrace : AcceptanceTrace trace L) :
     LanguagePartiallyListable L :=
   acceptanceTrace_partiallyListable_of_word_code hcode htrace
 
@@ -148,7 +147,7 @@ theorem recursively_enumerable_language_partially_listable_by_code_bounded_searc
     {code : Word alpha -> Nat}
     (hcode : FoC.Foundation.Fn.Injective code)
     {L : Language alpha}
-    (h : RecursivelyEnumerableLanguage L) :
+    (h : TuringAcceptable L) :
     LanguagePartiallyListable L := by
   classical
   rcases recursively_enumerable_language_has_acceptance_trace h with
@@ -159,20 +158,20 @@ theorem recursively_enumerable_language_partially_listable_by_code_bounded_searc
 theorem listed_language_has_acceptance_trace
     {stream : Nat -> Word alpha} {L : Language alpha}
     (h : LanguageListedBy stream L) :
-    LanguageAcceptanceTrace (fun w n => stream n = w) L :=
+    AcceptanceTrace (fun w n => stream n = w) L :=
   listedBy_acceptanceTrace h
 
 theorem partially_listed_language_has_acceptance_trace
     {stream : Nat -> Option (Word alpha)} {L : Language alpha}
     (h : LanguagePartiallyListedBy stream L) :
-    LanguageAcceptanceTrace (fun w n => stream n = some w) L :=
+    AcceptanceTrace (fun w n => stream n = some w) L :=
   partiallyListedBy_acceptanceTrace h
 
 theorem partially_listable_language_has_acceptance_trace_by_bounded_search
     {L : Language alpha}
     (h : LanguagePartiallyListable L) :
     exists trace : Word alpha -> Nat -> Prop,
-      LanguageAcceptanceTrace trace L := by
+      AcceptanceTrace trace L := by
   rcases h with ⟨stream, hstream⟩
   exact ⟨fun w n => stream n = some w,
     partially_listed_language_has_acceptance_trace hstream⟩
@@ -181,10 +180,10 @@ theorem partially_listable_language_program_acceptable_by_bounded_search
     [DecidableEq alpha]
     {L : Language alpha}
     (h : LanguagePartiallyListable L) :
-    ProgramAcceptableLanguage L := by
+    ProgramAcceptable L := by
   rcases h with ⟨stream, hstream⟩
   let trace : Word alpha -> Nat -> Prop := fun w n => stream n = some w
-  have htrace : LanguageAcceptanceTrace trace L :=
+  have htrace : AcceptanceTrace trace L :=
     partially_listed_language_has_acceptance_trace hstream
   exact acceptance_trace_has_program_acceptable_language htrace
 
@@ -299,7 +298,7 @@ theorem acceptance_trace_partial_range_by_bounded_search
     [∀ w n, Decidable (trace w n)]
     {L : Language output}
     (hcovers : LanguageWordStreamCovers candidates)
-    (htrace : LanguageAcceptanceTrace trace L) :
+    (htrace : AcceptanceTrace trace L) :
     PartialRangeOfUnaryStringFunction L :=
   acceptanceTrace_partialRangeOfUnaryFunction_of_word_stream hcovers htrace
 
@@ -309,7 +308,7 @@ theorem acceptance_trace_partial_range_by_code_bounded_search
     {trace : Word output -> Nat -> Prop}
     [∀ w n, Decidable (trace w n)]
     {L : Language output}
-    (htrace : LanguageAcceptanceTrace trace L) :
+    (htrace : AcceptanceTrace trace L) :
     PartialRangeOfUnaryStringFunction L :=
   acceptanceTrace_partialRangeOfUnaryFunction_of_word_code hcode htrace
 
@@ -317,7 +316,7 @@ theorem recursively_enumerable_language_partial_range_by_code_bounded_search
     {code : Word output -> Nat}
     (hcode : FoC.Foundation.Fn.Injective code)
     {L : Language output}
-    (h : RecursivelyEnumerableLanguage L) :
+    (h : TuringAcceptable L) :
     PartialRangeOfUnaryStringFunction L := by
   classical
   rcases recursively_enumerable_language_has_acceptance_trace h with
@@ -340,18 +339,18 @@ theorem partial_unary_string_function_range_has_acceptance_trace
     {L : Language output}
     (h : PartialRangeOfUnaryStringFunction L) :
     exists trace : Word output -> Nat -> Prop,
-      LanguageAcceptanceTrace trace L :=
+      AcceptanceTrace trace L :=
   partialRangeOfUnaryFunction_acceptanceTrace h
 
 theorem partial_unary_string_function_range_program_acceptable_by_bounded_search
     [DecidableEq output]
     {L : Language output}
     (h : PartialRangeOfUnaryStringFunction L) :
-    ProgramAcceptableLanguage L := by
+    ProgramAcceptable L := by
   rcases Computability.partialRangeOfUnaryFunction_partiallyListable h with
     ⟨stream, hstream⟩
   let trace : Word output -> Nat -> Prop := fun w n => stream n = some w
-  have htrace : LanguageAcceptanceTrace trace L :=
+  have htrace : AcceptanceTrace trace L :=
     partiallyListedBy_acceptanceTrace hstream
   exact acceptance_trace_has_program_acceptable_language htrace
 
@@ -602,121 +601,121 @@ one range language.
 -/
 
 theorem concrete_finite_partial_unary_output_range_is_program_range
-    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    (P : FinitePartialUnaryRangeProgram) :
     Language.Equal
-      (ConcreteFinitePartialUnaryOutputRange P)
+      (FinitePartialUnaryRangeProgram.outputRange P)
       (LanguageProgramRange
-        (ConcreteFinitePartialUnaryRangeStagedProgram P)) := by
+        (FinitePartialUnaryRangeProgram.toStagedProgram P)) := by
   intro out
   rfl
 
 theorem concrete_finite_partial_unary_range_equal_description_outputs
-    (P : ConcreteFinitePartialUnaryRangeProgram) :
+    (P : FinitePartialUnaryRangeProgram) :
     Language.Equal
-      (ConcreteFinitePartialUnaryOutputRange P)
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
-  simpa [ConcreteFinitePartialUnaryOutputRange,
-    ConcreteFinitePartialUnaryDescriptionOutputRange]
+      (FinitePartialUnaryRangeProgram.outputRange P)
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
+  simpa [FinitePartialUnaryRangeProgram.outputRange,
+    FinitePartialUnaryRangeProgram.descriptionOutputRange]
     using!
       Computability.FinitePartialUnaryRangeProgram.outputRange_equal_descriptionOutputRange
         P
 
 theorem concrete_finite_partial_unary_output_function_compiled_by_description
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P) :
+    (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P) :
     ConcretePartialFunctionCompiledByDescription
-      (ConcreteFinitePartialUnaryOutputFunction P)
+      (FinitePartialUnaryRangeProgram.outputFunction P)
       (fun _ : Unit => true)
       P.description := by
-  simpa [ConcreteFinitePartialUnaryOutputFunction,
-    ConcreteFinitePartialUnaryOutputComplete]
+  simpa [FinitePartialUnaryRangeProgram.outputFunction,
+    FinitePartialUnaryRangeProgram.OutputComplete]
     using!
       Computability.FinitePartialUnaryRangeProgram.outputFunction_compiledByDescription
         P hD hcomplete
 
 theorem concrete_finite_partial_unary_output_function_range_equal_description_outputs
-    (P : ConcreteFinitePartialUnaryRangeProgram)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (P : FinitePartialUnaryRangeProgram)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     Language.Equal
       (PartialFunctionRangeLanguage
-        (ConcreteFinitePartialUnaryOutputFunction P))
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+        (FinitePartialUnaryRangeProgram.outputFunction P))
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
   simpa [PartialFunctionRangeLanguage,
-    ConcreteFinitePartialUnaryOutputFunction,
-    ConcreteFinitePartialUnaryDescriptionOutputRange,
-    ConcreteFinitePartialUnaryOutputFunctional]
+    FinitePartialUnaryRangeProgram.outputFunction,
+    FinitePartialUnaryRangeProgram.descriptionOutputRange,
+    FinitePartialUnaryRangeProgram.OutputFunctional]
     using
       Computability.FinitePartialUnaryRangeProgram.partialRange_outputFunction_equal_descriptionOutputRange
         P hfunctional
 
 theorem concrete_finite_partial_unary_output_listing_partially_lists_description_outputs
-    (P : ConcreteFinitePartialUnaryRangeProgram)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (P : FinitePartialUnaryRangeProgram)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     LanguagePartiallyListedBy
-      (ConcreteFinitePartialUnaryOutputListing P)
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
-  simpa [ConcreteFinitePartialUnaryOutputListing,
-    ConcreteFinitePartialUnaryDescriptionOutputRange,
-    ConcreteFinitePartialUnaryOutputFunctional]
+      (FinitePartialUnaryRangeProgram.outputListing P)
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
+  simpa [FinitePartialUnaryRangeProgram.outputListing,
+    FinitePartialUnaryRangeProgram.descriptionOutputRange,
+    FinitePartialUnaryRangeProgram.OutputFunctional]
     using!
       Computability.FinitePartialUnaryRangeProgram.outputListing_partiallyListedBy_descriptionOutputRange
         P hfunctional
 
 theorem concrete_finite_partial_unary_description_output_range_compiled
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     ConcreteCompiledPartialUnaryRange
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
   simpa [ConcreteCompiledPartialUnaryRange,
-    ConcreteFinitePartialUnaryDescriptionOutputRange,
-    ConcreteFinitePartialUnaryOutputComplete,
-    ConcreteFinitePartialUnaryOutputFunctional]
+    FinitePartialUnaryRangeProgram.descriptionOutputRange,
+    FinitePartialUnaryRangeProgram.OutputComplete,
+    FinitePartialUnaryRangeProgram.OutputFunctional]
     using
       Computability.FinitePartialUnaryRangeProgram.compiledPartialUnaryRange_descriptionOutputRange
         P hD hcomplete hfunctional
 
 theorem concrete_finite_partial_unary_description_output_range_turing_computable
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     ConcretePartialUnaryTuringComputableRange
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) :=
   concrete_compiled_partial_unary_range_has_turing_computable_range
     (concrete_finite_partial_unary_description_output_range_compiled
       P hD hcomplete hfunctional)
 
 theorem concrete_finite_partial_unary_description_output_range_partially_listable
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     LanguagePartiallyListable
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) :=
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) :=
   concrete_compiled_partial_unary_range_is_partially_listable
     (concrete_finite_partial_unary_description_output_range_compiled
       P hD hcomplete hfunctional)
 
 theorem concrete_finite_partial_unary_description_output_range_compiled_program_range
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
-    (hcomplete : ConcreteFinitePartialUnaryOutputComplete P)
-    (hfunctional : ConcreteFinitePartialUnaryOutputFunctional P) :
+    (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
+    (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
     ConcreteCompiledPartialUnaryFunctionProgramRange
-      (ConcreteFinitePartialUnaryDescriptionOutputRange P) := by
+      (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
   simpa [ConcreteCompiledPartialUnaryFunctionProgramRange,
-    ConcreteFinitePartialUnaryDescriptionOutputRange,
-    ConcreteFinitePartialUnaryOutputComplete,
-    ConcreteFinitePartialUnaryOutputFunctional]
+    FinitePartialUnaryRangeProgram.descriptionOutputRange,
+    FinitePartialUnaryRangeProgram.OutputComplete,
+    FinitePartialUnaryRangeProgram.OutputFunctional]
     using
       Computability.FinitePartialUnaryRangeProgram.compiledPartialUnaryFunctionProgramRange_descriptionOutputRange
         P hD hcomplete hfunctional
 
 theorem concrete_finite_partial_unary_range_presentation_compiled_range
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
     ConcreteCompiledPartialUnaryRange L :=
@@ -726,7 +725,7 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_range
     h.right.right.right
 
 theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
-    (P : ConcreteFinitePartialUnaryRangeProgram)
+    (P : FinitePartialUnaryRangeProgram)
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
     ConcreteCompiledPartialUnaryFunctionProgramRange L :=
@@ -799,42 +798,6 @@ def AcceptableListingEquivalenceStatement (L : Language alpha) : Prop :=
 
 def AcceptableRangeEquivalenceStatement (L : Language alpha) : Prop :=
   AcceptableRangeEquivalence L
-
-def ConcreteFiniteTraceTableRecognizable
-    (L : Language terminal) : Prop :=
-  FiniteTraceTableRecognizable L
-
-def ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction : Prop :=
-  DescriptionRecognizerToFiniteGeneralGrammarConstruction
-
-def ConcreteBooleanRecognizerToFiniteGeneralGrammarConstruction : Prop :=
-  BooleanRecognizerToFiniteGeneralGrammarConstruction
-
-def ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :
-    Prop :=
-  ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction
-
-abbrev ConcreteMachineHistoryNonterminal
-    (D : MachineDescription) :=
-  MachineHistoryNonterminal D
-
-def ConcreteMachineHistoryGrammar
-    (D : MachineDescription) :
-    GeneralGrammar Bool (ConcreteMachineHistoryNonterminal D) :=
-  MachineDescriptionHistoryGrammar.grammar D
-
-def ConcreteMachineHistoryGrammarProductions
-    (D : MachineDescription) :
-    List (GeneralGrammar.Production Bool
-      (ConcreteMachineHistoryNonterminal D)) :=
-  MachineDescriptionHistoryGrammar.productions D
-
-def ConcreteMachineHistoryConfigurationForm
-    (D : MachineDescription)
-    (c : MachineDescription.Configuration) :
-    SententialForm Bool (ConcreteMachineHistoryNonterminal D) :=
-  MachineDescriptionHistoryGrammar.configForm D c
-
 
 end Section02
 end Chapter05

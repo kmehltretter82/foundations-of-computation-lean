@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
+import FoC.Computability.Compiler.Core.Language
 
 set_option doc.verso true
 

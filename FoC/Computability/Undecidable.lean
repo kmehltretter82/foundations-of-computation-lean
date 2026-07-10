@@ -400,7 +400,7 @@ theorem compl_selfHalting_not_acceptable_if_decoder_universal
 theorem compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
-    ¬ RecursivelyEnumerable
+    ¬ TuringAcceptable
       (Language.Compl (SelfHaltingLanguage decodeAccepts)) :=
   compl_selfHalting_not_acceptable_if_decoder_universal huniv
 
@@ -408,7 +408,7 @@ theorem selfHalting_not_recursive_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptablePrinciple code)
     (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts) :
-    ¬ Recursive (SelfHaltingLanguage decodeAccepts) := by
+    ¬ TuringDecidable (SelfHaltingLanguage decodeAccepts) := by
   intro hrecursive
   exact compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
     huniv
@@ -426,10 +426,10 @@ theorem selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptablePrinciple code)
     (huniv : DecoderUniversalForAcceptableLanguages decodeAccepts)
-    (hself : RecursivelyEnumerable (SelfHaltingLanguage decodeAccepts)) :
-    RecursivelyEnumerable (SelfHaltingLanguage decodeAccepts) ∧
-      ¬ Recursive (SelfHaltingLanguage decodeAccepts) ∧
-        ¬ RecursivelyEnumerable
+    (hself : TuringAcceptable (SelfHaltingLanguage decodeAccepts)) :
+    TuringAcceptable (SelfHaltingLanguage decodeAccepts) ∧
+      ¬ TuringDecidable (SelfHaltingLanguage decodeAccepts) ∧
+        ¬ TuringAcceptable
           (Language.Compl (SelfHaltingLanguage decodeAccepts)) := by
   constructor
   · exact hself

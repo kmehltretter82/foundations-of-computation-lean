@@ -27,11 +27,11 @@ languages.
 
 theorem recursive_language_iff_general_grammar_pair
     {L : Language terminal}
-    (hre : RecursiveIffReCoREConstruction terminal)
+    (hre : TuringDecidableIffReCoRePrinciple terminal)
     (hgrammarL : GeneralGrammarAcceptabilityEquivalence L)
     (hgrammarCompl :
       GeneralGrammarAcceptabilityEquivalence (Language.Compl L)) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L := by
+    TuringDecidable L <-> GeneralGrammarPairGenerated L := by
   constructor
   · intro hrecursive
     have hrecore := (hre L).mp hrecursive
@@ -45,24 +45,24 @@ theorem recursive_language_iff_general_grammar_pair
     · exact hgrammarCompl.mp hgrammar.right
 
 theorem recursive_language_iff_general_grammar_pair_of_constructions
-    (haccept : DecidableToAcceptableConstruction terminal)
-    (hdovetail : DovetailingDecidableConstruction terminal)
+    (haccept : DecidableToAcceptablePrinciple terminal)
+    (hdovetail : ReCoReToDecidablePrinciple terminal)
     (hgrammar : forall K : Language terminal,
       GeneralGrammarAcceptabilityEquivalence K)
     (L : Language terminal) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> GeneralGrammarPairGenerated L :=
   recursive_language_iff_general_grammar_pair
     (recursive_iff_re_co_re_construction_of_principles haccept hdovetail)
     (hgrammar L)
     (hgrammar (Language.Compl L))
 
 theorem recursive_language_iff_general_grammar_pair_of_grammar_constructions
-    (haccept : DecidableToAcceptableConstruction terminal)
-    (hdovetail : DovetailingDecidableConstruction terminal)
+    (haccept : DecidableToAcceptablePrinciple terminal)
+    (hdovetail : ReCoReToDecidablePrinciple terminal)
     (hto : GeneralGrammarToRecursivelyEnumerableConstruction terminal)
     (hfrom : RecursivelyEnumerableToGeneralGrammarConstruction terminal)
     (L : Language terminal) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> GeneralGrammarPairGenerated L :=
   recursive_language_iff_general_grammar_pair_of_constructions
     haccept hdovetail
     (general_grammar_re_equivalence_construction_of_constructions
@@ -70,11 +70,11 @@ theorem recursive_language_iff_general_grammar_pair_of_grammar_constructions
     L
 
 theorem recursive_language_iff_general_grammar_pair_of_staged_program_compiler
-    (haccept : DecidableToAcceptableConstruction terminal)
-    (hdovetail : DovetailingDecidableConstruction terminal)
-    (hcompile : StagedAcceptorCompilationConstruction terminal)
+    (haccept : DecidableToAcceptablePrinciple terminal)
+    (hdovetail : ReCoReToDecidablePrinciple terminal)
+    (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     (L : Language terminal) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> GeneralGrammarPairGenerated L :=
   recursive_language_iff_general_grammar_pair_of_grammar_constructions
     haccept hdovetail
     (general_grammar_to_recursively_enumerable_construction_of_staged_program_compiler
@@ -82,11 +82,11 @@ theorem recursive_language_iff_general_grammar_pair_of_staged_program_compiler
     recursively_enumerable_to_general_grammar_construction_semantic L
 
 theorem boolean_recursive_language_iff_general_grammar_pair_of_concrete_grammar_compiler
-    (haccept : DecidableToAcceptableConstruction Bool)
-    (hdovetail : DovetailingDecidableConstruction Bool)
+    (haccept : DecidableToAcceptablePrinciple Bool)
+    (hdovetail : ReCoReToDecidablePrinciple Bool)
     (hcompile : ConcreteBooleanGeneralGrammarRecognizerCompilerConstruction)
     (L : Language Bool) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> GeneralGrammarPairGenerated L :=
   recursive_language_iff_general_grammar_pair_of_grammar_constructions
     haccept hdovetail
     (boolean_general_grammar_to_recursively_enumerable_construction_of_concrete_grammar_compiler
@@ -95,13 +95,13 @@ theorem boolean_recursive_language_iff_general_grammar_pair_of_concrete_grammar_
 
 theorem recursive_language_iff_finite_general_grammar_pair
     {L : Language terminal}
-    (hre : RecursiveIffReCoREConstruction terminal)
+    (hre : TuringDecidableIffReCoRePrinciple terminal)
     (hgrammarL :
-      FiniteGeneralGrammarGenerated L <-> RecursivelyEnumerableLanguage L)
+      FiniteGeneralGrammarGenerated L <-> TuringAcceptable L)
     (hgrammarCompl :
       FiniteGeneralGrammarGenerated (Language.Compl L) <->
-        RecursivelyEnumerableLanguage (Language.Compl L)) :
-    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L := by
+        TuringAcceptable (Language.Compl L)) :
+    TuringDecidable L <-> FiniteGeneralGrammarPairGenerated L := by
   constructor
   · intro hrecursive
     have hrecore := (hre L).mp hrecursive
@@ -115,26 +115,26 @@ theorem recursive_language_iff_finite_general_grammar_pair
     · exact hgrammarCompl.mp hgrammar.right
 
 theorem recursive_language_iff_finite_general_grammar_pair_of_constructions
-    (haccept : DecidableToAcceptableConstruction terminal)
-    (hdovetail : DovetailingDecidableConstruction terminal)
+    (haccept : DecidableToAcceptablePrinciple terminal)
+    (hdovetail : ReCoReToDecidablePrinciple terminal)
     (hgrammar : forall K : Language terminal,
-      FiniteGeneralGrammarGenerated K <-> RecursivelyEnumerableLanguage K)
+      FiniteGeneralGrammarGenerated K <-> TuringAcceptable K)
     (L : Language terminal) :
-    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> FiniteGeneralGrammarPairGenerated L :=
   recursive_language_iff_finite_general_grammar_pair
     (recursive_iff_re_co_re_construction_of_principles haccept hdovetail)
     (hgrammar L)
     (hgrammar (Language.Compl L))
 
 theorem recursive_language_iff_finite_general_grammar_pair_of_grammar_constructions
-    (haccept : DecidableToAcceptableConstruction terminal)
-    (hdovetail : DovetailingDecidableConstruction terminal)
+    (haccept : DecidableToAcceptablePrinciple terminal)
+    (hdovetail : ReCoReToDecidablePrinciple terminal)
     (hto : FiniteGeneralGrammarToRecursivelyEnumerableConstruction terminal)
     (hfrom :
       RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
         terminal)
     (L : Language terminal) :
-    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> FiniteGeneralGrammarPairGenerated L :=
   recursive_language_iff_finite_general_grammar_pair_of_constructions
     haccept hdovetail
     (finite_general_grammar_re_equivalence_construction_of_constructions
@@ -143,19 +143,19 @@ theorem recursive_language_iff_finite_general_grammar_pair_of_grammar_constructi
 
 theorem dovetailing_decidable_construction_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout) :
-    DovetailingDecidableConstruction Bool :=
+    ReCoReToDecidablePrinciple Bool :=
   dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
     hclose.dovetailDescription
 
 theorem bounded_trace_search_construction_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout) :
-    BoundedTraceSearchConstruction :=
+    Computability.BoundedTraceSearchConstruction :=
   hclose.boundedTraceSearch
 
 theorem recursive_language_iff_re_and_co_re_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :
-    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L :=
   recursive_language_iff_re_and_co_re_of_constructions
     hclose.decidableToAcceptable
     (dovetailing_decidable_construction_of_section52_closeout hclose)
@@ -164,7 +164,7 @@ theorem recursive_language_iff_re_and_co_re_of_section52_closeout
 theorem recursive_language_iff_re_and_co_re_of_semantic_surface
     (h : SemanticLanguagePrincipleSurface terminal)
     (L : Language terminal) :
-    RecursiveLanguage L <-> RecursivelyEnumerableLanguageWithComplement L :=
+    TuringDecidable L <-> RecursivelyEnumerableWithComplement L :=
   recursive_language_iff_re_and_co_re_of_constructions
     h.decidableToAcceptable h.dovetailingDecidable L
 
@@ -205,7 +205,7 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_section
 theorem boolean_recursive_language_iff_general_grammar_pair_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :
-    RecursiveLanguage L <-> GeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> GeneralGrammarPairGenerated L :=
   recursive_language_iff_general_grammar_pair_of_grammar_constructions
     hclose.decidableToAcceptable
     (dovetailing_decidable_construction_of_section52_closeout hclose)
@@ -223,7 +223,7 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_
 
 theorem program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
-    ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
   Computability.booleanFiniteDataSection52CompilerCloseout_programAcceptableByDescriptionToFiniteGrammar
     hclose
 
@@ -236,18 +236,18 @@ theorem program_acceptable_by_description_to_finite_general_grammar_presentation
 theorem program_acceptable_by_description_finite_general_grammar_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
     {L : Language Bool}
-    (hL : ConcreteProgramAcceptableByDescription L) :
+    (hL : ProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
   (program_acceptable_by_description_to_finite_general_grammar_presentation_construction_of_finite_data_closeout
     hclose) L hL
 
 theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
-    (hpaired : ConcretePairedRecognizerDovetailCompilerConstruction)
+    (hpaired : PairedRecognizerDovetailDescriptionCompilerPrinciple)
     (hfinite :
       ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
-    RecursiveLanguage L := by
+    TuringDecidable L := by
   rcases hpair.left with ⟨acceptNonterminal, acceptG,
     acceptFinite, acceptEq⟩
   rcases hpair.right with ⟨rejectNonterminal, rejectG,
@@ -268,43 +268,43 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
         (GeneralGrammar.hasFiniteProductions_of_hasFinitePresentation
           rejectFinite) with
     ⟨rejectD, rejectCompiled⟩
-  let acceptProgram : ConcreteFiniteAcceptorProgram :=
+  let acceptProgram : FiniteAcceptorProgram :=
     { description := acceptD }
-  let rejectProgram : ConcreteFiniteAcceptorProgram :=
+  let rejectProgram : FiniteAcceptorProgram :=
     { description := rejectD }
   have acceptGenerated :
-      ConcreteMachineDescriptionAccepts acceptD
+      MachineDescriptionAcceptsLanguage acceptD
         (GeneralGrammarGeneratedLanguage acceptG) :=
     Computability.programCompiledByDescription_acceptsLanguage
       (Computability.generalGrammarRecognizerProgram_acceptsLanguage acceptG)
       acceptCompiled
   have rejectGenerated :
-      ConcreteMachineDescriptionAccepts rejectD
+      MachineDescriptionAcceptsLanguage rejectD
         (GeneralGrammarGeneratedLanguage rejectG) :=
     Computability.programCompiledByDescription_acceptsLanguage
       (Computability.generalGrammarRecognizerProgram_acceptsLanguage rejectG)
       rejectCompiled
   have acceptLanguage :
-      ConcreteMachineDescriptionAccepts acceptD L := by
+      MachineDescriptionAcceptsLanguage acceptD L := by
     constructor
     · exact acceptGenerated.left
     · intro w
       exact Iff.trans (acceptGenerated.right w) (acceptEq w)
   have rejectLanguage :
-      ConcreteMachineDescriptionAccepts rejectD (Language.Compl L) := by
+      MachineDescriptionAcceptsLanguage rejectD (Language.Compl L) := by
     constructor
     · exact rejectGenerated.left
     · intro w
       exact Iff.trans (rejectGenerated.right w) (rejectEq w)
   have htraces :
-      LanguageComplementaryAcceptanceTraces
-        (ConcreteFiniteAcceptorTrace acceptProgram)
-        (ConcreteFiniteAcceptorTrace rejectProgram) L := by
+      ComplementaryAcceptanceTraces
+        (FiniteAcceptorProgram.trace acceptProgram)
+        (FiniteAcceptorProgram.trace rejectProgram) L := by
     constructor
-    · simpa [acceptProgram, ConcreteFiniteAcceptorTrace,
+    · simpa [acceptProgram, FiniteAcceptorProgram.trace,
         Computability.FiniteAcceptorProgram.trace] using!
         concrete_machine_description_acceptance_trace acceptLanguage
-    · simpa [rejectProgram, ConcreteFiniteAcceptorTrace,
+    · simpa [rejectProgram, FiniteAcceptorProgram.trace,
         Computability.FiniteAcceptorProgram.trace] using!
         concrete_machine_description_acceptance_trace rejectLanguage
   exact
@@ -316,7 +316,7 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
-    RecursiveLanguage L :=
+    TuringDecidable L :=
   finite_general_grammar_pair_recursive_of_finite_data_constructions
     hclose.pairedDovetailDescription
     hclose.finiteGrammarRecognizerDescription
@@ -335,12 +335,12 @@ to the first-order presentation compiler.
 
 theorem stopped_decidable_to_acceptable_construction_bool :
   forall L : Language Bool,
-      StoppedTuringDecidableLanguage L -> RecursivelyEnumerableLanguage L := by
+      StoppedTuringDecidable L -> TuringAcceptable L := by
   intro _L h
   exact TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
 
 theorem program_acceptable_by_description_to_finite_general_grammar_scaffold :
-    ConcreteProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
   Computability.programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
     (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
       concrete_machine_description_to_finite_general_grammar_construction)
@@ -353,18 +353,18 @@ theorem program_acceptable_by_description_to_finite_general_grammar_presentation
 
 theorem program_acceptable_by_description_finite_general_grammar_scaffold
     {L : Language Bool}
-    (hL : ConcreteProgramAcceptableByDescription L) :
+    (hL : ProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
   program_acceptable_by_description_to_finite_general_grammar_presentation_scaffold
     L hL
 
 theorem finite_general_grammar_pair_recursive_of_checked_presentation_compiler
-    (hpaired : ConcretePairedRecognizerDovetailCompilerConstruction)
+    (hpaired : PairedRecognizerDovetailDescriptionCompilerPrinciple)
     (hcompile :
       ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
-    RecursiveLanguage L :=
+    TuringDecidable L :=
   finite_general_grammar_pair_recursive_of_finite_data_constructions
     hpaired
     (concrete_finite_bool_general_grammar_presentation_compiler_scaffold
@@ -382,7 +382,7 @@ theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_sec
 theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout)
     (L : Language Bool) :
-    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> FiniteGeneralGrammarPairGenerated L :=
   recursive_language_iff_finite_general_grammar_pair_of_grammar_constructions
     hclose.decidableToAcceptable
     (dovetailing_decidable_construction_of_concrete_dovetail_description_compiler
@@ -410,7 +410,7 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_s
     (hfinite :
       RecursivelyEnumerableToFiniteGeneralGrammarConstruction Bool)
     (L : Language Bool) :
-    RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
+    TuringDecidable L <-> FiniteGeneralGrammarPairGenerated L :=
   boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout
     (concrete_finite_section52_closeout_of_semantic_closeout
       hclose hpresentation hfinite)
@@ -450,14 +450,14 @@ The declarations above now pin that infrastructure down as
 and {name}`ConcreteBooleanFiniteGrammarSection52Closeout` for the finite grammar
 page, while {name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records
 the narrowed finite/effective route. These closeouts carry
-{name}`BoundedTraceSearchConstruction` as the primary finite-trace handoff. The
+{name}`Computability.BoundedTraceSearchConstruction` as the primary finite-trace handoff. The
 semantic closeout uses the semantic reverse grammar construction. The
 finite-data closeout replaces the older broad dovetail compiler by a paired
 recognizer dovetail compiler; the bounded-dovetail table target is proved
 equivalent to that paired-recognizer target. It also uses the first-order finite
 grammar-presentation compiler as its finite grammar-recognizer input, and uses the
 description-backed construction
-{name}`ConcreteDescriptionRecognizerToFiniteGeneralGrammarConstruction`.
+{name}`DescriptionRecognizerToFiniteGeneralGrammarConstruction`.
 The first-order presentation, checked-certificate, and runner-search
 boundaries identify the remaining transition-table construction work. The
 checked-presentation wrapper above therefore takes both the paired-recognizer

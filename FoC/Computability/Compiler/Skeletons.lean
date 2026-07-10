@@ -658,69 +658,6 @@ theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequen
   simpa [PairedRecognizerDovetailTotalStageAttemptSourceCode,
     initRunner, attempt] using hsecond
 
-theorem pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
-    (hcompile : DovetailDescriptionCompilerPrinciple) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
-  intro accept reject
-  exact hcompile
-    (fun w n => accept.HaltsIn n w)
-    (fun w n => reject.HaltsIn n w)
-
-theorem pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
-    (hcompile :
-      PairedRecognizerBoundedDovetailTableCompilerConstruction) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple := by
-  intro accept reject
-  cases hcompile accept reject with
-  | intro decider hdecider =>
-      exists decider
-      constructor
-      · exact hdecider.left
-      · intro w b
-        constructor
-        · intro hhalt
-          cases (hdecider.right w b).mp hhalt with
-          | intro limit hlimit =>
-              exists limit
-              rwa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-                at hlimit
-        · intro hprog
-          cases hprog with
-          | intro limit hlimit =>
-              apply (hdecider.right w b).mpr
-              exists limit
-              rwa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-
-theorem pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler
-    (hcompile : PairedRecognizerDovetailDescriptionCompilerPrinciple) :
-    PairedRecognizerBoundedDovetailTableCompilerConstruction := by
-  intro accept reject
-  rcases hcompile accept reject with ⟨decider, hdecider⟩
-  refine ⟨decider, ?_⟩
-  constructor
-  · exact hdecider.left
-  · intro w b
-    constructor
-    · intro hhalt
-      rcases (hdecider.right w b).mp hhalt with ⟨limit, hlimit⟩
-      exact
-        ⟨limit, by
-          simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-            using! hlimit⟩
-    · intro hlimit
-      rcases hlimit with ⟨limit, hlimit⟩
-      apply (hdecider.right w b).mpr
-      exact
-        ⟨limit, by
-          simpa [MachineDescription.boundedDovetailOutput_eq_dovetailProgram_run]
-            using! hlimit⟩
-
-theorem pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetailDescriptionCompiler :
-    PairedRecognizerBoundedDovetailTableCompilerConstruction <->
-      PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  ⟨pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler,
-    pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler⟩
-
 theorem DescriptionCompiler.ofLayoutAndSearch
     (hrunner :
       PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction)
@@ -845,17 +782,6 @@ theorem DescriptionCompiler.ofLayoutSubroutineAndRunner
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     (PairedRecognizerBoundedDovetailTableCompiler.of_layoutSubroutine_and_runnerSearch
       hrunner hdriver)
-
-theorem dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
-    DovetailDescriptionCompilerPrinciple :=
-  fun accept reject => hcompile (DovetailProgram accept reject)
-
-theorem pairedRecognizerDovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler
-    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  pairedRecognizerDovetailDescriptionCompiler_of_dovetailDescriptionCompiler
-    (dovetailDescriptionCompiler_of_descriptionBoolDeciderCompiler hcompile)
 
 theorem programAcceptorCompilationPrinciple_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :

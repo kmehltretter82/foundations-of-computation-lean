@@ -152,13 +152,13 @@ theorem programAcceptableByDescription_of_descriptionCompiler
   rcases hcompile P with ⟨D, hD⟩
   exact ⟨P, D, hP, hD⟩
 
-theorem recursivelyEnumerable_programAcceptableByDescription_of_descriptionCompiler
+theorem turingAcceptable_programAcceptableByDescription_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple)
     {L : Language Bool}
-    (h : RecursivelyEnumerable L) :
+    (h : TuringAcceptable L) :
     ProgramAcceptableByDescription L :=
   programAcceptableByDescription_of_descriptionCompiler hcompile
-    (recursivelyEnumerable_programAcceptable h)
+    (turingAcceptable_programAcceptable h)
 
 def DescriptionProgramBoolDeciderCompilationPrinciple : Prop :=
   forall P : StagedProgram Bool Bool,
