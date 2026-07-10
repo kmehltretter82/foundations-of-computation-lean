@@ -11,6 +11,7 @@ import FoC.Grammars.PDANormalize
 import FoC.Grammars.CFGToPDA
 import FoC.Grammars.PDAToCFG
 import FoC.Grammars.GeneralGrammar
+import FoC.Grammars.GeneralGrammar.Permutation
 
 set_option doc.verso true
 
@@ -67,6 +68,8 @@ Two boundary cases are kept separate.  {module}`FoC.Grammars.RightRegular`
 connects right-regular grammars with finite automata, and
 {module}`FoC.Grammars.GeneralGrammar` introduces unrestricted grammars for the
 transition from context-free languages to recursively enumerable languages.
+Its {module}`FoC.Grammars.GeneralGrammar.Permutation` companion lifts marker
+permutations and pointwise rewrites to reusable unrestricted derivations.
 
 Right-regular grammars look backward to Chapter 3, while unrestricted grammars
 look forward to Chapter 5. Keeping them outside the CFG/PDA conversion core

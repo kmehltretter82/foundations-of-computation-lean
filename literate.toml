@@ -63,7 +63,8 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Grammars.PDANormalize",
   "FoC.Grammars.CFGToPDA",
   "FoC.Grammars.PDAToCFG",
-  "FoC.Grammars.GeneralGrammar"
+  "FoC.Grammars.GeneralGrammar",
+  "FoC.Grammars.GeneralGrammar.Permutation"
 ]
 "FoC.Computability" = [
   "FoC.Computability.Tape",
@@ -353,6 +354,9 @@ title = "CFL Closure with Regular Languages"
 
 [modules."FoC.Grammars.GeneralGrammar"]
 title = "General Grammars"
+
+[modules."FoC.Grammars.GeneralGrammar.Permutation"]
+title = "General-Grammar Permutations"
 
 [modules."FoC.Grammars.PDA"]
 title = "Pushdown Automata"
