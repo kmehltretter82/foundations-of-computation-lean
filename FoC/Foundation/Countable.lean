@@ -190,6 +190,268 @@ theorem countable_iff_finite_or_countablyInfinite {A : FSet alpha} :
 def CountablyInfiniteByBijection (A : FSet alpha) : Prop :=
   Nonempty (Fn.SetBijection (Univ : FSet Nat) A)
 
+/-!
+The textbook definition uses a bijection with the natural numbers, while the
+executable Foundation definition uses a partial enumeration together with
+non-finiteness.  The private construction below scans the partial enumeration
+in index order, discards gaps and repeated values, and selects sufficiently
+long duplicate-free prefixes.  Prefix stability makes the resulting total
+sequence both injective and exhaustive.
+-/
+
+private def UniqueOutputs [DecidableEq alpha]
+    (f : Nat -> Option alpha) : Nat -> List alpha
+  | 0 => []
+  | n + 1 =>
+      let previous := UniqueOutputs f n
+      match f n with
+      | none => previous
+      | some x => if x ∈ previous then previous else previous ++ [x]
+
+private theorem uniqueOutputs_nodup [DecidableEq alpha]
+    (f : Nat -> Option alpha) (n : Nat) : (UniqueOutputs f n).Nodup := by
+  induction n with
+  | zero => simp [UniqueOutputs]
+  | succ n ih =>
+      cases hfn : f n with
+      | none => simpa [UniqueOutputs, hfn] using ih
+      | some x =>
+          by_cases hx : x ∈ UniqueOutputs f n
+          · simpa [UniqueOutputs, hfn, hx] using ih
+          · have hcross : forall a, a ∈ UniqueOutputs f n -> a ≠ x := by
+              intro a ha hax
+              apply hx
+              rwa [← hax]
+            simpa [UniqueOutputs, hfn, hx, List.nodup_append] using
+              And.intro ih hcross
+
+private theorem mem_uniqueOutputs_iff [DecidableEq alpha]
+    (f : Nat -> Option alpha) (x : alpha) (n : Nat) :
+    x ∈ UniqueOutputs f n <-> exists k, k < n ∧ f k = some x := by
+  induction n with
+  | zero => simp [UniqueOutputs]
+  | succ n ih =>
+      cases hfn : f n with
+      | none =>
+          constructor
+          · intro hx
+            rcases ih.mp (by simpa [UniqueOutputs, hfn] using hx) with ⟨k, hk, hfk⟩
+            exact ⟨k, Nat.lt_succ_of_lt hk, hfk⟩
+          · rintro ⟨k, hk, hfk⟩
+            have hkn : k < n := by
+              apply Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk)
+              intro hkn
+              subst k
+              simp [hfn] at hfk
+            simpa [UniqueOutputs, hfn] using ih.mpr ⟨k, hkn, hfk⟩
+      | some y =>
+          by_cases hy : y ∈ UniqueOutputs f n
+          · constructor
+            · intro hx
+              rcases ih.mp (by simpa [UniqueOutputs, hfn, hy] using hx) with
+                ⟨k, hk, hfk⟩
+              exact ⟨k, Nat.lt_succ_of_lt hk, hfk⟩
+            · rintro ⟨k, hk, hfk⟩
+              by_cases hkn : k = n
+              · subst k
+                have hxy : x = y := Option.some.inj (hfk.symm.trans hfn)
+                simp [UniqueOutputs, hfn, hy, hxy]
+              · have hklt : k < n := Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) hkn
+                simpa [UniqueOutputs, hfn, hy] using ih.mpr ⟨k, hklt, hfk⟩
+          · constructor
+            · intro hx
+              have hx' : x ∈ UniqueOutputs f n ∨ x = y := by
+                simpa [UniqueOutputs, hfn, hy] using hx
+              rcases hx' with hxold | hxy
+              · rcases ih.mp hxold with ⟨k, hk, hfk⟩
+                exact ⟨k, Nat.lt_succ_of_lt hk, hfk⟩
+              ·
+                exact ⟨n, Nat.lt_succ_self n, by simpa [hxy] using hfn⟩
+            · rintro ⟨k, hk, hfk⟩
+              by_cases hkn : k = n
+              · subst k
+                have hxy : x = y := Option.some.inj (hfk.symm.trans hfn)
+                have hmem : x ∈ UniqueOutputs f n ++ [y] :=
+                  List.mem_append.mpr (Or.inr (by simp [hxy]))
+                simpa [UniqueOutputs, hfn, hy] using hmem
+              · have hklt : k < n := Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hk) hkn
+                have hmem : x ∈ UniqueOutputs f n ++ [y] :=
+                  List.mem_append.mpr (Or.inl (ih.mpr ⟨k, hklt, hfk⟩))
+                simpa [UniqueOutputs, hfn, hy] using hmem
+
+private theorem uniqueOutputs_prefix_succ [DecidableEq alpha]
+    (f : Nat -> Option alpha) (n : Nat) :
+  UniqueOutputs f n <+: UniqueOutputs f (n + 1) := by
+  cases hfn : f n with
+  | none => simp [UniqueOutputs, hfn]
+  | some x =>
+      by_cases hx : x ∈ UniqueOutputs f n
+      · simp [UniqueOutputs, hfn, hx]
+      · simp [UniqueOutputs, hfn, hx]
+
+private theorem uniqueOutputs_prefix_of_le [DecidableEq alpha]
+    (f : Nat -> Option alpha) {n m : Nat} (h : n <= m) :
+    UniqueOutputs f n <+: UniqueOutputs f m := by
+  rcases Nat.exists_eq_add_of_le h with ⟨d, rfl⟩
+  clear h
+  induction d with
+  | zero => simp
+  | succ d ih =>
+      exact ih.trans (by
+        simpa [Nat.add_assoc] using uniqueOutputs_prefix_succ f (n + d))
+
+private theorem exists_nodup_list_of_length_of_not_finite
+    {A : FSet alpha} (hA : ¬ Finite A) (n : Nat) :
+    exists xs : List alpha,
+      xs.Nodup ∧ xs.length = n ∧ forall x, x ∈ xs -> x ∈ A := by
+  classical
+  induction n with
+  | zero => exact ⟨[], by simp⟩
+  | succ n ih =>
+      rcases ih with ⟨xs, hnodup, hlength, hall⟩
+      have hfresh : exists x, x ∈ A ∧ x ∉ xs := by
+        apply Classical.byContradiction
+        intro hno
+        apply hA
+        refine ⟨xs, ?_⟩
+        intro x
+        constructor
+        · intro hxA
+          apply Classical.byContradiction
+          intro hxnot
+          exact hno ⟨x, hxA, hxnot⟩
+        · exact hall x
+      rcases hfresh with ⟨x, hxA, hxnot⟩
+      refine ⟨x :: xs, ?_, ?_, ?_⟩
+      · rw [List.nodup_cons]
+        exact ⟨hxnot, hnodup⟩
+      · simp [hlength]
+      · intro y hy
+        cases hy with
+        | head => exact hxA
+        | tail _ hy => exact hall y hy
+
+private theorem finite_list_subset_uniqueOutputs [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha} (hf : EnumeratedBy A f)
+    (xs : List alpha) (hall : forall x, x ∈ xs -> x ∈ A) :
+    exists n, forall x, x ∈ xs -> x ∈ UniqueOutputs f n := by
+  induction xs with
+  | nil =>
+      exact ⟨0, by simp⟩
+  | cons x xs ih =>
+      rcases ih (fun y hy => hall y (List.Mem.tail x hy)) with ⟨n, hn⟩
+      rcases (hf x).mp (hall x (List.Mem.head xs)) with ⟨k, hk⟩
+      let bound := Nat.max n (k + 1)
+      refine ⟨bound, ?_⟩
+      intro y hy
+      cases hy with
+      | head =>
+          apply (mem_uniqueOutputs_iff f x bound).mpr
+          exact ⟨k,
+            Nat.lt_of_lt_of_le (Nat.lt_succ_self k) (Nat.le_max_right n (k + 1)), hk⟩
+      | tail _ hy =>
+          exact (uniqueOutputs_prefix_of_le f (Nat.le_max_left n (k + 1))).sublist.subset
+            (hn y hy)
+
+private theorem uniqueOutputs_unbounded [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) (i : Nat) :
+    exists n, i < (UniqueOutputs f n).length := by
+  rcases exists_nodup_list_of_length_of_not_finite hA (i + 1) with
+    ⟨xs, hnodup, hlength, hall⟩
+  rcases finite_list_subset_uniqueOutputs hf xs hall with ⟨n, hsub⟩
+  have hle := list_nodup_length_le_of_subset hnodup hsub
+  rw [hlength] at hle
+  exact ⟨n, by lia⟩
+
+private noncomputable def UniqueOutputStage [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) (i : Nat) : Nat :=
+  Classical.choose (uniqueOutputs_unbounded hf hA i)
+
+private theorem uniqueOutputStage_spec [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) (i : Nat) :
+    i < (UniqueOutputs f (UniqueOutputStage hf hA i)).length :=
+  Classical.choose_spec (uniqueOutputs_unbounded hf hA i)
+
+private noncomputable def UniqueOutputAt [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) (i : Nat) : alpha :=
+  (UniqueOutputs f (UniqueOutputStage hf hA i))[i]'(uniqueOutputStage_spec hf hA i)
+
+private theorem uniqueOutputAt_mem [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) (i : Nat) :
+    UniqueOutputAt hf hA i ∈ A := by
+  apply (hf (UniqueOutputAt hf hA i)).mpr
+  rcases (mem_uniqueOutputs_iff f (UniqueOutputAt hf hA i)
+      (UniqueOutputStage hf hA i)).mp
+      (List.getElem_mem (uniqueOutputStage_spec hf hA i)) with ⟨k, _hk, hfk⟩
+  exact ⟨k, hfk⟩
+
+private theorem uniqueOutputAt_injective [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) :
+    Fn.Injective (UniqueOutputAt hf hA) := by
+  intro i j hij
+  cases Nat.le_total (UniqueOutputStage hf hA i) (UniqueOutputStage hf hA j) with
+  | inl hstage =>
+      have hprefix := uniqueOutputs_prefix_of_le f hstage
+      have hi := uniqueOutputStage_spec hf hA i
+      have hj := uniqueOutputStage_spec hf hA j
+      have hi' : i < (UniqueOutputs f (UniqueOutputStage hf hA j)).length :=
+        Nat.lt_of_lt_of_le hi hprefix.length_le
+      have hsameIndex := hprefix.getElem hi
+      have hvalues :
+          (UniqueOutputs f (UniqueOutputStage hf hA j))[i]'hi' =
+            (UniqueOutputs f (UniqueOutputStage hf hA j))[j]'hj := by
+        have houtput :
+            (UniqueOutputs f (UniqueOutputStage hf hA i))[i]'hi =
+              (UniqueOutputs f (UniqueOutputStage hf hA j))[j]'hj := by
+          simpa only [UniqueOutputAt] using hij
+        exact hsameIndex.symm.trans houtput
+      exact (List.getElem_inj (uniqueOutputs_nodup f (UniqueOutputStage hf hA j))).mp
+        hvalues
+  | inr hstage =>
+      have hprefix := uniqueOutputs_prefix_of_le f hstage
+      have hi := uniqueOutputStage_spec hf hA i
+      have hj := uniqueOutputStage_spec hf hA j
+      have hj' : j < (UniqueOutputs f (UniqueOutputStage hf hA i)).length :=
+        Nat.lt_of_lt_of_le hj hprefix.length_le
+      have hsameIndex := hprefix.getElem hj
+      have hvalues :
+          (UniqueOutputs f (UniqueOutputStage hf hA i))[i]'hi =
+            (UniqueOutputs f (UniqueOutputStage hf hA i))[j]'hj' := by
+        have houtput :
+            (UniqueOutputs f (UniqueOutputStage hf hA i))[i]'hi =
+              (UniqueOutputs f (UniqueOutputStage hf hA j))[j]'hj := by
+          simpa only [UniqueOutputAt] using hij
+        exact houtput.trans hsameIndex
+      exact (List.getElem_inj (uniqueOutputs_nodup f (UniqueOutputStage hf hA i))).mp
+        hvalues
+
+private theorem uniqueOutputAt_surjective [DecidableEq alpha]
+    {A : FSet alpha} {f : Nat -> Option alpha}
+    (hf : EnumeratedBy A f) (hA : ¬ Finite A) :
+    forall x, x ∈ A -> exists i, UniqueOutputAt hf hA i = x := by
+  intro x hx
+  rcases (hf x).mp hx with ⟨k, hk⟩
+  have hxmem : x ∈ UniqueOutputs f (k + 1) :=
+    (mem_uniqueOutputs_iff f x (k + 1)).mpr ⟨k, Nat.lt_succ_self k, hk⟩
+  rcases List.mem_iff_getElem.mp hxmem with ⟨i, hi, hget⟩
+  refine ⟨i, ?_⟩
+  have hstage := uniqueOutputStage_spec hf hA i
+  cases Nat.le_total (UniqueOutputStage hf hA i) (k + 1) with
+  | inl hle =>
+      have hprefix := uniqueOutputs_prefix_of_le f hle
+      have hsame := hprefix.getElem hstage
+      simpa only [UniqueOutputAt] using hsame.trans hget
+  | inr hle =>
+      have hprefix := uniqueOutputs_prefix_of_le f hle
+      have hsame := hprefix.getElem hi
+      simpa only [UniqueOutputAt] using hsame.symm.trans hget
+
 theorem countablyInfinite_of_setBijection_nat {A : FSet alpha}
     (hA : CountablyInfiniteByBijection A) : CountablyInfinite A := by
   classical
@@ -221,6 +483,29 @@ theorem countablyInfinite_of_setBijection_nat {A : FSet alpha}
     have hle := list_nodup_length_le_of_subset hnodup hsub
     simp [outputs] at hle
     lia
+
+theorem setBijection_nat_of_countablyInfinite {A : FSet alpha}
+    (hA : CountablyInfinite A) : CountablyInfiniteByBijection A := by
+  classical
+  rcases hA.left with ⟨f, hf⟩
+  refine ⟨{
+    toFun := fun n => ⟨UniqueOutputAt hf hA.right n.val,
+      uniqueOutputAt_mem hf hA.right n.val⟩
+    injective := ?_
+    surjective := ?_
+  }⟩
+  · intro n m hnm
+    apply Subtype.ext
+    apply uniqueOutputAt_injective hf hA.right
+    exact congrArg Subtype.val hnm
+  · intro x
+    rcases uniqueOutputAt_surjective hf hA.right x.val x.property with ⟨n, hn⟩
+    refine ⟨⟨n, True.intro⟩, ?_⟩
+    exact Subtype.ext hn
+
+theorem countablyInfinite_iff_setBijection_nat {A : FSet alpha} :
+    CountablyInfinite A <-> CountablyInfiniteByBijection A :=
+  ⟨setBijection_nat_of_countablyInfinite, countablyInfinite_of_setBijection_nat⟩
 
 /-!
 **Infinite sets.**

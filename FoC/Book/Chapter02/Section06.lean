@@ -87,6 +87,11 @@ theorem countably_infinite_of_bijection_with_naturals {A : FSet alpha}
     FSet.CountablyInfinite A :=
   FSet.countablyInfinite_of_setBijection_nat hA
 
+theorem countably_infinite_iff_bijection_with_naturals {A : FSet alpha} :
+    FSet.CountablyInfinite A <->
+      Nonempty (Fn.SetBijection (FSet.Univ : FSet Nat) A) :=
+  FSet.countablyInfinite_iff_setBijection_nat
+
 theorem union_of_countable_sets_countable {A B : FSet alpha}
     (hA : FSet.Countable A) (hB : FSet.Countable B) :
     FSet.Countable (FSet.Union A B) :=
