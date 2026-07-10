@@ -1,4 +1,4 @@
-import FoC.Computability.Encoding
+import FoC.Computability.MachineDescription
 
 set_option doc.verso true
 

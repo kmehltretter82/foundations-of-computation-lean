@@ -215,16 +215,6 @@ theorem decodedBoundedSimulatorNormalizedInput_decodeNat
     codePrefixRecognizerStageCode_decodeNat
       (List.append (MachineDescription.encodeDescription D) input) stage
 
-/-- The normalized payload has exactly the requested decoded description. -/
-theorem decodedBoundedSimulatorNormalizedInput_decodeDescriptionPrefix
-    (D : MachineDescription) (input : Word MachineCodeSymbol) :
-    MachineDescription.decodeDescriptionPrefix
-        (List.append (MachineDescription.encodeDescription D) input) =
-      some (D, input) := by
-  simpa using
-    MachineDescription.decodeDescriptionPrefix_encodeDescription_append
-      D input
-
 /--
 The code primitive accepts a normalized source word exactly when the decoded
 machine halts within the requested stage bound.
@@ -239,7 +229,7 @@ theorem decodedBoundedSimulatorNormalizedInput_transform_eq_some_nil_iff
         (MachineDescription.encodeCodeWordAsInput input) := by
   simpa [decodedBoundedSimulatorNormalizedInput] using
     codePrefixDecodedBoundedSimulatorCode_stageCode_eq_some_iff
-      (decodedBoundedSimulatorNormalizedInput_decodeDescriptionPrefix
+      (MachineDescription.decodeDescriptionPrefix_encodeDescription_append
         D input)
 
 /--
@@ -285,7 +275,7 @@ theorem decodedBoundedSimulatorNormalizedCode_transform_eq_some_nil_iff
           List.append (MachineDescription.encodeDescription D) input,
           D, input,
           codePrefixRecognizerStageCode_eq_of_decodeNat hstage,
-          decodedBoundedSimulatorNormalizedInput_decodeDescriptionPrefix
+          MachineDescription.decodeDescriptionPrefix_encodeDescription_append
             D input,
           hhalts⟩
 

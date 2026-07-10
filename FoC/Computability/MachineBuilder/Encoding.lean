@@ -1,4 +1,5 @@
 import FoC.Computability.MachineBuilder.StateTables
+import FoC.Computability.Encoding
 
 set_option doc.verso true
 

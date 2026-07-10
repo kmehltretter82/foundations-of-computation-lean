@@ -1,20 +1,20 @@
-import FoC.Computability.TuringMachine
+import FoC.Computability.MachineDescription
 
 set_option doc.verso true
 
 /-!
-# Machine descriptions and interpretation
+# Machine-description encoding
 
-This module starts the concrete encoding/interpreter layer needed for the
-remaining Chapter 5 theorems.  It introduces a finite token alphabet for
-binary-tape machine descriptions, a decoder for that syntax, a well-formedness
-predicate for decoded transition tables, and an interpreter semantics that can
-also be compiled into the existing one-tape
-{name}`FoC.Computability.TuringMachine` model.
+This module defines the finite token alphabet, serializers, and parsers for
+Boolean-tape machine descriptions.  Executable transition-table semantics live
+in {module}`FoC.Computability.MachineDescription`; languages obtained by
+decoding and running description codes live in
+{module -checked}`FoC.Computability.DescriptionLanguages`.
 
 The descriptions here are intentionally first-order data: they are finite
 lists of transition records, not arbitrary Lean functions.  This keeps later
-compiler and universal-machine theorems tied to concrete syntax.
+compiler and universal-machine theorems tied to concrete syntax without
+conflating parser correctness with construction of a finite universal runner.
 
 ## Book coordinates
 
@@ -60,160 +60,7 @@ def finite : FiniteType MachineCodeSymbol where
 
 end MachineCodeSymbol
 
-def finFinite (n : Nat) : FiniteType (Fin n) where
-  elems := List.finRange n
-  complete := List.mem_finRange
-
-/-!
-# Transition and machine descriptions
--/
-
-structure TransitionDescription where
-  source : Nat
-  read : Option Bool
-  write : Option Bool
-  move : Direction
-  target : Nat
-deriving DecidableEq
-
-structure MachineDescription where
-  stateCount : Nat
-  start : Nat
-  halt : Nat
-  transitions : List TransitionDescription
-deriving DecidableEq
-
-namespace TransitionDescription
-
-def WellFormed (stateCount : Nat) (t : TransitionDescription) : Prop :=
-  t.source < stateCount ∧ t.target < stateCount
-
-def SameKey (t u : TransitionDescription) : Prop :=
-  t.source = u.source ∧ t.read = u.read
-
-def SameAction (t u : TransitionDescription) : Prop :=
-  t.write = u.write ∧ t.move = u.move ∧ t.target = u.target
-
-end TransitionDescription
-
 namespace MachineDescription
-
-def Deterministic (D : MachineDescription) : Prop :=
-  forall t u : TransitionDescription,
-    t ∈ D.transitions -> u ∈ D.transitions ->
-      TransitionDescription.SameKey t u ->
-        TransitionDescription.SameAction t u
-
-def WellFormed (D : MachineDescription) : Prop :=
-  0 < D.stateCount ∧
-    D.start < D.stateCount ∧
-    D.halt < D.stateCount ∧
-    (forall t : TransitionDescription,
-      t ∈ D.transitions ->
-        TransitionDescription.WellFormed D.stateCount t) ∧
-    D.Deterministic
-
-def Matches (source : Nat) (read : Option Bool)
-    (t : TransitionDescription) : Bool :=
-  t.source == source && t.read == read
-
-def lookupTransition (D : MachineDescription)
-    (source : Nat) (read : Option Bool) :
-    Option TransitionDescription :=
-  D.transitions.find? (Matches source read)
-
-structure Configuration where
-  state : Nat
-  tape : Tape Bool
-deriving DecidableEq
-
-def initial (D : MachineDescription) (w : Word Bool) :
-    Configuration where
-  state := D.start
-  tape := Tape.input w
-
-def stepConfig (D : MachineDescription)
-    (c : Configuration) : Option Configuration :=
-  match D.lookupTransition c.state (Tape.read c.tape) with
-  | none => none
-  | some t =>
-      some
-        { state := t.target
-          tape := Tape.move t.move (Tape.write t.write c.tape) }
-
-def runConfig (D : MachineDescription) :
-    Nat -> Configuration -> Configuration
-  | 0, c => c
-  | n + 1, c =>
-      match D.stepConfig c with
-      | none => c
-      | some next => runConfig D n next
-
-def HaltsIn (D : MachineDescription) (n : Nat) (w : Word Bool) : Prop :=
-  (D.runConfig n (D.initial w)).state = D.halt
-
-instance (D : MachineDescription) (n : Nat) (w : Word Bool) :
-    Decidable (D.HaltsIn n w) := by
-  unfold HaltsIn
-  infer_instance
-
-def HaltsOnInput (D : MachineDescription) (w : Word Bool) : Prop :=
-  exists n : Nat, D.HaltsIn n w
-
-def stateOfNat (D : MachineDescription) (n : Nat) :
-    Fin (D.stateCount + 1) :=
-  if h : n < D.stateCount + 1 then
-    ⟨n, h⟩
-  else
-    ⟨D.stateCount, Nat.lt_succ_self D.stateCount⟩
-
-theorem stateOfNat_val_of_lt {D : MachineDescription} {n : Nat}
-    (h : n < D.stateCount + 1) :
-    (D.stateOfNat n).val = n := by
-  simp [stateOfNat, h]
-
-def toTMConfig (D : MachineDescription) (c : Configuration) :
-    TuringMachine.Configuration Bool (Fin (D.stateCount + 1)) where
-  state := D.stateOfNat c.state
-  tape := c.tape
-
-def toTuringMachine (D : MachineDescription) :
-    TuringMachine Bool (Fin (D.stateCount + 1)) where
-  start := D.stateOfNat D.start
-  halt := D.stateOfNat D.halt
-  transition := fun q cell =>
-    match D.lookupTransition q.val cell with
-    | none => none
-    | some t => some (t.write, t.move, D.stateOfNat t.target)
-  statesFinite := finFinite (D.stateCount + 1)
-
-theorem toTuringMachine_transition_of_lookup
-    {D : MachineDescription} {source : Nat} {read : Option Bool}
-    {t : TransitionDescription}
-    (hsource : source < D.stateCount + 1)
-    (hlookup : D.lookupTransition source read = some t) :
-    (D.toTuringMachine).transition (D.stateOfNat source) read =
-      some (t.write, t.move, D.stateOfNat t.target) := by
-  simp [toTuringMachine, stateOfNat_val_of_lt hsource, hlookup]
-
-theorem toTuringMachine_step_of_stepConfig
-    {D : MachineDescription} {c d : Configuration}
-    (hsource : c.state < D.stateCount + 1)
-    (hstep : D.stepConfig c = some d) :
-    TuringMachine.Step D.toTuringMachine
-      (D.toTMConfig c) (D.toTMConfig d) := by
-  unfold stepConfig at hstep
-  cases hlookup : D.lookupTransition c.state (Tape.read c.tape) with
-  | none =>
-      rw [hlookup] at hstep
-      cases hstep
-  | some t =>
-      rw [hlookup] at hstep
-      cases hstep
-      exact TuringMachine.Step.mk
-        (toTuringMachine_transition_of_lookup
-          (D := D) (source := c.state)
-          (read := Tape.read c.tape) hsource hlookup)
 
 /-!
 # Encoding and decoding
@@ -1172,78 +1019,6 @@ theorem encodeCodeWordAsInput_injective :
   rw [decodeCodeWordAsInput_encodeCodeWordAsInput,
     decodeCodeWordAsInput_encodeCodeWordAsInput] at hdecode
   exact Option.some.inj hdecode
-
-def CodeAccepts
-    (machine input : Word MachineCodeSymbol) : Prop :=
-  exists D : MachineDescription,
-    decodeDescription machine = some D ∧
-      D.HaltsOnInput (encodeCodeWordAsInput input)
-
-def CodePrefixAccepts (encoded : Word MachineCodeSymbol) : Prop :=
-  exists D : MachineDescription, exists input : Word MachineCodeSymbol,
-    decodeDescriptionPrefix encoded = some (D, input) ∧
-      D.HaltsOnInput (encodeCodeWordAsInput input)
-
-def CodeAcceptedLanguage
-    (machine : Word MachineCodeSymbol) : Language MachineCodeSymbol :=
-  fun input => CodeAccepts machine input
-
-def CodePrefixAcceptedLanguage : Language MachineCodeSymbol :=
-  fun encoded => CodePrefixAccepts encoded
-
-def EncodedInputLanguage
-    (D : MachineDescription) : Language MachineCodeSymbol :=
-  fun input => D.HaltsOnInput (encodeCodeWordAsInput input)
-
-theorem codeAccepts_encodeDescription_iff
-    (D : MachineDescription) (input : Word MachineCodeSymbol) :
-    CodeAccepts (encodeDescription D) input <->
-      D.HaltsOnInput (encodeCodeWordAsInput input) := by
-  constructor
-  · intro h
-    cases h with
-    | intro decoded hdecoded =>
-        have henc := decodeDescription_encodeDescription D
-        rw [henc] at hdecoded
-        cases hdecoded.left
-        exact hdecoded.right
-  · intro h
-    exact Exists.intro D
-      (And.intro (decodeDescription_encodeDescription D) h)
-
-theorem codeAccepts_of_encodeDescription
-    {D : MachineDescription} {input : Word MachineCodeSymbol}
-    (h : D.HaltsOnInput (encodeCodeWordAsInput input)) :
-    CodeAccepts (encodeDescription D) input :=
-  (codeAccepts_encodeDescription_iff D input).mpr h
-
-theorem codePrefixAccepts_encodeDescription_append_iff
-    (D : MachineDescription) (input : Word MachineCodeSymbol) :
-    CodePrefixAccepts (List.append (encodeDescription D) input) <->
-      D.HaltsOnInput (encodeCodeWordAsInput input) := by
-  constructor
-  · intro h
-    rcases h with ⟨decoded, decodedInput, hdecode, hhalts⟩
-    have hprefix :=
-      decodeDescriptionPrefix_encodeDescription_append D input
-    rw [hprefix] at hdecode
-    cases hdecode
-    exact hhalts
-  · intro h
-    exact ⟨D, input,
-      decodeDescriptionPrefix_encodeDescription_append D input, h⟩
-
-theorem codePrefixAccepts_of_encodeDescription_append
-    {D : MachineDescription} {input : Word MachineCodeSymbol}
-    (h : D.HaltsOnInput (encodeCodeWordAsInput input)) :
-    CodePrefixAccepts (List.append (encodeDescription D) input) :=
-  (codePrefixAccepts_encodeDescription_append_iff D input).mpr h
-
-theorem encodeDescription_codeAccepts_elim
-    {D : MachineDescription} {input : Word MachineCodeSymbol}
-    (h : CodeAccepts (encodeDescription D) input) :
-    D.HaltsOnInput (encodeCodeWordAsInput input) :=
-  (codeAccepts_encodeDescription_iff D input).mp h
 
 end MachineDescription
 

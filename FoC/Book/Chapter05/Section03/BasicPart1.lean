@@ -1,7 +1,7 @@
 import FoC.Computability.Coding
 import FoC.Computability.Compiler
+import FoC.Computability.DescriptionLanguages
 import FoC.Computability.DiagonalPairMachine
-import FoC.Computability.Encoding
 
 set_option doc.verso true
 
@@ -16,21 +16,25 @@ namespace Section03
 This section formalizes the diagonal and halting-problem statements that mark
 the limits of computation. The definitions are book-facing wrappers over
 {module}`FoC.Computability.Undecidable`,
-{module}`FoC.Computability.Coding`, and
-{module}`FoC.Computability.Encoding`, with languages represented as predicates
-on encoded words.
+{module}`FoC.Computability.Coding`,
+{module}`FoC.Computability.MachineDescription`,
+{module}`FoC.Computability.Encoding`, and
+{module}`FoC.Computability.DescriptionLanguages`, with languages represented
+as predicates on encoded words.
 
 The page supplies a concrete pair-code alphabet for halting-problem reductions.
-It also exposes the first concrete machine-description syntax and interpreter.
-Universal-machine execution is still relative to a later proof that this
-interpreter can itself be implemented by a concrete machine.
+It also exposes finite transition-table execution, concrete
+machine-description syntax, and the decoded-code acceptance languages.
+Universal-machine execution is still relative to a later proof that the
+bounded interpreter can itself be implemented by a concrete machine.
 
 The structure mirrors the standard textbook argument but keeps the implementation
 boundary visible. Abstract decoder and diagonalization theorems are proved in
-full generality. Concrete code words, machine descriptions, pair encodings, and
-interpreter semantics are present. The final step, a single finite universal
-machine implementing the decoder relation, remains an explicit construction
-target rather than an implicit assumption.
+full generality. Concrete code words, machine descriptions, pair encodings,
+parser inversions, and executable description semantics are present. The final
+step, a single finite universal machine implementing the decoded bounded-run
+relation, remains an explicit construction target rather than an implicit
+assumption.
 -/
 
 open Languages

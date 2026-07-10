@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Skeletons
+import FoC.Computability.DescriptionLanguages
 import FoC.Computability.MachineBuilder.PrefixParser
 
 set_option doc.verso true

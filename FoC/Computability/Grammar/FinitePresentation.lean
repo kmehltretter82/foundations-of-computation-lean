@@ -142,7 +142,7 @@ def toGrammar (P : FiniteBoolGeneralGrammarPresentation) :
     rcases h with ⟨rule, hrule, hlhs, _hrhs⟩
     rw [← hlhs]
     exact P.rule_lhsContainsNonterminal rule hrule
-  nonterminalsFinite := finFinite P.nonterminalCount
+  nonterminalsFinite := Foundation.FiniteType.fin P.nonterminalCount
 
 theorem toGrammar_produces_iff
     (P : FiniteBoolGeneralGrammarPresentation)

@@ -36,12 +36,12 @@ concrete machine-description compilers are exposed as named construction
 surfaces.
 
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
-machine-encoding, and universal-machine vocabulary. The concrete encoding,
-interpreter, compiled-machine simulation, and faithful diagonal-pair
-copy-machine witness are present. The remaining implementation boundary is the
-finite-source compiler and universal-prefix runner machinery needed to turn the
-interpreter layer into one finite universal machine theorem without extra
-hypotheses.
+machine-encoding, and universal-machine vocabulary. Finite-table execution,
+description encoding and parsing, semantic interpreter relations,
+compiled-machine simulation, and a faithful diagonal-pair copy-machine witness
+are present. The remaining implementation boundary is the finite-source
+compiler and universal-prefix runner machinery needed to realize the semantic
+interpreter by one finite universal machine without extra hypotheses.
 
 ## Source Audit
 
@@ -69,8 +69,11 @@ see {module}`FoC.Computability.Computable`,
 {module}`FoC.Computability.Recognizable`, and
 {module}`FoC.Computability.Enumerable`. For staged programs and grammar
 recognizers, see {module}`FoC.Computability.Program` and
-{module}`FoC.Computability.Grammar`. For encodings, compiler bridges, and
-undecidability, inspect {module}`FoC.Computability.Encoding`,
+{module}`FoC.Computability.Grammar`. For finite table execution, encoded-code
+languages, encodings, compiler bridges, and undecidability, inspect
+{module}`FoC.Computability.MachineDescription`,
+{module}`FoC.Computability.DescriptionLanguages`,
+{module}`FoC.Computability.Encoding`,
 {module}`FoC.Computability.Compiler`, {module}`FoC.Computability.FiniteProgram`,
 {module}`FoC.Computability.Coding`,
 {module}`FoC.Computability.DiagonalPairMachine`, and

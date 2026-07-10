@@ -7,8 +7,9 @@ set_option doc.verso true
 /-!
 # Description-backed program compilation
 
-This module connects the concrete machine descriptions from
-{module}`FoC.Computability.Encoding` with the staged-program layer from
+This module connects the executable finite descriptions from
+{module}`FoC.Computability.MachineDescription` and their concrete encodings
+from {module}`FoC.Computability.Encoding` with the staged-program layer from
 {module}`FoC.Computability.Program`.
 
 The compiler predicates here are deliberately explicit.  A staged program is
