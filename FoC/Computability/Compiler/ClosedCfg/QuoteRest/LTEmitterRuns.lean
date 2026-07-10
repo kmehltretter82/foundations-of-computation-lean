@@ -677,6 +677,30 @@ theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells
   simp [List.map_append, List.map_map,
     optionBitDefaultFalse, optionBitDefaultFalse_map_some]
 
+/-- The finite context occupied by a split live-tail source tape. -/
+theorem mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_contextLength
+    (leftRev : List (Option Bool))
+    (quoteScan rawTail quoteRest : Word Bool) :
+    Tape.contextLength
+        (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+          leftRev quoteScan rawTail quoteRest) =
+      leftRev.length + quoteScan.length + rawTail.length +
+        quoteRest.length + 1 := by
+  cases quoteScan <;> cases rawTail <;>
+    simp [mixedOptionCellQuoteLiveTailEmitterSplitSourceTape,
+      tapeAtCells, Tape.contextLength] <;> lia
+
+/-- The finite context occupied by a live-tail emitter target tape. -/
+theorem mixedOptionCellQuoteLiveTailEmitterTargetTape_contextLength
+    (emittedPrefix rawTail quoteRest : Word Bool) :
+    Tape.contextLength
+        (mixedOptionCellQuoteLiveTailEmitterTargetTape
+          emittedPrefix rawTail quoteRest) =
+      emittedPrefix.length + rawTail.length + quoteRest.length + 1 := by
+  cases rawTail <;>
+    simp [mixedOptionCellQuoteLiveTailEmitterTargetTape,
+      tapeAtCells, Tape.contextLength] <;> lia
+
 def mixedOptionCellQuoteLiveTailEmitterSourceBits
     (leftRev : List (Option Bool))
     (quoteScan rawTail quoteRest : Word Bool) : Word Bool :=
@@ -947,6 +971,57 @@ theorem assemblySourceRestLiveTailEmitterTargetBits_defaultedCells
       assemblySourceRestLiveTailEmitterTargetBits p := by
   rw [mixedOptionCellQuoteLiveTailEmitterTargetTape_defaultedCells]
   rfl
+
+/--
+The assembly emitter's quoted prefix has room for the left marker context and
+the remaining quote scan.
+-/
+theorem assemblySourceRestLiveTailEmitterLeftQuote_length_le_emittedPrefix
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    (assemblySourceRestLiveTailEmitterLeftRev p).length +
+        (assemblySourceRestLiveTailEmitterQuoteScan p).length <=
+      (assemblySourceRestLiveTailEmitterEmittedPrefix p).length := by
+  cases p with
+  | mk w sourceRestBits stage =>
+      simp only [assemblySourceRestLiveTailEmitterLeftRev,
+        assemblySourceRestLiveTailEmitterQuoteScan,
+        assemblySourceRestLiveTailEmitterEmittedPrefix,
+        assemblySourceRestFinishParserMarkerLeftCells,
+        assemblySourceRestFinishParserMarkerRightBits,
+        assemblySourceRestFinishPrefixQuoteOutputBits,
+        assemblySourceRestFinishLengthHeaderBits,
+        assemblySourceRestFinishQuotedPrefixBits,
+        assemblySourceRestFinishSourcePrefixBits]
+      rw [stageInputBits_eq_false_false_tail,
+        stageInputSecondBitTail_eq_prefix_stageNat]
+      cases w <;>
+        simp [transitionPrefixLeftTail,
+          preservingCellPassCellBits_length,
+          stageNatBits_length,
+          encodeCodeSymbolAsInput_length] <;> lia
+
+/--
+The local exact emitter target is context-feasible.  Its exact head position is
+also the source layout consumed by the following right-gap scanner.
+-/
+theorem assemblySourceRestLiveTailEmitterTarget_contextLength_ge_source
+    (p : AssemblySourceRestLiveTailEmitterParam) :
+    Tape.contextLength
+        (mixedOptionCellQuoteLiveTailEmitterSplitSourceTape
+          (assemblySourceRestLiveTailEmitterLeftRev p)
+          (assemblySourceRestLiveTailEmitterQuoteScan p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) <=
+      Tape.contextLength
+        (mixedOptionCellQuoteLiveTailEmitterTargetTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix p)
+          (assemblySourceRestLiveTailEmitterRawTail p)
+          (assemblySourceRestLiveTailEmitterQuoteRest p)) := by
+  rw [mixedOptionCellQuoteLiveTailEmitterSplitSourceTape_contextLength,
+    mixedOptionCellQuoteLiveTailEmitterTargetTape_contextLength]
+  have hprefix :=
+    assemblySourceRestLiveTailEmitterLeftQuote_length_le_emittedPrefix p
+  lia
 
 theorem MixedParserStackWholeSourcePrefixQuotedSeparatedTape_eq_gapPayloadScanSource
     (w sourceRestBits : Word Bool) (stage : Nat)

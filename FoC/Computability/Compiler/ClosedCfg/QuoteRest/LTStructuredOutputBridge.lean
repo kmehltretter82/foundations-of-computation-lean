@@ -879,15 +879,6 @@ theorem StructuredLiveTailJoinerAssemblyFamilyOutputConstruction_of_assemblyOutp
       (StructuredLiveTailJoinerAssemblyFamilyOutputSpec_iff_assemblyOutputSpec
         finish).mpr hfinish⟩
 
-theorem StructuredLiveTailJoinerAssemblyFamilyOutputConstruction_of_exact
-    (h :
-      MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
-        assemblySourceRestLiveTailEmitterEmittedPrefix
-        assemblySourceRestLiveTailEmitterRawTail
-        assemblySourceRestLiveTailEmitterQuoteRest) :
-    StructuredLiveTailJoinerAssemblyFamilyOutputConstruction :=
-  MixedOptionCellQuoteLiveTailJoinerFamilyOutputConstruction_of_exact h
-
 /-! ## Structured-to-ordinary output bridge contracts -/
 
 def StructuredLiveTailEmitterOrdinaryOutputBridgeSpec

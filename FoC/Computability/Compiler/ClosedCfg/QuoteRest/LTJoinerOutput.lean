@@ -527,14 +527,6 @@ theorem MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssembl
   rw [← mixedOptionCellQuoteLiveTailJoinedTape_eq_assemblyQuoteRestJoinedTape]
   exact hfinish.right w sourceRestBits stage
 
-theorem MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoiner
-    (hjoin :
-      MixedOptionCellQuoteLiveTailJoinerConstructionForAssemblySourceRest) :
-    MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest :=
-  MixedParserStackAfterRawTailScanJoinFinisherOutputConstructionForAssemblySourceRest_of_mixedOptionCellQuoteLiveTailJoinerOutput
-    (MixedOptionCellQuoteLiveTailJoinerOutputConstructionForAssemblySourceRest_of_exact
-      hjoin)
-
 end SelectedProjectionInputQuoterFiniteLeaf
 
 end BoundedLayoutRunner
