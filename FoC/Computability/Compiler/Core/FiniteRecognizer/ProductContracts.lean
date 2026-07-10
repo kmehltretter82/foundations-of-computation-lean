@@ -6,11 +6,12 @@ set_option doc.verso true
 # Product exact-fuel route contracts
 
 This module packages the generated product exact-fuel runner around the
-existing decoded finite-table leaf in
-{module}`FoC.Computability.Compiler.Core.FiniteRecognizer.Product`.  The
-contracts record the semantic nested-stage shape, decoded exact-output
-surface, exact-output primitive bridge, runner bridge, and hidden-fuel search
-bridge used by later tuple-search and controller scaffolds.
+ordinary-halting finite-table leaf in
+{module}`FoC.Computability.Compiler.Core.FiniteRecognizer.Product`. The
+contracts record the semantic nested-stage shape, runner bridge, and
+hidden-fuel search bridge used by later tuple-search and controller scaffolds.
+Literal exact-empty-output routes are intentionally absent because their
+stored input context cannot shrink.
 -/
 
 namespace FoC
@@ -160,96 +161,10 @@ theorem generatedProductExactFuelRun_nestedStageCode_of_pair
     ⟨hleft, hright⟩
 
 /-!
-## Decoded exact-output route
--/
-
-structure GeneratedProductDecodedExactOutputRoute
-    {leftN rightN : Nat}
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN))
-    (selectedState : Type)
-    (selected : TuringMachine MachineCodeSymbol selectedState) :
-    Prop where
-  decodedSpec :
-    GeneratedProductDecodedExactOutputSpec selected left right
-  canonical :
-    ExactFuel.StageProgram.ExactOutputCanonicalSpec selected
-      (generatedProductExactFuelRun left right)
-  haltingTransitionsDisabled :
-    TuringMachine.HaltingTransitionsDisabled selected
-  forward :
-    forall input : Word MachineCodeSymbol,
-    forall leftFuel rightFuel : Nat,
-      TuringMachine.HaltsWithExactOutput selected
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-          ([] : Word MachineCodeSymbol) <->
-        TuringMachine.HaltsOnInputIn left leftFuel input ∧
-          TuringMachine.HaltsOnInputIn right rightFuel input
-  closed :
-    forall tokens output : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithExactOutput selected tokens output ->
-        exists input : Word MachineCodeSymbol,
-        exists leftFuel : Nat,
-        exists rightFuel : Nat,
-          tokens =
-              GeneratedCode.nestedStageCode input rightFuel leftFuel /\
-            output = ([] : Word MachineCodeSymbol) /\
-            TuringMachine.HaltsOnInputIn left leftFuel input ∧
-              TuringMachine.HaltsOnInputIn right rightFuel input
-
-def GeneratedProductDecodedExactOutputRouteConstruction
-    {leftN rightN : Nat}
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) :
-    Prop :=
-  exists selectedState : Type,
-  exists selected : TuringMachine MachineCodeSymbol selectedState,
-    GeneratedProductDecodedExactOutputRoute
-      left right selectedState selected
-
-theorem generatedProductDecodedExactOutputRoute_of_construction
-    {leftN rightN : Nat}
-    {left : TuringMachine MachineCodeSymbol (Fin leftN)}
-    {right : TuringMachine MachineCodeSymbol (Fin rightN)}
-    (h :
-      GeneratedProductDecodedExactOutputPrimitiveConstruction
-        left right) :
-    GeneratedProductDecodedExactOutputRouteConstruction left right := by
-  rcases h with ⟨selectedState, selected, hspec, hcanonical, hstop⟩
-  exact
-    ⟨selectedState, selected,
-      { decodedSpec := hspec
-        canonical := hcanonical
-        haltingTransitionsDisabled := hstop
-        forward := hspec.left
-        closed := hspec.right }⟩
-
-theorem generatedProductDecodedExactOutputRouteConstruction_of_finState
-    (h :
-      GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction) :
-    forall leftN rightN : Nat,
-    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
-    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
-      GeneratedProductDecodedExactOutputRouteConstruction left right := by
-  intro leftN rightN left right
-  exact
-    generatedProductDecodedExactOutputRoute_of_construction
-      (h leftN rightN left right)
-
-/-!
 ## Fin-state product route
 -/
 
 structure GeneratedProductFiniteRoute : Prop where
-  decodedPrimitive :
-    GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction
-  decodedRoute :
-    forall leftN rightN : Nat,
-    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
-    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
-      GeneratedProductDecodedExactOutputRouteConstruction left right
-  exactOutputPrimitive :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction
   finStateRunner :
     GeneratedProductExactFuelRunnerFinStateConstruction
   finStateSearch :
@@ -276,28 +191,14 @@ structure GeneratedProductFiniteRoute : Prop where
 def GeneratedProductFiniteRouteConstruction : Prop :=
   GeneratedProductFiniteRoute
 
-theorem generatedProductFiniteRoute_of_decoded
-    (hdecoded :
-      GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction) :
+theorem generatedProductFiniteRoute_of_runner
+    (hrunner : GeneratedProductExactFuelRunnerFinStateConstruction) :
     GeneratedProductFiniteRoute := by
-  let hexact :
-      GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :=
-    generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded.mpr
-      hdecoded
-  let hrunner :
-      GeneratedProductExactFuelRunnerFinStateConstruction :=
-    generatedProductExactFuelRunnerFinStateConstruction_of_exactOutputPrimitive
-      hexact
   let hsearch :
       GeneratedProductExactFuelSearchFinStateConstruction :=
     generatedProductExactFuelSearchFinStateFiniteLeaf
   exact
-    { decodedPrimitive := hdecoded
-      decodedRoute :=
-        generatedProductDecodedExactOutputRouteConstruction_of_finState
-          hdecoded
-      exactOutputPrimitive := hexact
-      finStateRunner := hrunner
+    { finStateRunner := hrunner
       finStateSearch := hsearch
       runnerConstruction := by
         intro leftN rightN left right
@@ -313,8 +214,8 @@ theorem generatedProductFiniteRoute_of_decoded
 
 theorem generatedProductFiniteRoute_finiteLeaf :
     GeneratedProductFiniteRoute :=
-  generatedProductFiniteRoute_of_decoded
-    generatedProductDecodedExactOutputPrimitiveFiniteLeaf
+  generatedProductFiniteRoute_of_runner
+    generatedProductExactFuelRunnerFinStateFiniteLeaf
 
 theorem generatedProductFiniteRouteConstruction_finiteLeaf :
     GeneratedProductFiniteRouteConstruction :=
@@ -329,11 +230,6 @@ structure GeneratedProductMachineRoute
     (left : TuringMachine MachineCodeSymbol (Fin leftN))
     (right : TuringMachine MachineCodeSymbol (Fin rightN)) :
     Prop where
-  decodedRoute :
-    GeneratedProductDecodedExactOutputRouteConstruction left right
-  exactOutputPrimitive :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
-      left right
   runner :
     GeneratedProductExactFuelRunnerConstruction left right
   search :
@@ -361,11 +257,7 @@ theorem GeneratedProductFiniteRoute.machineRoute
     (left : TuringMachine MachineCodeSymbol (Fin leftN))
     (right : TuringMachine MachineCodeSymbol (Fin rightN)) :
     GeneratedProductMachineRoute left right :=
-  { decodedRoute :=
-      hroute.decodedRoute leftN rightN left right
-    exactOutputPrimitive :=
-      hroute.exactOutputPrimitive leftN rightN left right
-    runner :=
+  { runner :=
       hroute.runnerConstruction leftN rightN left right
     search :=
       hroute.searchConstruction leftN rightN left right
@@ -546,26 +438,6 @@ theorem generatedProductSearchRouteDecidable_finiteLeaf
     (right : TuringMachine MachineCodeSymbol rightState) :
     GeneratedProductSearchRouteConstruction left right :=
   generatedProductFiniteRoute_finiteLeaf.searchRouteDecidable left right
-
-/-!
-## Compatibility aliases
--/
-
-theorem generatedProductDecodedExactOutputPrimitiveFiniteLeaf_route :
-    GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction :=
-  generatedProductFiniteRoute_finiteLeaf.decodedPrimitive
-
-theorem generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf_route :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :=
-  generatedProductFiniteRoute_finiteLeaf.exactOutputPrimitive
-
-theorem generatedProductExactFuelRunnerFinStateFiniteLeaf_route :
-    GeneratedProductExactFuelRunnerFinStateConstruction :=
-  generatedProductFiniteRoute_finiteLeaf.finStateRunner
-
-theorem generatedProductExactFuelSearchFinStateFiniteLeaf_route :
-    GeneratedProductExactFuelSearchFinStateConstruction :=
-  generatedProductFiniteRoute_finiteLeaf.finStateSearch
 
 end FiniteRecognizer
 

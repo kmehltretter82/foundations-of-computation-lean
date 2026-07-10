@@ -235,6 +235,44 @@ def GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction :
       GeneratedProductDecodedExactOutputPrimitiveConstruction
         left right
 
+private def generatedProductExactOutputCounterexampleMachine :
+    TuringMachine MachineCodeSymbol (Fin 1) where
+  start := 0
+  halt := 0
+  transition := fun _ _ => none
+  statesFinite := Foundation.FiniteType.fin 1
+
+private theorem generatedProductExactOutputCounterexampleMachine_haltsIn
+    (input : Word MachineCodeSymbol) :
+    TuringMachine.HaltsOnInputIn
+      generatedProductExactOutputCounterexampleMachine 0 input := by
+  refine ⟨TuringMachine.initial
+    generatedProductExactOutputCounterexampleMachine input, ?_, ?_⟩
+  · exact TuringMachine.ComputesIn.zero _
+  · rfl
+
+/--
+The generated product runner cannot erase every nested generated call to the
+literal blank tape. The stored input context is nonempty and cannot shrink.
+-/
+theorem not_generatedProductDecodedExactOutputPrimitiveFinStateConstruction :
+    ¬ GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction := by
+  intro hconstruction
+  rcases hconstruction 1 1
+      generatedProductExactOutputCounterexampleMachine
+      generatedProductExactOutputCounterexampleMachine with
+    ⟨_state, selected, hspec, _hcanonical, _hstop⟩
+  have hhalt :=
+    (hspec.left ([] : Word MachineCodeSymbol) 0 0).mpr
+      ⟨generatedProductExactOutputCounterexampleMachine_haltsIn [],
+        generatedProductExactOutputCounterexampleMachine_haltsIn []⟩
+  apply
+    TuringMachine.not_haltsWithExactOutput_empty_of_input_contextLength_pos
+      (M := selected)
+      (w := GeneratedCode.nestedStageCode
+        ([] : Word MachineCodeSymbol) 0 0) ?_ hhalt
+  decide
+
 theorem generatedProductExactOutputSpec_iff_decoded
     {leftN rightN : Nat} {selectedState : Type}
     (selected : TuringMachine MachineCodeSymbol selectedState)
@@ -313,6 +351,15 @@ theorem generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded :
       (generatedProductExactOutputPrimitiveConstruction_iff_decoded
         left right).mpr
         (hconstruction leftN rightN left right)
+
+/-- The transformer-shaped exact-output product target is refuted as well. -/
+theorem not_generatedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :
+    ¬ GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction := by
+  intro hconstruction
+  exact
+    not_generatedProductDecodedExactOutputPrimitiveFinStateConstruction
+      (generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded.mp
+        hconstruction)
 
 /--
 Concrete-state generated exact-fuel product runner target.
@@ -467,13 +514,12 @@ theorem generatedProductExactFuelRunnerConstruction_of_finStateConstructionDecid
         (TuringMachine.indexedDecidable right))
 
 /--
-Remaining decoded exact-output primitive obligation for generated product
-exact-fuel calls. It must parse the nested generated call, preserve the raw
-input, run both selected recognizers for their parsed exact fuels, and halt
-with canonical empty output exactly when both runs accept.
+Remaining finite-state generated product runner. Its contract observes only
+ordinary halting on the nested generated call, not erasure of the physical
+input tape.
 -/
-theorem generatedProductDecodedExactOutputPrimitiveFiniteLeaf :
-    GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction := by
+theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
+    GeneratedProductExactFuelRunnerFinStateConstruction := by
   intro leftN rightN left right
   cases leftN with
   | zero =>
@@ -484,26 +530,6 @@ theorem generatedProductDecodedExactOutputPrimitiveFiniteLeaf :
           exact False.elim (Fin.elim0 right.start)
       | succ _ =>
           sorry
-
-/--
-Compatibility exact-output primitive leaf for generated product exact-fuel
-calls, derived from the decoded nested-call target above.
--/
-theorem generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction := by
-  exact
-    generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded.mpr
-      generatedProductDecodedExactOutputPrimitiveFiniteLeaf
-
-/--
-Concrete finite-machine leaf for generated product exact-fuel calls, derived
-from the sharper exact-output primitive boundary above.
--/
-theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
-    GeneratedProductExactFuelRunnerFinStateConstruction := by
-  exact
-    generatedProductExactFuelRunnerFinStateConstruction_of_exactOutputPrimitive
-      generatedProductExactFuelRunnerExactOutputPrimitiveFiniteLeaf
 
 /--
 Finite-machine leaf for generated exact-fuel product runners over arbitrary
