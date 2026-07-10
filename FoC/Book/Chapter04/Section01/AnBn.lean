@@ -45,18 +45,42 @@ def AnBnNT.finite : FiniteType AnBnNT where
     cases x
     simp
 
-inductive AnBnProduces :
-    AnBnNT -> SententialForm AB AnBnNT -> Prop where
-  | wrap :
-      AnBnProduces AnBnNT.S
-        [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S, Symbol.terminal AB.b]
-  | stop :
-      AnBnProduces AnBnNT.S []
+def anbnWrapProduction : CFG.Production AB AnBnNT where
+  lhs := AnBnNT.S
+  rhs :=
+    [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S, Symbol.terminal AB.b]
 
-def AnBnGrammar : CFG AB AnBnNT where
-  start := AnBnNT.S
-  produces := AnBnProduces
-  nonterminalsFinite := AnBnNT.finite
+def anbnStopProduction : CFG.Production AB AnBnNT where
+  lhs := AnBnNT.S
+  rhs := []
+
+def anbnProductionList : List (CFG.Production AB AnBnNT) :=
+  [anbnWrapProduction, anbnStopProduction]
+
+def AnBnGrammar : CFG AB AnBnNT :=
+  CFG.ProductionList.toCFG AnBnNT.S AnBnNT.finite anbnProductionList
+
+def anbnPresentation : CFG.Presentation AnBnGrammar :=
+  CFG.ProductionList.presentation AnBnNT.S AnBnNT.finite anbnProductionList
+
+theorem anbn_produces_iff
+    (A : AnBnNT) (rhs : SententialForm AB AnBnNT) :
+    AnBnGrammar.produces A rhs <->
+      (A = AnBnNT.S ∧
+        [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S,
+          Symbol.terminal AB.b] = rhs) ∨
+      (A = AnBnNT.S ∧ rhs = []) := by
+  simp [AnBnGrammar, CFG.ProductionList.toCFG, anbnProductionList,
+    anbnWrapProduction, anbnStopProduction]
+
+theorem anbn_wrap_produces :
+    AnBnGrammar.produces AnBnNT.S
+      [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S,
+        Symbol.terminal AB.b] :=
+  (anbn_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem anbn_stop_produces : AnBnGrammar.produces AnBnNT.S [] :=
+  (anbn_produces_iff _ _).mpr (Or.inr ⟨rfl, rfl⟩)
 
 def AnBnWrap (w : Word AB) : Word AB :=
   AB.a :: Word.Concat w [AB.b]
@@ -175,15 +199,16 @@ theorem anbn_yields_open_cases (n : Nat) {y : SententialForm AB AnBnNT}
                           subst y
                           rw [← hsplit.left, ← hsplit.right.right]
                           cases hsplit.right.left
-                          cases hprod with
-                          | wrap =>
+                          rcases (anbn_produces_iff A rhs).mp hprod with
+                            ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+                          ·
                               left
                               simp [AnBnOpenForm, AnBnPrefix, AnBnSuffix,
                                 Word.RepeatSymbol, SententialForm.terminalWord,
                                 replicate_succ_eq_append (Symbol.terminal AB.a) n,
                                 replicate_succ_eq_cons (Symbol.terminal AB.b) n,
                                 List.append_assoc]
-                          | stop =>
+                          ·
                               right
                               simp [AnBnClosedForm, AnBnWord, Word.Concat,
                                 SententialForm.terminalWord]
@@ -297,7 +322,7 @@ theorem anbn_empty_generated :
   exists AnBnNT.S
   exists ([] : SententialForm AB AnBnNT)
   constructor
-  · exact AnBnProduces.stop
+  · exact anbn_stop_produces
   constructor <;> rfl
 
 theorem anbn_wrap_generated {w : Word AB}
@@ -311,7 +336,7 @@ theorem anbn_wrap_generated {w : Word AB}
     exists AnBnNT.S
     exists [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S, Symbol.terminal AB.b]
     constructor
-    · exact AnBnProduces.wrap
+    · exact anbn_wrap_produces
     constructor <;> rfl
   have hContext :
       CFG.Derives AnBnGrammar
@@ -348,38 +373,9 @@ language definition below is reused by the boundary corollary that separates
 context-free languages from regular languages.
 -/
 
-def anbnWrapProduction : CFG.Production AB AnBnNT where
-  lhs := AnBnNT.S
-  rhs :=
-    [Symbol.terminal AB.a, Symbol.nonterminal AnBnNT.S, Symbol.terminal AB.b]
-
-def anbnStopProduction : CFG.Production AB AnBnNT where
-  lhs := AnBnNT.S
-  rhs := []
-
 theorem anbn_has_finite_productions :
-    CFG.HasFiniteProductions AnBnGrammar := by
-  exists [anbnWrapProduction, anbnStopProduction]
-  intro A rhs
-  constructor
-  · intro h
-    cases h with
-    | wrap =>
-        exact ⟨anbnWrapProduction, by simp [anbnWrapProduction], rfl, rfl⟩
-    | stop =>
-        exact ⟨anbnStopProduction, by simp [anbnStopProduction], rfl, rfl⟩
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [anbnWrapProduction, anbnStopProduction] at hmem
-    rcases hmem with hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact AnBnProduces.wrap
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact AnBnProduces.stop
+    CFG.HasFiniteProductions AnBnGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation ⟨anbnPresentation⟩
 
 def AnBnLanguage : Language AB :=
   fun w => exists n, w = AnBnWord n

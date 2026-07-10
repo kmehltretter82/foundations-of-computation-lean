@@ -46,22 +46,6 @@ def BalancedParensNT.finite : FiniteType BalancedParensNT where
     cases x
     simp
 
-inductive BalancedParensProduces :
-    BalancedParensNT -> SententialForm Paren BalancedParensNT -> Prop where
-  | empty :
-      BalancedParensProduces BalancedParensNT.S []
-  | pair :
-      BalancedParensProduces BalancedParensNT.S
-        [Symbol.terminal Paren.left,
-          Symbol.nonterminal BalancedParensNT.S,
-          Symbol.terminal Paren.right,
-          Symbol.nonterminal BalancedParensNT.S]
-
-def BalancedParensGrammar : CFG Paren BalancedParensNT where
-  start := BalancedParensNT.S
-  produces := BalancedParensProduces
-  nonterminalsFinite := BalancedParensNT.finite
-
 inductive BalancedParens : Word Paren -> Prop where
   | empty : BalancedParens []
   | pair {inside rest : Word Paren} :
@@ -89,31 +73,47 @@ def balancedParensPairProduction :
       Symbol.terminal Paren.right,
       Symbol.nonterminal BalancedParensNT.S]
 
+def balancedParensProductionList :
+    List (CFG.Production Paren BalancedParensNT) :=
+  [balancedParensEmptyProduction, balancedParensPairProduction]
+
+def BalancedParensGrammar : CFG Paren BalancedParensNT :=
+  CFG.ProductionList.toCFG BalancedParensNT.S BalancedParensNT.finite
+    balancedParensProductionList
+
+def balancedParensPresentation : CFG.Presentation BalancedParensGrammar :=
+  CFG.ProductionList.presentation BalancedParensNT.S BalancedParensNT.finite
+    balancedParensProductionList
+
+theorem balanced_parens_produces_iff
+    (A : BalancedParensNT) (rhs : SententialForm Paren BalancedParensNT) :
+    BalancedParensGrammar.produces A rhs <->
+      (A = BalancedParensNT.S ∧ rhs = []) ∨
+      (A = BalancedParensNT.S ∧
+        [Symbol.terminal Paren.left,
+          Symbol.nonterminal BalancedParensNT.S,
+          Symbol.terminal Paren.right,
+          Symbol.nonterminal BalancedParensNT.S] = rhs) := by
+  simp [BalancedParensGrammar, CFG.ProductionList.toCFG,
+    balancedParensProductionList, balancedParensEmptyProduction,
+    balancedParensPairProduction]
+
+theorem balanced_parens_empty_produces :
+    BalancedParensGrammar.produces BalancedParensNT.S [] := by
+  exact (balanced_parens_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem balanced_parens_pair_produces :
+    BalancedParensGrammar.produces BalancedParensNT.S
+      [Symbol.terminal Paren.left,
+        Symbol.nonterminal BalancedParensNT.S,
+        Symbol.terminal Paren.right,
+        Symbol.nonterminal BalancedParensNT.S] := by
+  exact (balanced_parens_produces_iff _ _).mpr (Or.inr ⟨rfl, rfl⟩)
+
 theorem balanced_parens_has_finite_productions :
-    CFG.HasFiniteProductions BalancedParensGrammar := by
-  exists [balancedParensEmptyProduction, balancedParensPairProduction]
-  intro A rhs
-  constructor
-  · intro h
-    cases h with
-    | empty =>
-        exact ⟨balancedParensEmptyProduction, by simp [balancedParensEmptyProduction],
-          rfl, rfl⟩
-    | pair =>
-        exact ⟨balancedParensPairProduction,
-          by simp [balancedParensPairProduction], rfl, rfl⟩
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [balancedParensEmptyProduction, balancedParensPairProduction] at hmem
-    rcases hmem with hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact BalancedParensProduces.empty
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact BalancedParensProduces.pair
+    CFG.HasFiniteProductions BalancedParensGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation
+    ⟨balancedParensPresentation⟩
 
 /-!
 For soundness, the pair production is the only nontrivial case. Membership in
@@ -146,11 +146,12 @@ theorem balanced_parens_production_sound
     forall w, w ∈ CFG.FormLanguage BalancedParensSymbolLanguage rhs ->
       w ∈ BalancedParensSymbolLanguage (Symbol.nonterminal A) := by
   intro w hw
-  cases hprod with
-  | empty =>
+  rcases (balanced_parens_produces_iff A rhs).mp hprod with
+    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  ·
       cases hw
       exact BalancedParens.empty
-  | pair =>
+  ·
       exact balanced_parens_pair_form_language hw
 
 theorem balanced_parens_start_form_language
@@ -183,7 +184,7 @@ theorem balanced_parens_empty_generated :
   exists BalancedParensNT.S
   exists ([] : SententialForm Paren BalancedParensNT)
   constructor
-  · exact BalancedParensProduces.empty
+  · exact balanced_parens_empty_produces
   constructor <;> rfl
 
 /-!
@@ -212,7 +213,7 @@ theorem balanced_parens_pair_generated {inside rest : Word Paren}
       Symbol.terminal Paren.right,
       Symbol.nonterminal BalancedParensNT.S]
     constructor
-    · exact BalancedParensProduces.pair
+    · exact balanced_parens_pair_produces
     constructor <;> rfl
   have hform :
       Paren.left :: Word.Concat inside (Paren.right :: rest) ∈

@@ -54,28 +54,6 @@ def BalancedBracketsNT.finite : FiniteType BalancedBracketsNT where
     cases x
     simp
 
-inductive BalancedBracketsProduces :
-    BalancedBracketsNT -> SententialForm Bracket BalancedBracketsNT -> Prop where
-  | empty :
-      BalancedBracketsProduces BalancedBracketsNT.S []
-  | roundPair :
-      BalancedBracketsProduces BalancedBracketsNT.S
-        [Symbol.terminal Bracket.roundLeft,
-          Symbol.nonterminal BalancedBracketsNT.S,
-          Symbol.terminal Bracket.roundRight,
-          Symbol.nonterminal BalancedBracketsNT.S]
-  | squarePair :
-      BalancedBracketsProduces BalancedBracketsNT.S
-        [Symbol.terminal Bracket.squareLeft,
-          Symbol.nonterminal BalancedBracketsNT.S,
-          Symbol.terminal Bracket.squareRight,
-          Symbol.nonterminal BalancedBracketsNT.S]
-
-def BalancedBracketsGrammar : CFG Bracket BalancedBracketsNT where
-  start := BalancedBracketsNT.S
-  produces := BalancedBracketsProduces
-  nonterminalsFinite := BalancedBracketsNT.finite
-
 inductive BalancedBrackets : Word Bracket -> Prop where
   | empty : BalancedBrackets []
   | roundPair {inside rest : Word Bracket} :
@@ -117,40 +95,65 @@ def balancedBracketsSquarePairProduction :
       Symbol.terminal Bracket.squareRight,
       Symbol.nonterminal BalancedBracketsNT.S]
 
-theorem balanced_brackets_has_finite_productions :
-    CFG.HasFiniteProductions BalancedBracketsGrammar := by
-  exists [balancedBracketsEmptyProduction, balancedBracketsRoundPairProduction,
+def balancedBracketsProductionList :
+    List (CFG.Production Bracket BalancedBracketsNT) :=
+  [balancedBracketsEmptyProduction, balancedBracketsRoundPairProduction,
     balancedBracketsSquarePairProduction]
-  intro A rhs
-  constructor
-  · intro h
-    cases h with
-    | empty =>
-        exact ⟨balancedBracketsEmptyProduction,
-          by simp [balancedBracketsEmptyProduction], rfl, rfl⟩
-    | roundPair =>
-        exact ⟨balancedBracketsRoundPairProduction,
-          by simp [balancedBracketsRoundPairProduction], rfl, rfl⟩
-    | squarePair =>
-        exact ⟨balancedBracketsSquarePairProduction,
-          by simp [balancedBracketsSquarePairProduction], rfl, rfl⟩
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [balancedBracketsEmptyProduction, balancedBracketsRoundPairProduction,
-      balancedBracketsSquarePairProduction] at hmem
-    rcases hmem with hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact BalancedBracketsProduces.empty
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact BalancedBracketsProduces.roundPair
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact BalancedBracketsProduces.squarePair
+
+def BalancedBracketsGrammar : CFG Bracket BalancedBracketsNT :=
+  CFG.ProductionList.toCFG BalancedBracketsNT.S BalancedBracketsNT.finite
+    balancedBracketsProductionList
+
+def balancedBracketsPresentation : CFG.Presentation BalancedBracketsGrammar :=
+  CFG.ProductionList.presentation BalancedBracketsNT.S
+    BalancedBracketsNT.finite balancedBracketsProductionList
+
+theorem balanced_brackets_produces_iff
+    (A : BalancedBracketsNT)
+    (rhs : SententialForm Bracket BalancedBracketsNT) :
+    BalancedBracketsGrammar.produces A rhs <->
+      (A = BalancedBracketsNT.S ∧ rhs = []) ∨
+      (A = BalancedBracketsNT.S ∧
+        [Symbol.terminal Bracket.roundLeft,
+          Symbol.nonterminal BalancedBracketsNT.S,
+          Symbol.terminal Bracket.roundRight,
+          Symbol.nonterminal BalancedBracketsNT.S] = rhs) ∨
+      (A = BalancedBracketsNT.S ∧
+        [Symbol.terminal Bracket.squareLeft,
+          Symbol.nonterminal BalancedBracketsNT.S,
+          Symbol.terminal Bracket.squareRight,
+          Symbol.nonterminal BalancedBracketsNT.S] = rhs) := by
+  simp [BalancedBracketsGrammar, CFG.ProductionList.toCFG,
+    balancedBracketsProductionList, balancedBracketsEmptyProduction,
+    balancedBracketsRoundPairProduction,
+    balancedBracketsSquarePairProduction]
+
+theorem balanced_brackets_empty_produces :
+    BalancedBracketsGrammar.produces BalancedBracketsNT.S [] := by
+  exact (balanced_brackets_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem balanced_brackets_round_pair_produces :
+    BalancedBracketsGrammar.produces BalancedBracketsNT.S
+      [Symbol.terminal Bracket.roundLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.roundRight,
+        Symbol.nonterminal BalancedBracketsNT.S] := by
+  exact (balanced_brackets_produces_iff _ _).mpr
+    (Or.inr (Or.inl ⟨rfl, rfl⟩))
+
+theorem balanced_brackets_square_pair_produces :
+    BalancedBracketsGrammar.produces BalancedBracketsNT.S
+      [Symbol.terminal Bracket.squareLeft,
+        Symbol.nonterminal BalancedBracketsNT.S,
+        Symbol.terminal Bracket.squareRight,
+        Symbol.nonterminal BalancedBracketsNT.S] := by
+  exact (balanced_brackets_produces_iff _ _).mpr
+    (Or.inr (Or.inr ⟨rfl, rfl⟩))
+
+theorem balanced_brackets_has_finite_productions :
+    CFG.HasFiniteProductions BalancedBracketsGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation
+    ⟨balancedBracketsPresentation⟩
 
 /-!
 The two-bracket grammar repeats the parenthesis soundness argument twice. Each
@@ -202,13 +205,14 @@ theorem balanced_brackets_production_sound
     forall w, w ∈ CFG.FormLanguage BalancedBracketsSymbolLanguage rhs ->
       w ∈ BalancedBracketsSymbolLanguage (Symbol.nonterminal A) := by
   intro w hw
-  cases hprod with
-  | empty =>
+  rcases (balanced_brackets_produces_iff A rhs).mp hprod with
+    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  ·
       cases hw
       exact BalancedBrackets.empty
-  | roundPair =>
+  ·
       exact balanced_brackets_round_pair_form_language hw
-  | squarePair =>
+  ·
       exact balanced_brackets_square_pair_form_language hw
 
 theorem balanced_brackets_start_form_language
@@ -241,7 +245,7 @@ theorem balanced_brackets_empty_generated :
   exists BalancedBracketsNT.S
   exists ([] : SententialForm Bracket BalancedBracketsNT)
   constructor
-  · exact BalancedBracketsProduces.empty
+  · exact balanced_brackets_empty_produces
   constructor <;> rfl
 
 /-!
@@ -269,7 +273,7 @@ theorem balanced_brackets_round_pair_generated {inside rest : Word Bracket}
       Symbol.terminal Bracket.roundRight,
       Symbol.nonterminal BalancedBracketsNT.S]
     constructor
-    · exact BalancedBracketsProduces.roundPair
+    · exact balanced_brackets_round_pair_produces
     constructor <;> rfl
   have hform :
       Bracket.roundLeft :: Word.Concat inside (Bracket.roundRight :: rest) ∈
@@ -329,7 +333,7 @@ theorem balanced_brackets_square_pair_generated {inside rest : Word Bracket}
       Symbol.terminal Bracket.squareRight,
       Symbol.nonterminal BalancedBracketsNT.S]
     constructor
-    · exact BalancedBracketsProduces.squarePair
+    · exact balanced_brackets_square_pair_produces
     constructor <;> rfl
   have hform :
       Bracket.squareLeft :: Word.Concat inside (Bracket.squareRight :: rest) ∈

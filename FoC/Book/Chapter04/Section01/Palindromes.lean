@@ -34,30 +34,6 @@ def PalindromeNT.finite : FiniteType PalindromeNT where
     cases x
     simp
 
-inductive PalindromeProduces :
-    PalindromeNT -> SententialForm AB PalindromeNT -> Prop where
-  | empty :
-      PalindromeProduces PalindromeNT.S []
-  | singleA :
-      PalindromeProduces PalindromeNT.S [Symbol.terminal AB.a]
-  | singleB :
-      PalindromeProduces PalindromeNT.S [Symbol.terminal AB.b]
-  | wrapA :
-      PalindromeProduces PalindromeNT.S
-        [Symbol.terminal AB.a,
-          Symbol.nonterminal PalindromeNT.S,
-          Symbol.terminal AB.a]
-  | wrapB :
-      PalindromeProduces PalindromeNT.S
-        [Symbol.terminal AB.b,
-          Symbol.nonterminal PalindromeNT.S,
-          Symbol.terminal AB.b]
-
-def PalindromeGrammar : CFG AB PalindromeNT where
-  start := PalindromeNT.S
-  produces := PalindromeProduces
-  nonterminalsFinite := PalindromeNT.finite
-
 inductive PalindromeAB : Word AB -> Prop where
   | empty : PalindromeAB []
   | singleA : PalindromeAB [AB.a]
@@ -97,6 +73,63 @@ def palindromeWrapBProduction : CFG.Production AB PalindromeNT where
       Symbol.nonterminal PalindromeNT.S,
       Symbol.terminal AB.b]
 
+def palindromeProductionList : List (CFG.Production AB PalindromeNT) :=
+  [palindromeEmptyProduction, palindromeSingleAProduction,
+    palindromeSingleBProduction, palindromeWrapAProduction,
+    palindromeWrapBProduction]
+
+def PalindromeGrammar : CFG AB PalindromeNT :=
+  CFG.ProductionList.toCFG PalindromeNT.S PalindromeNT.finite
+    palindromeProductionList
+
+def palindromePresentation : CFG.Presentation PalindromeGrammar :=
+  CFG.ProductionList.presentation PalindromeNT.S PalindromeNT.finite
+    palindromeProductionList
+
+theorem palindrome_produces_iff
+    (A : PalindromeNT) (rhs : SententialForm AB PalindromeNT) :
+    PalindromeGrammar.produces A rhs <->
+      (A = PalindromeNT.S ∧ rhs = []) ∨
+      (A = PalindromeNT.S ∧ [Symbol.terminal AB.a] = rhs) ∨
+      (A = PalindromeNT.S ∧ [Symbol.terminal AB.b] = rhs) ∨
+      (A = PalindromeNT.S ∧
+        [Symbol.terminal AB.a, Symbol.nonterminal PalindromeNT.S,
+          Symbol.terminal AB.a] = rhs) ∨
+      (A = PalindromeNT.S ∧
+        [Symbol.terminal AB.b, Symbol.nonterminal PalindromeNT.S,
+          Symbol.terminal AB.b] = rhs) := by
+  simp [PalindromeGrammar, CFG.ProductionList.toCFG,
+    palindromeProductionList, palindromeEmptyProduction,
+    palindromeSingleAProduction, palindromeSingleBProduction,
+    palindromeWrapAProduction, palindromeWrapBProduction]
+
+theorem palindrome_empty_produces :
+    PalindromeGrammar.produces PalindromeNT.S [] :=
+  (palindrome_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem palindrome_single_a_produces :
+    PalindromeGrammar.produces PalindromeNT.S [Symbol.terminal AB.a] :=
+  (palindrome_produces_iff _ _).mpr (Or.inr (Or.inl ⟨rfl, rfl⟩))
+
+theorem palindrome_single_b_produces :
+    PalindromeGrammar.produces PalindromeNT.S [Symbol.terminal AB.b] :=
+  (palindrome_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩)))
+
+theorem palindrome_wrap_a_produces :
+    PalindromeGrammar.produces PalindromeNT.S
+      [Symbol.terminal AB.a, Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.a] :=
+  (palindrome_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩))))
+
+theorem palindrome_wrap_b_produces :
+    PalindromeGrammar.produces PalindromeNT.S
+      [Symbol.terminal AB.b, Symbol.nonterminal PalindromeNT.S,
+        Symbol.terminal AB.b] :=
+  (palindrome_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inr ⟨rfl, rfl⟩))))
+
 /-!
 For palindromes, finite production bookkeeping has five cases: the empty word,
 the two one-letter words, and the two symmetric wrappers. Naming each production
@@ -104,55 +137,8 @@ keeps the generated-language proof readable later.
 -/
 
 theorem palindrome_has_finite_productions :
-    CFG.HasFiniteProductions PalindromeGrammar := by
-  exists [palindromeEmptyProduction, palindromeSingleAProduction,
-    palindromeSingleBProduction, palindromeWrapAProduction,
-    palindromeWrapBProduction]
-  intro A rhs
-  constructor
-  · intro h
-    cases h with
-    | empty =>
-        exact ⟨palindromeEmptyProduction, by simp [palindromeEmptyProduction],
-          rfl, rfl⟩
-    | singleA =>
-        exact ⟨palindromeSingleAProduction,
-          by simp [palindromeSingleAProduction], rfl, rfl⟩
-    | singleB =>
-        exact ⟨palindromeSingleBProduction,
-          by simp [palindromeSingleBProduction], rfl, rfl⟩
-    | wrapA =>
-        exact ⟨palindromeWrapAProduction,
-          by simp [palindromeWrapAProduction], rfl, rfl⟩
-    | wrapB =>
-        exact ⟨palindromeWrapBProduction,
-          by simp [palindromeWrapBProduction], rfl, rfl⟩
-  · intro h
-    rcases h with ⟨rule, hmem, hlhs, hrhs⟩
-    simp [palindromeEmptyProduction, palindromeSingleAProduction,
-      palindromeSingleBProduction, palindromeWrapAProduction,
-      palindromeWrapBProduction] at hmem
-    rcases hmem with hrule | hrule | hrule | hrule | hrule
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PalindromeProduces.empty
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PalindromeProduces.singleA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PalindromeProduces.singleB
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PalindromeProduces.wrapA
-    · subst rule
-      cases hlhs
-      cases hrhs
-      exact PalindromeProduces.wrapB
+    CFG.HasFiniteProductions PalindromeGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation ⟨palindromePresentation⟩
 
 theorem palindrome_single_a_form_language {w : Word AB}
     (hw : w ∈ CFG.FormLanguage PalindromeSymbolLanguage
@@ -212,17 +198,18 @@ theorem palindrome_production_sound
     forall w, w ∈ CFG.FormLanguage PalindromeSymbolLanguage rhs ->
       w ∈ PalindromeSymbolLanguage (Symbol.nonterminal A) := by
   intro w hw
-  cases hprod with
-  | empty =>
+  rcases (palindrome_produces_iff A rhs).mp hprod with
+    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  ·
       cases hw
       exact PalindromeAB.empty
-  | singleA =>
+  ·
       exact palindrome_single_a_form_language hw
-  | singleB =>
+  ·
       exact palindrome_single_b_form_language hw
-  | wrapA =>
+  ·
       exact palindrome_wrap_a_form_language hw
-  | wrapB =>
+  ·
       exact palindrome_wrap_b_form_language hw
 
 theorem palindrome_start_form_language {w : Word AB}
@@ -253,7 +240,7 @@ theorem palindrome_empty_generated :
   exists PalindromeNT.S
   exists ([] : SententialForm AB PalindromeNT)
   constructor
-  · exact PalindromeProduces.empty
+  · exact palindrome_empty_produces
   constructor <;> rfl
 
 theorem palindrome_single_a_generated :
@@ -264,7 +251,7 @@ theorem palindrome_single_a_generated :
   exists PalindromeNT.S
   exists [Symbol.terminal AB.a]
   constructor
-  · exact PalindromeProduces.singleA
+  · exact palindrome_single_a_produces
   constructor <;> rfl
 
 theorem palindrome_single_b_generated :
@@ -275,7 +262,7 @@ theorem palindrome_single_b_generated :
   exists PalindromeNT.S
   exists [Symbol.terminal AB.b]
   constructor
-  · exact PalindromeProduces.singleB
+  · exact palindrome_single_b_produces
   constructor <;> rfl
 
 /-!
@@ -300,7 +287,7 @@ theorem palindrome_wrap_a_generated {w : Word AB}
       Symbol.nonterminal PalindromeNT.S,
       Symbol.terminal AB.a]
     constructor
-    · exact PalindromeProduces.wrapA
+    · exact palindrome_wrap_a_produces
     constructor <;> rfl
   have hform :
       AB.a :: Word.Concat w [AB.a] ∈
@@ -344,7 +331,7 @@ theorem palindrome_wrap_b_generated {w : Word AB}
       Symbol.nonterminal PalindromeNT.S,
       Symbol.terminal AB.b]
     constructor
-    · exact PalindromeProduces.wrapB
+    · exact palindrome_wrap_b_produces
     constructor <;> rfl
   have hform :
       AB.b :: Word.Concat w [AB.b] ∈
