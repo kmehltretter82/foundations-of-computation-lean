@@ -548,7 +548,11 @@ completed:
         status: "partial_no_pumping_examples_deferred"
         formalized:
           - artifact: "FoC.Book.Chapter04.Section05"
-            reason: "Finite-production CFG/CFL vocabulary, finite-production preservation for union/concatenation/star, RHS length bounds, CFL Pumping Lemma, bad-word counterexample schemas, a^n b^n c^n bad-word-family theorem, no-pumping contradiction, unconditional non-context-free theorem, finite-production intersection witnesses, finite-production CFL union closure, nonclosure schemas, unconditional finite-production complement nonclosure wrapper, finite-production CFL-to-finite-presentation PDA recognizability over finite terminal alphabets, PDA/DFA intersection product, automatic accepting-state presentations for finite-state DFAs, finite-presentation preservation for PDA/DFA products, finite-presentation PDA-recognizable closure under DFA intersection and finite-language subtraction, conditional finite-production CFL closure for PDA/DFA intersection and DFA-language subtraction from product empty-summary completeness, unconditional finite-production CFL closure for finite-presented PDA/DFA intersection and DFA-language subtraction via arbitrary finite-presented PDA-to-CFG exactness, finite-language DFA recognizability, PDA-recognizable finite-language subtraction, and full finite-alphabet CFL closure under finite-language subtraction."
+            reason: "Finite-production CFG/CFL vocabulary, finite-production preservation for union/concatenation/star, RHS length bounds, the CFL Pumping Lemma, bad-word counterexample schemas, the a^n b^n c^n no-pumping theorem, concrete finite-production intersection witnesses, CFL nonclosure consequences, and the partial duplicate-word pumping argument."
+          - artifact: "FoC.Grammars.PDA.Intersection"
+            reason: "Exact PDA/DFA product construction, automatic DFA accepting-state presentations, finite-presentation preservation, computation projection and lifting, and exact accepted-language intersection."
+          - artifact: "FoC.Grammars.CFL.Closure"
+            reason: "Finite-presentation PDA-recognizable closure under DFA intersection and subtraction, finite-language DFA recognizability, finite-language subtraction, and finite-alphabet context-free closure under intersection with and subtraction by regular languages."
           - artifact: "FoC.Grammars.ParseTree"
             reason: "Parse-tree pumping infrastructure used by the CFL Pumping Lemma."
         missing: []

@@ -1,10 +1,12 @@
 import FoC.Grammars.CFG
 import FoC.Grammars.CFL
+import FoC.Grammars.CFL.Closure
 import FoC.Grammars.RightRegular
 import FoC.Grammars.BNF
 import FoC.Grammars.ParseTree
 import FoC.Grammars.Parsing
 import FoC.Grammars.PDA
+import FoC.Grammars.PDA.Intersection
 import FoC.Grammars.PDANormalize
 import FoC.Grammars.CFGToPDA
 import FoC.Grammars.PDAToCFG
@@ -36,6 +38,8 @@ small BNF conveniences that the book expands into ordinary productions.
 derivations. {module}`FoC.Grammars.Parsing` provides the sound executable
 LL(1) parser, finite table and conflict checks, and fixed-point
 {lit}`FIRST`/{lit}`FOLLOW` approximants.
+{module}`FoC.Grammars.CFL.Closure` supplies intersection and subtraction
+closure with regular and finite languages.
 
 Parse trees do more than present derivations visually. They also supply the
 height, frontier, subtree, and repetition machinery needed for the
@@ -45,6 +49,8 @@ context-free-language pumping argument.
 
 The automata side begins with {module}`FoC.Grammars.PDA`, which models
 pushdown automata by configurations with a list-valued stack.  The conversion
+module {module}`FoC.Grammars.PDA.Intersection` combines a PDA with a DFA and
+proves exact language intersection while preserving finite presentation. The
 files, {module}`FoC.Grammars.CFGToPDA` and {module}`FoC.Grammars.PDAToCFG`,
 state the standard constructions in reusable form.  {module}`FoC.Grammars.PDANormalize`
 provides the finite pop-normalization layer needed by the PDA-to-CFG

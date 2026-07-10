@@ -139,6 +139,12 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Grammars.CFG.Concat",
   "FoC.Grammars.CFG.Star"
 ]
+"FoC.Grammars.CFL" = [
+  "FoC.Grammars.CFL.Closure"
+]
+"FoC.Grammars.PDA" = [
+  "FoC.Grammars.PDA.Intersection"
+]
 "FoC.Grammars.PDANormalize" = [
   "FoC.Grammars.PDANormalize.Construction",
   "FoC.Grammars.PDANormalize.Forward",
@@ -319,11 +325,17 @@ title = "CFG to PDA"
 [modules."FoC.Grammars.CFL"]
 title = "Context-Free Languages"
 
+[modules."FoC.Grammars.CFL.Closure"]
+title = "CFL Closure with Regular Languages"
+
 [modules."FoC.Grammars.GeneralGrammar"]
 title = "General Grammars"
 
 [modules."FoC.Grammars.PDA"]
 title = "Pushdown Automata"
+
+[modules."FoC.Grammars.PDA.Intersection"]
+title = "PDA Intersection with DFAs"
 
 [modules."FoC.Grammars.PDANormalize"]
 title = "PDA Normalization"
