@@ -32,6 +32,21 @@ theorem fixedDescriptionBoundedSimulatorCanonicalOutputTape_bridge
     EncRewriters.BoundedLayoutRunner.moveLeft_moveRight_equiv_self
       (FixedDescriptionBoundedSimulatorCanonicalOutputTape attempt L)
 
+/--
+Canonical-input-only fuel-simulator parser endpoints used by the exact-fuel
+runner.  The runner starts from a known generated fuel input, so its forward
+and closed specifications need pointwise determinism, not inversion from
+arbitrary starting tapes.
+-/
+private def FuelSimulatorStructuredPointwiseEndpointEquivConstruction : Prop :=
+  forall attempt : MachineDescription,
+    exists parser : MachineDescription,
+      parser.SubroutineReady ∧
+        forall i : FuelSimulatorStructuredIndex,
+          parser.HaltsFromTapeEquiv
+            (fuelSimulatorStructuredInputTape i)
+            (fuelSimulatorStructuredOutputTape attempt i)
+
 private theorem fuelSimulatorStructuredOutputTape_handoffEquiv
     (attempt : MachineDescription)
     (i : FuelSimulatorStructuredIndex)
@@ -283,10 +298,9 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         attempt w result limit fuel).mp (by
           simpa [L] using houtputTransform)
 
-theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_endpointEquiv_extractor
+private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_pointwiseEndpointEquiv_extractor
     (hparserConstruction :
-      forall attempt : MachineDescription,
-        FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt)
+      FuelSimulatorStructuredPointwiseEndpointEquivConstruction)
     (hsimulatorConstruction :
       FixedDescriptionBoundedSimulatorEquivConstruction)
     (hextractorConstruction :
@@ -294,17 +308,14 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction := by
   intro attempt _invoker _hinvoker
   rcases hparserConstruction attempt with
-    ⟨Wparser, _initialized, _lowered, hparserEndpoint⟩
+    ⟨parser, hparserReady, hparserForward⟩
   rcases hsimulatorConstruction attempt with ⟨simulator, hsimulator⟩
   rcases hextractorConstruction attempt with ⟨extractor, hextractor⟩
-  let parser := Wparser.machine
   let simExtractor :=
     EncRewriters.BoundedLayoutRunner.SeqViaCanonical
       simulator extractor
   let runner :=
     seqSubroutine parser simExtractor tapeCodePrimitiveCodeWordHandoffMove
-  have hparserReady : parser.SubroutineReady := by
-    simpa [parser] using Wparser.machine_subroutineReady
   have hsimulatorReady : simulator.SubroutineReady :=
     hsimulator.left
   have hextractorReady : extractor.SubroutineReady :=
@@ -323,8 +334,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         attempt w limit fuel
     let i : FuelSimulatorStructuredIndex := ⟨w, limit, fuel⟩
     rcases
-        Structured3EndpointEquivIndexedFamilySpec.forward
-          hparserEndpoint i with
+        hparserForward i with
       ⟨Tparser, hparserFromTape, hTparser⟩
     have hparserHalt :
         parser.HaltsWithTape
@@ -335,7 +345,7 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
       rcases hparserFromTape with ⟨n, hn⟩
       exact
         ⟨n, by
-          simpa [parser, HaltsWithTapeIn, HaltsFromTapeIn,
+          simpa [HaltsWithTapeIn, HaltsFromTapeIn,
             MachineDescription.initial, fuelSimulatorStructuredInputTape,
             fuelSimulatorStructuredInputCode, i] using hn⟩
     have hsimForward :
@@ -422,31 +432,15 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
       rcases hparserHalt with ⟨n, hn⟩
       exact
         ⟨n, by
-          simpa [parser, HaltsWithTapeIn, HaltsFromTapeIn,
+          simpa [HaltsWithTapeIn, HaltsFromTapeIn,
             MachineDescription.initial] using hn⟩
-    rcases
-        Structured3EndpointEquivIndexedFamilySpec.closedIndex
-          hparserEndpoint
-          (Tape.input
-            (encodeCodeWordAsInput
-              (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-                w limit fuel)))
-          Tparser hparserFromTape with
-      ⟨i, hinput, hTparser⟩
-    have hcode :
-        PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-            w limit fuel =
-          fuelSimulatorStructuredInputCode i :=
-      fuelSimulatorStructuredInputCode_eq_of_inputTape_eq hinput
-    rcases i with ⟨wi, limiti, fueli⟩
-    simp [fuelSimulatorStructuredInputCode] at hcode
-    rcases
-        pairedRecognizerDovetailControllerStageAttemptFuelInputCode_injective
-          hcode with
-      ⟨hw, hlimit, hfuel⟩
-    subst wi
-    subst limiti
-    subst fueli
+    have hTparser :
+        Tape.Equiv Tparser
+          (fuelSimulatorStructuredOutputTape
+            attempt ⟨w, limit, fuel⟩) :=
+      haltsFromTape_equiv_target_of_forward
+        hparserReady hparserFromTape
+        (hparserForward ⟨w, limit, fuel⟩)
     have hparserHandoffEquiv :
         Tape.Equiv
           (Tape.move tapeCodePrimitiveCodeWordHandoffMove Tparser)
@@ -518,6 +512,59 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
         attempt w result limit fuel).mp (by
           simpa [L] using houtputTransform)
 
+theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_endpointEquiv_extractor
+    (hparserConstruction :
+      forall attempt : MachineDescription,
+        FuelSimulatorStructuredEndpointEquivIndexedConstruction attempt)
+    (hsimulatorConstruction :
+      FixedDescriptionBoundedSimulatorEquivConstruction)
+    (hextractorConstruction :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction := by
+  apply
+    pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_pointwiseEndpointEquiv_extractor
+  · intro attempt
+    rcases hparserConstruction attempt with
+      ⟨W, _initialized, _lowered, hspec⟩
+    exact ⟨W.machine, W.machine_subroutineReady, hspec.forward⟩
+  · exact hsimulatorConstruction
+  · exact hextractorConstruction
+
+private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
+    FuelSimulatorStructuredPointwiseEndpointEquivConstruction := by
+  intro attempt
+  rcases fuelSimulatorStructuredLoweredCoreConstruction_core attempt with ⟨C⟩
+  rcases structured3EndpointTape2ProjectorConstruction_core with
+    ⟨projector, hprojector⟩
+  let W : Structured3EndpointWrapper :=
+    { core := C.core
+      initializer := structured3InputEmbeddingEmitterDescription
+      projector := projector
+      coreWellFormed := C.coreWellFormed
+      coreHaltTransitionFree := C.coreHaltTransitionFree
+      coreSupportsRows := C.coreSupportsRows
+      initializerSubroutineReady :=
+        structured3InputEmbeddingEmitterDescription_spec.left
+      projectorSubroutineReady := hprojector.subroutineReady }
+  refine ⟨W.machine, W.machine_subroutineReady, ?_⟩
+  intro i
+  apply W.haltsFromTapeEquivGeneral
+    (Tinit := fuelSimulatorStructuredInitializedTape i)
+    (Tlowered := fuelSimulatorStructuredLoweredTape attempt i)
+  · simpa [W, fuelSimulatorStructuredInputTape,
+      fuelSimulatorStructuredInitializedTape,
+      fuelSimulatorStructuredOutputBuffer] using
+      structured3InputEmbeddingEmitterDescription_spec.right
+        (encodeCodeWordAsInput (fuelSimulatorStructuredInputCode i))
+  · simpa [W, Structured3EndpointWrapper.lowered] using
+      C.loweredCore.toEquivLoweredCoreSpec.forward i
+  · rw [C.loweredShape i]
+    simpa [W] using
+      hprojector.forward
+        (fuelSimulatorStructuredInputTape i)
+        Tape.blank
+        (fuelSimulatorStructuredOutputTape attempt i)
+
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=
   pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_of_endpointEquivIndexed
@@ -525,11 +572,10 @@ private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubr
 
 private theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction :=
-  by
-    -- Remaining finite-table obligation: build the fuel-simulator parser
-    -- endpoint without relying on arbitrary-start closedness for unmarked input
-    -- tapes.
-    sorry
+  pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClosedConstruction_of_parser_pointwiseEndpointEquiv_extractor
+    fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core
+    EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner
+    pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf
 
 theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf :
     PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction :=
