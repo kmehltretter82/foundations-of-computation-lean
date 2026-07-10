@@ -1,6 +1,5 @@
-import FoC.Foundation.Sets
-import FoC.Foundation.Finite
-import FoC.Languages.Regular
+import FoC.Languages.Language
+import FoC.Languages.WordCountable
 
 set_option doc.verso true
 
@@ -27,9 +26,8 @@ The concrete alphabet types below give the book's binary and a/b examples
 small finite types, so later automata and grammar examples can state
 membership facts with actual words. The accompanying witnesses
 {lit}`BitAlphabet` and {lit}`ABAlphabet` record the book's convention that these
-alphabets are finite; the later sections do not consume these two witnesses
-directly, but instead pass explicit symbol lists or build their own
-finite-state witnesses where finiteness is needed.
+alphabets are finite. The automata-to-expression API and later chapter bridges
+accept these witnesses directly when alphabet enumeration is required.
 
 The key modeling choice is extensional: a language is not a list of words, but
 a predicate saying which words belong. This is why theorems about language
@@ -39,22 +37,26 @@ operations look like set-theoretic membership laws.
 open Foundation
 open Languages
 
+/-- The binary alphabet used by the book's automata examples. -/
 inductive Bit where
   | zero
   | one
 deriving DecidableEq
 
+/-- The two-symbol alphabet used by the book's regular-language examples. -/
 inductive AB where
   | a
   | b
 deriving DecidableEq
 
+/-- A finite witness for the binary alphabet. -/
 def BitAlphabet : FiniteType Bit where
   elems := [Bit.zero, Bit.one]
   complete := by
     intro x
     cases x <;> simp
 
+/-- A finite witness for the two-symbol alphabet. -/
 def ABAlphabet : FiniteType AB where
   elems := [AB.a, AB.b]
   complete := by
@@ -200,17 +202,32 @@ theorem singleton_language_finite (w : Word alpha) :
   FoC.Foundation.FSet.singleton_finite w
 
 /-!
-## Diagonalization
+## Countability and Diagonalization
 
-The final theorem is the Cantor-style statement from the section: there is no
-word-indexed listing of all languages over an alphabet. This is the language
-version of the powerset diagonal argument from {module}`FoC.Foundation.Sets`.
+Words over a finite nonempty alphabet are countably infinite. Cantor's
+diagonal argument then proves the book's theorem that the collection of all
+languages over that alphabet is uncountable. The word-indexed formulation is
+also retained as the direct powerset obstruction.
 
 Even when the alphabet is small, the set of all languages over that alphabet
 is too large to be listed by words. The proof is the same diagonal idea as for
 powersets: a proposed list misses the language that flips membership at each
 listed word.
 -/
+
+/-- Words over a finite nonempty alphabet are countably infinite. -/
+theorem words_over_finite_nonempty_alphabet_countably_infinite
+    (alphabet : FiniteType alpha) (a : alpha) :
+    FSet.CountablyInfinite (FSet.Univ : FSet (Word alpha)) :=
+  Word.univ_countablyInfinite alphabet a
+
+/-- The set of all languages over a finite nonempty alphabet is uncountable. -/
+theorem languages_over_finite_nonempty_alphabet_uncountable
+    (alphabet : FiniteType alpha) (a : alpha) :
+    FSet.Uncountable (FSet.Univ : FSet (Language alpha)) := by
+  change FSet.Uncountable (FSet.Univ : FSet (FSet (Word alpha)))
+  exact FSet.univ_fset_uncountable_of_countablyInfinite
+    (Word.univ_countablyInfinite alphabet a)
 
 theorem no_word_indexed_listing_of_all_languages
     (f : Word alpha -> Language alpha) :

@@ -684,6 +684,67 @@ theorem tuples_nodup {alpha : Type u} {choices : List alpha}
 
 end ListCard
 
+namespace FiniteType
+
+/-!
+**Finite powerset types.**
+
+The powerset of a finite type is itself finite.  The construction enumerates
+all sublists of a covering list and interprets each sublist extensionally as a
+predicate set.  It is noncomputable because equality and membership of
+arbitrary predicate sets are classical at this boundary.
+-/
+
+private theorem filter_mem_sublists (xs : List alpha) (p : alpha -> Prop)
+    [DecidablePred p] :
+    xs.filter (fun x => decide (p x)) ∈ ListCard.Sublists xs := by
+  induction xs with
+  | nil =>
+      simp [ListCard.Sublists]
+  | cons x rest ih =>
+      by_cases hx : p x
+      · apply List.mem_append.mpr
+        apply Or.inr
+        apply List.mem_map.mpr
+        exists rest.filter (fun y => decide (p y))
+        constructor
+        · exact ih
+        · simp [hx]
+      · apply List.mem_append.mpr
+        apply Or.inl
+        simpa [hx] using ih
+
+/-- A classical finite witness for all predicate subsets of a finite type. -/
+noncomputable def powerset (finite : FiniteType alpha) :
+    FiniteType (FSet alpha) := by
+  classical
+  exact
+    { elems := (ListCard.Sublists finite.elems).map FSet.OfList
+      complete := by
+        intro A
+        let xs := finite.elems.filter (fun x => decide (x ∈ A))
+        have hxs : xs ∈ ListCard.Sublists finite.elems := by
+          exact filter_mem_sublists finite.elems (fun x => x ∈ A)
+        have hA : A = FSet.OfList xs := by
+          funext x
+          apply propext
+          constructor
+          · intro hxA
+            show x ∈ xs
+            have hxFilter : x ∈ finite.elems ∧ x ∈ A :=
+              And.intro (finite.complete x) hxA
+            simpa [xs] using hxFilter
+          · intro hx
+            change x ∈ xs at hx
+            have hxFilter : x ∈ finite.elems ∧ x ∈ A := by
+              simpa [xs] using hx
+            exact hxFilter.right
+        rw [hA]
+        apply List.mem_map.mpr
+        exists xs }
+
+end FiniteType
+
 namespace FSet
 
 /-!

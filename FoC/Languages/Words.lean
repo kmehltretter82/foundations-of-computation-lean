@@ -25,13 +25,14 @@ namespace FoC
 namespace Languages
 
 /-!
-# Word representation
+## Word representation
 
 Words are lists, with named constructors for the empty word, one-symbol words,
 concatenation, length, and reversal. These names keep the book-facing Lean
 statements close to the textbook notation.
 -/
 
+/-- A finite word over the alphabet type, represented by a list of symbols. -/
 def Word (alpha : Type u) : Type u :=
   List alpha
 
@@ -40,42 +41,50 @@ instance [DecidableEq alpha] : DecidableEq (Word alpha) :=
 
 namespace Word
 
+/-- The empty word. -/
 def Empty : Word alpha :=
   []
 
+/-- A one-symbol word. -/
 def Symbol (a : alpha) : Word alpha :=
   [a]
 
+/-- Concatenate two words. -/
 def Concat (x y : Word alpha) : Word alpha :=
   List.append x y
 
+/-- The number of symbols in a word. -/
 def Length (w : Word alpha) : Nat :=
   w.length
 
+/-- Reverse the order of a word's symbols. -/
 def Reverse (w : Word alpha) : Word alpha :=
   w.reverse
 
+/-- Concatenate a given number of copies of a word. -/
 def RepeatWord (w : Word alpha) : Nat -> Word alpha
   | 0 => []
   | n + 1 => List.append w (RepeatWord w n)
 
+/-- A word consisting of a given number of copies of one symbol. -/
 def RepeatSymbol (a : alpha) (n : Nat) : Word alpha :=
   List.replicate n a
 
 /-!
-# Counting symbols
+## Counting symbols
 
 The counting operation is used in non-regular-language and context-free
 language examples where statements compare the number of occurrences of
 particular alphabet symbols.
 -/
 
+/-- Count the occurrences of a symbol in a word. -/
 def Count [DecidableEq alpha] (a : alpha) : Word alpha -> Nat
   | [] => 0
   | b :: w => (if b = a then 1 else 0) + Count a w
 
 /-!
-# Word algebra
+## Word algebra
 
 These lemmas collect the algebra of empty words, associativity, reversal,
 repetition, and symbol counts needed by later automata and pumping arguments.
@@ -149,7 +158,6 @@ theorem count_concat [DecidableEq alpha] (a : alpha) (x y : Word alpha) :
       change Count a (List.append x y) = Count a x + Count a y at ih
       by_cases h : b = a
       · simp [Count, h]
-        have ih' : Count a (List.append x y) = Count a x + Count a y := ih
         change 1 + Count a (List.append x y) = 1 + Count a x + Count a y
         lia
       · simp [Count, h]

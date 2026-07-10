@@ -45,7 +45,7 @@ def PDAIntersectDFA (P : PDA input stack pstate) (D : DFA input dstate) :
     | none => P.transition q.1 none pop r.1 push ∧ r.2 = q.2
     | some a => P.transition q.1 (some a) pop r.1 push ∧ r.2 = D.step q.2 a
   accept := fun q => P.accept q.1 ∧ D.accept q.2
-  statesFinite := FiniteState.Product P.statesFinite D.statesFinite
+  statesFinite := FiniteType.product P.statesFinite D.statesFinite
 
 structure DFAAcceptingPresentation (D : DFA input dstate) where
   acceptingStates : List dstate

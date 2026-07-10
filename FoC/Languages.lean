@@ -1,4 +1,5 @@
 import FoC.Languages.Words
+import FoC.Languages.WordCountable
 import FoC.Languages.Language
 import FoC.Languages.RegularExpression
 import FoC.Languages.DFA

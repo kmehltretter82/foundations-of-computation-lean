@@ -23,12 +23,13 @@ namespace Languages
 namespace Pumping
 
 /-!
-# Pumping vocabulary
+## Pumping vocabulary
 
 A decomposition splits a long word into prefix, nonempty loop, and suffix, with
 the loop repeatable any number of times.
 -/
 
+/-- A legal pumping split of a word at a proposed pumping length. -/
 def Decomposition (L : Language alpha) (n : Nat) (w : Word alpha) : Prop :=
   exists x y z : Word alpha,
     w = Word.Concat x (Word.Concat y z) ∧
@@ -36,22 +37,22 @@ def Decomposition (L : Language alpha) (n : Nat) (w : Word alpha) : Prop :=
     Word.Length y > 0 ∧
     forall k : Nat, Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L
 
+/-- A positive bound for which every sufficiently long word has a pumping split. -/
 def PumpingLength (L : Language alpha) (n : Nat) : Prop :=
   n > 0 ∧ forall w, w ∈ L -> n <= Word.Length w -> Decomposition L n w
 
+/-- The language admits at least one pumping length. -/
 def HasPumpingProperty (L : Language alpha) : Prop :=
   exists n, PumpingLength L n
 
-def PumpingLemmaConclusion (L : Language alpha) : Prop :=
-  RegularLanguage.Regular L -> HasPumpingProperty L
-
 /-!
-# Prefix states
+## Prefix states
 
 For a DFA run, the list of prefix states has one more entry than the input word
 has symbols. A long enough word therefore repeats a state.
 -/
 
+/-- The states visited before and after every symbol of a DFA run. -/
 def PrefixStatesFrom (M : DFA alpha state) : state -> Word alpha -> List state
   | q, [] => [q]
   | q, a :: w => q :: PrefixStatesFrom M (M.step q a) w
@@ -105,7 +106,7 @@ private theorem duplicate_indices_of_length_gt {α : Type u} [DecidableEq α]
   Foundation.list_duplicate_indices_of_length_gt hlen hall
 
 /-!
-# Word splitting at repeated states
+## Word splitting at repeated states
 
 Repeated prefix states determine the pumping split. These lemmas reconstruct
 the word around the repeated segment and prove the repeated segment is nonempty.
@@ -184,22 +185,24 @@ private theorem runFrom_repeatWord_loop (M : DFA alpha state) (q : state)
       rw [Word.repeatWord_succ, DFA.runFrom_append, hloop, ih]
 
 /-!
-# DFA pumping lemma
+## DFA pumping lemma
 
 The repeated state in a long DFA run yields a loop that can be traversed any
 number of times without changing the accepting state.
 
 The length below is the length of the DFA's finite-state witness list. Since
-{lit}`FiniteType` allows duplicates, this is a valid finite bound rather than
+{name}`FoC.Foundation.FiniteType` allows duplicates, this is a valid finite bound rather than
 a canonical number of states.
 -/
 
+/-- The finite-state witness length is a pumping length for a DFA language. -/
 theorem dfa_pumpingLength [DecidableEq state] (M : DFA alpha state) :
-    PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) := by
+    PumpingLength (DFA.Language M) M.statesFinite.elems.length := by
   constructor
-  · lia
+  · exact List.length_pos_iff_exists_mem.mpr
+      ⟨M.start, M.statesFinite.complete M.start⟩
   · intro w hw hlen
-    let n := M.statesFinite.elems.length + 1
+    let n := M.statesFinite.elems.length
     let pref : Word alpha := List.take n w
     let states := PrefixStatesFrom M M.start pref
     have hprefLen : Word.Length pref = n := by
@@ -213,7 +216,6 @@ theorem dfa_pumpingLength [DecidableEq state] (M : DFA alpha state) :
     have hmore : M.statesFinite.elems.length < states.length := by
       rw [hstatesLen]
       simp [n]
-      lia
     have hall : forall q, q ∈ states -> q ∈ M.statesFinite.elems := by
       intro q hq
       exact prefixStatesFrom_all_mem M M.start pref hq
@@ -326,11 +328,11 @@ theorem dfa_pumpingLength [DecidableEq state] (M : DFA alpha state) :
 
 theorem dfa_hasPumpingProperty [DecidableEq state] (M : DFA alpha state) :
     HasPumpingProperty (DFA.Language M) := by
-  exists M.statesFinite.elems.length + 1
+  exists M.statesFinite.elems.length
   exact dfa_pumpingLength M
 
 /-!
-# Transfer to regular languages
+## Transfer to regular languages
 
 The DFA pumping property is transported across language equality and then
 through the regular-language to DFA-recognizable bridge.
@@ -400,16 +402,12 @@ theorem dfa_recognizable_hasPumpingProperty {L : Language alpha}
       | intro M hM =>
           exact hasPumpingProperty_of_equal hM (dfa_hasPumpingProperty M)
 
+/-- Every regular language has the pumping property. -/
 theorem regular_hasPumpingProperty {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
     HasPumpingProperty L :=
   dfa_recognizable_hasPumpingProperty
     (RegularLanguage.regular_is_dfa_recognizable hL)
-
-theorem regular_pumpingLemmaConclusion (L : Language alpha) :
-    PumpingLemmaConclusion L := by
-  intro hreg
-  exact regular_hasPumpingProperty hreg
 
 theorem pumpingLength_mono {L : Language alpha} {n m : Nat}
     (hnm : n <= m) (h : PumpingLength L n) :
@@ -435,7 +433,7 @@ theorem pumpingLength_mono {L : Language alpha} {n m : Nat}
                     exact hrest.right
 
 /-!
-# Pumping counterexamples
+## Pumping counterexamples
 
 These are the contrapositive tools used in the book examples: exhibit, for
 every proposed pumping length, a long word whose every valid split fails.
@@ -486,17 +484,12 @@ theorem not_hasPumpingProperty_of_counterexamples {L : Language alpha}
           exact not_pumpingLength_of_counterexample hw.left hw.right.left
             hw.right.right hn
 
+/-- Failure of the pumping property implies non-regularity. -/
 theorem not_regular_of_no_pumping_property {L : Language alpha}
-    (pumpingLemma : PumpingLemmaConclusion L)
     (hNoPump : ¬ HasPumpingProperty L) :
     ¬ RegularLanguage.Regular L := by
   intro hreg
-  exact hNoPump (pumpingLemma hreg)
-
-theorem not_regular_of_no_pumping_property_regular {L : Language alpha}
-    (hNoPump : ¬ HasPumpingProperty L) :
-    ¬ RegularLanguage.Regular L :=
-  not_regular_of_no_pumping_property (regular_pumpingLemmaConclusion L) hNoPump
+  exact hNoPump (regular_hasPumpingProperty hreg)
 
 end Pumping
 end Languages

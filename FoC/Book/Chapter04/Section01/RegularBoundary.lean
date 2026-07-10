@@ -130,8 +130,7 @@ theorem anbn_language_not_regular :
       cases hstate with
       | intro M hM =>
           apply RegularLanguage.dfa_recognizable_regular
-            Chapter03.Section01.ABAlphabet.elems
-            Chapter03.Section01.ABAlphabet.complete
+            Chapter03.Section01.ABAlphabet
           exists state
           exists RelabelDFA abFromChapter03 M
           intro w

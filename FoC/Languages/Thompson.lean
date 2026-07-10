@@ -28,35 +28,29 @@ open Foundation
 namespace Thompson
 
 /-!
-# Base NFAs
+## Base NFAs
 
 The base regular expressions are implemented by tiny two-state NFAs for the
 empty language, epsilon, and a single symbol.
 -/
 
-def BoolFinite : FiniteType Bool where
-  elems := [false, true]
-  complete := by
-    intro b
-    cases b <;> simp
-
 def EmptyNFA (alpha : Type u) : NFA alpha Bool where
   start := false
   step := fun _ _ => FSet.Empty
   accept := fun q => q = true
-  statesFinite := BoolFinite
+  statesFinite := FiniteType.bool
 
 def EpsilonNFA (alpha : Type u) : NFA alpha Bool where
   start := false
   step := fun q input r => q = false ∧ input = none ∧ r = true
   accept := fun q => q = true
-  statesFinite := BoolFinite
+  statesFinite := FiniteType.bool
 
 def SymbolNFA (a : alpha) : NFA alpha Bool where
   start := false
   step := fun q input r => q = false ∧ input = some a ∧ r = true
   accept := fun q => q = true
-  statesFinite := BoolFinite
+  statesFinite := FiniteType.bool
 
 private theorem empty_path_no_accept {w : Word alpha} {q : Bool}
     (hpath : NFA.Path (EmptyNFA alpha) false w q) :
@@ -158,7 +152,7 @@ theorem symbolNFA_language (a : alpha) :
     · rfl
 
 /-!
-# Union construction
+## Union construction
 
 The union NFA adds a fresh start state with epsilon transitions into the two
 component machines and preserves accepting states from either branch.
@@ -380,19 +374,8 @@ theorem unionNFA_language (M : NFA alpha leftState) (N : NFA alpha rightState) :
     | inl hM => exact Or.inl ((NFA.pathAccepts_iff_accepts M w).mpr hM)
     | inr hN => exact Or.inr ((NFA.pathAccepts_iff_accepts N w).mpr hN)
 
-def SumFinite (leftFinite : FiniteType leftState) (rightFinite : FiniteType rightState) :
-    FiniteType (Sum leftState rightState) where
-  elems := (leftFinite.elems.map Sum.inl) ++ (rightFinite.elems.map Sum.inr)
-  complete := by
-    intro q
-    cases q with
-    | inl q =>
-        simp [leftFinite.complete q]
-    | inr q =>
-        simp [rightFinite.complete q]
-
 /-!
-# Concatenation construction
+## Concatenation construction
 
 The concatenation NFA starts in the left machine and uses epsilon transitions
 from left accepting states into the right start state.
@@ -412,7 +395,7 @@ def ConcatNFA (M : NFA alpha leftState) (N : NFA alpha rightState) :
     match q with
     | Sum.inl _ => False
     | Sum.inr q => N.accept q
-  statesFinite := SumFinite M.statesFinite N.statesFinite
+  statesFinite := FiniteType.sum M.statesFinite N.statesFinite
 
 private theorem concat_left_path {M : NFA alpha leftState} {N : NFA alpha rightState}
     {q r : leftState} {w : Word alpha}
@@ -639,18 +622,8 @@ theorem concatNFA_language (M : NFA alpha leftState) (N : NFA alpha rightState) 
     exact (NFA.pathAccepts_iff_accepts (ConcatNFA M N) w).mp
       ((concatNFA_pathAccepts (M := M) (N := N) w).mpr hw)
 
-def OptionFinite (stateFinite : FiniteType state) : FiniteType (Option state) where
-  elems := none :: stateFinite.elems.map some
-  complete := by
-    intro q
-    cases q with
-    | none =>
-        simp
-    | some q =>
-        simp [stateFinite.complete q]
-
 /-!
-# Star construction
+## Star construction
 
 The star NFA adds a fresh accepting start state and loops from accepting
 component states back to the component start by epsilon transitions.
@@ -665,7 +638,7 @@ def StarNFA (M : NFA alpha state) : NFA alpha (Option state) where
         (exists r, r ∈ M.step q input ∧ next = some r) ∨
           (input = none ∧ M.accept q ∧ next = none)
   accept := fun q => q = none
-  statesFinite := OptionFinite M.statesFinite
+  statesFinite := FiniteType.option M.statesFinite
 
 private theorem star_inner_path {M : NFA alpha state} {q r : state} {w : Word alpha}
     (hpath : NFA.Path M q w r) :
@@ -849,74 +822,8 @@ theorem starNFA_language (M : NFA alpha state) :
     exact (NFA.pathAccepts_iff_accepts (StarNFA M) w).mp
       ((starNFA_pathAccepts (M := M) w).mpr hw)
 
-private theorem union_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
-    (hL : Language.Equal L₁ L₂) (hM : Language.Equal M₁ M₂) :
-    Language.Equal (Language.Union L₁ M₁) (Language.Union L₂ M₂) := by
-  intro w
-  constructor
-  · intro hw
-    cases hw with
-    | inl h => exact Or.inl ((hL w).mp h)
-    | inr h => exact Or.inr ((hM w).mp h)
-  · intro hw
-    cases hw with
-    | inl h => exact Or.inl ((hL w).mpr h)
-    | inr h => exact Or.inr ((hM w).mpr h)
-
-private theorem concat_equal_of_equal {L₁ L₂ M₁ M₂ : Language alpha}
-    (hL : Language.Equal L₁ L₂) (hM : Language.Equal M₁ M₂) :
-    Language.Equal (Language.Concat L₁ M₁) (Language.Concat L₂ M₂) := by
-  intro w
-  constructor
-  · intro hw
-    cases hw with
-    | intro x hx =>
-        cases hx with
-        | intro y hy =>
-            cases hy with
-            | intro hxL hrest =>
-                cases hrest with
-                | intro hyM hwEq =>
-                    exists x
-                    exists y
-                    exact And.intro ((hL x).mp hxL) (And.intro ((hM y).mp hyM) hwEq)
-  · intro hw
-    cases hw with
-    | intro x hx =>
-        cases hx with
-        | intro y hy =>
-            cases hy with
-            | intro hxL hrest =>
-                cases hrest with
-                | intro hyM hwEq =>
-                    exists x
-                    exists y
-                    exact And.intro ((hL x).mpr hxL) (And.intro ((hM y).mpr hyM) hwEq)
-
-private theorem star_equal_of_equal {L M : Language alpha}
-    (h : Language.Equal L M) :
-    Language.Equal (Language.Star L) (Language.Star M) := by
-  intro w
-  constructor
-  · intro hw
-    cases hw with
-    | intro pieces hpieces =>
-        exists pieces
-        constructor
-        · intro p hp
-          exact (h p).mp (hpieces.left p hp)
-        · exact hpieces.right
-  · intro hw
-    cases hw with
-    | intro pieces hpieces =>
-        exists pieces
-        constructor
-        · intro p hp
-          exact (h p).mpr (hpieces.left p hp)
-        · exact hpieces.right
-
 /-!
-# Structural induction
+## Structural induction
 
 The final compiler recursively translates any regular expression into an NFA
 whose accepted language is exactly the expression's denotation.
@@ -947,7 +854,7 @@ def Compile : (r : RegExp alpha) -> RegexNFA r
         machine := UnionNFA cr.machine cs.machine
         correct := FoC.Foundation.FSet.equal_trans
           (unionNFA_language cr.machine cs.machine)
-          (union_equal_of_equal cr.correct cs.correct) }
+          (Language.union_congr cr.correct cs.correct) }
   | RegExp.seq r s =>
       let cr := Compile r
       let cs := Compile s
@@ -955,14 +862,14 @@ def Compile : (r : RegExp alpha) -> RegexNFA r
         machine := ConcatNFA cr.machine cs.machine
         correct := FoC.Foundation.FSet.equal_trans
           (concatNFA_language cr.machine cs.machine)
-          (concat_equal_of_equal cr.correct cs.correct) }
+          (Language.concat_congr cr.correct cs.correct) }
   | RegExp.star r =>
       let cr := Compile r
       { state := Option cr.state
         machine := StarNFA cr.machine
         correct := FoC.Foundation.FSet.equal_trans
           (starNFA_language cr.machine)
-          (star_equal_of_equal cr.correct) }
+          (Language.star_congr cr.correct) }
 
 theorem regularExpression_nfa (r : RegExp alpha) :
     NFA.Recognizable (RegExp.Denote r) := by

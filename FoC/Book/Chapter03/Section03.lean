@@ -27,8 +27,8 @@ open Languages
 
 Optional, plus, and character classes expand to union, concatenation, star,
 and finite alternatives. Their canonical membership theorems are
-{lit}`RegExp.optional_membership`, {lit}`RegExp.plus_membership`, and
-{lit}`RegExp.charClass_denote`. The sample digit class demonstrates
+{name}`RegExp.optional_membership`, {name}`RegExp.plus_membership`, and
+{name}`RegExp.charClass_denote`. The sample digit class demonstrates
 character-class membership for a concrete one-symbol word.
 
 The digit-class example is deliberately simple. It shows how a character class

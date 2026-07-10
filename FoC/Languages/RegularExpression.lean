@@ -23,12 +23,13 @@ namespace FoC
 namespace Languages
 
 /-!
-# Expression syntax
+## Expression syntax
 
 Regular expressions are syntax trees with constructors for the empty language,
 epsilon, symbols, union, concatenation, and Kleene star.
 -/
 
+/-- Syntax trees for regular expressions over an alphabet. -/
 inductive RegExp (alpha : Type u) where
   | empty : RegExp alpha
   | eps : RegExp alpha
@@ -40,12 +41,13 @@ inductive RegExp (alpha : Type u) where
 namespace RegExp
 
 /-!
-# Denotational semantics
+## Denotational semantics
 
 The meaning of an expression is a language, defined structurally by translating
 each syntactic constructor to the corresponding language operation.
 -/
 
+/-- The language denoted by a regular expression. -/
 def Denote : RegExp alpha -> Language alpha
   | empty => Language.Empty
   | eps => Language.Singleton Word.Empty
@@ -54,26 +56,31 @@ def Denote : RegExp alpha -> Language alpha
   | seq r s => Language.Concat (Denote r) (Denote s)
   | star r => Language.Star (Denote r)
 
+/-- An expression generates a language when its denotation is extensionally equal to it. -/
 def Generates (r : RegExp alpha) (L : Language alpha) : Prop :=
   Language.Equal (Denote r) L
 
+/-- A language is regular when some regular expression generates it. -/
 def Regular (L : Language alpha) : Prop :=
   exists r : RegExp alpha, Generates r L
 
 /-!
-# Derived expression forms
+## Derived expression forms
 
 The textbook abbreviations such as optional, plus, character classes, finite
 alternations, finite languages, and reversal are encoded as ordinary expression
 transformations.
 -/
 
+/-- The derived expression matching either the input expression or epsilon. -/
 def Optional (r : RegExp alpha) : RegExp alpha :=
   alt r eps
 
+/-- The derived expression matching one or more repetitions. -/
 def Plus (r : RegExp alpha) : RegExp alpha :=
   seq r (star r)
 
+/-- A finite alternative of one-symbol expressions. -/
 def CharClass : List alpha -> RegExp alpha
   | [] => empty
   | a :: rest => alt (sym a) (CharClass rest)
@@ -82,14 +89,17 @@ def AltList : List (RegExp alpha) -> RegExp alpha
   | [] => empty
   | r :: rest => alt r (AltList rest)
 
+/-- The exact regular expression for one word. -/
 def OfWord : Word alpha -> RegExp alpha
   | [] => eps
   | a :: w => seq (sym a) (OfWord w)
 
+/-- A regular expression for a finite list of words. -/
 def OfFiniteLanguage : List (Word alpha) -> RegExp alpha
   | [] => empty
   | w :: ws => alt (OfWord w) (OfFiniteLanguage ws)
 
+/-- Transform an expression to denote the reversal of its language. -/
 def Reverse : RegExp alpha -> RegExp alpha
   | empty => empty
   | eps => eps
@@ -99,14 +109,7 @@ def Reverse : RegExp alpha -> RegExp alpha
   | star r => star (Reverse r)
 
 /-!
-# Semantic equations
-
-These theorems expose the membership rules for each expression constructor and
-register the base regular languages.
--/
-
-/-!
-# Closure constructions
+## Closure constructions
 
 The remaining theorems prove that the semantic language class is closed under
 reversal, union, concatenation, star, and finite-language constructions.
@@ -205,93 +208,26 @@ theorem reverse_denote (r : RegExp alpha) :
 
 theorem regular_reverse {L : Language alpha}
     (hL : Regular L) : Regular (Language.Reverse L) := by
-  cases hL with
-  | intro r hr =>
-      exists Reverse r
-      exact FoC.Foundation.FSet.equal_trans (reverse_denote r)
-        (by
-          intro w
-          constructor
-          · intro hw
-            exact (hr (Word.Reverse w)).mp hw
-          · intro hw
-            exact (hr (Word.Reverse w)).mpr hw)
+  rcases hL with ⟨r, hr⟩
+  exact ⟨Reverse r, FoC.Foundation.FSet.equal_trans
+    (reverse_denote r) (Language.reverse_congr hr)⟩
 
 theorem regular_union {L M : Language alpha}
     (hL : Regular L) (hM : Regular M) : Regular (Language.Union L M) := by
-  cases hL with
-  | intro r hr =>
-      cases hM with
-      | intro s hs =>
-          exists alt r s
-          intro w
-          constructor
-          · intro hw
-            cases hw with
-            | inl hwr => exact Or.inl ((hr w).mp hwr)
-            | inr hws => exact Or.inr ((hs w).mp hws)
-          · intro hw
-            cases hw with
-            | inl hwL => exact Or.inl ((hr w).mpr hwL)
-            | inr hwM => exact Or.inr ((hs w).mpr hwM)
+  rcases hL with ⟨r, hr⟩
+  rcases hM with ⟨s, hs⟩
+  exact ⟨alt r s, Language.union_congr hr hs⟩
 
 theorem regular_concat {L M : Language alpha}
     (hL : Regular L) (hM : Regular M) : Regular (Language.Concat L M) := by
-  cases hL with
-  | intro r hr =>
-      cases hM with
-      | intro s hs =>
-          exists seq r s
-          intro w
-          constructor
-          · intro hw
-            cases hw with
-            | intro x hx =>
-                cases hx with
-                | intro y hy =>
-                    cases hy with
-                    | intro hxR hrest =>
-                        cases hrest with
-                        | intro hyS hwEq =>
-                            exists x
-                            exists y
-                            exact And.intro ((hr x).mp hxR) (And.intro ((hs y).mp hyS) hwEq)
-          · intro hw
-            cases hw with
-            | intro x hx =>
-                cases hx with
-                | intro y hy =>
-                    cases hy with
-                    | intro hxL hrest =>
-                        cases hrest with
-                        | intro hyM hwEq =>
-                            exists x
-                            exists y
-                            exact And.intro ((hr x).mpr hxL) (And.intro ((hs y).mpr hyM) hwEq)
+  rcases hL with ⟨r, hr⟩
+  rcases hM with ⟨s, hs⟩
+  exact ⟨seq r s, Language.concat_congr hr hs⟩
 
 theorem regular_star {L : Language alpha} (hL : Regular L) :
     Regular (Language.Star L) := by
-  cases hL with
-  | intro r hr =>
-      exists star r
-      intro w
-      constructor
-      · intro hw
-        cases hw with
-        | intro pieces hpieces =>
-            exists pieces
-            constructor
-            · intro p hp
-              exact (hr p).mp (hpieces.left p hp)
-            · exact hpieces.right
-      · intro hw
-        cases hw with
-        | intro pieces hpieces =>
-            exists pieces
-            constructor
-            · intro p hp
-              exact (hr p).mpr (hpieces.left p hp)
-            · exact hpieces.right
+  rcases hL with ⟨r, hr⟩
+  exact ⟨star r, Language.star_congr hr⟩
 
 theorem optional_membership (r : RegExp alpha) (w : Word alpha) :
     w ∈ Denote (Optional r) <-> w ∈ Denote r ∨ w = Word.Empty :=

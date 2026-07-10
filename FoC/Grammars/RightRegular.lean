@@ -324,7 +324,7 @@ theorem rightRegularLanguage_regular (alphabet : List terminal)
           have hReg :
               Languages.RegularLanguage.Regular
                 (NFA.AcceptedLanguage (RightRegularNFA G)) :=
-            Languages.RegularLanguage.nfa_language_regular alphabet halphabet
+            Languages.RegularLanguage.nfa_language_regular_of_list alphabet halphabet
               (RightRegularNFA G)
           cases hReg with
           | intro r hr =>

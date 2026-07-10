@@ -12,7 +12,7 @@ set_option doc.verso true
 Used by:
 - Chapter 3, Section 3.6: regular-expression-to-NFA constructions
 
-The core {lit}`NFA.Accepts` definition is reachability-set based because that
+The core {name}`FoC.Languages.NFA.Accepts` definition is reachability-set based because that
 is convenient for subset construction.  Thompson-style constructions are easier
 to prove with explicit paths.  This module proves that both views agree.
 -/
@@ -25,13 +25,14 @@ open Foundation
 namespace NFA
 
 /-!
-# Explicit paths
+## Explicit paths
 
 The inductive path relation records a concrete accepting computation: epsilon
 steps may occur before reading the next input symbol, and word labels compose
 along the path.
 -/
 
+/-- An explicit NFA path whose label is the consumed input word. -/
 inductive Path (M : NFA alpha state) : state -> Word alpha -> state -> Prop where
   | nil (q : state) : Path M q Word.Empty q
   | eps {q r s : state} {w : Word alpha} :
@@ -39,11 +40,12 @@ inductive Path (M : NFA alpha state) : state -> Word alpha -> state -> Prop wher
   | sym {q r s : state} {a : alpha} {w : Word alpha} :
       r ∈ M.step q (some a) -> Path M r w s -> Path M q (a :: w) s
 
+/-- Acceptance witnessed by an explicit path to an accepting state. -/
 def PathAccepts (M : NFA alpha state) (w : Word alpha) : Prop :=
   exists q, Path M M.start w q ∧ M.accept q
 
 /-!
-# Empty paths and composition
+## Empty paths and composition
 
 These facts connect empty-word paths with epsilon reachability and show that
 paths compose across word concatenation.
@@ -93,7 +95,7 @@ theorem path_append {M : NFA alpha state} {q r s : state}
       exact Path.sym hstep (ih hyz)
 
 /-!
-# Closed reachable sets
+## Closed reachable sets
 
 The set-based semantics used by the subset construction is related back to
 explicit paths by closure lemmas for starts, next states, and reachable sets.
@@ -193,7 +195,7 @@ theorem reachFromSet_path_iff {M : NFA alpha state} {S : FSet state}
                   (Exists.intro p (And.intro hp.left hp.right))
 
 /-!
-# Acceptance equivalence
+## Acceptance equivalence
 
 The final theorem proves that the set-of-states acceptance predicate agrees
 with the explicit path semantics.

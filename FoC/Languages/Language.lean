@@ -32,13 +32,14 @@ namespace Languages
 open Foundation
 
 /-!
-# Predicates over words
+## Predicates over words
 
 A language is represented extensionally as a predicate on words. The empty,
 universal, singleton, pair, equality, and subset definitions mirror the first
 set-theoretic language operations from Chapter 3.
 -/
 
+/-- A formal language over an alphabet type, represented extensionally as a word predicate. -/
 def Language (alpha : Type u) : Type u :=
   Word alpha -> Prop
 
@@ -48,52 +49,63 @@ instance : Membership (Word alpha) (Language alpha) where
   mem L w := L w
 
 /-!
-# Boolean operations
+## Boolean operations
 
 Union, intersection, complement, and difference are pointwise set operations on
 the word predicate.
 -/
 
+/-- The language containing no words. -/
 def Empty : Language alpha :=
   fun _ => False
 
+/-- The language containing every word. -/
 def Universal : Language alpha :=
   fun _ => True
 
+/-- The language containing exactly one word. -/
 def Singleton (w : Word alpha) : Language alpha :=
   fun x => x = w
 
 def Pair (x y : Word alpha) : Language alpha :=
   fun w => w = x ∨ w = y
 
+/-- Extensional equality of languages. -/
 def Equal (L M : Language alpha) : Prop :=
   FSet.Equal L M
 
+/-- Language inclusion. -/
 def Subset (L M : Language alpha) : Prop :=
   FSet.Subset L M
 
+/-- Union of two languages. -/
 def Union (L M : Language alpha) : Language alpha :=
   FSet.Union L M
 
+/-- Intersection of two languages. -/
 def Inter (L M : Language alpha) : Language alpha :=
   FSet.Inter L M
 
+/-- Complement relative to the universal language over the ambient alphabet. -/
 def Compl (L : Language alpha) : Language alpha :=
   FSet.Compl L
 
+/-- Language difference. -/
 def Diff (L M : Language alpha) : Language alpha :=
   FSet.Diff L M
 
 /-!
-# Concatenation, reversal, and star
+## Concatenation, reversal, and star
 
 The operations that are specific to formal languages are defined by splitting a
 word into pieces, reversing words, and concatenating finite lists of pieces.
 -/
 
+/-- The language of reversals of words in the input language. -/
 def Reverse (L : Language alpha) : Language alpha :=
   fun w => (Word.Reverse w) ∈ L
 
+/-- Concatenation of two languages. -/
 def Concat (L M : Language alpha) : Language alpha :=
   fun w => exists x y, x ∈ L ∧ y ∈ M ∧ w = Word.Concat x y
 
@@ -104,20 +116,23 @@ def ConcatWords : List (Word alpha) -> Word alpha
 def ReversePieces (pieces : List (Word alpha)) : List (Word alpha) :=
   pieces.reverse.map Word.Reverse
 
+/-- A finite concatenation power of a language. -/
 def Power (L : Language alpha) : Nat -> Language alpha
   | 0 => Singleton Word.Empty
   | n + 1 => Concat L (Power L n)
 
+/-- The Kleene closure of a language. -/
 def Star (L : Language alpha) : Language alpha :=
   fun w =>
     exists pieces : List (Word alpha),
       (forall p, p ∈ pieces -> p ∈ L) ∧ ConcatWords pieces = w
 
+/-- The language admits a finite list enumeration. -/
 def Finite (L : Language alpha) : Prop :=
   FSet.Finite L
 
 /-!
-# Membership laws
+## Membership laws
 
 These lemmas expose the membership rules for the language constructors and
 finite examples.
@@ -149,11 +164,58 @@ theorem mem_concat (w : Word alpha) (L M : Language alpha) :
   Iff.rfl
 
 /-!
-# Extensional algebra
+## Extensional algebra
 
 Language equality is pointwise logical equivalence. These facts provide the
 set-algebra and concatenation laws used throughout the regular-language proofs.
 -/
+
+/-- Union respects extensional equality of both input languages. -/
+theorem union_congr {L₁ L₂ M₁ M₂ : Language alpha}
+    (hL : Equal L₁ L₂) (hM : Equal M₁ M₂) :
+    Equal (Union L₁ M₁) (Union L₂ M₂) := by
+  intro w
+  exact or_congr (hL w) (hM w)
+
+/-- Intersection respects extensional equality of both input languages. -/
+theorem inter_congr {L₁ L₂ M₁ M₂ : Language alpha}
+    (hL : Equal L₁ L₂) (hM : Equal M₁ M₂) :
+    Equal (Inter L₁ M₁) (Inter L₂ M₂) := by
+  intro w
+  exact and_congr (hL w) (hM w)
+
+/-- Complement respects extensional equality. -/
+theorem compl_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Compl L) (Compl M) := by
+  intro w
+  exact not_congr (h w)
+
+/-- Reversal respects extensional equality. -/
+theorem reverse_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Reverse L) (Reverse M) := by
+  intro w
+  exact h (Word.Reverse w)
+
+/-- Concatenation respects extensional equality of both input languages. -/
+theorem concat_congr {L₁ L₂ M₁ M₂ : Language alpha}
+    (hL : Equal L₁ L₂) (hM : Equal M₁ M₂) :
+    Equal (Concat L₁ M₁) (Concat L₂ M₂) := by
+  intro w
+  constructor
+  · rintro ⟨x, y, hx, hy, rfl⟩
+    exact ⟨x, y, (hL x).mp hx, (hM y).mp hy, rfl⟩
+  · rintro ⟨x, y, hx, hy, rfl⟩
+    exact ⟨x, y, (hL x).mpr hx, (hM y).mpr hy, rfl⟩
+
+/-- Kleene star respects extensional equality. -/
+theorem star_congr {L M : Language alpha} (h : Equal L M) :
+    Equal (Star L) (Star M) := by
+  intro w
+  constructor
+  · rintro ⟨pieces, hpieces, rfl⟩
+    exact ⟨pieces, fun p hp => (h p).mp (hpieces p hp), rfl⟩
+  · rintro ⟨pieces, hpieces, rfl⟩
+    exact ⟨pieces, fun p hp => (h p).mpr (hpieces p hp), rfl⟩
 
 theorem diff_as_inter_compl (L M : Language alpha) :
     Equal (Diff L M) (Inter L (Compl M)) :=
@@ -337,11 +399,11 @@ theorem star_concat {L : Language alpha} {x y : Word alpha}
           · rw [concatWords_append, hxs.right, hys.right]
 
 /-!
-# Star as a union of powers
+## Star as a union of powers
 
 The book introduces the Kleene star of a language as the union of its
 concatenation powers {lit}`S^0 ∪ S^1 ∪ S^2 ∪ ...`.  The next lemmas connect the
-piece-list definition of {lit}`Star` with the {lit}`Power` operation: the zeroth
+piece-list definition of {name}`Star` with the {name}`Power` operation: the zeroth
 power is the epsilon-only language, successor powers are concatenations, and a
 word lies in the star exactly when it lies in some finite power.
 -/

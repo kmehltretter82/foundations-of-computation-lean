@@ -59,7 +59,7 @@ The first definitions describe the extended transition function and acceptance
 predicate. The concrete DFA above recognizes binary words with at least two
 ones, matching the section's finite-state-machine examples.
 
-{lit}`DFA.RunFrom` starts in an arbitrary state, while {lit}`DFA.Run` starts in the
+{name}`DFA.RunFrom` starts in an arbitrary state, while {name}`DFA.Run` starts in the
 machine's designated start state. Acceptance checks the final state after the
 whole input word has been consumed.
 -/

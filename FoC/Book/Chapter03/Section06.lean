@@ -31,7 +31,7 @@ open Languages
 Union, concatenation, Kleene star, and the universal finite alphabet language
 are regular because the corresponding regular expressions can be built
 directly. The finite-language case was already recorded in Section 3.2 as
-{lit}`Section02.finite_language_is_regular`.
+{name}`Section02.finite_language_is_regular`.
 
 This block uses the expression view of regularity. It shows how to construct a
 regular expression for the new language once regular expressions for the input
@@ -54,9 +54,10 @@ theorem regular_languages_closed_under_kleene_star {L : Language alpha}
   RegExp.regular_star hL
 
 theorem finite_alphabet_universal_language_regular
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet) :
+    (alphabet : FiniteType alpha) :
     RegularLanguage.Regular (Language.Universal : Language alpha) :=
-  RegularLanguage.finite_alphabet_universal_regular alphabet halphabet
+  RegularLanguage.finite_alphabet_universal_regular
+    alphabet.elems alphabet.complete
 
 theorem regular_languages_closed_under_reversal {L : Language alpha}
     (hL : RegularLanguage.Regular L) :
@@ -156,44 +157,44 @@ theorem dfa_state_elimination_regex_complete [DecidableEq state]
   RegularLanguage.dfaRegex_complete alphabet M halphabet hw
 
 theorem dfa_recognizable_language_is_regular
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L : Language alpha} (hL : RegularLanguage.DFARecognizable L) :
     RegularLanguage.Regular L :=
-  RegularLanguage.dfa_recognizable_regular alphabet halphabet hL
+  RegularLanguage.dfa_recognizable_regular alphabet hL
 
 theorem dfa_language_is_regular [DecidableEq state]
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     (M : DFA alpha state) [DecidablePred M.accept] :
     RegularLanguage.Regular (DFA.Language M) :=
-  RegularLanguage.dfa_language_regular alphabet halphabet M
+  RegularLanguage.dfa_language_regular alphabet M
 
 theorem nfa_language_is_regular
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {state : Type} (M : NFA alpha state) :
     RegularLanguage.Regular (NFA.AcceptedLanguage M) :=
-  RegularLanguage.nfa_language_regular alphabet halphabet M
+  RegularLanguage.nfa_language_regular alphabet M
 
 theorem nfa_recognizable_language_is_regular
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L : Language alpha} (hL : RegularLanguage.NFARecognizable L) :
     RegularLanguage.Regular L :=
-  RegularLanguage.nfa_recognizable_regular alphabet halphabet hL
+  RegularLanguage.nfa_recognizable_regular alphabet hL
 
 theorem regular_iff_dfa_recognizable_over_finite_alphabet
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     (L : Language alpha) :
     RegularLanguage.Regular L <-> RegularLanguage.DFARecognizable L := by
   constructor
   · exact regular_language_is_dfa_recognizable
-  · exact dfa_recognizable_language_is_regular alphabet halphabet
+  · exact dfa_recognizable_language_is_regular alphabet
 
 theorem regular_iff_nfa_recognizable_over_finite_alphabet
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     (L : Language alpha) :
     RegularLanguage.Regular L <-> RegularLanguage.NFARecognizable L := by
   constructor
   · exact regular_language_is_nfa_recognizable
-  · exact nfa_recognizable_language_is_regular alphabet halphabet
+  · exact nfa_recognizable_language_is_regular alphabet
 
 /-!
 ## Complement and Intersection
@@ -208,44 +209,44 @@ definition of regularity.
 -/
 
 theorem dfa_backed_regular_languages_closed_under_complement
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L : Language alpha} (hL : RegularLanguage.DFARecognizable L) :
     RegularLanguage.Regular (Language.Compl L) :=
-  RegularLanguage.dfa_recognizable_complement_regular alphabet halphabet hL
+  RegularLanguage.dfa_recognizable_complement_regular alphabet hL
 
 theorem dfa_backed_regular_languages_closed_under_intersection
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L M : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) (hM : RegularLanguage.DFARecognizable M) :
     RegularLanguage.Regular (Language.Inter L M) :=
-  RegularLanguage.dfa_recognizable_intersection_regular alphabet halphabet hL hM
+  RegularLanguage.dfa_recognizable_intersection_regular alphabet hL hM
 
 theorem dfa_backed_regular_languages_closed_under_difference
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L M : Language alpha}
     (hL : RegularLanguage.DFARecognizable L) (hM : RegularLanguage.DFARecognizable M) :
     RegularLanguage.Regular (Language.Diff L M) :=
-  RegularLanguage.dfa_recognizable_difference_regular alphabet halphabet hL hM
+  RegularLanguage.dfa_recognizable_difference_regular alphabet hL hM
 
 theorem regular_languages_closed_under_complement
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L : Language alpha} (hL : RegularLanguage.Regular L) :
     RegularLanguage.Regular (Language.Compl L) :=
-  RegularLanguage.complement_regular alphabet halphabet hL
+  RegularLanguage.complement_regular alphabet hL
 
 theorem regular_languages_closed_under_intersection
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L M : Language alpha}
     (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
     RegularLanguage.Regular (Language.Inter L M) :=
-  RegularLanguage.intersection_regular alphabet halphabet hL hM
+  RegularLanguage.intersection_regular alphabet hL hM
 
 theorem regular_languages_closed_under_difference
-    (alphabet : List alpha) (halphabet : forall a, a ∈ alphabet)
+    (alphabet : FiniteType alpha)
     {L M : Language alpha}
     (hL : RegularLanguage.Regular L) (hM : RegularLanguage.Regular M) :
     RegularLanguage.Regular (Language.Diff L M) :=
-  RegularLanguage.difference_regular alphabet halphabet hL hM
+  RegularLanguage.difference_regular alphabet hL hM
 
 end Section06
 end Chapter03

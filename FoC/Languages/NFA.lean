@@ -1,4 +1,4 @@
-import FoC.Foundation.Finite
+import FoC.Foundation.Cardinality
 import FoC.Languages.DFA
 
 set_option doc.verso true
@@ -25,12 +25,13 @@ namespace Languages
 open Foundation
 
 /-!
-# NFA structure
+## NFA structure
 
 An NFA has a start state, finite state space, accepting states, and a transition
 function that may consume a symbol or take an epsilon transition.
 -/
 
+/-- A nondeterministic finite automaton with symbol and epsilon transitions. -/
 structure NFA (alpha : Type u) (state : Type v) where
   start : state
   step : state -> Option alpha -> FSet state
@@ -40,17 +41,19 @@ structure NFA (alpha : Type u) (state : Type v) where
 namespace NFA
 
 /-!
-# Epsilon closure and reachability
+## Epsilon closure and reachability
 
 Reachable-state sets are built from epsilon closure, symbol moves, and the
 recursive extension of the transition relation to input words.
 -/
 
+/-- Reachability by zero or more epsilon transitions. -/
 inductive EpsilonReach (M : NFA alpha state) : state -> state -> Prop where
   | refl (q : state) : EpsilonReach M q q
   | step {q r s : state} :
       r ∈ M.step q none -> EpsilonReach M r s -> EpsilonReach M q s
 
+/-- Close a set of states under epsilon reachability. -/
 def EpsilonClosure (M : NFA alpha state) (S : FSet state) : FSet state :=
   fun r => exists q, q ∈ S ∧ EpsilonReach M q r
 
@@ -63,29 +66,35 @@ def Next (M : NFA alpha state) (S : FSet state) (a : alpha) : FSet state :=
 def StartSet (M : NFA alpha state) : FSet state :=
   EpsilonClosure M (FSet.Singleton M.start)
 
+/-- Extend an epsilon-closed set of states across an input word. -/
 def ReachFromSet (M : NFA alpha state) : FSet state -> Word alpha -> FSet state
   | S, [] => S
   | S, a :: w => ReachFromSet M (Next M S a) w
 
+/-- The states reachable from the epsilon closure of the start state. -/
 def Reach (M : NFA alpha state) (w : Word alpha) : FSet state :=
   ReachFromSet M (StartSet M) w
 
+/-- An NFA accepts when some reachable state is accepting. -/
 def Accepts (M : NFA alpha state) (w : Word alpha) : Prop :=
   exists q, q ∈ Reach M w ∧ M.accept q
 
+/-- The language accepted by an NFA. -/
 def AcceptedLanguage (M : NFA alpha state) : FoC.Languages.Language alpha :=
   fun w => Accepts M w
 
+/-- A language is NFA-recognizable when some finite-state NFA accepts it exactly. -/
 def Recognizable (L : FoC.Languages.Language alpha) : Prop :=
   exists state : Type, exists M : NFA alpha state, FoC.Languages.Language.Equal (AcceptedLanguage M) L
 
 /-!
-# Subset construction
+## Subset construction
 
 The deterministic machine whose states are sets of NFA states recognizes the
 same language, provided the set-of-states type is finite.
 -/
 
+/-- Determinize an NFA using predicate subsets as DFA states. -/
 def SubsetDFA (M : NFA alpha state) (subsetsFinite : FiniteType (FSet state)) :
     DFA alpha (FSet state) where
   start := StartSet M
@@ -122,13 +131,25 @@ theorem subsetDFA_language (M : NFA alpha state)
   intro w
   exact subsetDFA_accepts M subsetsFinite w
 
+/-- The classical subset construction with its finite powerset witness inferred. -/
+noncomputable def SubsetDFAAuto (M : NFA alpha state) :
+    DFA alpha (FSet state) :=
+  SubsetDFA M (FiniteType.powerset M.statesFinite)
+
+/-- The automatic subset construction recognizes exactly the NFA language. -/
+theorem subsetDFAAuto_language (M : NFA alpha state) :
+    FoC.Languages.Language.Equal
+      (DFA.Language (SubsetDFAAuto M)) (AcceptedLanguage M) :=
+  subsetDFA_language M (FiniteType.powerset M.statesFinite)
+
 /-!
-# Deterministic automata as NFAs
+## Deterministic automata as NFAs
 
 A DFA embeds into an NFA by using no epsilon transitions and a singleton symbol
 move. The following lemmas prove that the accepted language is unchanged.
 -/
 
+/-- Embed a DFA as an NFA with singleton symbol moves and no epsilon moves. -/
 def FromDFA (M : DFA alpha state) : NFA alpha state where
   start := M.start
   step := fun q input =>
@@ -283,6 +304,14 @@ theorem nfa_language_dfa_recognizable {state : Type} (M : NFA alpha state)
   exists FSet state
   exists SubsetDFA M subsetsFinite
   exact subsetDFA_language M subsetsFinite
+
+/-- Every NFA language is DFA-recognizable via the automatic subset construction. -/
+theorem nfa_language_dfa_recognizable_auto {state : Type}
+    (M : NFA alpha state) :
+    DFA.Recognizable (AcceptedLanguage M) := by
+  exists FSet state
+  exists SubsetDFAAuto M
+  exact subsetDFAAuto_language M
 
 end NFA
 end Languages

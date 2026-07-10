@@ -508,6 +508,50 @@ theorem countablyInfinite_iff_setBijection_nat {A : FSet alpha} :
   ⟨setBijection_nat_of_countablyInfinite, countablyInfinite_of_setBijection_nat⟩
 
 /-!
+**Uncountability of powersets.**
+
+Reindex a countably infinite type by the natural numbers and diagonalize
+against any proposed partial enumeration of its predicate subsets.  This is
+the reusable form of Cantor's argument needed for sets of formal languages.
+-/
+
+/-- The type of predicate subsets of a countably infinite type is uncountable. -/
+theorem univ_fset_uncountable_of_countablyInfinite
+    (hAlpha : CountablyInfinite (Univ : FSet alpha)) :
+    Uncountable (Univ : FSet (FSet alpha)) := by
+  intro hcountable
+  rcases hcountable with ⟨enumerate, henumerate⟩
+  rcases setBijection_nat_of_countablyInfinite hAlpha with ⟨e⟩
+  let atIndex : Nat -> alpha :=
+    fun n => (e.toFun ⟨n, True.intro⟩).val
+  let diagonal : FSet alpha := fun x =>
+    exists n, atIndex n = x ∧
+      match enumerate n with
+      | none => True
+      | some A => ¬ x ∈ A
+  have hatIndexInjective : Fn.Injective atIndex := by
+    intro n m hnm
+    have hsubtype :
+        e.toFun ⟨n, True.intro⟩ = e.toFun ⟨m, True.intro⟩ :=
+      Subtype.ext hnm
+    exact congrArg Subtype.val (e.injective hsubtype)
+  rcases (henumerate diagonal).mp True.intro with ⟨k, hk⟩
+  let x := atIndex k
+  have hdiagonal : x ∈ diagonal <-> ¬ x ∈ diagonal := by
+    constructor
+    · intro hx
+      rcases hx with ⟨n, hnx, hn⟩
+      have hnk : n = k := hatIndexInjective (by simpa [x] using hnx)
+      subst n
+      simpa [hk] using hn
+    · intro hx
+      refine ⟨k, rfl, ?_⟩
+      simpa [hk] using hx
+  by_cases hx : x ∈ diagonal
+  · exact (hdiagonal.mp hx) hx
+  · exact hx (hdiagonal.mpr hx)
+
+/-!
 **Infinite sets.**
 
 A finite list of natural numbers cannot contain a number larger than its
@@ -517,7 +561,8 @@ infinite.  Combined with the enumerations above, both sets are countably
 infinite in the book's sense.
 -/
 
-private theorem list_mem_le_foldr_max (xs : List Nat) :
+/-- Every member of a natural-number list is bounded by its folded maximum. -/
+theorem list_mem_le_foldr_max (xs : List Nat) :
     forall x, x ∈ xs -> x <= xs.foldr Nat.max 0 := by
   induction xs with
   | nil =>
@@ -652,6 +697,21 @@ countable universal set by searching for the first value with a given code.
 
 def EncodableByNat (alpha : Type u) : Prop :=
   exists code : alpha -> Nat, Fn.Injective code
+
+/-- Every explicitly finite type admits an injective natural-number code. -/
+theorem finiteType_encodableByNat (finite : FiniteType alpha) :
+    EncodableByNat alpha := by
+  classical
+  refine ⟨fun x => (FiniteType.indexOf finite x).val, ?_⟩
+  intro x y hxy
+  have hindices : FiniteType.indexOf finite x = FiniteType.indexOf finite y :=
+    Fin.ext hxy
+  calc
+    x = FiniteType.valueOf finite (FiniteType.indexOf finite x) :=
+      (FiniteType.valueOf_indexOf finite x).symm
+    _ = FiniteType.valueOf finite (FiniteType.indexOf finite y) := by
+      rw [hindices]
+    _ = y := FiniteType.valueOf_indexOf finite y
 
 structure NatCodec (alpha : Type u) where
   encode : alpha -> Nat

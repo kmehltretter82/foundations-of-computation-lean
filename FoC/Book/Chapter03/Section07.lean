@@ -13,8 +13,9 @@ namespace Section07
 
 This section formalizes the Pumping Lemma interface and its use for proving
 languages non-regular. The reusable proof infrastructure lives in
-{module}`FoC.Languages.Pumping`; this file applies it to the book's
-{lit}`a^n b a^n` and {lit}`a^n b^n` examples.
+{module}`FoC.Languages.Pumping`; this file applies it to the book's main
+{lit}`a^n b^n` example, the backreference target from Section 3.3, and all four
+non-regularity exercises.
 
 Informally, the Pumping Lemma says that every regular language has a positive
 number {lit}`n` such that every word in the language of length at least {lit}`n` can be
@@ -29,130 +30,30 @@ open Languages
 /-!
 ## Pumping Lemma Vocabulary
 
-The first theorems expose the quantified shape of pumping lengths,
-decompositions, extensionality, monotonicity, and counterexample principles.
-These are the tools used to turn a family of bad words into non-regularity.
-
-{lit}`Pumping.PumpingLength L n` is the formal version of "n is a valid pumping
-length for L". It contains three pieces of information: {lit}`n > 0`; every long
+{name}`Pumping.PumpingLength` is the formal predicate expressing that a number
+is a valid pumping length for a language. It contains three pieces of
+information: {lit}`n > 0`; every long
 word {lit}`w` in {lit}`L` admits a decomposition; and that decomposition includes the
-conditions {lit}`w = x y z`, `|x y| <= n`, `|y| > 0`, and membership of every pumped
+conditions {lit}`w = x y z`, {lit}`|x y| <= n`, {lit}`|y| > 0`, and membership of every pumped
 word {lit}`x y^k z`.
 
-{lit}`Pumping.HasPumpingProperty L` says that at least one such {lit}`n` exists. The
-regular-language Pumping Lemma is the theorem that regular languages have this
-property.
--/
+{name}`Pumping.HasPumpingProperty` says that at least one such {lit}`n` exists. The
+regular-language Pumping Lemma is {name}`Pumping.regular_hasPumpingProperty`.
+The DFA proof is {name}`Pumping.dfa_pumpingLength`, and
+{name}`Pumping.pumpingLength_mono` allows any larger valid bound.
 
-theorem pumping_length_definition (L : Language alpha) (n : Nat) :
-    Pumping.PumpingLength L n <->
-      n > 0 ∧ forall w, w ∈ L -> n <= Word.Length w -> Pumping.Decomposition L n w :=
-  Iff.rfl
-
-theorem pumped_decomposition_original_word_mem
-    {L : Language alpha} {n : Nat} {w : Word alpha}
-    (h : Pumping.Decomposition L n w) : w ∈ L :=
-  Pumping.decomposition_original_word_mem h
-
-theorem pumped_decomposition_of_equal {L M : Language alpha} {n : Nat}
-    {w : Word alpha}
-    (hEq : Language.Equal L M) (h : Pumping.Decomposition L n w) :
-    Pumping.Decomposition M n w :=
-  Pumping.decomposition_of_equal hEq h
-
-theorem pumping_length_of_equal {L M : Language alpha} {n : Nat}
-    (hEq : Language.Equal L M) (h : Pumping.PumpingLength L n) :
-    Pumping.PumpingLength M n :=
-  Pumping.pumpingLength_of_equal hEq h
-
-theorem pumping_property_of_equal {L M : Language alpha}
-    (hEq : Language.Equal L M) (h : Pumping.HasPumpingProperty L) :
-    Pumping.HasPumpingProperty M :=
-  Pumping.hasPumpingProperty_of_equal hEq h
-
-theorem pumping_length_monotone {L : Language alpha} {n m : Nat}
-    (hnm : n <= m) (h : Pumping.PumpingLength L n) :
-    Pumping.PumpingLength L m :=
-  Pumping.pumpingLength_mono hnm h
-
-/-!
-The next two declarations are the reusable "bad word" principle. For a fixed
+For a fixed
 candidate pumping length {lit}`n`, it is enough to produce one long word {lit}`w` in the
 language such that every legal split {lit}`w = x y z` fails after some pump count
 {lit}`k`. If such a bad word exists for every positive {lit}`n`, then the language has no
-pumping property at all.
+pumping property at all. The reusable counterexample principles are
+{name}`Pumping.not_pumpingLength_of_counterexample` and
+{name}`Pumping.not_hasPumpingProperty_of_counterexamples`; failure of the
+property implies non-regularity by
+{name}`Pumping.not_regular_of_no_pumping_property`.
 -/
 
-theorem not_pumping_length_of_counterexample {L : Language alpha} {n : Nat}
-    {w : Word alpha}
-    (hw : w ∈ L) (hlen : n <= Word.Length w)
-    (hbad :
-      forall x y z : Word alpha,
-        w = Word.Concat x (Word.Concat y z) ->
-        Word.Length (Word.Concat x y) <= n ->
-        Word.Length y > 0 ->
-        exists k : Nat,
-          ¬ Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L) :
-    ¬ Pumping.PumpingLength L n :=
-  Pumping.not_pumpingLength_of_counterexample hw hlen hbad
-
-theorem not_pumping_property_of_counterexamples {L : Language alpha}
-    (hbad :
-      forall n : Nat, n > 0 ->
-        exists w : Word alpha,
-          w ∈ L ∧
-          n <= Word.Length w ∧
-          forall x y z : Word alpha,
-            w = Word.Concat x (Word.Concat y z) ->
-            Word.Length (Word.Concat x y) <= n ->
-            Word.Length y > 0 ->
-            exists k : Nat,
-              ¬ Word.Concat x (Word.Concat (Word.RepeatWord y k) z) ∈ L) :
-    ¬ Pumping.HasPumpingProperty L :=
-  Pumping.not_hasPumpingProperty_of_counterexamples hbad
-
-/-!
-The final vocabulary statements connect the counterexample method to
-regularity. If the regular-language Pumping Lemma is available for {lit}`L`, then
-showing that {lit}`L` has no pumping property proves {lit}`L` is not regular.
-
-Each concrete language below gets two non-regularity theorems. The
-{lit}`..._not_regular_from_pumping_lemma` variants take the pumping-lemma
-conclusion as an explicit hypothesis, mirroring the book's proof-by-pumping
-presentation; since {lit}`pumping_lemma_conclusion` proves that hypothesis
-outright, they are subsumed by their unconditional twins and are kept only to
-match the book's argument structure.
--/
-
-theorem not_regular_if_no_pumping_property {L : Language alpha}
-    (pumpingLemma : Pumping.PumpingLemmaConclusion L)
-    (hNoPump : ¬ Pumping.HasPumpingProperty L) :
-    ¬ RegularLanguage.Regular L :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma hNoPump
-
-theorem not_regular_if_no_pumping_property_regular {L : Language alpha}
-    (hNoPump : ¬ Pumping.HasPumpingProperty L) :
-    ¬ RegularLanguage.Regular L :=
-  Pumping.not_regular_of_no_pumping_property_regular hNoPump
-
-theorem regular_languages_have_pumping_property {L : Language alpha}
-    (hL : RegularLanguage.Regular L) :
-    Pumping.HasPumpingProperty L :=
-  Pumping.regular_hasPumpingProperty hL
-
-theorem dfa_pumping_length [DecidableEq state] (M : DFA alpha state) :
-    Pumping.PumpingLength (DFA.Language M) (M.statesFinite.elems.length + 1) :=
-  Pumping.dfa_pumpingLength M
-
-theorem dfa_has_pumping_property [DecidableEq state] (M : DFA alpha state) :
-    Pumping.HasPumpingProperty (DFA.Language M) :=
-  Pumping.dfa_hasPumpingProperty M
-
-theorem pumping_lemma_conclusion (L : Language alpha) :
-    Pumping.PumpingLemmaConclusion L :=
-  Pumping.regular_pumpingLemmaConclusion L
-
-theorem pump_two_count_symbol [DecidableEq alpha]
+private theorem pump_two_count_symbol [DecidableEq alpha]
     (sym : alpha) (x y z : Word alpha) :
     Word.Count sym (Word.Concat x (Word.Concat (Word.RepeatWord y 2) z)) =
       Word.Count sym (Word.Concat x (Word.Concat y z)) + Word.Count sym y := by
@@ -168,7 +69,7 @@ block and leaves the suffix untouched. The concrete bad-word lemmas below are
 instances of this statement.
 -/
 
-theorem repeatSymbol_delete_initial_block {a : alpha}
+private theorem repeatSymbol_delete_initial_block {a : alpha}
     {suffix x y z : Word alpha} {n : Nat}
     (hword : Word.Concat (Word.RepeatSymbol a n) suffix =
       Word.Concat x (Word.Concat y z))
@@ -259,13 +160,13 @@ needed to delete a pumped initial block of {lit}`a` symbols and derive a
 contradiction.
 
 The bad word for a proposed pumping length {lit}`n` is {lit}`a^n b a^n`. Because the
-split must satisfy `|x y| <= n`, the pumped portion {lit}`y` lies entirely in the
+split must satisfy {lit}`|x y| <= n`, the pumped portion {lit}`y` lies entirely in the
 first block of {lit}`a` symbols. Pumping with {lit}`k = 0` deletes at least one initial
 {lit}`a`, leaving fewer {lit}`a`s before the middle {lit}`b` than after it. That word cannot
-belong to `{ a^n b a^n | n >= 0 }`.
+belong to {lit}`{ a^n b a^n | n >= 0 }`.
 -/
 
-theorem anbanWord_injective {p q r s : Nat}
+private theorem anbanWord_injective {p q r s : Nat}
     (h : Section03.anbanWord p q = Section03.anbanWord r s) :
     p = r ∧ q = s := by
   induction p generalizing r q s with
@@ -300,7 +201,7 @@ theorem anbanWord_injective {p q r s : Nat}
               · lia
               · exact hqs
 
-theorem anban_members_have_equal_blocks {p q : Nat}
+private theorem anban_members_have_equal_blocks {p q : Nat}
     (h : Section03.anbanWord p q ∈ Section03.anbanLanguage) :
     p = q := by
   cases h with
@@ -308,7 +209,7 @@ theorem anban_members_have_equal_blocks {p q : Nat}
       have hinj := anbanWord_injective hn
       rw [hinj.left, hinj.right]
 
-theorem anbanWord_delete_initial_a
+private theorem anbanWord_delete_initial_a
     {x y z : Word Section01.AB} {n : Nat}
     (hword : Section03.anbanWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
@@ -352,15 +253,9 @@ theorem anban_no_pumping_property :
                         lia
                       lia
 
-theorem anban_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion Section03.anbanLanguage) :
-    ¬ RegularLanguage.Regular Section03.anbanLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma
-    anban_no_pumping_property
-
 theorem anban_not_regular :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular anban_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property anban_no_pumping_property
 
 theorem backreference_target_language_not_regular :
     ¬ RegularLanguage.Regular Section03.anbanLanguage :=
@@ -369,7 +264,7 @@ theorem backreference_target_language_not_regular :
 /-!
 # The {lit}`a^n b^n` Example
 
-The final part of the section sets up and proves non-regularity for the
+The main textbook example sets up and proves non-regularity for the
 standard equal-block language. Counting lemmas identify how many {lit}`a` and
 {lit}`b` symbols occur in block words, which is what pumping breaks.
 
@@ -380,6 +275,7 @@ result has unequal symbol counts and cannot be another word of the form
 {lit}`a^m b^m`.
 -/
 
+/-- The textbook language of equal ordered blocks of a symbols and b symbols. -/
 def anbnLanguage : Language Section01.AB :=
   fun w => exists n,
     w = Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -392,7 +288,7 @@ theorem anbn_membership (w : Word Section01.AB) :
           (Word.RepeatSymbol Section01.AB.b n) :=
   Iff.rfl
 
-theorem ablock_word_count_a (aCount bCount : Nat) :
+private theorem ablock_word_count_a (aCount bCount : Nat) :
     Word.Count Section01.AB.a
       (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
         (Word.RepeatSymbol Section01.AB.b bCount)) = aCount := by
@@ -402,7 +298,7 @@ theorem ablock_word_count_a (aCount bCount : Nat) :
   · intro h
     cases h
 
-theorem ablock_word_count_b (aCount bCount : Nat) :
+private theorem ablock_word_count_b (aCount bCount : Nat) :
     Word.Count Section01.AB.b
       (Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
         (Word.RepeatSymbol Section01.AB.b bCount)) = bCount := by
@@ -412,26 +308,26 @@ theorem ablock_word_count_b (aCount bCount : Nat) :
   · intro h
     cases h
 
-theorem anbn_word_count_a (n : Nat) :
+private theorem anbn_word_count_a (n : Nat) :
     Word.Count Section01.AB.a
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
   exact ablock_word_count_a n n
 
-theorem anbn_word_count_b (n : Nat) :
+private theorem anbn_word_count_b (n : Nat) :
     Word.Count Section01.AB.b
       (Word.Concat (Word.RepeatSymbol Section01.AB.a n)
         (Word.RepeatSymbol Section01.AB.b n)) = n := by
   exact ablock_word_count_b n n
 
-theorem anbn_members_have_equal_counts {w : Word Section01.AB}
+private theorem anbn_members_have_equal_counts {w : Word Section01.AB}
     (hw : w ∈ anbnLanguage) :
     Word.Count Section01.AB.a w = Word.Count Section01.AB.b w := by
   cases hw with
   | intro n hn =>
       rw [hn, anbn_word_count_a n, anbn_word_count_b n]
 
-theorem ab_count_a_pos_of_length_pos_count_b_zero {w : Word Section01.AB}
+private theorem ab_count_a_pos_of_length_pos_count_b_zero {w : Word Section01.AB}
     (hlen : 0 < Word.Length w)
     (hb : Word.Count Section01.AB.b w = 0) :
     0 < Word.Count Section01.AB.a w := by
@@ -446,7 +342,7 @@ theorem ab_count_a_pos_of_length_pos_count_b_zero {w : Word Section01.AB}
       | b =>
           simp [Word.Count] at hb
 
-theorem ablock_prefix_before_boundary_count_b_zero
+private theorem ablock_prefix_before_boundary_count_b_zero
     {x y z : Word Section01.AB} {aCount bCount : Nat}
     (hword :
       Word.Concat (Word.RepeatSymbol Section01.AB.a aCount)
@@ -517,7 +413,7 @@ theorem ablock_prefix_before_boundary_count_b_zero
   rw [Word.count_concat] at hbxy
   lia
 
-theorem anbn_prefix_before_boundary_count_b_zero
+private theorem anbn_prefix_before_boundary_count_b_zero
     {x y z : Word Section01.AB} {n : Nat}
     (hword :
       Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -527,7 +423,7 @@ theorem anbn_prefix_before_boundary_count_b_zero
     Word.Count Section01.AB.b y = 0 :=
   ablock_prefix_before_boundary_count_b_zero hword hxy
 
-theorem anbn_pump_zero_unequal_counts
+private theorem anbn_pump_zero_unequal_counts
     {x y z : Word Section01.AB} {n : Nat}
     (hword :
       Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -603,6 +499,7 @@ the initial {lit}`a` block destroys equality of counts, even though this languag
 does not require all {lit}`a`s to come before all {lit}`b`s.
 -/
 
+/-- Words containing equally many a symbols and b symbols in arbitrary order. -/
 def equalCountLanguage : Language Section01.AB :=
   fun w => Word.Count Section01.AB.a w = Word.Count Section01.AB.b w
 
@@ -652,33 +549,29 @@ theorem equal_count_no_pumping_property :
                           using hpumpZero
                       exact hunequal hcountsZero
 
-theorem equal_count_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion equalCountLanguage) :
-    ¬ RegularLanguage.Regular equalCountLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma
-    equal_count_no_pumping_property
-
 theorem equal_count_not_regular :
     ¬ RegularLanguage.Regular equalCountLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular equal_count_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property equal_count_no_pumping_property
 
 /-!
 # The {lit}`x x` Language
 
-The language `{ x x | x in {a,b}* }` contains duplicated words. The bad family
-uses words of the form `(a^n b)(a^n b)`. Pumping near the front changes only
+The language {lit}`{ x x | x in {a,b}* }` contains duplicated words. The bad family
+uses words of the form {lit}`(a^n b)(a^n b)`. Pumping near the front changes only
 the first {lit}`a` block. The supporting lemmas prove that a word with two {lit}`b`s of
 this shape is a square only when the two {lit}`a` blocks have equal length.
 -/
 
-def squareBlockWord (p q : Nat) : Word Section01.AB :=
+private def squareBlockWord (p q : Nat) : Word Section01.AB :=
   Word.Concat (Word.RepeatSymbol Section01.AB.a p)
     (Word.Concat (Word.Symbol Section01.AB.b)
       (Word.Concat (Word.RepeatSymbol Section01.AB.a q) (Word.Symbol Section01.AB.b)))
 
+/-- Words obtained by concatenating some word with itself. -/
 def squareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u u
 
+/-- A book-facing name for the square language. -/
 def duplicateWordLanguage : Language Section01.AB :=
   squareLanguage
 
@@ -690,7 +583,7 @@ theorem duplicate_word_language_membership (w : Word Section01.AB) :
     w ∈ duplicateWordLanguage <-> exists u, w = Word.Concat u u :=
   Iff.rfl
 
-theorem squareBlock_count_b (p q : Nat) :
+private theorem squareBlock_count_b (p q : Nat) :
     Word.Count Section01.AB.b (squareBlockWord p q) = 2 := by
   unfold squareBlockWord
   rw [Word.count_concat, Word.count_concat, Word.count_concat]
@@ -701,13 +594,13 @@ theorem squareBlock_count_b (p q : Nat) :
   · intro h
     cases h
 
-theorem squareBlock_length (p q : Nat) :
+private theorem squareBlock_length (p q : Nat) :
     Word.Length (squareBlockWord p q) = p + q + 2 := by
   unfold squareBlockWord
   simp [Word.Length, Word.Concat, Word.RepeatSymbol, Word.Symbol]
   lia
 
-theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
+private theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
     (hl : l <= p) :
     Word.Count Section01.AB.b (List.take l (squareBlockWord p q)) = 0 := by
   unfold squareBlockWord
@@ -736,7 +629,7 @@ theorem squareBlock_take_before_first_b_count_b {p q l : Nat}
     simp [Word.RepeatSymbol, hmin]]
   exact Word.count_repeatSymbol_different (by intro h; cases h) l
 
-theorem squareBlock_take_middle {p q l : Nat}
+private theorem squareBlock_take_middle {p q l : Nat}
     (hp : p < l) (hl : l <= p + q + 1) :
     List.take l (squareBlockWord p q) =
       Word.Concat (Word.RepeatSymbol Section01.AB.a p)
@@ -758,7 +651,7 @@ theorem squareBlock_take_middle {p q l : Nat}
   rw [hzero]
   simp
 
-theorem squareBlock_drop_middle {p q l : Nat}
+private theorem squareBlock_drop_middle {p q l : Nat}
     (hp : p < l) (hl : l <= p + q + 1) :
     List.drop l (squareBlockWord p q) =
       Word.Concat (Word.RepeatSymbol Section01.AB.a (p + q + 1 - l))
@@ -776,7 +669,7 @@ theorem squareBlock_drop_middle {p q l : Nat}
   rw [hzero]
   simp
 
-theorem single_b_block_eq_trailing_b {p r s : Nat}
+private theorem single_b_block_eq_trailing_b {p r s : Nat}
     (h : Word.Concat (Word.RepeatSymbol Section01.AB.a p)
         (Word.Concat (Word.Symbol Section01.AB.b)
           (Word.RepeatSymbol Section01.AB.a r)) =
@@ -816,7 +709,7 @@ theorem single_b_block_eq_trailing_b {p r s : Nat}
               · lia
               · exact hr
 
-theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
+private theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
     {p q : Nat}
     (h : Word.Concat u u = squareBlockWord p q) :
     p = q := by
@@ -869,7 +762,7 @@ theorem square_block_members_have_equal_a_blocks {u : Word Section01.AB}
   | intro _ _ =>
       lia
 
-theorem squareBlock_delete_initial_a
+private theorem squareBlock_delete_initial_a
     {x y z : Word Section01.AB} {n : Nat}
     (hword : squareBlockWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
@@ -919,15 +812,9 @@ theorem square_no_pumping_property :
                             lia
                           lia
 
-theorem square_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion squareLanguage) :
-    ¬ RegularLanguage.Regular squareLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma
-    square_no_pumping_property
-
 theorem square_not_regular :
     ¬ RegularLanguage.Regular squareLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular square_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property square_no_pumping_property
 
 theorem duplicate_word_not_regular :
     ¬ RegularLanguage.Regular duplicateWordLanguage :=
@@ -936,22 +823,24 @@ theorem duplicate_word_not_regular :
 /-!
 # The {lit}`x x^R` Language
 
-The language `{ x reverse(x) | x in {a,b}* }` is handled by a mirror-image
+The language {lit}`{ x reverse(x) | x in {a,b}* }` is handled by a mirror-image
 variant of the square argument. The bad word is {lit}`a^n b b a^n`; deleting a
 pumped piece from the first {lit}`a` block breaks the symmetry around the two
 central {lit}`b` symbols.
 -/
 
-def doubleBWord : Word Section01.AB :=
+private def doubleBWord : Word Section01.AB :=
   Word.Concat (Word.Symbol Section01.AB.b) (Word.Symbol Section01.AB.b)
 
-def mirrorBlockWord (p q : Nat) : Word Section01.AB :=
+private def mirrorBlockWord (p q : Nat) : Word Section01.AB :=
   Word.Concat (Word.RepeatSymbol Section01.AB.a p)
     (Word.Concat doubleBWord (Word.RepeatSymbol Section01.AB.a q))
 
+/-- Words obtained by concatenating a word with its reversal. -/
 def reverseSquareLanguage : Language Section01.AB :=
   fun w => exists u, w = Word.Concat u (Word.Reverse u)
 
+/-- A book-facing name for the even-palindrome language. -/
 def evenPalindromeLanguage : Language Section01.AB :=
   reverseSquareLanguage
 
@@ -963,7 +852,7 @@ theorem even_palindrome_language_membership (w : Word Section01.AB) :
     w ∈ evenPalindromeLanguage <-> exists u, w = Word.Concat u (Word.Reverse u) :=
   Iff.rfl
 
-theorem mirrorBlock_succ_succ (p q : Nat) :
+private theorem mirrorBlock_succ_succ (p q : Nat) :
     mirrorBlockWord (p + 1) (q + 1) =
       Section01.AB.a :: Word.Concat (mirrorBlockWord p q) (Word.Symbol Section01.AB.a) := by
   unfold mirrorBlockWord doubleBWord Word.Concat Word.RepeatSymbol Word.Symbol
@@ -971,7 +860,7 @@ theorem mirrorBlock_succ_succ (p q : Nat) :
   rw [List.replicate_succ']
   simp [List.append_assoc]
 
-theorem mirrorBlock_succ_zero (p : Nat) :
+private theorem mirrorBlock_succ_zero (p : Nat) :
     mirrorBlockWord (p + 1) 0 =
       Section01.AB.a :: Word.Concat
         (Word.Concat (Word.RepeatSymbol Section01.AB.a p) (Word.Symbol Section01.AB.b))
@@ -980,7 +869,7 @@ theorem mirrorBlock_succ_zero (p : Nat) :
   rw [List.replicate_succ]
   simp [List.append_assoc]
 
-theorem mirrorBlock_zero_succ (q : Nat) :
+private theorem mirrorBlock_zero_succ (q : Nat) :
     mirrorBlockWord 0 (q + 1) =
       Section01.AB.b :: Word.Concat
         (Word.Concat (Word.Symbol Section01.AB.b) (Word.RepeatSymbol Section01.AB.a q))
@@ -989,7 +878,7 @@ theorem mirrorBlock_zero_succ (q : Nat) :
   rw [List.replicate_succ']
   simp
 
-theorem mirror_strip_a {u middle : Word Section01.AB}
+private theorem mirror_strip_a {u middle : Word Section01.AB}
     (h : Word.Concat u (Word.Reverse u) =
       Section01.AB.a :: Word.Concat middle (Word.Symbol Section01.AB.a)) :
     exists v, u = Section01.AB.a :: v ∧
@@ -1010,7 +899,7 @@ theorem mirror_strip_a {u middle : Word Section01.AB}
       | b =>
           cases h
 
-theorem mirror_not_a_to_b {u middle : Word Section01.AB} :
+private theorem mirror_not_a_to_b {u middle : Word Section01.AB} :
     Word.Concat u (Word.Reverse u) ≠
       Section01.AB.a :: Word.Concat middle (Word.Symbol Section01.AB.b) := by
   intro h
@@ -1027,7 +916,7 @@ theorem mirror_not_a_to_b {u middle : Word Section01.AB} :
       | b =>
           cases h
 
-theorem mirror_not_b_to_a {u middle : Word Section01.AB} :
+private theorem mirror_not_b_to_a {u middle : Word Section01.AB} :
     Word.Concat u (Word.Reverse u) ≠
       Section01.AB.b :: Word.Concat middle (Word.Symbol Section01.AB.a) := by
   intro h
@@ -1044,7 +933,7 @@ theorem mirror_not_b_to_a {u middle : Word Section01.AB} :
           have hrev := congrArg List.reverse htail
           simp [List.reverse_append] at hrev
 
-theorem mirror_block_members_have_equal_a_blocks {u : Word Section01.AB}
+private theorem mirror_block_members_have_equal_a_blocks {u : Word Section01.AB}
     {p q : Nat}
     (h : Word.Concat u (Word.Reverse u) = mirrorBlockWord p q) :
     p = q := by
@@ -1069,7 +958,7 @@ theorem mirror_block_members_have_equal_a_blocks {u : Word Section01.AB}
               have hpq := ih hv.right
               lia
 
-theorem mirrorBlock_delete_initial_a
+private theorem mirrorBlock_delete_initial_a
     {x y z : Word Section01.AB} {n : Nat}
     (hword : mirrorBlockWord n n = Word.Concat x (Word.Concat y z))
     (hxy : Word.Length (Word.Concat x y) <= n) :
@@ -1120,15 +1009,9 @@ theorem reverse_square_no_pumping_property :
                             lia
                           lia
 
-theorem reverse_square_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion reverseSquareLanguage) :
-    ¬ RegularLanguage.Regular reverseSquareLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma
-    reverse_square_no_pumping_property
-
 theorem reverse_square_not_regular :
     ¬ RegularLanguage.Regular reverseSquareLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular reverse_square_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property reverse_square_no_pumping_property
 
 theorem even_palindrome_not_regular :
     ¬ RegularLanguage.Regular evenPalindromeLanguage :=
@@ -1137,11 +1020,12 @@ theorem even_palindrome_not_regular :
 /-!
 # More {lit}`b`s Than {lit}`a`s in Blocks
 
-For the block language `{ a^n b^m | n < m }`, the bad word is {lit}`a^n b^(n+1)`.
+For the block language {lit}`{ a^n b^m | n < m }`, the bad word is {lit}`a^n b^(n+1)`.
 This time pumping with {lit}`k = 2` duplicates some initial {lit}`a`s. The result has at
 least as many {lit}`a`s as {lit}`b`s, so it cannot remain in the language.
 -/
 
+/-- Ordered blocks with strictly more b symbols than a symbols. -/
 def moreBsBlockLanguage : Language Section01.AB :=
   fun w => exists aCount bCount,
     aCount < bCount ∧
@@ -1156,7 +1040,7 @@ theorem more_bs_block_language_membership (w : Word Section01.AB) :
             (Word.RepeatSymbol Section01.AB.b bCount) :=
   Iff.rfl
 
-theorem more_bs_block_members_have_more_b_counts {w : Word Section01.AB}
+private theorem more_bs_block_members_have_more_b_counts {w : Word Section01.AB}
     (hw : w ∈ moreBsBlockLanguage) :
     Word.Count Section01.AB.a w < Word.Count Section01.AB.b w := by
   cases hw with
@@ -1167,7 +1051,7 @@ theorem more_bs_block_members_have_more_b_counts {w : Word Section01.AB}
             ablock_word_count_b aCount bCount]
           exact hbCount.left
 
-theorem more_bs_block_pump_two_not_mem
+private theorem more_bs_block_pump_two_not_mem
     {x y z : Word Section01.AB} {n : Nat}
     (hword :
       Word.Concat (Word.RepeatSymbol Section01.AB.a n)
@@ -1226,33 +1110,22 @@ theorem more_bs_block_no_pumping_property :
                       exact more_bs_block_pump_two_not_mem hword hrest.left
                         hrest.right.left (hrest.right.right 2)
 
-theorem more_bs_block_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion moreBsBlockLanguage) :
-    ¬ RegularLanguage.Regular moreBsBlockLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma
-    more_bs_block_no_pumping_property
-
 theorem more_bs_block_not_regular :
     ¬ RegularLanguage.Regular moreBsBlockLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular more_bs_block_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property more_bs_block_no_pumping_property
 
 /-!
-The final two declarations return to the textbook's standard
-`{ a^n b^n | n >= 0 }` example and package the contradiction into
-book-facing non-regularity theorems.
+The final declaration returns to the textbook's standard
+{lit}`{ a^n b^n | n >= 0 }` example and packages the contradiction into a
+book-facing non-regularity theorem.
 -/
-
-theorem anbn_not_regular_from_pumping_lemma
-    (pumpingLemma : Pumping.PumpingLemmaConclusion anbnLanguage) :
-    ¬ RegularLanguage.Regular anbnLanguage :=
-  Pumping.not_regular_of_no_pumping_property pumpingLemma anbn_no_pumping_property
 
 theorem anbn_not_regular :
     ¬ RegularLanguage.Regular anbnLanguage :=
-  Pumping.not_regular_of_no_pumping_property_regular anbn_no_pumping_property
+  Pumping.not_regular_of_no_pumping_property anbn_no_pumping_property
 
 /-!
-The concrete contradiction for `{ a^n b^n | n >= 0 }` is now formalized:
+The concrete contradiction for {lit}`{ a^n b^n | n >= 0 }` is now formalized:
 no pumping length can satisfy the book's quantified pumping property for this
 language. The regular-language pumping lemma is proved in
 {module}`FoC.Languages.Pumping`, so this file also derives the book-facing
