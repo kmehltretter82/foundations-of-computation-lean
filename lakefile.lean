@@ -11,7 +11,8 @@ open Lake DSL
 package «foc» where
   version := v!"0.1.0"
 
-require verso from git "https://github.com/leanprover/verso.git" @ "v4.31.0"
+require verso from git "https://github.com/kmehltretter82/verso.git" @
+  "b25f4eeddce59f3decf54c0b63d62b6b3f104598"
 
 @[default_target]
 lean_lib FoC where

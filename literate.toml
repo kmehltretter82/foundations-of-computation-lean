@@ -1,6 +1,7 @@
 landing_page = "FoC"
 hide_commands = ["import", "open", "set_option", "namespace", "end"]
 show_imports = false
+show_proof_states = false
 docstrings_as_text = true
 
 order = ["FoC"]
