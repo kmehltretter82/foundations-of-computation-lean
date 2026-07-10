@@ -343,12 +343,24 @@ theorem productionListProduces_iff_produces
     · simp [hlhs]
     · simp [hrhs]
 
+/-- The finite trace table's explicit rule list exactly presents its semantic
+grammar. -/
+def presentation (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.Presentation T.grammar where
+  rules := T.productions
+  complete := by
+    intro lhs rhs
+    exact (T.productionListProduces_iff_produces lhs rhs).symm
+
+theorem hasFinitePresentation
+    (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.HasFinitePresentation T.grammar :=
+  T.presentation.hasFinitePresentation
+
 theorem hasFiniteProductions
     (T : FiniteAcceptanceTraceTable terminal) :
-    GeneralGrammar.HasFiniteProductions T.grammar := by
-  exists T.productions
-  intro lhs rhs
-  exact (T.productionListProduces_iff_produces lhs rhs).symm
+    GeneralGrammar.HasFiniteProductions T.grammar :=
+  T.presentation.hasFiniteProductions
 
 theorem generated_language
     (T : FiniteAcceptanceTraceTable terminal) :
@@ -356,32 +368,48 @@ theorem generated_language
       (GeneralGrammar.GeneratedLanguage T.grammar) T.language :=
   semanticLanguageGrammar_generates T.language
 
+theorem finitePresentationGenerated_language
+    (T : FiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.FinitePresentationGenerated T.language := by
+  exact ⟨Unit, T.grammar, T.hasFinitePresentation, T.generated_language⟩
+
 theorem finiteProductionGenerated_language
     (T : FiniteAcceptanceTraceTable terminal) :
-    GeneralGrammar.FiniteProductionGenerated T.language := by
-  exists Unit
-  exists T.grammar
-  exact ⟨T.hasFiniteProductions, T.generated_language⟩
+    GeneralGrammar.FiniteProductionGenerated T.language :=
+  GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mp
+    T.finitePresentationGenerated_language
 
 def PresentsLanguage
     (T : FiniteAcceptanceTraceTable terminal)
     (L : Language terminal) : Prop :=
   Language.Equal T.language L
 
+theorem finitePresentationGenerated_of_presents
+    {T : FiniteAcceptanceTraceTable terminal}
+    {L : Language terminal}
+    (h : T.PresentsLanguage L) :
+    GeneralGrammar.FinitePresentationGenerated L := by
+  exact ⟨Unit, T.grammar, T.hasFinitePresentation,
+    FoC.Foundation.FSet.equal_trans T.generated_language h⟩
+
 theorem finiteProductionGenerated_of_presents
     {T : FiniteAcceptanceTraceTable terminal}
     {L : Language terminal}
     (h : T.PresentsLanguage L) :
-    GeneralGrammar.FiniteProductionGenerated L := by
-  rcases T.finiteProductionGenerated_language with ⟨nonterminal, G, hG⟩
-  exists nonterminal
-  exists G
-  exact ⟨hG.left, FoC.Foundation.FSet.equal_trans hG.right h⟩
+    GeneralGrammar.FiniteProductionGenerated L :=
+  GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mp
+    (T.finitePresentationGenerated_of_presents h)
 
 end FiniteAcceptanceTraceTable
 
 def FiniteTraceTableRecognizable (L : Language terminal) : Prop :=
   exists T : FiniteAcceptanceTraceTable terminal, T.PresentsLanguage L
+
+def FiniteTraceTableToFiniteGeneralGrammarPresentationConstruction
+    (terminal : Type u) : Prop :=
+  forall L : Language terminal,
+    FiniteTraceTableRecognizable L ->
+      GeneralGrammar.FinitePresentationGenerated L
 
 def FiniteTraceTableToFiniteGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
@@ -389,12 +417,25 @@ def FiniteTraceTableToFiniteGeneralGrammarConstruction
     FiniteTraceTableRecognizable L ->
       GeneralGrammar.FiniteProductionGenerated L
 
+theorem finiteTraceTableRecognizable_finitePresentationGenerated
+    {L : Language terminal}
+    (h : FiniteTraceTableRecognizable L) :
+    GeneralGrammar.FinitePresentationGenerated L := by
+  rcases h with ⟨T, hT⟩
+  exact T.finitePresentationGenerated_of_presents hT
+
 theorem finiteTraceTableRecognizable_finiteProductionGenerated
     {L : Language terminal}
     (h : FiniteTraceTableRecognizable L) :
-    GeneralGrammar.FiniteProductionGenerated L := by
-  rcases h with ⟨T, hT⟩
-  exact T.finiteProductionGenerated_of_presents hT
+    GeneralGrammar.FiniteProductionGenerated L :=
+  GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mp
+    (finiteTraceTableRecognizable_finitePresentationGenerated h)
+
+theorem finiteTraceTableToFiniteGeneralGrammarPresentationConstruction
+    (terminal : Type u) :
+    FiniteTraceTableToFiniteGeneralGrammarPresentationConstruction terminal := by
+  intro L hL
+  exact finiteTraceTableRecognizable_finitePresentationGenerated hL
 
 theorem finiteTraceTableToFiniteGeneralGrammarConstruction
     (terminal : Type u) :
@@ -420,13 +461,22 @@ theorem machineFiniteAcceptanceTraceTable_generated
       (fun w : Word Bool => D.HaltsOnInput w) :=
   FoC.Foundation.FSet.equal_trans T.generated_language hT
 
+theorem machineFiniteAcceptanceTraceTable_finitePresentationGenerated
+    {D : MachineDescription}
+    {T : MachineFiniteAcceptanceTraceTable D}
+    (hT : MachineFiniteAcceptanceTraceTable.Presents D T) :
+    GeneralGrammar.FinitePresentationGenerated
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  T.finitePresentationGenerated_of_presents hT
+
 theorem machineFiniteAcceptanceTraceTable_finiteProductionGenerated
     {D : MachineDescription}
     {T : MachineFiniteAcceptanceTraceTable D}
     (hT : MachineFiniteAcceptanceTraceTable.Presents D T) :
     GeneralGrammar.FiniteProductionGenerated
       (fun w : Word Bool => D.HaltsOnInput w) :=
-  T.finiteProductionGenerated_of_presents hT
+  GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mp
+    (machineFiniteAcceptanceTraceTable_finitePresentationGenerated hT)
 
 
 end Computability

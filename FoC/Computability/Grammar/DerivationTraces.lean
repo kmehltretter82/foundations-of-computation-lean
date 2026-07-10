@@ -13,6 +13,13 @@ turns the length-indexed derivation relation from
 {module}`FoC.Grammars.GeneralGrammar` into an acceptance trace and a staged
 program recognizer.
 
+The presentation-based entry points retain an explicit
+{name (full := FoC.Grammars.GeneralGrammar.Presentation)}`GeneralGrammar.Presentation`,
+so executable recognizers can use its
+stored rule list directly. The production-list entry points remain the
+low-level certificate semantics, while the older existential finite-production
+theorems are compatibility wrappers.
+
 The construction stays at the staged-program layer.  Compiling this recognizer
 to a concrete one-tape Turing machine is the later universal/interpreter
 development.
@@ -48,6 +55,14 @@ def FiniteProductionListDerivationTrace
   GeneralGrammar.ProductionListDerivesIn rules n
     [Symbol.nonterminal G.start]
     (SententialForm.terminalWord w)
+
+/-- The derivation trace obtained from the stored rules of an explicit finite
+presentation. -/
+def FinitePresentationDerivationTrace
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G)
+    (w : Word terminal) (n : Nat) : Prop :=
+  FiniteProductionListDerivationTrace G presentation.rules w n
 
 inductive FiniteProductionListStepCertificate
     (rules : List (GeneralGrammar.Production terminal nonterminal))
@@ -593,6 +608,14 @@ theorem finiteProductionListDerivationTrace_iff_derivationTrace
   GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
     hrules
 
+theorem finitePresentationDerivationTrace_iff_derivationTrace
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G)
+    {w : Word terminal} {n : Nat} :
+    FinitePresentationDerivationTrace presentation w n <->
+      GeneralGrammarDerivationTrace G w n :=
+  presentation.productionListDerivesIn_iff_derivesIn
+
 theorem generalGrammar_derivationTrace_acceptance
     (G : GeneralGrammar terminal nonterminal) :
     AcceptanceTrace
@@ -631,6 +654,25 @@ theorem finiteProductionListDerivationTrace_acceptance
       ⟨n,
         (finiteProductionListDerivationTrace_iff_derivationTrace
           hrules).mpr hn⟩
+
+theorem finitePresentationDerivationTrace_acceptance
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    AcceptanceTrace
+      (FinitePresentationDerivationTrace presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListDerivationTrace_acceptance presentation.complete
+
+theorem finitePresentationDerivationTrace_acceptance_of_hasFinitePresentation
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFinitePresentation G) :
+    exists presentation : GeneralGrammar.Presentation G,
+      AcceptanceTrace
+        (FinitePresentationDerivationTrace presentation)
+        (GeneralGrammar.GeneratedLanguage G) := by
+  rcases hfinite with ⟨presentation⟩
+  exact ⟨presentation,
+    finitePresentationDerivationTrace_acceptance presentation⟩
 
 theorem finiteProductionListDerivationTrace_acceptance_of_hasFiniteProductions
     {G : GeneralGrammar terminal nonterminal}
@@ -924,6 +966,36 @@ def FiniteProductionListBoundedRecognizerProgram
     StagedProgram terminal Unit :=
   FiniteProductionListCheckedIndexedCertificateRecognizerProgram G rules
 
+def FinitePresentationCheckedIndexedCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCheckedIndexedCertificateRecognizerProgram G
+    presentation.rules
+
+def FinitePresentationCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListCertificateRecognizerProgram G presentation.rules
+
+def FinitePresentationIndexedCertificateRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListIndexedCertificateRecognizerProgram G
+    presentation.rules
+
+def FinitePresentationBoundedRecognizerProgram
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListBoundedRecognizerProgram G presentation.rules
+
 theorem generalGrammarBoundedRecognizerProgram_acceptsLanguage
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptsLanguage
@@ -999,6 +1071,47 @@ theorem finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
       (GeneralGrammar.GeneratedLanguage G) :=
   finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
     hrules
+
+theorem finitePresentationCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (FinitePresentationCheckedIndexedCertificateRecognizerProgram
+        presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+    presentation.complete
+
+theorem finitePresentationBoundedRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (FinitePresentationBoundedRecognizerProgram presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListBoundedRecognizerProgram_acceptsLanguage
+    presentation.complete
+
+theorem finitePresentationCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (FinitePresentationCertificateRecognizerProgram presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListCertificateRecognizerProgram_acceptsLanguage
+    presentation.complete
+
+theorem finitePresentationIndexedCertificateRecognizerProgram_acceptsLanguage
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (FinitePresentationIndexedCertificateRecognizerProgram presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
+    presentation.complete
 
 theorem finiteProductionListCertificateRecognizerProgram_same_language
     [DecidableEq terminal] [DecidableEq nonterminal]
@@ -1091,6 +1204,14 @@ noncomputable def FiniteProductionListRecognizerProgram
           else
             none }
 
+/-- The staged recognizer driven by the concrete rules stored in a
+proof-relevant finite presentation. -/
+noncomputable def FinitePresentationRecognizerProgram
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FiniteProductionListRecognizerProgram G presentation.rules
+
 theorem finiteProductionListRecognizerProgram_run_of_trace
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -1142,6 +1263,26 @@ theorem finiteProductionListRecognizerProgram_acceptsLanguage
     rcases (finiteProductionListDerivationTrace_acceptance hrules w).mpr h with
       ⟨n, hn⟩
     exact ⟨n, finiteProductionListRecognizerProgram_run_of_trace hn⟩
+
+theorem finitePresentationRecognizerProgram_acceptsLanguage
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (FinitePresentationRecognizerProgram presentation)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  finiteProductionListRecognizerProgram_acceptsLanguage
+    presentation.complete
+
+theorem finitePresentationRecognizerProgram_acceptsLanguage_of_hasFinitePresentation
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFinitePresentation G) :
+    exists presentation : GeneralGrammar.Presentation G,
+      ProgramAcceptsLanguage
+        (FinitePresentationRecognizerProgram presentation)
+        (GeneralGrammar.GeneratedLanguage G) := by
+  rcases hfinite with ⟨presentation⟩
+  exact ⟨presentation,
+    finitePresentationRecognizerProgram_acceptsLanguage presentation⟩
 
 theorem finiteProductionListRecognizerProgram_acceptsLanguage_of_hasFiniteProductions
     {G : GeneralGrammar terminal nonterminal}

@@ -240,6 +240,24 @@ theorem hasFiniteProductions_of_hasFinitePresentation
     HasFiniteProductions G :=
   hasFinitePresentation_iff_hasFiniteProductions.mp h
 
+namespace Presentation
+
+/-- An explicit presentation witnesses the proposition that the grammar is
+finitely presented. Executable consumers should retain the presentation itself
+rather than discard its rule list through this proposition. -/
+def hasFinitePresentation {G : GeneralGrammar terminal nonterminal}
+    (presentation : Presentation G) : HasFinitePresentation G :=
+  ⟨presentation⟩
+
+/-- Compatibility projection from a proof-relevant presentation to the older
+existential finite-production predicate. -/
+theorem hasFiniteProductions {G : GeneralGrammar terminal nonterminal}
+    (presentation : Presentation G) : HasFiniteProductions G :=
+  hasFiniteProductions_of_hasFinitePresentation
+    presentation.hasFinitePresentation
+
+end Presentation
+
 namespace ProductionList
 
 /-- Build a semantic general grammar directly from a valid finite rule list. -/
@@ -408,6 +426,20 @@ theorem productionListDerivesIn_iff_derivesIn_of_produces
         exact ProductionListDerivesIn.step
           ((productionListYields_iff_yields_of_produces hrules).mpr hstep)
           ih
+
+namespace Presentation
+
+/-- Length-indexed derivations over the stored finite rule list are exactly the
+semantic derivations of the presented grammar. -/
+theorem productionListDerivesIn_iff_derivesIn
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : Presentation G)
+    {n : Nat} {x y : SententialForm terminal nonterminal} :
+    ProductionListDerivesIn presentation.rules n x y <->
+      DerivesIn G n x y :=
+  productionListDerivesIn_iff_derivesIn_of_produces presentation.complete
+
+end Presentation
 
 theorem yields_derives {G : GeneralGrammar terminal nonterminal}
     {x y : SententialForm terminal nonterminal} (h : Yields G x y) :

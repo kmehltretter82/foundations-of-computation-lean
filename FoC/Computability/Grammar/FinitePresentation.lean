@@ -151,24 +151,33 @@ theorem toGrammar_produces_iff
       GeneralGrammar.ProductionListProduces P.rules lhs rhs :=
   Iff.rfl
 
+/-- The first-order Boolean grammar data gives an exact proof-relevant
+presentation of its semantic grammar. -/
+def toPresentation (P : FiniteBoolGeneralGrammarPresentation) :
+    GeneralGrammar.Presentation P.toGrammar where
+  rules := P.rules
+  complete := P.toGrammar_produces_iff
+
+theorem toGrammar_hasFinitePresentation
+    (P : FiniteBoolGeneralGrammarPresentation) :
+    GeneralGrammar.HasFinitePresentation P.toGrammar :=
+  P.toPresentation.hasFinitePresentation
+
 theorem toGrammar_hasFiniteProductions
     (P : FiniteBoolGeneralGrammarPresentation) :
-    GeneralGrammar.HasFiniteProductions P.toGrammar := by
-  exists P.rules
-  intro lhs rhs
-  exact P.toGrammar_produces_iff lhs rhs
+    GeneralGrammar.HasFiniteProductions P.toGrammar :=
+  P.toPresentation.hasFiniteProductions
 
 noncomputable def recognizerProgram
     (P : FiniteBoolGeneralGrammarPresentation) :
     StagedProgram Bool Unit :=
-  FiniteProductionListRecognizerProgram P.toGrammar P.rules
+  FinitePresentationRecognizerProgram P.toPresentation
 
 theorem recognizerProgram_acceptsLanguage
     (P : FiniteBoolGeneralGrammarPresentation) :
     ProgramAcceptsLanguage P.recognizerProgram
       (GeneralGrammar.GeneratedLanguage P.toGrammar) :=
-  finiteProductionListRecognizerProgram_acceptsLanguage
-    (P.toGrammar_produces_iff)
+  finitePresentationRecognizerProgram_acceptsLanguage P.toPresentation
 
 def CompilerConstruction : Prop :=
   forall P : FiniteBoolGeneralGrammarPresentation,
@@ -179,28 +188,27 @@ def BoundedRecognizerCompilerConstruction : Prop :=
   forall P : FiniteBoolGeneralGrammarPresentation,
     exists D : MachineDescription,
       ProgramCompiledByDescription
-        (FiniteProductionListBoundedRecognizerProgram P.toGrammar P.rules) D
+        (FinitePresentationBoundedRecognizerProgram P.toPresentation) D
 
 def CertificateRecognizerCompilerConstruction : Prop :=
   forall P : FiniteBoolGeneralGrammarPresentation,
     exists D : MachineDescription,
       ProgramCompiledByDescription
-        (FiniteProductionListCertificateRecognizerProgram P.toGrammar
-          P.rules) D
+        (FinitePresentationCertificateRecognizerProgram P.toPresentation) D
 
 def IndexedCertificateRecognizerCompilerConstruction : Prop :=
   forall P : FiniteBoolGeneralGrammarPresentation,
     exists D : MachineDescription,
       ProgramCompiledByDescription
-        (FiniteProductionListIndexedCertificateRecognizerProgram
-          P.toGrammar P.rules) D
+        (FinitePresentationIndexedCertificateRecognizerProgram
+          P.toPresentation) D
 
 def CheckedIndexedCertificateRecognizerCompilerConstruction : Prop :=
   forall P : FiniteBoolGeneralGrammarPresentation,
     exists D : MachineDescription,
       ProgramCompiledByDescription
-        (FiniteProductionListCheckedIndexedCertificateRecognizerProgram
-          P.toGrammar P.rules) D
+        (FinitePresentationCheckedIndexedCertificateRecognizerProgram
+          P.toPresentation) D
 
 theorem compilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
@@ -214,7 +222,7 @@ theorem certificateRecognizerCompilerConstruction_of_descriptionCompiler
   intro P
   exact
     hcompile
-      (FiniteProductionListCertificateRecognizerProgram P.toGrammar P.rules)
+      (FinitePresentationCertificateRecognizerProgram P.toPresentation)
 
 theorem indexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
@@ -222,8 +230,8 @@ theorem indexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
   intro P
   exact
     hcompile
-      (FiniteProductionListIndexedCertificateRecognizerProgram
-        P.toGrammar P.rules)
+      (FinitePresentationIndexedCertificateRecognizerProgram
+        P.toPresentation)
 
 theorem checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCompiler
     (hcompile : DescriptionProgramAcceptorCompilationPrinciple) :
@@ -231,8 +239,8 @@ theorem checkedIndexedCertificateRecognizerCompilerConstruction_of_descriptionCo
   intro P
   exact
     hcompile
-      (FiniteProductionListCheckedIndexedCertificateRecognizerProgram
-        P.toGrammar P.rules)
+      (FinitePresentationCheckedIndexedCertificateRecognizerProgram
+        P.toPresentation)
 
 theorem boundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
     (hcompile : CertificateRecognizerCompilerConstruction) :
@@ -242,10 +250,10 @@ theorem boundedRecognizerCompilerConstruction_of_certificateRecognizerCompiler
   exact
     ⟨D,
       programCompiledByDescription_of_same_accepted_language
-        (finiteProductionListCertificateRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
-        (finiteProductionListBoundedRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
+        (finitePresentationCertificateRecognizerProgram_acceptsLanguage
+          P.toPresentation)
+        (finitePresentationBoundedRecognizerProgram_acceptsLanguage
+          P.toPresentation)
         hD⟩
 
 theorem boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCompiler
@@ -256,10 +264,10 @@ theorem boundedRecognizerCompilerConstruction_of_indexedCertificateRecognizerCom
   exact
     ⟨D,
       programCompiledByDescription_of_same_accepted_language
-        (finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
-        (finiteProductionListBoundedRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
+        (finitePresentationIndexedCertificateRecognizerProgram_acceptsLanguage
+          P.toPresentation)
+        (finitePresentationBoundedRecognizerProgram_acceptsLanguage
+          P.toPresentation)
         hD⟩
 
 theorem indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
@@ -270,10 +278,10 @@ theorem indexedCertificateRecognizerCompilerConstruction_of_checkedIndexedCertif
   exact
     ⟨D,
       programCompiledByDescription_of_same_accepted_language
-        (finiteProductionListCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
-        (finiteProductionListIndexedCertificateRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
+        (finitePresentationCheckedIndexedCertificateRecognizerProgram_acceptsLanguage
+          P.toPresentation)
+        (finitePresentationIndexedCertificateRecognizerProgram_acceptsLanguage
+          P.toPresentation)
         hD⟩
 
 theorem boundedRecognizerCompilerConstruction_of_checkedIndexedCertificateRecognizerCompiler
@@ -291,8 +299,8 @@ theorem compilerConstruction_of_boundedRecognizerCompiler
   exact
     ⟨D,
       programCompiledByDescription_of_same_accepted_language
-        (finiteProductionListBoundedRecognizerProgram_acceptsLanguage
-          (P.toGrammar_produces_iff))
+        (finitePresentationBoundedRecognizerProgram_acceptsLanguage
+          P.toPresentation)
         P.recognizerProgram_acceptsLanguage
         hD⟩
 
@@ -316,6 +324,14 @@ def ofGrammarRules [DecidableEq nonterminal]
       (containsNonterminal_mapNonterminal_iff
         (indexOfDecidable G.nonterminalsFinite) source.lhs).mpr
         (G.lhsContainsNonterminal source.lhs source.rhs hprod)
+
+/-- Replace an arbitrary finite nonterminal type by {lit}`Fin n`, retaining the
+rule list and exactness theorem from an explicit presentation. -/
+def ofPresentation [DecidableEq nonterminal]
+    {G : GeneralGrammar Bool nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    FiniteBoolGeneralGrammarPresentation :=
+  ofGrammarRules G presentation.rules presentation.complete
 
 theorem productionListYields_mapNonterminal
     (f : nonterminal -> nonterminal')
@@ -513,6 +529,16 @@ theorem generatedLanguage_equal_ofGrammarRules [DecidableEq nonterminal]
       ((GeneralGrammar.productionListDerivesIn_iff_derivesIn_of_produces
         (P.toGrammar_produces_iff)).mp hPList)
 
+theorem generatedLanguage_equal_ofPresentation [DecidableEq nonterminal]
+    {G : GeneralGrammar Bool nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    Language.Equal
+      (GeneralGrammar.GeneratedLanguage
+        (ofPresentation presentation).toGrammar)
+      (GeneralGrammar.GeneratedLanguage G) :=
+  generatedLanguage_equal_ofGrammarRules G presentation.rules
+    presentation.complete
+
 theorem recognizerProgram_acceptsLanguage_ofGrammarRules
     [DecidableEq nonterminal]
     (G : GeneralGrammar Bool nonterminal)
@@ -527,6 +553,16 @@ theorem recognizerProgram_acceptsLanguage_ofGrammarRules
   exact Iff.trans
     ((ofGrammarRules G rules hrules).recognizerProgram_acceptsLanguage w)
     ((generatedLanguage_equal_ofGrammarRules G rules hrules) w)
+
+theorem recognizerProgram_acceptsLanguage_ofPresentation
+    [DecidableEq nonterminal]
+    {G : GeneralGrammar Bool nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (ofPresentation presentation).recognizerProgram
+      (GeneralGrammar.GeneratedLanguage G) :=
+  recognizerProgram_acceptsLanguage_ofGrammarRules G presentation.rules
+    presentation.complete
 
 end FiniteBoolGeneralGrammarPresentation
 
@@ -678,9 +714,9 @@ theorem generalGrammar_generated_programAcceptable
           exact programAcceptable_of_equal
             (generalGrammar_generatedLanguage_programAcceptable G) hG
 
-theorem finiteProductionGenerated_programAcceptable
+theorem finitePresentationGenerated_programAcceptable
     {L : Language terminal}
-    (h : GeneralGrammar.FiniteProductionGenerated L) :
+    (h : GeneralGrammar.FinitePresentationGenerated L) :
     ProgramAcceptable L := by
   cases h with
   | intro nonterminal hnonterminal =>
@@ -689,6 +725,14 @@ theorem finiteProductionGenerated_programAcceptable
           exact programAcceptable_of_equal
             (generalGrammar_generatedLanguage_programAcceptable G)
             hG.right
+
+theorem finiteProductionGenerated_programAcceptable
+    {L : Language terminal}
+    (h : GeneralGrammar.FiniteProductionGenerated L) :
+    ProgramAcceptable L :=
+  finitePresentationGenerated_programAcceptable
+    (GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mpr
+      h)
 
 theorem generalGrammar_generatedLanguage_recursivelyEnumerable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
@@ -705,13 +749,23 @@ theorem generalGrammar_generated_recursivelyEnumerable_of_programCompiler
   recursivelyEnumerable_of_programCompiler hcompile
     (generalGrammar_generated_programAcceptable h)
 
+theorem finitePresentationGenerated_recursivelyEnumerable_of_programCompiler
+    (hcompile : ProgramAcceptorCompilationPrinciple terminal)
+    {L : Language terminal}
+    (h : GeneralGrammar.FinitePresentationGenerated L) :
+    RecursivelyEnumerable L :=
+  recursivelyEnumerable_of_programCompiler hcompile
+    (finitePresentationGenerated_programAcceptable h)
+
 theorem finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
     (hcompile : ProgramAcceptorCompilationPrinciple terminal)
     {L : Language terminal}
     (h : GeneralGrammar.FiniteProductionGenerated L) :
     RecursivelyEnumerable L :=
-  recursivelyEnumerable_of_programCompiler hcompile
-    (finiteProductionGenerated_programAcceptable h)
+  finitePresentationGenerated_recursivelyEnumerable_of_programCompiler
+    hcompile
+    (GeneralGrammar.finitePresentationGenerated_iff_finiteProductionGenerated.mpr
+      h)
 
 
 end Computability

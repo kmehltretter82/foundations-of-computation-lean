@@ -130,7 +130,9 @@ theorem recursive_language_iff_finite_general_grammar_pair_of_grammar_constructi
     (haccept : DecidableToAcceptableConstruction terminal)
     (hdovetail : DovetailingDecidableConstruction terminal)
     (hto : FiniteGeneralGrammarToRecursivelyEnumerableConstruction terminal)
-    (hfrom : RecursivelyEnumerableToFiniteGeneralGrammarConstruction terminal)
+    (hfrom :
+      RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
+        terminal)
     (L : Language terminal) :
     RecursiveLanguage L <-> FiniteGeneralGrammarPairGenerated L :=
   recursive_language_iff_finite_general_grammar_pair_of_constructions
@@ -225,12 +227,18 @@ theorem program_acceptable_by_description_to_finite_general_grammar_construction
   Computability.booleanFiniteDataSection52CompilerCloseout_programAcceptableByDescriptionToFiniteGrammar
     hclose
 
+theorem program_acceptable_by_description_to_finite_general_grammar_presentation_construction_of_finite_data_closeout
+    (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout) :
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarPresentationConstruction :=
+  Computability.booleanFiniteDataSection52CompilerCloseout_programAcceptableByDescriptionToFinitePresentationGrammar
+    hclose
+
 theorem program_acceptable_by_description_finite_general_grammar_of_finite_data_closeout
     (hclose : ConcreteBooleanFiniteDataSection52CompilerCloseout)
     {L : Language Bool}
     (hL : ConcreteProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
-  (program_acceptable_by_description_to_finite_general_grammar_construction_of_finite_data_closeout
+  (program_acceptable_by_description_to_finite_general_grammar_presentation_construction_of_finite_data_closeout
     hclose) L hL
 
 theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
@@ -251,10 +259,14 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
     concrete_finite_grammar_recognizer_compiler_of_production_list_compiler
       hlist
   rcases hgrammar
-      (nonterminal := acceptNonterminal) acceptG acceptFinite with
+      (nonterminal := acceptNonterminal) acceptG
+        (GeneralGrammar.hasFiniteProductions_of_hasFinitePresentation
+          acceptFinite) with
     ⟨acceptD, acceptCompiled⟩
   rcases hgrammar
-      (nonterminal := rejectNonterminal) rejectG rejectFinite with
+      (nonterminal := rejectNonterminal) rejectG
+        (GeneralGrammar.hasFiniteProductions_of_hasFinitePresentation
+          rejectFinite) with
     ⟨rejectD, rejectCompiled⟩
   let acceptProgram : ConcreteFiniteAcceptorProgram :=
     { description := acceptD }
@@ -333,11 +345,18 @@ theorem program_acceptable_by_description_to_finite_general_grammar_scaffold :
     (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
       concrete_machine_description_to_finite_general_grammar_construction)
 
+theorem program_acceptable_by_description_to_finite_general_grammar_presentation_scaffold :
+    ProgramAcceptableByDescriptionToFiniteGeneralGrammarPresentationConstruction :=
+  Computability.programAcceptableByDescriptionToFiniteGeneralGrammarPresentationConstruction_of_descriptionRecognizer
+    (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarPresentationConstruction_of_machineConstruction
+      concrete_machine_description_to_finite_general_grammar_presentation_construction)
+
 theorem program_acceptable_by_description_finite_general_grammar_scaffold
     {L : Language Bool}
     (hL : ConcreteProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
-  program_acceptable_by_description_to_finite_general_grammar_scaffold L hL
+  program_acceptable_by_description_to_finite_general_grammar_presentation_scaffold
+    L hL
 
 theorem finite_general_grammar_pair_recursive_of_checked_presentation_compiler
     (hpaired : ConcretePairedRecognizerDovetailCompilerConstruction)
@@ -358,7 +377,7 @@ theorem boolean_finite_general_grammar_re_equivalence_construction_of_finite_sec
   finite_general_grammar_re_equivalence_construction_of_constructions
     (finite_general_grammar_to_recursively_enumerable_construction_of_finite_section52_closeout
       hclose)
-    hclose.recursivelyEnumerableToFiniteGrammar
+    hclose.recursivelyEnumerableToFinitePresentationGrammar
 
 theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout)
@@ -370,7 +389,7 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_sec
       hclose.dovetailDescription)
     (finite_general_grammar_to_recursively_enumerable_construction_of_finite_section52_closeout
       hclose)
-    hclose.recursivelyEnumerableToFiniteGrammar
+    hclose.recursivelyEnumerableToFinitePresentationGrammar
     L
 
 theorem boolean_finite_general_grammar_re_equivalence_construction_of_semantic_section52_closeout

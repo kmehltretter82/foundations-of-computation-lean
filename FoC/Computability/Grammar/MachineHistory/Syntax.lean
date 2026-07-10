@@ -304,11 +304,22 @@ def grammar (D : MachineDescription) :
       exact trivial
   nonterminalsFinite := MachineHistoryNonterminal.finite D
 
+/-- The explicit machine-history rules exactly present the semantic history
+grammar. -/
+def presentation (D : MachineDescription) :
+    GeneralGrammar.Presentation (grammar D) where
+  rules := productions D
+  complete := by
+    intro lhs rhs
+    rfl
+
+theorem hasFinitePresentation (D : MachineDescription) :
+    GeneralGrammar.HasFinitePresentation (grammar D) :=
+  (presentation D).hasFinitePresentation
+
 theorem hasFiniteProductions (D : MachineDescription) :
-    GeneralGrammar.HasFiniteProductions (grammar D) := by
-  exists productions D
-  intro lhs rhs
-  rfl
+    GeneralGrammar.HasFiniteProductions (grammar D) :=
+  (presentation D).hasFiniteProductions
 
 def configForm (D : MachineDescription)
     (c : MachineDescription.Configuration) :

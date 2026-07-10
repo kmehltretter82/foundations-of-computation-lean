@@ -55,6 +55,11 @@ indexed-certificate, and checked-indexed-certificate recognizer targets used
 to factor the finite presentation compiler. The paired-recognizer dovetail
 field is supplied either by a
 dedicated dovetail compiler or by the Boolean description decider compiler.
+
+Finite general grammars on this page now use proof-relevant
+{name}`GeneralGrammar.Presentation` as their canonical interface. The older
+finite-production names are retained only where they expose compatibility
+results for existing callers.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -71,6 +76,12 @@ def GeneralGrammarFiniteProductionListTraceLanguage
     (rules : List (GeneralGrammar.Production terminal nonterminal))
     (w : Word terminal) (n : Nat) : Prop :=
   FiniteProductionListDerivationTrace G rules w n
+
+def GeneralGrammarFinitePresentationTraceLanguage
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G)
+    (w : Word terminal) (n : Nat) : Prop :=
+  FinitePresentationDerivationTrace presentation w n
 
 def GeneralGrammarBoundedDerivationSearchLanguage
     (G : GeneralGrammar terminal nonterminal)
@@ -94,6 +105,12 @@ noncomputable def GeneralGrammarFiniteProductionListStagedRecognizer
     StagedProgram terminal Unit :=
   FiniteProductionListRecognizerProgram G rules
 
+noncomputable def GeneralGrammarFinitePresentationStagedRecognizer
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FinitePresentationRecognizerProgram presentation
+
 noncomputable def GeneralGrammarBoundedStagedRecognizer
     (G : GeneralGrammar terminal nonterminal) :
     StagedProgram terminal Unit :=
@@ -105,6 +122,13 @@ def GeneralGrammarFiniteProductionListBoundedStagedRecognizer
     (rules : List (GeneralGrammar.Production terminal nonterminal)) :
     StagedProgram terminal Unit :=
   FiniteProductionListBoundedRecognizerProgram G rules
+
+def GeneralGrammarFinitePresentationBoundedStagedRecognizer
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    StagedProgram terminal Unit :=
+  FinitePresentationBoundedRecognizerProgram presentation
 
 def ConcreteFiniteProductionListDerivationCertificateTrace
     (G : GeneralGrammar terminal nonterminal)
@@ -242,10 +266,19 @@ def ConcreteFiniteTraceTableToFiniteGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
   FiniteTraceTableToFiniteGeneralGrammarConstruction terminal
 
+def ConcreteFiniteTraceTableToFiniteGeneralGrammarPresentationConstruction
+    (terminal : Type u) : Prop :=
+  FiniteTraceTableToFiniteGeneralGrammarPresentationConstruction terminal
+
 def ConcreteFiniteAcceptanceTraceTableGrammar
     (T : ConcreteFiniteAcceptanceTraceTable terminal) :
     GeneralGrammar terminal Unit :=
   T.grammar
+
+def ConcreteFiniteAcceptanceTraceTablePresentation
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.Presentation T.grammar :=
+  T.presentation
 
 def ConcreteMachineFiniteAcceptanceTraceTable
     (D : MachineDescription) : Type :=
@@ -259,8 +292,20 @@ def ConcreteMachineFiniteAcceptanceTraceTablePresents
 def ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction : Prop :=
   MachineDescriptionToFiniteGeneralGrammarConstruction
 
+def ConcreteMachineDescriptionToFiniteGeneralGrammarPresentationConstruction :
+    Prop :=
+  MachineDescriptionToFiniteGeneralGrammarPresentationConstruction
+
 def ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction : Prop :=
   MachineDescriptionAcceptsToFiniteGeneralGrammarConstruction
+
+def ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarPresentationConstruction :
+    Prop :=
+  MachineDescriptionAcceptsToFiniteGeneralGrammarPresentationConstruction
+
+theorem concrete_machine_description_to_finite_general_grammar_presentation_construction :
+    ConcreteMachineDescriptionToFiniteGeneralGrammarPresentationConstruction :=
+  Computability.machineDescriptionToFiniteGeneralGrammarPresentationConstruction
 
 theorem concrete_machine_description_to_finite_general_grammar_construction :
     ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction :=
@@ -285,6 +330,13 @@ def ConcreteFiniteSourceFiniteGeneralGrammarRecognizerCompilerConstruction :
 
 def ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction : Prop :=
   FiniteProductionListGrammarRecognizerCompilerConstruction
+
+def ConcreteGeneralGrammarPresentationRecognizerCompilerConstruction : Prop :=
+  GeneralGrammarPresentationRecognizerCompilerConstruction
+
+def ConcreteFinitePresentationBooleanGeneralGrammarRecognizerCompilerConstruction :
+    Prop :=
+  FinitePresentationBooleanGeneralGrammarRecognizerCompilerPrinciple
 
 def ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :
     Prop :=
@@ -324,6 +376,10 @@ def RecursivelyEnumerableToFiniteGeneralGrammarConstruction
     (terminal : Type u) : Prop :=
   RecursivelyEnumerableToFiniteGeneralGrammarPrinciple terminal
 
+def RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
+    (terminal : Type u) : Prop :=
+  RecursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple terminal
+
 /-!
 These aliases preserve the chapter's older {lit}`Concrete...Closeout` names.
 The underlying records are layered: the semantic closeout contains semantic
@@ -348,6 +404,12 @@ theorem concrete_finite_grammar_recognizer_compiler_of_general_compiler
   Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
     hcompile
 
+theorem concrete_finite_presentation_grammar_recognizer_compiler_of_general_compiler
+    (hcompile : SemanticBooleanGeneralGrammarRecognizerCompilerAssumption) :
+    ConcreteFinitePresentationBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.finitePresentationBooleanGeneralGrammarRecognizerCompilerPrinciple_of_generalCompiler
+    hcompile
+
 theorem concrete_finite_production_list_grammar_recognizer_compiler_of_description_compiler
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
     ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction :=
@@ -366,6 +428,20 @@ theorem concrete_finite_production_list_grammar_recognizer_compiler_of_finite_pr
       ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction) :
     ConcreteFiniteProductionListGrammarRecognizerCompilerConstruction :=
   Computability.finiteProductionListGrammarRecognizerCompilerConstruction_of_finitePresentationCompiler
+    hcompile
+
+theorem concrete_general_grammar_presentation_recognizer_compiler_of_finite_presentation_compiler
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction) :
+    ConcreteGeneralGrammarPresentationRecognizerCompilerConstruction :=
+  Computability.generalGrammarPresentationRecognizerCompilerConstruction_of_finitePresentationCompiler
+    hcompile
+
+theorem concrete_finite_presentation_grammar_recognizer_compiler_of_presentation_compiler
+    (hcompile :
+      ConcreteGeneralGrammarPresentationRecognizerCompilerConstruction) :
+    ConcreteFinitePresentationBooleanGeneralGrammarRecognizerCompilerConstruction :=
+  Computability.finitePresentationBooleanGeneralGrammarRecognizerCompilerPrinciple_of_presentationCompiler
     hcompile
 
 theorem concrete_finite_grammar_recognizer_compiler_of_finite_presentation_compiler
@@ -459,6 +535,12 @@ theorem concrete_finite_bool_general_grammar_presentation_has_finite_productions
     (P : ConcreteFiniteBoolGeneralGrammarPresentation) :
     GeneralGrammar.HasFiniteProductions P.toGrammar :=
   Computability.FiniteBoolGeneralGrammarPresentation.toGrammar_hasFiniteProductions
+    P
+
+theorem concrete_finite_bool_general_grammar_presentation_has_finite_presentation
+    (P : ConcreteFiniteBoolGeneralGrammarPresentation) :
+    GeneralGrammar.HasFinitePresentation P.toGrammar :=
+  Computability.FiniteBoolGeneralGrammarPresentation.toGrammar_hasFinitePresentation
     P
 
 theorem concrete_finite_bool_general_grammar_presentation_staged_recognizer_accepts
@@ -569,6 +651,12 @@ theorem recursively_enumerable_to_finite_general_grammar_construction_of_descrip
   Computability.recursivelyEnumerableToFiniteGeneralGrammarPrinciple_bool_of_descriptionCompiler
     hcompile
 
+theorem recursively_enumerable_to_finite_presentation_general_grammar_construction_of_description_compiler
+    (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
+    RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction Bool :=
+  Computability.recursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple_bool_of_descriptionCompiler
+    hcompile
+
 theorem concrete_finite_section52_closeout_of_semantic_closeout_and_description_compiler
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (hcompile : ConcreteDescriptionAcceptorCompilationConstruction) :
@@ -617,10 +705,10 @@ def GeneralGrammarREEquivalenceConstruction
 
 def FiniteGeneralGrammarREEquivalenceConstruction
     (terminal : Type u) : Prop :=
-  FiniteGeneralGrammarREEquivalencePrinciple terminal
+  FinitePresentationGeneralGrammarREEquivalencePrinciple terminal
 
 def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
-  GeneralGrammar.FiniteProductionGenerated L
+  GeneralGrammar.FinitePresentationGenerated L
 
 def FiniteGeneralGrammarToRecursivelyEnumerableConstruction
     (terminal : Type u) : Prop :=
@@ -638,7 +726,7 @@ def ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage
     {nonterminal : Type}
     (G : GeneralGrammar Bool nonterminal)
     (L : Language Bool) : Prop :=
-  GeneralGrammar.HasFiniteProductions G ∧
+  GeneralGrammar.HasFinitePresentation G ∧
     Language.Equal (GeneralGrammarGeneratedLanguage G) L ∧
       exists D : MachineDescription,
         ConcreteProgramCompiledByDescription
@@ -683,6 +771,15 @@ theorem finite_production_list_trace_iff_general_derivation_trace
   Computability.finiteProductionListDerivationTrace_iff_derivationTrace
     hrules
 
+theorem finite_presentation_trace_iff_general_derivation_trace
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G)
+    {w : Word terminal} {n : Nat} :
+    GeneralGrammarFinitePresentationTraceLanguage presentation w n <->
+      GeneralGrammarDerivationTraceLanguage G w n :=
+  Computability.finitePresentationDerivationTrace_iff_derivationTrace
+    presentation
+
 theorem finite_production_list_trace_accepts_generated_language
     {G : GeneralGrammar terminal nonterminal}
     {rules : List (GeneralGrammar.Production terminal nonterminal)}
@@ -693,6 +790,14 @@ theorem finite_production_list_trace_accepts_generated_language
       (GeneralGrammarFiniteProductionListTraceLanguage G rules)
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListDerivationTrace_acceptance hrules
+
+theorem finite_presentation_trace_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    LanguageAcceptanceTrace
+      (GeneralGrammarFinitePresentationTraceLanguage presentation)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finitePresentationDerivationTrace_acceptance presentation
 
 theorem general_grammar_bounded_derivation_search_sound
     {G : GeneralGrammar terminal nonterminal}
@@ -756,6 +861,15 @@ theorem finite_production_list_staged_recognizer_accepts_generated_language
   Computability.finiteProductionListRecognizerProgram_acceptsLanguage
     hrules
 
+theorem finite_presentation_staged_recognizer_accepts_generated_language
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFinitePresentationStagedRecognizer presentation)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finitePresentationRecognizerProgram_acceptsLanguage
+    presentation
+
 theorem general_grammar_bounded_staged_recognizer_accepts_generated_language
     (G : GeneralGrammar terminal nonterminal) :
     ProgramAcceptsLanguage
@@ -775,6 +889,16 @@ theorem finite_production_list_bounded_staged_recognizer_accepts_generated_langu
       (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListBoundedRecognizerProgram_acceptsLanguage
     hrules
+
+theorem finite_presentation_bounded_staged_recognizer_accepts_generated_language
+    [DecidableEq terminal] [DecidableEq nonterminal]
+    {G : GeneralGrammar terminal nonterminal}
+    (presentation : GeneralGrammar.Presentation G) :
+    ProgramAcceptsLanguage
+      (GeneralGrammarFinitePresentationBoundedStagedRecognizer presentation)
+      (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finitePresentationBoundedRecognizerProgram_acceptsLanguage
+    presentation
 
 theorem finite_production_list_certificate_staged_recognizer_accepts_generated_language
     [DecidableEq terminal] [DecidableEq nonterminal]
@@ -925,6 +1049,12 @@ theorem concrete_machine_history_grammar_has_finite_productions
       (ConcreteMachineHistoryGrammar D) :=
   Computability.MachineDescriptionHistoryGrammar.hasFiniteProductions D
 
+theorem concrete_machine_history_grammar_has_finite_presentation
+    (D : MachineDescription) :
+    GeneralGrammar.HasFinitePresentation
+      (ConcreteMachineHistoryGrammar D) :=
+  Computability.MachineDescriptionHistoryGrammar.hasFinitePresentation D
+
 theorem concrete_machine_history_grammar_complete
     {D : MachineDescription} {w : Word Bool}
     (h : D.HaltsOnInput w) :
@@ -965,6 +1095,12 @@ theorem concrete_finite_acceptance_trace_table_has_finite_productions
       (ConcreteFiniteAcceptanceTraceTableGrammar T) :=
   Computability.FiniteAcceptanceTraceTable.hasFiniteProductions T
 
+theorem concrete_finite_acceptance_trace_table_has_finite_presentation
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.HasFinitePresentation
+      (ConcreteFiniteAcceptanceTraceTableGrammar T) :=
+  Computability.FiniteAcceptanceTraceTable.hasFinitePresentation T
+
 theorem concrete_finite_acceptance_trace_table_generated_language
     (T : ConcreteFiniteAcceptanceTraceTable terminal) :
     Language.Equal
@@ -973,16 +1109,28 @@ theorem concrete_finite_acceptance_trace_table_generated_language
       (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
   Computability.FiniteAcceptanceTraceTable.generated_language T
 
-theorem concrete_finite_acceptance_trace_table_finite_production_generated
+theorem concrete_finite_acceptance_trace_table_finite_presentation_generated
     (T : ConcreteFiniteAcceptanceTraceTable terminal) :
     FiniteGeneralGrammarGenerated
       (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
+  Computability.FiniteAcceptanceTraceTable.finitePresentationGenerated_language T
+
+theorem concrete_finite_acceptance_trace_table_finite_production_generated
+    (T : ConcreteFiniteAcceptanceTraceTable terminal) :
+    GeneralGrammar.FiniteProductionGenerated
+      (ConcreteFiniteAcceptanceTraceTableLanguage T) :=
   Computability.FiniteAcceptanceTraceTable.finiteProductionGenerated_language T
+
+theorem concrete_finite_trace_table_recognizable_finite_presentation_generated
+    {L : Language terminal}
+    (h : ConcreteFiniteTraceTableRecognizable L) :
+    FiniteGeneralGrammarGenerated L :=
+  Computability.finiteTraceTableRecognizable_finitePresentationGenerated h
 
 theorem concrete_finite_trace_table_recognizable_finite_production_generated
     {L : Language terminal}
     (h : ConcreteFiniteTraceTableRecognizable L) :
-    FiniteGeneralGrammarGenerated L :=
+    GeneralGrammar.FiniteProductionGenerated L :=
   Computability.finiteTraceTableRecognizable_finiteProductionGenerated h
 
 theorem concrete_finite_trace_table_to_finite_general_grammar_construction
@@ -1000,11 +1148,19 @@ theorem concrete_machine_finite_acceptance_trace_table_generated
       (fun w : Word Bool => D.HaltsOnInput w) :=
   Computability.machineFiniteAcceptanceTraceTable_generated hT
 
-theorem concrete_machine_finite_acceptance_trace_table_finite_production_generated
+theorem concrete_machine_finite_acceptance_trace_table_finite_presentation_generated
     {D : MachineDescription}
     {T : ConcreteMachineFiniteAcceptanceTraceTable D}
     (hT : ConcreteMachineFiniteAcceptanceTraceTablePresents D T) :
     FiniteGeneralGrammarGenerated
+      (fun w : Word Bool => D.HaltsOnInput w) :=
+  Computability.machineFiniteAcceptanceTraceTable_finitePresentationGenerated hT
+
+theorem concrete_machine_finite_acceptance_trace_table_finite_production_generated
+    {D : MachineDescription}
+    {T : ConcreteMachineFiniteAcceptanceTraceTable D}
+    (hT : ConcreteMachineFiniteAcceptanceTraceTablePresents D T) :
+    GeneralGrammar.FiniteProductionGenerated
       (fun w : Word Bool => D.HaltsOnInput w) :=
   Computability.machineFiniteAcceptanceTraceTable_finiteProductionGenerated hT
 
@@ -1021,6 +1177,16 @@ theorem finite_general_grammar_has_finite_list_staged_recognizer
         (GeneralGrammarFiniteProductionListStagedRecognizer G rules)
         (GeneralGrammarGeneratedLanguage G) :=
   Computability.finiteProductionListRecognizerProgram_acceptsLanguage_of_hasFiniteProductions
+    hfinite
+
+theorem finite_general_grammar_has_finite_presentation_staged_recognizer
+    {G : GeneralGrammar terminal nonterminal}
+    (hfinite : GeneralGrammar.HasFinitePresentation G) :
+    exists presentation : GeneralGrammar.Presentation G,
+      ProgramAcceptsLanguage
+        (GeneralGrammarFinitePresentationStagedRecognizer presentation)
+        (GeneralGrammarGeneratedLanguage G) :=
+  Computability.finitePresentationRecognizerProgram_acceptsLanguage_of_hasFinitePresentation
     hfinite
 
 theorem general_grammar_generated_language_is_program_acceptable
@@ -1160,7 +1326,9 @@ theorem generated_re_of_concreteFiniteGrammarCompiler
   | intro nonterminal hnonterminal =>
       cases hnonterminal with
       | intro G hG =>
-          cases hcompile (nonterminal := nonterminal) G hG.left with
+          cases hcompile (nonterminal := nonterminal) G
+              (GeneralGrammar.hasFiniteProductions_of_hasFinitePresentation
+                hG.left) with
           | intro D hD =>
               exact
                 boolean_general_grammar_generated_is_recursively_enumerable_of_concrete_description
@@ -1172,10 +1340,11 @@ theorem concrete_finite_general_grammar_recognizer_presentation_of_finite_compil
     (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
     {nonterminal : Type}
     (G : GeneralGrammar Bool nonterminal)
-    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    (hfinite : GeneralGrammar.HasFinitePresentation G) :
     ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage
       G (GeneralGrammarGeneratedLanguage G) := by
-  cases hcompile G hfinite with
+  cases hcompile G
+      (GeneralGrammar.hasFiniteProductions_of_hasFinitePresentation hfinite) with
   | intro D hD =>
       constructor
       · exact hfinite
@@ -1188,7 +1357,7 @@ theorem concrete_finite_general_grammar_recognizer_language_of_finite_compiler
     (hcompile : ConcreteFiniteBooleanGeneralGrammarRecognizerCompilerConstruction)
     {nonterminal : Type}
     (G : GeneralGrammar Bool nonterminal)
-    (hfinite : GeneralGrammar.HasFiniteProductions G) :
+    (hfinite : GeneralGrammar.HasFinitePresentation G) :
     ConcreteFiniteGeneralGrammarRecognizerLanguage
       (GeneralGrammarGeneratedLanguage G) := by
   exists nonterminal
@@ -1221,7 +1390,7 @@ theorem finite_general_grammar_generated_language_is_program_acceptable
     {L : Language terminal}
     (h : FiniteGeneralGrammarGenerated L) :
     ProgramAcceptableLanguage L :=
-  Computability.finiteProductionGenerated_programAcceptable h
+  Computability.finitePresentationGenerated_programAcceptable h
 
 theorem general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
     (hcompile : StagedAcceptorCompilationConstruction terminal)
@@ -1251,7 +1420,7 @@ theorem finite_general_grammar_generated_language_is_recursively_enumerable_of_s
     {L : Language terminal}
     (h : FiniteGeneralGrammarGenerated L) :
     RecursivelyEnumerableLanguage L :=
-  Computability.finiteProductionGenerated_recursivelyEnumerable_of_programCompiler
+  Computability.finitePresentationGenerated_recursivelyEnumerable_of_programCompiler
     hcompile h
 
 theorem finite_general_grammar_to_recursively_enumerable_construction_of_staged_program_compiler
@@ -1292,7 +1461,9 @@ theorem general_grammar_re_equivalence_construction_of_to_construction
 
 theorem finite_general_grammar_acceptability_equivalence_of_constructions
     (hto : FiniteGeneralGrammarToRecursivelyEnumerableConstruction terminal)
-    (hfrom : RecursivelyEnumerableToFiniteGeneralGrammarConstruction terminal)
+    (hfrom :
+      RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
+        terminal)
     (L : Language terminal) :
     FiniteGeneralGrammarGenerated L <-> RecursivelyEnumerableLanguage L := by
   constructor
@@ -1301,7 +1472,9 @@ theorem finite_general_grammar_acceptability_equivalence_of_constructions
 
 theorem finite_general_grammar_re_equivalence_construction_of_constructions
     (hto : FiniteGeneralGrammarToRecursivelyEnumerableConstruction terminal)
-    (hfrom : RecursivelyEnumerableToFiniteGeneralGrammarConstruction terminal) :
+    (hfrom :
+      RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
+        terminal) :
     FiniteGeneralGrammarREEquivalenceConstruction terminal := by
   intro L
   exact finite_general_grammar_acceptability_equivalence_of_constructions
