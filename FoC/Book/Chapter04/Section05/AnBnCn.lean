@@ -185,28 +185,70 @@ def finite : Foundation.FiniteType AnBnCstarNT where
 
 end AnBnCstarNT
 
-inductive AnBnCstarProduces :
-    AnBnCstarNT -> SententialForm ABC AnBnCstarNT -> Prop where
-  | startRule :
-      AnBnCstarProduces AnBnCstarNT.start
-        [Symbol.nonterminal AnBnCstarNT.pair,
-         Symbol.nonterminal AnBnCstarNT.ctail]
-  | pairWrap :
-      AnBnCstarProduces AnBnCstarNT.pair
-        [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
-         Symbol.terminal ABC.b]
-  | pairStop :
-      AnBnCstarProduces AnBnCstarNT.pair []
-  | cMore :
-      AnBnCstarProduces AnBnCstarNT.ctail
-        [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail]
-  | cStop :
-      AnBnCstarProduces AnBnCstarNT.ctail []
+def AnBnCstarProductionList : List (CFG.Production ABC AnBnCstarNT) :=
+  [
+    { lhs := AnBnCstarNT.start,
+      rhs := [Symbol.nonterminal AnBnCstarNT.pair,
+        Symbol.nonterminal AnBnCstarNT.ctail] },
+    { lhs := AnBnCstarNT.pair,
+      rhs := [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
+        Symbol.terminal ABC.b] },
+    { lhs := AnBnCstarNT.pair, rhs := [] },
+    { lhs := AnBnCstarNT.ctail,
+      rhs := [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail] },
+    { lhs := AnBnCstarNT.ctail, rhs := [] }]
 
-def AnBnCstarGrammar : CFG ABC AnBnCstarNT where
-  start := AnBnCstarNT.start
-  produces := AnBnCstarProduces
-  nonterminalsFinite := AnBnCstarNT.finite
+def AnBnCstarGrammar : CFG ABC AnBnCstarNT :=
+  CFG.ProductionList.toCFG AnBnCstarNT.start AnBnCstarNT.finite
+    AnBnCstarProductionList
+
+def anbnCstarPresentation : CFG.Presentation AnBnCstarGrammar :=
+  CFG.ProductionList.presentation AnBnCstarNT.start AnBnCstarNT.finite
+    AnBnCstarProductionList
+
+theorem anbnCstar_produces_iff
+    (A : AnBnCstarNT) (rhs : SententialForm ABC AnBnCstarNT) :
+    AnBnCstarGrammar.produces A rhs <->
+      (AnBnCstarNT.start = A ∧
+        [Symbol.nonterminal AnBnCstarNT.pair,
+          Symbol.nonterminal AnBnCstarNT.ctail] = rhs) ∨
+      (AnBnCstarNT.pair = A ∧
+        [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
+          Symbol.terminal ABC.b] = rhs) ∨
+      (AnBnCstarNT.pair = A ∧ rhs = []) ∨
+      (AnBnCstarNT.ctail = A ∧
+        [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail] = rhs) ∨
+      (AnBnCstarNT.ctail = A ∧ rhs = []) := by
+  simp [AnBnCstarGrammar, CFG.ProductionList.toCFG,
+    AnBnCstarProductionList]
+
+theorem anbnCstar_start_produces :
+    AnBnCstarGrammar.produces AnBnCstarNT.start
+      [Symbol.nonterminal AnBnCstarNT.pair,
+        Symbol.nonterminal AnBnCstarNT.ctail] :=
+  (anbnCstar_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem anbnCstar_pair_wrap_produces :
+    AnBnCstarGrammar.produces AnBnCstarNT.pair
+      [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
+        Symbol.terminal ABC.b] :=
+  (anbnCstar_produces_iff _ _).mpr (Or.inr (Or.inl ⟨rfl, rfl⟩))
+
+theorem anbnCstar_pair_stop_produces :
+    AnBnCstarGrammar.produces AnBnCstarNT.pair [] :=
+  (anbnCstar_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩)))
+
+theorem anbnCstar_c_more_produces :
+    AnBnCstarGrammar.produces AnBnCstarNT.ctail
+      [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail] :=
+  (anbnCstar_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩))))
+
+theorem anbnCstar_c_stop_produces :
+    AnBnCstarGrammar.produces AnBnCstarNT.ctail [] :=
+  (anbnCstar_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inr ⟨rfl, rfl⟩))))
 
 def anbnCstarSymbolLanguage : Symbol ABC AnBnCstarNT -> Language ABC
   | Symbol.terminal t => Language.Singleton (Word.Symbol t)
@@ -229,7 +271,7 @@ theorem anbnCstar_pair_stop_generated :
   exists AnBnCstarNT.pair
   exists ([] : SententialForm ABC AnBnCstarNT)
   constructor
-  · exact AnBnCstarProduces.pairStop
+  · exact anbnCstar_pair_stop_produces
   constructor
   · rfl
   · simp [abcAnBnWord, Word.Concat, Word.RepeatSymbol, SententialForm.terminalWord]
@@ -249,7 +291,7 @@ theorem anbnCstar_pair_wrap_generated {w : Word ABC}
     exists [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
       Symbol.terminal ABC.b]
     constructor
-    · exact AnBnCstarProduces.pairWrap
+    · exact anbnCstar_pair_wrap_produces
     constructor <;> rfl
   have hContext :
       CFG.Derives AnBnCstarGrammar
@@ -281,7 +323,7 @@ theorem anbnCstar_c_stop_generated :
   exists AnBnCstarNT.ctail
   exists ([] : SententialForm ABC AnBnCstarNT)
   constructor
-  · exact AnBnCstarProduces.cStop
+  · exact anbnCstar_c_stop_produces
   constructor
   · rfl
   · simp [Word.RepeatSymbol, SententialForm.terminalWord]
@@ -299,7 +341,7 @@ theorem anbnCstar_c_more_generated {w : Word ABC}
     exists AnBnCstarNT.ctail
     exists [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail]
     constructor
-    · exact AnBnCstarProduces.cMore
+    · exact anbnCstar_c_more_produces
     constructor <;> rfl
   have hContext :
       CFG.Derives AnBnCstarGrammar
@@ -329,7 +371,7 @@ theorem anbnCstar_words_generated (n k : Nat) :
     exists [Symbol.nonterminal AnBnCstarNT.pair,
       Symbol.nonterminal AnBnCstarNT.ctail]
     constructor
-    · exact AnBnCstarProduces.startRule
+    · exact anbnCstar_start_produces
     constructor <;> rfl
   have hPair :=
     anbnCstar_pair_words_generated n
@@ -370,8 +412,9 @@ theorem anbnCstar_production_sound
     forall w, w ∈ CFG.FormLanguage anbnCstarSymbolLanguage rhs ->
       w ∈ anbnCstarSymbolLanguage (Symbol.nonterminal A) := by
   intro w hw
-  cases hprod with
-  | startRule =>
+  rcases (anbnCstar_produces_iff A rhs).mp hprod with
+    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨pairWord, tail, hpair, htail, _hwEq⟩
       rcases hpair with ⟨n, hn⟩
@@ -385,7 +428,7 @@ theorem anbnCstar_production_sound
       subst tail
       subst w
       simp [anbnCstarWord, Word.Concat, Word.Empty]
-  | pairWrap =>
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, _hfirst, htail, _hwEq⟩
       rcases htail with ⟨middle, last, hmiddle, hlast, _htailEq⟩
@@ -400,11 +443,11 @@ theorem anbnCstar_production_sound
       subst w
       rw [hlastEq]
       exact abcAnBn_wrap_word n
-  | pairStop =>
+  ·
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw
       exists 0
-  | cMore =>
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
       rcases htail with ⟨middle, empty, hmiddle, hempty, htailEq⟩
@@ -412,7 +455,7 @@ theorem anbnCstar_production_sound
       exists k + 1
       rw [hwEq, hfirst, htailEq, hk, hempty]
       simpa [Word.Symbol, Word.Concat, Word.Empty] using! abcCstar_cons_word k
-  | cStop =>
+  ·
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw
       exists 0
@@ -440,47 +483,8 @@ theorem anbnCstar_generated_language_exact (w : Word ABC) :
     exact anbnCstar_words_generated n k
 
 theorem anbnCstar_hasFiniteProductions :
-    CFG.HasFiniteProductions AnBnCstarGrammar := by
-  exists [
-    { lhs := AnBnCstarNT.start,
-      rhs := [Symbol.nonterminal AnBnCstarNT.pair,
-        Symbol.nonterminal AnBnCstarNT.ctail] },
-    { lhs := AnBnCstarNT.pair,
-      rhs := [Symbol.terminal ABC.a, Symbol.nonterminal AnBnCstarNT.pair,
-        Symbol.terminal ABC.b] },
-    { lhs := AnBnCstarNT.pair,
-      rhs := [] },
-    { lhs := AnBnCstarNT.ctail,
-      rhs := [Symbol.terminal ABC.c, Symbol.nonterminal AnBnCstarNT.ctail] },
-    { lhs := AnBnCstarNT.ctail,
-      rhs := [] }]
-  intro A rhs
-  constructor
-  · intro h
-    cases h <;> simp
-  · intro h
-    simp at h
-    rcases h with h | h | h | h | h
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AnBnCstarProduces.startRule
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AnBnCstarProduces.pairWrap
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AnBnCstarProduces.pairStop
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AnBnCstarProduces.cMore
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AnBnCstarProduces.cStop
+    CFG.HasFiniteProductions AnBnCstarGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation ⟨anbnCstarPresentation⟩
 
 theorem anbnCstar_finite_production_context_free :
     CFL.FiniteProductionContextFreeLanguage anbnCstarLanguage := by
@@ -513,28 +517,70 @@ def finite : Foundation.FiniteType AstarBnCnNT where
 
 end AstarBnCnNT
 
-inductive AstarBnCnProduces :
-    AstarBnCnNT -> SententialForm ABC AstarBnCnNT -> Prop where
-  | startRule :
-      AstarBnCnProduces AstarBnCnNT.start
-        [Symbol.nonterminal AstarBnCnNT.ahead,
-         Symbol.nonterminal AstarBnCnNT.pair]
-  | aMore :
-      AstarBnCnProduces AstarBnCnNT.ahead
-        [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead]
-  | aStop :
-      AstarBnCnProduces AstarBnCnNT.ahead []
-  | pairWrap :
-      AstarBnCnProduces AstarBnCnNT.pair
-        [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
-         Symbol.terminal ABC.c]
-  | pairStop :
-      AstarBnCnProduces AstarBnCnNT.pair []
+def AstarBnCnProductionList : List (CFG.Production ABC AstarBnCnNT) :=
+  [
+    { lhs := AstarBnCnNT.start,
+      rhs := [Symbol.nonterminal AstarBnCnNT.ahead,
+        Symbol.nonterminal AstarBnCnNT.pair] },
+    { lhs := AstarBnCnNT.ahead,
+      rhs := [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead] },
+    { lhs := AstarBnCnNT.ahead, rhs := [] },
+    { lhs := AstarBnCnNT.pair,
+      rhs := [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
+        Symbol.terminal ABC.c] },
+    { lhs := AstarBnCnNT.pair, rhs := [] }]
 
-def AstarBnCnGrammar : CFG ABC AstarBnCnNT where
-  start := AstarBnCnNT.start
-  produces := AstarBnCnProduces
-  nonterminalsFinite := AstarBnCnNT.finite
+def AstarBnCnGrammar : CFG ABC AstarBnCnNT :=
+  CFG.ProductionList.toCFG AstarBnCnNT.start AstarBnCnNT.finite
+    AstarBnCnProductionList
+
+def astarBnCnPresentation : CFG.Presentation AstarBnCnGrammar :=
+  CFG.ProductionList.presentation AstarBnCnNT.start AstarBnCnNT.finite
+    AstarBnCnProductionList
+
+theorem astarBnCn_produces_iff
+    (A : AstarBnCnNT) (rhs : SententialForm ABC AstarBnCnNT) :
+    AstarBnCnGrammar.produces A rhs <->
+      (AstarBnCnNT.start = A ∧
+        [Symbol.nonterminal AstarBnCnNT.ahead,
+          Symbol.nonterminal AstarBnCnNT.pair] = rhs) ∨
+      (AstarBnCnNT.ahead = A ∧
+        [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead] = rhs) ∨
+      (AstarBnCnNT.ahead = A ∧ rhs = []) ∨
+      (AstarBnCnNT.pair = A ∧
+        [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
+          Symbol.terminal ABC.c] = rhs) ∨
+      (AstarBnCnNT.pair = A ∧ rhs = []) := by
+  simp [AstarBnCnGrammar, CFG.ProductionList.toCFG,
+    AstarBnCnProductionList]
+
+theorem astarBnCn_start_produces :
+    AstarBnCnGrammar.produces AstarBnCnNT.start
+      [Symbol.nonterminal AstarBnCnNT.ahead,
+        Symbol.nonterminal AstarBnCnNT.pair] :=
+  (astarBnCn_produces_iff _ _).mpr (Or.inl ⟨rfl, rfl⟩)
+
+theorem astarBnCn_a_more_produces :
+    AstarBnCnGrammar.produces AstarBnCnNT.ahead
+      [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead] :=
+  (astarBnCn_produces_iff _ _).mpr (Or.inr (Or.inl ⟨rfl, rfl⟩))
+
+theorem astarBnCn_a_stop_produces :
+    AstarBnCnGrammar.produces AstarBnCnNT.ahead [] :=
+  (astarBnCn_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩)))
+
+theorem astarBnCn_pair_wrap_produces :
+    AstarBnCnGrammar.produces AstarBnCnNT.pair
+      [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
+        Symbol.terminal ABC.c] :=
+  (astarBnCn_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inl ⟨rfl, rfl⟩))))
+
+theorem astarBnCn_pair_stop_produces :
+    AstarBnCnGrammar.produces AstarBnCnNT.pair [] :=
+  (astarBnCn_produces_iff _ _).mpr
+    (Or.inr (Or.inr (Or.inr (Or.inr ⟨rfl, rfl⟩))))
 
 def astarBnCnSymbolLanguage : Symbol ABC AstarBnCnNT -> Language ABC
   | Symbol.terminal t => Language.Singleton (Word.Symbol t)
@@ -551,7 +597,7 @@ theorem astarBnCn_a_stop_generated :
   exists AstarBnCnNT.ahead
   exists ([] : SententialForm ABC AstarBnCnNT)
   constructor
-  · exact AstarBnCnProduces.aStop
+  · exact astarBnCn_a_stop_produces
   constructor
   · rfl
   · simp [Word.RepeatSymbol, SententialForm.terminalWord]
@@ -575,7 +621,7 @@ theorem astarBnCn_a_more_generated {w : Word ABC}
     exists AstarBnCnNT.ahead
     exists [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead]
     constructor
-    · exact AstarBnCnProduces.aMore
+    · exact astarBnCn_a_more_produces
     constructor <;> rfl
   have hContext :
       CFG.Derives AstarBnCnGrammar
@@ -602,7 +648,7 @@ theorem astarBnCn_pair_stop_generated :
   exists AstarBnCnNT.pair
   exists ([] : SententialForm ABC AstarBnCnNT)
   constructor
-  · exact AstarBnCnProduces.pairStop
+  · exact astarBnCn_pair_stop_produces
   constructor
   · rfl
   · simp [abcBnCnWord, Word.Concat, Word.RepeatSymbol, SententialForm.terminalWord]
@@ -622,7 +668,7 @@ theorem astarBnCn_pair_wrap_generated {w : Word ABC}
     exists [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
       Symbol.terminal ABC.c]
     constructor
-    · exact AstarBnCnProduces.pairWrap
+    · exact astarBnCn_pair_wrap_produces
     constructor <;> rfl
   have hContext :
       CFG.Derives AstarBnCnGrammar
@@ -662,7 +708,7 @@ theorem astarBnCn_words_generated (k n : Nat) :
     exists [Symbol.nonterminal AstarBnCnNT.ahead,
       Symbol.nonterminal AstarBnCnNT.pair]
     constructor
-    · exact AstarBnCnProduces.startRule
+    · exact astarBnCn_start_produces
     constructor <;> rfl
   have hAhead :=
     astarBnCn_a_words_generated k
@@ -697,8 +743,9 @@ theorem astarBnCn_production_sound
     forall w, w ∈ CFG.FormLanguage astarBnCnSymbolLanguage rhs ->
       w ∈ astarBnCnSymbolLanguage (Symbol.nonterminal A) := by
   intro w hw
-  cases hprod with
-  | startRule =>
+  rcases (astarBnCn_produces_iff A rhs).mp hprod with
+    ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨aWord, tail, haWord, htail, _hwEq⟩
       rcases haWord with ⟨k, hk⟩
@@ -712,7 +759,7 @@ theorem astarBnCn_production_sound
       subst tail
       subst w
       simp [astarBnCnWord, Word.Concat, Word.Empty]
-  | aMore =>
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, hfirst, htail, hwEq⟩
       rcases htail with ⟨middle, empty, hmiddle, hempty, htailEq⟩
@@ -720,11 +767,11 @@ theorem astarBnCn_production_sound
       exists k + 1
       rw [hwEq, hfirst, htailEq, hk, hempty]
       simpa [Word.Symbol, Word.Concat, Word.Empty] using! abcAstar_cons_word k
-  | aStop =>
+  ·
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw
       exists 0
-  | pairWrap =>
+  ·
       simp [CFG.FormLanguage] at hw
       rcases hw with ⟨first, tail, _hfirst, htail, _hwEq⟩
       rcases htail with ⟨middle, last, hmiddle, hlast, _htailEq⟩
@@ -739,7 +786,7 @@ theorem astarBnCn_production_sound
       subst w
       rw [hlastEq]
       exact abcBnCn_wrap_word n
-  | pairStop =>
+  ·
       simp [CFG.FormLanguage] at hw
       have hwEmpty : w = Word.Empty := hw
       exists 0
@@ -767,47 +814,8 @@ theorem astarBnCn_generated_language_exact (w : Word ABC) :
     exact astarBnCn_words_generated k n
 
 theorem astarBnCn_hasFiniteProductions :
-    CFG.HasFiniteProductions AstarBnCnGrammar := by
-  exists [
-    { lhs := AstarBnCnNT.start,
-      rhs := [Symbol.nonterminal AstarBnCnNT.ahead,
-        Symbol.nonterminal AstarBnCnNT.pair] },
-    { lhs := AstarBnCnNT.ahead,
-      rhs := [Symbol.terminal ABC.a, Symbol.nonterminal AstarBnCnNT.ahead] },
-    { lhs := AstarBnCnNT.ahead,
-      rhs := [] },
-    { lhs := AstarBnCnNT.pair,
-      rhs := [Symbol.terminal ABC.b, Symbol.nonterminal AstarBnCnNT.pair,
-        Symbol.terminal ABC.c] },
-    { lhs := AstarBnCnNT.pair,
-      rhs := [] }]
-  intro A rhs
-  constructor
-  · intro h
-    cases h <;> simp
-  · intro h
-    simp at h
-    rcases h with h | h | h | h | h
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AstarBnCnProduces.startRule
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AstarBnCnProduces.aMore
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AstarBnCnProduces.aStop
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AstarBnCnProduces.pairWrap
-    · rcases h with ⟨hA, hrhs⟩
-      cases hA
-      cases hrhs
-      exact AstarBnCnProduces.pairStop
+    CFG.HasFiniteProductions AstarBnCnGrammar :=
+  CFG.hasFiniteProductions_of_hasFinitePresentation ⟨astarBnCnPresentation⟩
 
 theorem astarBnCn_finite_production_context_free :
     CFL.FiniteProductionContextFreeLanguage astarBnCnLanguage := by
