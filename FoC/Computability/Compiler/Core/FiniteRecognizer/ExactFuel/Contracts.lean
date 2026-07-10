@@ -5,13 +5,13 @@ set_option doc.verso true
 /-!
 # Exact-fuel generated-runner route contracts
 
-This module packages the semantic and construction-chain surfaces for the
-normalized exact-fuel generated runner.  The concrete finite-table leaf remains
-in
+This module packages the semantic and ordinary-halting construction surfaces
+for the normalized exact-fuel generated runner. The concrete finite-table leaf
+remains in
 {module}`FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program`;
 the route contracts here record the reusable path from decoded stage input to
-protected layout, protected layout fuel loop, exact-output primitive, code
-machine, and arbitrary finite-state exact-fuel runner.
+protected layout, ordinary protected-layout recognition, a code machine, and
+an arbitrary finite-state exact-fuel runner.
 -/
 
 namespace FoC
@@ -239,34 +239,6 @@ structure InitialLayoutDecodedPrimitiveRoute
             output = StageProgram.initialLayoutDecodedOutput
               M fuel input
 
-structure LayoutFuelLoopDecodedPrimitiveRoute
-    {stateCount : Nat}
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
-    (runnerState : Type)
-    (runner : TuringMachine MachineCodeSymbol runnerState) :
-    Prop where
-  decodedSpec :
-    LayoutFuelLoopDecodedExactOutputSpec runner M
-  canonical :
-    StageProgram.ExactOutputCanonicalSpec runner
-      (layoutFuelLoopCodePrimitive M).transform
-  haltingTransitionsDisabled :
-    TuringMachine.HaltingTransitionsDisabled runner
-  forwardDecoded :
-    forall tokens : Word MachineCodeSymbol,
-    forall L : Layout stateCount,
-      Layout.decode stateCount tokens = some (L, []) ->
-        (TuringMachine.HaltsWithExactOutput runner tokens
-            ([] : Word MachineCodeSymbol) <->
-          Layout.accepts M L)
-  closedDecoded :
-    forall tokens output : Word MachineCodeSymbol,
-      TuringMachine.HaltsWithExactOutput runner tokens output ->
-        exists L : Layout stateCount,
-          Layout.decode stateCount tokens = some (L, []) /\
-            output = ([] : Word MachineCodeSymbol) /\
-            Layout.accepts M L
-
 def InitialLayoutDecodedPrimitiveRouteConstruction
     {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
@@ -274,14 +246,6 @@ def InitialLayoutDecodedPrimitiveRouteConstruction
   exists materializerState : Type,
   exists materializer : TuringMachine MachineCodeSymbol materializerState,
     InitialLayoutDecodedPrimitiveRoute M materializerState materializer
-
-def LayoutFuelLoopDecodedPrimitiveRouteConstruction
-    {stateCount : Nat}
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
-    Prop :=
-  exists runnerState : Type,
-  exists runner : TuringMachine MachineCodeSymbol runnerState,
-    LayoutFuelLoopDecodedPrimitiveRoute M runnerState runner
 
 theorem initialLayoutDecodedPrimitiveRoute_of_construction
     {stateCount : Nat}
@@ -300,21 +264,6 @@ theorem initialLayoutDecodedPrimitiveRoute_of_construction
         forwardStageCode := hspec.left
         closedStageCode := hspec.right }⟩
 
-theorem layoutFuelLoopDecodedPrimitiveRoute_of_construction
-    {stateCount : Nat}
-    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
-    (h :
-      LayoutFuelLoopDecodedExactOutputPrimitiveConstruction M) :
-    LayoutFuelLoopDecodedPrimitiveRouteConstruction M := by
-  rcases h with ⟨runnerState, runner, hspec, hcanonical, hstop⟩
-  exact
-    ⟨runnerState, runner,
-      { decodedSpec := hspec
-        canonical := hcanonical
-        haltingTransitionsDisabled := hstop
-        forwardDecoded := hspec.left
-        closedDecoded := hspec.right }⟩
-
 theorem initialLayoutDecodedPrimitiveRouteConstruction_of_finState
     (h :
       StageProgram.InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction) :
@@ -324,30 +273,15 @@ theorem initialLayoutDecodedPrimitiveRouteConstruction_of_finState
   intro stateCount M
   exact initialLayoutDecodedPrimitiveRoute_of_construction (h stateCount M)
 
-theorem layoutFuelLoopDecodedPrimitiveRouteConstruction_of_finState
-    (h :
-      FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction) :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      LayoutFuelLoopDecodedPrimitiveRouteConstruction M := by
-  intro stateCount M
-  exact layoutFuelLoopDecodedPrimitiveRoute_of_construction (h stateCount M)
-
 /-!
 ## Finite construction-chain routes
 -/
 
 structure ExactFuelFiniteComponentRoute : Prop where
-  fullyDecodedComponents :
-    StageProgram.ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction
-  decodedComponents :
-    StageProgram.ExactOutputPrimitiveDecodedComponentFinStateConstruction
-  ordinaryComponents :
-    StageProgram.ExactOutputPrimitiveComponentFinStateConstruction
-  exactOutputPrimitive :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      StageProgram.ExactOutputPrimitiveConstruction M
+  components :
+    StageProgram.FiniteComponentFinStateConstruction
+  layoutFuelLoop :
+    FinStateLayoutFuelLoopCodeMachineConstruction
   codeMachine :
     StageProgram.FinStateCodeMachineConstruction
   runner :
@@ -356,74 +290,32 @@ structure ExactFuelFiniteComponentRoute : Prop where
     forall stateCount : Nat,
     forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
       InitialLayoutDecodedPrimitiveRouteConstruction M
-  layoutFuelLoopRoute :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      LayoutFuelLoopDecodedPrimitiveRouteConstruction M
 
 def ExactFuelFiniteComponentRouteConstruction : Prop :=
   ExactFuelFiniteComponentRoute
 
-theorem exactFuelFiniteComponentRoute_of_fullyDecoded
-    (hfully :
-      StageProgram.ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction) :
+theorem exactFuelFiniteComponentRoute_of_components
+    (hcomponents : StageProgram.FiniteComponentFinStateConstruction) :
     ExactFuelFiniteComponentRoute := by
-  let hdecoded :
-      StageProgram.ExactOutputPrimitiveDecodedComponentFinStateConstruction :=
-    StageProgram.exactOutputPrimitiveDecodedComponentFinStateConstruction_of_fullyDecodedComponents
-      hfully
-  let hordinary :
-      StageProgram.ExactOutputPrimitiveComponentFinStateConstruction :=
-    StageProgram.exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
-      hdecoded
-  let hexact :
-      forall stateCount : Nat,
-      forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-        StageProgram.ExactOutputPrimitiveConstruction M :=
-    StageProgram.exactOutputPrimitiveFinStateConstruction_of_decodedComponents
-      hdecoded
   let hcode :
-      StageProgram.FinStateCodeMachineConstruction := by
-    intro stateCount M
-    exact StageProgram.codeMachineConstruction_of_exactOutputPrimitive
-      (hexact stateCount M)
+      StageProgram.FinStateCodeMachineConstruction :=
+    StageProgram.codeMachineFinStateConstruction_of_finiteComponents
+      hcomponents
   exact
-    { fullyDecodedComponents := hfully
-      decodedComponents := hdecoded
-      ordinaryComponents := hordinary
-      exactOutputPrimitive := hexact
+    { components := hcomponents
+      layoutFuelLoop := hcomponents.right
       codeMachine := hcode
       runner :=
         StageProgram.finStateRunnerConstruction_of_codeMachine
           hcode
       initialLayoutRoute :=
         initialLayoutDecodedPrimitiveRouteConstruction_of_finState
-          hfully.left
-      layoutFuelLoopRoute :=
-        layoutFuelLoopDecodedPrimitiveRouteConstruction_of_finState
-          hfully.right }
-
-theorem exactFuelFiniteComponentRoute_of_decoded
-    (hdecoded :
-      StageProgram.ExactOutputPrimitiveDecodedComponentFinStateConstruction)
-    (hfully :
-      StageProgram.ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction) :
-    ExactFuelFiniteComponentRoute := by
-  have hroute := exactFuelFiniteComponentRoute_of_fullyDecoded hfully
-  exact
-    { hroute with
-      decodedComponents := hdecoded
-      ordinaryComponents :=
-        StageProgram.exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
-          hdecoded
-      exactOutputPrimitive :=
-        StageProgram.exactOutputPrimitiveFinStateConstruction_of_decodedComponents
-          hdecoded }
+          hcomponents.left }
 
 theorem exactFuelFiniteComponentRoute_finiteLeaf :
     ExactFuelFiniteComponentRoute :=
-  exactFuelFiniteComponentRoute_of_fullyDecoded
-    StageProgram.exactOutputPrimitiveFullyDecodedComponentFiniteLeaves
+  exactFuelFiniteComponentRoute_of_components
+    StageProgram.finiteComponentFiniteLeaves
 
 theorem exactFuelFiniteComponentRouteConstruction_finiteLeaf :
     ExactFuelFiniteComponentRouteConstruction :=
@@ -438,16 +330,10 @@ structure ExactFuelMachineRoute
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) : Prop where
   initialLayoutDecoded :
     StageProgram.InitialLayoutDecodedExactOutputPrimitiveConstruction M
-  layoutFuelLoopDecoded :
-    LayoutFuelLoopDecodedExactOutputPrimitiveConstruction M
+  layoutFuelLoop :
+    LayoutFuelLoopCodeMachineConstruction M
   initialLayoutRoute :
     InitialLayoutDecodedPrimitiveRouteConstruction M
-  layoutFuelLoopRoute :
-    LayoutFuelLoopDecodedPrimitiveRouteConstruction M
-  decodedComponents :
-    StageProgram.ExactOutputPrimitiveDecodedComponentFinStateConstruction
-  exactOutputPrimitive :
-    StageProgram.ExactOutputPrimitiveConstruction M
   codeMachine :
     StageProgram.CodeMachineConstruction M
   runner :
@@ -463,17 +349,11 @@ theorem ExactFuelFiniteComponentRoute.machineRoute
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
     ExactFuelMachineRoute M :=
   { initialLayoutDecoded :=
-      hroute.fullyDecodedComponents.left stateCount M
-    layoutFuelLoopDecoded :=
-      hroute.fullyDecodedComponents.right stateCount M
+      hroute.components.left stateCount M
+    layoutFuelLoop :=
+      hroute.layoutFuelLoop stateCount M
     initialLayoutRoute :=
       hroute.initialLayoutRoute stateCount M
-    layoutFuelLoopRoute :=
-      hroute.layoutFuelLoopRoute stateCount M
-    decodedComponents :=
-      hroute.decodedComponents
-    exactOutputPrimitive :=
-      hroute.exactOutputPrimitive stateCount M
     codeMachine :=
       hroute.codeMachine stateCount M
     runner :=
@@ -636,36 +516,6 @@ theorem exactFuelCodeMachineRoute_finiteLeaf
     (M : TuringMachine MachineCodeSymbol (Fin stateCount)) :
     ExactFuelCodeMachineRouteConstruction M :=
   exactFuelFiniteComponentRoute_finiteLeaf.codeMachineRoute M
-
-/-!
-## Compatibility with existing public leaf names
--/
-
-theorem finStateRunnerConstructionFiniteLeaf_route :
-    FinStateRunnerConstruction StageProgram.stageCode :=
-  exactFuelFiniteComponentRoute_finiteLeaf.runner
-
-theorem codeMachineFinStateFiniteLeaf_route :
-    StageProgram.FinStateCodeMachineConstruction :=
-  exactFuelFiniteComponentRoute_finiteLeaf.codeMachine
-
-theorem exactOutputPrimitiveFinStateFiniteLeaf_route :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      StageProgram.ExactOutputPrimitiveConstruction M :=
-  exactFuelFiniteComponentRoute_finiteLeaf.exactOutputPrimitive
-
-theorem exactOutputPrimitiveDecodedComponentFiniteLeaves_route :
-    StageProgram.ExactOutputPrimitiveDecodedComponentFinStateConstruction :=
-  exactFuelFiniteComponentRoute_finiteLeaf.decodedComponents
-
-theorem exactOutputPrimitiveComponentFiniteLeaves_route :
-    StageProgram.ExactOutputPrimitiveComponentFinStateConstruction :=
-  exactFuelFiniteComponentRoute_finiteLeaf.ordinaryComponents
-
-theorem exactOutputPrimitiveFullyDecodedComponentFiniteLeaves_route :
-    StageProgram.ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction :=
-  exactFuelFiniteComponentRoute_finiteLeaf.fullyDecodedComponents
 
 end ExactFuel
 end FiniteRecognizer

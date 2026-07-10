@@ -21,50 +21,18 @@ namespace ExactFuel
 namespace StageProgram
 
 /--
-Remaining fully decoded component obligations for the normalized exact-fuel
-staged program.  The first component materializes the protected initial layout
-from decoded generated stage code; the second component recognizes decoded
-protected layouts with canonical empty output.
+Remaining finite components for the normalized exact-fuel staged program. The
+first component materializes the protected initial layout exactly; the second
+recognizes protected layouts using ordinary halting semantics.
 -/
-theorem exactOutputPrimitiveFullyDecodedComponentFiniteLeaves :
-    ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction := by
+theorem finiteComponentFiniteLeaves :
+    FiniteComponentFinStateConstruction := by
   sorry
 
-/--
-Decoded compatibility component package for the normalized exact-fuel staged
-program.
--/
-theorem exactOutputPrimitiveDecodedComponentFiniteLeaves :
-    ExactOutputPrimitiveDecodedComponentFinStateConstruction := by
-  exact
-    exactOutputPrimitiveDecodedComponentFinStateConstruction_of_fullyDecodedComponents
-      exactOutputPrimitiveFullyDecodedComponentFiniteLeaves
-
-/--
-Compatibility component package for the normalized exact-fuel staged program.
--/
-theorem exactOutputPrimitiveComponentFiniteLeaves :
-    ExactOutputPrimitiveComponentFinStateConstruction := by
-  exact
-    exactOutputPrimitiveComponentFinStateConstruction_of_decodedComponents
-      exactOutputPrimitiveDecodedComponentFiniteLeaves
-
-/--
-Finite-state construction for the normalized exact-fuel staged program.
--/
-theorem exactOutputPrimitiveFinStateFiniteLeaf :
-    forall stateCount : Nat,
-    forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
-      ExactOutputPrimitiveConstruction M :=
-  exactOutputPrimitiveFinStateConstruction_of_decodedComponents
-    exactOutputPrimitiveDecodedComponentFiniteLeaves
-
 theorem codeMachineFinStateFiniteLeaf :
-    FinStateCodeMachineConstruction := by
-  intro stateCount M
-  exact
-    codeMachineConstruction_of_exactOutputPrimitive
-      (exactOutputPrimitiveFinStateFiniteLeaf stateCount M)
+    FinStateCodeMachineConstruction :=
+  codeMachineFinStateConstruction_of_finiteComponents
+    finiteComponentFiniteLeaves
 
 theorem finStateRunnerConstructionFiniteLeaf :
     FinStateRunnerConstruction stageCode :=

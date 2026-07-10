@@ -922,6 +922,51 @@ def FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction :
   forall M : TuringMachine MachineCodeSymbol (Fin stateCount),
     LayoutFuelLoopDecodedExactOutputPrimitiveConstruction M
 
+private def layoutFuelLoopExactOutputCounterexampleMachine :
+    TuringMachine MachineCodeSymbol (Fin 1) where
+  start := 0
+  halt := 0
+  transition := fun _ _ => none
+  statesFinite := Foundation.FiniteType.fin 1
+
+private theorem layoutFuelLoopExactOutputCounterexampleMachine_haltsIn :
+    TuringMachine.HaltsOnInputIn
+      layoutFuelLoopExactOutputCounterexampleMachine 0
+      ([] : Word MachineCodeSymbol) := by
+  refine
+    ⟨TuringMachine.initial layoutFuelLoopExactOutputCounterexampleMachine [],
+      ?_, ?_⟩
+  · exact TuringMachine.ComputesIn.zero _
+  · rfl
+
+/--
+A layout recognizer cannot erase every encoded layout to the literal blank
+tape. The encoded initial layout below is accepted but has nonempty context.
+-/
+theorem not_finStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction :
+    ¬ FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction := by
+  intro hconstruction
+  rcases hconstruction 1 layoutFuelLoopExactOutputCounterexampleMachine with
+    ⟨_state, runner, hspec, _hcanonical, _hstop⟩
+  let L :=
+    Layout.initial layoutFuelLoopExactOutputCounterexampleMachine
+      ([] : Word MachineCodeSymbol) 0
+  have hdecode : Layout.decode 1 (Layout.encode L) = some (L, []) :=
+    Layout.decode_encode L
+  have haccepts :
+      Layout.accepts layoutFuelLoopExactOutputCounterexampleMachine L := by
+    simpa [L] using
+      (Layout.accepts_initial_iff_haltsOnInputIn
+        layoutFuelLoopExactOutputCounterexampleMachine
+        ([] : Word MachineCodeSymbol) 0).mpr
+        layoutFuelLoopExactOutputCounterexampleMachine_haltsIn
+  have hhalt :=
+    (hspec.left (Layout.encode L) L hdecode).mpr haccepts
+  apply
+    TuringMachine.not_haltsWithExactOutput_empty_of_input_contextLength_pos
+      (M := runner) (w := Layout.encode L) ?_ hhalt
+  decide
+
 theorem layoutFuelLoopExactOutputSpec_iff_decoded
     {stateCount : Nat} {runnerState : Type}
     (runner : TuringMachine MachineCodeSymbol runnerState)
@@ -1281,6 +1326,22 @@ def ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction :
   InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction ∧
     FinStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction
 
+/-- The old fully decoded component package contains the refuted layout loop. -/
+theorem not_exactOutputPrimitiveFullyDecodedComponentFinStateConstruction :
+    ¬ ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction := by
+  intro hcomponents
+  exact
+    not_finStateLayoutFuelLoopDecodedExactOutputPrimitiveConstruction
+      hcomponents.right
+
+/--
+Honest finite component boundary: materialize the initial protected layout
+exactly, then recognize that layout with ordinary halting semantics.
+-/
+def FiniteComponentFinStateConstruction : Prop :=
+  InitialLayoutDecodedExactOutputPrimitiveFinStateConstruction ∧
+    FinStateLayoutFuelLoopCodeMachineConstruction
+
 theorem exactOutputPrimitiveDecodedComponentFinStateConstruction_of_fullyDecodedComponents
     (hcomponents :
       ExactOutputPrimitiveFullyDecodedComponentFinStateConstruction) :
@@ -1491,6 +1552,24 @@ theorem codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose
   codeMachineConstruction_of_exactMaterializer_layoutRunner_compose
     hcompose hmaterializer
     (layoutCodeRunnerConstruction_of_codeMachine hlayout)
+
+theorem codeMachineFinStateConstruction_of_finiteComponents
+    (hcomponents : FiniteComponentFinStateConstruction) :
+    FinStateCodeMachineConstruction := by
+  intro stateCount M
+  have hmaterializerPrimitive :
+      InitialLayoutExactOutputPrimitiveConstruction M :=
+    (initialLayoutExactOutputPrimitiveConstruction_iff_decoded M).mpr
+      (hcomponents.left stateCount M)
+  have hmaterializer : InitialLayoutExactMaterializerConstruction M :=
+    initialLayoutExactMaterializerConstruction_of_exactOutputPrimitive
+      hmaterializerPrimitive
+  have hlayout : LayoutCodeMachineConstruction M :=
+    layoutCodeMachineConstruction_of_fuelLoopCodeMachine
+      (hcomponents.right stateCount M)
+  exact
+    codeMachineConstruction_of_exactMaterializer_layoutCodeMachine_compose
+      exactOutputThenRecognizeConstruction hmaterializer hlayout
 
 end StageProgram
 end ExactFuel
