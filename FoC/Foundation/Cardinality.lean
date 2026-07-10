@@ -35,7 +35,7 @@ namespace Foundation
 namespace FSet
 
 /-!
-# Cardinality witnesses
+**Cardinality witnesses.**
 
 Cardinality is defined by a duplicate-free finite enumeration whose length is
 the displayed cardinal.  The first lemmas transport that witness across
@@ -92,7 +92,7 @@ theorem singleton_has_cardinality_one (a : alpha) :
   · rfl
 
 /-!
-# Finite pigeonhole principle
+**Finite pigeonhole principle.**
 
 If a function maps every member of a finite set {lit}`A` into a finite set
 {lit}`B` and is injective on {lit}`A`, then {lit}`A` cannot have larger
@@ -170,7 +170,7 @@ theorem pigeonhole_collision_of_cardinality_lt {A : FSet alpha} {B : FSet beta}
   lia
 
 /-!
-# Cardinality is well-defined
+**Cardinality is well-defined.**
 
 Exercise 5 from Section 2.6 asks for the key sanity property of finite
 cardinality: any two duplicate-free enumerations of the same set have the same
@@ -205,7 +205,7 @@ theorem hasCardinality_unique_classical {A : FSet alpha} {m n : Nat}
   exact hasCardinality_unique hm hn
 
 /-!
-# Bridges to finiteness
+**Bridges to finiteness.**
 
 A cardinality witness is in particular a finite enumeration.  Conversely,
 deduplicating a finite enumeration produces a cardinality witness, so every
@@ -230,7 +230,7 @@ theorem exists_hasCardinality_of_finite_classical {A : FSet alpha}
   exact exists_hasCardinality_of_finite h
 
 /-!
-# Counting segments
+**Counting segments.**
 
 The book's basis for counting is the family of initial segments
 {lit}`N_n = {0, 1, ..., n-1}` of the natural numbers.  Each segment has
@@ -289,7 +289,7 @@ end FSet
 namespace ListCard
 
 /-!
-# Products and disjoint parts
+**Products and disjoint parts.**
 
 The finite-cardinality theorems are proved first as list-length identities.
 Product cardinality uses nested lists of pairs, and union arithmetic is reduced
@@ -392,7 +392,7 @@ theorem union_cardinality_by_parts (leftOnly both rightOnly : Nat) :
   lia
 
 /-!
-# Powersets
+**Powersets.**
 
 The powerset model enumerates sublists.  Each input element is either omitted or
 included, yielding the expected power-of-two length.
@@ -470,8 +470,41 @@ theorem sublists_nodup {alpha : Type u} {xs : List alpha}
             rw [hlt, ← ht'.right] at hsub
             exact hxs.left (hsub.subset (List.Mem.head t'))
 
+private theorem sublist_eq_of_same_members {alpha : Type u}
+    {xs l t : List alpha} (hxs : xs.Nodup)
+    (hl : l.Sublist xs) (ht : t.Sublist xs)
+    (hmem : forall x, x ∈ l <-> x ∈ t) : l = t := by
+  induction hxs generalizing l t with
+  | nil =>
+      cases hl
+      cases ht
+      rfl
+  | @cons x xs hx hxs ih =>
+      cases hl with
+      | cons _ hl =>
+          cases ht with
+          | cons _ ht => exact ih hl ht hmem
+          | cons_cons _ ht =>
+              exact False.elim
+                (hx x (hl.subset ((hmem x).mpr (List.Mem.head _))) rfl)
+      | cons_cons _ hl =>
+          cases ht with
+          | cons _ ht =>
+              exact False.elim
+                (hx x (ht.subset ((hmem x).mp (List.Mem.head _))) rfl)
+          | cons_cons _ ht =>
+              congr 1
+              apply ih hl ht
+              intro a
+              by_cases hax : a = x
+              · subst a
+                constructor <;> intro ha
+                · exact False.elim (hx x (hl.subset ha) rfl)
+                · exact False.elim (hx x (ht.subset ha) rfl)
+              · simpa [hax] using hmem a
+
 /-!
-# Function spaces
+**Function spaces.**
 
 Finite function spaces are modeled as fixed-length tuples of choices.  The tuple
 length theorem is the list-level core of the book's finite function-space
@@ -654,7 +687,7 @@ end ListCard
 namespace FSet
 
 /-!
-# Set-level cardinality laws
+**Set-level cardinality laws.**
 
 The list models above become genuine set-level theorems here: the cross
 product of sets with cardinalities {lit}`m` and {lit}`n` has cardinality
@@ -685,6 +718,218 @@ theorem product_hasCardinality {A : FSet alpha} {B : FSet beta} {m n : Nat}
                 exact And.intro ((hxs.left.right p.1).mpr h.left)
                   ((hys.left.right p.2).mpr h.right)
           · rw [ListCard.length_pairs, hxs.right, hys.right]
+
+/-!
+The list-of-sublists construction also yields the genuine set-level powerset
+law.  A sublist is interpreted extensionally as a predicate set; filtering the
+enumeration of {lit}`A` by an arbitrary subset proves completeness.
+-/
+theorem powerset_hasCardinality {A : FSet alpha} {n : Nat}
+    (hA : HasCardinality A n) :
+    HasCardinality (Powerset A) (2 ^ n) := by
+  classical
+  rcases hA with ⟨xs, hxs⟩
+  let sets := (ListCard.Sublists xs).map OfList
+  refine ⟨sets, ?_, ?_⟩
+  · constructor
+    · apply list_nodup_map_of_injective_on_list
+        (ListCard.sublists_nodup hxs.left.left)
+      intro l t hl ht hlt
+      have hsl : l.Sublist xs := ListCard.mem_sublists.mp hl
+      have hst : t.Sublist xs := ListCard.mem_sublists.mp ht
+      have hmem : forall x, x ∈ l <-> x ∈ t := by
+        intro x
+        exact Iff.of_eq (congrFun hlt x)
+      exact ListCard.sublist_eq_of_same_members hxs.left.left hsl hst hmem
+    · intro S
+      constructor
+      · intro hS
+        let selected := xs.filter (fun x => decide (x ∈ S))
+        have hselected : selected ∈ ListCard.Sublists xs :=
+          ListCard.mem_sublists.mpr (List.filter_sublist)
+        have heq : OfList selected = S := by
+          apply eq_of_equal
+          intro x
+          change x ∈ selected <-> x ∈ S
+          rw [List.mem_filter]
+          simp only [decide_eq_true_eq]
+          constructor
+          · exact fun hx => hx.right
+          · intro hx
+            exact ⟨(hxs.left.right x).mp (hS x hx), hx⟩
+        exact List.mem_map.mpr ⟨selected, hselected, heq⟩
+      · intro hS
+        rcases List.mem_map.mp hS with ⟨l, hl, rfl⟩
+        intro x hx
+        exact (hxs.left.right x).mpr
+          ((ListCard.mem_sublists.mp hl).subset hx)
+  · simp [sets, ListCard.length_sublists, hxs.right]
+
+theorem hasCardinality_of_setBijection {A : FSet alpha} {B : FSet beta}
+    {n : Nat} (e : Fn.SetBijection A B) (hA : HasCardinality A n) :
+    HasCardinality B n := by
+  rcases hA with ⟨xs, hxs⟩
+  let ys := xs.attach.map (fun x =>
+    (e.toFun ⟨x.val, (hxs.left.right x.val).mpr x.property⟩).val)
+  refine ⟨ys, ?_, ?_⟩
+  · constructor
+    · apply list_nodup_map_of_injective_on_list
+        (list_attach_nodup hxs.left.left)
+      intro x y _hx _hy hxy
+      have he :
+          e.toFun ⟨x.val, (hxs.left.right x.val).mpr x.property⟩ =
+          e.toFun ⟨y.val, (hxs.left.right y.val).mpr y.property⟩ :=
+        Subtype.ext hxy
+      have hsource := e.injective he
+      exact Subtype.ext
+        (congrArg (fun z : {z // z ∈ A} => z.val) hsource)
+    · intro y
+      constructor
+      · intro hy
+        rcases e.surjective ⟨y, hy⟩ with ⟨x, hx⟩
+        have hxmem : x.val ∈ xs := (hxs.left.right x.val).mp x.property
+        let xmem : {z // z ∈ xs} := ⟨x.val, hxmem⟩
+        apply List.mem_map.mpr
+        refine ⟨xmem, List.mem_attach xs xmem, ?_⟩
+        exact congrArg Subtype.val hx
+      · intro hy
+        rcases List.mem_map.mp hy with ⟨x, _hx, rfl⟩
+        exact (e.toFun ⟨x.val, (hxs.left.right x.val).mpr x.property⟩).property
+  · simp [ys, hxs.right]
+
+private theorem indexOfMemDecidable_getElem [DecidableEq alpha]
+    {xs : List alpha} (hxs : xs.Nodup) (i : Nat) (hi : i < xs.length) :
+    (FiniteType.indexOfMemDecidable xs xs[i] (List.getElem_mem hi)).val = i := by
+  apply (List.getElem_inj hxs).mp
+  have hvalue := FiniteType.get_indexOfMemDecidable
+    xs xs[i] (List.getElem_mem hi)
+  simpa [List.get_eq_getElem] using hvalue
+
+theorem hasCardinality_iff_setBijection_segment {A : FSet alpha} {n : Nat} :
+    HasCardinality A n <-> Nonempty (Fn.SetBijection A (Segment n)) := by
+  classical
+  constructor
+  · rintro ⟨xs, hxs⟩
+    refine ⟨{
+      toFun := fun x =>
+        let hx : x.val ∈ xs := (hxs.left.right x.val).mp x.property
+        let i := FiniteType.indexOfMemDecidable xs x.val hx
+        ⟨i.val, hxs.right ▸ i.isLt⟩
+      injective := ?_
+      surjective := ?_
+    }⟩
+    · intro x y hxy
+      have hindex :
+          (FiniteType.indexOfMemDecidable xs x.val
+            ((hxs.left.right x.val).mp x.property)).val =
+          (FiniteType.indexOfMemDecidable xs y.val
+            ((hxs.left.right y.val).mp y.property)).val :=
+        congrArg Subtype.val hxy
+      apply Subtype.ext
+      have hxvalue := FiniteType.get_indexOfMemDecidable xs x.val
+        ((hxs.left.right x.val).mp x.property)
+      have hyvalue := FiniteType.get_indexOfMemDecidable xs y.val
+        ((hxs.left.right y.val).mp y.property)
+      have hfin :
+          FiniteType.indexOfMemDecidable xs x.val
+              ((hxs.left.right x.val).mp x.property) =
+            FiniteType.indexOfMemDecidable xs y.val
+              ((hxs.left.right y.val).mp y.property) :=
+        Fin.ext hindex
+      have hget := congrArg (List.get xs) hfin
+      exact hxvalue.symm.trans (hget.trans hyvalue)
+    · intro i
+      have hi : i.val < xs.length := hxs.right.symm ▸ i.property
+      let x : {x // x ∈ A} :=
+        ⟨xs[i.val], (hxs.left.right xs[i.val]).mpr (List.getElem_mem hi)⟩
+      refine ⟨x, ?_⟩
+      apply Subtype.ext
+      exact indexOfMemDecidable_getElem hxs.left.left i.val hi
+  · rintro ⟨e⟩
+    exact hasCardinality_of_setBijection e.symm (segment_hasCardinality n)
+
+private def restrictedFunctionOfTuple [DecidableEq alpha]
+    {A : FSet alpha} {B : FSet beta}
+    (xs : List alpha) (hA : ListEnumerates xs A)
+    (ys : List beta) (hB : ListEnumerates ys B)
+    (l : List beta) (hlen : l.length = xs.length)
+    (hchoices : forall y, y ∈ l -> y ∈ ys) :
+    Fn.RestrictedFunction A B :=
+  fun x =>
+    let hx : x.val ∈ xs := (hA x.val).mp x.property
+    let i := FiniteType.indexOfMemDecidable xs x.val hx
+    have hi : i.val < l.length := by
+      rw [hlen]
+      exact i.isLt
+    ⟨l[i.val], (hB l[i.val]).mpr (hchoices l[i.val] (List.getElem_mem hi))⟩
+
+/-!
+Functions from {lit}`A` to {lit}`B` are represented by the tuple of outputs in
+the order of a duplicate-free enumeration of {lit}`A`.  This upgrades
+{name}`ListCard.length_tuples` to the book's set-level exponentiation law.
+-/
+theorem restrictedFunctionSpace_hasCardinality
+    {A : FSet alpha} {B : FSet beta} {m n : Nat}
+    (hA : HasCardinality A m) (hB : HasCardinality B n) :
+    HasCardinality (Fn.RestrictedFunctionSpace A B) (n ^ m) := by
+  classical
+  rcases hA with ⟨xs, hxs⟩
+  rcases hB with ⟨ys, hys⟩
+  let tuples := ListCard.Tuples ys xs.length
+  let functions := tuples.attach.map (fun l =>
+    restrictedFunctionOfTuple xs hxs.left.right ys hys.left.right l.val
+      (ListCard.mem_tuples.mp l.property).left
+      (ListCard.mem_tuples.mp l.property).right)
+  refine ⟨functions, ?_, ?_⟩
+  · constructor
+    · apply list_nodup_map_of_injective_on_list
+        (list_attach_nodup (ListCard.tuples_nodup hys.left.left xs.length))
+      intro l t _hl _ht hfun
+      apply Subtype.ext
+      apply List.ext_getElem
+      · exact (ListCard.mem_tuples.mp l.property).left.trans
+          (ListCard.mem_tuples.mp t.property).left.symm
+      · intro i hil hit
+        have hixs : i < xs.length := by
+          rw [← (ListCard.mem_tuples.mp l.property).left]
+          exact hil
+        let x : {x // x ∈ A} :=
+          ⟨xs[i], (hxs.left.right xs[i]).mpr (List.getElem_mem hixs)⟩
+        have hvalue := congrArg Subtype.val (congrFun hfun x)
+        have hindex := indexOfMemDecidable_getElem hxs.left.left i hixs
+        simpa [restrictedFunctionOfTuple, x, hindex] using hvalue
+    · intro f
+      constructor
+      · intro _
+        let outputs := xs.attach.map (fun x =>
+          (f ⟨x.val, (hxs.left.right x.val).mpr x.property⟩).val)
+        have houtputsLength : outputs.length = xs.length := by
+          simp [outputs]
+        have houtputsChoices : forall y, y ∈ outputs -> y ∈ ys := by
+          intro y hy
+          rcases List.mem_map.mp hy with ⟨x, _hx, rfl⟩
+          exact (hys.left.right _).mp
+            (f ⟨x.val, (hxs.left.right x.val).mpr x.property⟩).property
+        have houtputs : outputs ∈ tuples := by
+          exact ListCard.mem_tuples.mpr ⟨houtputsLength, houtputsChoices⟩
+        let outputMember : {l // l ∈ tuples} := ⟨outputs, houtputs⟩
+        apply List.mem_map.mpr
+        refine ⟨outputMember, List.mem_attach tuples outputMember, ?_⟩
+        funext x
+        apply Subtype.ext
+        have hxmem : x.val ∈ xs := (hxs.left.right x.val).mp x.property
+        let i := FiniteType.indexOfMemDecidable xs x.val hxmem
+        have hi : i.val < xs.length := i.isLt
+        have hvalue := FiniteType.get_indexOfMemDecidable xs x.val hxmem
+        simp only [restrictedFunctionOfTuple]
+        change outputs[i.val] = (f x).val
+        simp [outputs, i]
+        apply congrArg Subtype.val
+        apply congrArg f
+        exact Subtype.ext hvalue
+      · intro _
+        exact True.intro
+  · simp [functions, tuples, ListCard.length_tuples, hxs.right, hys.right]
 
 private theorem list_nodup_filter (p : alpha -> Bool)
     {xs : List alpha} (h : xs.Nodup) : (xs.filter p).Nodup := by

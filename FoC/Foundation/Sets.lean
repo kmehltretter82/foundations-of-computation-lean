@@ -10,6 +10,10 @@ predicate {lit}`alpha -> Prop`, and use {lit}`FSet.Equal` for book-style equalit
 This keeps set membership and set equality close to the textbook notation while
 remaining simple enough to use throughout the formalization.
 
+The ambient type plays the role of the book's fixed universal set {lit}`U`.
+Consequently {lit}`FSet.Compl A` is complement relative to every value of that
+ambient type.
+
 ## Book coordinates
 
 Used by:
@@ -24,7 +28,7 @@ namespace FoC
 namespace Foundation
 
 /-!
-# Set representation
+**Set representation.**
 
 Sets are predicates, so membership is function application and extensional
 equality is pointwise equivalence of membership.
@@ -74,6 +78,9 @@ def Diff (A B : FSet alpha) : FSet alpha :=
 def Powerset (A : FSet alpha) : FSet (FSet alpha) :=
   fun B => Subset B A
 
+def OfList (xs : List alpha) : FSet alpha :=
+  fun x => x ∈ xs
+
 def Disjoint (A B : FSet alpha) : Prop :=
   forall x, ¬ (x ∈ A ∧ x ∈ B)
 
@@ -89,7 +96,7 @@ def ListInter : List (FSet alpha) -> FSet alpha
   | A :: As => Inter A (ListInter As)
 
 /-!
-# Subsets and extensional equality
+**Subsets and extensional equality.**
 
 Subset and equality lemmas provide the basic rewriting API for predicate sets.
 -/
@@ -129,8 +136,12 @@ theorem equal_of_subsets {A B : FSet alpha}
   · intro hx
     exact hBA x hx
 
+theorem eq_of_equal {A B : FSet alpha} (h : Equal A B) : A = B := by
+  funext x
+  exact propext (h x)
+
 /-!
-# Boolean algebra of sets
+**Boolean algebra of sets.**
 
 The algebraic laws cover union, intersection, complements, distributivity, and
 De Morgan laws.
@@ -415,7 +426,7 @@ theorem compl_listUnion (sets : List (FSet alpha)) :
             exact htail hAs
 
 /-!
-# Classical complement laws
+**Classical complement laws.**
 
 The book states the complement laws for arbitrary sets, without any
 decidability assumption.  The lemmas above keep their decidable hypotheses so
@@ -479,7 +490,7 @@ theorem compl_listInter_classical (sets : List (FSet alpha)) :
   exact compl_listInter sets (fun _ _ => inferInstance)
 
 /-!
-# Cantor diagonalization
+**Cantor diagonalization.**
 
 Cantor's powerset argument is formalized directly: no function from a type to
 its powerset can be surjective.

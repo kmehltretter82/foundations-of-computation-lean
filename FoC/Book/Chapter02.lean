@@ -45,25 +45,15 @@ and relations, use {module}`FoC.Foundation.Functions` and
 {module}`FoC.Foundation.Finite`, {module}`FoC.Foundation.Cardinality`, and
 {module}`FoC.Foundation.Countable`.
 
-## Status Notes
+## Formal Coverage
 
-The formal core of the chapter is covered. The set sections include the
-membership tests, subset/equality principles, Boolean algebra laws, De Morgan
-laws, absorption identities, universe/empty identities, and difference
-simplifications. The programming-with-sets section mirrors these laws in the
-bit-vector model where finite-set operations are pointwise Boolean operations.
+The chapter API includes set algebra, functional graphs, restricted function
+spaces, finite cardinality via counting-segment bijections, set-level product,
+powerset, union, and function-space laws, partial functions, countability,
+Cantor diagonalization, and the rational/real uncountability bridge.
 
-The function and counting sections cover graphs, images, preimages,
-composition, injectivity, surjectivity, countability, Cantor diagonalization,
-and the rational/real uncountability bridge. Recent cleanup adds exact
-image/preimage transport laws for composition, union, intersection, and
-complement, plus the correspondence between partial functions and total
-functions into a codomain extended with a bottom value.
-
-The relation and database sections cover equivalence classes, partitions,
-class overlap/disjointness, the natural-number total order and the subset
-partial order, transitive closure, relational tables, filtering, updates, and
-primary-key preservation under insertion, selection, and deletion.
-Programming-language examples and database-management-system implementation
-details remain application material rather than formal source obligations.
+The application sections use fixed-width bitsets and distinguish declarative
+database tables from duplicate-free finite storage. Projection, products,
+joins, updates, and primary-key preservation are stated through their row
+membership semantics.
 -/

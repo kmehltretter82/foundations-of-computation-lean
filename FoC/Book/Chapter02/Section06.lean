@@ -1,7 +1,6 @@
 import FoC.Foundation.Countable
 import FoC.Foundation.Functions
 import FoC.Foundation.Cardinality
-import FoC.Foundation.Rationals
 import FoC.Foundation.DigitStreams
 import FoC.Foundation.Reals
 import FoC.Foundation.RealUncountability
@@ -79,6 +78,15 @@ theorem finite_set_countable {A : FSet alpha}
     (hA : FSet.Finite A) : FSet.Countable A :=
   FSet.countable_of_finite hA
 
+theorem countable_iff_finite_or_countably_infinite {A : FSet alpha} :
+    FSet.Countable A <-> FSet.Finite A ∨ FSet.CountablyInfinite A :=
+  FSet.countable_iff_finite_or_countablyInfinite
+
+theorem countably_infinite_of_bijection_with_naturals {A : FSet alpha}
+    (hA : FSet.CountablyInfiniteByBijection A) :
+    FSet.CountablyInfinite A :=
+  FSet.countablyInfinite_of_setBijection_nat hA
+
 theorem union_of_countable_sets_countable {A B : FSet alpha}
     (hA : FSet.Countable A) (hB : FSet.Countable B) :
     FSet.Countable (FSet.Union A B) :=
@@ -144,40 +152,6 @@ theorem natural_number_pairs_countable :
   Countability.natPair_univ_countable
 
 /-!
-## Rational Representatives
-
-Rational representatives are assigned finite stages by combining the natural
-codes of numerator and denominator. The Lean statements make the diagonal
-listing explicit: each representative has a code, the code is injective, and
-the pair code appears on the expected diagonal.
--/
-
-def RationalRepresentativeStage (s : Nat) : FSet Rational :=
-  fun q => Countability.IntCode q.num + Countability.IntCode q.den = s
-
-def RationalRepresentativeCode (q : Rational) : Nat × Nat :=
-  (Countability.IntCode q.num, Countability.IntCode q.den)
-
-theorem rational_representative_code_injective :
-    Fn.Injective RationalRepresentativeCode := by
-  intro q r h
-  cases q with
-  | mk qnum qden qhden =>
-      cases r with
-      | mk rnum rden rhden =>
-          simp [RationalRepresentativeCode] at h
-          have hnum : qnum = rnum := Countability.intCode_injective h.left
-          have hden : qden = rden := Countability.intCode_injective h.right
-          cases hnum
-          cases hden
-          rfl
-
-theorem rational_representative_code_on_diagonal (q : Rational) :
-    RationalRepresentativeCode q ∈
-      Countability.DiagonalList ((RationalRepresentativeCode q).1 + (RationalRepresentativeCode q).2) :=
-  Countability.pair_mem_diagonalList (RationalRepresentativeCode q).1 (RationalRepresentativeCode q).2
-
-/-!
 ## Finite Cardinality Formulas
 
 The cardinality statements cover the elementary finite cases, the sanity
@@ -233,6 +207,12 @@ theorem counting_segment_has_cardinality (n : Nat) :
     FSet.HasCardinality (FSet.Segment n) n :=
   FSet.segment_hasCardinality n
 
+theorem has_cardinality_iff_bijection_with_counting_segment
+    {A : FSet alpha} {n : Nat} :
+    FSet.HasCardinality A n <->
+      Nonempty (Fn.SetBijection A (FSet.Segment n)) :=
+  FSet.hasCardinality_iff_setBijection_segment
+
 theorem no_correspondence_between_distinct_segments {m n : Nat}
     (hmn : m ≠ n) (f : Nat -> Nat) :
     ¬ ((forall x, x ∈ FSet.Segment m -> f x ∈ FSet.Segment n) ∧
@@ -257,6 +237,17 @@ theorem product_of_finite_sets_cardinality {A : FSet alpha} {B : FSet beta}
     FSet.HasCardinality (FSet.Product A B) (m * n) :=
   FSet.product_hasCardinality hA hB
 
+theorem powerset_of_finite_set_cardinality {A : FSet alpha} {n : Nat}
+    (hA : FSet.HasCardinality A n) :
+    FSet.HasCardinality (FSet.Powerset A) (2 ^ n) :=
+  FSet.powerset_hasCardinality hA
+
+theorem restricted_function_space_cardinality
+    {A : FSet alpha} {B : FSet beta} {m n : Nat}
+    (hA : FSet.HasCardinality A m) (hB : FSet.HasCardinality B n) :
+    FSet.HasCardinality (Fn.RestrictedFunctionSpace A B) (n ^ m) :=
+  FSet.restrictedFunctionSpace_hasCardinality hA hB
+
 theorem union_of_finite_sets_cardinality {A B : FSet alpha} {m n k : Nat}
     (hA : FSet.HasCardinality A m) (hB : FSet.HasCardinality B n)
     (hI : FSet.HasCardinality (FSet.Inter A B) k) :
@@ -279,9 +270,9 @@ theorem disjoint_union_of_finite_sets_cardinality {A B : FSet alpha}
   FSet.union_hasCardinality_of_disjoint_classical hA hB hAB
 
 /-!
-### List Models
+### Implementation List Models
 
-The remaining formulas of Theorem 2.8 are stated on the list models.  The
+The set-level theorems above are implemented by these list models.  Their
 completeness and duplicate-freedom lemmas make the lengths honest counts: the
 sublist model enumerates each sublist of a duplicate-free enumeration exactly
 once, and the tuple model enumerates each length-{lit}`n` tuple of choices

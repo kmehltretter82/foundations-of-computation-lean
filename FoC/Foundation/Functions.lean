@@ -26,7 +26,7 @@ namespace Foundation
 namespace Fn
 
 /-!
-# Core function notions
+**Core function notions.**
 
 The basic predicates record identity, composition, injectivity, surjectivity,
 bijectivity, graphs, images, preimages, function spaces, and partial functions.
@@ -50,14 +50,50 @@ def Bijective (f : alpha -> beta) : Prop :=
 def Graph (f : alpha -> beta) : FSet (alpha × beta) :=
   fun p => p.2 = f p.1
 
+def RestrictedFunction (A : FSet alpha) (B : FSet beta) :=
+  {x // x ∈ A} -> {y // y ∈ B}
+
+def RestrictedFunctionSpace (A : FSet alpha) (B : FSet beta) :
+    FSet (RestrictedFunction A B) :=
+  FSet.Univ
+
+def FunctionalGraph (A : FSet alpha) (B : FSet beta)
+    (R : FSet (alpha × beta)) : Prop :=
+  (forall {x y}, (x, y) ∈ R -> x ∈ A ∧ y ∈ B) ∧
+    forall x, x ∈ A ->
+      exists y, (y ∈ B ∧ (x, y) ∈ R) ∧
+        forall z, z ∈ B ∧ (x, z) ∈ R -> z = y
+
+def GraphOfRestrictedFunction {A : FSet alpha} {B : FSet beta}
+    (f : RestrictedFunction A B) : FSet (alpha × beta) :=
+  fun p => exists hx : p.1 ∈ A, p.2 = (f ⟨p.1, hx⟩).val
+
+structure SetBijection (A : FSet alpha) (B : FSet beta) where
+  toFun : {x // x ∈ A} -> {y // y ∈ B}
+  injective : Injective toFun
+  surjective : Surjective toFun
+
+noncomputable def SetBijection.symm {A : FSet alpha} {B : FSet beta}
+    (e : SetBijection A B) : SetBijection B A where
+  toFun := fun y => Classical.choose (e.surjective y)
+  injective := by
+    intro y₁ y₂ h
+    have h₁ := Classical.choose_spec (e.surjective y₁)
+    have h₂ := Classical.choose_spec (e.surjective y₂)
+    apply Subtype.ext
+    have := congrArg e.toFun h
+    simpa [h₁, h₂] using congrArg Subtype.val this
+  surjective := by
+    intro x
+    refine ⟨e.toFun x, ?_⟩
+    apply e.injective
+    exact Classical.choose_spec (e.surjective (e.toFun x))
+
 def Image (f : alpha -> beta) (A : FSet alpha) : FSet beta :=
   fun y => exists x, x ∈ A ∧ f x = y
 
 def Preimage (f : alpha -> beta) (B : FSet beta) : FSet alpha :=
   fun x => f x ∈ B
-
-def FunctionSpace (alpha : Type u) (beta : Type v) : FSet (alpha -> beta) :=
-  fun _ => True
 
 def Evaluation {alpha : Type u} {beta : Type v} (p : (alpha -> beta) × alpha) : beta :=
   p.1 p.2
@@ -69,7 +105,7 @@ def TotalAsPartial {alpha : Type u} {beta : Type v} (f : alpha -> beta) : Partia
   fun x => some (f x)
 
 /-!
-# Identity and composition
+**Identity and composition.**
 
 The first proof block establishes the expected identity, associativity, and
 cancellation facts for composition.
@@ -105,7 +141,7 @@ theorem surjective_of_comp_surjective {f : alpha -> beta} {g : beta -> gamma}
       exact Exists.intro (f x) hx
 
 /-!
-# Graphs, images, and preimages
+**Graphs, images, and preimages.**
 
 Graphs are represented as sets of ordered pairs, and images/preimages are
 represented by existential or direct membership conditions.
@@ -118,6 +154,83 @@ theorem graph_contains_value (f : alpha -> beta) (x : alpha) :
 theorem graph_unique_value {f : alpha -> beta} {x : alpha} {y z : beta}
     (hy : (x, y) ∈ Graph f) (hz : (x, z) ∈ Graph f) : y = z :=
   Eq.trans hy hz.symm
+
+theorem graphOfRestrictedFunction_functional {A : FSet alpha} {B : FSet beta}
+    (f : RestrictedFunction A B) :
+    FunctionalGraph A B (GraphOfRestrictedFunction f) := by
+  constructor
+  · intro x y hxy
+    rcases hxy with ⟨hx, hy⟩
+    constructor
+    · exact hx
+    · change y = (f ⟨x, hx⟩).val at hy
+      rw [hy]
+      exact (f ⟨x, hx⟩).property
+  · intro x hx
+    refine ⟨(f ⟨x, hx⟩).val,
+      ⟨⟨(f ⟨x, hx⟩).property, ⟨hx, rfl⟩⟩, ?_⟩⟩
+    intro y hy
+    rcases hy.right with ⟨hx', hy'⟩
+    exact hy'
+
+noncomputable def FunctionOfFunctionalGraph {A : FSet alpha} {B : FSet beta}
+    {R : FSet (alpha × beta)} (hR : FunctionalGraph A B R) :
+    RestrictedFunction A B :=
+  fun x =>
+    ⟨Classical.choose (hR.right x.val x.property),
+      (Classical.choose_spec (hR.right x.val x.property)).left.left⟩
+
+theorem graphOf_functionOfFunctionalGraph {A : FSet alpha} {B : FSet beta}
+    {R : FSet (alpha × beta)} (hR : FunctionalGraph A B R) :
+    FSet.Equal (GraphOfRestrictedFunction (FunctionOfFunctionalGraph hR)) R := by
+  intro p
+  rcases p with ⟨x, y⟩
+  constructor
+  · rintro ⟨hx, hy⟩
+    change y = (FunctionOfFunctionalGraph hR ⟨x, hx⟩).val at hy
+    rw [hy]
+    exact (Classical.choose_spec (hR.right x hx)).left.right
+  · intro hxy
+    have hx := (hR.left hxy).left
+    refine ⟨hx, ?_⟩
+    exact (Classical.choose_spec (hR.right x hx)).right y
+      ⟨(hR.left hxy).right, hxy⟩
+
+theorem functionOf_graphOfRestrictedFunction {A : FSet alpha} {B : FSet beta}
+    (f : RestrictedFunction A B) :
+    FunctionOfFunctionalGraph (graphOfRestrictedFunction_functional f) = f := by
+  funext x
+  apply Subtype.ext
+  exact (Classical.choose_spec
+      ((graphOfRestrictedFunction_functional f).right x.val x.property)).right
+    (f x).val
+    ⟨(f x).property, ⟨x.property, rfl⟩⟩ |>.symm
+
+def FunctionalGraphSpace (A : FSet alpha) (B : FSet beta) :=
+  {R : FSet (alpha × beta) // FunctionalGraph A B R}
+
+def restrictedFunctionGraph {A : FSet alpha} {B : FSet beta}
+    (f : RestrictedFunction A B) : FunctionalGraphSpace A B :=
+  ⟨GraphOfRestrictedFunction f, graphOfRestrictedFunction_functional f⟩
+
+theorem restrictedFunctionGraph_bijective {A : FSet alpha} {B : FSet beta} :
+    Bijective (restrictedFunctionGraph (A := A) (B := B)) := by
+  constructor
+  · intro f g hfg
+    funext x
+    apply Subtype.ext
+    have hsets := congrArg Subtype.val hfg
+    change GraphOfRestrictedFunction f = GraphOfRestrictedFunction g at hsets
+    have hmem : (x.val, (f x).val) ∈ GraphOfRestrictedFunction g := by
+      rw [← hsets]
+      exact ⟨x.property, rfl⟩
+    rcases hmem with ⟨hx, hvalue⟩
+    simpa using hvalue
+  · intro R
+    let f := FunctionOfFunctionalGraph R.property
+    refine ⟨f, ?_⟩
+    apply Subtype.ext
+    exact FSet.eq_of_equal (graphOf_functionOfFunctionalGraph R.property)
 
 theorem image_membership (f : alpha -> beta) (A : FSet alpha) (y : beta) :
     y ∈ Image f A <-> exists x, x ∈ A ∧ f x = y :=
@@ -202,7 +315,7 @@ theorem image_compose (g : beta -> gamma) (f : alpha -> beta) (A : FSet alpha) :
               rw [hx.right, hy.right]))
 
 /-!
-# Injectivity tests
+**Injectivity tests.**
 
 The remaining function lemmas rephrase injectivity in terms of distinct images
 and explicit collisions.
@@ -242,7 +355,7 @@ theorem collision_of_not_injective {f : alpha -> beta}
     exact Exists.intro x (Exists.intro y (And.intro hxy' hxy))
 
 /-!
-# Partial functions
+**Partial functions.**
 
 Total functions embed into partial functions by wrapping every output in
 {lit}`some`.

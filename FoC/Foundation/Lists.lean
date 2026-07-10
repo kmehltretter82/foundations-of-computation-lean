@@ -112,6 +112,22 @@ theorem list_nodup_map_of_injective_on_list {α : Type u} {β : Type v}
         intro a b ha hb hfab
         exact hinj a b (List.Mem.tail x ha) (List.Mem.tail x hb) hfab
 
+theorem list_attach_nodup {xs : List alpha} (hxs : xs.Nodup) :
+    xs.attach.Nodup := by
+  induction xs with
+  | nil => simp
+  | cons x xs ih =>
+      rw [List.nodup_cons] at hxs
+      simp only [List.attach_cons, List.nodup_cons]
+      constructor
+      · intro hmem
+        rcases List.mem_map.mp hmem with ⟨y, _hy, heq⟩
+        have hval : y.val = x := congrArg Subtype.val heq
+        exact hxs.left (hval ▸ y.property)
+      · apply list_nodup_map_of_injective_on_list (ih hxs.right)
+        intro a b _ha _hb hab
+        exact Subtype.ext (by simpa using congrArg Subtype.val hab)
+
 /-!
 # Duplicate witnesses
 

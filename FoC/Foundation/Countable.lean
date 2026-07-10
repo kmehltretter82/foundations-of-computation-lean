@@ -33,7 +33,7 @@ namespace Foundation
 namespace FSet
 
 /-!
-# Countability predicates
+**Countability predicates.**
 
 A countable set is one that can be enumerated by a partial function from natural
 numbers.  The partial codomain lets an enumeration skip positions without
@@ -59,7 +59,7 @@ private def InterleaveEnumerations (f g : Nat -> Option alpha) (n : Nat) : Optio
   if n % 2 = 0 then f (n / 2) else g (n / 2)
 
 /-!
-# Basic enumerations
+**Basic enumerations.**
 
 The first examples enumerate all natural numbers and the even natural numbers.
 -/
@@ -157,7 +157,7 @@ theorem countable_subset_classical {A B : FSet alpha}
   exact countable_subset hAB hB
 
 /-!
-# Finite sets are countable
+**Finite sets are countable.**
 
 The book defines a countable set as one that is finite or countably infinite.
 The formal connection is that every finite enumeration is in particular a
@@ -175,8 +175,55 @@ theorem countable_of_finite {A : FSet alpha} (hA : Finite A) : Countable A := by
       · intro hx
         exact (hxs x).mpr (List.mem_iff_getElem?.mpr hx)
 
+theorem countable_iff_finite_or_countablyInfinite {A : FSet alpha} :
+    Countable A <-> Finite A ∨ CountablyInfinite A := by
+  classical
+  constructor
+  · intro hA
+    by_cases hfinite : Finite A
+    · exact Or.inl hfinite
+    · exact Or.inr ⟨hA, hfinite⟩
+  · rintro (hfinite | hinfinite)
+    · exact countable_of_finite hfinite
+    · exact hinfinite.left
+
+def CountablyInfiniteByBijection (A : FSet alpha) : Prop :=
+  Nonempty (Fn.SetBijection (Univ : FSet Nat) A)
+
+theorem countablyInfinite_of_setBijection_nat {A : FSet alpha}
+    (hA : CountablyInfiniteByBijection A) : CountablyInfinite A := by
+  classical
+  rcases hA with ⟨e⟩
+  constructor
+  · refine ⟨fun n => some (e.toFun ⟨n, True.intro⟩).val, ?_⟩
+    intro x
+    constructor
+    · intro hx
+      rcases e.surjective ⟨x, hx⟩ with ⟨n, hn⟩
+      exact ⟨n.val, congrArg some (congrArg Subtype.val hn)⟩
+    · rintro ⟨n, hn⟩
+      have hval : (e.toFun ⟨n, True.intro⟩).val = x := Option.some.inj hn
+      exact hval ▸ (e.toFun ⟨n, True.intro⟩).property
+  · intro hfinite
+    rcases hfinite with ⟨xs, hxs⟩
+    let outputs := (List.range (xs.length + 1)).map
+      (fun n => (e.toFun ⟨n, True.intro⟩).val)
+    have hnodup : outputs.Nodup := by
+      apply list_nodup_map_of_injective_on_list List.nodup_range
+      intro a b _ha _hb hab
+      have hout : e.toFun ⟨a, True.intro⟩ = e.toFun ⟨b, True.intro⟩ :=
+        Subtype.ext hab
+      exact congrArg Subtype.val (e.injective hout)
+    have hsub : forall x, x ∈ outputs -> x ∈ xs := by
+      intro x hx
+      rcases List.mem_map.mp hx with ⟨n, _hn, rfl⟩
+      exact (hxs _).mp (e.toFun ⟨n, True.intro⟩).property
+    have hle := list_nodup_length_le_of_subset hnodup hsub
+    simp [outputs] at hle
+    lia
+
 /-!
-# Infinite sets
+**Infinite sets.**
 
 A finite list of natural numbers cannot contain a number larger than its
 maximum, so no list enumerates all of {lit}`Nat`: the set of natural numbers
@@ -225,7 +272,7 @@ theorem even_naturals_countably_infinite : CountablyInfinite EvenNaturals :=
   And.intro even_naturals_countable even_naturals_not_finite
 
 /-!
-# Countable unions
+**Countable unions.**
 
 Exercise 11(b) from Section 2.6 is represented by interleaving two
 enumerations.  Even positions enumerate the first set and odd positions
@@ -280,7 +327,7 @@ theorem countably_infinite_union {A B : FSet alpha}
     exact hA.right (finite_subset (union_left_subset A B) hfinite)
 
 /-!
-# Removing countable subsets
+**Removing countable subsets.**
 
 Theorem 2.9 says that removing a countable subset from an uncountable set still
 leaves an uncountable set.  The formal proof argues by contradiction: if the
@@ -312,7 +359,7 @@ end FSet
 namespace Countability
 
 /-!
-# Encodable types
+**Encodable types.**
 
 An encodable type injects into natural numbers.  Such an injection gives a
 countable universal set by searching for the first value with a given code.
@@ -403,7 +450,7 @@ def NatCodec.int : NatCodec Int where
         simp [IntCode, hdiv]
 
 /-!
-# Integer encodings
+**Integer encodings.**
 
 Integers are countable by an explicit code into natural numbers: nonnegative
 integers go to even codes and negative successors go to odd codes.
@@ -421,7 +468,7 @@ theorem int_encodable : EncodableByNat Int := by
   exact Exists.intro IntCode intCode_injective
 
 /-!
-# Compound encodings
+**Compound encodings.**
 
 Pairs, options, sums, products, and lists are encoded by combining natural
 number codes.  The list encoding is the reusable countability construction used
@@ -531,7 +578,7 @@ theorem list_encodable {alpha : Type u}
       exact listCode_injective hcode
 
 /-!
-# Diagonal pair enumeration
+**Diagonal pair enumeration.**
 
 The diagonal lists enumerate pairs by increasing sum of coordinates, matching
 the standard grid-walk proof that {lit}`Nat × Nat` is countable.

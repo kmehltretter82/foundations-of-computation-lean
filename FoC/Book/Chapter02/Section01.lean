@@ -1,5 +1,4 @@
 import FoC.Foundation.Sets
-import FoC.Book.Chapter01.Section08
 
 set_option doc.verso true
 
@@ -75,20 +74,24 @@ theorem empty_is_subset (A : FSet alpha) : FSet.Subset FSet.Empty A :=
 ## Induction
 
 The chapter states ordinary mathematical induction and strong induction before
-using them in later set and counting arguments. These wrappers point back to
-the Chapter 1 formalization of the same principles.
+using them in later set and counting arguments. These wrappers use Lean's
+built-in natural-number induction principles directly.
 -/
 
 theorem mathematical_induction (P : Nat -> Prop)
     (base : P 0)
     (step : forall k, P k -> P (k + 1)) :
-    forall n, P n :=
-  Chapter01.Section08.mathematical_induction P base step
+    forall n, P n := by
+  intro n
+  induction n with
+  | zero => exact base
+  | succ n ih => exact step n ih
 
 theorem strong_induction (P : Nat -> Prop)
     (step : forall n, (forall k, k < n -> P k) -> P n) :
-    forall n, P n :=
-  Chapter01.Section08.strong_induction_book P step
+    forall n, P n := by
+  intro n
+  exact Nat.strongRecOn (motive := P) n step
 
 /-!
 ## Typed Sets and Russell's Paradox

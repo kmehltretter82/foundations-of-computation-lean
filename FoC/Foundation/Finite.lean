@@ -20,7 +20,7 @@ namespace FoC
 namespace Foundation
 
 /-!
-# Finite types
+**Finite types.**
 
 A finite type is represented by a list that contains every value of the type.
 This is the finite-state witness reused by automata and grammar modules.
@@ -186,7 +186,7 @@ theorem valueOf_indexOfDecidable [DecidableEq alpha]
 end FiniteType
 
 /-!
-# Removing duplicates
+**Removing duplicates.**
 
 A finite enumeration may repeat elements.  With decidable equality the
 duplicates can be filtered out, turning any enumeration into a duplicate-free
@@ -227,7 +227,7 @@ theorem listDedup_nodup [DecidableEq alpha] (xs : List alpha) :
 namespace FSet
 
 /-!
-# Finite predicate sets
+**Finite predicate sets.**
 
 For sets represented as predicates, finiteness means that some list enumerates
 exactly the members of the predicate.  The duplicate-free variant is the one
@@ -264,7 +264,7 @@ theorem singleton_finite (a : alpha) : Finite (Singleton a) := by
         cases htail
 
 /-!
-# Finite subsets
+**Finite subsets.**
 
 Exercise 12(c) is the finite-subset principle: every subset of a finite set is
 finite.  The proof filters the finite list for the larger set.

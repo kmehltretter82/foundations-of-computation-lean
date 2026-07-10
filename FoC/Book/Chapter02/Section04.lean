@@ -42,6 +42,28 @@ theorem graph_unique_value {f : alpha -> beta} {x : alpha} {y z : beta}
     (hy : (x, y) ∈ Fn.Graph f) (hz : (x, z) ∈ Fn.Graph f) : y = z :=
   Fn.graph_unique_value hy hz
 
+theorem restricted_function_graph_is_functional
+    {A : FSet alpha} {B : FSet beta} (f : Fn.RestrictedFunction A B) :
+    Fn.FunctionalGraph A B (Fn.GraphOfRestrictedFunction f) :=
+  Fn.graphOfRestrictedFunction_functional f
+
+noncomputable def function_of_functional_graph
+    {A : FSet alpha} {B : FSet beta} {R : FSet (alpha × beta)}
+    (hR : Fn.FunctionalGraph A B R) : Fn.RestrictedFunction A B :=
+  Fn.FunctionOfFunctionalGraph hR
+
+theorem graph_function_round_trip
+    {A : FSet alpha} {B : FSet beta} {R : FSet (alpha × beta)}
+    (hR : Fn.FunctionalGraph A B R) :
+    FSet.Equal
+      (Fn.GraphOfRestrictedFunction (function_of_functional_graph hR)) R :=
+  Fn.graphOf_functionOfFunctionalGraph hR
+
+theorem restricted_functions_biject_functional_graphs
+    {A : FSet alpha} {B : FSet beta} :
+    Fn.Bijective (Fn.restrictedFunctionGraph (A := A) (B := B)) :=
+  Fn.restrictedFunctionGraph_bijective
+
 theorem image_membership (f : alpha -> beta) (A : FSet alpha) (y : beta) :
     y ∈ Fn.Image f A <-> exists x, x ∈ A ∧ f x = y :=
   Fn.image_membership f A y

@@ -23,27 +23,17 @@ namespace FoC
 namespace Foundation
 
 /-!
-# Set extensionality
-
-Mutual inclusion of predicate sets upgrades to Lean equality: pointwise
-equivalence of membership becomes equality of the membership predicates by
-function and proposition extensionality.  This is the form of the book's
-Theorem 2.1 that supplies antisymmetry for the subset order below.
--/
-
-theorem FSet.eq_of_equal {A B : FSet alpha} (h : FSet.Equal A B) : A = B := by
-  funext x
-  exact propext (h x)
-
-/-!
-# Relation predicates
+**Relation predicates.**
 
 A relation is a binary predicate.  The first definitions package the usual
 properties and order/equivalence combinations.
 -/
 
-def Rel (alpha : Type u) : Type u :=
-  alpha -> alpha -> Prop
+def Relation (alpha : Type u) (beta : Type v) : Type (max u v) :=
+  alpha -> beta -> Prop
+
+abbrev Rel (alpha : Type u) : Type u :=
+  Relation alpha alpha
 
 namespace Rel
 
@@ -69,7 +59,7 @@ def TotalOrder (R : Rel alpha) : Prop :=
   PartialOrder R ∧ forall x y, R x y ∨ R y x
 
 def Class (R : Rel alpha) (x : alpha) : FSet alpha :=
-  fun y => R x y
+  fun y => R y x
 
 def Classes (R : Rel alpha) : FSet (FSet alpha) :=
   fun C => exists x, FSet.Equal C (Class R x)
@@ -83,7 +73,7 @@ structure Partition (alpha : Type u) where
       (exists x, x ∈ A ∧ x ∈ B) -> FSet.Equal A B
 
 /-!
-# Equivalence classes and partitions
+**Equivalence classes and partitions.**
 
 Equivalence relations determine classes, and those classes form a partition of
 the underlying type.
@@ -108,15 +98,15 @@ theorem class_equal_of_related {R : Rel alpha} (h : Equivalence R)
   intro x
   constructor
   · intro hax
-    exact h.right.right (h.right.left hab) hax
+    exact h.right.right hax hab
   · intro hbx
-    exact h.right.right hab hbx
+    exact h.right.right hbx (h.right.left hab)
 
 theorem class_equal_iff_related {R : Rel alpha} (h : Equivalence R)
     {a b : alpha} : FSet.Equal (Class R a) (Class R b) <-> R a b := by
   constructor
   · intro hClass
-    exact (hClass b).mpr (class_self h b)
+    exact (hClass a).mp (class_self h a)
   · exact class_equal_of_related h
 
 theorem overlapping_classes_equal {R : Rel alpha} (h : Equivalence R)
@@ -124,7 +114,7 @@ theorem overlapping_classes_equal {R : Rel alpha} (h : Equivalence R)
     FSet.Equal (Class R a) (Class R b) := by
   cases hoverlap with
   | intro x hx =>
-      have hab : R a b := h.right.right hx.left (h.right.left hx.right)
+      have hab : R a b := h.right.right (h.right.left hx.left) hx.right
       exact class_equal_of_related h hab
 
 theorem classes_equal_or_disjoint {R : Rel alpha} (h : Equivalence R)
@@ -168,9 +158,9 @@ def classes_partition {R : Rel alpha} (h : Equivalence R) : Partition alpha wher
         | intro b hBeq =>
             cases hOverlap with
             | intro x hx =>
-                have hax : R a x := (hAeq x).mp hx.left
-                have hbx : R b x := (hBeq x).mp hx.right
-                have hab : R a b := h.right.right hax (h.right.left hbx)
+                have hxa : R x a := (hAeq x).mp hx.left
+                have hxb : R x b := (hBeq x).mp hx.right
+                have hab : R a b := h.right.right (h.right.left hxa) hxb
                 have hClass : FSet.Equal (Class R a) (Class R b) :=
                   class_equal_of_related h hab
                 exact FSet.equal_trans hAeq (FSet.equal_trans hClass (FSet.equal_symm hBeq))
@@ -187,7 +177,7 @@ theorem same_fiber_equivalence (f : alpha -> beta) :
       exact Eq.trans hxy hyz
 
 /-!
-# Order examples
+**Order examples.**
 
 The chapter's two standard order examples witness the order definitions.  The
 numeric order on the natural numbers is a total order.  Set inclusion is a
@@ -225,7 +215,7 @@ theorem subset_not_total_order (a b : alpha) (hab : a ≠ b) :
   | inr hsub => exact hab (hsub b rfl).symm
 
 /-!
-# Transitive closure
+**Transitive closure.**
 
 The transitive closure is the reachability-style relation reused by later
 transition-system material.

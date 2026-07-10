@@ -52,12 +52,9 @@ theorem difference_membership_test (A B : FSet alpha) (x : alpha) :
 
 For finite universes, the book describes sets as bit vectors: 32-bit binary
 numbers whose universal set is the fixed index range 0 through 31. This model
-instead uses {lean}`Nat -> Bool`, so each operation becomes a pointwise
-Boolean operation on indices, but the universe is the whole of the natural
-numbers rather than the book's 32-bit range. The divergence matters only for
-{lit}`compl`: the book's bitwise not operator flips exactly 32 bits, while the
-complement here flips the bit at every natural-number index. The other
-operations agree with the book bit for bit.
+uses {lit}`Fin width -> Bool`, so the width is part of the type.  The alias
+{lit}`BookBitSet` specializes the reusable model to the book's 32-bit range;
+complement therefore flips exactly those 32 membership bits.
 
 The theorems in this namespace are intentionally definitional: evaluating an
 operation at index {lit}`i` immediately reduces to the Boolean expression for that
@@ -66,55 +63,65 @@ bit.
 
 namespace BitVectorSet
 
-abbrev BitSet : Type :=
-  Nat -> Bool
+abbrev BitSet (width : Nat) : Type :=
+  Fin width -> Bool
 
-def union (A B : BitSet) : BitSet :=
+abbrev BookBitSet : Type :=
+  BitSet 32
+
+def union (A B : BitSet width) : BitSet width :=
   fun i => A i || B i
 
-def inter (A B : BitSet) : BitSet :=
+def inter (A B : BitSet width) : BitSet width :=
   fun i => A i && B i
 
-def diff (A B : BitSet) : BitSet :=
+def diff (A B : BitSet width) : BitSet width :=
   fun i => A i && !(B i)
 
-def compl (A : BitSet) : BitSet :=
+def compl (A : BitSet width) : BitSet width :=
   fun i => !(A i)
 
-theorem union_apply (A B : BitSet) (i : Nat) :
+theorem union_apply (A B : BitSet width) (i : Fin width) :
     union A B i = (A i || B i) :=
   rfl
 
-theorem inter_apply (A B : BitSet) (i : Nat) :
+theorem inter_apply (A B : BitSet width) (i : Fin width) :
     inter A B i = (A i && B i) :=
   rfl
 
-theorem diff_apply (A B : BitSet) (i : Nat) :
+theorem diff_apply (A B : BitSet width) (i : Fin width) :
     diff A B i = (A i && !(B i)) :=
   rfl
 
-theorem compl_apply (A : BitSet) (i : Nat) :
+theorem compl_apply (A : BitSet width) (i : Fin width) :
     compl A i = !(A i) :=
   rfl
 
-theorem union_commutative (A B : BitSet) (i : Nat) :
-    union A B i = union B A i := by
+theorem union_commutative (A B : BitSet width) :
+    union A B = union B A := by
+  funext i
   simp [union, Bool.or_comm]
 
-theorem inter_commutative (A B : BitSet) (i : Nat) :
-    inter A B i = inter B A i := by
+theorem inter_commutative (A B : BitSet width) :
+    inter A B = inter B A := by
+  funext i
   simp [inter, Bool.and_comm]
 
-theorem union_absorption (A B : BitSet) (i : Nat) :
-    union A (inter A B) i = A i := by
-  simp [union, inter]; cases A i <;> simp
+theorem union_absorption (A B : BitSet width) :
+    union A (inter A B) = A := by
+  funext i
+  simp [union, inter]
+  cases A i <;> simp
 
-theorem inter_absorption (A B : BitSet) (i : Nat) :
-    inter A (union A B) i = A i := by
-  simp [inter, union]; cases A i <;> simp
+theorem inter_absorption (A B : BitSet width) :
+    inter A (union A B) = A := by
+  funext i
+  simp [inter, union]
+  cases A i <;> simp
 
-theorem double_complement (A : BitSet) (i : Nat) :
-    compl (compl A) i = A i := by
+theorem double_complement (A : BitSet width) :
+    compl (compl A) = A := by
+  funext i
   simp [compl, Bool.not_not]
 
 end BitVectorSet
