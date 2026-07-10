@@ -1,4 +1,5 @@
 import FoC.Foundation.Logic
+import FoC.Book.Chapter01.Section08
 
 set_option doc.verso true
 
@@ -220,7 +221,7 @@ theorem labeled_circuit_computes_formula :
   rfl
 
 /-!
-# Disjunctive Normal Form
+**Disjunctive Normal Form.**
 
 The list definitions below are the computational core of Definition 1.5 and
 Theorem 1.3 from the source text.
@@ -242,6 +243,15 @@ def Conjunction.eval (valuation : Var -> Bool) : List (Literal Var) -> Bool
 def DNF.eval (valuation : Var -> Bool) : List (List (Literal Var)) -> Bool
   | [] => false
   | clause :: rest => Conjunction.eval valuation clause || DNF.eval valuation rest
+
+def Literal.variable : Literal Var -> Var
+  | Literal.positive v => v
+  | Literal.negative v => v
+
+/-! A DNF has no repeated clause and no repeated variable within a clause. -/
+def IsDNF (dnf : List (List (Literal Var))) : Prop :=
+  dnf.Nodup ∧
+    forall clause, clause ∈ dnf -> (clause.map Literal.variable).Nodup
 
 def Literal.toPropForm : Literal Var -> PropForm Var
   | Literal.positive v => PropForm.var v
@@ -269,8 +279,8 @@ theorem conjunctionToPropForm_eval (valuation : Var -> Bool) :
           PropForm.eval, conjunctionToPropForm_eval valuation rest]
 
 /-!
-The DNF theorem lifts the conjunction result to a disjunction of conjunctions.
-This is the semantic core of the section's DNF representation mechanism.
+Translation from the list representation to propositional-formula syntax
+preserves evaluation.
 -/
 theorem dnfToPropForm_eval (valuation : Var -> Bool) :
     forall dnf, PropForm.eval valuation (dnfToPropForm dnf) = DNF.eval valuation dnf
@@ -278,6 +288,164 @@ theorem dnfToPropForm_eval (valuation : Var -> Bool) :
   | clause :: rest => by
       simp [dnfToPropForm, DNF.eval, PropForm.eval,
         conjunctionToPropForm_eval valuation clause, dnfToPropForm_eval valuation rest]
+
+/-!
+**Exhaustive truth tables.**
+
+Rows in the general construction are lists of Boolean values in the same order
+as the variable list. This representation makes exhaustiveness and absence of
+duplicate rows explicit, rather than hiding them in functions.
+-/
+
+def rowClauseValues : List Var -> List Bool -> List (Literal Var)
+  | v :: vars, value :: values =>
+      (if value then Literal.positive v else Literal.negative v) ::
+        rowClauseValues vars values
+  | _, _ => []
+
+theorem rowClauseValues_eval_eq (valuation : Var -> Bool) :
+    forall (vars : List Var) (values : List Bool),
+      values.length = vars.length ->
+      Conjunction.eval valuation (rowClauseValues vars values) =
+        (values == vars.map valuation) := by
+  intro vars
+  induction vars with
+  | nil =>
+      intro values hlength
+      cases values
+      · rfl
+      · simp at hlength
+  | cons v vars ih =>
+      intro values hlength
+      cases values with
+      | nil => simp at hlength
+      | cons value values =>
+          simp at hlength
+          cases value <;> cases hval : valuation v <;>
+            simp [rowClauseValues, Conjunction.eval, Literal.eval, hval, ih values hlength]
+
+theorem rowClauseValues_variables :
+    forall (vars : List Var) (values : List Bool),
+      values.length = vars.length ->
+      (rowClauseValues vars values).map Literal.variable = vars := by
+  intro vars
+  induction vars with
+  | nil =>
+      intro values hlength
+      cases values
+      · rfl
+      · simp at hlength
+  | cons v vars ih =>
+      intro values hlength
+      cases values with
+      | nil => simp at hlength
+      | cons value values =>
+          simp at hlength
+          cases value <;> simp [rowClauseValues, Literal.variable, ih values hlength]
+
+theorem rowClauseValues_injective (vars : List Var) {left right : List Bool}
+    (hleft : left.length = vars.length)
+    (hright : right.length = vars.length)
+    (heq : rowClauseValues vars left = rowClauseValues vars right) :
+    left = right := by
+  induction vars generalizing left right with
+  | nil =>
+      cases left <;> cases right <;> simp_all
+  | cons v vars ih =>
+      cases left with
+      | nil => simp at hleft
+      | cons l left =>
+          cases right with
+          | nil => simp at hright
+          | cons r right =>
+              simp at hleft hright
+              cases l <;> cases r <;>
+                simp [rowClauseValues] at heq <;>
+                simp_all
+              all_goals exact ih hleft hright heq
+
+def dnfFromValueRows (vars : List Var) (rows : List (List Bool)) :
+    List (List (Literal Var)) :=
+  rows.map (rowClauseValues vars)
+
+theorem dnfFromValueRows_eval_eq_any (valuation : Var -> Bool) (vars : List Var)
+    (rows : List (List Bool))
+    (hlength : forall row, row ∈ rows -> row.length = vars.length) :
+    DNF.eval valuation (dnfFromValueRows vars rows) =
+      rows.any (fun row => row == vars.map valuation) := by
+  induction rows with
+  | nil => rfl
+  | cons row rows ih =>
+      change
+        (Conjunction.eval valuation (rowClauseValues vars row) ||
+          DNF.eval valuation (dnfFromValueRows vars rows)) =
+        ((row == vars.map valuation) ||
+          rows.any (fun row => row == vars.map valuation))
+      rw [rowClauseValues_eval_eq valuation vars row (hlength row (by simp))]
+      rw [ih]
+      intro candidate hcandidate
+      exact hlength candidate (by simp [hcandidate])
+
+/-! Compile the true rows of a total Boolean truth table into DNF. -/
+def truthTableDNF (vars : List Var) (table : List Bool -> Bool) :
+    List (List (Literal Var)) :=
+  dnfFromValueRows vars
+    ((FoC.Book.Chapter01.Section08.truthAssignments vars.length).filter table)
+
+/-! The exhaustive truth-table-to-DNF theorem: the generated DNF agrees with
+the table on the row read from every valuation. -/
+theorem truthTableDNF_eval (valuation : Var -> Bool) (vars : List Var)
+    (table : List Bool -> Bool) :
+    DNF.eval valuation (truthTableDNF vars table) =
+      table (vars.map valuation) := by
+  rw [truthTableDNF, dnfFromValueRows_eval_eq_any]
+  · cases htable : table (vars.map valuation)
+    · apply List.any_eq_false.mpr
+      intro row hrow heq
+      have hselected := (List.mem_filter.mp hrow).right
+      have hroweq : row = vars.map valuation := by simpa using heq
+      rw [hroweq, htable] at hselected
+      contradiction
+    · apply List.any_eq_true.mpr
+      refine ⟨vars.map valuation, ?_, by simp⟩
+      apply List.mem_filter.mpr
+      exact ⟨FoC.Book.Chapter01.Section08.mem_truthAssignments_of_length (by simp), htable⟩
+  · intro row hrow
+    exact FoC.Book.Chapter01.Section08.length_of_mem_truthAssignments
+      (List.mem_filter.mp hrow).left
+
+/-! Duplicate-free variables produce a DNF satisfying Definition 1.5's two
+structural side conditions. -/
+theorem truthTableDNF_isDNF (vars : List Var) (table : List Bool -> Bool)
+    (hvars : vars.Nodup) :
+    IsDNF (truthTableDNF vars table) := by
+  let rows := (FoC.Book.Chapter01.Section08.truthAssignments vars.length).filter table
+  have hrowLength : forall row, row ∈ rows -> row.length = vars.length := by
+    intro row hrow
+    exact FoC.Book.Chapter01.Section08.length_of_mem_truthAssignments
+      (List.mem_filter.mp hrow).left
+  have hrowsNodup : rows.Nodup :=
+    List.filter_sublist.nodup
+      (FoC.Book.Chapter01.Section08.truthAssignments_nodup vars.length)
+  constructor
+  · change (rows.map (rowClauseValues vars)).Nodup
+    rw [List.Nodup, List.pairwise_map]
+    exact List.Pairwise.imp_of_mem
+      (fun ha hb hne heq =>
+        hne (rowClauseValues_injective vars (hrowLength _ ha) (hrowLength _ hb) heq))
+      hrowsNodup
+  · intro clause hclause
+    change clause ∈ rows.map (rowClauseValues vars) at hclause
+    rw [List.mem_map] at hclause
+    rcases hclause with ⟨row, hrow, rfl⟩
+    rw [rowClauseValues_variables vars row (hrowLength row hrow)]
+    exact hvars
+
+theorem truthTableDNF_toPropForm_eval (valuation : Var -> Bool)
+    (vars : List Var) (table : List Bool -> Bool) :
+    PropForm.eval valuation (dnfToPropForm (truthTableDNF vars table)) =
+      table (vars.map valuation) := by
+  rw [dnfToPropForm_eval, truthTableDNF_eval]
 
 def rowClause (vars : List Var) (row : Var -> Bool) : List (Literal Var) :=
   vars.map (fun v => if row v then Literal.positive v else Literal.negative v)

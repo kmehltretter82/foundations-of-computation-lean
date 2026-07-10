@@ -194,12 +194,12 @@ theorem predicate_modus_tollens (P Q : alpha -> Prop) (a : alpha)
   exact hnqa (hforall a hpa)
 
 /-!
-# Formal Proofs
+**Semantically valid proof sequences.**
 
 The book defines a formal proof as a sequence of propositions in which every
 line is either a premise of the argument or follows by logical deduction from
 lines that precede it, and the last line is the conclusion.
-{lit}`FormalProofStep` records one proof line: a step is either a premise or a
+The declaration below records one proof line: a step is either a premise or a
 statement derived from a list of cited earlier statements.
 -/
 
@@ -217,34 +217,34 @@ def proofPremises : List (FormalProofStep Statement) -> List Statement
   | FormalProofStep.derived _ _ :: rest => proofPremises rest
 
 /-!
-The checker walks the proof list while accumulating the statements established
-so far. Each derived line may cite only statements of earlier lines, and its
-statement must be true under every valuation that makes all cited statements
-true, which is the semantic reading of "follows by logical deduction".
+This predicate walks the proof list while accumulating the statements
+established so far. Each derived line may cite only earlier statements, and
+the caller supplies semantic validity for the derivation. It is deliberately
+named as a semantic certificate rather than an executable rule checker.
 -/
-def CheckedProofFrom (earlier : List (PropForm Var)) :
+def SemanticallyValidProofFrom (earlier : List (PropForm Var)) :
     List (FormalProofStep (PropForm Var)) -> Prop
   | [] => True
-  | FormalProofStep.premise s :: rest => CheckedProofFrom (s :: earlier) rest
+  | FormalProofStep.premise s :: rest => SemanticallyValidProofFrom (s :: earlier) rest
   | FormalProofStep.derived s cited :: rest =>
       (forall c, c ∈ cited -> c ∈ earlier) ∧
         (forall valuation : Var -> Bool,
           (forall c, c ∈ cited -> PropForm.eval valuation c = true) ->
           PropForm.eval valuation s = true) ∧
-        CheckedProofFrom (s :: earlier) rest
+        SemanticallyValidProofFrom (s :: earlier) rest
 
-def CheckedProof (steps : List (FormalProofStep (PropForm Var))) : Prop :=
-  CheckedProofFrom [] steps
+def SemanticallyValidProof (steps : List (FormalProofStep (PropForm Var))) : Prop :=
+  SemanticallyValidProofFrom [] steps
 
 /-!
-Soundness of the checker, in accumulator form: if a proof list checks relative
-to a set of already-established statements, then any valuation that makes the
-established statements and all premise lines true makes every line true.
+Soundness in accumulator form: if a proof list is semantically valid relative
+to already-established statements, then any valuation that makes those
+statements and all premise lines true makes every line true.
 -/
-theorem checkedProofFrom_all_true {valuation : Var -> Bool} :
+theorem semanticallyValidProofFrom_all_true {valuation : Var -> Bool} :
     forall {steps : List (FormalProofStep (PropForm Var))}
       {earlier : List (PropForm Var)},
-      CheckedProofFrom earlier steps ->
+      SemanticallyValidProofFrom earlier steps ->
       (forall p, p ∈ earlier -> PropForm.eval valuation p = true) ->
       (forall p, p ∈ proofPremises steps -> PropForm.eval valuation p = true) ->
       forall step, step ∈ steps ->
@@ -294,12 +294,13 @@ theorem checkedProofFrom_all_true {valuation : Var -> Bool} :
                 (by simpa [proofPremises] using hpremises) current hmem
 
 /-!
-The existence of a checked formal proof shows that the argument is valid:
+The existence of a semantically valid proof sequence shows that the argument is valid:
 every valuation that makes the premise lines true makes every line true, and
 in particular the last line, which is the conclusion of the argument.
 -/
-theorem checked_proof_lines_true {steps : List (FormalProofStep (PropForm Var))}
-    (hchecked : CheckedProof steps) (valuation : Var -> Bool)
+theorem semantically_valid_proof_lines_true
+    {steps : List (FormalProofStep (PropForm Var))}
+    (hvalid : SemanticallyValidProof steps) (valuation : Var -> Bool)
     (hpremises : forall p, p ∈ proofPremises steps ->
       PropForm.eval valuation p = true) :
     forall step, step ∈ steps ->
@@ -308,12 +309,13 @@ theorem checked_proof_lines_true {steps : List (FormalProofStep (PropForm Var))}
       PropForm.eval valuation p = true := by
     intro p hp
     cases hp
-  exact checkedProofFrom_all_true hchecked hempty hpremises
+  exact semanticallyValidProofFrom_all_true hvalid hempty hpremises
 
 /-!
 The section's first displayed formal proof derives {lit}`s` from the five
 premises of the five-premise argument in nine numbered lines. The list below
-is that proof, line by line, and the theorem checks it: two modus ponens
+is that proof, line by line, and the theorem certifies its semantic validity:
+two modus ponens
 steps, a conjunction introduction, and a final modus ponens.
 -/
 def fivePremiseFormalProof (p q r s t : PropForm Var) :
@@ -329,9 +331,9 @@ def fivePremiseFormalProof (p q r s t : PropForm Var) :
     FormalProofStep.derived s
       [PropForm.and p r, PropForm.imp (PropForm.and p r) s]]
 
-theorem fivePremiseFormalProof_checked (p q r s t : PropForm Var) :
-    CheckedProof (fivePremiseFormalProof p q r s t) := by
-  simp [CheckedProof, fivePremiseFormalProof, CheckedProofFrom]
+theorem fivePremiseFormalProof_semantically_valid (p q r s t : PropForm Var) :
+    SemanticallyValidProof (fivePremiseFormalProof p q r s t) := by
+  simp [SemanticallyValidProof, fivePremiseFormalProof, SemanticallyValidProofFrom]
   apply And.intro
   · intro valuation h1 h2
     simp [PropForm.eval, h2] at h1

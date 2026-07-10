@@ -16,10 +16,29 @@ arguments; this file keeps the executable mathematics: Tower of Hanoi move
 counts and structural recursion over binary trees.
 
 The declarations show two faces of recursion. For Hanoi, recursion describes a
-process and the proof extracts a closed form for its length. For trees,
+process; the proofs establish its legality, final configuration, and closed
+form for its length. For trees,
 recursion describes how a value is computed from subtrees, and induction over
 the tree proves that two computations agree.
 -/
+
+/-! The factorial example belongs to the recursion application in this
+section. Its equations are definitional. -/
+def factorial : Nat -> Nat
+  | 0 => 1
+  | n + 1 => factorial n * (n + 1)
+
+theorem factorial_succ (n : Nat) : factorial (n + 1) = factorial n * (n + 1) :=
+  rfl
+
+theorem factorial_zero : factorial 0 = 1 :=
+  rfl
+
+theorem factorial_one : factorial 1 = 1 :=
+  rfl
+
+theorem factorial_five : factorial 5 = 120 :=
+  rfl
 
 /-- The recursive move-count equation for the Tower of Hanoi puzzle. -/
 def hanoiMoveCount : Nat -> Nat
@@ -53,6 +72,7 @@ inductive Peg where
   | left : Peg
   | middle : Peg
   | right : Peg
+deriving DecidableEq, Repr
 
 def hanoiMoves : Nat -> Peg -> Peg -> Peg -> List (Peg × Peg)
   | 0, _, _, _ => []
@@ -78,7 +98,193 @@ theorem hanoiMoves_length (n : Nat) (source target spare : Peg) :
       lia
 
 /-!
-# Binary Trees
+**Legal Hanoi execution.** The source text's principal theorem concerns the
+execution, not only its length. Disks are numbered from {lit}`0` (smallest)
+upward. A move is legal when its disk is on the named source peg and every
+smaller disk is on neither the source nor the target peg. Thus the moved disk
+is exposed and is placed on no smaller disk.
+-/
+
+structure DiskMove where
+  disk : Nat
+  source : Peg
+  target : Peg
+deriving DecidableEq, Repr
+
+abbrev HanoiConfig := Nat -> Peg
+
+def LegalMove (config : HanoiConfig) (move : DiskMove) : Prop :=
+  config move.disk = move.source ∧
+    forall smaller, smaller < move.disk ->
+      config smaller ≠ move.source ∧ config smaller ≠ move.target
+
+def applyMove (config : HanoiConfig) (move : DiskMove) : HanoiConfig :=
+  fun disk => if disk = move.disk then move.target else config disk
+
+def legalMoveBool (config : HanoiConfig) (move : DiskMove) : Bool :=
+  config move.disk == move.source &&
+    (List.range move.disk).all fun smaller =>
+      config smaller != move.source && config smaller != move.target
+
+theorem legalMoveBool_eq_true (config : HanoiConfig) (move : DiskMove) :
+    legalMoveBool config move = true <-> LegalMove config move := by
+  simp [legalMoveBool, LegalMove, List.all_eq_true]
+
+/-! Execute a list of moves, returning {lit}`none` at the first illegal move. -/
+def runMoves : HanoiConfig -> List DiskMove -> Option HanoiConfig
+  | config, [] => some config
+  | config, move :: moves =>
+      if legalMoveBool config move then
+        runMoves (applyMove config move) moves
+      else
+        none
+
+inductive Executes : HanoiConfig -> List DiskMove -> HanoiConfig -> Prop where
+  | nil (config) : Executes config [] config
+  | cons {config final : HanoiConfig} {move : DiskMove} {moves : List DiskMove} :
+      LegalMove config move ->
+      Executes (applyMove config move) moves final ->
+      Executes config (move :: moves) final
+
+theorem executes_iff_runMoves_eq_some (initial final : HanoiConfig) :
+    forall moves, Executes initial moves final <-> runMoves initial moves = some final := by
+  intro moves
+  constructor
+  · intro hexec
+    induction hexec with
+    | nil => rfl
+    | cons hlegal _ ih =>
+        simp [runMoves, (legalMoveBool_eq_true _ _).mpr hlegal, ih]
+  · intro hrun
+    induction moves generalizing initial with
+    | nil =>
+        simp [runMoves] at hrun
+        subst final
+        exact Executes.nil initial
+    | cons move moves ih =>
+        simp only [runMoves] at hrun
+        by_cases hlegal : legalMoveBool initial move = true
+        · rw [if_pos hlegal] at hrun
+          exact Executes.cons ((legalMoveBool_eq_true _ _).mp hlegal)
+            (ih (applyMove initial move) hrun)
+        · rw [if_neg hlegal] at hrun
+          contradiction
+
+def hanoiDiskMoves : Nat -> Peg -> Peg -> Peg -> List DiskMove
+  | 0, _, _, _ => []
+  | n + 1, source, target, spare =>
+      hanoiDiskMoves n source spare target ++
+        [{ disk := n, source := source, target := target }] ++
+        hanoiDiskMoves n spare target source
+
+def DiskMove.erase (move : DiskMove) : Peg × Peg :=
+  (move.source, move.target)
+
+/-! Forgetting disk labels recovers the original textbook move list. -/
+theorem hanoiDiskMoves_erase (n : Nat) (source target spare : Peg) :
+    (hanoiDiskMoves n source target spare).map DiskMove.erase =
+      hanoiMoves n source target spare := by
+  induction n generalizing source target spare with
+  | zero => rfl
+  | succ n ih =>
+      simp [hanoiDiskMoves, hanoiMoves, DiskMove.erase, ih]
+
+theorem executes_append {initial middle final : HanoiConfig}
+    {first second : List DiskMove}
+    (hfirst : Executes initial first middle)
+    (hsecond : Executes middle second final) :
+    Executes initial (first ++ second) final := by
+  induction hfirst with
+  | nil => exact hsecond
+  | cons hlegal hexec ih =>
+      exact Executes.cons hlegal (ih hsecond)
+
+def DistinctPegs (source target spare : Peg) : Prop :=
+  source ≠ target ∧ source ≠ spare ∧ target ≠ spare
+
+/-! The recursive algorithm's induction invariant. All relevant disks finish
+on the target, larger disks are unchanged, and every step is legal. -/
+theorem hanoiDiskMoves_solve : forall (n : Nat) (config : HanoiConfig)
+    (source target spare : Peg),
+    DistinctPegs source target spare ->
+    (forall disk, disk < n -> config disk = source) ->
+    exists final,
+      Executes config (hanoiDiskMoves n source target spare) final ∧
+        (forall disk, disk < n -> final disk = target) ∧
+        (forall disk, n <= disk -> final disk = config disk) := by
+  intro n
+  induction n with
+  | zero =>
+      intro config source target spare _ _
+      exact ⟨config, Executes.nil config, by simp, by simp⟩
+  | succ n ih =>
+      intro config source target spare hdistinct hsource
+      rcases hdistinct with ⟨hst, hsa, hta⟩
+      obtain ⟨afterFirst, hfirstExec, hfirstAtSpare, hfirstUnchanged⟩ :=
+        ih config source spare target
+          ⟨hsa, hst, Ne.symm hta⟩
+          (fun disk hd => hsource disk (Nat.lt_succ_of_lt hd))
+      let largest : DiskMove := { disk := n, source := source, target := target }
+      let afterLargest := applyMove afterFirst largest
+      have hlargestLegal : LegalMove afterFirst largest := by
+        constructor
+        · rw [hfirstUnchanged n (Nat.le_refl n)]
+          exact hsource n (Nat.lt_succ_self n)
+        · intro smaller hsmaller
+          rw [hfirstAtSpare smaller hsmaller]
+          exact ⟨Ne.symm hsa, Ne.symm hta⟩
+      have hlargestExec : Executes afterFirst [largest] afterLargest :=
+        Executes.cons hlargestLegal (Executes.nil afterLargest)
+      obtain ⟨final, hsecondExec, hfinalAtTarget, hsecondUnchanged⟩ :=
+        ih afterLargest spare target source
+          ⟨Ne.symm hta, Ne.symm hsa, Ne.symm hst⟩
+          (by
+            intro disk hd
+            simp [afterLargest, applyMove, largest, Nat.ne_of_lt hd,
+              hfirstAtSpare disk hd])
+      refine ⟨final, ?_, ?_, ?_⟩
+      · simpa [hanoiDiskMoves, largest] using
+          executes_append (executes_append hfirstExec hlargestExec) hsecondExec
+      · intro disk hd
+        by_cases heq : disk = n
+        · rw [heq, hsecondUnchanged n (Nat.le_refl n)]
+          simp [afterLargest, applyMove, largest]
+        · apply hfinalAtTarget disk
+          lia
+      · intro disk hd
+        rw [hsecondUnchanged disk (by lia)]
+        simp [afterLargest, applyMove, largest, show disk ≠ n by lia]
+        exact hfirstUnchanged disk (by lia)
+
+def initialHanoiConfig (source : Peg) : HanoiConfig :=
+  fun _ => source
+
+/-! The principal Tower-of-Hanoi theorem: from the standard initial
+configuration, the generated moves execute legally and put every puzzle disk
+on the target peg. -/
+theorem hanoiMoves_legally_solve (n : Nat) (source target spare : Peg)
+    (hdistinct : DistinctPegs source target spare) :
+    exists final,
+      Executes (initialHanoiConfig source)
+        (hanoiDiskMoves n source target spare) final ∧
+      forall disk, disk < n -> final disk = target := by
+  obtain ⟨final, hexec, htarget, _⟩ :=
+    hanoiDiskMoves_solve n (initialHanoiConfig source) source target spare
+      hdistinct (by simp [initialHanoiConfig])
+  exact ⟨final, hexec, htarget⟩
+
+theorem hanoiMoves_run_succeeds (n : Nat) (source target spare : Peg)
+    (hdistinct : DistinctPegs source target spare) :
+    exists final,
+      runMoves (initialHanoiConfig source)
+        (hanoiDiskMoves n source target spare) = some final ∧
+      forall disk, disk < n -> final disk = target := by
+  obtain ⟨final, hexec, htarget⟩ :=
+    hanoiMoves_legally_solve n source target spare hdistinct
+  exact ⟨final, (executes_iff_runMoves_eq_some _ _ _).mp hexec, htarget⟩
+
+/-!
+**Binary trees.**
 
 The binary-tree definitions show structural recursion: every computation over a
 tree is determined by the empty-tree case and the node case. The final theorem

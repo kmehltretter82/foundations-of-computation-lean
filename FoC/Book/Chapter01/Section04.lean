@@ -37,7 +37,7 @@ def Existential (P : alpha -> Prop) : Prop :=
   exists x, P x
 
 /-!
-# Counting Quantifiers
+**Counting quantifiers.**
 
 The section's happy-person examples show how plain quantifiers express
 counting statements: {lit}`AtLeastTwo` and {lit}`ExactlyOne` are the section's
@@ -64,45 +64,23 @@ def ExactlyThree (P : alpha -> Prop) : Prop :=
 contain two, and exactly three witnesses are in particular at least three. -/
 theorem atLeastTwo_of_atLeastThree {P : alpha -> Prop}
     (h : AtLeastThree P) : AtLeastTwo P := by
-  cases h with
-  | intro x hx =>
-      cases hx with
-      | intro y hy =>
-          cases hy with
-          | intro z hz =>
-              exact Exists.intro x (Exists.intro y
-                (And.intro hz.left
-                  (And.intro hz.right.left hz.right.right.right.left)))
+  rcases h with ⟨x, y, _, hx, hy, _, hxy, _, _⟩
+  exact ⟨x, y, hx, hy, hxy⟩
 
 theorem atLeastThree_of_exactlyThree {P : alpha -> Prop}
     (h : ExactlyThree P) : AtLeastThree P := by
-  cases h with
-  | intro x hx =>
-      cases hx with
-      | intro y hy =>
-          cases hy with
-          | intro z hz =>
-              exact Exists.intro x (Exists.intro y (Exists.intro z
-                (And.intro hz.left
-                  (And.intro hz.right.left
-                    (And.intro hz.right.right.left
-                      (And.intro hz.right.right.right.left
-                        (And.intro hz.right.right.right.right.left
-                          hz.right.right.right.right.right.left)))))))
+  rcases h with ⟨x, y, z, hx, hy, hz, hxy, hxz, hyz, _⟩
+  exact ⟨x, y, z, hx, hy, hz, hxy, hxz, hyz⟩
 
 /-! The uniqueness clause of {lit}`ExactlyOne` rules out a second distinct
 witness, so exactly one and at least two are incompatible. -/
 theorem not_atLeastTwo_of_exactlyOne {P : alpha -> Prop}
     (h : ExactlyOne P) : ¬ AtLeastTwo P := by
-  intro htwo
-  cases htwo with
-  | intro x hx =>
-      cases hx with
-      | intro y hy =>
-          exact hy.right.right (h.right x y hy.left hy.right.left)
+  rintro ⟨x, y, hx, hy, hxy⟩
+  exact hxy (h.right x y hx hy)
 
 /-!
-# Finite Domains and Translation Examples
+**Finite domains and translation examples.**
 
 For a finite domain, quantifiers reduce to the propositional connectives from
 the previous sections. These examples formalize the exercise that compares
@@ -136,9 +114,9 @@ theorem exists_iff_disjunction (P : TwoEntity -> Prop) :
         · exact Or.inl hx
         · exact Or.inr hx
   · intro h
-    cases h with
-    | inl hfirst => exact Exists.intro first hfirst
-    | inr hsecond => exact Exists.intro second hsecond
+    rcases h with hfirst | hsecond
+    · exact ⟨first, hfirst⟩
+    · exact ⟨second, hsecond⟩
 
 end TwoEntity
 
@@ -171,12 +149,10 @@ theorem exists_iff_disjunction (P : ThreeEntity -> Prop) :
         · exact Or.inr (Or.inl hx)
         · exact Or.inr (Or.inr hx)
   · intro h
-    cases h with
-    | inl hfirst => exact Exists.intro first hfirst
-    | inr hrest =>
-        cases hrest with
-        | inl hsecond => exact Exists.intro second hsecond
-        | inr hthird => exact Exists.intro third hthird
+    rcases h with hfirst | hsecond | hthird
+    · exact ⟨first, hfirst⟩
+    · exact ⟨second, hsecond⟩
+    · exact ⟨third, hthird⟩
 
 end ThreeEntity
 

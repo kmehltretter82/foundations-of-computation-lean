@@ -117,7 +117,7 @@ theorem finite_cardinality_pigeonhole_not_injective
   FSet.not_injective_of_cardinality_lt_maps_to hA hB hlt f hmap
 
 /-!
-# Square-Root Irrationality Cores
+**Square-root irrationality cores.**
 
 The reduced-rational and quotient-rational theorems are the formal core of the
 sqrt(2) and sqrt(3) irrationality arguments. The later real bridges say that

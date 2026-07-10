@@ -33,6 +33,10 @@ witnesses now range over all integers.
 def Divides (a b : Int) : Prop :=
   exists k : Int, b = a * k
 
+/-! Bridge to Lean's canonical divisibility relation. -/
+theorem divides_iff_dvd (a b : Int) : Divides a b <-> a ∣ b :=
+  Iff.rfl
+
 def Even (n : Int) : Prop :=
   exists k : Int, n = 2 * k
 

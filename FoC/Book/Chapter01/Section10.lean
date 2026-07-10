@@ -24,9 +24,11 @@ then translates the result back to quotient rationals and embedded reals.
 
 open Foundation
 
-/-- The Fibonacci function used here is the one defined in Section 1.8. -/
-def fib : Nat -> Nat :=
-  Section08.fib
+/-! The canonical Fibonacci definition is placed at its textbook coordinate. -/
+def fib : Nat -> Nat
+  | 0 => 0
+  | 1 => 1
+  | n + 2 => fib (n + 1) + fib n
 
 /-- The first base equation for Fibonacci numbers. -/
 theorem fib_zero : fib 0 = 0 :=
@@ -65,14 +67,14 @@ upper estimates.
 -/
 
 theorem fib_lt_two_pow : forall n, fib n < 2 ^ n
-  | 0 => by simp [fib, Section08.fib]
-  | 1 => by simp [fib, Section08.fib]
+  | 0 => by simp [fib]
+  | 1 => by simp [fib]
   | n + 2 => by
       have h1 := fib_lt_two_pow (n + 1)
       have h2 := fib_lt_two_pow n
-      simp [fib, Section08.fib]
+      simp [fib]
       have hpow_pos : 0 < 2 ^ n := Nat.pow_pos (by decide : 0 < 2)
-      have hsum : Section08.fib (n + 1) + Section08.fib n < 2 ^ (n + 1) + 2 ^ n :=
+      have hsum : fib (n + 1) + fib n < 2 ^ (n + 1) + 2 ^ n :=
         Nat.add_lt_add h1 h2
       have hbound : 2 ^ (n + 1) + 2 ^ n < 2 ^ (n + 2) := by
         rw [Nat.pow_succ, Nat.pow_succ]
@@ -80,7 +82,7 @@ theorem fib_lt_two_pow : forall n, fib n < 2 ^ n
       exact Nat.lt_trans hsum hbound
 
 /-!
-# Lower Bound by Three Halves
+**Lower bound by three halves.**
 
 The lower-bound proof avoids rational exponents by multiplying both sides by a
 power of two. The private helper below is the scaled statement that makes the
@@ -92,11 +94,11 @@ def scaledFibLower (n : Nat) : Nat :=
 
 private theorem scaledFibLower_recurrence (n : Nat) :
     scaledFibLower (n + 2) = 2 * scaledFibLower (n + 1) + 4 * scaledFibLower n := by
-  unfold scaledFibLower fib
-  change Section08.fib ((n + 6) + 2) * 2 ^ ((n + 5) + 2) =
-    2 * (Section08.fib ((n + 6) + 1) * 2 ^ ((n + 5) + 1)) +
-      4 * (Section08.fib (n + 6) * 2 ^ (n + 5))
-  rw [Section08.fib_succ_succ]
+  unfold scaledFibLower
+  change fib ((n + 6) + 2) * 2 ^ ((n + 5) + 2) =
+    2 * (fib ((n + 6) + 1) * 2 ^ ((n + 5) + 1)) +
+      4 * (fib (n + 6) * 2 ^ (n + 5))
+  rw [fib_recurrence]
   rw [show 2 ^ ((n + 5) + 2) = 2 ^ (n + 5) * 4 by
     rw [show (n + 5) + 2 = (n + 5) + 1 + 1 by lia]
     rw [Nat.pow_succ, Nat.pow_succ]
@@ -142,7 +144,7 @@ theorem fib_lower_bound_three_halves_scaled (n : Nat) (hn : 6 <= n) :
   | intro d hd =>
       rw [hd]
       have h := fib_lower_bound_scaled_shifted d
-      simpa [scaledFibLower, fib, Nat.add_comm, Nat.add_assoc, Nat.add_left_comm] using h
+      simpa [scaledFibLower, Nat.add_comm, Nat.add_assoc, Nat.add_left_comm] using h
 
 /-!
 The remaining statements translate the scaled natural-number inequality into

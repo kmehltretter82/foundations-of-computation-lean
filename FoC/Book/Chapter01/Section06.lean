@@ -20,7 +20,7 @@ propositional equivalence, parity, divisibility, rational numbers, and real
 numbers.
 
 Some real-number statements use the project's Dedekind-cut real infrastructure.
-The irrational-product example now uses the concrete Dedekind-cut square-root
+The irrational-product example uses the concrete Dedekind-cut square-root
 construction.
 
 The page is intentionally a sampler. The first block is still propositional
@@ -115,12 +115,14 @@ natural-number fact from the foundation layer through {lit}`Int.natAbs`.
 
 theorem integer_number_divisible_by_three_if_square_divisible_by_three {n : Int}
     (h : IntPred.Divides 3 (n * n)) : IntPred.Divides 3 n := by
-  have hdvd : (3 : Int) ∣ n * n := h
+  have hdvd : (3 : Int) ∣ n * n :=
+    (IntPred.divides_iff_dvd 3 (n * n)).mp h
   have hnat : 3 ∣ n.natAbs * n.natAbs := by
     have habs := Int.natAbs_dvd_natAbs.mpr hdvd
     simpa [Int.natAbs_mul] using habs
   have hn : 3 ∣ n.natAbs :=
     NatDivisibility.three_dvd_of_three_dvd_square hnat
+  apply (IntPred.divides_iff_dvd 3 n).mpr
   exact Int.natAbs_dvd_natAbs.mp (by simpa using hn)
 
 theorem integer_divisible_by_three_iff_square_divisible_by_three (n : Int) :
@@ -192,7 +194,7 @@ theorem four_digit_divisible_by_three_iff_digit_sum_divisible_by_three
         lia
 
 /-!
-# Rational and Real Arithmetic
+**Rational and real arithmetic.**
 
 The rational-number statements formalize the book's worked example that the
 sum of two rational numbers is rational, along with the product analogue. A

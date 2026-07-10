@@ -19,9 +19,9 @@ theorems isolate ordinary induction from zero, induction beginning at an
 arbitrary lower bound, and strong induction.
 
 The later statements are the formal kernels behind the textbook examples:
-factorial and Fibonacci recursion, closed forms for finite sums, geometric
-series identities over the quotient rationals and embedded reals, the sum of
-odd numbers, and the existence of a product-of-primes factorization.
+truth-assignment counting, closed forms for finite sums, geometric-series
+identities over the quotient rationals and embedded reals, the sum of odd
+numbers, and the existence of a product-of-primes factorization.
 
 Induction in Lean is a recursion principle for proofs. To prove a proposition
 about every natural number, the declarations below either supply a base case
@@ -65,7 +65,7 @@ theorem strong_induction_book (P : Nat -> Prop)
   exact Nat.strongRecOn (motive := P) n step
 
 /-!
-# First Induction Example
+**First induction example.**
 
 The book's first worked induction example proves that {lit}`2^(2n) - 1` is
 divisible by {lit}`3`.  The formal statement uses the elementary divisibility
@@ -100,41 +100,80 @@ theorem two_to_even_power_minus_one_divisible_by_three (n : Nat) :
               lia
 
 /-!
-# Recursive Numerical Definitions
+**Counting truth assignments.**
 
-The next definitions mirror the textbook's recursive definitions. In Lean, the
-equations for factorial and Fibonacci are definitional, so the successor
-theorems are proved by reflexivity.
+For a fixed ordering of {lit}`n` propositional variables, a truth assignment is
+a length-{lit}`n` list of Boolean values. The enumeration doubles at every
+successor step, exactly as in the book's induction proof.
 -/
 
-def factorial : Nat -> Nat
-  | 0 => 1
-  | n + 1 => factorial n * (n + 1)
+def truthAssignments : Nat -> List (List Bool)
+  | 0 => [[]]
+  | n + 1 =>
+      (truthAssignments n).map (fun row => true :: row) ++
+        (truthAssignments n).map (fun row => false :: row)
 
-theorem factorial_succ (n : Nat) : factorial (n + 1) = factorial n * (n + 1) :=
-  rfl
+theorem truthAssignments_length (n : Nat) :
+    (truthAssignments n).length = 2 ^ n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+      simp [truthAssignments, ih, Nat.pow_succ]
+      lia
 
-theorem factorial_zero : factorial 0 = 1 :=
-  rfl
+theorem length_of_mem_truthAssignments {assignment : List Bool} {n : Nat}
+    (h : assignment ∈ truthAssignments n) : assignment.length = n := by
+  induction n generalizing assignment with
+  | zero =>
+      simp [truthAssignments] at h
+      simp [h]
+  | succ n ih =>
+      simp [truthAssignments, List.mem_append, List.mem_map] at h
+      rcases h with ⟨row, hrow, rfl⟩ | ⟨row, hrow, rfl⟩ <;>
+        simp [ih hrow]
 
-theorem factorial_one : factorial 1 = 1 :=
-  rfl
+theorem mem_truthAssignments_of_length {assignment : List Bool} {n : Nat}
+    (h : assignment.length = n) : assignment ∈ truthAssignments n := by
+  induction assignment generalizing n with
+  | nil =>
+      rw [← h]
+      simp [truthAssignments]
+  | cons b rest ih =>
+      rw [← h]
+      cases b <;> simp [truthAssignments, List.mem_append, List.mem_map, ih rfl]
 
-theorem factorial_five : factorial 5 = 120 :=
-  rfl
+theorem truthAssignments_nodup (n : Nat) : (truthAssignments n).Nodup := by
+  induction n with
+  | zero => simp [truthAssignments]
+  | succ n ih =>
+      rw [truthAssignments, List.nodup_append]
+      refine ⟨?_, ?_, ?_⟩
+      · rw [List.Nodup, List.pairwise_map]
+        exact List.Pairwise.imp (fun hne heq => hne (List.cons.inj heq).right) ih
+      · rw [List.Nodup, List.pairwise_map]
+        exact List.Pairwise.imp (fun hne heq => hne (List.cons.inj heq).right) ih
+      · intro a ha b hb
+        rw [List.mem_map] at ha hb
+        rcases ha with ⟨rowa, _, rfl⟩
+        rcases hb with ⟨rowb, _, rfl⟩
+        intro heq
+        exact Bool.noConfusion (List.cons.inj heq).left
 
-def fib : Nat -> Nat
-  | 0 => 0
-  | 1 => 1
-  | n + 2 => fib (n + 1) + fib n
-
-theorem fib_succ_succ (n : Nat) : fib (n + 2) = fib (n + 1) + fib n :=
-  rfl
+/-! The truth-assignment counting theorem, including completeness and absence
+of duplicates. -/
+theorem truth_assignment_count (n : Nat) :
+    (truthAssignments n).length = 2 ^ n ∧
+      (truthAssignments n).Nodup ∧
+      forall assignment : List Bool,
+        assignment ∈ truthAssignments n <-> assignment.length = n := by
+  exact ⟨truthAssignments_length n, truthAssignments_nodup n,
+    fun assignment => ⟨length_of_mem_truthAssignments,
+      mem_truthAssignments_of_length⟩⟩
 
 open Foundation
 
 /-!
-# Finite Sums and Geometric Series
+**Finite sums and geometric series.**
 
 These statements reuse the finite-summation library from {module}`FoC.Foundation`.
 They put the familiar closed forms from the book into the chapter-facing order.
@@ -189,84 +228,48 @@ theorem geometric_successor_base_sum (b n : Nat) :
     b * NatSum.SumZeroTo (fun i => (b + 1) ^ i) n = (b + 1) ^ (n + 1) - 1 :=
   NatSum.geometric_successor_base_sum b n
 
-def qratPower (r : QRat) : Nat -> QRat
-  | 0 => 1
-  | n + 1 => qratPower r n * r
+/-! Thin book-facing names for the canonical Foundation power and sum APIs. -/
+abbrev qratPower (r : QRat) : Nat -> QRat :=
+  QRat.powNat r
 
 theorem qratPower_eq_powNat (r : QRat) (n : Nat) :
-    qratPower r n = QRat.powNat r n := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      rw [qratPower, QRat.powNat_succ, ih]
+    qratPower r n = QRat.powNat r n :=
+  rfl
 
 def qratGeometricSum (r : QRat) : Nat -> QRat
   | 0 => 1
-  | n + 1 => qratGeometricSum r n + qratPower r (n + 1)
+  | n + 1 => qratGeometricSum r n + QRat.powNat r (n + 1)
 
-noncomputable def realGeometricSum (x : Real) : Nat -> Real
-  | 0 => 1
-  | n + 1 => realGeometricSum x n + Real.powNat x (n + 1)
+noncomputable abbrev realGeometricSum (x : Real) : Nat -> Real :=
+  RealGeometricSeries.Sum x
 
 theorem real_powNat_eq_algebraic_pow (x : Real) (n : Nat) :
-    Real.powNat x n = NatSum.GeometricSeries.Pow x n := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      calc
-        Real.powNat x (n + 1) = Real.powNat x n * x := rfl
-        _ = NatSum.GeometricSeries.Pow x n * x := by rw [ih]
-        _ = NatSum.GeometricSeries.Pow x (n + 1) := rfl
+    Real.powNat x n = NatSum.GeometricSeries.Pow x n :=
+  RealGeometricSeries.powNat_eq_algebraic_pow x n
 
 theorem real_geometric_sum_eq_algebraic_sum (x : Real) (n : Nat) :
-    realGeometricSum x n = NatSum.GeometricSeries.Sum x n := by
-  induction n with
-  | zero =>
-      rfl
-  | succ n ih =>
-      calc
-        realGeometricSum x (n + 1) =
-            realGeometricSum x n + Real.powNat x (n + 1) := rfl
-        _ = NatSum.GeometricSeries.Sum x n +
-              NatSum.GeometricSeries.Pow x (n + 1) := by
-            rw [ih, real_powNat_eq_algebraic_pow]
-        _ = NatSum.GeometricSeries.Sum x (n + 1) := rfl
+    realGeometricSum x n = NatSum.GeometricSeries.Sum x n :=
+  rfl
 
 def DedekindRealGeometricSeriesAlgebra : Prop :=
-  NatSum.GeometricSeries.Algebra Real
+  RealGeometricSeries.Algebra
 
 theorem dedekind_real_geometric_series_algebra :
-    DedekindRealGeometricSeriesAlgebra := by
-  exact {
-    add_assoc := Real.add_assoc
-    zero_add := Real.zero_add
-    neg_add_cancel := Real.neg_add_cancel
-    sub_eq_add_neg := Real.sub_eq_add_neg
-    one_mul := Real.one_mul
-    mul_one := Real.mul_one
-    left_distrib := Real.left_distrib
-    right_distrib := Real.right_distrib
-    mul_neg := Real.mul_neg
-  }
+    DedekindRealGeometricSeriesAlgebra :=
+  RealGeometricSeries.algebra
 
 theorem arbitrary_real_geometric_series_mul_one_sub_of_algebra
     (laws : DedekindRealGeometricSeriesAlgebra)
     (x : Real) (n : Nat) :
     realGeometricSum x n * (1 - x) =
       1 - Real.powNat x (n + 1) := by
-  have h := NatSum.GeometricSeries.mul_one_sub laws x n
-  rw [real_geometric_sum_eq_algebraic_sum,
-    real_powNat_eq_algebraic_pow]
-  exact h
+  exact RealGeometricSeries.mul_one_sub_of_algebra laws x n
 
 theorem arbitrary_real_geometric_series_mul_one_sub
     (x : Real) (n : Nat) :
     realGeometricSum x n * (1 - x) =
       1 - Real.powNat x (n + 1) := by
-  exact arbitrary_real_geometric_series_mul_one_sub_of_algebra
-    dedekind_real_geometric_series_algebra x n
+  exact RealGeometricSeries.mul_one_sub x n
 
 theorem arbitrary_real_geometric_series_division_formula
     (x : Real) (n : Nat) (hden : 1 - x ≠ 0) :
@@ -294,8 +297,8 @@ laws, and multiplication by negatives used by
 
 The division form uses {name}`Real.divByNonzero`, a noncomputable selector for a
 preimage under multiplication by a nonzero denominator. Its cancellation theorem
-is now unconditional because {name}`Real.right_distrib` and the no-zero-divisor
-theorem are available for the custom Dedekind-cut multiplication. The
+follows from {name}`Real.right_distrib` and the no-zero-divisor theorem for the
+custom Dedekind-cut multiplication. The
 quotient-rational and embedded-rational specializations below remain separate
 because their denominator is a quotient rational and can use {name}`Real.divByQ`.
 -/
@@ -310,7 +313,12 @@ theorem real_geometric_sum_qreal (r : QRat) (n : Nat) :
       calc
         realGeometricSum (Real.qreal r) (n + 1) =
             realGeometricSum (Real.qreal r) n +
-              Real.powNat (Real.qreal r) (n + 1) := rfl
+              Real.powNat (Real.qreal r) (n + 1) := by
+          change NatSum.GeometricSeries.Sum (Real.qreal r) n +
+              NatSum.GeometricSeries.Pow (Real.qreal r) (n + 1) =
+            NatSum.GeometricSeries.Sum (Real.qreal r) n +
+              Real.powNat (Real.qreal r) (n + 1)
+          rw [real_powNat_eq_algebraic_pow]
         _ = Real.qreal (qratGeometricSum r n) +
               Real.qreal (QRat.powNat r (n + 1)) := by
             rw [ih, Real.qreal_powNat]
@@ -325,12 +333,14 @@ theorem quotient_rational_geometric_series_mul_one_sub (r : QRat) (n : Nat) :
   induction n with
   | zero =>
       apply QRat.eq_of_toRat_eq
-      simp [qratGeometricSum, qratPower, QRat.toRat_mul, QRat.toRat_sub,
+      simp [qratGeometricSum, qratPower, QRat.powNat,
+        QRat.toRat_mul, QRat.toRat_sub,
         QRat.toRat_one]
   | succ n ih =>
       apply QRat.eq_of_toRat_eq
       have ihRat := congrArg QRat.toRat ih
-      simp [qratGeometricSum, qratPower, QRat.toRat_mul, QRat.toRat_add,
+      simp [qratGeometricSum, qratPower, QRat.powNat,
+        QRat.toRat_mul, QRat.toRat_add,
         QRat.toRat_sub, QRat.toRat_one] at ihRat ⊢
       grind [Rat.add_mul, Rat.sub_eq_add_neg, Rat.mul_add, Rat.mul_neg,
         Rat.pow_succ]

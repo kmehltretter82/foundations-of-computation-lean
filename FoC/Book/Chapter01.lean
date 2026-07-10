@@ -46,7 +46,7 @@ formalized, while the proof shows that Lean can check the required cases.
 
 ## Status Notes
 
-The formal core of the chapter is covered. The propositional-logic and Boolean
+The propositional-logic and Boolean
 algebra sections include truth-table equivalences, substitution laws, NOR
 expressibility, and circuit/formula bridges. The circuit section now also links
 the full-adder DNF tables to compact XOR and carry formulas, so the table,
@@ -54,126 +54,19 @@ formula, and gate-reading presentations are checked against one another.
 
 The proof sections cover parity, divisibility, rational closure, irrational
 real examples, contradiction, pigeonhole, induction, finite sums, recursive
-definitions, Hanoi move counts, and binary-tree recursions. Recent cleanup
-adds explicit odd-plus-odd, odd-times-odd, and even-sum induction wrappers.
+definitions, legal Hanoi executions, and binary-tree recursions. They include
+explicit odd-plus-odd, odd-times-odd, and even-sum induction wrappers.
 
-Theorem 1.9, the induction proof that {lit}`n` propositional variables admit
-exactly {lit}`2 ^ n` truth assignments, is formalized below as a counting
-statement about the enumeration {lit}`truthAssignments` defined below.
+The truth-assignment counting result is formalized in
+{module}`FoC.Book.Chapter01.Section08`, alongside the chapter's induction
+theorems. The DNF construction in {module}`FoC.Book.Chapter01.Section03`
+uses that exhaustive enumeration to prove the truth-table-to-DNF theorem.
+
+The Tower of Hanoi development in {module}`FoC.Book.Chapter01.Section09`
+includes disk-labelled moves, executable configurations, legality, and a
+proof that the recursive move sequence reaches the target peg legally.
 
 Remaining deferrals are intentionally presentational: drawn circuit layouts,
 long exercise lists whose Lean counterparts are already represented by more
 general theorem schemas, and informal prose about proof-writing style.
 -/
-
-namespace FoC
-namespace Book
-namespace Chapter01
-
-/-!
-# Theorem 1.9: Counting Truth Assignments
-
-Theorem 1.9 states that if a compound proposition contains exactly {lit}`n`
-propositional variables, there are exactly {lit}`2 ^ n` ways of assigning
-truth values to those variables. With the variables listed in a fixed order,
-a truth assignment is a length-{lit}`n` list of Boolean values, one entry per
-variable. The enumeration below doubles at each step, mirroring the book's
-induction: every assignment for {lit}`n` variables extends to exactly two
-assignments for {lit}`n + 1` variables, one per truth value of the new
-variable.
--/
-
-def truthAssignments : Nat -> List (List Bool)
-  | 0 => [[]]
-  | n + 1 =>
-      (truthAssignments n).map (fun row => true :: row) ++
-        (truthAssignments n).map (fun row => false :: row)
-
-/-! The enumeration has exactly {lit}`2 ^ n` entries. -/
-theorem truthAssignments_length (n : Nat) :
-    (truthAssignments n).length = 2 ^ n := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-      simp [truthAssignments, ih, Nat.pow_succ]
-      lia
-
-/-! Every entry of the enumeration assigns a truth value to exactly the
-{lit}`n` listed variables. -/
-theorem length_of_mem_truthAssignments {assignment : List Bool} {n : Nat}
-    (h : assignment ∈ truthAssignments n) : assignment.length = n := by
-  induction n generalizing assignment with
-  | zero =>
-      simp [truthAssignments] at h
-      simp [h]
-  | succ n ih =>
-      simp [truthAssignments, List.mem_append, List.mem_map] at h
-      cases h with
-      | inl h =>
-          cases h with
-          | intro row hrow =>
-              rw [← hrow.right]
-              simp [ih hrow.left]
-      | inr h =>
-          cases h with
-          | intro row hrow =>
-              rw [← hrow.right]
-              simp [ih hrow.left]
-
-/-! The enumeration is complete: every truth assignment to the {lit}`n`
-listed variables occurs in it. -/
-theorem mem_truthAssignments_of_length {assignment : List Bool} {n : Nat}
-    (h : assignment.length = n) : assignment ∈ truthAssignments n := by
-  induction assignment generalizing n with
-  | nil =>
-      rw [← h]
-      simp [truthAssignments]
-  | cons b rest ih =>
-      rw [← h]
-      cases b
-      · simp [truthAssignments, List.mem_append, List.mem_map]
-        exact ih rfl
-      · simp [truthAssignments, List.mem_append, List.mem_map]
-        exact ih rfl
-
-/-! The enumeration lists no assignment twice, so its length counts the
-assignments exactly. The two halves of the doubling step are separately
-duplicate-free, and they are disjoint because their entries disagree on the
-newly added variable. -/
-theorem truthAssignments_nodup (n : Nat) : (truthAssignments n).Nodup := by
-  induction n with
-  | zero => simp [truthAssignments]
-  | succ n ih =>
-      rw [truthAssignments, List.nodup_append]
-      apply And.intro
-      · rw [List.Nodup, List.pairwise_map]
-        exact List.Pairwise.imp (fun hne heq => hne (List.cons.inj heq).right) ih
-      apply And.intro
-      · rw [List.Nodup, List.pairwise_map]
-        exact List.Pairwise.imp (fun hne heq => hne (List.cons.inj heq).right) ih
-      · intro a ha b hb
-        rw [List.mem_map] at ha hb
-        cases ha with
-        | intro rowa hrowa =>
-            cases hb with
-            | intro rowb hrowb =>
-                rw [← hrowa.right, ← hrowb.right]
-                intro heq
-                exact Bool.noConfusion (List.cons.inj heq).left
-
-/-! Theorem 1.9 packaged: the enumeration of truth assignments on {lit}`n`
-variables has exactly {lit}`2 ^ n` entries, contains no duplicates, and
-contains precisely the length-{lit}`n` truth-value lists. -/
-theorem truth_assignment_count (n : Nat) :
-    (truthAssignments n).length = 2 ^ n ∧
-      (truthAssignments n).Nodup ∧
-      forall assignment : List Bool,
-        assignment ∈ truthAssignments n <-> assignment.length = n := by
-  apply And.intro (truthAssignments_length n)
-  apply And.intro (truthAssignments_nodup n)
-  intro assignment
-  exact Iff.intro length_of_mem_truthAssignments mem_truthAssignments_of_length
-
-end Chapter01
-end Book
-end FoC

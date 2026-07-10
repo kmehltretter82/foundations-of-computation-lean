@@ -1,5 +1,18 @@
 import FoC.Foundation.Reals.BasicPart1
 
+set_option doc.verso true
+
+/-!
+# Dedekind reals: multiplication, division, square roots, and density
+
+This implementation module continues the nonnegative multiplication
+construction from {module}`FoC.Foundation.Reals.BasicPart1`. It establishes
+signed multiplication and the ring laws, provides the deliberately limited
+division selectors used by the book, constructs the square-root cuts for two
+and three, and proves density. The semantic landmarks below make the retained
+size-based compatibility split navigable in generated API documentation.
+-/
+
 namespace FoC
 namespace Foundation
 namespace Real
@@ -429,6 +442,7 @@ private theorem mul_assoc_nonneg (x y z : Real)
 private theorem mul_assoc_nonneg_left_pair (x y z : Real)
     (hx : (0 : Real) ≤ x) (hy : (0 : Real) ≤ y) :
     (x * y) * z = x * (y * z) := by
+  classical
   by_cases hz : (0 : Real) ≤ z
   · exact mul_assoc_nonneg x y z hx hy hz
   · have hnz : (0 : Real) ≤ -z := nonneg_neg_of_not_nonneg hz
@@ -444,6 +458,7 @@ private theorem mul_assoc_nonneg_left_pair (x y z : Real)
 private theorem mul_assoc_nonneg_left (x y z : Real)
     (hx : (0 : Real) ≤ x) :
     (x * y) * z = x * (y * z) := by
+  classical
   by_cases hy : (0 : Real) ≤ y
   · exact mul_assoc_nonneg_left_pair x y z hx hy
   · have hny : (0 : Real) ≤ -y := nonneg_neg_of_not_nonneg hy
@@ -458,6 +473,7 @@ private theorem mul_assoc_nonneg_left (x y z : Real)
     simpa [neg_neg] using hcong
 
 theorem mul_assoc (x y z : Real) : (x * y) * z = x * (y * z) := by
+  classical
   by_cases hx : (0 : Real) ≤ x
   · exact mul_assoc_nonneg_left x y z hx
   · have hnx : (0 : Real) ≤ -x := nonneg_neg_of_not_nonneg hx
@@ -473,11 +489,11 @@ theorem mul_assoc (x y z : Real) : (x * y) * z = x * (y * z) := by
 /-!
 **Nonzero division as a classical selector.** The theorem {name}`right_distrib`
 and {name}`mul_ne_zero` turn equality after multiplication by a nonzero
-denominator into cancellation ({name}`mul_right_cancel`). The quotient selector
-below uses classical choice to pick a preimage under multiplication by the
-denominator, if one exists, and returns {lit}`0` otherwise. It is specified only
-on exact products: {name}`divByNonzero_mul_cancel` proves that, for an actual
-product {lit}`a * d`, the selected quotient is the original {lit}`a`. Existence
+denominator into cancellation. The quotient selector below uses classical
+choice to pick a preimage under multiplication by the denominator, if one
+exists, and returns {lit}`0` otherwise. Its specification applies to exact
+products: for an actual product {lit}`a * d`, the selected quotient is the
+original {lit}`a`. Existence
 of multiplicative inverses for arbitrary nonzero cuts is not proved here, so
 this is not total field division.
 -/
@@ -763,7 +779,7 @@ theorem qreal_divByQ (r q : QRat) (hq : q ≠ 0) :
         rw [QRat.mul_comm]
 
 /-!
-# Square-root cuts and irrationality bridges
+**Square-root cuts and irrationality bridges.**
 
 Square-root cuts are specified by rational square inequalities. The bridge
 theorems turn quotient-rational no-square-root facts into real irrationality
@@ -1141,7 +1157,7 @@ theorem rational_not_square_eq_three {x : Real}
   exact irrational_of_square_eq_three hsquare hx
 
 /-!
-# Density
+**Density.**
 
 The final theorem constructs a rational cut strictly between any two ordered
 Dedekind cuts, matching the dense-order statement used in the book layer.

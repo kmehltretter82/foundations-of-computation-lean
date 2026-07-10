@@ -29,6 +29,10 @@ are then phrased in the same elementary language used by the textbook examples.
 def Divides (a b : Nat) : Prop :=
   exists k, b = a * k
 
+/-! Bridge to Lean's canonical divisibility relation. -/
+theorem divides_iff_dvd (a b : Nat) : Divides a b <-> a ∣ b :=
+  Iff.rfl
+
 def Even (n : Nat) : Prop :=
   Divides 2 n
 

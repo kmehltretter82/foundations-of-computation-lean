@@ -1,4 +1,5 @@
 import FoC.Foundation.Reals.Basic
+import FoC.Foundation.Reals.Summation
 
 set_option doc.verso true
 
