@@ -10,7 +10,10 @@ set_option doc.verso true
 The book's tape is infinite in both directions and blank except for finitely
 many cells.  We represent the finite visible window by a left context, current
 cell, and right context.  Cells outside the stored lists are blank, represented
-by {lit}`none`.
+by {lit}`none`.  The representation is intentionally not canonical: moving
+past a stored edge may retain explicit blank cells.  {lit}`Tape.Equiv`
+forgets only this far-edge blank padding, while {lit}`Tape.normalizedOutput`
+forgets every blank cell and the head position.
 
 ## Book coordinates
 
@@ -35,6 +38,10 @@ inductive Direction where
   | right : Direction
 deriving DecidableEq
 
+/--
+A finite window into the book's bi-infinite tape.  Both context lists are
+stored nearest-to-head first; cells beyond them are implicitly blank.
+-/
 structure Tape (symbol : Type u) where
   left : List (Option symbol)
   head : Option symbol
@@ -83,12 +90,22 @@ def move : Direction -> Tape symbol -> Tape symbol
 def output (w : Word symbol) : Tape symbol :=
   input w
 
+/-- The stored window in left-to-right order, including the head cell. -/
 def cells (T : Tape symbol) : List (Option symbol) :=
   T.left.reverse ++ T.head :: T.right
 
+/--
+Read the stored nonblank symbols from left to right.  This is an output-word
+view, not an exact physical-tape or head-position observation.
+-/
 def normalizedOutput (T : Tape symbol) : Word symbol :=
   (cells T).filterMap (fun cell => cell)
 
+/--
+The number of stored context cells beside the head.  The head itself is not
+counted.  A machine step cannot decrease this measure because every transition
+moves the head once.
+-/
 def contextLength (T : Tape symbol) : Nat :=
   T.left.length + T.right.length
 
@@ -289,9 +306,11 @@ theorem move_right_after_write (cell : Option symbol) (T : Tape symbol) :
   rfl
 
 /-!
-# Tape Equivalence
+# Tape equivalence
 
-We define `Tape.Equiv` to ignore trailing blanks (none) on both ends of the tape.
+Tape equivalence ignores blank padding at the far ends of both contexts.  It
+still requires the same head cell and the same non-padding context, so it is
+strictly more physical than equality of normalized output words.
 -/
 
 def dropTrailingNone {symbol} : List (Option symbol) -> List (Option symbol)
@@ -301,6 +320,11 @@ def dropTrailingNone {symbol} : List (Option symbol) -> List (Option symbol)
       if rest = [] then [] else none :: rest
   | some x :: xs => some x :: dropTrailingNone xs
 
+/--
+Equality of represented tapes modulo far-left and far-right blank padding.
+Unlike {name}`Tape.normalizedOutput`, this relation preserves the head cell and
+the two-sided tape layout.
+-/
 def Equiv {symbol} (T1 T2 : Tape symbol) : Prop :=
   dropTrailingNone T1.left = dropTrailingNone T2.left ∧
   T1.head = T2.head ∧

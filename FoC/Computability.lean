@@ -21,93 +21,28 @@ set_option doc.verso true
 /-!
 # Computability
 
-## Turing-Machine Layer
+The Computability library is the reusable foundation beneath Chapter 5.  Its
+dependency direction runs from machine semantics, through language and
+function classes, into finite syntax and compilers, and finally to book-facing
+corollaries.  A theorem at a semantic layer does not by itself claim that a
+finite machine description has been constructed.
 
-The Computability library is the reusable layer beneath Chapter 5.  It builds
-from concrete Turing-machine configurations to the abstract vocabulary of
-computable functions, decidable languages, recursively enumerable languages,
-and undecidability.
+## Layers
 
-The library is split so that semantic facts, construction principles, finite
-program descriptions, and concrete encodings are visible as separate layers.
-This is important in a formalization of computability: a textbook construction
-that says "build a machine" becomes either a checked finite description or an
-explicit construction hypothesis.
+| Layer | Principal modules | Responsibility |
+|---|---|---|
+| machine semantics | {module}`FoC.Computability.Tape`, {module}`FoC.Computability.TuringMachine` | finite tape windows, transitions, computation, halting, output, and acceptance |
+| functions and language classes | {module}`FoC.Computability.Computable`, {module}`FoC.Computability.Recognizable`, {module}`FoC.Computability.Enumerable` | partial/total computability, decidability, recognizability, and listability |
+| staged semantic programs | {module}`FoC.Computability.Program`, {module}`FoC.Computability.Grammar` | finite-stage search and semantic program/grammar bridges |
+| finite syntax and encodings | {module}`FoC.Computability.Coding`, {module}`FoC.Computability.Encoding`, {module}`FoC.Computability.FiniteProgram` | concrete codes, parsers, and finite description witnesses |
+| machine construction | {module}`FoC.Computability.MachineBuilder`, {module}`FoC.Computability.Compiler` | executable descriptions, simulation, lowering, and compiler contracts |
+| semantic limitations | {module}`FoC.Computability.Undecidable` | reductions, diagonalization, and noncomputability |
 
-## Machine Semantics
-
-{module}`FoC.Computability.Tape` represents the book's two-way infinite tape by
-a finite visible window around the head.  {module}`FoC.Computability.TuringMachine`
-then defines deterministic one-tape machines, configurations, single steps,
-multi-step computations, halting, output, and acceptance by halting.
-
-These files are the operational base. They prove determinism, finite-step
-reasoning, halted-state stability, output uniqueness, and the bridges between
-exact-step runs and ordinary reachability.
-
-## Language Classes and Programs
-
-The next files separate the common language-theoretic predicates.
-{module}`FoC.Computability.Computable` defines total and partial computable
-string functions, with both compatibility-level encodings and faithful
-injective-encoding variants.  {module}`FoC.Computability.Recognizable` defines
-Turing-acceptable and Turing-decidable languages.  {module}`FoC.Computability.Transform`
-contains reusable machine transformations.  {module}`FoC.Computability.Enumerable`
-records the enumeration and range-of-computable-function views of recursively
-enumerable languages.  {module}`FoC.Computability.Program` supplies a staged
-program semantics for trace-level dovetailing and partial listing/range/program
-equivalences.  {module}`FoC.Computability.Grammar` connects general grammar
-derivations with staged program recognizers, proves the semantic
-one-nonterminal grammar construction for arbitrary unrestricted production
-relations, and separates that from the finite/effective grammar theorem shape.
-
-The staged-program layer is a proof tool, not a replacement for Turing
-machines. It captures finite-stage acceptance and bounded search directly, then
-the compiler layers state what is needed to turn those staged programs into
-machine descriptions.
-
-## Diagonalization, Encoding, and Compilers
-
-Finally, {module}`FoC.Computability.Undecidable` packages the diagonal,
-halting-problem, reduction, preimage-construction, and noncomputability
-vocabulary used by the limits of computation section.
-{module}`FoC.Computability.Coding` supplies concrete pair-code words,
-injectivity facts, and computable-map preimage bridges for those reductions.
-{module}`FoC.Computability.Encoding` starts the concrete machine-description
-and interpreter layer needed to discharge the remaining compiler and universal
-machine theorem shapes, including a description-backed code-word decoder
-relation for Section 5.3 diagonalization.
-{module}`FoC.Computability.DiagonalPairMachine` contains the extracted finite
-machine witnesses for the concrete diagonal pair map: the legacy compatibility
-machine for older non-injective statements and the faithful copy-machine theorem
-used by the Chapter 5 reductions that require injective encodings.
-{module}`FoC.Computability.MachineBuilder` adds the reusable transition-fragment
-DSL, state-offset, canonical simulator/dovetail tape layouts, finite
-tape/configuration-code, one-step and bounded simulator layout semantics,
-executable tape-code primitives, encoded-runner, and executable bounded-search
-tools needed for the remaining finite compiler constructions.
-{module}`FoC.Computability.Compiler` proves simulation equivalences between
-well-formed descriptions and their compiled one-tape machines, using normalized
-and exact output for output comparisons, then exposes description-backed
-compiler bridges for staged acceptors, Boolean deciders, fixed-description
-bounded simulators, paired-trace dovetailing, partial unary range programs,
-encoded-input recognizers, and universal row coverage.
-{module}`FoC.Computability.FiniteProgram` packages finite executable
-program-description syntax and proves concrete bridges for trace recognizers,
-Boolean deciders, dovetailing deciders, and partial unary range outputs when
-their descriptions are explicitly supplied, including finite construction
-surfaces for dovetailing and output-complete partial unary range descriptions.
-
-The current Chapter 5 boundary is visible here. Description encodings,
-interpreter semantics, compiled-machine simulation, supplied-description
-bridges, semantic grammar closure, and finite construction surfaces are present.
-The remaining universal runner and uniform finite compiler constructions are
-packaged as closeout records so downstream theorem statements can be precise
-without pretending those finite machines have already been built.
-
-Keep API inventories generated from Lean declarations and module docs rather
-than hand-maintained in this wrapper.  Stable reading guidance belongs in
-module docstrings close to the declarations it describes.
+The staged-program layer is a proof tool rather than a replacement for Turing
+machines.  Construction modules must explicitly supply finite descriptions or
+state the finite construction still required.  Detailed declaration inventories
+and construction status belong in the defining module docs and generated API
+reports, not in this facade.
 
 ## Reading Route
 
@@ -115,7 +50,7 @@ The chapter-facing material in {module -checked}`FoC.Book.Chapter05` points to
 these definitions while keeping the textbook-order statements separate from the
 reusable infrastructure.
 
-For a fast conceptual pass, read the modules in this order:
+For a conceptual pass, read the modules in dependency order:
 
 * tapes and Turing machines;
 * computable and recognizable language classes;

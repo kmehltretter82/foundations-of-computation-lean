@@ -19,6 +19,24 @@ Lean functions as finitely encodable programs.  Names with
 Lean objects; names with {lit}`FiniteSource...Construction` mark compiler
 targets whose inputs are concrete finite data.
 
+The executable description runner is fuel-bounded and stutters after a missing
+transition.  Its halting predicates nevertheless require the final state to be
+the designated halt state, so a description stuck elsewhere is not accepted.
+
+## Contract currency
+
+| Currency | Meaning |
+|---|---|
+| ordinary halting | Reaches the designated halt state; makes no tape claim |
+| exact tape | Uses {lit}`MachineDescription.HaltsFromTape`; preserves the entire physical tape representation |
+| tape equivalence | Uses {lit}`MachineDescription.HaltsFromTapeEquiv`; ignores only far-edge blank padding and preserves the head/layout |
+| normalized output | Uses {lit}`MachineDescription.HaltsFromTapeWithOutput`; observes only the nonblank output word |
+| word-start inversion | A higher compiler contract whose inversion hypotheses apply only to canonical starts {lit}`Tape.input w`, not arbitrary tapes |
+
+Use exact tape equality only for genuine handoff layouts.  Public consumers
+that inspect only an emitted word or tolerate blank padding should use the
+corresponding weaker currency directly.
+
 ## Book coordinates
 
 Used by:
@@ -324,8 +342,16 @@ theorem toTuringMachine_computesIn_to_runConfig {D : MachineDescription}
 
 /-!
 ## Output semantics for descriptions
+
+The {lit}`...In` predicates expose an explicit runner fuel.  Because
+{name}`MachineDescription.runConfig` stutters after a missing transition, this
+is a number of runner iterations rather than a claim that every iteration took
+a machine step.  The unindexed predicates existentially hide that fuel.  All
+variants below still require the designated halt state rather than mere absence
+of a transition.
 -/
 
+/-- Halting at the supplied runner fuel with a normalized output word. -/
 def HaltsWithOutputIn (D : MachineDescription)
     (n : Nat) (w out : Word Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
@@ -336,6 +362,7 @@ instance (D : MachineDescription) (n : Nat) (w out : Word Bool) :
   dsimp [HaltsWithOutputIn]
   infer_instance
 
+/-- Halting at the supplied runner fuel on the canonical exact output tape. -/
 def HaltsWithExactOutputIn (D : MachineDescription)
     (n : Nat) (w out : Word Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
@@ -346,6 +373,7 @@ instance (D : MachineDescription) (n : Nat) (w out : Word Bool) :
   dsimp [HaltsWithExactOutputIn]
   infer_instance
 
+/-- Halting at the supplied runner fuel on a specified physical tape. -/
 def HaltsWithTapeIn (D : MachineDescription)
     (n : Nat) (w : Word Bool) (T : Tape Bool) : Prop :=
   let final := D.runConfig n (D.initial w)
@@ -374,11 +402,13 @@ def HaltsWithTape (D : MachineDescription)
     (w : Word Bool) (T : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsWithTapeIn n w T
 
+/-- Halting at the supplied runner fuel between two specified physical tapes. -/
 def HaltsFromTapeIn (D : MachineDescription)
     (n : Nat) (Tin Tout : Tape Bool) : Prop :=
   let final := D.runConfig n { state := D.start, tape := Tin }
   final.state = D.halt ∧ final.tape = Tout
 
+/-- Halting at the supplied runner fuel with a normalized output word. -/
 def HaltsFromTapeWithOutputIn (D : MachineDescription)
     (n : Nat) (Tin : Tape Bool) (out : Word Bool) : Prop :=
   let final := D.runConfig n { state := D.start, tape := Tin }
@@ -390,10 +420,12 @@ instance (D : MachineDescription) (n : Nat)
   dsimp [HaltsFromTapeWithOutputIn]
   infer_instance
 
+/-- Halting from one specified physical tape on another, modulo no quotient. -/
 def HaltsFromTape (D : MachineDescription)
     (Tin Tout : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsFromTapeIn n Tin Tout
 
+/-- Halting from a physical tape with only the normalized output constrained. -/
 def HaltsFromTapeWithOutput (D : MachineDescription)
     (Tin : Tape Bool) (out : Word Bool) : Prop :=
   exists n : Nat, D.HaltsFromTapeWithOutputIn n Tin out
@@ -560,18 +592,23 @@ theorem runConfig_eq_halt_of_haltsFromTape
   rcases h with ⟨n, hn⟩
   exact ⟨n, runConfig_eq_halt_of_haltsFromTapeIn hn⟩
 
+/-- Exact halting cannot decrease the stored tape-context length. -/
+theorem haltsFromTape_contextLength_mono
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (h : D.HaltsFromTape Tin Tout) :
+    Tape.contextLength Tin ≤ Tape.contextLength Tout := by
+  rcases runConfig_eq_halt_of_haltsFromTape h with ⟨n, hrun⟩
+  simpa [hrun] using
+    (runConfig_contextLength_mono D n
+      { state := D.start, tape := Tin })
+
 /-- A machine description cannot halt on an exact tape with shorter context. -/
 theorem not_haltsFromTape_of_contextLength_gt
     {D : MachineDescription} {Tin Tout : Tape Bool}
     (hgt : Tape.contextLength Tout < Tape.contextLength Tin) :
-    ¬ D.HaltsFromTape Tin Tout := by
-  intro hhalt
-  rcases runConfig_eq_halt_of_haltsFromTape hhalt with ⟨n, hrun⟩
-  have hmono :=
-    runConfig_contextLength_mono D n { state := D.start, tape := Tin }
-  have hmono' : Tape.contextLength Tin ≤ Tape.contextLength Tout := by
-    simpa [hrun] using hmono
-  exact (Nat.not_le_of_gt hgt) hmono'
+    ¬ D.HaltsFromTape Tin Tout :=
+  fun hhalt =>
+    (Nat.not_le_of_gt hgt) (haltsFromTape_contextLength_mono hhalt)
 
 theorem haltsWithExactOutputIn_iff_haltsWithTapeIn_output
     {D : MachineDescription} {n : Nat} {w out : Word Bool} :
@@ -1686,16 +1723,25 @@ theorem runConfig_equiv
         rw [hc, hd] at hstep
         exact ih hstep.1 hstep.2
 
+/-- Halting from a word on a tape equivalent to the requested physical tape. -/
 def HaltsWithTapeEquiv (D : MachineDescription)
     (w : Languages.Word Bool) (T : Tape Bool) : Prop :=
   exists Tactual : Tape Bool,
     D.HaltsWithTape w Tactual /\ Tape.Equiv Tactual T
 
+/--
+Halting from a physical tape on some tape equivalent to the requested target.
+This tolerates far-edge blank padding but preserves head position and layout.
+-/
 def HaltsFromTapeEquiv (D : MachineDescription)
     (Tin Tout : Tape Bool) : Prop :=
   exists Tactual : Tape Bool,
     D.HaltsFromTape Tin Tactual /\ Tape.Equiv Tactual Tout
 
+/--
+Every exact halting tape from the source is equivalent to the target.  This is
+a conditional postcondition and does not assert that the machine halts.
+-/
 def ClosedFromTapeEquiv (D : MachineDescription)
     (Tin Tout : Tape Bool) : Prop :=
   forall T, D.HaltsFromTape Tin T -> Tape.Equiv T Tout
