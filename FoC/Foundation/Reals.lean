@@ -8,8 +8,9 @@ set_option doc.verso true
 
 This wrapper exposes the Dedekind-cut real-number layer used by the early book
 chapters. The implementation is split below {module}`FoC.Foundation.Reals.Basic`
-and its supporting rational infrastructure; this module is the public entry
-point for order, arithmetic, inverse/division, and the example lemmas used by
+into semantic arithmetic, division, square-root, and density modules, together
+with supporting rational infrastructure. This module is the public entry point
+for order, arithmetic, inverse/division, and the example lemmas used by
 Chapter 1.
 
 The commutative-ring laws are certified for {lit}`Real`: additive
