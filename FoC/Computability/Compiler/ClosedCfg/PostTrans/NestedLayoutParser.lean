@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.PostTrans.Specs
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutScanner
 
 set_option doc.verso true
 
@@ -37,6 +37,69 @@ def SelectedMergePaddedEmitterNestedLayoutContextParsedTape
     (p : SelectedMergeEmitterPayload) : Tape Bool :=
   DovetailInitialLayoutInitializer.tapeAtCells []
     ((SelectedMergePaddedEmitterParsedInnerSourceBits p).map some)
+
+private def selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail
+    (p : SelectedMergeEmitterPayload) : List Bool :=
+  CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits p.L.input
+    (List.append
+      (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits
+        p.L.stage)
+      (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+        p.L.acceptConfig
+        (CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits
+          p.L.rejectConfig
+          (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+            p.L.acceptHit
+            (CanonicalLayouts.DovetailLayoutScanner.boolFieldBits
+              p.L.rejectHit
+              (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p))))))
+
+private theorem selectedMergePaddedEmitterNestedLayoutContextRawSourceTape_eq_scannerSource
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        ((List.append nestedLayoutScannerSourcePrefix
+          (selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail p)).map
+            some) := by
+  simp [SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape,
+    selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail,
+    CanonicalLayouts.DovetailLayoutScanner.dovetailLayoutFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.transitionPrefixBits,
+    nestedLayoutScannerSourcePrefix, encodeCodeSymbolAsInput]
+
+private theorem markedDovetailLayoutBody_append_outerSuffix
+    (p : SelectedMergeEmitterPayload) :
+    List.append
+        (CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits
+          p.L)
+        (SelectedMergePaddedEmitterParsedInnerOuterSuffixBits p) =
+      List.append
+        CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits
+        (selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail p) := by
+  simp [selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail,
+    CanonicalLayouts.DovetailLayoutScanner.markedDovetailLayoutBodyBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.configurationFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.tapeFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.cellFieldBits,
+    CanonicalLayouts.DovetailLayoutScanner.boolFieldBits,
+    List.append_assoc]
+
+private theorem selectedMergePaddedEmitterNestedLayoutContextParsedTape_eq_scannerTarget
+    (p : SelectedMergeEmitterPayload) :
+    SelectedMergePaddedEmitterNestedLayoutContextParsedTape p =
+      DovetailInitialLayoutInitializer.tapeAtCells []
+        ((false :: nestedLayoutScannerInsertedTail
+          (selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail p)).map
+            some) := by
+  rw [SelectedMergePaddedEmitterNestedLayoutContextParsedTape,
+    SelectedMergePaddedEmitterParsedInnerSourceBits,
+    SelectedMergePaddedEmitterParsedInnerSourceTailBits]
+  rw [markedDovetailLayoutBody_append_outerSuffix]
+  simp [nestedLayoutScannerInsertedTail,
+    CanonicalLayouts.DovetailLayoutScanner.transitionRemainderBits,
+    encodeCodeSymbolAsInput]
 
 -- Expose the raw scanner source as cells and normalized bits.  The materializer
 -- leaf should only need to produce this exact dovetail-layout field window.
@@ -562,7 +625,15 @@ preserving the outer simulator suffix.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowScannerConstruction := by
-  sorry
+  refine ⟨nestedLayoutTransitionRemainderInserterDescription,
+    nestedLayoutTransitionRemainderInserterDescription_subroutineReady, ?_⟩
+  intro p
+  rw [
+    selectedMergePaddedEmitterNestedLayoutContextRawSourceTape_eq_scannerSource,
+    selectedMergePaddedEmitterNestedLayoutContextParsedTape_eq_scannerTarget]
+  exact
+    nestedLayoutTransitionRemainderInserterDescription_haltsFrom_insert
+      (selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail p)
 
 /--
 Finite-machine obligation that restores the checked scanner result to the
