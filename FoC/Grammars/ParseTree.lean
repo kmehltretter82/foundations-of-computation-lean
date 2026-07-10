@@ -1,16 +1,14 @@
-import FoC.Grammars.ParseTreePart2
+import FoC.Grammars.ParseTree.Ambiguity
 
 set_option doc.verso true
 
 /-!
-# ParseTree
+# Parse Trees
 
-This wrapper exposes the reusable parse-tree API for Chapter 4. The split
-modules connect trees to generated-language membership, frontiers, leftmost
-derivations, ambiguity witnesses, height bounds, repeated nonterminals, and the
-subtree machinery used by the context-free pumping argument.
+This wrapper exposes the reusable parse-tree API through semantic child
+modules: syntax and measures, derivation correspondence, path selection,
+pumping infrastructure, and ambiguity via canonical derivation traces.
 
-Read this module when the chapter-facing theorem mentions parse trees but the
-proof needs the derivation or pumping support hidden in the implementation
-parts.
+Read this module for the complete API. Import a child module directly when a
+consumer needs only an earlier layer.
 -/

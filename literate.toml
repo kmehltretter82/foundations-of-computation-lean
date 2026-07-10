@@ -142,6 +142,13 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
 "FoC.Grammars.CFL" = [
   "FoC.Grammars.CFL.Closure"
 ]
+"FoC.Grammars.ParseTree" = [
+  "FoC.Grammars.ParseTree.Basic",
+  "FoC.Grammars.ParseTree.Derivations",
+  "FoC.Grammars.ParseTree.Paths",
+  "FoC.Grammars.ParseTree.Pumping",
+  "FoC.Grammars.ParseTree.Ambiguity"
+]
 "FoC.Grammars.PDA" = [
   "FoC.Grammars.PDA.Intersection"
 ]
@@ -618,11 +625,20 @@ title = "Real Numbers: Order and Algebra"
 [modules."FoC.Foundation.Reals.BasicPart2"]
 title = "Real Numbers: Completeness"
 
-[modules."FoC.Grammars.ParseTreePart1"]
-title = "Parse Trees: Core Lemmas"
+[modules."FoC.Grammars.ParseTree.Basic"]
+title = "Parse Trees: Syntax and Measures"
 
-[modules."FoC.Grammars.ParseTreePart2"]
-title = "Parse Trees: Derived Lemmas"
+[modules."FoC.Grammars.ParseTree.Derivations"]
+title = "Parse Trees and Derivations"
+
+[modules."FoC.Grammars.ParseTree.Paths"]
+title = "Parse-Tree Paths"
+
+[modules."FoC.Grammars.ParseTree.Pumping"]
+title = "Parse-Tree Pumping"
+
+[modules."FoC.Grammars.ParseTree.Ambiguity"]
+title = "Parse-Tree Ambiguity"
 
 [modules."FoC.Grammars.PDAToCFG.Completeness"]
 title = "PDA to CFG Completeness"
