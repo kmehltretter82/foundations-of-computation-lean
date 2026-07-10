@@ -560,6 +560,19 @@ theorem runConfig_eq_halt_of_haltsFromTape
   rcases h with ⟨n, hn⟩
   exact ⟨n, runConfig_eq_halt_of_haltsFromTapeIn hn⟩
 
+/-- A machine description cannot halt on an exact tape with shorter context. -/
+theorem not_haltsFromTape_of_contextLength_gt
+    {D : MachineDescription} {Tin Tout : Tape Bool}
+    (hgt : Tape.contextLength Tout < Tape.contextLength Tin) :
+    ¬ D.HaltsFromTape Tin Tout := by
+  intro hhalt
+  rcases runConfig_eq_halt_of_haltsFromTape hhalt with ⟨n, hrun⟩
+  have hmono :=
+    runConfig_contextLength_mono D n { state := D.start, tape := Tin }
+  have hmono' : Tape.contextLength Tin ≤ Tape.contextLength Tout := by
+    simpa [hrun] using hmono
+  exact (Nat.not_le_of_gt hgt) hmono'
+
 theorem haltsWithExactOutputIn_iff_haltsWithTapeIn_output
     {D : MachineDescription} {n : Nat} {w out : Word Bool} :
     D.HaltsWithExactOutputIn n w out <->

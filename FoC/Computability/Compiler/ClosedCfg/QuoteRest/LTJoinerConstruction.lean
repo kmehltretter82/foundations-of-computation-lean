@@ -39,6 +39,11 @@ def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
     assemblySourceRestLiveTailEmitterRawTail
     assemblySourceRestLiveTailEmitterQuoteRest
 
+/-- The old exact assembly family is refuted by the 109-to-107 context drop. -/
+theorem not_MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :
+    ¬ MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyConstruction :=
+  not_mixedOptionCellQuoteLiveTailJoinerAssemblyExactFamilyConstruction
+
 def MixedOptionCellQuoteLiveTailJoinerAssemblyFamilyOutputSpec
     (finish : MachineDescription) : Prop :=
   MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec

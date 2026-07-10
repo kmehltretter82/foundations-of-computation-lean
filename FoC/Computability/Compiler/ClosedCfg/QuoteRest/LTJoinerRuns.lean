@@ -793,6 +793,47 @@ def MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
     MixedOptionCellQuoteLiveTailJoinerFamilySpec
       emittedPrefix rawTail quoteRest finish
 
+def mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam :
+    AssemblySourceRestLiveTailEmitterParam :=
+  { w := [], sourceRestBits := [], stage := 0 }
+
+/--
+The concrete assembly joiner has 110 visible cells (109 context cells) but asks
+for an exact target with only 108 visible cells (107 context cells). This is the
+permanent size regression witness.
+-/
+theorem mixedOptionCellQuoteLiveTailJoinerContextCounterexample_contextLengths :
+    Tape.contextLength
+        (mixedOptionCellQuoteLiveTailSeparatedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)
+          (assemblySourceRestLiveTailEmitterRawTail
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)
+          (assemblySourceRestLiveTailEmitterQuoteRest
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)) = 109 ∧
+      Tape.contextLength
+        (mixedOptionCellQuoteLiveTailJoinedTape
+          (assemblySourceRestLiveTailEmitterEmittedPrefix
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)
+          (assemblySourceRestLiveTailEmitterRawTail
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)
+          (assemblySourceRestLiveTailEmitterQuoteRest
+            mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam)) = 107 := by
+  decide
+
+/-- The assembly joiner's old exact-tape family is unreachable. -/
+theorem not_mixedOptionCellQuoteLiveTailJoinerAssemblyExactFamilyConstruction :
+    ¬ MixedOptionCellQuoteLiveTailJoinerFamilyConstruction
+      assemblySourceRestLiveTailEmitterEmittedPrefix
+      assemblySourceRestLiveTailEmitterRawTail
+      assemblySourceRestLiveTailEmitterQuoteRest := by
+  intro hconstruction
+  rcases hconstruction with ⟨finish, hfinish⟩
+  have hrun :=
+    hfinish.right mixedOptionCellQuoteLiveTailJoinerContextCounterexampleParam
+  apply MachineDescription.not_haltsFromTape_of_contextLength_gt ?_ hrun
+  decide
+
 def MixedOptionCellQuoteLiveTailJoinerFamilyOutputSpec
     {ι : Type}
     (emittedPrefix rawTail quoteRest : ι -> Word Bool)
