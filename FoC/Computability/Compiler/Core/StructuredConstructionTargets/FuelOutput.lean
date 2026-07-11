@@ -27,6 +27,24 @@ def fuelOutputStructuredInputTape
         attempt) : Tape Bool :=
   Tape.input (fuelOutputStructuredInputBits i.1.1)
 
+/--
+Final tape-0 shape left by the fuel-output structured core: the encoded
+layout input with its right-edge blank visited once.
+
+The core must read one blank past the last encoded bit to detect the end of
+the final cell-token run, and tape windows never shrink, so the honest local
+tape-0 family carries exactly one trailing represented blank.  The endpoint
+composition and the shared tape-2 projector quantify over arbitrary
+{lit}`tape0` families, so this choice stays local to the leaf.
+-/
+def fuelOutputStructuredPaddedInputTape
+    {attempt : MachineDescription}
+    (i :
+      PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+        attempt) : Tape Bool :=
+  CommonGround.FiniteTransducers.inputWithTrailingBlankPadding
+    (fuelOutputStructuredInputBits i.1.1) 1
+
 def fuelOutputStructuredInitializedTape
     (L : SimulatorLayout) : Tape Bool :=
   CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
@@ -39,7 +57,7 @@ def fuelOutputStructuredLoweredTape
       PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
         attempt) : Tape Bool :=
   encodedGuardedStructured3Tapes
-    (fuelOutputStructuredInputTape i)
+    (fuelOutputStructuredPaddedInputTape i)
     Tape.blank
     (PairedRecognizerDovetailControllerStageAttemptFuelOutputTape i)
 
@@ -55,7 +73,10 @@ The core is a lowered structured three-tape machine, and the concrete lowerer
 transfers structured runs only up to tape equivalence
 ({name}`RunsFromStateTapeEquiv`), so equivalence is the honest currency for
 this leaf; the logical tape-2 output code itself remains exact inside the
-guarded encoding.
+guarded encoding.  Logical tape 0 ends as the input with one visited
+right-edge blank ({name}`fuelOutputStructuredPaddedInputTape`), because the
+core detects the end of the encoded layout by reading that blank and logical
+tape windows never shrink.
 -/
 def FuelOutputStructuredEquivSemanticCoreConstruction
     (attempt : MachineDescription) : Prop :=
@@ -66,7 +87,7 @@ def FuelOutputStructuredEquivSemanticCoreConstruction
     fuelOutputStructuredInitializedTape
     fuelOutputStructuredLoweredTape
     PairedRecognizerDovetailControllerStageAttemptFuelOutputTape
-    fuelOutputStructuredInputTape
+    fuelOutputStructuredPaddedInputTape
     (fun _i :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
         attempt => Tape.blank)
