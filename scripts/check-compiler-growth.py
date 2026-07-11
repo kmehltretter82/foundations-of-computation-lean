@@ -656,6 +656,21 @@ def main(argv: list[str]) -> int:
         print_metrics(metrics)
 
     failures: list[str] = []
+    campaign_results = [check_campaign(root, campaign) for campaign in args.campaign]
+    for result in campaign_results:
+        failures.extend(result.failures)
+    outstanding_allowances = sum(
+        result.allowance
+        for result in campaign_results
+        if not result.historical_debt
+    )
+    if outstanding_allowances > MAX_OUTSTANDING_GROWTH_LOANS:
+        failures.append(
+            "outstanding Compiler growth loans exceed the global cap: "
+            f"{outstanding_allowances} > {MAX_OUTSTANDING_GROWTH_LOANS}"
+        )
+    effective_global_growth = args.allow_net_growth + outstanding_allowances
+
     if args.baseline is not None:
         baseline = read_json(args.baseline)
         failures.extend(baseline_review_failures(root, args.baseline, baseline))
@@ -663,7 +678,7 @@ def main(argv: list[str]) -> int:
             compare(
                 metrics,
                 baseline,
-                args.allow_net_growth,
+                effective_global_growth,
                 check_unreachable=args.unreachable_allowlist is None,
             )
         )
@@ -694,20 +709,6 @@ def main(argv: list[str]) -> int:
                     duplicate_groups, duplicate_baseline
                 )
             )
-
-    campaign_results = [check_campaign(root, campaign) for campaign in args.campaign]
-    for result in campaign_results:
-        failures.extend(result.failures)
-    outstanding_allowances = sum(
-        result.allowance
-        for result in campaign_results
-        if not result.historical_debt
-    )
-    if outstanding_allowances > MAX_OUTSTANDING_GROWTH_LOANS:
-        failures.append(
-            "outstanding Compiler growth loans exceed the global cap: "
-            f"{outstanding_allowances} > {MAX_OUTSTANDING_GROWTH_LOANS}"
-        )
 
     for failure in failures:
         print(failure, file=sys.stderr)
