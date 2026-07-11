@@ -9,7 +9,8 @@
   "name": "sorry-15-pair-encoded-payload-ingress",
   "paths": [
     "FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor",
-    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction"
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean"
   ],
   "required_axiom_clean": [
     "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core",
