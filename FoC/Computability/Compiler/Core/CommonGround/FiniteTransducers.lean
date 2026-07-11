@@ -23,6 +23,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGa
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppendGenerated
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredRuns
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerContracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
