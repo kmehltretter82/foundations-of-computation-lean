@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Contracts
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore
 
 set_option doc.verso true
 

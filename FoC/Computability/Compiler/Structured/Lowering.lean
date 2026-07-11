@@ -31,6 +31,8 @@ import FoC.Computability.Compiler.Structured.ProjectionContracts
 import FoC.Computability.Compiler.Structured.HeadRoutes
 import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
 import FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor
+import FoC.Computability.Compiler.Structured.Lowering.TypedStateTable
+import FoC.Computability.Compiler.Structured.Lowering.TypedStateTableExecution
 
 set_option doc.verso true
 
