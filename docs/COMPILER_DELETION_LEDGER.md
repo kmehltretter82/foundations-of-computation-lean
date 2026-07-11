@@ -172,6 +172,23 @@ comparison.
 - Reconsider only if: a real caller needs multiple fields of one route record.
   Prefer a direct theorem over recreating symmetric route/bundle conversions.
 
+### Superseded Dispatcher reader layout
+
+- Deleting commit: `123eb193` (`Remove obsolete dispatcher reader scaffolds`)
+- Reduction: 292 lines and 37 declarations.
+- Old surface: the single-copy tape-0/1/2 reader offsets and limits, partial
+  read scratch banks, retargeted reader starts, blank-bounce jump descriptions,
+  separation bounds, run wrappers, and target-order convenience lemmas formerly
+  in `Structured/Lowering/Dispatcher.lean`.
+- Why retired: no qualified, open-namespace, or reopened-namespace consumer
+  existed. DispatcherAssembly and StaticMachine use the retained compact
+  `ready`/`afterRead` state and target API instead.
+- Current route: the compact definitions in `Dispatcher.lean` and the checked
+  implementation under `DispatcherAssembly/`.
+- Reconsider only if: a new physical dispatcher deliberately chooses the old
+  contiguous scratch-bank layout. Compare it first against the compact live
+  layout and its 3.28-second `SelectedRuns.lean` benchmark.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
