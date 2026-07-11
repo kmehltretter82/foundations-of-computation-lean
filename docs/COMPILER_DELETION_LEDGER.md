@@ -189,6 +189,28 @@ comparison.
   contiguous scratch-bank layout. Compare it first against the compact live
   layout and its 3.28-second `SelectedRuns.lean` benchmark.
 
+### Unused controller invocation and scalar search-driver route bundles
+
+- Deleting commit: `59985a4d` (`Shrink finite scaffold contract facades`).
+- Net reduction: 1,371 lines.
+- Old surface: route structures, construction bundles, finite-leaf wrappers,
+  and public `_route` aliases formerly in
+  `ControllerInvocationContracts.lean` and
+  `ControllerSearchDriverContracts.lean`.
+- Potentially reusable ideas: framed/protected invocation projections, scalar
+  fuel-search adapters, finite stage-loop sequencing records, and aggregate
+  finite-route witnesses.
+- Why retired: exhaustive declaration-reference search found no consumer
+  outside the two files. The finite-leaf aliases merely repackaged canonical
+  scaffold theorems and were the only sorry-dependent declarations in the
+  modules.
+- Current route: `ControllerInvocationContracts.lean` remains a thin #6/#7
+  acceptance boundary over the canonical invocation contracts; the search
+  module retains only the honest Boolean-indexed #12 family consumer.
+- Reconsider only if: a checked consumer needs several fields that are not
+  already available from the canonical construction or indexed family. Add
+  only that consumer-facing record; do not restore the scalar/bundle lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

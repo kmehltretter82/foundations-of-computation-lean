@@ -26,33 +26,16 @@ wrappers in `Structured/Lowering/Dispatcher.lean` had no consumer; the live
 assembly uses the compact state layout. Removed 292 lines/37 declarations in
 `123eb193`.
 
+### Finite-scaffold route bundles — completed
+
+`ControllerInvocationContracts.lean` is now a 16-line #6/#7 acceptance
+boundary, and `ControllerSearchDriverContracts.lean` retains only the honest
+Boolean-indexed #12 family consumer. The unused scalar routes, aggregate
+finite-route bundles, and sorry-dependent aliases were removed in
+`59985a4d`: 16 insertions, 1,371 deletions. Both direct modules and the
+`FiniteScaffolds.lean` barrel pass.
+
 ## High-value next audits
-
-### Finite-scaffold route bundles
-
-Files:
-
-- `Core/FiniteScaffolds/ControllerInvocationContracts.lean` — 692 lines;
-- `Core/FiniteScaffolds/ControllerSearchDriverContracts.lean` — 836 lines.
-
-Evidence:
-
-- no declaration in `ControllerInvocationContracts.lean` is referenced outside
-  that file or `ControllerSearchDriverContracts.lean`;
-- no declaration in `ControllerSearchDriverContracts.lean` is referenced
-  outside that file;
-- the duplicate baseline contains five invocation route/scaffold pairs and
-  seven search-driver route/scaffold pairs;
-- the final public `_route` aliases duplicate already available `_scaffold` or
-  `_finite_leaf` theorem types.
-
-Constraint: the search-driver file contains the current output-indexed family
-surface for repaired sorry #12, while the invocation file is intended as an
-acceptance surface for #6/#7. Do not delete those honest currencies blindly.
-First reduce the search-driver module to the actually checked family consumer,
-then determine whether the legacy scalar and finite-route bundles can be
-retired until their direct leaves are axiom-clean. Plausible saving: 800–1,300
-lines.
 
 ### HeadRoutes projection aliases
 
@@ -105,6 +88,21 @@ modules in `8d84d908`. Search for further private well-formedness plus
 halt-transition-free pairs before inventing another checker. Chunked transition
 tables need a separate helper only after two current chunked machines can
 delete their local proofs in the same change.
+
+### One-tape execution composition and list-loop induction
+
+The Compiler still contains 1,224 textual uses of `runConfig_add`. Many are
+legitimate phase boundaries, but the repeated fixed-cost list scans and
+multi-phase chains are candidates for stronger reusable lemmas rather than
+another machine-specific proof.
+
+First promote the already triplicated theorem that equal transition tables
+give equal `MachineDescription.runConfig` executions. Then pilot a one-tape
+counterpart of the structured `runConfig_listLoop` theorem and a small
+phase-chain tactic on two distinct machine families. Promotion requires an
+immediate net LOC reduction and no focused elaboration-time regression; a
+syntax-only tactic that merely hides long proof terms without deleting the
+underlying local invariants does not pass the gate.
 
 ## Review rule
 
