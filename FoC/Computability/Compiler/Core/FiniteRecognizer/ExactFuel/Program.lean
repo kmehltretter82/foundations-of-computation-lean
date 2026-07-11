@@ -27,6 +27,7 @@ recognizes protected layouts using ordinary halting semantics.
 -/
 theorem finiteComponentFiniteLeaves :
     FiniteComponentFinStateConstruction := by
+  -- Obligation: implement the exact materializer and protected-layout recognizer.
   sorry
 
 theorem codeMachineFinStateFiniteLeaf :

@@ -529,6 +529,7 @@ theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
       | zero =>
           exact False.elim (Fin.elim0 right.start)
       | succ _ =>
+          -- Obligation: construct the positive-state finite product runner.
           sorry
 
 /--

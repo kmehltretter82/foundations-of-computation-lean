@@ -678,6 +678,7 @@ the runner erases its complete physical tape.
 -/
 theorem decodedDescriptionInterpreterFinStateFiniteLeaf :
     DecodedDescriptionInterpreterFinStateConstruction := by
+  -- Obligation: implement the finite decoded-description interpreter table.
   sorry
 
 theorem decodedDescriptionInterpreterFiniteLeaf :
