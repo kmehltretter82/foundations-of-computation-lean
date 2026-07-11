@@ -1,0 +1,841 @@
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.ClassifiedBoundary
+
+set_option doc.verso true
+
+/-!
+# Fixed-start classified selector ingress
+
+The D-specific decomposer stores its finite state classification in the
+preallocated scratch-marker reservoir.  This module implements the structured
+scanner that reads that selector from one fixed start state, restores the
+reservoir and saved hit exactly, and stops at a proof-relevant class-indexed
+control state.  A later combined table splices those control states directly
+into the existing loop dispatcher without an intervening halt.
+-/
+
+namespace FoC
+namespace Computability
+
+open Languages
+open MachineDescription
+
+namespace EncRewriters
+namespace BoundedLayoutRunner
+namespace RunConfigEmitterCore
+namespace FieldDecomposition
+namespace SelectorIngress
+
+open CommonGround.FiniteTransducers
+open CommonGround.FiniteTransducers.Structured
+open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
+open CommonGround.FiniteTransducers.Structured.MultiTapeLowering.ThreeTape
+open ClassifiedBoundary
+
+/-!
+## Finite typed scanner
+-/
+
+/-- A simple additive bound for a finite list of natural numbers. -/
+def natListBound : List Nat -> Nat
+  | [] => 0
+  | value :: rest => value + natListBound rest
+
+theorem le_natListBound_of_mem {value : Nat} :
+    forall {values : List Nat}, value ∈ values -> value ≤ natListBound values := by
+  intro values hmem
+  induction values with
+  | nil => cases hmem
+  | cons head rest ih =>
+      rcases List.mem_cons.mp hmem with rfl | hrest
+      · simp [natListBound]
+      · have := ih hrest
+        simp only [natListBound]
+        lia
+
+/-- Bound large enough to enumerate every unary prefix of every known state. -/
+def stateValueBound (D : MachineDescription) : Nat :=
+  natListBound (fixedStepValues D)
+
+theorem knownState_le_stateValueBound
+    {D : MachineDescription} {state : Nat}
+    (hstate : state ∈ fixedStepValues D) :
+    state ≤ stateValueBound D := by
+  exact le_natListBound_of_mem hstate
+
+/-- Typed controls of the selector scanner.  The original hit bit is retained
+in finite control until its temporarily marked cell is restored. -/
+inductive State (D : MachineDescription) where
+  | start
+  | bool0 (hit : Bool)
+  | bool1 (hit : Bool)
+  | bool2 (hit : Bool)
+  | bool3 (hit branch : Bool)
+  | nat0 (hit : Bool) (value : Nat)
+  | nat1 (hit : Bool) (value : Nat)
+  | nat2 (hit : Bool) (value : Nat)
+  | nat3 (hit : Bool) (value : Nat)
+  | seekDelimiter (hit : Bool) (tag : StateClass D)
+  | returnToHit (hit : Bool) (tag : StateClass D)
+  | restoreHit (hit : Bool) (tag : StateClass D)
+  | done (tag : StateClass D)
+  | halt
+deriving DecidableEq
+
+/-- One transition acting only on logical tape 2. -/
+private def step2 {D : MachineDescription}
+    (action2 : TapeAction) (target : State D) :
+    Option (TypedStep (State D)) :=
+  some
+    { target := target
+      action0 := keepS
+      action1 := keepS
+      action2 := action2 }
+
+/-- Fixed-start selector parser and exact marker-restoration transition. -/
+def next (D : MachineDescription) :
+    State D -> Option Bool -> Option Bool -> Option Bool ->
+      Option (TypedStep (State D))
+  | .start, _, _, some hit =>
+      step2 (writeL (some false)) (.bool0 hit)
+  | .start, _, _, none => none
+  | .bool0 hit, _, _, some false =>
+      step2 (writeL (some true)) (.bool1 hit)
+  | .bool0 _, _, _, _ => none
+  | .bool1 hit, _, _, some true =>
+      step2 (writeL (some true)) (.bool2 hit)
+  | .bool1 _, _, _, _ => none
+  | .bool2 hit, _, _, some branch =>
+      step2 (writeL (some true)) (.bool3 hit branch)
+  | .bool2 _, _, _, none => none
+  | .bool3 hit false, _, _, some true =>
+      step2 (writeL (some true))
+        (.seekDelimiter hit (StateClass.other : StateClass D))
+  | .bool3 hit true, _, _, some false =>
+      step2 (writeL (some true)) (.nat0 hit 0)
+  | .bool3 _ _, _, _, _ => none
+  | .nat0 hit value, _, _, some false =>
+      if value ≤ stateValueBound D then
+        step2 (writeL (some true)) (.nat1 hit value)
+      else
+        none
+  | .nat0 _ _, _, _, _ => none
+  | .nat1 hit value, _, _, some false =>
+      if value ≤ stateValueBound D then
+        step2 (writeL (some true)) (.nat2 hit value)
+      else
+        none
+  | .nat1 _ _, _, _, _ => none
+  | .nat2 hit value, _, _, some true =>
+      if value ≤ stateValueBound D then
+        step2 (writeL (some true)) (.nat3 hit value)
+      else
+        none
+  | .nat2 _ _, _, _, _ => none
+  | .nat3 hit value, _, _, some false =>
+      if value < stateValueBound D then
+        step2 (writeL (some true)) (.nat0 hit (value + 1))
+      else
+        none
+  | .nat3 hit value, _, _, some true =>
+      if hstate : value ∈ fixedStepValues D then
+        step2 (writeL (some true))
+          (.seekDelimiter hit (.known value hstate))
+      else
+        none
+  | .nat3 _ _, _, _, none => none
+  | .seekDelimiter hit tag, _, _, some true =>
+      step2 keepL (.seekDelimiter hit tag)
+  | .seekDelimiter hit tag, _, _, none =>
+      step2 keepR (.returnToHit hit tag)
+  | .seekDelimiter _ _, _, _, some false => none
+  | .returnToHit hit tag, _, _, some true =>
+      step2 keepR (.returnToHit hit tag)
+  | .returnToHit hit tag, _, _, some false =>
+      step2 (writeR (some hit)) (.restoreHit hit tag)
+  | .returnToHit _ _, _, _, none => none
+  | .restoreHit _ tag, _, _, none =>
+      step2 keepL (.done tag)
+  | .restoreHit _ _, _, _, some _ => none
+  | .done _, _, _, _ => none
+  | .halt, _, _, _ => none
+
+/-!
+## Finite state enumeration
+-/
+
+def boolStates (D : MachineDescription) : List (State D) :=
+  [ .bool0 false, .bool0 true
+  , .bool1 false, .bool1 true
+  , .bool2 false, .bool2 true
+  , .bool3 false false, .bool3 false true
+  , .bool3 true false, .bool3 true true ]
+
+def natStatesAt (D : MachineDescription) (value : Nat) : List (State D) :=
+  [ .nat0 false value, .nat0 true value
+  , .nat1 false value, .nat1 true value
+  , .nat2 false value, .nat2 true value
+  , .nat3 false value, .nat3 true value ]
+
+def natStates (D : MachineDescription) : List (State D) :=
+  (List.range (stateValueBound D + 1)).flatMap (natStatesAt D)
+
+def tagStatesAt (D : MachineDescription)
+    (tag : StateClass D) : List (State D) :=
+  [ .seekDelimiter false tag, .seekDelimiter true tag
+  , .returnToHit false tag, .returnToHit true tag
+  , .restoreHit false tag, .restoreHit true tag
+  , .done tag ]
+
+def tagStates (D : MachineDescription) : List (State D) :=
+  (stateClasses D).flatMap (tagStatesAt D)
+
+def states (D : MachineDescription) : List (State D) :=
+  .start ::
+    List.append (boolStates D)
+      (List.append (natStates D)
+        (List.append (tagStates D) [.halt]))
+
+theorem start_mem_states (D : MachineDescription) :
+    State.start ∈ states D := by
+  simp [states]
+
+theorem halt_mem_states (D : MachineDescription) :
+    State.halt ∈ states D := by
+  simp [states]
+
+theorem bool0_mem_states (D : MachineDescription) (hit : Bool) :
+    State.bool0 hit ∈ states D := by
+  cases hit <;> simp [states, boolStates]
+
+theorem bool1_mem_states (D : MachineDescription) (hit : Bool) :
+    State.bool1 hit ∈ states D := by
+  cases hit <;> simp [states, boolStates]
+
+theorem bool2_mem_states (D : MachineDescription) (hit : Bool) :
+    State.bool2 hit ∈ states D := by
+  cases hit <;> simp [states, boolStates]
+
+theorem bool3_mem_states (D : MachineDescription) (hit branch : Bool) :
+    State.bool3 hit branch ∈ states D := by
+  cases hit <;> cases branch <;> simp [states, boolStates]
+
+private theorem mem_states_of_natStates
+    {D : MachineDescription} {state : State D}
+    (hstate : state ∈ natStates D) : state ∈ states D := by
+  unfold states
+  apply List.mem_cons_of_mem
+  apply List.mem_append_right (boolStates D)
+  exact List.mem_append_left (List.append (tagStates D) [.halt]) hstate
+
+private theorem mem_states_of_tagStates
+    {D : MachineDescription} {state : State D}
+    (hstate : state ∈ tagStates D) : state ∈ states D := by
+  unfold states
+  apply List.mem_cons_of_mem
+  apply List.mem_append_right (boolStates D)
+  apply List.mem_append_right (natStates D)
+  exact List.mem_append_left [.halt] hstate
+
+theorem nat0_mem_states
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hvalue : value ≤ stateValueBound D) :
+    State.nat0 hit value ∈ states D := by
+  apply mem_states_of_natStates
+  unfold natStates
+  apply List.mem_flatMap.mpr
+  refine ⟨value, List.mem_range.mpr (by lia), ?_⟩
+  cases hit <;> simp [natStatesAt]
+
+theorem nat1_mem_states
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hvalue : value ≤ stateValueBound D) :
+    State.nat1 hit value ∈ states D := by
+  apply mem_states_of_natStates
+  unfold natStates
+  apply List.mem_flatMap.mpr
+  refine ⟨value, List.mem_range.mpr (by lia), ?_⟩
+  cases hit <;> simp [natStatesAt]
+
+theorem nat2_mem_states
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hvalue : value ≤ stateValueBound D) :
+    State.nat2 hit value ∈ states D := by
+  apply mem_states_of_natStates
+  unfold natStates
+  apply List.mem_flatMap.mpr
+  refine ⟨value, List.mem_range.mpr (by lia), ?_⟩
+  cases hit <;> simp [natStatesAt]
+
+theorem nat3_mem_states
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hvalue : value ≤ stateValueBound D) :
+    State.nat3 hit value ∈ states D := by
+  apply mem_states_of_natStates
+  unfold natStates
+  apply List.mem_flatMap.mpr
+  refine ⟨value, List.mem_range.mpr (by lia), ?_⟩
+  cases hit <;> simp [natStatesAt]
+
+theorem seekDelimiter_mem_states
+    (D : MachineDescription) (hit : Bool) (tag : StateClass D) :
+    State.seekDelimiter hit tag ∈ states D := by
+  apply mem_states_of_tagStates
+  unfold tagStates
+  apply List.mem_flatMap.mpr
+  refine ⟨tag, mem_stateClasses D tag, ?_⟩
+  cases hit <;> simp [tagStatesAt]
+
+theorem returnToHit_mem_states
+    (D : MachineDescription) (hit : Bool) (tag : StateClass D) :
+    State.returnToHit hit tag ∈ states D := by
+  apply mem_states_of_tagStates
+  unfold tagStates
+  apply List.mem_flatMap.mpr
+  refine ⟨tag, mem_stateClasses D tag, ?_⟩
+  cases hit <;> simp [tagStatesAt]
+
+theorem restoreHit_mem_states
+    (D : MachineDescription) (hit : Bool) (tag : StateClass D) :
+    State.restoreHit hit tag ∈ states D := by
+  apply mem_states_of_tagStates
+  unfold tagStates
+  apply List.mem_flatMap.mpr
+  refine ⟨tag, mem_stateClasses D tag, ?_⟩
+  cases hit <;> simp [tagStatesAt]
+
+theorem done_mem_states
+    (D : MachineDescription) (tag : StateClass D) :
+    State.done tag ∈ states D := by
+  apply mem_states_of_tagStates
+  unfold tagStates
+  exact List.mem_flatMap.mpr
+    ⟨tag, mem_stateClasses D tag, by simp [tagStatesAt]⟩
+
+theorem next_target_mem (D : MachineDescription) :
+    forall s : State D, s ∈ states D ->
+      forall (r0 r1 r2 : Option Bool) (step : TypedStep (State D)),
+        next D s r0 r1 r2 = some step -> step.target ∈ states D := by
+  intro s hs r0 r1 r2 step hnext
+  cases s with
+  | start =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some hit => cases hnext; exact bool0_mem_states D hit
+  | bool0 hit =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit <;> simp [next] at hnext
+          cases hnext
+          exact bool1_mem_states D hit
+  | bool1 hit =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit <;> simp [next] at hnext
+          cases hnext
+          exact bool2_mem_states D hit
+  | bool2 hit =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some branch =>
+          cases hnext
+          exact bool3_mem_states D hit branch
+  | bool3 hit branch =>
+      cases branch with
+      | false =>
+          cases r2 with
+          | none => simp [next] at hnext
+          | some bit =>
+              cases bit with
+              | false => simp [next] at hnext
+              | true =>
+                  cases hnext
+                  exact seekDelimiter_mem_states D hit .other
+      | true =>
+          cases r2 with
+          | none => simp [next] at hnext
+          | some bit =>
+              cases bit with
+              | false =>
+                  cases hnext
+                  exact nat0_mem_states D hit 0 (Nat.zero_le _)
+              | true => simp [next] at hnext
+  | nat0 hit value =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit with
+          | false =>
+              simp only [next] at hnext
+              split at hnext
+              · rename_i hvalue
+                cases hnext
+                exact nat1_mem_states D hit value hvalue
+              · cases hnext
+          | true => simp [next] at hnext
+  | nat1 hit value =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit with
+          | false =>
+              simp only [next] at hnext
+              split at hnext
+              · rename_i hvalue
+                cases hnext
+                exact nat2_mem_states D hit value hvalue
+              · cases hnext
+          | true => simp [next] at hnext
+  | nat2 hit value =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit with
+          | false => simp [next] at hnext
+          | true =>
+              simp only [next] at hnext
+              split at hnext
+              · rename_i hvalue
+                cases hnext
+                exact nat3_mem_states D hit value hvalue
+              · cases hnext
+  | nat3 hit value =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit with
+          | false =>
+              simp only [next] at hnext
+              split at hnext
+              · cases hnext
+                exact nat0_mem_states D hit (value + 1) (by lia)
+              · cases hnext
+          | true =>
+              simp only [next] at hnext
+              split at hnext
+              · rename_i hstate
+                cases hnext
+                exact seekDelimiter_mem_states D hit (.known value hstate)
+              · cases hnext
+  | seekDelimiter hit tag =>
+      cases r2 with
+      | none =>
+          cases hnext
+          exact returnToHit_mem_states D hit tag
+      | some bit =>
+          cases bit <;> simp [next] at hnext
+          cases hnext
+          exact seekDelimiter_mem_states D hit tag
+  | returnToHit hit tag =>
+      cases r2 with
+      | none => simp [next] at hnext
+      | some bit =>
+          cases bit <;> cases hnext
+          · exact restoreHit_mem_states D hit tag
+          · exact returnToHit_mem_states D hit tag
+  | restoreHit hit tag =>
+      cases r2 with
+      | none => cases hnext; exact done_mem_states D tag
+      | some bit => cases bit <;> simp [next] at hnext
+  | done tag => simp [next] at hnext
+  | halt => simp [next] at hnext
+
+/-- Concrete typed table for the fixed-start selector scanner. -/
+def table (D : MachineDescription) : TypedStateTable (State D) :=
+  TypedStateTable.ofList
+    (states D) .start .halt (next D)
+    (start_mem_states D) (halt_mem_states D)
+    (by intro r0 r1 r2; rfl)
+    (next_target_mem D)
+
+def description (D : MachineDescription) : Description :=
+  (table D).description
+
+theorem description_wellFormed (D : MachineDescription) :
+    (description D).WellFormed :=
+  (table D).description_wellFormed
+
+theorem description_haltTransitionFree (D : MachineDescription) :
+    (description D).HaltTransitionFree :=
+  (table D).description_haltTransitionFree
+
+theorem description_supportsReadWriteRows3 (D : MachineDescription) :
+    SupportsReadWriteRows3 (description D) :=
+  (table D).description_supportsReadWriteRows3
+
+/-!
+## Exact typed execution
+-/
+
+/-- One defined typed selector row executes as one structured step. -/
+theorem description_runConfig_one
+    (D : MachineDescription) (state : State D)
+    (hstate : state ∈ states D)
+    (T0 T1 T2 : Tape Bool) (step : TypedStep (State D))
+    (hnext :
+      next D state (Tape.read T0) (Tape.read T1) (Tape.read T2) = some step) :
+    (description D).runConfig 1
+        (ThreeTape.config ((table D).stateId state) T0 T1 T2) =
+      ThreeTape.config ((table D).stateId step.target)
+        (step.action0.apply T0)
+        (step.action1.apply T1)
+        (step.action2.apply T2) := by
+  change
+    (table D).description.runConfig (0 + 1)
+        (ThreeTape.config ((table D).stateId state) T0 T1 T2) = _
+  rw [(table D).runConfig_succ_config hstate hnext 0]
+  rfl
+
+@[simp] theorem writeL_apply_tapeAtCells_cons
+    (written current next : Option Bool)
+    (left right : List (Option Bool)) :
+    (writeL written).apply
+        (tapeAtCells (next :: left) (current :: right)) =
+      tapeAtCells left (next :: written :: right) := by
+  rfl
+
+@[simp] theorem keepL_apply_tapeAtCells_cons
+    (current next : Option Bool)
+    (left right : List (Option Bool)) :
+    keepL.apply (tapeAtCells (next :: left) (current :: right)) =
+      tapeAtCells left (next :: current :: right) := by
+  rfl
+
+@[simp] theorem writeR_apply_tapeAtCells_cons
+    (written current next : Option Bool)
+    (left right : List (Option Bool)) :
+    (writeR written).apply
+        (tapeAtCells left (current :: next :: right)) =
+      tapeAtCells (written :: left) (next :: right) := by
+  rfl
+
+@[simp] theorem keepR_apply_tapeAtCells_cons
+    (current next : Option Bool)
+    (left right : List (Option Bool)) :
+    keepR.apply (tapeAtCells left (current :: next :: right)) =
+      tapeAtCells (current :: left) (next :: right) := by
+  rfl
+
+theorem description_runConfig_one_step2
+    (D : MachineDescription) (state target : State D)
+    (hstate : state ∈ states D)
+    (T0 T1 T2 : Tape Bool) (action2 : TapeAction)
+    (hnext :
+      next D state (Tape.read T0) (Tape.read T1) (Tape.read T2) =
+        step2 action2 target) :
+    (description D).runConfig 1
+        (ThreeTape.config ((table D).stateId state) T0 T1 T2) =
+      ThreeTape.config ((table D).stateId target)
+        T0 T1 (action2.apply T2) := by
+  simpa [step2, keepS, TapeAction.stay, TapeAction.apply,
+    HeadMove.apply] using
+    description_runConfig_one D state hstate T0 T1 T2
+      { target := target
+        action0 := keepS
+        action1 := keepS
+        action2 := action2 }
+      hnext
+
+theorem description_runConfig_one_start
+    (D : MachineDescription) (hit : Bool)
+    (T0 T1 : Tape Bool) (left : List (Option Bool))
+    (right : List (Option Bool)) :
+    (description D).runConfig 1
+        (ThreeTape.config (description D).start T0 T1
+          (tapeAtCells left (some hit :: right))) =
+      ThreeTape.config
+        ((table D).stateId (.bool0 hit)) T0 T1
+        ((writeL (some false)).apply
+          (tapeAtCells left (some hit :: right))) := by
+  change
+    (table D).description.runConfig 1
+        (ThreeTape.config ((table D).stateId (table D).start) T0 T1
+          (tapeAtCells left (some hit :: right))) = _
+  rw [show (table D).start = State.start from rfl]
+  have hnext :
+      next D .start
+          (Tape.read T0) (Tape.read T1)
+          (Tape.read (tapeAtCells left (some hit :: right))) =
+        some
+          { target := .bool0 hit
+            action0 := keepS
+            action1 := keepS
+            action2 := writeL (some false) } := by
+    rfl
+  simpa [description, keepS, TapeAction.stay, TapeAction.apply,
+    HeadMove.apply] using
+    description_runConfig_one D .start (start_mem_states D)
+      T0 T1 (tapeAtCells left (some hit :: right)) _ hnext
+
+/-- Parse and restore the four-bit {lit}`other` selector token. -/
+theorem description_runConfig_bool_other
+    (D : MachineDescription) (hit : Bool)
+    (T0 T1 : Tape Bool) (nextCell : Option Bool)
+    (left right : List (Option Bool)) :
+    (description D).runConfig 4
+        (ThreeTape.config ((table D).stateId (.bool0 hit)) T0 T1
+          (tapeAtCells
+            (some true :: some false :: some true :: nextCell :: left)
+            (some false :: right))) =
+      ThreeTape.config
+        ((table D).stateId
+          (.seekDelimiter hit (StateClass.other : StateClass D)))
+        T0 T1
+        (tapeAtCells left
+          (nextCell :: some true :: some true :: some true ::
+            some true :: right)) := by
+  rw [show 4 = 1 + (1 + (1 + 1)) by rfl]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool0 hit) (.bool1 hit) (bool0_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some true :: some false :: some true :: nextCell :: left)
+      (some false :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool1 hit) (.bool2 hit) (bool1_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some false :: some true :: nextCell :: left)
+      (some true :: some true :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool2 hit) (.bool3 hit false) (bool2_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some true :: nextCell :: left)
+      (some false :: some true :: some true :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  simpa only [writeL_apply_tapeAtCells_cons] using
+    description_runConfig_one_step2 D
+    (.bool3 hit false) (.seekDelimiter hit .other)
+    (bool3_mem_states D hit false)
+    T0 T1
+    (tapeAtCells (nextCell :: left)
+      (some true :: some true :: some true :: some true :: right))
+    (writeL (some true)) (by rfl)
+
+/-- Parse and restore the four-bit known-branch token, stopping on the first
+bit of its following unary state encoding. -/
+theorem description_runConfig_bool_known
+    (D : MachineDescription) (hit : Bool)
+    (T0 T1 : Tape Bool) (nextCell : Option Bool)
+    (left right : List (Option Bool)) :
+    (description D).runConfig 4
+        (ThreeTape.config ((table D).stateId (.bool0 hit)) T0 T1
+          (tapeAtCells
+            (some true :: some true :: some false :: nextCell :: left)
+            (some false :: right))) =
+      ThreeTape.config ((table D).stateId (.nat0 hit 0)) T0 T1
+        (tapeAtCells left
+          (nextCell :: some true :: some true :: some true ::
+            some true :: right)) := by
+  rw [show 4 = 1 + (1 + (1 + 1)) by rfl]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool0 hit) (.bool1 hit) (bool0_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some true :: some true :: some false :: nextCell :: left)
+      (some false :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool1 hit) (.bool2 hit) (bool1_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some true :: some false :: nextCell :: left)
+      (some true :: some true :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.bool2 hit) (.bool3 hit true) (bool2_mem_states D hit)
+    T0 T1
+    (tapeAtCells
+      (some false :: nextCell :: left)
+      (some true :: some true :: some true :: right))
+    (writeL (some true)) (by rfl)]
+  simp only [writeL_apply_tapeAtCells_cons]
+  simpa only [writeL_apply_tapeAtCells_cons] using
+    description_runConfig_one_step2 D
+    (.bool3 hit true) (.nat0 hit 0)
+    (bool3_mem_states D hit true)
+    T0 T1
+    (tapeAtCells (nextCell :: left)
+      (some false :: some true :: some true :: some true :: right))
+    (writeL (some true)) (by rfl)
+
+/-- Restore one unary {lit}`tick` token and increment the bounded count. -/
+theorem description_runConfig_nat_tick
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hvalue : value < stateValueBound D)
+    (T0 T1 : Tape Bool) (nextCell : Option Bool)
+    (left right : List (Option Bool)) :
+    (description D).runConfig 4
+        (ThreeTape.config ((table D).stateId (.nat0 hit value)) T0 T1
+          (tapeAtCells
+            (some false :: some true :: some false :: nextCell :: left)
+            (some false :: right))) =
+      ThreeTape.config
+        ((table D).stateId (.nat0 hit (value + 1))) T0 T1
+        (tapeAtCells left
+          (nextCell :: some true :: some true :: some true ::
+            some true :: right)) := by
+  have hvalueLe : value ≤ stateValueBound D := Nat.le_of_lt hvalue
+  rw [show 4 = 1 + (1 + (1 + 1)) by rfl]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat0 hit value) (.nat1 hit value)
+    (nat0_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some false :: some true :: some false :: nextCell :: left)
+      (some false :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat1 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat1 hit value) (.nat2 hit value)
+    (nat1_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some true :: some false :: nextCell :: left)
+      (some false :: some true :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat2 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat2 hit value) (.nat3 hit value)
+    (nat2_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some false :: nextCell :: left)
+      (some true :: some true :: some true :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat3 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  simpa only [writeL_apply_tapeAtCells_cons] using
+    description_runConfig_one_step2 D
+      (.nat3 hit value) (.nat0 hit (value + 1))
+      (nat3_mem_states D hit value hvalueLe)
+      T0 T1
+      (tapeAtCells (nextCell :: left)
+        (some false :: some true :: some true :: some true :: right))
+      (writeL (some true)) (by
+        change
+          (if value < stateValueBound D then
+            step2 (writeL (some true)) (.nat0 hit (value + 1))
+          else none) = _
+        rw [if_pos hvalue])
+
+/-- Restore the unary {lit}`done` token and expose the corresponding known
+class in typed control. -/
+theorem description_runConfig_nat_done
+    (D : MachineDescription) (hit : Bool) (value : Nat)
+    (hstate : value ∈ fixedStepValues D)
+    (T0 T1 : Tape Bool) (nextCell : Option Bool)
+    (left right : List (Option Bool)) :
+    (description D).runConfig 4
+        (ThreeTape.config ((table D).stateId (.nat0 hit value)) T0 T1
+          (tapeAtCells
+            (some false :: some true :: some true :: nextCell :: left)
+            (some false :: right))) =
+      ThreeTape.config
+        ((table D).stateId (.seekDelimiter hit (.known value hstate)))
+        T0 T1
+        (tapeAtCells left
+          (nextCell :: some true :: some true :: some true ::
+            some true :: right)) := by
+  have hvalueLe := knownState_le_stateValueBound hstate
+  rw [show 4 = 1 + (1 + (1 + 1)) by rfl]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat0 hit value) (.nat1 hit value)
+    (nat0_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some false :: some true :: some true :: nextCell :: left)
+      (some false :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat1 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat1 hit value) (.nat2 hit value)
+    (nat1_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some true :: some true :: nextCell :: left)
+      (some false :: some true :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat2 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  rw [Structured.Description.runConfig_add]
+  rw [description_runConfig_one_step2 D
+    (.nat2 hit value) (.nat3 hit value)
+    (nat2_mem_states D hit value hvalueLe)
+    T0 T1
+    (tapeAtCells
+      (some true :: nextCell :: left)
+      (some true :: some true :: some true :: right))
+    (writeL (some true)) (by
+      change
+        (if value ≤ stateValueBound D then
+          step2 (writeL (some true)) (.nat3 hit value)
+        else none) = _
+      rw [if_pos hvalueLe])]
+  simp only [writeL_apply_tapeAtCells_cons]
+  simpa only [writeL_apply_tapeAtCells_cons] using
+    description_runConfig_one_step2 D
+      (.nat3 hit value) (.seekDelimiter hit (.known value hstate))
+      (nat3_mem_states D hit value hvalueLe)
+      T0 T1
+      (tapeAtCells (nextCell :: left)
+        (some true :: some true :: some true :: some true :: right))
+      (writeL (some true)) (by
+        change
+          (if h : value ∈ fixedStepValues D then
+            step2 (writeL (some true))
+              (.seekDelimiter hit (.known value h))
+          else none) = _
+        simp [hstate])
+
+end SelectorIngress
+end FieldDecomposition
+end RunConfigEmitterCore
+end BoundedLayoutRunner
+end EncRewriters
+
+end Computability
+end FoC
