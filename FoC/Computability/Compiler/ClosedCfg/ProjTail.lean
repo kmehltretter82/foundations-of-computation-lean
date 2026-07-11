@@ -1,14 +1,4 @@
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScaffoldOutput
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.Footprint.Contracts
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.PrefixEraser.Contracts
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedDecoder
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHead
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.SelectedHeadThreaded
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Routes.Threaded
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Contracts
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.OutputRoutes
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.BranchRoutes
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.EndpointRoutes
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.PostPaddingPrefixScanner
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.PostPaddingScratchCounter
 
