@@ -734,6 +734,9 @@ def rejectRun1Bits
     (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
     (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
 
+def rejectConfigGapLength (p : SelectedMergeEmitterPayload) : Nat :=
+  Nat.pred (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length
+
 def rejectJ2InputTape
     (p : SelectedMergeEmitterPayload)
     (b1 : Bool) (blkT field : Word Bool)
@@ -744,8 +747,7 @@ def rejectJ2InputTape
         List.append ((rejectRun1Bits p).map some)
           (none ::
             List.append
-              (List.replicate
-                (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length none)
+              (List.replicate (rejectConfigGapLength p) none)
               (List.append
                 ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
                 (none ::
@@ -762,8 +764,7 @@ def rejectJ2OutputTape
         (none ::
           List.append ((rejectRun1Bits p).map some)
             (List.append
-              (List.replicate
-                (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length none)
+              (List.replicate (rejectConfigGapLength p) none)
               (none ::
                 List.append
                   ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
@@ -771,6 +772,7 @@ def rejectJ2OutputTape
                     (none ::
                       List.append (field.map some) (none :: none :: R)))))))
 
+set_option maxRecDepth 200000 in
 theorem rejectJ2_haltsFrom
     (p : SelectedMergeEmitterPayload)
     (b1 : Bool) (blkT field : Word Bool)
@@ -789,7 +791,7 @@ theorem rejectJ2_haltsFrom
       false
       (List.append prefixTail
         (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p))
-      (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length
+      (rejectConfigGapLength p)
       false [true, p.L.acceptHit, !p.L.acceptHit]
       g2 field x R
 
@@ -832,8 +834,7 @@ def rejectAfterFirstPullTape
       none ::
         List.append ((rejectRun1Bits p).map some)
           (List.append
-            (List.replicate
-              (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length none)
+            (List.replicate (rejectConfigGapLength p) none)
             (none ::
               List.append
                 ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
@@ -849,12 +850,14 @@ def rejectAfterFirstPullTape
                       (none :: commonRightPadding))))))
 
 set_option maxHeartbeats 1000000 in
-set_option maxRecDepth 100000 in
+set_option maxRecDepth 200000 in
 theorem rejectFirstPull_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     pullFirstRejectDescription.HaltsFromTape
       (Tape.move Direction.left (rejectAfterHitTape p))
       (rejectAfterFirstPullTape p) := by
+  rcases configurationFieldBits_cons_false p.L.rejectConfig [] with
+    ⟨rcTail, hreject⟩
   have hAH :
       (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).reverse ≠ [] := by
     intro h
@@ -870,16 +873,20 @@ theorem rejectFirstPull_haltsFrom
     rw [hprefix] at h
     simp at h
   apply haltsFromTape_of_reaches
-  simpa (config := { maxSteps := 1000000 }) [rejectAfterHitTape, rejectAfterHitLeft, rejectAfterMidBaseLeft,
+  rw [show pullFirstRejectDescription.start = 0 by rfl,
+    show pullFirstRejectDescription.halt = 14 by rfl]
+  simpa (config := { maxSteps := 1000000 })
+    [rejectAfterHitTape, rejectAfterHitLeft, rejectAfterMidBaseLeft,
+    rejectPrefixBaseLeft, rejectConfigGapLength, commonRightPadding,
     rejectAfterFirstPullTape, rejectRun1Bits,
     SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits,
-    SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits, hreject,
     SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
     SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits,
     SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
     SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
     boolFieldBits_eq_four, List.map_append, List.map_reverse,
-    List.reverse_append, List.replicate_succ, List.append_assoc,
+    List.reverse_append, List.append_assoc,
     replicate_none_append_cons', none_cons_replicate_append,
     Tape.move, Tape.moveLeft,
     CommonGround.FiniteTransducers.tapeAtCells] using
@@ -888,11 +895,653 @@ theorem rejectFirstPull_haltsFrom
           (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).reverse)
         ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
         (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).reverse hAH
-        (SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits p).length
+        rcTail.length
         (List.append
           (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p).reverse
           (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p).reverse)
         hrun1 commonRightPadding
+
+@[irreducible] def rejectThroughFirstPullDescription : MachineDescription :=
+  seqSubroutine rejectDeleteDescription pullFirstRejectDescription Direction.left
+
+set_option maxHeartbeats 1000000
+
+theorem rejectThroughFirstPullDescription_subroutineReady :
+    rejectThroughFirstPullDescription.SubroutineReady := by
+  unfold rejectThroughFirstPullDescription
+  exact seqSubroutine_subroutineReady
+    rejectDeleteDescription_subroutineReady
+    pullFirstRejectDescription_subroutineReady
+
+theorem rejectThroughFirstPullDescription_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughFirstPullDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectAfterFirstPullTape p) := by
+  unfold rejectThroughFirstPullDescription
+  exact
+    CommonGround.SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      rejectDeleteDescription_subroutineReady
+      pullFirstRejectDescription_subroutineReady
+      (rejectDeleteDescription_haltsFrom p)
+      rfl
+      (rejectFirstPull_haltsFrom p)
+
+theorem rejectAfterFirstPullTape_eq_j2Input
+    (p : SelectedMergeEmitterPayload) :
+    rejectAfterFirstPullTape p =
+      rejectJ2InputTape p (!p.S.hit) []
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          [false, true, p.S.hit])
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        commonRightPadding := by
+  simp [rejectAfterFirstPullTape, rejectJ2InputTape, rejectRun1Bits,
+    replicate_none_comm', List.append_assoc]
+
+@[irreducible] def rejectThroughOuterHitPull2Description : MachineDescription :=
+  canonicalSeqDescription rejectThroughFirstPullDescription pullOneBitJ2Description
+
+theorem rejectThroughOuterHitPull2Description_subroutineReady :
+    rejectThroughOuterHitPull2Description.SubroutineReady := by
+  unfold rejectThroughOuterHitPull2Description
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughFirstPullDescription_subroutineReady
+    pullOneBitJ2Description_subroutineReady
+
+theorem rejectThroughOuterHitPull2Description_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughOuterHitPull2Description.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectJ2OutputTape p (!p.S.hit) []
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          [false, true])
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        p.S.hit commonRightPadding) := by
+  unfold rejectThroughOuterHitPull2Description
+  have hbridge :
+      Tape.move Direction.left
+          (Tape.move Direction.right (rejectAfterFirstPullTape p)) =
+        rejectJ2InputTape p (!p.S.hit) []
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+            [false, true, p.S.hit])
+          ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+          commonRightPadding := by
+    rw [show
+        Tape.move Direction.left
+            (Tape.move Direction.right (rejectAfterFirstPullTape p)) =
+          rejectAfterFirstPullTape p by
+      simp [rejectAfterFirstPullTape,
+        CommonGround.FiniteTransducers.tapeAtCells,
+        Tape.move, Tape.moveLeft, Tape.moveRight]]
+    exact rejectAfterFirstPullTape_eq_j2Input p
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughFirstPullDescription_subroutineReady
+      pullOneBitJ2Description_subroutineReady
+      (rejectThroughFirstPullDescription_haltsFrom p)
+      hbridge
+      (by
+        simpa [List.append_assoc] using
+          (rejectJ2_haltsFrom p (!p.S.hit) []
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false, true])
+            ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+            p.S.hit commonRightPadding))
+
+@[irreducible] def rejectThroughOuterHitPull3Description : MachineDescription :=
+  canonicalSeqDescription
+    rejectThroughOuterHitPull2Description pullOneBitJ2Description
+
+theorem rejectThroughOuterHitPull3Description_subroutineReady :
+    rejectThroughOuterHitPull3Description.SubroutineReady := by
+  unfold rejectThroughOuterHitPull3Description
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughOuterHitPull2Description_subroutineReady
+    pullOneBitJ2Description_subroutineReady
+
+theorem rejectThroughOuterHitPull3Description_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughOuterHitPull3Description.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectJ2OutputTape p p.S.hit [!p.S.hit]
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          [false])
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        true (none :: commonRightPadding)) := by
+  unfold rejectThroughOuterHitPull3Description
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughOuterHitPull2Description_subroutineReady
+      pullOneBitJ2Description_subroutineReady
+      (rejectThroughOuterHitPull2Description_haltsFrom p)
+      (by
+        simpa [List.append_assoc] using
+          (rejectJ2OutputTape_canonicalBridge p (!p.S.hit) []
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false])
+            ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+            true p.S.hit commonRightPadding))
+      (by
+        simpa [List.append_assoc] using
+          (rejectJ2_haltsFrom p p.S.hit [!p.S.hit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false])
+            ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+            true (none :: commonRightPadding)))
+
+@[irreducible] def rejectThroughOuterHitPull4Description : MachineDescription :=
+  canonicalSeqDescription
+    rejectThroughOuterHitPull3Description pullOneBitJ2Description
+
+theorem rejectThroughOuterHitPull4Description_subroutineReady :
+    rejectThroughOuterHitPull4Description.SubroutineReady := by
+  unfold rejectThroughOuterHitPull4Description
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughOuterHitPull3Description_subroutineReady
+    pullOneBitJ2Description_subroutineReady
+
+theorem rejectThroughOuterHitPull4Description_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughOuterHitPull4Description.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectJ2OutputTape p true [p.S.hit, !p.S.hit]
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        false (none :: none :: commonRightPadding)) := by
+  unfold rejectThroughOuterHitPull4Description
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughOuterHitPull3Description_subroutineReady
+      pullOneBitJ2Description_subroutineReady
+      (rejectThroughOuterHitPull3Description_haltsFrom p)
+      (rejectJ2OutputTape_canonicalBridge p p.S.hit [!p.S.hit]
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        false true (none :: commonRightPadding))
+      (rejectJ2_haltsFrom p true [p.S.hit, !p.S.hit]
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        false (none :: none :: commonRightPadding))
+
+def rejectAfterAcceptHitPullTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
+      (List.append
+        ((SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p).map some)
+        (none ::
+          List.append ((rejectRun1Bits p).map some)
+            (List.append
+              (List.replicate (rejectConfigGapLength p) none)
+              (none ::
+                List.append
+                  (List.replicate
+                    (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).length none)
+                  (none ::
+                    List.append
+                      (List.replicate
+                        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+                        none)
+                      (List.append
+                        ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
+                        (List.append (List.replicate 4 none) commonRightPadding))))))))
+
+set_option maxRecDepth 200000 in
+theorem rejectAcceptHitPull_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    pullLoopJ1Description.HaltsFromTape
+      (rejectJ2OutputTape p true [p.S.hit, !p.S.hit]
+        (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+        ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+        false (none :: none :: commonRightPadding))
+      (rejectAfterAcceptHitPullTape p) := by
+  rcases configurationFieldBits_eq_reverse_cons_cons p.L.acceptConfig with
+    ⟨x, y, rest, hconfig⟩
+  rcases outputPrefixBits_cons p with ⟨prefixTail, hprefix⟩
+  apply haltsFromTape_of_reaches
+  rw [show pullLoopJ1Description.start = 0 by rfl,
+    show pullLoopJ1Description.halt = 26 by rfl]
+  simpa [rejectJ2OutputTape, rejectAfterAcceptHitPullTape, rejectRun1Bits,
+    hconfig, hprefix,
+    SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+    boolFieldBits_eq_four, replicate_none_comm',
+    List.map_append, List.map_reverse, List.reverse_append,
+    List.replicate_succ, List.append_assoc] using
+    pullLoopJ1_run false [true, p.S.hit, !p.S.hit]
+      (rejectRun1Bits p)
+      (by simp [rejectRun1Bits, hprefix])
+      (rejectConfigGapLength p)
+      (!p.L.acceptHit) p.L.acceptHit [true, false]
+      (List.append
+        (List.replicate
+          ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+          none)
+        (List.append
+          ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
+          (List.append (List.replicate 4 none) commonRightPadding)))
+
+@[irreducible] def rejectThroughAcceptHitPullDescription : MachineDescription :=
+  canonicalSeqDescription
+    rejectThroughOuterHitPull4Description pullLoopJ1Description
+
+theorem rejectThroughAcceptHitPullDescription_subroutineReady :
+    rejectThroughAcceptHitPullDescription.SubroutineReady := by
+  unfold rejectThroughAcceptHitPullDescription
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughOuterHitPull4Description_subroutineReady
+    pullLoopJ1Description_subroutineReady
+
+theorem rejectThroughAcceptHitPullDescription_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughAcceptHitPullDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectAfterAcceptHitPullTape p) := by
+  unfold rejectThroughAcceptHitPullDescription
+  have hbridge :
+      Tape.move Direction.left
+          (Tape.move Direction.right
+            (rejectJ2OutputTape p true [p.S.hit, !p.S.hit]
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+              false (none :: none :: commonRightPadding))) =
+        rejectJ2OutputTape p true [p.S.hit, !p.S.hit]
+          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+          ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 3)
+          false (none :: none :: commonRightPadding) := by
+    simp [rejectJ2OutputTape,
+      CommonGround.FiniteTransducers.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughOuterHitPull4Description_subroutineReady
+      pullLoopJ1Description_subroutineReady
+      (rejectThroughOuterHitPull4Description_haltsFrom p)
+      hbridge (rejectAcceptHitPull_haltsFrom p)
+
+def rejectAfterOuterConfigPullTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append
+      ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
+      (List.append
+        ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
+        (List.append
+          ((SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p).map some)
+          (none ::
+            List.append ((rejectRun1Bits p).map some)
+              (List.append
+                (List.replicate
+                  (rejectConfigGapLength p +
+                    (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 8)
+                  none)
+                (none ::
+                  List.append
+                    (List.replicate
+                      (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
+                    (List.append (List.replicate 4 none) commonRightPadding)))))))
+
+theorem replicate_add_none (m n : Nat) :
+    List.replicate (m + n) (none : Option Bool) =
+      List.append (List.replicate m none) (List.replicate n none) := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [Nat.succ_add, List.replicate_succ, List.replicate_succ, ih]
+    rfl
+
+set_option maxHeartbeats 10000000 in
+set_option maxRecDepth 1000000 in
+theorem rejectOuterConfigPull_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    pullLoopJ1Description.HaltsFromTape
+      (rejectAfterAcceptHitPullTape p)
+      (rejectAfterOuterConfigPullTape p) := by
+  rcases configurationFieldBits_eq_reverse_cons_cons p.S.config with
+    ⟨x, y, rest, houter⟩
+  rcases outputPrefixBits_cons p with ⟨prefixTail, hprefix⟩
+  apply haltsFromTape_of_reaches
+  rw [show pullLoopJ1Description.start = 0 by rfl,
+    show pullLoopJ1Description.halt = 26 by rfl]
+  have hrun :=
+    pullLoopJ1_run false
+      [true, p.L.acceptHit, !p.L.acceptHit,
+        false, true, p.S.hit, !p.S.hit]
+      (rejectRun1Bits p)
+      (by simp [rejectRun1Bits, hprefix])
+      (rejectConfigGapLength p +
+        (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 8)
+      x y rest
+      (List.append (List.replicate 3 none) commonRightPadding)
+  have hgap (X : List (Option Bool)) :
+      List.replicate
+          (rejectConfigGapLength p +
+            ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 9))
+          none ++ X =
+        List.replicate
+            (rejectConfigGapLength p) none ++
+          (List.replicate
+            ((SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 9) none ++ X) := by
+    rw [replicate_add_none]
+    exact List.append_assoc _ _ _
+  simpa (config := { maxSteps := 200000 })
+    [rejectAfterAcceptHitPullTape, rejectAfterOuterConfigPullTape,
+    rejectRun1Bits, houter, hprefix,
+    SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+    boolFieldBits_eq_four,
+    replicate_none_append_cons', none_cons_replicate_append,
+    List.map_append, List.map_reverse, List.reverse_append, hgap,
+    List.append_assoc, Nat.add_assoc] using hrun
+
+@[irreducible] def rejectThroughOuterConfigPullDescription : MachineDescription :=
+  canonicalSeqDescription
+    rejectThroughAcceptHitPullDescription pullLoopJ1Description
+
+theorem rejectThroughOuterConfigPullDescription_subroutineReady :
+    rejectThroughOuterConfigPullDescription.SubroutineReady := by
+  unfold rejectThroughOuterConfigPullDescription
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughAcceptHitPullDescription_subroutineReady
+    pullLoopJ1Description_subroutineReady
+
+theorem rejectThroughOuterConfigPullDescription_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectThroughOuterConfigPullDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectAfterOuterConfigPullTape p) := by
+  unfold rejectThroughOuterConfigPullDescription
+  have hbridge :
+      Tape.move Direction.left
+          (Tape.move Direction.right (rejectAfterAcceptHitPullTape p)) =
+        rejectAfterAcceptHitPullTape p := by
+    simp [rejectAfterAcceptHitPullTape,
+      SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+      boolFieldBits_eq_four,
+      CommonGround.FiniteTransducers.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughAcceptHitPullDescription_subroutineReady
+      pullLoopJ1Description_subroutineReady
+      (rejectThroughAcceptHitPullDescription_haltsFrom p)
+      hbridge (rejectOuterConfigPull_haltsFrom p)
+
+def rejectAfterOutputPrefixPullTape
+    (p : SelectedMergeEmitterPayload) : Tape Bool :=
+  tapeAtCells [none]
+    (List.append ((rejectRun1Bits p).map some)
+      (List.append
+        ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
+        (List.append
+          ((SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p).map some)
+          (List.append
+            ((SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p).map some)
+            (none ::
+              List.append
+                (List.replicate (rejectRun1Bits p).length none)
+                (none ::
+                  List.append
+                    (List.replicate
+                      (rejectConfigGapLength p +
+                        (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 7)
+                      none)
+                    (none ::
+                      List.append
+                        (List.replicate
+                          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
+                        (List.append (List.replicate 4 none) commonRightPadding))))))))
+
+set_option maxHeartbeats 10000000 in
+set_option maxRecDepth 1000000 in
+theorem rejectOutputPrefixPull_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    pullLoopJ0Description.HaltsFromTape
+      (rejectAfterOuterConfigPullTape p)
+      (rejectAfterOutputPrefixPullTape p) := by
+  rcases configurationFieldBits_false_false_tail p.S.config [] with
+    ⟨ocTail, houter⟩
+  rcases configurationFieldBits_eq_reverse_cons_cons p.L.acceptConfig with
+    ⟨x, y, rest, haccept⟩
+  rcases outputPrefixBits_cons p with ⟨prefixTail, hprefix⟩
+  apply haltsFromTape_of_reaches
+  rw [show pullLoopJ0Description.start = 0 by rfl,
+    show pullLoopJ0Description.halt = 14 by rfl]
+  have hlen :
+      rest.length + (prefixTail.length + 4) =
+        prefixTail.length + (rest.length + 4) := by
+    simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+  simpa (config := { maxSteps := 1000000 })
+    [rejectAfterOuterConfigPullTape, rejectAfterOutputPrefixPullTape,
+    rejectRun1Bits, houter, haccept, hprefix,
+    SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
+    SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+    SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+    boolFieldBits_eq_four,
+    none_cons_replicate_append,
+    List.map_append, List.map_reverse, List.reverse_append,
+    List.append_assoc, Nat.add_assoc, hlen] using
+    pullLoopJ0_run false
+      (false :: List.append ocTail
+        (List.append
+          (SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits p)
+          (SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits p)))
+      x y
+      (List.append rest
+        (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p).reverse)
+      (List.append
+        (List.replicate
+          (rejectConfigGapLength p +
+            (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 7)
+          none)
+        (none ::
+          List.append
+            (List.replicate
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
+            (List.append (List.replicate 4 none) commonRightPadding)))
+
+@[irreducible] def rejectFieldTransportDescription : MachineDescription :=
+  canonicalSeqDescription
+    rejectThroughOuterConfigPullDescription pullLoopJ0Description
+
+theorem rejectFieldTransportDescription_subroutineReady :
+    rejectFieldTransportDescription.SubroutineReady := by
+  unfold rejectFieldTransportDescription
+  exact canonicalSeqDescription_subroutineReady
+    rejectThroughOuterConfigPullDescription_subroutineReady
+    pullLoopJ0Description_subroutineReady
+
+theorem rejectFieldTransportDescription_haltsFrom
+    (p : SelectedMergeEmitterPayload) :
+    rejectFieldTransportDescription.HaltsFromTape
+      (SelectedMergePaddedEmitterParsedInnerPostPrefixGapClosedTape p)
+      (rejectAfterOutputPrefixPullTape p) := by
+  unfold rejectFieldTransportDescription
+  rcases configurationFieldBits_false_false_tail p.S.config [] with
+    ⟨outerTail, houter⟩
+  have hbridge :
+      Tape.move Direction.left
+          (Tape.move Direction.right (rejectAfterOuterConfigPullTape p)) =
+        rejectAfterOuterConfigPullTape p := by
+    simp [rejectAfterOuterConfigPullTape, houter,
+      SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits,
+      CommonGround.FiniteTransducers.tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+  exact
+    canonicalSeqDescription_haltsFromTape_of_haltsFromTape
+      rejectThroughOuterConfigPullDescription_subroutineReady
+      pullLoopJ0Description_subroutineReady
+      (rejectThroughOuterConfigPullDescription_haltsFrom p)
+      hbridge (rejectOutputPrefixPull_haltsFrom p)
+
+theorem dropTrailingNone_append_of_all_none
+    (xs pad : List (Option Bool))
+    (hpad : ∀ z ∈ pad, z = none) :
+    Tape.dropTrailingNone (xs ++ pad) = Tape.dropTrailingNone xs := by
+  have hrep : pad = List.replicate pad.length none := by
+    induction pad with
+    | nil => rfl
+    | cons a rest ih =>
+      have ha : a = none := hpad a (by simp)
+      have hr : ∀ z ∈ rest, z = none := by
+        intro z hz
+        exact hpad z (by simp [hz])
+      rw [ha]
+      simp only [List.length_cons, List.replicate_succ]
+      exact congrArg (List.cons (none : Option Bool)) (ih hr)
+  rw [hrep]
+  exact FoC.Computability.dropTrailingNone_append_replicate_none xs pad.length
+
+theorem rejectAfterOutputPrefixPullTape_equiv_decodedHandoff
+    (p : SelectedMergeEmitterPayload) :
+    Tape.Equiv (rejectAfterOutputPrefixPullTape p)
+      (SelectedMergePaddedEmitterDecodedHandoffTape false p) := by
+  rcases outputPrefixBits_cons p with ⟨prefixTail, hprefix⟩
+  have hbits :
+      SelectedMergePaddedEmitterDecodedHandoffBits false p =
+        List.append
+          (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+          (List.append
+            (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              (List.append
+                [false, true, p.L.acceptHit, !p.L.acceptHit]
+                [false, true, p.S.hit, !p.S.hit]))) := by
+    rw [SelectedMergePaddedEmitterDecodedHandoffBits_eq_postPrefixTargetBits]
+    simp [SelectedMergePaddedEmitterParsedInnerPostPrefixTargetBits,
+      SelectedMergePaddedEmitterParsedInnerTargetFieldTailExpandedBits,
+      SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+      SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+      boolFieldBits_eq_four]
+  rw [SelectedMergePaddedEmitterDecodedHandoffTape_eq_tapeAtCells_bits, hbits]
+  let core : List (Option Bool) :=
+    List.append (prefixTail.map some)
+      (List.append
+        ((SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p).map some)
+        (List.append
+          ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
+          [some false, some true, some p.L.acceptHit, some (!p.L.acceptHit),
+            some false, some true, some p.S.hit, some (!p.S.hit)]))
+  let actualPad : List (Option Bool) :=
+    none ::
+      List.append
+        (List.replicate
+          (List.length prefixTail +
+            (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p).length + 1)
+          none)
+        (none ::
+          List.append
+            (List.replicate
+              (rejectConfigGapLength p +
+                (SelectedMergePaddedEmitterParsedInnerOuterStageFieldBits p).length + 7)
+              none)
+            (none ::
+              List.append
+                (List.replicate
+                  (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
+                [none, none, none, none, none, none, none, none, none, none]))
+  let targetPad : List (Option Bool) :=
+    List.replicate (SimulatorLayout.asBoolInput p.S).length none
+  have hactualRight :
+      (rejectAfterOutputPrefixPullTape p).right = core ++ actualPad := by
+    simp [rejectAfterOutputPrefixPullTape, rejectRun1Bits, core, actualPad,
+      SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
+      SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
+      boolFieldBits_eq_four, commonRightPadding,
+      CommonGround.FiniteTransducers.tapeAtCells,
+      hprefix, List.map_append, List.append_assoc]
+  have htargetRight :
+      (DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((List.append
+            (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+              (List.append
+                (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+                (List.append
+                  [false, true, p.L.acceptHit, !p.L.acceptHit]
+                  [false, true, p.S.hit, !p.S.hit])))).map some)
+          (List.replicate (SimulatorLayout.asBoolInput p.S).length none))).right =
+          core ++ targetPad := by
+    rw [hprefix]
+    simp [core, targetPad, DovetailInitialLayoutInitializer.tapeAtCells,
+      List.map_append, List.append_assoc]
+  have hactualLeft : (rejectAfterOutputPrefixPullTape p).left = [none] := by
+    simp [rejectAfterOutputPrefixPullTape, rejectRun1Bits, hprefix,
+      CommonGround.FiniteTransducers.tapeAtCells, List.map_append]
+  have htargetLeft :
+      (DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((List.append
+            (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+              (List.append
+                (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+                (List.append
+                  [false, true, p.L.acceptHit, !p.L.acceptHit]
+                  [false, true, p.S.hit, !p.S.hit])))).map some)
+          (List.replicate (SimulatorLayout.asBoolInput p.S).length none))).left = [] := by
+    simp [DovetailInitialLayoutInitializer.tapeAtCells, hprefix,
+      List.map_append]
+  have hactualHead : (rejectAfterOutputPrefixPullTape p).head = some false := by
+    simp [rejectAfterOutputPrefixPullTape, rejectRun1Bits, hprefix,
+      CommonGround.FiniteTransducers.tapeAtCells, List.map_append]
+  have htargetHead :
+      (DovetailInitialLayoutInitializer.tapeAtCells []
+        (List.append
+          ((List.append
+            (SelectedMergePaddedEmitterParsedInnerOutputPrefixBits p)
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits p)
+              (List.append
+                (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+                (List.append
+                  [false, true, p.L.acceptHit, !p.L.acceptHit]
+                  [false, true, p.S.hit, !p.S.hit])))).map some)
+          (List.replicate (SimulatorLayout.asBoolInput p.S).length none))).head =
+        some false := by
+    simp [DovetailInitialLayoutInitializer.tapeAtCells, hprefix,
+      List.map_append]
+  constructor
+  · rw [hactualLeft, htargetLeft]
+    rfl
+  · constructor
+    · rw [hactualHead, htargetHead]
+    · rw [hactualRight, htargetRight,
+        dropTrailingNone_append_of_all_none core actualPad (by
+          intro z hz
+          simp [actualPad, commonRightPadding] at hz
+          rcases hz with h | h | h
+          · exact h
+          · exact h.2
+          · exact h),
+        dropTrailingNone_append_of_all_none core targetPad (by
+          intro z hz
+          simp [targetPad] at hz
+          exact hz.2)]
+
+theorem rejectFieldTransportDescription_spec :
+    SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec false
+      rejectFieldTransportDescription := by
+  constructor
+  · exact rejectFieldTransportDescription_subroutineReady
+  · intro p
+    exact ⟨rejectAfterOutputPrefixPullTape p,
+      rejectFieldTransportDescription_haltsFrom p,
+      rejectAfterOutputPrefixPullTape_equiv_decodedHandoff p⟩
 
 end ParsedInnerTransport
 end BoundedLayoutRunner

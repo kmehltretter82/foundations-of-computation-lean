@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.ParsedInnerWindows
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.Specs
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.ParsedInnerTransport.AcceptOuterPull
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.ParsedInnerTransport.RejectSchedule
 
 set_option doc.verso true
 
@@ -29,7 +31,11 @@ theorem selectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportConstructio
     exists transport : MachineDescription,
       SelectedMergePaddedEmitterParsedInnerPostPrefixFieldTransportSpec
         useAccept transport := by
-  sorry
+  cases useAccept
+  · exact ⟨ParsedInnerTransport.rejectFieldTransportDescription,
+      ParsedInnerTransport.rejectFieldTransportDescription_spec⟩
+  · exact ⟨ParsedInnerTransport.acceptFieldTransportDescription,
+      ParsedInnerTransport.acceptFieldTransportDescription_spec⟩
 
 /--
 Finite-machine leaf that rewrites the parsed nested layout plus outer source

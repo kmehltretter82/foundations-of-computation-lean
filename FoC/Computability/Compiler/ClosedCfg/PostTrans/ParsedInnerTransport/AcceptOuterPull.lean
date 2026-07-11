@@ -81,13 +81,15 @@ theorem acceptThroughOuterHitPull1Description_haltsFrom
       acceptThroughRejectHitPull4Description_subroutineReady
       pullOneBitJ2Description_subroutineReady
       hprev hbridge
-      (acceptJ2_haltsFrom p acTail false
-        [true, p.L.rejectHit, !p.L.rejectHit]
-        (List.append
-          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
-          [false, true, p.S.hit])
-          (stageTail.length + 8) (!p.S.hit)
-          (List.replicate 5 none))
+      (by
+        simpa [List.append_assoc] using
+          (acceptJ2_haltsFrom p acTail false
+            [true, p.L.rejectHit, !p.L.rejectHit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false, true, p.S.hit])
+            (stageTail.length + 8) (!p.S.hit)
+            (List.replicate 5 none)))
 
 @[irreducible] def acceptThroughOuterHitPull2Description : MachineDescription :=
   canonicalSeqDescription
@@ -122,20 +124,24 @@ theorem acceptThroughOuterHitPull2Description_haltsFrom
       acceptThroughOuterHitPull1Description_subroutineReady
       pullOneBitJ2Description_subroutineReady
       hprev
-      (acceptJ2OutputTape_canonicalBridge p acTail false
-        [true, p.L.rejectHit, !p.L.rejectHit]
-        (List.append
-          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
-          [false, true])
-        (stageTail.length + 8) p.S.hit (!p.S.hit)
-        (List.replicate 5 none))
-      (acceptJ2_haltsFrom p acTail (!p.S.hit)
-        [false, true, p.L.rejectHit, !p.L.rejectHit]
-        (List.append
-          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
-          [false, true])
-        (stageTail.length + 8) p.S.hit
-        (none :: List.replicate 5 none))
+      (by
+        simpa [List.append_assoc] using
+          (acceptJ2OutputTape_canonicalBridge p acTail false
+            [true, p.L.rejectHit, !p.L.rejectHit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false, true])
+            (stageTail.length + 8) p.S.hit (!p.S.hit)
+            (List.replicate 5 none)))
+      (by
+        simpa [List.append_assoc] using
+          (acceptJ2_haltsFrom p acTail (!p.S.hit)
+            [false, true, p.L.rejectHit, !p.L.rejectHit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false, true])
+            (stageTail.length + 8) p.S.hit
+            (none :: List.replicate 5 none)))
 
 @[irreducible] def acceptThroughOuterHitPull3Description : MachineDescription :=
   canonicalSeqDescription
@@ -170,20 +176,24 @@ theorem acceptThroughOuterHitPull3Description_haltsFrom
       acceptThroughOuterHitPull2Description_subroutineReady
       pullOneBitJ2Description_subroutineReady
       hprev
-      (acceptJ2OutputTape_canonicalBridge p acTail (!p.S.hit)
-        [false, true, p.L.rejectHit, !p.L.rejectHit]
-        (List.append
-          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
-          [false])
-        (stageTail.length + 8) true p.S.hit
-        (none :: List.replicate 5 none))
-      (acceptJ2_haltsFrom p acTail p.S.hit
-        [!p.S.hit, false, true, p.L.rejectHit, !p.L.rejectHit]
-        (List.append
-          (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
-          [false])
-        (stageTail.length + 8) true
-        (none :: none :: List.replicate 5 none))
+      (by
+        simpa [List.append_assoc] using
+          (acceptJ2OutputTape_canonicalBridge p acTail (!p.S.hit)
+            [false, true, p.L.rejectHit, !p.L.rejectHit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false])
+            (stageTail.length + 8) true p.S.hit
+            (none :: List.replicate 5 none)))
+      (by
+        simpa [List.append_assoc] using
+          (acceptJ2_haltsFrom p acTail p.S.hit
+            [!p.S.hit, false, true, p.L.rejectHit, !p.L.rejectHit]
+            (List.append
+              (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
+              [false])
+            (stageTail.length + 8) true
+            (none :: none :: List.replicate 5 none)))
 
 @[irreducible] def acceptThroughOuterHitPull4Description : MachineDescription :=
   canonicalSeqDescription
