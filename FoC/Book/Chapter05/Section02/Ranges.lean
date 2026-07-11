@@ -1,4 +1,7 @@
-import FoC.Book.Chapter05.Section02.MachineCompiler
+import FoC.Book.Chapter05.Section02.ConstructionStatus
+import FoC.Book.Chapter05.Section02.Dovetailing
+import FoC.Computability.Compiler.UniversalAndRanges.Ranges
+import FoC.Computability.FiniteProgram
 
 set_option doc.verso true
 

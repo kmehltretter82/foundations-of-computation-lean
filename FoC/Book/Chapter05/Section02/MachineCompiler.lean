@@ -1,4 +1,7 @@
-import FoC.Book.Chapter05.Section02.Dovetailing
+import FoC.Computability.Compiler.Core.BoundedTrace
+import FoC.Computability.Compiler.Core.Closeout
+import FoC.Computability.Compiler.Core.ConstructionTargets
+import FoC.Computability.Compiler.Core.SearchDrivers
 
 set_option doc.verso true
 

@@ -1,4 +1,7 @@
-import FoC.Book.Chapter05.Section02.Ranges
+import FoC.Book.Chapter05.Section02.ConstructionStatus
+import FoC.Book.Chapter05.Section02.Dovetailing
+import FoC.Computability.Compiler.Core.Language
+import FoC.Computability.FiniteProgram
 import FoC.Computability.Grammar.Closeouts
 
 set_option doc.verso true

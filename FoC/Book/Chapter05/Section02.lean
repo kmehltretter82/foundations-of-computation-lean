@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section02.Vocabulary
+import FoC.Book.Chapter05.Section02.ConstructionStatus
 import FoC.Book.Chapter05.Section02.Dovetailing
 import FoC.Book.Chapter05.Section02.MachineCompiler
 import FoC.Book.Chapter05.Section02.Ranges
@@ -13,5 +14,12 @@ set_option doc.verso true
 This module provides the supporting declarations and helper lemmas for
 Section 5.2. It compares recursive, recursively enumerable, listable,
 range, and general-grammar views of computability.
+
+This wrapper is the re-export point for the section pages.  The pages form a
+shallow dependency graph rather than a linear chain: the vocabulary and
+machine-compiler pages depend only on reusable computability modules, the
+construction-status page defines the named compiler hypotheses, and the
+dovetailing, ranges, grammar, and closeout pages import only the pages whose
+declarations they actually use.
 -/
 

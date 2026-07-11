@@ -1,4 +1,8 @@
+import FoC.Book.Chapter05.Section02.ConstructionStatus
+import FoC.Book.Chapter05.Section02.Dovetailing
 import FoC.Book.Chapter05.Section02.Grammars
+import FoC.Book.Chapter05.Section02.Ranges
+import FoC.Book.Chapter05.Section02.Vocabulary
 import FoC.Computability.Transform
 
 set_option doc.verso true

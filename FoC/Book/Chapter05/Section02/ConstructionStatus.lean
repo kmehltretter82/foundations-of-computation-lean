@@ -1,4 +1,3 @@
-import FoC.Book.Chapter05.Section02.Vocabulary
 import FoC.Computability.Compiler.Core.BoundedTrace
 import FoC.Computability.Compiler.Core.ConstructionTargets
 import FoC.Computability.Compiler.Core.ControllerCloseout
