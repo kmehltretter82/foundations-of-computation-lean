@@ -177,6 +177,76 @@ theorem leads_step [DecidableEq sigma]
   exact
     ⟨1, executesIn_one_of_next M hstate tape0 tape1 tape2 hnext⟩
 
+/-!
+## List and unary induction combinators
+
+These fold the repeated inductive counting loops that every phase file
+currently hand-rolls into two reusable leads.  The list form threads an
+accumulator through a left fold; the unary form drives a natural-number indexed
+configuration family down to zero.  Both come in a step-count-free lead variant
+for phase composition and an exact fixed-cost execution variant for callers
+that need the total compiled step count.
+-/
+
+/-- Compose a fixed per-element execution across an entire list. -/
+theorem executesIn_list {alpha beta : Type}
+    (stepCost : Nat)
+    (inv : List alpha -> beta -> TypedThreeTapeConfig sigma)
+    (update : beta -> alpha -> beta)
+    (hstep : forall (x : alpha) (xs : List alpha) (acc : beta),
+      M.ExecutesIn stepCost (inv (x :: xs) acc) (inv xs (update acc x)))
+    (input : List alpha) (acc : beta) :
+    M.ExecutesIn (stepCost * input.length)
+      (inv input acc) (inv [] (input.foldl update acc)) := by
+  induction input generalizing acc with
+  | nil => simpa using ExecutesIn.refl M (inv [] acc)
+  | cons x xs ih =>
+      have h := ExecutesIn.trans M (hstep x xs acc) (ih (update acc x))
+      have hc : stepCost * (x :: xs).length = stepCost + stepCost * xs.length := by
+        rw [List.length_cons, Nat.mul_succ]; exact Nat.add_comm _ _
+      rw [hc, List.foldl_cons]
+      exact h
+
+/-- Step-count-free list composition. -/
+theorem leads_list {alpha beta : Type}
+    (inv : List alpha -> beta -> TypedThreeTapeConfig sigma)
+    (update : beta -> alpha -> beta)
+    (hstep : forall (x : alpha) (xs : List alpha) (acc : beta),
+      M.Leads (inv (x :: xs) acc) (inv xs (update acc x)))
+    (input : List alpha) (acc : beta) :
+    M.Leads (inv input acc) (inv [] (input.foldl update acc)) := by
+  induction input generalizing acc with
+  | nil => exact Leads.refl M _
+  | cons x xs ih =>
+      rw [List.foldl_cons]
+      exact Leads.trans M (hstep x xs acc) (ih (update acc x))
+
+/-- Drive a fixed per-step execution down a natural-number indexed family. -/
+theorem executesIn_unary
+    (stepCost : Nat)
+    (inv : Nat -> TypedThreeTapeConfig sigma)
+    (hstep : forall (n : Nat), M.ExecutesIn stepCost (inv (n + 1)) (inv n))
+    (n : Nat) :
+    M.ExecutesIn (stepCost * n) (inv n) (inv 0) := by
+  induction n with
+  | zero => simpa using ExecutesIn.refl M (inv 0)
+  | succ k ih =>
+      have h := ExecutesIn.trans M (hstep k) ih
+      have hc : stepCost * (k + 1) = stepCost + stepCost * k := by
+        rw [Nat.mul_succ]; exact Nat.add_comm _ _
+      rw [hc]
+      exact h
+
+/-- Step-count-free unary drive down a natural-number indexed family. -/
+theorem leads_unary
+    (inv : Nat -> TypedThreeTapeConfig sigma)
+    (hstep : forall (n : Nat), M.Leads (inv (n + 1)) (inv n))
+    (n : Nat) :
+    M.Leads (inv n) (inv 0) := by
+  induction n with
+  | zero => exact Leads.refl M _
+  | succ k ih => exact Leads.trans M (hstep k) ih
+
 end TypedStateTable
 
 end MultiTapeLowering
