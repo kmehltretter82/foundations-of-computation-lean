@@ -587,12 +587,13 @@ completed:
     status: "proved_semantics_with_conditional_compiler_boundaries"
     generated_metrics:
       module_prefix: "FoC.Book.Chapter05"
-      theorem_declarations: 621
-      definition_declarations: 197
+      theorem_declarations: 620
+      definition_declarations: 181
       inductive_declarations: 4
       constructor_declarations: 4
       depends_on_sorry: 0
-      generated_from: "scripts/export-declarations.lean --raw-only"
+      normalized_duplicate_theorem_types: 0
+      generated_from: "scripts/export-declarations.lean"
     open_sorries:
       total: 20
       by_file:
