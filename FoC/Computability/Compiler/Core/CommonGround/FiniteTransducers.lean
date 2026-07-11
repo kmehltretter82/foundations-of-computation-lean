@@ -3,19 +3,14 @@ import FoC.Computability.Compiler.FST.BoolRawInput.Contracts
 import FoC.Computability.Compiler.FST.BoolRawInput.EndpointRoute
 import FoC.Computability.Compiler.FST.CountWindow.Contracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AppendWord
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AlternatingOptionAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.BoundaryEraser
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Compaction
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.DeleteWindow
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.EraseAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.FixedSkips
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.GapPayloadScan
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.LeftShiftCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MapAppend
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionAppend
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionSpecializations
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RewriteWrites
@@ -27,19 +22,16 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializerContracts
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredLowering
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.TwoStateOptionAppend
 
 set_option doc.verso true
 
 /-!
 # Certified finite transducer helpers
 
-This compatibility module re-exports the finite-transducer core, generated
-append-word, erase-append, bit-map append, optional-output append, generated
-arbitrary-state and two-state optional-output, and alternating optional-output
-compiler slices, their specialization links, the physical compaction shape
-helpers, the padded-input identity contract, the generic stateful optional-output
-append invariant, the reusable right-edge rewind adapter, and the structured
-logical-tape machine layer with its first primitive programs and restricted
-one-tape lowering fragment.
+This compatibility module re-exports the finite-transducer core, the generated
+append-word and arbitrary-state optional-output compiler slices, the physical
+compaction shape helpers, the padded-input identity contract, the generic
+stateful optional-output append invariant, the reusable right-edge rewind
+adapter, and the structured logical-tape machine layer with its first primitive
+programs and restricted one-tape lowering fragment.
 -/

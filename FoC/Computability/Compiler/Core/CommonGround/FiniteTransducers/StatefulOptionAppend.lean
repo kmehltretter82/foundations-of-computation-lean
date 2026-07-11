@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OptionAppend
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AppendWord
 
 set_option doc.verso true
 
@@ -18,6 +18,12 @@ open MachineDescription
 
 namespace CommonGround
 namespace FiniteTransducers
+
+def optionEmitWord (emit : Bool -> Option Bool) (bit : Bool) :
+    Word Bool :=
+  match emit bit with
+  | none => []
+  | some out => [out]
 
 def statefulOptionAfter
     (next : Nat -> Bool -> Nat) :
