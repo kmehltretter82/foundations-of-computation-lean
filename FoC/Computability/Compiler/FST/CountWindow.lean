@@ -9,7 +9,6 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Mirror
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.CountedSuffixExtraBlankRestorer
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary
-import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Contracts
 
 set_option doc.verso true
 
@@ -1359,84 +1358,6 @@ def CountWindowRawSourceEncoderRawBoundaryEmitterEquivConstruction :
     Prop :=
   exists emitter : MachineDescription,
     CountWindowRawSourceEncoderRawBoundaryEmitterEquivSpec emitter
-
-def CountWindowRawSourceEncoderRawBoundaryOutputRouteFamily : Prop :=
-  forall (skipped count : Word Bool)
-    (tailFirst : Bool) (tail : List (Option Bool)),
-    exists emitter : MachineDescription,
-      emitter.SubroutineReady ∧
-        emitter.HaltsFromTapeWithOutput
-          (countWindowRawSourceEncoderRawBoundaryTape
-            skipped count (some tailFirst :: tail))
-          (Tape.normalizedOutput
-            (countWindowRawSourceEncoderTargetTapeNoCountPadding
-              skipped count (some tailFirst :: tail)))
-
-theorem countWindowRawSourceEncoderRawBoundaryOutputRouteFamily_blankSentinel :
-    CountWindowRawSourceEncoderRawBoundaryOutputRouteFamily := by
-  intro skipped count tailFirst tail
-  refine
-    ⟨CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription
-        skipped count tailFirst,
-      ?_, ?_⟩
-  · exact
-      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
-        skipped count tailFirst
-  · have hroute :=
-      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundary_blankSentinelEndToEnd_haltsWithOutput
-        skipped count tailFirst tail
-    simpa [
-      countWindowRawSourceEncoderRawBoundaryTape,
-      CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape,
-      countWindowRawSourceEncoderTargetTapeNoCountPadding_normalizedOutput]
-      using hroute
-
-def CountWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily : Prop :=
-  forall (skipped count : Word Bool)
-    (tailFirst : Bool) (tail : List (Option Bool)),
-    exists emitter : MachineDescription,
-      emitter.SubroutineReady ∧
-        emitter.HaltsFromTapeEquiv
-          (countWindowRawSourceEncoderRawBoundaryTape
-            skipped count (some tailFirst :: tail))
-          (countWindowRawSourceEncoderTargetTapeNoCountPadding
-            skipped count (some tailFirst :: tail))
-
-theorem countWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily_blankSentinel :
-    CountWindowRawSourceEncoderRawBoundaryEmitterEquivRouteFamily := by
-  intro skipped count tailFirst tail
-  let route :=
-    CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription
-      skipped count tailFirst
-  refine
-    ⟨CommonGround.SameHeadComposition.leftRightSeqDescription
-        route rightEdgeRewindDescription,
-      ?_, ?_⟩
-  · exact
-      CommonGround.SameHeadComposition.leftRightSeqDescription_subroutineReady
-        (CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
-          skipped count tailFirst)
-        rightEdgeRewindDescription_subroutineReady
-  · exact
-      CommonGround.SameHeadComposition.leftRightSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
-        (CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundaryBlankSentinelRouteDescription_subroutineReady
-          skipped count tailFirst)
-        rightEdgeRewindDescription_subroutineReady
-        (by
-          simpa [route, countWindowRawSourceEncoderRawBoundaryTape,
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.sourceTape] using
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rawBoundary_blankSentinelEndToEnd_haltsEquiv
-              skipped count tailFirst tail)
-        (by
-          simpa [countWindowRawSourceEncoderEncodedLayoutRightEdgeTape,
-            countWindowRawSourceEncoderEncodedLayoutBits,
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.rightEdgeTape,
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape,
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.encodedLayoutBits] using
-            CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter.preRewindTape_moveRight
-              skipped count tailFirst tail)
-        (countWindowRawSourceEncoderEncodedLayoutRightEdgeTape_rewind_haltsFromTape
-          skipped count tailFirst tail).toEquiv
 
 theorem countWindowRawSourceEncoderCountWindowStartEmitterEquivConstruction_of_rawBoundaryEmitter
     (hemitter :
