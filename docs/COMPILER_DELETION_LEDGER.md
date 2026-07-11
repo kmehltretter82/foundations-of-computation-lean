@@ -102,6 +102,50 @@ comparison.
   without one of these distinctions. Recover only that distinction and attach
   it to the live construction.
 
+### False selected-footprint ingress and exact-padding bridge lattice
+
+- Deleting commit: this change (`Retire false selected-footprint bridge
+  lattice`).
+- Net reduction: 5,003 Compiler lines within the sorry #15 campaign.
+- Old paths:
+  - `ClosedCfg/ProjTail/SelectedFootprintCompaction/BridgeCore.lean` and
+    `ThreeTapeBridge.lean`;
+  - the internal `SelectedFootprintCompactionEndpoint.lean`,
+    `SelectedFootprintCompactionPaddingSplit.lean`, and
+    `SelectedFootprintCompactionPaddingOutput.lean` facades;
+  - the compatibility-only `SelectedFootprintCompaction/Base.lean` barrel;
+  - the payload-wide ingress construction leaf formerly in
+    `Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean`.
+- Potentially reusable ideas: exact source/rewind endpoint views, explicit
+  bit/separator/padding splits, nil/cons case decomposition, and composition
+  of an ingress materializer, lowered three-tape compactor, separator focus,
+  and tape-2 projector.
+- Why retired: the route's contracts are inconsistent under `Tape.Equiv`.
+  Payloads `[]` and `[none]` collide behind the concrete six-blank prefix but
+  demand different guarded targets. Likewise, `([], [some true])` and
+  `([], [none, some true])` collide at the arbitrary compactor source but
+  demand different exact rewind head layouts. Exhaustive reference search
+  found no consumer for the endpoint/padding facades outside this false
+  lattice.
+- Current route: `SelectedFootprintCompaction/ContractGuardrails.lean` records
+  both counterexamples and proves target functionality for the narrower live
+  `(useAccept, DovetailLayout)` family. `EndpointFrontier.lean` contains the
+  sole indexed construction obligation. The seven externally used facts moved
+  to the shape, output, and guardrail modules that own them.
+- Algorithms kept: the completed lowered pair-encoded compactor and its
+  projectable separator focus remain in
+  `Structured/Lowering/PairEncodedOptionCellCompactor/Lowered.lean` and
+  `ProjectableFocus.lean`; the structured tape-2 projector and adjacent
+  pair-parity prefix scan also remain. A normalized-output weakening of the
+  retired endpoint is sound in principle because it does not observe exact
+  blank padding or head position, but its spec and adapters were also removed
+  because no current declaration consumed them.
+- Reconsider only if: a checked source family supplies an injective physical
+  frame, such as a nonblank sentinel or explicit length/alignment field, and
+  first proves target functionality on `Tape.Equiv` classes. Recover only the
+  needed endpoint theorem or adapter from Git; do not restore the arbitrary
+  payload/padding lattice wholesale.
+
 ### Unreachable padded-output and run-loop branches
 
 - Deleting commit: `deebb902` (`Remove unreachable compiler surfaces`)

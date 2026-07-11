@@ -339,6 +339,16 @@ theorem selectedSegmentLogicalTapeDecoderFootprintCells_eq_fromPayload
         selectedSegmentLogicalTapeDecoderPayloadCells,
         List.append_assoc]
 
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintCells_length
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+      bits padding).length =
+      10 + 2 * bits.length + 2 * padding.length := by
+  rw [selectedSegmentLogicalTapeDecoderFootprintCells_eq_fromPayload,
+    selectedSegmentLogicalTapeDecoderFootprintCellsFromPayload_length,
+    selectedSegmentLogicalTapeDecoderPayloadCells_length]
+  lia
+
 theorem selectedSegmentLogicalTapeDecoderFootprintCells_eq_guardPrefix_payload
     (bits : Word Bool) (padding : List (Option Bool)) :
     selectedSegmentLogicalTapeDecoderDensifierFootprintCells
@@ -428,6 +438,19 @@ theorem selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload_cells_eq
         [none] := by
   rw [selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload_cells]
   rfl
+
+theorem selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells_eq_footprint
+    (bits : Word Bool) (padding : List (Option Bool)) :
+    Tape.cells
+        (selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape
+          bits padding) =
+      none ::
+        List.append
+          (selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+            bits padding)
+          [none, none] := by
+  rw [selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape_cells]
+  simp [selectedSegmentLogicalTapeDecoderDensifierSourceCells]
 
 theorem selectedSegmentLogicalTapeDecoderFootprintSourceTapeFromPayload_cells_filterMap
     (payload : List (Option Bool)) :

@@ -641,35 +641,6 @@ theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompacto
       countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputSpec_of_exact
         hspec⟩
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputSpec_of_generic
-    {compactor : MachineDescription}
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputSpec
-        compactor) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputSpec
-      compactor := by
-  rcases hgeneric with ⟨hready, hrun⟩
-  refine ⟨hready, ?_⟩
-  intro useAccept L
-  simpa [
-    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape,
-    countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape,
-    selectedSegmentLogicalTapeDecoderDensifierFootprintSourceTape,
-    selectedSegmentLogicalTapeDecoderDensifierFootprintTargetTape,
-    postFieldDecodedPrefixScanSourceTape] using
-    hrun (ParsedLayoutBits L)
-      (postFieldDecodedPrefixScanPadding useAccept L)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputConstruction_of_generic
-    (hgeneric :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorOutputConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputConstruction := by
-  rcases hgeneric with ⟨compactor, hspec⟩
-  exact
-    ⟨compactor,
-      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOutputSpec_of_generic
-        hspec⟩
-
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchOutputSpec_of_casesOutput
     {eraser : MachineDescription}
     (hcases :

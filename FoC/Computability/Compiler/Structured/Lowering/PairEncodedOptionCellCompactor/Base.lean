@@ -81,6 +81,27 @@ theorem encodedCells_append_singleton
     encodedCells cells = [] ↔ cells = [] := by
   cases cells <;> simp
 
+theorem encodedCells_inj
+    {xs ys : List (Option Bool)}
+    (h : encodedCells xs = encodedCells ys) :
+    xs = ys := by
+  induction xs generalizing ys with
+  | nil =>
+      cases ys with
+      | nil => rfl
+      | cons y ys =>
+          simp at h
+  | cons x xs ih =>
+      cases ys with
+      | nil =>
+          simp at h
+      | cons y ys =>
+          simp only [encodedCells_cons] at h
+          injection h with _ hrest
+          injection hrest with hxy htail
+          subst y
+          rw [ih htail]
+
 @[simp] theorem mappedSelectedCells_flatten_eq_nil_iff
     (cells : List (Option Bool)) :
     (List.map selectedSegmentLogicalTapeDecoderCellCells cells).flatten = [] ↔
@@ -240,15 +261,6 @@ theorem payloadIngressTargetFamilySpec_haltsFromTapeEquiv
       (source input)
       (payloadIngressTargetTape (payload input)) :=
   hspec.right input
-
-theorem fixedPrefixPayloadIngressTargetFamilyConstruction_core
-    (fixedPrefix : List (Option Bool)) :
-    FixedPrefixPayloadIngressTargetFamilyConstruction fixedPrefix := by
-  -- Remaining shared finite-machine ingress obligation: skip the fixed
-  -- prefix, decode pair-encoded payload cells into tape 0, emit one marker per
-  -- payload cell on tape 1, and leave tape 2 at the blank compactor output
-  -- buffer.
-  sorry
 
 /-!
 ## Split-target separator focus route

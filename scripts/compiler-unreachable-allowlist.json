@@ -134,6 +134,24 @@
     },
     {
       "category": "public-facade",
+      "intended_consumer": "Sorry #15 live indexed footprint compactor",
+      "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor",
+      "reason": "Optional barrel for the preserved pair-encoded implementation modules."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #15 live indexed footprint compactor",
+      "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor.Lowered",
+      "reason": "Completed lowered three-tape pair compactor retained as an implementation component for the repaired frontier."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #15 live indexed footprint compactor",
+      "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor.ProjectableFocus",
+      "reason": "Completed projectable separator-focus machine retained for a future source-functional endpoint route."
+    },
+    {
+      "category": "public-facade",
       "intended_consumer": "Optional dispatcher-assembly imports",
       "module": "FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly",
       "reason": "One-line public facade; production users import focused child modules directly."

@@ -1,6 +1,17 @@
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompaction.Base
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompaction.ContractGuardrails
 
 set_option doc.verso true
+
+/-!
+# Live selected-footprint compactor frontier
+
+The retired frontier quantified over arbitrary payloads, bits, and padding.
+That family is inconsistent modulo {lit}`Tape.Equiv`; the guardrail module
+records two concrete collisions.  The remaining construction is indexed only
+by the count-window inputs that reach this phase.  Its target is functional on
+source equivalence classes by the functionality theorem in the imported
+guardrail module.
+-/
 
 namespace FoC
 namespace Computability
@@ -17,141 +28,19 @@ namespace SelectedProjectionPaddedTailCleanup
 open CanonicalLayouts.DovetailLayoutScanner
 
 /--
-Remaining endpoint bridge leaves for selected-footprint compaction.
+The sole remaining selected-footprint construction obligation.
 
-The lowered three-tape compactor is complete.  Ingress materializes the old
-selected-footprint source tape as the guarded three-tape input.  Egress is
-split by the same nil/cons and padding-symbol cases used by the one-tape
-selected-footprint bridge; this keeps the exact cursor-positioning obligations
-separate from the endpoint composition glue.
+For each live branch and parsed layout, compact the decoder footprint to the
+right-edge rewind tape.  {name}`ParsedLayoutBits` begins with two represented bits,
+which is the clean source premise missing from the old arbitrary-payload
+frontier.
 -/
-theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_of_pairEncoded
-      (PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core
-        selectedSegmentLogicalTapeDecoderGuardPrefixCells)
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerSplitConstruction_of_construction
-      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_of_payload
-      selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_of_inputMaterializer
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeInputMaterializerConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_of_pairEncoded
-      PairEncodedOptionCellCompactor.splitTargetProjectableRightEdgeRewindOutputConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectorConstruction_core :
-    StructuredTape2ProjectorConstruction :=
-  structuredTape2ProjectorConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction := by
-  exact
-    structuredEgressConstruction_ofProjectableFocusProjector
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectableSeparatorFocusConstruction_core
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeProjectorConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_of_structuredEgress
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeStructuredEgressConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction_of_splitPadSymbolCases
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressSplitPadSymbolCaseConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction_of_ingress_egress
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeIngressBridgeConstruction_core
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEgressBridgeConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_of_threeTapeEndpointBridge
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitThreeTapeEndpointBridgeConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_paddingSplit
-    (hpadding :
-      SelectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction) :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_guardedFootprint
-      (guardedLogicalTapeDecoderFootprintCompactorSplitConstruction_of_construction
-        (guardedLogicalTapeDecoderFootprintCompactorConstruction_of_paddingSplit
-          (selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorConstruction_of_split
-            hpadding)))
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_of_paddingSplit
-      selectedSegmentLogicalTapeDecoderFootprintPaddingSplitCompactorSplitConstruction_core
-
-theorem selectedFootprintCompactorBridgeConstruction_core :
-    SelectedFootprintCompactorBridgeConstruction := by
-  exact
-    selectedFootprintCompactorBridgeConstruction_of_rightEndBridgeSplit
-      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_of_split
-      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeSplitConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_of_rightEndBridge
-      selectedSegmentLogicalTapeDecoderFootprintCompactorRightEndBridgeConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_of_split
-      selectedSegmentLogicalTapeDecoderFootprintCompactorSplitPadSymbolCaseConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_of_padSymbolCases
-      selectedSegmentLogicalTapeDecoderFootprintCompactorPadSymbolCaseConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
-      selectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core :
-    SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
-      selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_core
-
-
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
+  -- Classified finite-machine obligation: construct one subroutine for the
+  -- live `(useAccept, DovetailLayout)` source family.  Do not generalize this
+  -- back to arbitrary payloads; ContractGuardrails proves that claim false.
+  sorry
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner

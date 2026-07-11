@@ -75,12 +75,6 @@ theorem segmentNormalizerConstruction_ofBranchFootprintCases
                   (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
                     hcases))⟩)))
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
-      selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_core
-
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_prefixEraser
     (hprefix :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :

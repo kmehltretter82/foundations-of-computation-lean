@@ -3,17 +3,27 @@
   "base_commit": "913ba25995eaba414cb8894067880020e251785f",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean",
-    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/EndpointFrontier.lean"
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionShape.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ContractGuardrails.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/EndpointFrontier.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Output.lean"
   ],
-  "frontier": "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core",
+  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core",
   "name": "sorry-15-pair-encoded-payload-ingress",
   "paths": [
     "FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor",
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction",
-    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean"
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionShape.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionEndpoint.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionPaddingSplit.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionPaddingOutput.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Output.lean"
   ],
   "required_axiom_clean": [
-    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core",
-    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core"
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_core"
   ]
 }
