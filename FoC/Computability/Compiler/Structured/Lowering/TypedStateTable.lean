@@ -57,6 +57,82 @@ structure TypedStep (σ : Type) where
   action2 : TapeAction
 
 /--
+First-occurrence index of an element in a list.
+
+Unlike a bare position count this indexer needs no duplicate-freeness for
+injectivity on members: two members with the same first occurrence are equal.
+-/
+def listIndexOf {σ : Type} [DecidableEq σ] : List σ -> σ -> Nat
+  | [], _ => 0
+  | x :: xs, s => if x = s then 0 else listIndexOf xs s + 1
+
+theorem listIndexOf_lt_length {σ : Type} [DecidableEq σ] :
+    forall {l : List σ} {s : σ}, s ∈ l ->
+      listIndexOf l s < l.length := by
+  intro l
+  induction l with
+  | nil =>
+      intro s hs
+      cases hs
+  | cons x xs ih =>
+      intro s hs
+      by_cases hx : x = s
+      · simp [listIndexOf, hx]
+      · have hs' : s ∈ xs := by
+          rcases List.mem_cons.mp hs with heq | hmem
+          · exact absurd heq.symm hx
+          · exact hmem
+        have := ih hs'
+        simp [listIndexOf, hx]
+        exact this
+
+theorem listIndexOf_inj {σ : Type} [DecidableEq σ] :
+    forall {l : List σ} {s t : σ}, s ∈ l -> t ∈ l ->
+      listIndexOf l s = listIndexOf l t -> s = t := by
+  intro l
+  induction l with
+  | nil =>
+      intro s t hs
+      cases hs
+  | cons x xs ih =>
+      intro s t hs ht hid
+      by_cases hxs : x = s
+      · by_cases hxt : x = t
+        · rw [← hxs, hxt]
+        · rw [show listIndexOf (x :: xs) s = 0 by
+              simp [listIndexOf, hxs]] at hid
+          rw [show listIndexOf (x :: xs) t =
+              listIndexOf xs t + 1 by
+              simp [listIndexOf, hxt]] at hid
+          cases hid
+      · by_cases hxt : x = t
+        · rw [show listIndexOf (x :: xs) t = 0 by
+              simp [listIndexOf, hxt]] at hid
+          rw [show listIndexOf (x :: xs) s =
+              listIndexOf xs s + 1 by
+              simp [listIndexOf, hxs]] at hid
+          cases hid
+        · have hs' : s ∈ xs := by
+            rcases List.mem_cons.mp hs with heq | hmem
+            · exact absurd heq.symm hxs
+            · exact hmem
+          have ht' : t ∈ xs := by
+            rcases List.mem_cons.mp ht with heq | hmem
+            · exact absurd heq.symm hxt
+            · exact hmem
+          have hid' :
+              listIndexOf xs s = listIndexOf xs t := by
+            have h1 : listIndexOf (x :: xs) s =
+                listIndexOf xs s + 1 := by
+              simp [listIndexOf, hxs]
+            have h2 : listIndexOf (x :: xs) t =
+                listIndexOf xs t + 1 := by
+              simp [listIndexOf, hxt]
+            rw [h1, h2] at hid
+            exact Nat.succ.inj hid
+          exact ih hs' ht' hid'
+
+/--
 A typed three-tape state table.
 
 {lit}`next` is the semantic transition function; {lit}`states` enumerates the
@@ -473,6 +549,38 @@ theorem stepConfig_config_none [DecidableEq σ]
         (ThreeTape.config (M.stateId s) T0 T1 T2) = none := by
   rw [M.stepConfig_config hs T0 T1 T2, hnext]
   rfl
+
+/--
+Build a typed state table from an enumeration list, indexing states by first
+occurrence.  Duplicates in the enumeration are harmless: they compile to
+duplicate identical rows.
+-/
+def ofList {σ : Type} [DecidableEq σ]
+    (states : List σ) (start halt : σ)
+    (next :
+      σ -> Option Bool -> Option Bool -> Option Bool ->
+        Option (TypedStep σ))
+    (start_mem : start ∈ states)
+    (halt_mem : halt ∈ states)
+    (halt_next :
+      forall r0 r1 r2 : Option Bool, next halt r0 r1 r2 = none)
+    (next_target_mem :
+      forall s : σ, s ∈ states ->
+        forall r0 r1 r2 : Option Bool, forall st : TypedStep σ,
+          next s r0 r1 r2 = some st -> st.target ∈ states) :
+    TypedStateTable σ where
+  states := states
+  stateCount := states.length
+  stateId := listIndexOf states
+  start := start
+  halt := halt
+  next := next
+  start_mem := start_mem
+  halt_mem := halt_mem
+  stateId_lt := fun _s hs => listIndexOf_lt_length hs
+  stateId_inj := fun _s hs _t ht hid => listIndexOf_inj hs ht hid
+  halt_next := halt_next
+  next_target_mem := next_target_mem
 
 end TypedStateTable
 
