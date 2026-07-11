@@ -748,8 +748,8 @@ scratch-width markers.  The remaining phase must preserve tape 1, decode the
 state and exact configuration tape, prepend canonical input/stage/state
 metadata behind the scratch block, put the hit bit at the tape-2 head, and
 reserve the finite D-specific classification selector in the markers nearest
-the hit.  A plain unclassified {name}`FieldDecomposition.loopTargetTape`
-handoff would lose the input-dependent dispatcher control. -/
+the hit.  An unclassified handoff would lose the input-dependent dispatcher
+control. -/
 def PostStageSpec
     (D : MachineDescription) (parser : MachineDescription) : Prop :=
   parser.SubroutineReady ∧

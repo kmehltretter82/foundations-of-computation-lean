@@ -14,8 +14,9 @@ The machine temporarily writes {lit}`false` at that tape-2 blank, walks left
 across the selector and scratch markers, preserves the first blank as the
 metadata delimiter, and copies the already-scanned input/stage/raw-state prefix
 backward from tape 0.  A four-bit lag discards exactly the fixed header token.
-It then reparses the preserved prefix forward to restore tape 0 to the exact
-configuration boundary and walks tape 2 right to the temporary false head.
+It restores tape 0 to the header of the complete preserved layout and walks
+tape 2 right to the temporary false head.  The next phase therefore needs only
+one forward scan through the prefix and configuration.
 
 The selector and remaining scratch cells are read but never changed.  The
 temporary false head is deliberately left for the final configuration/hit
@@ -55,11 +56,6 @@ inductive State where
   | copy3 (a b c : Bool)
   | copy4 (a b c d : Bool)
   | copy4p (a b c d pending : Bool)
-  | hdr0 | hdr1 | hdr2 | hdr3
-  | inLen0 | inLen1 | inLen2 | inLen3
-  | inBits0 | inBits1 | inBits2 | inBits3
-  | stage0 | stage1 | stage2 | stage3
-  | state0 | state1 | state2 | state3
   | outputEnter
   | metadataRight
   | scratchRight
@@ -97,12 +93,7 @@ def copyStates : List State :=
 def states : List State :=
   [ .start, .scratchLeft, .copyEnter ] ++
     copyStates ++
-    [ .hdr0, .hdr1, .hdr2, .hdr3
-    , .inLen0, .inLen1, .inLen2, .inLen3
-    , .inBits0, .inBits1, .inBits2, .inBits3
-    , .stage0, .stage1, .stage2, .stage3
-    , .state0, .state1, .state2, .state3
-    , .outputEnter, .metadataRight, .scratchRight, .halt ]
+    [ .outputEnter, .metadataRight, .scratchRight, .halt ]
 
 theorem state_mem (s : State) : s ∈ states := by
   cases s with
@@ -120,33 +111,13 @@ theorem state_mem (s : State) : s ∈ states := by
       simp [states, copyStates, bool_mem_boolValues]
   | copy4p a b c d pending =>
       simp [states, copyStates, bool_mem_boolValues]
-  | hdr0 => simp [states]
-  | hdr1 => simp [states]
-  | hdr2 => simp [states]
-  | hdr3 => simp [states]
-  | inLen0 => simp [states]
-  | inLen1 => simp [states]
-  | inLen2 => simp [states]
-  | inLen3 => simp [states]
-  | inBits0 => simp [states]
-  | inBits1 => simp [states]
-  | inBits2 => simp [states]
-  | inBits3 => simp [states]
-  | stage0 => simp [states]
-  | stage1 => simp [states]
-  | stage2 => simp [states]
-  | stage3 => simp [states]
-  | state0 => simp [states]
-  | state1 => simp [states]
-  | state2 => simp [states]
-  | state3 => simp [states]
   | outputEnter => simp [states]
   | metadataRight => simp [states]
   | scratchRight => simp [states]
   | halt => simp [states]
 
 /-- Copy metadata backward, discard the four-bit header held at the left edge,
-reparse to the configuration boundary, and return to the marked tape-2 head. -/
+restore the original header cursor, and return to the marked tape-2 head. -/
 def next :
     State -> Option Bool -> Option Bool -> Option Bool ->
       Option (TypedStep State)
@@ -172,55 +143,7 @@ def next :
       some ⟨.copy4p b c d bit a,
         keepL, keepS, writeL (some pending)⟩
   | .copy4p false false false false pending, none, _, _ =>
-      some ⟨.hdr0, keepR, keepS, writeS (some pending)⟩
-  | .hdr0, some false, _, _ =>
-      some ⟨.hdr1, keepR, keepS, keepS⟩
-  | .hdr1, some false, _, _ =>
-      some ⟨.hdr2, keepR, keepS, keepS⟩
-  | .hdr2, some false, _, _ =>
-      some ⟨.hdr3, keepR, keepS, keepS⟩
-  | .hdr3, some false, _, _ =>
-      some ⟨.inLen0, keepR, keepS, keepS⟩
-  | .inLen0, some false, _, _ =>
-      some ⟨.inLen1, keepR, keepS, keepS⟩
-  | .inLen1, some false, _, _ =>
-      some ⟨.inLen2, keepR, keepS, keepS⟩
-  | .inLen2, some true, _, _ =>
-      some ⟨.inLen3, keepR, keepS, keepS⟩
-  | .inLen3, some false, _, _ =>
-      some ⟨.inLen0, keepR, keepS, keepS⟩
-  | .inLen3, some true, _, _ =>
-      some ⟨.inBits0, keepR, keepS, keepS⟩
-  | .inBits0, some false, _, _ =>
-      some ⟨.inBits1, keepR, keepS, keepS⟩
-  | .inBits1, some true, _, _ =>
-      some ⟨.inBits2, keepR, keepS, keepS⟩
-  | .inBits1, some false, _, _ =>
-      some ⟨.stage2, keepR, keepS, keepS⟩
-  | .inBits2, some _, _, _ =>
-      some ⟨.inBits3, keepR, keepS, keepS⟩
-  | .inBits3, some _, _, _ =>
-      some ⟨.inBits0, keepR, keepS, keepS⟩
-  | .stage0, some false, _, _ =>
-      some ⟨.stage1, keepR, keepS, keepS⟩
-  | .stage1, some false, _, _ =>
-      some ⟨.stage2, keepR, keepS, keepS⟩
-  | .stage2, some true, _, _ =>
-      some ⟨.stage3, keepR, keepS, keepS⟩
-  | .stage3, some false, _, _ =>
-      some ⟨.stage0, keepR, keepS, keepS⟩
-  | .stage3, some true, _, _ =>
-      some ⟨.state0, keepR, keepS, keepS⟩
-  | .state0, some false, _, _ =>
-      some ⟨.state1, keepR, keepS, keepS⟩
-  | .state1, some false, _, _ =>
-      some ⟨.state2, keepR, keepS, keepS⟩
-  | .state2, some true, _, _ =>
-      some ⟨.state3, keepR, keepS, keepS⟩
-  | .state3, some false, _, _ =>
-      some ⟨.state0, keepR, keepS, keepS⟩
-  | .state3, some true, _, _ =>
-      some ⟨.outputEnter, keepR, keepS, keepS⟩
+      some ⟨.outputEnter, keepR, keepS, writeS (some pending)⟩
   | .outputEnter, _, _, _ =>
       some ⟨.metadataRight, keepS, keepS, keepR⟩
   | .metadataRight, _, _, some _ =>
@@ -272,18 +195,25 @@ theorem description_subroutineReady : description.SubroutineReady :=
 ## Exact marked-metadata boundary
 -/
 
+/-- Tape 0 after the backward metadata copy.  The complete encoded simulator
+layout is preserved, with the head returned to its header.  The final
+configuration/hit phase consumes this prefix and the configuration fields in
+one forward scan. -/
+def headerStartTape (L : SimulatorLayout) : Tape Bool :=
+  rightEdgeRewindTargetTape (SimulatorLayout.asBoolInput L) []
+
 def sourceTapes
     (D : MachineDescription) (L : SimulatorLayout) : List (Tape Bool) :=
   [ StateSelector.postStateTape L
   , FieldDecomposition.stageCounterTape L.stage
   , StateSelector.selectorScratchTape D L ]
 
-/-- Exact logical target.  Tape 0 is restored to the same configuration-field
-cursor; tape 1 is untouched; tape 2 has compact metadata, the byte-for-byte
-selector/scratch block, and the temporary false head. -/
+/-- Exact logical target.  Tape 0 is restored to the layout header; tape 1 is
+untouched; tape 2 has compact metadata, the byte-for-byte selector/scratch
+block, and the temporary false head. -/
 def targetTapes
     (D : MachineDescription) (L : SimulatorLayout) : List (Tape Bool) :=
-  [ StateSelector.postStateTape L
+  [ headerStartTape L
   , FieldDecomposition.stageCounterTape L.stage
   , ClassifiedBoundary.metadataHitTapeWithSelectorMarked D L ]
 
@@ -311,8 +241,8 @@ def RunObligation : Prop :=
       (targetTapes D L)
 
 /-- Final construction after metadata materialization: decode the encoded
-left/head/right fields on tape 0 exactly, decode the hit token, and overwrite
-the temporary false tape-2 head with the actual hit. -/
+prefix and left/head/right fields on tape 0 exactly, decode the hit token, and
+overwrite the temporary false tape-2 head with the actual hit. -/
 def ConfigTapeAndHitSpec
     (D : MachineDescription) (materializer : MachineDescription) : Prop :=
   materializer.SubroutineReady ∧

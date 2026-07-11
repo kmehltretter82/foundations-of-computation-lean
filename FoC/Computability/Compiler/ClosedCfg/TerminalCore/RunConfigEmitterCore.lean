@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterTheory.Output
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.InputDecompositionPipeline
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.InputMaterializer
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.LoopDispatcherDoneWitnessCloseout
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.ExactTapeSerializer
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.FiniteRealization
