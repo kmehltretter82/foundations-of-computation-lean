@@ -1,0 +1,18 @@
+{
+  "allow_net_growth": 500,
+  "base_commit": "913ba25995eaba414cb8894067880020e251785f",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/EndpointFrontier.lean"
+  ],
+  "frontier": "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core",
+  "name": "sorry-15-pair-encoded-payload-ingress",
+  "paths": [
+    "FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.PairEncodedOptionCellCompactor.fixedPrefixPayloadIngressTargetFamilyConstruction_core",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedSegmentLogicalTapeDecoderFootprintPayloadThreeTapeInputMaterializerConstruction_core"
+  ]
+}
