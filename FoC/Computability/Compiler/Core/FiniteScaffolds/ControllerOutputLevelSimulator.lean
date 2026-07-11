@@ -533,7 +533,8 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerForwardClose
 private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
     FuelSimulatorStructuredPointwiseEndpointEquivConstruction := by
   intro attempt
-  rcases fuelSimulatorStructuredLoweredCoreConstruction_core attempt with ⟨C⟩
+  rcases fuelSimulatorStructuredEquivLoweredCoreConstruction_core attempt with
+    ⟨C⟩
   rcases structured3EndpointTape2ProjectorConstruction_core with
     ⟨projector, hprojector⟩
   let W : Structured3EndpointWrapper :=
@@ -557,7 +558,7 @@ private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
       structured3InputEmbeddingEmitterDescription_spec.right
         (encodeCodeWordAsInput (fuelSimulatorStructuredInputCode i))
   · simpa [W, Structured3EndpointWrapper.lowered] using
-      C.loweredCore.toEquivLoweredCoreSpec.forward i
+      C.loweredCore.forward i
   · rw [C.loweredShape i]
     simpa [W] using
       hprojector.forward
