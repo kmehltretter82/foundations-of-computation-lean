@@ -5,8 +5,8 @@ set_option doc.verso true
 /-!
 # Fuel-output structured core machine
 
-The typed three-tape machine behind sorry {lit}`#10`: it reads an encoded
-halted simulator layout on logical tape 0, checks that the encoded state
+The typed three-tape machine for construction target {lit}`#10`: it reads an
+encoded halted simulator layout on logical tape 0, checks that the encoded state
 field equals the attempt's halt state (a unary chain parametric in that
 state), and emits the normalized Boolean result code of the encoded
 configuration tape onto logical tape 2, in reverse order through a one-bit
@@ -716,6 +716,26 @@ theorem next_target_mem (n : Nat) :
            | exact mem_cs_le1 _
            | exact mem_cs_le2 _
            | exact mem_cs_le3 _ _)
+      | cases hnext
+
+set_option maxHeartbeats 1600000 in
+/-- Every defined core step moves logical tape 0. -/
+theorem next_action0_move_ne_stay (n : Nat) :
+    forall (s : CoreState) (r0 r1 r2 : Option Bool)
+      (st : TypedStep CoreState),
+      CoreState.next n s r0 r1 r2 = some st ->
+        st.action0.move ≠ HeadMove.stay := by
+  intro s r0 r1 r2 st hnext
+  cases s <;> cases r0 <;> try (rename_i b; cases b)
+  all_goals simp only [CoreState.next] at hnext
+  all_goals repeat' split at hnext
+  all_goals
+    try
+      (delta CoreState.streamLeft CoreState.streamRight Emission.stream at hnext;
+        repeat' split at hnext)
+  all_goals
+    first
+      | (cases hnext; simp [keepL, keepR, writeL, writeR])
       | cases hnext
 
 /-- The typed state table of the fuel-output core for halt parameter n. -/
