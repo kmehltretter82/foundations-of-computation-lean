@@ -728,5 +728,40 @@ theorem universalMachineSpec_pair_decode
     decodeAccepts machine input :=
   (hspec machine input).mp hhalts
 
+/-!
+# Universal and diagonal statement classification
+
+The universal and diagonal development spans three evidence tiers, and each
+theorem's tier is visible in its hypotheses.
+
+Semantic theorems are unconditional and quantify over an abstract decoding
+relation.  Everything in this module is semantic: the diagonal contradictions
+{name}`diagonal_not_self_recognized`,
+{name}`decoder_cannot_recognize_self_diagonal`, and
+{name}`decoder_not_universal_for_all_languages`, the reduction algebra, the
+halting-problem languages, and the {name}`UniversalMachineSpec` unfolding
+lemmas.  The decoded-description acceptance languages in
+{module -checked}`FoC.Computability.DescriptionLanguages` are also purely
+semantic; no theorem in either module asserts that a finite universal machine
+exists.
+
+Conditional theorems consume named construction hypotheses such as
+{name}`DecoderUniversalForAcceptableLanguages`,
+{name}`DecidablePreimagePrinciple`, or a supplied
+{name}`UniversalMachineSpec` witness.  The compiler-facing universal-runner
+interfaces in
+{module -checked}`FoC.Computability.Compiler.UniversalAndRanges.Basic` name
+the exact runner and compiler obligations that upgrade these semantic
+arguments to machine-level statements.
+
+Concrete finite machines exist for the faithful diagonal pair map, namely
+{lit}`FaithfulConcreteDiagonalPairMapMachine` in
+{module -checked}`FoC.Computability.DiagonalPairMachine`, and for the
+description-prefix parser and normalizer route under
+{module -checked}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`.
+No concrete finite universal interpreter has been constructed; that route
+remains an explicit named construction obligation in the compiler layer.
+-/
+
 end Computability
 end FoC
