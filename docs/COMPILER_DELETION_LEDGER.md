@@ -102,6 +102,58 @@ comparison.
   without one of these distinctions. Recover only that distinction and attach
   it to the live construction.
 
+### Unreachable padded-output and run-loop branches
+
+- Deleting commit: `deebb902` (`Remove unreachable compiler surfaces`)
+- Net reduction within the audited unreachable tranche: 4,917 lines.
+- Old paths: `ClosedCfg/RunLoop/SourceShape.lean`, the padded projection
+  `ForwardOutput`/`Output`/`OutputHybrid` and quoter-output chain,
+  `Simulator/PaddedEmitter/RunLoop.lean`, `BoundedLayoutRunner/Emitter.lean`,
+  `StructuredInputMaterializerFrontier.lean`, `SingletonRefreshRuns.lean`, and
+  `Structured/ProjectionContracts.lean`.
+- Potentially reusable ideas: output-only padded projection, a simulator
+  run-loop source-shape wrapper, singleton-refresh execution lemmas, and
+  indexed structured projection contracts.
+- Why retired: the dependency-closed branches had no tracked importer; the old
+  padded-emitter run-loop was the documented circular/decoy route for sorry
+  #18, not an independent implementation.
+- Current route: the live padded projection and TerminalCore construction
+  stacks, focused structured lowering modules, and consumer-local honest
+  projection contracts.
+- Reconsider only if: a new checked consumer needs one specific output or
+  refresh theorem. Re-derive it over the live construction and verify it does
+  not recreate the #18 circular dependency.
+
+### Unconsumed shared execution APIs
+
+- Deleting commit: `deebb902` (`Remove unreachable compiler surfaces`)
+- Net reduction: 386 lines including their barrel imports.
+- Old paths: `Structured/Lowering/TypedStateTableExecution.lean` and
+  `Core/CommonGround/FiniteTransducers/StructuredRuns.lean`.
+- Potentially reusable ideas: generic typed-table and structured-description
+  `Leads` relations with reflexivity, transitivity, and `runConfig` conversion.
+- Why retired: exhaustive reference search found no real consumer. Migrating
+  the four local relations would retain their machine-specific step adapters
+  and was not net-negative.
+- Current route: the small local execution relations beside each machine.
+- Reconsider only if: two current construction families are ready to migrate
+  in the same change and deleted local code covers the shared layer plus all
+  adapters.
+
+### BoolRawInput contract/endpoint adapter island
+
+- Deleting commit: `deebb902` (`Remove unreachable compiler surfaces`)
+- Net reduction: 1,500 lines and 115 declarations.
+- Old paths: `FST/BoolRawInput/Contracts.lean` and `EndpointRoute.lean`.
+- Potentially reusable ideas: materializer route conversions and endpoint
+  adapters for raw Boolean-word input decoding.
+- Why retired: both namespaces were facade-only and had no source, book, or
+  semantic consumer.
+- Current route: the live BoolRawInput `Endpoint`, `EndpointContracts`, and
+  `Output` modules used by ProjTail.
+- Reconsider only if: a caller needs a statement not derivable directly from
+  those three live modules; add only the caller-facing theorem.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
