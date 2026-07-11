@@ -589,82 +589,82 @@ theorem chk_mem_bound {n j : Nat} {k : GroupPos}
       rcases List.mem_flatMap.mp hemit with ⟨e, _, hmem⟩
       simp [emissionBlock] at hmem
 
-private theorem mem_cs_re3 {n : Nat} (e : Emission) :
+theorem mem_cs_re3 {n : Nat} (e : Emission) :
     CoreState.re3 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_re2 {n : Nat} (v3 : Bool) (e : Emission) :
+theorem mem_cs_re2 {n : Nat} (v3 : Bool) (e : Emission) :
     CoreState.re2 v3 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by cases v3 <;> simp [emissionBlock])
 
-private theorem mem_cs_re1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+theorem mem_cs_re1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
     CoreState.re1 v3 v2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e)
     (by cases v3 <;> cases v2 <;> simp [emissionBlock])
 
-private theorem mem_cs_re0 {n : Nat} (e : Emission) :
+theorem mem_cs_re0 {n : Nat} (e : Emission) :
     CoreState.re0 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_rt3 {n : Nat} (e : Emission) :
+theorem mem_cs_rt3 {n : Nat} (e : Emission) :
     CoreState.rt3 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_rt2 {n : Nat} (v3 : Bool) (e : Emission) :
+theorem mem_cs_rt2 {n : Nat} (v3 : Bool) (e : Emission) :
     CoreState.rt2 v3 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by cases v3 <;> simp [emissionBlock])
 
-private theorem mem_cs_rt1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+theorem mem_cs_rt1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
     CoreState.rt1 v3 v2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e)
     (by cases v3 <;> cases v2 <;> simp [emissionBlock])
 
-private theorem mem_cs_rt0 {n : Nat} (e : Emission) :
+theorem mem_cs_rt0 {n : Nat} (e : Emission) :
     CoreState.rt0 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_hd0 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+theorem mem_cs_hd0 {n : Nat} (v3 v2 : Bool) (e : Emission) :
     CoreState.hd0 v3 v2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e)
     (by cases v3 <;> cases v2 <;> simp [emissionBlock])
 
-private theorem mem_cs_ls3 {n : Nat} (e : Emission) :
+theorem mem_cs_ls3 {n : Nat} (e : Emission) :
     CoreState.ls3 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_ls2 {n : Nat} (e : Emission) :
+theorem mem_cs_ls2 {n : Nat} (e : Emission) :
     CoreState.ls2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_ls1 {n : Nat} (e : Emission) :
+theorem mem_cs_ls1 {n : Nat} (e : Emission) :
     CoreState.ls1 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_ls0 {n : Nat} (e : Emission) :
+theorem mem_cs_ls0 {n : Nat} (e : Emission) :
     CoreState.ls0 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_turn1 {n : Nat} (e : Emission) :
+theorem mem_cs_turn1 {n : Nat} (e : Emission) :
     CoreState.turn1 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_turn2 {n : Nat} (e : Emission) :
+theorem mem_cs_turn2 {n : Nat} (e : Emission) :
     CoreState.turn2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_le0 {n : Nat} (e : Emission) :
+theorem mem_cs_le0 {n : Nat} (e : Emission) :
     CoreState.le0 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_le1 {n : Nat} (e : Emission) :
+theorem mem_cs_le1 {n : Nat} (e : Emission) :
     CoreState.le1 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_le2 {n : Nat} (e : Emission) :
+theorem mem_cs_le2 {n : Nat} (e : Emission) :
     CoreState.le2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
 
-private theorem mem_cs_le3 {n : Nat} (v2 : Bool) (e : Emission) :
+theorem mem_cs_le3 {n : Nat} (v2 : Bool) (e : Emission) :
     CoreState.le3 v2 e ∈ coreStates n :=
   mem_coreStates_of_emission (e := e) (by cases v2 <;> simp [emissionBlock])
 
