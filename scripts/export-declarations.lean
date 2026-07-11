@@ -40,12 +40,15 @@ def coreContext : Core.Context :=
     fileMap := FileMap.ofString ""
     options := {}
     currRecDepth := 0
-    maxRecDepth := 1000
+    maxRecDepth := 8192
     ref := Syntax.missing
     currNamespace := Name.anonymous
     openDecls := []
     initHeartbeats := 0
-    maxHeartbeats := 200000
+    -- The heartbeat counter is process-global; after importModules any
+    -- nonzero budget measured from initHeartbeats 0 is already exhausted,
+    -- so the offline export must disable the deterministic timeout.
+    maxHeartbeats := 0
     quotContext := Name.anonymous
     currMacroScope := 0
     diag := false
@@ -175,11 +178,17 @@ def normalizedTypeSkipped : NormalizedType :=
 
 unsafe def normalizedTypeKey (env : Environment) (type : Expr) :
     IO NormalizedType := do
+  let action : CoreM NormalizedType := do
+    try
+      let normalized ← normalizedTypeKeyCore type
+      pure { type := normalized, ok := true, error := "" }
+    catch err =>
+      let msg ← err.toMessageData.toString
+      pure { type := "", ok := false, error := msg }
   try
-    let normalized ← EIO.toIO
+    EIO.toIO
       (fun _ => IO.userError "Lean type normalization failed")
-      ((normalizedTypeKeyCore type).run' coreContext (coreState env))
-    pure { type := normalized, ok := true, error := "" }
+      (action.run' coreContext (coreState env))
   catch err =>
     pure
       { type := ""
