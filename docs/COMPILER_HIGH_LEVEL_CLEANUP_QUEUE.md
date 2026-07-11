@@ -37,6 +37,24 @@ finite-route bundles, and sorry-dependent aliases were removed in
 
 ## High-value next audits
 
+### Quoter raw-cell execution stack
+
+`Projection/Quoter/RawCells.lean` is 1,584 lines. Its first roughly 900 lines
+reprove the same `AssemblyPrefixDescription` state-100 through state-210 runs
+that are already exposed as `*_core` theorems by
+`ClosedCfg/QuoteAssembly/MarkingLoop.lean` and `Finish.lean`. There are 29
+matching core phase theorems, including the complete
+`run_stageInput_to_sourceRest_boundary_cells_withBase_core` route. The only
+external consumer of the duplicated stack needs the final exact
+source-to-prefix-boundary result, not the intermediate unsuffixed lemmas.
+
+The import graph confirms that `RawCells.lean` may import
+`QuoteAssembly/Finish.lean` without a cycle. Replace its public final theorem
+with a thin specialization of the with-base core, then delete the private/local
+replay rather than adding another execution abstraction. Expected saving:
+approximately 700–900 lines, subject to a focused `RawCellsOutput.lean` and
+`Quoter/Main.lean` check.
+
 ### HeadRoutes projection aliases
 
 `Structured/HeadRoutes/Pipeline.lean` still has eleven exact duplicate groups:
