@@ -10,9 +10,9 @@ set_option doc.verso true
 This module composes the checked right-end-left materializer with the honest
 field-decomposition boundary.  It handles the explicit left-window blank left
 by the materializer through tape-equivalence transport and same-head
-composition.  Therefore the remaining parser work is exactly
-`FieldDecomposition.Construction`; no additional ingress adapter is hidden at
-this boundary.
+composition.  Therefore the remaining parser work is exactly the named field
+decomposition construction; no additional ingress adapter is hidden at this
+boundary.
 -/
 
 namespace FoC
