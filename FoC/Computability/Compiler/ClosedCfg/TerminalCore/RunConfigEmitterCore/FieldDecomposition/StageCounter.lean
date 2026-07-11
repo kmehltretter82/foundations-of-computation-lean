@@ -736,31 +736,6 @@ theorem construction_core : Construction :=
     loweredDescription_subroutineReady,
     loweredDescription_haltsFromTapeEquiv⟩
 
-/-!
-## Exact next phase
--/
-
-/-- Remaining D-specific state/configuration parser and metadata materializer.
-
-Tape 0 is positioned at the first bit of the raw state field, tape 1 already
-is the exact loop-stage counter, and tape 2 still holds the original source
-scratch-width markers.  The remaining phase must preserve tape 1, decode the
-state and exact configuration tape, prepend canonical input/stage/state
-metadata behind the scratch block, put the hit bit at the tape-2 head, and
-reserve the finite D-specific classification selector in the markers nearest
-the hit.  An unclassified handoff would lose the input-dependent dispatcher
-control. -/
-def PostStageSpec
-    (D : MachineDescription) (parser : MachineDescription) : Prop :=
-  parser.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      parser.HaltsFromTapeEquiv
-        (targetTape L)
-        (ClassifiedBoundary.classifiedLoopTargetTape D L)
-
-def PostStageConstruction (D : MachineDescription) : Prop :=
-  exists parser : MachineDescription, PostStageSpec D parser
-
 end StageCounter
 end FieldDecomposition
 end RunConfigEmitterCore

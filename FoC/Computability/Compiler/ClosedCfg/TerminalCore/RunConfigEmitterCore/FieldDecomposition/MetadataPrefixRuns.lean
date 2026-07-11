@@ -798,6 +798,35 @@ theorem runObligation : RunObligation := by
   rcases (leads_layout D L).to_runConfig with ⟨steps, hrun⟩
   exact ⟨steps, hrun⟩
 
+/-!
+## Physical lowering
+-/
+
+def loweredDescription : MachineDescription :=
+  lowerStructured3Description description
+
+theorem loweredDescription_subroutineReady :
+    loweredDescription.SubroutineReady :=
+  lowerStructured3Description_subroutineReady
+    description_wellFormed description_supportsReadWriteRows3
+
+theorem loweredDescription_haltsFromTapeEquiv
+    (D : MachineDescription) (L : SimulatorLayout) :
+    loweredDescription.HaltsFromTapeEquiv
+      (sourceTape D L) (targetTape D L) := by
+  unfold loweredDescription sourceTape targetTape
+  apply lowerStructured3Description_haltsFromConfigWithTapes
+    description_wellFormed description_haltTransitionFree
+    description_supportsReadWriteRows3
+    (c := ThreeTape.config description.start
+      (StateSelector.postStateTape L)
+      (FieldDecomposition.stageCounterTape L.stage)
+      (StateSelector.selectorScratchTape D L))
+  · rfl
+  · rfl
+  · exact runObligation D L
+  done
+
 end MetadataPrefix
 end FieldDecomposition
 end RunConfigEmitterCore

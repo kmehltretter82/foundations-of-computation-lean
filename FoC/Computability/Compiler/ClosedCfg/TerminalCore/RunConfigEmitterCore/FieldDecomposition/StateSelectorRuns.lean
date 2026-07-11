@@ -899,29 +899,6 @@ theorem construction_core (D : MachineDescription) : Construction D :=
     loweredDescription_subroutineReady D,
     loweredDescription_haltsFromTapeEquiv D⟩
 
-/-!
-## Exact next phase
--/
-
-/-- Remaining exact configuration and metadata materializer.
-
-Tape 0 is positioned at the left-list length field, tape 1 is already the
-canonical stage counter, and tape 2 holds the classified selector in its final
-reserved scratch cells with a blank head.  The remaining phase must decode the
-left cells, head cell, and right cells without dropping blank cells or their
-head split; construct the compact input/stage/raw-state metadata to the left of
-the scratch reservoir; and place the decoded hit at the tape-2 head. -/
-def ConfigMetadataSpec
-    (D : MachineDescription) (materializer : MachineDescription) : Prop :=
-  materializer.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      materializer.HaltsFromTapeEquiv
-        (targetTape D L)
-        (ClassifiedBoundary.classifiedLoopTargetTape D L)
-
-def ConfigMetadataConstruction (D : MachineDescription) : Prop :=
-  exists materializer : MachineDescription, ConfigMetadataSpec D materializer
-
 end StateSelector
 end FieldDecomposition
 end RunConfigEmitterCore

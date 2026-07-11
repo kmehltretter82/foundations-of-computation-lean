@@ -639,30 +639,6 @@ theorem construction_core : Construction :=
     loweredDescription_subroutineReady,
     loweredDescription_haltsFromTapeEquiv⟩
 
-/-!
-## Exact next phase
--/
-
-/-- Broad D-specific remainder after the now-complete source counter.
-
-Starting with the original scratch-width markers on tape 2, it must parse the
-padded layout on tape 0, emit the raw stage counter on tape 1, place canonical
-input/original-stage/raw-state metadata behind the preserved scratch markers,
-materialize the exact configuration tape (including blank cells and head
-split), leave the hit bit at the tape-2 head, and reserve the D-specific finite
-classification selector in the scratch markers nearest the hit.  The narrower
-authoritative frontier after stage parsing is {lit}`StageCounter.PostStageSpec`.-/
-def PostCountSpec
-    (D : MachineDescription) (parser : MachineDescription) : Prop :=
-  parser.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      parser.HaltsFromTapeEquiv
-        (targetTape L)
-        (ClassifiedBoundary.classifiedLoopTargetTape D L)
-
-def PostCountConstruction (D : MachineDescription) : Prop :=
-  exists parser : MachineDescription, PostCountSpec D parser
-
 end SourceCounter
 end FieldDecomposition
 end RunConfigEmitterCore
