@@ -144,17 +144,14 @@ theorem scratchBits_map_some
 theorem scratchBits_ne_nil
     (D : MachineDescription) (L : SimulatorLayout) :
     scratchBits D L ≠ [] := by
-  intro hnil
-  have hparts :
-      selectorBits (classifyState D L.config.state) = [] ∧
-        List.replicate (remainingScratchMarkers D L).length true = [] := by
-    simpa [scratchBits] using List.append_eq_nil.mp hnil
-  have hlen := congrArg List.length hparts.left
   have hpos :=
     StateSelector.selectorBits_length_pos
       (classifyState D L.config.state)
-  simp at hlen
-  lia
+  intro hnil
+  rw [scratchBits] at hnil
+  cases hs : selectorBits (classifyState D L.config.state) with
+  | nil => rw [hs] at hpos; simp at hpos
+  | cons x xs => rw [hs] at hnil; simp at hnil
 
 theorem selectorScratchTape_eq_bits
     (D : MachineDescription) (L : SimulatorLayout) :
@@ -291,7 +288,7 @@ theorem leads_metadataRight
   | nil =>
       apply leads_tape2 (a2 := keepR) (state_mem _)
         (by rfl)
-      rfl
+      exact keepR_apply_tapeAtCells leftRev none _
   | cons bit rest ih =>
       have hone :
           Leads
@@ -374,7 +371,7 @@ theorem leads_return_to_mark
       (cfg .halt T0 T1
         (tapeAtCells
           (List.append (scratchPhysical.reverse.map some)
-            (none :: metadata.reverse.map some))
+            (none :: List.append (metadata.reverse.map some) [none]))
           [some false, none])) := by
   cases metadata with
   | nil => contradiction

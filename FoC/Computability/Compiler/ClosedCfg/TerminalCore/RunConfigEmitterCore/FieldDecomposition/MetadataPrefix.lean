@@ -82,16 +82,17 @@ def copyStates : List State :=
           (boolValues.flatMap fun a =>
             boolValues.flatMap fun b =>
               boolValues.map fun c => State.copy3 a b c)
-          (boolValues.flatMap fun a =>
-            boolValues.flatMap fun b =>
-              boolValues.flatMap fun c =>
-                boolValues.map fun d => State.copy4 a b c d)
-          (boolValues.flatMap fun a =>
-            boolValues.flatMap fun b =>
-              boolValues.flatMap fun c =>
-                boolValues.flatMap fun d =>
-                  boolValues.map fun pending =>
-                    State.copy4p a b c d pending))))
+          (List.append
+            (boolValues.flatMap fun a =>
+              boolValues.flatMap fun b =>
+                boolValues.flatMap fun c =>
+                  boolValues.map fun d => State.copy4 a b c d)
+            (boolValues.flatMap fun a =>
+              boolValues.flatMap fun b =>
+                boolValues.flatMap fun c =>
+                  boolValues.flatMap fun d =>
+                    boolValues.map fun pending =>
+                      State.copy4p a b c d pending))))
 
 def states : List State :=
   [ .start, .scratchLeft, .copyEnter ] ++
@@ -221,7 +222,7 @@ def next :
   | .state3, some true, _, _ =>
       some ⟨.outputEnter, keepR, keepS, keepS⟩
   | .outputEnter, _, _, _ =>
-      some ⟨.metadataRight, keepS, keepS, keepS⟩
+      some ⟨.metadataRight, keepS, keepS, keepR⟩
   | .metadataRight, _, _, some _ =>
       some ⟨.metadataRight, keepS, keepS, keepR⟩
   | .metadataRight, _, _, none =>

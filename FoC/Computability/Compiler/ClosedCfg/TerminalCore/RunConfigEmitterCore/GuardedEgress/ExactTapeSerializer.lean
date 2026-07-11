@@ -398,7 +398,7 @@ theorem description_haltsWithTapes
       (initialConfig baseLeft leftCells (first :: rest) padding)
       (finalConfig baseLeft leftCells (first :: rest) padding).tapes := by
   refine ⟨5 * leftCells.length + 7, ?_⟩
-  simpa [finalConfig, description, ThreeTape.description] using
+  simpa [finalConfig, description, ThreeTape.description, ThreeTape.config] using
     description_run baseLeft leftCells first rest padding
 
 end LeftLength
