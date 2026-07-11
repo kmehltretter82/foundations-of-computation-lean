@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.SimulatorLayoutInputMaterializer
 
 set_option doc.verso true
 
@@ -75,10 +76,8 @@ def FuelOutputStructuredEndpointEquivIndexedConstruction
 Finite-table leaf for the fuel-output public-input materializer.
 -/
 theorem fuelOutputStructuredMaterializerConstruction_core :
-    FuelOutputStructuredMaterializerConstruction := by
-  -- Remaining parser/materializer obligation: recognize syntactic simulator
-  -- layouts and materialize the guarded three-logical-tape input.
-  sorry
+    FuelOutputStructuredMaterializerConstruction :=
+  simulatorLayoutWordStartEquivMaterializerConstruction_core
 
 /--
 Finite-table leaf for the lowered fuel-output structured core.
