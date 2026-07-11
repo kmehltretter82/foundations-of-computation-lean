@@ -35,28 +35,12 @@ def ResultNoneGuardRewindDescription : MachineDescription where
         Direction.right 4
     ]
 
-private theorem resultNoneGuardRewindDescription_wellFormed :
-    ResultNoneGuardRewindDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ResultNoneGuardRewindDescription.transitions)
-      (stateCount := ResultNoneGuardRewindDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := ResultNoneGuardRewindDescription.transitions)
-      (by decide)
-
-private theorem resultNoneGuardRewindDescription_haltTransitionFree :
-    ResultNoneGuardRewindDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ResultNoneGuardRewindDescription.transitions)
-    (state := ResultNoneGuardRewindDescription.halt)
-    (by decide)
-
 private theorem resultNoneGuardRewindDescription_subroutineReady :
     ResultNoneGuardRewindDescription.SubroutineReady :=
-  ⟨resultNoneGuardRewindDescription_wellFormed,
-    resultNoneGuardRewindDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    ResultNoneGuardRewindDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 def resultNoneGuardRewindLeftScanTape
     (leftRev : Word Bool) (right : List (Option Bool)) : Tape Bool :=

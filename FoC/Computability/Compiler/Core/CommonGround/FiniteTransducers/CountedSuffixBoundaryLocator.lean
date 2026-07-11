@@ -261,74 +261,26 @@ def countedSuffixBoundaryLocatorDescription : MachineDescription :=
         countedSuffixBoundaryRightRestoreDescription
         rightEdgeRewindDescription))
 
-private theorem countedSuffixBoundaryLeftAdvanceDescription_wellFormed :
-    countedSuffixBoundaryLeftAdvanceDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := countedSuffixBoundaryLeftAdvanceDescription.transitions)
-      (stateCount := countedSuffixBoundaryLeftAdvanceDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := countedSuffixBoundaryLeftAdvanceDescription.transitions)
-      (by decide)
-
-private theorem countedSuffixBoundaryLeftAdvanceDescription_haltTransitionFree :
-    countedSuffixBoundaryLeftAdvanceDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := countedSuffixBoundaryLeftAdvanceDescription.transitions)
-    (state := countedSuffixBoundaryLeftAdvanceDescription.halt)
-    (by decide)
-
 private theorem countedSuffixBoundaryLeftAdvanceDescription_subroutineReady :
     countedSuffixBoundaryLeftAdvanceDescription.SubroutineReady :=
-  ⟨countedSuffixBoundaryLeftAdvanceDescription_wellFormed,
-    countedSuffixBoundaryLeftAdvanceDescription_haltTransitionFree⟩
-
-private theorem countedSuffixBoundaryPrefixShiftDescription_wellFormed :
-    countedSuffixBoundaryPrefixShiftDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := countedSuffixBoundaryPrefixShiftDescription.transitions)
-      (stateCount := countedSuffixBoundaryPrefixShiftDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := countedSuffixBoundaryPrefixShiftDescription.transitions)
-      (by decide)
-
-private theorem countedSuffixBoundaryPrefixShiftDescription_haltTransitionFree :
-    countedSuffixBoundaryPrefixShiftDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := countedSuffixBoundaryPrefixShiftDescription.transitions)
-    (state := countedSuffixBoundaryPrefixShiftDescription.halt)
-    (by decide)
+  machineDescription_subroutineReady_of_transition_checks
+    countedSuffixBoundaryLeftAdvanceDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem countedSuffixBoundaryPrefixShiftDescription_subroutineReady :
     countedSuffixBoundaryPrefixShiftDescription.SubroutineReady :=
-  ⟨countedSuffixBoundaryPrefixShiftDescription_wellFormed,
-    countedSuffixBoundaryPrefixShiftDescription_haltTransitionFree⟩
-
-private theorem countedSuffixBoundaryRightRestoreDescription_wellFormed :
-    countedSuffixBoundaryRightRestoreDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := countedSuffixBoundaryRightRestoreDescription.transitions)
-      (stateCount := countedSuffixBoundaryRightRestoreDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := countedSuffixBoundaryRightRestoreDescription.transitions)
-      (by decide)
-
-private theorem countedSuffixBoundaryRightRestoreDescription_haltTransitionFree :
-    countedSuffixBoundaryRightRestoreDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := countedSuffixBoundaryRightRestoreDescription.transitions)
-    (state := countedSuffixBoundaryRightRestoreDescription.halt)
-    (by decide)
+  machineDescription_subroutineReady_of_transition_checks
+    countedSuffixBoundaryPrefixShiftDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem countedSuffixBoundaryRightRestoreDescription_subroutineReady :
     countedSuffixBoundaryRightRestoreDescription.SubroutineReady :=
-  ⟨countedSuffixBoundaryRightRestoreDescription_wellFormed,
-    countedSuffixBoundaryRightRestoreDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    countedSuffixBoundaryRightRestoreDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem countedSuffixBoundaryLocatorDescription_subroutineReady :
     countedSuffixBoundaryLocatorDescription.SubroutineReady :=

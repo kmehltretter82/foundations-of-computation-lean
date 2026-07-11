@@ -272,28 +272,12 @@ theorem rightEdgeScanTargetTapeFromLeft_move_left_move_right
       cases padding <;>
         simp [tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-private theorem rightEdgeScanDescription_wellFormed :
-    rightEdgeScanDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := rightEdgeScanDescription.transitions)
-      (stateCount := rightEdgeScanDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := rightEdgeScanDescription.transitions)
-      (by decide)
-
-private theorem rightEdgeScanDescription_haltTransitionFree :
-    rightEdgeScanDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := rightEdgeScanDescription.transitions)
-    (state := rightEdgeScanDescription.halt)
-    (by decide)
-
 theorem rightEdgeScanDescription_subroutineReady :
     rightEdgeScanDescription.SubroutineReady :=
-  ⟨rightEdgeScanDescription_wellFormed,
-    rightEdgeScanDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    rightEdgeScanDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem rightEdgeScanDescription_step_bit
     (left right : List (Option Bool)) (bit : Bool) :
@@ -462,28 +446,12 @@ theorem rightEdgeRewindTargetTape_moveRight_equiv_FSTTargetTape
       (rightEdgeRewindTargetTape_equiv_paddedInput bits padding)
       Direction.right
 
-private theorem rightEdgeRewindDescription_wellFormed :
-    rightEdgeRewindDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := rightEdgeRewindDescription.transitions)
-      (stateCount := rightEdgeRewindDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := rightEdgeRewindDescription.transitions)
-      (by decide)
-
-private theorem rightEdgeRewindDescription_haltTransitionFree :
-    rightEdgeRewindDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := rightEdgeRewindDescription.transitions)
-    (state := rightEdgeRewindDescription.halt)
-    (by decide)
-
 theorem rightEdgeRewindDescription_subroutineReady :
     rightEdgeRewindDescription.SubroutineReady :=
-  ⟨rightEdgeRewindDescription_wellFormed,
-    rightEdgeRewindDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    rightEdgeRewindDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem rightEdgeRewindDescription_run_scan
     (leftBits : Word Bool) (current : Bool)

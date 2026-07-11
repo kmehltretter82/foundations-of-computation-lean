@@ -38,29 +38,11 @@ def WriteTransitionPrefixDescription :
 
 private abbrev WTP := WriteTransitionPrefixDescription
 
-private theorem writeTransitionPrefixDescription_wellFormed :
-    WTP.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := WTP.transitions)
-      (stateCount :=
-        WTP.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := WTP.transitions)
-      (by decide)
-
-private theorem writeTransitionPrefixDescription_haltTransitionFree :
-    WTP.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := WTP.transitions)
-    (state := WTP.halt)
-    (by decide)
-
 private theorem writeTransitionPrefixDescription_subroutineReady :
     WTP.SubroutineReady :=
-  ⟨writeTransitionPrefixDescription_wellFormed,
-    writeTransitionPrefixDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    WTP (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem writeTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
@@ -99,29 +81,11 @@ def WriteMarkedTransitionPrefixDescription :
 
 private abbrev WMTP := WriteMarkedTransitionPrefixDescription
 
-private theorem writeMarkedTransitionPrefixDescription_wellFormed :
-    WMTP.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := WMTP.transitions)
-      (stateCount :=
-        WMTP.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := WMTP.transitions)
-      (by decide)
-
-private theorem writeMarkedTransitionPrefixDescription_haltTransitionFree :
-    WMTP.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := WMTP.transitions)
-    (state := WMTP.halt)
-    (by decide)
-
 theorem writeMarkedTransitionPrefixDescription_subroutineReady :
     WMTP.SubroutineReady :=
-  ⟨writeMarkedTransitionPrefixDescription_wellFormed,
-    writeMarkedTransitionPrefixDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    WMTP (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem writeMarkedTransitionPrefixDescription_run
     (b : Bool) (rest : List (Option Bool)) :
@@ -167,49 +131,6 @@ def AppendFixedFourBitsLastDescription
     , transition
         4 (some true) (some true) Direction.right 5
     ]
-
-private theorem appendFixedFourBitsLastDescription_wellFormed
-    (b0 b1 b2 b3 : Bool) :
-    (AppendFixedFourBitsLastDescription b0 b1 b2 b3).WellFormed := by
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩
-  · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      decide
-  · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      decide
-  · cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-      decide
-  · exact transition_wellFormed_of_all
-      (l :=
-        (AppendFixedFourBitsLastDescription
-          b0 b1 b2 b3).transitions)
-      (stateCount :=
-        (AppendFixedFourBitsLastDescription
-          b0 b1 b2 b3).stateCount)
-      (by
-        cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          decide)
-  · exact transition_deterministic_of_all
-      (l :=
-        (AppendFixedFourBitsLastDescription
-          b0 b1 b2 b3).transitions)
-      (by
-        cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-          decide)
-
-private theorem appendFixedFourBitsLastDescription_haltTransitionFree
-    (b0 b1 b2 b3 : Bool) :
-    (AppendFixedFourBitsLastDescription
-      b0 b1 b2 b3).HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l :=
-      (AppendFixedFourBitsLastDescription
-        b0 b1 b2 b3).transitions)
-    (state :=
-      (AppendFixedFourBitsLastDescription
-        b0 b1 b2 b3).halt)
-    (by
-      cases b0 <;> cases b1 <;> cases b2 <;> cases b3 <;>
-        decide)
 
 private theorem appendFixedFourBitsLastDescription_step_scan_nonempty
     (b0 b1 b2 b3 : Bool)
@@ -506,21 +427,6 @@ theorem appendCodeSymbolLastDescription_halt
     (AppendCodeSymbolLastDescription symbol).halt = 5 := by
   cases symbol <;> rfl
 
-private theorem appendCodeSymbolLastDescription_wellFormed
-    (symbol : MachineCodeSymbol) :
-    (AppendCodeSymbolLastDescription symbol).WellFormed := by
-  cases symbol <;>
-    exact appendFixedFourBitsLastDescription_wellFormed _ _ _ _
-
-private theorem appendCodeSymbolLastDescription_haltTransitionFree
-    (symbol : MachineCodeSymbol) :
-    (AppendCodeSymbolLastDescription
-      symbol).HaltTransitionFree := by
-  cases symbol <;>
-    exact
-      appendFixedFourBitsLastDescription_haltTransitionFree
-        _ _ _ _
-
 theorem appendCodeSymbolLastDescription_run_from_scan
     (symbol : MachineCodeSymbol)
     (leftRev remaining : Word Bool) :
@@ -602,9 +508,10 @@ def appendCodeWordLastTape
 
 theorem appendCodeSymbolLastDescription_subroutineReady
     (symbol : MachineCodeSymbol) :
-    (AppendCodeSymbolLastDescription symbol).SubroutineReady :=
-  ⟨appendCodeSymbolLastDescription_wellFormed symbol,
-    appendCodeSymbolLastDescription_haltTransitionFree symbol⟩
+    (AppendCodeSymbolLastDescription symbol).SubroutineReady := by
+  cases symbol <;>
+    apply machineDescription_subroutineReady_of_transition_checks <;>
+      decide
 
 theorem appendCodeWordLastDescription_subroutineReady :
     forall code : Word MachineCodeSymbol,

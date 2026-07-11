@@ -262,29 +262,11 @@ def RestoreStageInputSecondBitDescription :
 
 private abbrev RSIB := RestoreStageInputSecondBitDescription
 
-private theorem restoreStageInputSecondBitDescription_wellFormed :
-    RSIB.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := RSIB.transitions)
-      (stateCount :=
-        RSIB.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := RSIB.transitions)
-      (by decide)
-
-private theorem restoreStageInputSecondBitDescription_haltTransitionFree :
-    RSIB.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := RSIB.transitions)
-    (state := RSIB.halt)
-    (by decide)
-
 private theorem restoreStageInputSecondBitDescription_subroutineReady :
     RSIB.SubroutineReady :=
-  ⟨restoreStageInputSecondBitDescription_wellFormed,
-    restoreStageInputSecondBitDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    RSIB (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem restoreStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
@@ -332,7 +314,7 @@ private theorem restoreStageInputSecondBitDescription_run_succ
   rw [restoreStageInputSecondBitDescription_run]
   exact
     runConfig_halt
-      restoreStageInputSecondBitDescription_haltTransitionFree
+      restoreStageInputSecondBitDescription_subroutineReady.2
       (Tape.input (stageInputBits w stage)) n
 
 private theorem restoreStageInputSecondBitDescription_run_checked_succ
@@ -347,7 +329,7 @@ private theorem restoreStageInputSecondBitDescription_run_checked_succ
   rw [restoreStageInputSecondBitDescription_run_checked]
   exact
     runConfig_halt
-      restoreStageInputSecondBitDescription_haltTransitionFree
+      restoreStageInputSecondBitDescription_subroutineReady.2
       (stageInputCheckedInputTape w stage) n
 
 def MarkStageInputSecondBitDescription :
@@ -366,29 +348,11 @@ def MarkStageInputSecondBitDescription :
 
 private abbrev MSIB := MarkStageInputSecondBitDescription
 
-private theorem markStageInputSecondBitDescription_wellFormed :
-    MSIB.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := MSIB.transitions)
-      (stateCount :=
-        MSIB.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := MSIB.transitions)
-      (by decide)
-
-private theorem markStageInputSecondBitDescription_haltTransitionFree :
-    MSIB.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := MSIB.transitions)
-    (state := MSIB.halt)
-    (by decide)
-
 private theorem markStageInputSecondBitDescription_subroutineReady :
     MSIB.SubroutineReady :=
-  ⟨markStageInputSecondBitDescription_wellFormed,
-    markStageInputSecondBitDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    MSIB (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem markStageInputSecondBitDescription_run
     (w : Word Bool) (stage : Nat) :
@@ -557,7 +521,7 @@ theorem markStageInputSecondBitDescription_haltsWithTape_inv
                               tail]
                             exact
                               runConfig_halt
-                                markStageInputSecondBitDescription_haltTransitionFree
+                                markStageInputSecondBitDescription_subroutineReady.2
                                 (tapeAtCells [some false]
                                   (none :: tail.map some)) k
                           let cfgGood :

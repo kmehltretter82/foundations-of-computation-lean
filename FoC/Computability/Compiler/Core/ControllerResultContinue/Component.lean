@@ -37,54 +37,22 @@ def ProjectionTailRewindDescription : MachineDescription where
         1 none none Direction.right 2
     ]
 
-private theorem projectionTailRewindDescription_wellFormed :
-    ProjectionTailRewindDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := ProjectionTailRewindDescription.transitions)
-      (stateCount := ProjectionTailRewindDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := ProjectionTailRewindDescription.transitions)
-      (by decide)
-
-private theorem projectionTailRewindDescription_haltTransitionFree :
-    ProjectionTailRewindDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := ProjectionTailRewindDescription.transitions)
-    (state := ProjectionTailRewindDescription.halt)
-    (by decide)
-
 theorem projectionTailRewindDescription_subroutineReady :
     ProjectionTailRewindDescription.SubroutineReady :=
-  ⟨projectionTailRewindDescription_wellFormed,
-    projectionTailRewindDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    ProjectionTailRewindDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 def StageInputContinueBoundaryRewriterDescription : MachineDescription :=
   { StageInputContinueCheckedRewriterDescription with start := 1 }
 
-private theorem stageInputContinueBoundaryRewriterDescription_wellFormed :
-    StageInputContinueBoundaryRewriterDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := StageInputContinueBoundaryRewriterDescription.transitions)
-      (stateCount := StageInputContinueBoundaryRewriterDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := StageInputContinueBoundaryRewriterDescription.transitions)
-      (by decide)
-
-private theorem stageInputContinueBoundaryRewriterDescription_haltTransitionFree :
-    StageInputContinueBoundaryRewriterDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := StageInputContinueBoundaryRewriterDescription.transitions)
-    (state := StageInputContinueBoundaryRewriterDescription.halt)
-    (by decide)
-
 theorem stageInputContinueBoundaryRewriterDescription_subroutineReady :
     StageInputContinueBoundaryRewriterDescription.SubroutineReady :=
-  ⟨stageInputContinueBoundaryRewriterDescription_wellFormed,
-    stageInputContinueBoundaryRewriterDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    StageInputContinueBoundaryRewriterDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 def ProjectedStageInputContinueDescription : MachineDescription :=
   seqSubroutine

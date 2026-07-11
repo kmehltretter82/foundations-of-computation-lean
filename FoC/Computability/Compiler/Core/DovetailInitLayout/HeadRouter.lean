@@ -96,29 +96,11 @@ def AppendInputTapeHeadRouterDescription :
 
 private abbrev AIHR := AppendInputTapeHeadRouterDescription
 
-private theorem appendInputTapeHeadRouterDescription_wellFormed :
-    AIHR.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := AIHR.transitions)
-      (stateCount :=
-        AIHR.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := AIHR.transitions)
-      (by decide)
-
-private theorem appendInputTapeHeadRouterDescription_haltTransitionFree :
-    AIHR.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := AIHR.transitions)
-    (state := AIHR.halt)
-    (by decide)
-
 private theorem appendInputTapeHeadRouterDescription_subroutineReady :
     AIHR.SubroutineReady :=
-  ⟨appendInputTapeHeadRouterDescription_wellFormed,
-    appendInputTapeHeadRouterDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    AIHR (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 private theorem appendInputTapeHeadRouterDescription_run_return20
     (beforeRevBits : Word Bool) (current : Bool)

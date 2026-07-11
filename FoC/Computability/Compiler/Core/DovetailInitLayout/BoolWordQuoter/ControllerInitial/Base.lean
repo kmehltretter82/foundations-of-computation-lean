@@ -141,29 +141,11 @@ def ControllerInitialRawBoolWordHeaderEmitterDescription :
 
 private abbrev CIH := ControllerInitialRawBoolWordHeaderEmitterDescription
 
-private theorem controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed :
-    CIH.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := CIH.transitions)
-      (stateCount :=
-        CIH.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := CIH.transitions)
-      (by decide)
-
-private theorem controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree :
-    CIH.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := CIH.transitions)
-    (state := CIH.halt)
-    (by decide)
-
 theorem controllerInitialRawBoolWordHeaderEmitterDescription_subroutineReady :
     CIH.SubroutineReady :=
-  ⟨controllerInitialRawBoolWordHeaderEmitterDescription_wellFormed,
-    controllerInitialRawBoolWordHeaderEmitterDescription_haltTransitionFree⟩
+  machineDescription_subroutineReady_of_transition_checks
+    CIH (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 def controllerInitialRawBoolWordHeaderEmitterOutput
     (w : Word Bool) : Word Bool :=

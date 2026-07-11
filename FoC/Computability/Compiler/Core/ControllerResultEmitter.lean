@@ -334,28 +334,21 @@ def DovetailControllerResultEmitterDescription :
   halt := controllerResultEmitterHalt
   transitions := controllerResultEmitterTransitionChunks.flatten
 
-private theorem dovetailControllerResultEmitterDescription_wellFormed :
-    DovetailControllerResultEmitterDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_chunk_all
-      (chunks := controllerResultEmitterTransitionChunks)
-      (stateCount := DovetailControllerResultEmitterDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_chunk_all
-      (chunks := controllerResultEmitterTransitionChunks)
-      (by decide)
-
-private theorem dovetailControllerResultEmitterDescription_haltTransitionFree :
-    DovetailControllerResultEmitterDescription.HaltTransitionFree :=
-  transition_notFrom_of_chunk_all
-    (chunks := controllerResultEmitterTransitionChunks)
-    (state := DovetailControllerResultEmitterDescription.halt)
-    (by decide)
-
 theorem dovetailControllerResultEmitterDescription_subroutineReady :
-    DovetailControllerResultEmitterDescription.SubroutineReady :=
-  ⟨dovetailControllerResultEmitterDescription_wellFormed,
-    dovetailControllerResultEmitterDescription_haltTransitionFree⟩
+    DovetailControllerResultEmitterDescription.SubroutineReady := by
+  constructor
+  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
+    · exact transition_wellFormed_of_chunk_all
+        (chunks := controllerResultEmitterTransitionChunks)
+        (stateCount := DovetailControllerResultEmitterDescription.stateCount)
+        (by decide)
+    · exact transition_deterministic_of_chunk_all
+        (chunks := controllerResultEmitterTransitionChunks)
+        (by decide)
+  · exact transition_notFrom_of_chunk_all
+      (chunks := controllerResultEmitterTransitionChunks)
+      (state := DovetailControllerResultEmitterDescription.halt)
+      (by decide)
 
 private theorem dovetailControllerResultEmitterDescription_run_first_bit
     (boundary : ControllerResultEmitterBoundary)
@@ -932,7 +925,7 @@ private theorem dovetailControllerResultEmitterDescription_haltsWithOutput_iff
           (controllerResultEmitterScanBoundary
             (DovetailControllerLayout.encode C)).output :=
       haltsWithOutput_functional_of_haltTransitionFree
-        dovetailControllerResultEmitterDescription_haltTransitionFree
+        dovetailControllerResultEmitterDescription_subroutineReady.2
         h hcanonical
     have hresult : C.result = [b] :=
       (controllerResultEmitterScanBoundary_controllerEncode_output_iff
@@ -974,7 +967,7 @@ theorem dovetailControllerResultEmitterDescription_haltsWithOutput_encodeBoolWor
           (controllerResultEmitterScanBoundary
             (encodeBoolWord result)).output :=
       haltsWithOutput_functional_of_haltTransitionFree
-        dovetailControllerResultEmitterDescription_haltTransitionFree
+        dovetailControllerResultEmitterDescription_subroutineReady.2
         h hcanonical
     have hresult : result = [b] :=
       (controllerResultEmitterScanBoundary_encodeBoolWord_output_iff
