@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.SimulatorLayoutInputMaterializer
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelOutputCore.Closed
 
 set_option doc.verso true
 
@@ -115,10 +116,57 @@ Finite-table leaf for the lowered fuel-output structured core.
 theorem fuelOutputStructuredEquivSemanticCoreConstruction_core
     (attempt : MachineDescription) :
     FuelOutputStructuredEquivSemanticCoreConstruction attempt := by
-  -- Remaining structured-core obligation: validate the halted layout, extract
-  -- its normalized boolean-word result code onto logical tape 2, and recover
-  -- the semantic output witness from successful runs.
-  sorry
+  refine ⟨{
+    core := FuelOutputCore.coreD attempt.halt
+    coreWellFormed := (FuelOutputCore.table attempt.halt).description_wellFormed
+    coreHaltTransitionFree :=
+      (FuelOutputCore.table attempt.halt).description_haltTransitionFree
+    coreSupportsRows :=
+      (FuelOutputCore.table attempt.halt).description_supportsReadWriteRows3
+    loweredShape := ?_
+    semanticCore := ?_ }⟩
+  · intro i
+    rfl
+  · constructor
+    · intro i
+      simpa [fuelOutputStructuredInitializedTape,
+        fuelOutputStructuredLoweredTape,
+        fuelOutputStructuredPaddedInputTape,
+        fuelOutputStructuredInputBits,
+        CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape,
+        encodedGuardedStructured3Tapes,
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputTape,
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode,
+        CommonGround.CodeWordEmitters.ExactOutputTape] using
+        FuelOutputCore.lowered_halts_of_valid_code attempt.halt
+          i.1.1 i.1.2 i.2.1 i.2.2
+    · intro L T hhalt
+      have hhalt' :
+          (lowerStructured3Description
+              (FuelOutputCore.coreD attempt.halt)).HaltsFromTape
+            (encodedGuardedStructuredTapes
+              [ Tape.input
+                  (encodeCodeWordAsInput (SimulatorLayout.encode L))
+              , Tape.blank
+              , Tape.blank ]) T := by
+        simpa [fuelOutputStructuredInitializedTape,
+          fuelOutputStructuredInputBits,
+          CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape,
+          encodedGuardedStructured3Tapes] using hhalt
+      rcases FuelOutputCore.lowered_closed attempt.halt L T hhalt' with
+        ⟨out, hstate, hout, hT⟩
+      let i :
+          PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
+            attempt :=
+        ⟨(L, out), hstate, hout⟩
+      refine ⟨i, rfl, ?_⟩
+      simpa [i, fuelOutputStructuredLoweredTape,
+        fuelOutputStructuredPaddedInputTape,
+        fuelOutputStructuredInputBits,
+        encodedGuardedStructured3Tapes,
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputTape,
+        PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode,
+        CommonGround.CodeWordEmitters.ExactOutputTape] using hT
 
 /--
 Target-local parser/core obligation for the fuel-output target.  The public
