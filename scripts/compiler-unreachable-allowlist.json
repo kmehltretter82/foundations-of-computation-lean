@@ -1,0 +1,142 @@
+{
+  "modules": [
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #22 count-window input materializer",
+      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.ConstWriters",
+      "reason": "Checked constant-writer phase for the active materializer frontier."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "ScratchBridge.InputMat.ConstWriters and sorry #22",
+      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.Shapes",
+      "reason": "Checked target and padding shape lemmas for the active materializer frontier."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #19/#20 QuoteRest emitter and joiner routes",
+      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredLowererReadiness",
+      "reason": "Readiness boundary for the active left-tailed structured implementation."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #19/#20 QuoteRest endpoint assembly",
+      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputProjectorRoutes",
+      "reason": "Active output-projector route over the left-tailed implementation."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional source-rest live-tail imports",
+      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LiveTail",
+      "reason": "Stable thin import facade for focused QuoteRest development."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 bounded fuel-pair search driver",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Layout",
+      "reason": "Checked physical candidate and simulator layout definitions for the active search repair."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 master dispatcher",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Retarget",
+      "reason": "Checked simulator-block retargeting for the active search repair."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 candidate advance loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Schedule",
+      "reason": "Checked finite-square schedule cursor advancement."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 master dispatcher after sorry #18 closes",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Simulation",
+      "reason": "Conditional adapter to the fixed-description simulator contract."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 payload-preserving branching validator",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Validation",
+      "reason": "Checked semantic validation and physical-validator contract for the active search repair."
+    },
+    {
+      "category": "debug",
+      "intended_consumer": "Opt-in finite-machine debugging sessions",
+      "module": "FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MachineDescriptionDebugExamples",
+      "reason": "Deliberately excluded executable debugger examples."
+    },
+    {
+      "category": "debug",
+      "intended_consumer": "Opt-in experiments with stay-move structured lowering",
+      "module": "FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredStayLowering",
+      "reason": "Deliberate optional extension; the production lowerer rejects stay moves."
+    },
+    {
+      "category": "guardrail",
+      "intended_consumer": "Dovetail quote-cleanup contract reviews",
+      "module": "FoC.Computability.Compiler.Core.DovetailInitLayout.CheckedBoolWordQuoteCleanup",
+      "reason": "Checked counterexample/guardrail module retained to prevent an invalid cleanup contract."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional padded-parser imports",
+      "module": "FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedParser",
+      "reason": "Stable thin import facade for the split padded parser."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional finite-recognizer API imports",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer",
+      "reason": "Public barrel intentionally kept outside the default FoC import graph."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreterContracts",
+      "reason": "Contract boundary for an active finite-recognizer sorry."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "ExactFuel.Program direct frontier",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Contracts",
+      "reason": "Exact-fuel recognizer contract used by the active program leaf."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "ExactFuel parser and program closure",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser",
+      "reason": "Checked unary parser phase for the active exact-fuel recognizer."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "FiniteRecognizer.Product direct frontier",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ProductContracts",
+      "reason": "Product recognizer contract for an active direct sorry."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "FiniteRecognizer.TupleSearch.Program direct frontiers",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Contracts",
+      "reason": "Tuple-search recognizer contracts for active direct sorries."
+    },
+    {
+      "category": "guardrail",
+      "intended_consumer": "Sorry #12 repaired bounded-fuel-pair contract",
+      "module": "FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator.ContractGuardrails",
+      "reason": "Concrete impossibility theorems prevent resurrection of the false scalar-output contract."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional structured-lowering imports",
+      "module": "FoC.Computability.Compiler.Structured.Lowering",
+      "reason": "Public barrel intentionally kept outside the default FoC import graph."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional dispatcher-assembly imports",
+      "module": "FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly",
+      "reason": "One-line public facade; production users import focused child modules directly."
+    }
+  ]
+}

@@ -8,7 +8,78 @@
   },
   "violations": {
     "compiler_dir_depth": [],
-    "compiler_rel_path": [],
+    "compiler_rel_path": [
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/ClassifiedBoundary.lean",
+        "value": 86
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/MetadataPrefix.lean",
+        "value": 82
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/MetadataPrefixRuns.lean",
+        "value": 86
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/SelectorIngress.lean",
+        "value": 83
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/SourceCounter.lean",
+        "value": 81
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/StateSelector.lean",
+        "value": 81
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/StateSelectorRuns.lean",
+        "value": 85
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/GuardedEgress/ExactTapeSerializer.lean",
+        "value": 82
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/LoopDispatcherDoneWitnessCloseout.lean",
+        "value": 82
+      },
+      {
+        "key": "compiler_rel_path",
+        "limit": 80,
+        "line": null,
+        "path": "formal/FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator/ContractGuardrails.lean",
+        "value": 84
+      }
+    ],
     "decl_name": [],
     "formal_lean_path": [],
     "route_contracts_file": []

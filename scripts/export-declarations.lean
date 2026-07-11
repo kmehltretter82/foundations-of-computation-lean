@@ -223,10 +223,11 @@ unsafe def emitDecl (env : Environment) (includeNormalized : Bool)
      csvEscape normalizedType.error]
 
 def usage : String :=
-  "Usage: lake env lean --run scripts/export-declarations.lean [MODULE] [PREFIX] [--raw-only] [--progress-every=N] [--no-progress]\n" ++
+  "Usage: lake env lean --run scripts/export-declarations.lean [MODULE] [PREFIX] [--module-prefix=NAME] [--raw-only] [--progress-every=N] [--no-progress]\n" ++
   "\n" ++
   "MODULE is the module to import, default FoC.Computability.\n" ++
   "PREFIX is the declaration-name prefix to export, default FoC.Computability.\n" ++
+  "--module-prefix keeps declarations originating in matching modules only.\n" ++
   "--raw-only skips normalized_type generation for faster broad exports.\n" ++
   "--progress-every=N logs progress to stderr every N matched declarations.\n" ++
   "--no-progress disables stderr progress logging."
@@ -234,6 +235,7 @@ def usage : String :=
 structure ExportOptions where
   moduleName : Name
   prefixName : Name
+  modulePrefix? : Option Name
   includeNormalized : Bool
   progressEvery : Nat
 
@@ -245,7 +247,8 @@ inductive ParsedArgs where
 def parseArgs (args : List String) : ParsedArgs :=
   let knownFlag (arg : String) : Bool :=
     ["--raw-only", "--no-progress", "-h", "--help"].contains arg ||
-      arg.startsWith "--progress-every="
+      arg.startsWith "--progress-every=" ||
+      arg.startsWith "--module-prefix="
   match args.find? (fun arg => arg.startsWith "--" && !knownFlag arg) with
   | some arg => .error s!"unknown option: {arg}\n\n{usage}"
   | none =>
@@ -254,17 +257,25 @@ def parseArgs (args : List String) : ParsedArgs :=
       else
         let progressArg? :=
           args.find? (fun arg => arg.startsWith "--progress-every=")
+        let modulePrefixArg? :=
+          args.find? (fun arg => arg.startsWith "--module-prefix=")
         let progressEvery? :=
           progressArg?.bind fun arg =>
             arg.drop "--progress-every=".length |>.toNat?
-        match progressArg?, progressEvery? with
-        | some arg, none =>
+        let modulePrefixText? :=
+          modulePrefixArg?.map fun arg =>
+            (arg.drop "--module-prefix=".length).toString
+        match progressArg?, progressEvery?, modulePrefixText? with
+        | some arg, none, _ =>
             .error s!"invalid progress interval: {arg}\n\n{usage}"
-        | _, _ =>
+        | _, _, some "" =>
+            .error s!"module prefix may not be empty\n\n{usage}"
+        | _, _, _ =>
             let positionals := args.filter (fun arg => !arg.startsWith "-")
             .options
               { moduleName := nameFromString (positionals.getD 0 "FoC.Computability")
                 prefixName := nameFromString (positionals.getD 1 "FoC.Computability")
+                modulePrefix? := modulePrefixText?.map nameFromString
                 includeNormalized := !args.contains "--raw-only"
                 progressEvery :=
                   if args.contains "--no-progress" then
@@ -305,7 +316,14 @@ unsafe def main (_args : List String) : IO UInt32 := do
       let entries :=
         (SMap.toList env.constants).foldl (init := (#[] : Array (Name × ConstantInfo)))
           fun rows entry =>
-            if nameStartsWith opts.prefixName entry.1 then
+            let moduleMatches :=
+              match opts.modulePrefix? with
+              | none => true
+              | some pref =>
+                  match moduleOf? env entry.1 with
+                  | none => false
+                  | some modName => nameStartsWith pref modName
+            if nameStartsWith opts.prefixName entry.1 && moduleMatches then
               rows.push entry
             else
               rows
