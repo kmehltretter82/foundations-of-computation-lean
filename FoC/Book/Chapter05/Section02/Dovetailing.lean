@@ -323,12 +323,6 @@ theorem re_and_co_re_have_program_bool_decider
     ProgramBoolDecidable L :=
   Computability.reCoRe_programBoolDecidable h
 
-theorem re_and_co_re_have_program_bool_decider_by_paired_bounded_search
-    {L : Language alpha}
-    (h : RecursivelyEnumerableWithComplement L) :
-    ProgramBoolDecidable L :=
-  re_and_co_re_have_program_bool_decider h
-
 /-!
 This is the compiler handoff. The trace-level dovetailer already decides the
 language as a staged program.  The named bounded-trace construction below is
@@ -550,12 +544,6 @@ end TotalStageAttemptSearchDriver
 
 namespace TotalStageAttemptControllerSearchDriver
 
-theorem of_descriptionBoolDeciderCompiler
-    (hcompile : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :=
-  Computability.Search.controllerCompilerOfGeneratedCallSearch
-    hcompile
-
 theorem of_finiteStageLoopController
     (hloop :
       PairedRecognizerDovetailFiniteStageLoopControllerConstruction) :
@@ -609,19 +597,6 @@ theorem of_finiteControllerCloseout
     PairedRecognizerBoundedDovetailTableCompilerConstruction :=
   Computability.pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
     hclose
-
-theorem of_pairedRecognizerSurface
-    (h : PairedRecognizerDovetailSurface) :
-    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  h.boundedTableCompiler
-
-theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
-    (hattempt :
-      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
-    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    PairedRecognizerBoundedDovetailTableCompilerConstruction :=
-  Computability.Search.boundedCompilerOfCompiledSubroutineAndDecider
-    hattempt hbool
 
 end BoundedDovetailTableCompiler
 
@@ -711,19 +686,6 @@ theorem of_finiteControllerCloseout
     PairedRecognizerDovetailDescriptionCompilerPrinciple :=
   Computability.pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
     hclose
-
-theorem of_surface
-    (h : PairedRecognizerDovetailSurface) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  h.finiteSourceCompiler
-
-theorem of_compiledSubroutine_and_descriptionBoolDeciderCompiler
-    (hattempt :
-      PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction)
-    (hbool : SemanticDescriptionBoolDeciderCompilationAssumption) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  Computability.DescriptionCompiler.ofCompiledSubroutineAndDecider
-    hattempt hbool
 
 theorem of_layoutSubroutine_and_subroutineSearchDriver
     (hrunner :

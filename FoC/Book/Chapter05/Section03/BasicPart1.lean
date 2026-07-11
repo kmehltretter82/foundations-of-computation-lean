@@ -213,16 +213,6 @@ def FaithfulConcreteDiagonalPairMapComputable : Prop :=
       Word ConcreteMachineCodeSymbol ->
         Word (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
 
-theorem concrete_diagonal_pair_map_computable_noninjective :
-    ConcreteDiagonalPairMapComputable := by
-  simpa [ConcreteDiagonalPairMapComputable, TuringComputableWordMap,
-    ConcreteDiagonalPairMap, ConcretePairCodeSymbol, ConcreteMachineCodeSymbol,
-    Computability.ConcreteDiagonalPairMapComputable,
-    Computability.ConcreteDiagonalPairMap,
-    Computability.ConcretePairCodeSymbol,
-    Computability.ConcreteMachineCodeSymbol]
-    using! Computability.concrete_diagonal_pair_map_computable_noninjective
-
 theorem faithful_concrete_diagonal_pair_map_computable :
     FaithfulConcreteDiagonalPairMapComputable := by
   simpa [FaithfulConcreteDiagonalPairMapComputable,

@@ -627,13 +627,6 @@ theorem concrete_finite_grammar_recognizer_compiler_of_description_compiler
   Computability.finiteBooleanGeneralGrammarRecognizerCompilerPrinciple_of_descriptionCompiler
     hcompile
 
-theorem concrete_finite_bool_general_grammar_presentation_compiler_scaffold
-    (hcompile :
-      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
-    ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
-  Computability.FiniteBoolGeneralGrammarPresentation.RecognizerCompilerConstruction.scaffold
-    hcompile
-
 theorem concrete_finite_section52_closeout_of_semantic_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (hpresentation :

@@ -61,6 +61,12 @@ descriptions, diagonal pair maps, and universal-prefix row coverage. That
 presentation keeps the theorem shapes but makes the remaining finite-source
 machine construction obligations explicit.
 
+Two source discrepancies are not reproduced in Lean.  The range-machine
+discussion types its computed value as a symbol where the surrounding argument
+requires a word; the formal statement is word-valued.  In the final diagonal
+argument, one prose branch reverses the halting conclusion needed by the
+contradiction; the Lean theorem states the intended diagonal property.
+
 ## What to Inspect
 
 For machine semantics, start with {module}`FoC.Computability.Tape` and
@@ -82,17 +88,32 @@ languages, encodings, compiler bridges, and undecidability, inspect
 
 ## Status Notes
 
-The chapter's formal core is covered. The remaining work is not hidden: the
-book pages and reusable APIs identify concrete finite compiler constructions,
-finite/effective grammar construction, and the universal-machine construction
-as explicit deferred surfaces. The closeout records have been narrowed to the
-actual construction handoffs: Section 5.2 now relates semantic and finite
-grammar closeouts directly, while Section 5.3 uses the finite-source closeout,
-the universal-prefix row-coverage route, the prefix recognizer machine, and the
-encoded-input description compiler as the live construction path. The older
-encoded-input program-compiler surface remains as compatibility scaffolding,
-not as the route to finish first. The surrounding theorems are therefore stated
-with closeout records or named construction hypotheses where a textbook proof
-says "build the machine" but the formal repository has not yet completed that
-finite machine description.
+The semantic layer is proved: machine execution, computability and language
+classes, listing/range equivalences, grammar traces, reductions, and the
+abstract diagonal arguments do not rely on unfinished construction providers.
+Concrete finite descriptions are also proved for many scanners, encoders,
+transducers, and local compiler phases.  The remaining finite compiler leaves
+are exposed as construction records or explicit hypotheses; importing this
+chapter does not turn them into unconditional theorems through {lit}`sorryAx`.
+
+Section 5.1 uses a partial transition function, so a missing row stops an
+execution without being the same event as entering the designated halt state.
+Its tapes are finite observed windows into an implicitly blank bi-infinite
+tape.  Exact physical-tape equality is reserved for local handoffs; public
+results normally observe tape equivalence or normalized output and therefore
+ignore far-edge blank padding and, for normalized output, head position.
+
+Section 5.2 treats the Church–Turing thesis as explanatory motivation, not a
+Lean proposition.  The structured logical-tape layer is useful construction
+infrastructure, but it does not by itself prove the textbook's general
+multi-tape-to-one-tape equivalence: that claim requires a semantics-preserving
+lowering theorem.  Semantic RE/co-RE, listability, range, and grammar results
+are proved independently of that unfinished compiler boundary.
+
+Section 5.3 proves description syntax, parsing inversions, interpreter
+semantics, compiled-machine simulation interfaces, row-language facts, and
+conditional diagonal consequences.  A single finite universal-prefix machine
+is not yet constructed.  The live path is the finite-source closeout plus the
+prefix recognizer/runner contract; statements that require that machine retain
+the corresponding explicit hypothesis.
 -/

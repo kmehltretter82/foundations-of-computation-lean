@@ -584,39 +584,63 @@ completed:
       - coordinate: "Chapter 4, Section 4.6"
         reason: "General-grammar semantics, proof-relevant finite presentations, countable raw descriptions, exact CFG embedding, context closure, reusable form-language soundness, and the principal equal-count, ordered-block, unary-square, and selected exercise constructions are formalized. The general-grammar/recursively-enumerable equivalence belongs to Chapter 5."
   - coordinate: "Chapter 5"
-    status: "coverage_complete_formal_core"
-    theorem_declarations: 618
-    definition_declarations: 296
+    status: "proved_semantics_with_conditional_compiler_boundaries"
+    generated_metrics:
+      module_prefix: "FoC.Book.Chapter05"
+      theorem_declarations: 621
+      definition_declarations: 197
+      inductive_declarations: 4
+      constructor_declarations: 4
+      depends_on_sorry: 0
+      generated_from: "scripts/export-declarations.lean --raw-only"
     open_sorries:
-      total: 12
+      total: 20
       by_file:
-        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController.lean"
+        - file: "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser.lean"
           count: 2
-          topic: "Budget checker and unbounded stage-search sequencing leaves."
-        - file: "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/DecodedBoundedSimulator.lean"
+          topic: "Contextual nested-layout materializer and exact local restorer leaves (#24/#26)."
+        - file: "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/InputMatFrontier.lean"
           count: 1
-          topic: "Decoded bounded simulator code-machine sequencing leaf."
-        - file: "FoC/Computability/Compiler/Core/FiniteScaffolds.lean"
+          topic: "Count-window structured indexed materializer leaf (#22)."
+        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean"
+          count: 1
+          topic: "Fuel-simulator equivalence lowered-core leaf (#13)."
+        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean"
+          count: 1
+          topic: "Bounded fuel-pair enumerator semantic-core leaf (#12)."
+        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutput.lean"
           count: 2
-          topic: "Stage-attempt invocation and finite stage-loop sequencing controller leaves."
-        - file: "FoC/Computability/Compiler/Core/ControllerInputInitializer.lean"
-          count: 1
-          topic: "Controller input initializer finite-machine leaf."
-        - file: "FoC/Computability/Compiler/Core/EncodedRewriters/BoundedLayoutRunner/Parser/Closed.lean"
-          count: 1
-          topic: "Checked dovetail-layout parser body-field inversion leaf."
-        - file: "FoC/Computability/Compiler/Core/EncodedRewriters.lean"
-          count: 1
-          topic: "Bounded-layout runner closed-handoff wrapper leaf."
-        - file: "FoC/Computability/Compiler/Core/FixedDescriptionBoundedSimulator/CodeRightShifted.lean"
-          count: 1
-          topic: "Right-shifted fixed-description simulator code construction leaf."
-        - file: "FoC/Computability/Compiler/Core/EncodedRewriters/BoundedLayoutRunner/ConfigRunner/Closed/Construction.lean"
+          topic: "Fuel/output syntactic materializer and exact semantic-core leaves (#9/#10)."
+        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean"
           count: 2
-          topic: "Selected projection and merge right-shifted construction leaves."
-        - file: "FoC/Computability/Compiler/Core/ControllerResultContinue.lean"
+          topic: "Framed-stage syntactic materializer and equivalence semantic-core leaves (#6/#7)."
+        - file: "FoC/Computability/Compiler/Structured/HeadRoutes/Endpoints.lean"
+          count: 2
+          topic: "Raw-head materializer and padded representative-cleanup leaves (#16/#17)."
+        - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Program.lean"
           count: 1
-          topic: "Controller continue-result finite-machine leaf."
+          topic: "Exact-fuel initial-layout materializer and ordinary runner route leaf (#5)."
+        - file: "FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean"
+          count: 1
+          topic: "Pair-encoded payload ingress leaf (#15)."
+        - file: "FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTJoinerConstruction.lean"
+          count: 1
+          topic: "QuoteRest tape-equivalence joiner leaf (#19)."
+        - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean"
+          count: 1
+          topic: "Ordinary-halting decoded-description interpreter leaf (#4)."
+        - file: "FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTEmitterConstruction.lean"
+          count: 1
+          topic: "QuoteRest exact local emitter leaf (#20)."
+        - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean"
+          count: 1
+          topic: "Generated-product ordinary exact-fuel runner leaf (#3)."
+        - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean"
+          count: 2
+          topic: "Unbounded and budgeted tuple-search recognizer leaves (#1/#2)."
+        - file: "FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitter.lean"
+          count: 1
+          topic: "Closed-configuration run-config emitter leaf (#18)."
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"
@@ -635,40 +659,6 @@ completed:
       - "FoC.Computability.Encoding"
       - "FoC.Computability.Compiler"
       - "FoC.Computability.FiniteProgram"
-    proved_core:
-      - "Turing-machine directions and finite-window tapes with blanks as option-valued cells"
-      - "Tape input/output representation, normalized output extraction, reading, writing, and left/right movement"
-      - "Deterministic one-tape Turing-machine structure with start state, halt state, transition function, and finite state witness"
-      - "Configurations, initial input configurations, one-step transition semantics, deterministic next-configuration uniqueness, and reflexive-transitive computation"
-      - "Step-indexed computations, finite-step halting, finite-step normalized-output halting, exact-output aliases, and equivalence between unbounded halting and halting in some finite number of steps"
-      - "Exact-step computation composition, deterministic fixed-length run uniqueness, output-tape injectivity, and fixed-time output uniqueness"
-      - "Stopped-halting-state vocabulary, no outgoing transitions from halted configurations, halted-computation stability, halted-final uniqueness, and stopped-machine output uniqueness"
-      - "Halting, halting with output, acceptance by halting, accepted languages, and recognizer equality vocabulary"
-      - "Computation reflexivity, one-step inclusion, transitivity, halted-configuration halting, computation-to-halt halting, backward closure of halting over prior computation, and halting-with-output implies halting"
-      - "Machine-recognized languages and accepted languages bridge into the Turing-acceptable-language vocabulary"
-      - "Turing-computable total and partial string-function vocabulary with explicit input/output encodings, total-as-partial embedding, universal-domain fact, and pointwise equality transport"
-      - "Partial computable function domains, exact halting/domain equivalence, and the theorem that every partial computable function domain is Turing-acceptable and recursively enumerable"
-      - "Turing-decidable and Turing-acceptable language vocabulary, recursive and recursively enumerable aliases, and language-equality transport"
-      - "Characteristic-function vocabulary for languages, proof that the canonical Boolean characteristic function is characteristic, and equivalence between Turing-decidability and having a Turing-computable Boolean characteristic function"
-      - "A decider, as modeled by output 0/1, halts on every input and has finite-stage accepting/rejecting output traces"
-      - "Stopped 0/1 decider witness vocabulary, ordinary-decidability projection, complement closure, output soundness, normalized output-1/output-0 classification, complementary finite output traces, and bounded-search classification for stopped deciders"
-      - "Concrete normalized-output stopped-decider-to-acceptor machine transformation, with finite outward scanner, scanner-completeness proof, simulation, reachability invariant, no-false-accept soundness, and Turing-acceptability consequence"
-      - "Stopped-decider accepting and rejecting output traces as finite acceptance traces for a language and its complement"
-      - "Decidable and recursive languages are closed under complement by swapping decider outputs, with complement equivalences using double-complement language equality"
-      - "Co-recursively enumerable language vocabulary, finite-stage acceptance traces for recursively enumerable languages, complementary acceptance traces for RE plus co-RE languages, bounded trace-hit search, no-conflict lemmas, the classical bounded classification core that underlies dovetailing, and a conditional proof of the recursive iff RE/co-RE theorem from the decider-to-acceptor and dovetailing construction principles"
-      - "Staged program semantics with acceptance-trace equivalence, trace recognizer programs, a concrete trace-level dovetailing program that decides a language from complementary acceptance traces, explicit staged-program compiler principles, a description-backed dovetail compiler principle, the paired-recognizer description-level dovetail compiler target, finite recognizer presentation predicates, and finite-dovetail compiler construction surfaces that derive description-backed and Turing-layer recursive-language consequences once the finite decider description is supplied"
-      - "Listing and range-language vocabulary for recursively enumerable languages, including listability/range extensionality, partial listings that can represent the empty language, unary-input bridges between listings and ranges, two-parameter staged-program ranges folded into unary partial ranges by the pairing code, semantic equivalences among partial listings, partial unary ranges, and partial-function programs, description-backed compiler principles for arbitrary partial unary range/program syntax, conditional compiled-range iff statements under those compiler principles, finite partial-unary output-function bridges from supplied descriptions with output completeness/functionality, and finite partial-unary presentation closeouts to compiled range and compiled program-range languages"
-      - "Length-indexed unrestricted grammar derivations, finite-production-list yield/derivation traces with exact equivalence to grammar derivations, explicit finite production-list derivation certificates, checked indexed rule-reference certificate data, checked-data trace/search equivalences, bounded certificate recognizers, finite-production witness extraction into list-backed recognizers, grammar derivation acceptance traces, staged recognizer programs for generated languages, explicit finite-production-list staged recognizers, program-acceptability for finite-production generated general-grammar languages, compiler-conditional generated-language-to-RE bridges, named grammar-to-RE and finite-grammar-to-RE construction surfaces, finite grammar recognizer presentation predicates, and Boolean grammar recognizer description-compiler principles for both general and finite-production grammar directions"
-      - "Proof-relevant general-grammar presentations as the canonical Chapter 4/5 finite-grammar interface, with direct presentations for first-order Boolean grammars, finite trace-table grammars, and machine-history grammars; presentation-based derivation traces, ordinary/bounded/certificate recognizers, compiler boundaries, generated-language statements, and RE-equivalence surfaces; and compatibility corollaries for the older finite-production predicates"
-      - "General grammar versus recursively enumerable language equivalence statement shape, explicit forward/reverse construction surfaces for the grammar/RE equivalence, grammar witnesses for a language plus its complement, and conditional grammar-pair characterizations of recursive languages from the recursive iff RE/co-RE construction"
-      - "Non-computable function, non-acceptable language, undecidable language, decidable and acceptable reductions, diagonal-language, decoder-row recognition, decoder-universality for acceptable languages and for all languages, self-halting language, halting-problem, universal-machine specification vocabulary, universal-machine row languages, and row-coverage vocabulary, with extensionality and complement transport"
-      - "Reduction reflexivity/transitivity, complement preservation for decidable reductions, undecidability transfer along decidable reductions, and non-acceptability transfer along acceptable reductions"
-      - "Abstract diagonal contradiction core for self-recognition predicates, no decoder row for a decoder's own diagonal language, missing-language and no-universal-decoder theorems, non-acceptability under decoder universality, self-diagonal/complement-self-halting equivalence, conditional self-halting not-recursive/not-RE-complement theorem shape, halting-problem membership/elimination/extensionality, explicitly paired halting-problem and self-halting-pair vocabulary, diagonal-pair transfer of undecidability, universal-machine pair-halting/pair-decoding facts, concrete universal-machine row equalities, and the equivalence between decoder universality and universal-machine row coverage under a universal-machine spec"
-      - "Word-map preimage languages, decidable-preimage principles, computable-map decidable-preimage construction principles, injective pair-encoding vocabulary, diagonal pair maps, the theorem that an injective pair encoding makes the diagonal preimage of pair-halting exactly self-halting, decidability equivalence between the diagonal preimage and self-halting, a concrete finite-preserving pair-code alphabet with injectivity, concrete computable-map preimage bridges, explicit self-halting-to-pair-halting reductions, and specialized pair-halting reductions"
-      - "Concrete finite machine-description alphabet, unary/list-based encoders and exact/prefix decoders for descriptions, fixed-width Boolean expansion of machine-code words with decoder roundtrip and injectivity, well-formedness and determinism predicates for decoded transition tables, interpreter configurations and step/run/halting semantics, halt-transition-free subroutine vocabulary and preservation under table extension/offset/union, transition-fragment DSL primitives for single actions, write-then-move actions, preserving moves, cell-preserving branches, handoffs with proved one-step first-arrival behavior, loops, verified fragments, state offsets, disjoint unions, sequential fragment composition, fixed-simulator table skeletons, state-extension/offset/disjoint-union transition-table builders, tape/configuration encoders with roundtrips, executable single-step configuration-code primitive, executable tape-code primitives with identity/erase/prepend/append/compose builders and semantic realization lemmas, canonical single-simulator and paired-dovetail work-layout encoders with Boolean tape expansion and roundtrips, simulator-layout decode/complete-decode inversion, simulator-layout code normalization and bounded-run code primitives, paired-dovetail layout run code primitive with bounded-output agreement, one-step and bounded fixed-description simulator layout semantics with config/hit correctness, encoded fixed-description runner semantics, executable bounded halting/dovetail search, and a transition-level bridge from description-table steps to the existing one-tape Turing-machine model"
-      - "Concrete description-backed code-word decoder relation, Boolean expansion of machine-code inputs, encoded-description rows, prefix-decoder row semantics for concatenated encoded descriptions and inputs, and concrete machine self-halting/pair-halting language wrappers"
-      - "Simulation equivalence between well-formed machine descriptions and their compiled one-tape Turing machines, normalized-output and exact-output description-backed staged acceptor and Boolean decider compiler bridges, exact tape-output aliases, exact-output composition predicates, exact identity-description realization and uniqueness, concrete finite identity compiler for code-word tape primitives, halt-free primitive-table subroutine core, code-word-level primitive-composition compiler boundary, normalized-output code-realizer boundaries, checked exact-output obstruction for the erase primitive, named tape-level input/output helpers, executable fixed-description step and bounded-simulator code primitives, code-primitive-to-description compiler boundaries for the fixed stepper, fixed bounded simulator, paired dovetail layout runner, and paired dovetail partial/total single-stage attempts, convention-aware first-arrival phase targets, finite halt/handoff phase realizers, verified phase sequencing soundness, skeleton-realizer predicates, and skeleton/phase compiler bridges for the fixed-description bounded-simulator table-realizer target, accept-merge primitive successful-transform shape and nonempty-output lemmas, dovetail and paired-recognizer description compiler principles, the bounded-dovetail table-realizer target and its bridge to the paired-recognizer compiler, compiled partial unary range/program-range compiler bridges to partial Turing-computable functions including staged unary program ranges, proofs that the legacy raw-concatenation universal-machine spec and closeout structure are inconsistent, and a prefix-code universal-runner specification with encoded-description row equality and row-coverage construction from the encoded-input compiler"
-      - "Finite executable program-description syntax for acceptors, Boolean deciders, dovetailing deciders, and partial unary range programs, with concrete Section 5.2 bridges from supplied descriptions, finite recognizer presentations, finite partial-unary presentations, finite partial-unary output listings, finite construction surfaces to RE/recursive/range conclusions, and an equivalence between the finite dovetail compiler wrapper and the paired-recognizer description-level compiler target"
     sections:
       - coordinate: "Chapter 5, Section 5.1"
         status: "complete_stopped_decider_transformation_core"

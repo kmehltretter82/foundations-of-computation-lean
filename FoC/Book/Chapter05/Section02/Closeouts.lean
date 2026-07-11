@@ -367,7 +367,7 @@ theorem finite_general_grammar_pair_recursive_of_checked_presentation_compiler
     TuringDecidable L :=
   finite_general_grammar_pair_recursive_of_finite_data_constructions
     hpaired
-    (concrete_finite_bool_general_grammar_presentation_compiler_scaffold
+    (ConcreteFiniteBoolGeneralGrammarPresentation.RecognizerCompiler.of_checkedIndexedCertificateRecognizerCompiler
       hcompile)
     hpair
 
