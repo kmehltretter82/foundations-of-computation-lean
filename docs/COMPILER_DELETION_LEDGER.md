@@ -154,6 +154,24 @@ comparison.
 - Reconsider only if: a caller needs a statement not derivable directly from
   those three live modules; add only the caller-facing theorem.
 
+### Facade-only materializer and CountWindow route bundles
+
+- Deleting commit: `5f557820` (`Remove unused materializer contract bundles`)
+- Net reduction: 1,670 lines.
+- Old paths: `FiniteTransducers/StructuredInputMaterializerContracts.lean` and
+  `FST/CountWindow/Contracts.lean`.
+- Potentially reusable ideas: exact/output/equivalence materializer route
+  records, endpoint/scan views of CountWindow, construction-chain bundles, and
+  exact-live-tail impossibility packaging.
+- Why retired: both modules were imported only by the broad finite-transducer
+  facade; every declaration reference was internal to its own module. The live
+  materializer, CountWindow construction, and downstream raw-source bridge use
+  the canonical specs directly.
+- Current route: `StructuredInputMaterializer.lean`, its focused endpoint
+  modules, and `FST/CountWindow.lean`.
+- Reconsider only if: a real caller needs multiple fields of one route record.
+  Prefer a direct theorem over recreating symmetric route/bundle conversions.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
