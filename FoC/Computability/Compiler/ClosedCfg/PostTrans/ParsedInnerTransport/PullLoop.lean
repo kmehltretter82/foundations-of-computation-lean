@@ -520,7 +520,7 @@ theorem pullOneBitJ2_run
                               (none :: [])))))))
           (none :: R) } := by
     refine Reaches.of_eq ?_
-    simp only [Configuration.mk.injEq, and_true, true_and, eq_self_iff_true]
+    simp only [Configuration.mk.injEq, true_and]
     congr 1
     simp [List.append_eq, List.reverse_append, List.append_assoc,
       replicate_none_comm']
@@ -560,7 +560,7 @@ theorem pullOneBitJ2_run
           | rfl
           | (congr 1
              simp [List.append_eq, List.reverse_reverse, List.reverse_append,
-               List.append_assoc, replicate_none_comm'])
+               replicate_none_comm'])
   | true =>
       have s5 := pullStepLeft
         (D := pullOneBitJ2Description) (s := 6) (t := 8) (x := true)
@@ -596,7 +596,7 @@ theorem pullOneBitJ2_run
           | rfl
           | (congr 1
              simp [List.append_eq, List.reverse_reverse, List.reverse_append,
-               List.append_assoc, replicate_none_comm'])
+               replicate_none_comm'])
 
 /-- One pull across one interior run, from the block's leftmost bit. -/
 theorem pullOneBitJ1_run
@@ -669,7 +669,7 @@ theorem pullOneBitJ1_run
                         (none :: [])))))
           (none :: R) } := by
     refine Reaches.of_eq ?_
-    simp only [Configuration.mk.injEq, and_true, true_and, eq_self_iff_true]
+    simp only [Configuration.mk.injEq, true_and]
     congr 1
     simp [List.append_eq, List.reverse_append, List.append_assoc,
       replicate_none_comm']
@@ -703,7 +703,7 @@ theorem pullOneBitJ1_run
           | rfl
           | (congr 1
              simp [List.append_eq, List.reverse_reverse, List.reverse_append,
-               List.append_assoc, replicate_none_comm'])
+               replicate_none_comm'])
   | true =>
       have s4 := pullStepLeft
         (D := pullOneBitJ1Description) (s := 4) (t := 6) (x := true)
@@ -733,7 +733,7 @@ theorem pullOneBitJ1_run
           | rfl
           | (congr 1
              simp [List.append_eq, List.reverse_reverse, List.reverse_append,
-               List.append_assoc, replicate_none_comm'])
+               replicate_none_comm'])
 
 /-- Bit-run crossing leftward to the window edge, exiting on the phantom
 blank beyond the leftmost cell. -/
@@ -820,7 +820,7 @@ theorem deliverRightEdge
       tapeAtCells [some x] (List.append (revBits.reverse.map some) R)
       from by cases hr : List.append (revBits.reverse.map some) R <;>
         simp [tapeSeenLeft, tapeAtCells, Tape.move, Tape.moveRight,
-          Tape.write, hr]] at this)
+          Tape.write]] at this)
 
 theorem replicate_none_append_cons' (n : Nat) (X : List (Option Bool)) :
     (List.replicate n (none : Option Bool)) ++ (none :: X) =
@@ -1017,7 +1017,7 @@ theorem pullLoopJ1_loop
         (by decide) (by decide) (by decide) (by decide) (by decide)
         (by decide)
         g1 (List.append rest.reverse [y])
-        (by cases hr : rest.reverse <;> simp [hr])
+        (by cases rest.reverse <;> simp)
         (none ::
           List.append (run1Rev.reverse.reverse.map some)
             (none ::
@@ -1063,10 +1063,10 @@ theorem pullLoopJ1_loop
 
 /--
 Full run of the one-interior-run pull loop machine: from the block's leftmost
-bit, pull the entire field beyond `run1` and prepend it to the block.  The
+bit, pull the entire field beyond {name}`run1` and prepend it to the block.  The
 pulled field is presented through its reversed decomposition
-`x0 :: y0 :: fldRest` (fields pulled by this machine always have at least two
-bits).
+{lean}`x0 :: y0 :: fldRest` (fields pulled by this machine always have at
+least two bits).
 -/
 theorem pullLoopJ1_run
     (b1 : Bool) (blkT : Word Bool)

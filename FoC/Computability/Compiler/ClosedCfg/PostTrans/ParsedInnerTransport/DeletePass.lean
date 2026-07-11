@@ -187,7 +187,7 @@ theorem eraseNat_run
             List.append (List.replicate (4 * (n + 1) + 4) none) L := by
         rw [show 4 * (n + 1) + 4 = (4 * n + 4) + 4 from by lia,
           replicate_none_add]
-        simp [List.append_eq, List.append_assoc, List.replicate,
+        simp [List.append_eq, List.replicate,
           replicate_none_comm']
       have efin :
           (Configuration.mk t (tapeAtCells

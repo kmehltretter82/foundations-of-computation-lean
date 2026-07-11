@@ -231,7 +231,7 @@ theorem inputScannerDescription_haltsFrom_commonSource
       List.append (stageNatBits p.L.stage)
           (commonAfterStageSuffixBits p) =
         false :: suffixTail := by
-    simp [suffixTail, hstage, List.append_assoc]
+    simp [suffixTail, hstage]
   rcases
       run_cellList_raw_to_canonical_handoff_withBaseAndRight
         (p.L.input.map some) commonTransitionBaseLeft
@@ -370,6 +370,33 @@ theorem commonScheduleDescription_haltsFrom
       hentryInput
       (commonAfterInputTape_move_right p)
       (stageScannerDescription_haltsFrom_commonSource p)
+
+theorem dropTrailingNone_append_of_all_none
+    (xs pad : List (Option Bool))
+    (hpad : ∀ z ∈ pad, z = none) :
+    Tape.dropTrailingNone (xs ++ pad) = Tape.dropTrailingNone xs := by
+  have hrep : pad = List.replicate pad.length none := by
+    induction pad with
+    | nil => rfl
+    | cons a rest ih =>
+      have ha : a = none := hpad a (by simp)
+      have hr : ∀ z ∈ rest, z = none := by
+        intro z hz
+        exact hpad z (by simp [hz])
+      rw [ha]
+      simp only [List.length_cons, List.replicate_succ]
+      exact congrArg (List.cons (none : Option Bool)) (ih hr)
+  rw [hrep]
+  exact FoC.Computability.dropTrailingNone_append_replicate_none xs pad.length
+
+theorem replicate_add_none (m n : Nat) :
+    List.replicate (m + n) (none : Option Bool) =
+      List.append (List.replicate m none) (List.replicate n none) := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [Nat.succ_add, List.replicate_succ, List.replicate_succ, ih]
+    rfl
 
 end ParsedInnerTransport
 end BoundedLayoutRunner

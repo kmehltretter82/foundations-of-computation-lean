@@ -80,13 +80,10 @@ theorem acceptAfterHitTape_move_left_firstPullShape
       SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits,
       SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
       boolFieldBits_eq_four]
-    simp [SelectedMergePaddedEmitterParsedInnerAcceptHitFieldBits,
-      SelectedMergePaddedEmitterParsedInnerRejectHitFieldBits,
-      SelectedMergePaddedEmitterParsedInnerOuterHitFieldBits,
-      boolFieldBits_eq_four, tapeSeenLeft,
+    simp [boolFieldBits_eq_four, tapeSeenLeft,
       CommonGround.FiniteTransducers.tapeAtCells,
-      commonRightPadding, Tape.move, Tape.moveLeft, List.map_append, List.map_reverse,
-      List.reverse_append, List.replicate_succ, List.append_assoc]
+      commonRightPadding, Tape.move, Tape.moveLeft, List.map_reverse,
+      List.replicate_succ]
 
 def acceptAfterFirstPullTape
     (p : SelectedMergeEmitterPayload)

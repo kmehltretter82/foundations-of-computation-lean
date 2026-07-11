@@ -65,7 +65,7 @@ theorem rejectAfterRejectConfigSuffixBits_eq_acceptHit
       (cellFieldBits_append_nil (some p.L.acceptHit)
         (rejectAfterAcceptHitSuffixBits p))
 
-theorem commonAfterAcceptConfigSuffixBits_eq_rejectConfig
+theorem rejectCommonAfterAcceptConfigSuffixBits_eq_rejectConfig
     (p : SelectedMergeEmitterPayload) :
     commonAfterAcceptConfigSuffixBits p =
       configurationFieldBits p.L.rejectConfig
@@ -135,7 +135,7 @@ theorem rejectAcceptConfigScan_haltsFrom
     ⟨suffixTail, hsuffix⟩
   have hright :
       commonAfterAcceptConfigSuffixBits p = false :: suffixTail := by
-    rw [commonAfterAcceptConfigSuffixBits_eq_rejectConfig]
+    rw [rejectCommonAfterAcceptConfigSuffixBits_eq_rejectConfig]
     exact hsuffix
   have hsourceBits :
       commonAfterStageSuffixBits p =
@@ -175,7 +175,7 @@ theorem rejectAcceptConfigScan_haltsFrom
       SelectedMergePaddedEmitterParsedInnerAcceptConfigFieldBits,
       hright, CommonGround.FiniteTransducers.tapeAtCells,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      List.map_append, List.map_reverse, List.append_assoc]
+      List.map_reverse]
   refine ⟨steps, ?_⟩
   constructor
   · simpa [MachineDescription.HaltsFromTapeIn,
@@ -289,12 +289,12 @@ theorem rejectThroughSentinelRestoreDescription_haltsFrom
       (List.append (suffixTail.map some) commonRightPadding)
   have hafterBits :
       commonAfterAcceptConfigSuffixBits p = false :: afterRejectTail := by
-    rw [commonAfterAcceptConfigSuffixBits_eq_rejectConfig, hpostBits]
+    rw [rejectCommonAfterAcceptConfigSuffixBits_eq_rejectConfig, hpostBits]
     exact hafterReject
   have hafterConfig :
       commonAfterAcceptConfigSuffixBits p =
         configurationFieldBits p.L.rejectConfig (false :: suffixTail) := by
-    rw [commonAfterAcceptConfigSuffixBits_eq_rejectConfig, hpostBits]
+    rw [rejectCommonAfterAcceptConfigSuffixBits_eq_rejectConfig, hpostBits]
   have hscanBridge :
       Tape.move Direction.left
           (Tape.move Direction.right (rejectAfterAcceptConfigTape p)) =
@@ -304,7 +304,7 @@ theorem rejectThroughSentinelRestoreDescription_haltsFrom
       hacceptConfig, hafterBits]
     simp [CommonGround.FiniteTransducers.tapeAtCells,
       Tape.move, Tape.moveLeft, Tape.moveRight,
-      List.map_append, List.map_reverse, List.reverse_append, List.append_assoc]
+      List.map_reverse, List.reverse_append]
   have hstash :
       sentinelStashDescription.HaltsFromTape
         (rejectAfterAcceptConfigTape p) stashTape := by
@@ -700,8 +700,7 @@ theorem rejectHitScannerDescription_haltsFrom
       DovetailInitialLayoutInitializer.config,
       CommonGround.FiniteTransducers.tapeAtCells,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      List.map_append, List.map_reverse, List.reverse_append,
-      List.append_assoc]
+      List.map_reverse]
     rfl
   rw [hsource] at hrun
   refine ⟨4, ?_⟩
@@ -1189,15 +1188,6 @@ def rejectAfterOuterConfigPullTape
                       (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
                     (List.append (List.replicate 4 none) commonRightPadding)))))))
 
-theorem replicate_add_none (m n : Nat) :
-    List.replicate (m + n) (none : Option Bool) =
-      List.append (List.replicate m none) (List.replicate n none) := by
-  induction m with
-  | zero => simp
-  | succ m ih =>
-    rw [Nat.succ_add, List.replicate_succ, List.replicate_succ, ih]
-    rfl
-
 set_option maxHeartbeats 10000000 in
 set_option maxRecDepth 1000000 in
 theorem rejectOuterConfigPull_haltsFrom
@@ -1319,7 +1309,7 @@ theorem rejectOutputPrefixPull_haltsFrom
   have hlen :
       rest.length + (prefixTail.length + 4) =
         prefixTail.length + (rest.length + 4) := by
-    simp [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+    simp [Nat.add_left_comm]
   simpa (config := { maxSteps := 1000000 })
     [rejectAfterOuterConfigPullTape, rejectAfterOutputPrefixPullTape,
     rejectRun1Bits, houter, haccept, hprefix,
@@ -1383,24 +1373,6 @@ theorem rejectFieldTransportDescription_haltsFrom
       pullLoopJ0Description_subroutineReady
       (rejectThroughOuterConfigPullDescription_haltsFrom p)
       hbridge (rejectOutputPrefixPull_haltsFrom p)
-
-theorem dropTrailingNone_append_of_all_none
-    (xs pad : List (Option Bool))
-    (hpad : ∀ z ∈ pad, z = none) :
-    Tape.dropTrailingNone (xs ++ pad) = Tape.dropTrailingNone xs := by
-  have hrep : pad = List.replicate pad.length none := by
-    induction pad with
-    | nil => rfl
-    | cons a rest ih =>
-      have ha : a = none := hpad a (by simp)
-      have hr : ∀ z ∈ rest, z = none := by
-        intro z hz
-        exact hpad z (by simp [hz])
-      rw [ha]
-      simp only [List.length_cons, List.replicate_succ]
-      exact congrArg (List.cons (none : Option Bool)) (ih hr)
-  rw [hrep]
-  exact FoC.Computability.dropTrailingNone_append_replicate_none xs pad.length
 
 theorem rejectAfterOutputPrefixPullTape_equiv_decodedHandoff
     (p : SelectedMergeEmitterPayload) :
@@ -1523,7 +1495,7 @@ theorem rejectAfterOutputPrefixPullTape_equiv_decodedHandoff
     · rw [hactualRight, htargetRight,
         dropTrailingNone_append_of_all_none core actualPad (by
           intro z hz
-          simp [actualPad, commonRightPadding] at hz
+          simp [actualPad] at hz
           rcases hz with h | h | h
           · exact h
           · exact h.2

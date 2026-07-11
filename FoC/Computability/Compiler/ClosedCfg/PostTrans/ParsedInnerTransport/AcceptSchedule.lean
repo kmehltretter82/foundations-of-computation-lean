@@ -339,8 +339,7 @@ theorem acceptThroughSentinelRestoreDescription_haltsFrom
     rw [hacceptConfigFull]
     simp [prefixLeft, afterStageRight, tapeSeenLeft,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      Tape.move, Tape.moveLeft, List.map_append, List.map_reverse,
-      List.reverse_append, List.append_assoc]
+      Tape.move, Tape.moveLeft, List.map_reverse, List.reverse_append]
     unfold Word at hacceptConfigFull
     simpa using
       (congrArg
@@ -355,7 +354,6 @@ theorem acceptThroughSentinelRestoreDescription_haltsFrom
     unfold afterStageRight
     rw [hacceptConfigFull]
     simp [tapeSeenLeft,
-      CommonGround.FiniteTransducers.tapeAtCells,
       Tape.move, Tape.moveLeft, Tape.moveRight]
   have hstash :
       sentinelStashDescription.HaltsFromTape
@@ -557,7 +555,7 @@ theorem acceptThroughRejectConfigScanDescription_haltsFrom
         SelectedMergePaddedEmitterParsedInnerRejectConfigFieldBits,
         hsuffix, CommonGround.FiniteTransducers.tapeAtCells,
         DovetailInitialLayoutInitializer.tapeAtCells,
-        List.map_append, List.map_reverse, List.append_assoc]
+        List.map_reverse]
     refine ⟨steps, ?_⟩
     constructor
     · simpa [MachineDescription.HaltsFromTapeIn,
@@ -798,8 +796,7 @@ theorem acceptHitScannerDescription_haltsFrom
       DovetailInitialLayoutInitializer.config,
       CommonGround.FiniteTransducers.tapeAtCells,
       DovetailInitialLayoutInitializer.tapeAtCells,
-      List.map_append, List.map_reverse, List.reverse_append,
-      List.append_assoc]
+      List.map_reverse]
     rfl
   rw [hsource] at hrun
   refine ⟨4, ?_⟩

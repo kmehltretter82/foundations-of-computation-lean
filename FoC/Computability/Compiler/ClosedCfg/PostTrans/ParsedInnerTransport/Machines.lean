@@ -51,9 +51,10 @@ def transportEntryDescription : MachineDescription where
     , transition 5 sTCell sTCell Direction.right 6 ]
 
 /--
-Starting on the last cell of a 4-bit token `[0,c2,c3,c4]`, rewrite it in
-place to `[c2,c3,c4,blank]` and halt on the cell after the token.  Valid
-tokens are the done token `0011` and the cell tokens `0100`, `0101`, `0110`.
+Starting on the last cell of a 4-bit token {lit}`[0,c2,c3,c4]`, rewrite it in
+place to {lit}`[c2,c3,c4,blank]` and halt on the cell after the token.  Valid
+tokens are the done token {lit}`0011` and the cell tokens {lit}`0100`,
+{lit}`0101`, {lit}`0110`.
 The blanked fourth cell later serves as the stop boundary for the
 left-boundary eraser.
 -/
@@ -88,8 +89,9 @@ def sentinelStashDescription : MachineDescription where
     , transition 17 sTCell none Direction.right 18 ]
 
 /--
-Starting on the first erased cell right of a stashed token `[c2,c3,c4,blank]`,
-restore the token to `[0,c2,c3,c4]` and halt back on the starting cell.
+Starting on the first erased cell right of a stashed token
+{lit}`[c2,c3,c4,blank]`, restore the token to {lit}`[0,c2,c3,c4]` and halt back
+on the starting cell.
 -/
 def sentinelRestoreDescription : MachineDescription where
   stateCount := 20
@@ -1018,10 +1020,10 @@ theorem runConfig_blanksThenBitsRev_exitBlank_left
 /-!
 ## Normalized crossing corollaries
 
-The general crossing lemmas end in a pending `move`/`write`; the corollaries
-below normalize those endings to `tapeAtCells`/`tapeSeenLeft` forms for the
-exit shapes the transport machines actually use, so machine run lemmas chain
-without per-step tape surgery.
+The general crossing lemmas end in a pending {lit}`move`/{lit}`write`; the
+corollaries below normalize those endings to {name}`tapeAtCells` and
+{name}`tapeSeenLeft` forms for the exit shapes the transport machines actually
+use, so machine run lemmas chain without per-step tape surgery.
 -/
 
 theorem move_right_write_tapeAtCells

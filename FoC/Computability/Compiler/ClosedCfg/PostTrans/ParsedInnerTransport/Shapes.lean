@@ -35,7 +35,7 @@ theorem stageNatBits_eq_prefix_done (n : Nat) :
   | succ n ih =>
       rcases ih with ⟨pre, hpre⟩
       refine ⟨List.append [false, false, true, false] pre, ?_⟩
-      simp [stageNatBits_succ, hpre, List.append_assoc]
+      simp [stageNatBits_succ, hpre]
 
 theorem stageNatBits_reverse_cons_cons (n : Nat) :
     exists rest : Word Bool,
@@ -43,7 +43,7 @@ theorem stageNatBits_reverse_cons_cons (n : Nat) :
   rcases stageNatBits_eq_prefix_done n with ⟨pre, hpre⟩
   refine ⟨false :: false :: pre.reverse, ?_⟩
   rw [hpre]
-  simp [List.reverse_append]
+  simp
 
 theorem cellListCanonicalRestoredLeftWithBase_eq_fieldBits_reverse_append
     (cells baseLeft : List (Option Bool)) :
@@ -172,7 +172,7 @@ theorem configurationFieldBits_eq_reverse_cons_cons
     ⟨pre, c2, c3, c4, hfield, _hvalid⟩
   refine ⟨c4, c3, c2 :: false :: pre.reverse, ?_⟩
   rw [hfield]
-  simp [List.reverse_append]
+  simp
 
 theorem outputPrefixBits_cons
     (p : SelectedMergeEmitterPayload) :
@@ -184,7 +184,7 @@ theorem outputPrefixBits_cons
         (CanonicalLayouts.DovetailLayoutScanner.boolWordFieldBits
           p.L.input (stageNatBits p.L.stage)), ?_⟩
   simp [SelectedMergePaddedEmitterParsedInnerOutputPrefixBits,
-    encodeCodeSymbolAsInput, List.append_assoc]
+    encodeCodeSymbolAsInput]
 
 theorem outputPrefixBits_eq_prefix_done
     (p : SelectedMergeEmitterPayload) :
