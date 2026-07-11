@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.CommonGround.Controller
 import FoC.Computability.Compiler.Core.CommonGround.CodeWordEmitters
 import FoC.Computability.Compiler.Core.CommonGround.Layouts
 import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Contract
 import FoC.Computability.Compiler.Core.EncRewriters.BoundedLayoutRunner.Basic
 import FoC.Computability.Compiler.Core.TapeCodePrimitiveSequencing
 
