@@ -48,9 +48,18 @@ def FuelOutputStructuredMaterializerConstruction : Prop :=
     fuelOutputStructuredInputBits
     fuelOutputStructuredInitializedTape
 
-def FuelOutputStructuredExactSemanticCoreConstruction
+/--
+Equivalence-facing semantic-core obligation for the fuel-output endpoint.
+
+The core is a lowered structured three-tape machine, and the concrete lowerer
+transfers structured runs only up to tape equivalence
+({name}`RunsFromStateTapeEquiv`), so equivalence is the honest currency for
+this leaf; the logical tape-2 output code itself remains exact inside the
+guarded encoding.
+-/
+def FuelOutputStructuredEquivSemanticCoreConstruction
     (attempt : MachineDescription) : Prop :=
-  Structured3EndpointExactSemanticCoreConstruction
+  Structured3EndpointEquivSemanticCoreConstruction
     (fun i :
       PairedRecognizerDovetailControllerStageAttemptFuelOutputIndex
         attempt => i.1.1)
@@ -82,12 +91,12 @@ theorem fuelOutputStructuredMaterializerConstruction_core :
 /--
 Finite-table leaf for the lowered fuel-output structured core.
 -/
-theorem fuelOutputStructuredExactSemanticCoreConstruction_core
+theorem fuelOutputStructuredEquivSemanticCoreConstruction_core
     (attempt : MachineDescription) :
-    FuelOutputStructuredExactSemanticCoreConstruction attempt := by
-  -- Remaining exact structured-core obligation: validate the halted layout,
-  -- extract its normalized boolean-word result code onto logical tape 2, and
-  -- recover the semantic output witness from successful runs.
+    FuelOutputStructuredEquivSemanticCoreConstruction attempt := by
+  -- Remaining structured-core obligation: validate the halted layout, extract
+  -- its normalized boolean-word result code onto logical tape 2, and recover
+  -- the semantic output witness from successful runs.
   sorry
 
 /--
@@ -98,15 +107,15 @@ projector.
 theorem fuelOutputStructuredEndpointEquivIndexedConstruction_of_components
     (attempt : MachineDescription) :
     FuelOutputStructuredMaterializerConstruction ->
-      FuelOutputStructuredExactSemanticCoreConstruction attempt ->
+      FuelOutputStructuredEquivSemanticCoreConstruction attempt ->
         FuelOutputStructuredEndpointEquivIndexedConstruction attempt := by
   intro hmaterializer hcore
   simpa [FuelOutputStructuredEndpointEquivIndexedConstruction,
     FuelOutputStructuredMaterializerConstruction,
-    FuelOutputStructuredExactSemanticCoreConstruction] using
+    FuelOutputStructuredEquivSemanticCoreConstruction] using
     structured3EndpointWordStartEquivIndexedConstruction_of_components
       hmaterializer
-      (structured3EndpointEquivSemanticCoreConstruction_of_exact hcore)
+      hcore
       structured3EndpointTape2ProjectorConstruction_core
 
 /--
@@ -119,7 +128,7 @@ theorem fuelOutputStructuredEndpointEquivIndexedConstruction_core
   fuelOutputStructuredEndpointEquivIndexedConstruction_of_components
     attempt
     fuelOutputStructuredMaterializerConstruction_core
-    (fuelOutputStructuredExactSemanticCoreConstruction_core attempt)
+    (fuelOutputStructuredEquivSemanticCoreConstruction_core attempt)
 
 theorem fuelOutputInputCode_eq_of_inputBits_eq
     {attempt : MachineDescription}
