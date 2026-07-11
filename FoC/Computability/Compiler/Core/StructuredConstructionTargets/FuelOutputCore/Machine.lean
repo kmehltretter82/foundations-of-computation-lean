@@ -171,132 +171,321 @@ The typed transition function, parametric in the attempt's halt state
 tape 2 always reads blank until the final flush.  States and reads outside
 the run on a valid encoded layout have no transition.
 -/
-def next (n : Nat) :
-    CoreState -> Option Bool -> Option Bool -> Option Bool ->
-      Option (TypedStep CoreState)
-  -- Header: four false bits.
-  | hdr0, some false, _, _ => step0 keepR hdr1
-  | hdr1, some false, _, _ => step0 keepR hdr2
-  | hdr2, some false, _, _ => step0 keepR hdr3
-  | hdr3, some false, _, _ => step0 keepR inLen0
-  -- Input-word length field: ticks then done.
-  | inLen0, some false, _, _ => step0 keepR inLen1
-  | inLen1, some false, _, _ => step0 keepR inLen2
-  | inLen2, some true, _, _ => step0 keepR inLen3
-  | inLen3, some false, _, _ => step0 keepR inLen0
-  | inLen3, some true, _, _ => step0 keepR inBits0
-  -- Input-word bit cells; first nat-class token starts the stage field.
-  | inBits0, some false, _, _ => step0 keepR inBits1
-  | inBits1, some true, _, _ => step0 keepR inBits2
-  | inBits1, some false, _, _ => step0 keepR stage2
-  | inBits2, some _, _, _ => step0 keepR inBits3
-  | inBits3, some _, _, _ => step0 keepR inBits0
-  -- Stage field: ticks then done.
-  | stage0, some false, _, _ => step0 keepR stage1
-  | stage1, some false, _, _ => step0 keepR stage2
-  | stage2, some true, _, _ => step0 keepR stage3
-  | stage3, some false, _, _ => step0 keepR stage0
-  | stage3, some true, _, _ => step0 keepR (chk 0 GroupPos.p0)
-  -- State field: match exactly n ticks then done, else spin.
-  | chk j GroupPos.p0, some false, _, _ => step0 keepR (chk j GroupPos.p1)
-  | chk j GroupPos.p1, some false, _, _ => step0 keepR (chk j GroupPos.p2)
-  | chk j GroupPos.p2, some true, _, _ => step0 keepR (chk j GroupPos.p3)
-  | chk j GroupPos.p3, some false, _, _ =>
-      if j < n then step0 keepR (chk (j + 1) GroupPos.p0)
-      else step0 keepR spin
-  | chk j GroupPos.p3, some true, _, _ =>
-      if j = n then step0 keepR lLen0 else step0 keepR spin
-  -- Left-list length field.
-  | lLen0, some false, _, _ => step0 keepR lLen1
-  | lLen1, some false, _, _ => step0 keepR lLen2
-  | lLen2, some true, _, _ => step0 keepR lLen3
-  | lLen3, some false, _, _ => step0 keepR lLen0
-  | lLen3, some true, _, _ => step0 keepR lb0
-  -- Left blob (left cells then head): the last cell token before a
-  -- nat-class token is the configuration head; mark it.
-  | lb0, some false, _, _ => step0 keepR lb1
-  | lb1, some true, _, _ => step0 keepR lb2
-  | lb1, some false, _, _ => step0 keepL lbB1
-  | lb2, some _, _, _ => step0 keepR lb3
-  | lb3, some _, _, _ => step0 keepR lb0
-  | lbB1, some _, _, _ => step0 keepL lbB2
-  | lbB2, some _, _, _ => step0 keepL lbB3
-  | lbB3, some _, _, _ => step0 keepL lbB4
-  | lbB4, some _, _, _ => step0 keepL lbMark
-  | lbMark, some false, _, _ => step0 (writeR (some true)) lbR1
-  | lbR1, some _, _, _ => step0 keepR lbR2
-  | lbR2, some _, _, _ => step0 keepR lbR3
-  | lbR3, some _, _, _ => step0 keepR lbR4
-  | lbR4, some _, _, _ => step0 keepR lbR5
-  | lbR5, some false, _, _ => step0 keepR rLen2
-  -- Right-list length field.
-  | rLen0, some false, _, _ => step0 keepR rLen1
-  | rLen1, some false, _, _ => step0 keepR rLen2
-  | rLen2, some true, _, _ => step0 keepR rLen3
-  | rLen3, some false, _, _ => step0 keepR rLen0
-  | rLen3, some true, _, _ => step0 keepR rb0
-  -- Right blob (right cells then hit): walk to the end blank.
-  | rb0, some false, _, _ => step0 keepR rb1
-  | rb0, none, _, _ => step0 keepL hit3
-  | rb1, some true, _, _ => step0 keepR rb2
-  | rb2, some _, _, _ => step0 keepR rb3
-  | rb3, some _, _, _ => step0 keepR rb0
-  -- Hit token skip, leftward.
-  | hit3, some _, _, _ => step0 keepL hit2
-  | hit2, some _, _, _ => step0 keepL hit1
-  | hit1, some _, _, _ => step0 keepL hit0
-  | hit0, some false, _, _ => step0 keepL (re3 Emission.start)
-  -- Right cells leftward: emit zero/one bits, skip blanks, stop at the
-  -- right-length done token (the first nat-class token).
-  | re3 e, some v3, _, _ => step0 keepL (re2 v3 e)
-  | re2 v3 e, some v2, _, _ => step0 keepL (re1 v3 v2 e)
-  | re1 true false e, some true, _, _ => streamLeft e false re0
-  | re1 false true e, some true, _, _ => streamLeft e true re0
-  | re1 false false e, some true, _, _ => step0 keepL (re0 e)
-  | re1 true true e, some false, _, _ => step0 keepL (rt0 e)
-  | re0 e, some false, _, _ => step0 keepL (re3 e)
-  -- Right-length field leftward; the first cell-class token is the marked
-  -- configuration head.
-  | rt3 e, some v3, _, _ => step0 keepL (rt2 v3 e)
-  | rt2 v3 e, some v2, _, _ => step0 keepL (rt1 v3 v2 e)
-  | rt1 false true e, some false, _, _ => step0 keepL (rt0 e)
-  | rt1 v3 v2 e, some true, _, _ => step0 keepL (hd0 v3 v2 e)
-  | rt0 e, some false, _, _ => step0 keepL (rt3 e)
-  -- Marked head: emit its bit, continue leftward into the left cells.
-  | hd0 true false e, some true, _, _ => streamLeft e false ls3
-  | hd0 false true e, some true, _, _ => streamLeft e true ls3
-  | hd0 false false e, some true, _, _ => step0 keepL (ls3 e)
-  -- Left cells leftward without emission, to the left-length done token.
-  | ls3 e, some _, _, _ => step0 keepL (ls2 e)
-  | ls2 e, some _, _, _ => step0 keepL (ls1 e)
-  | ls1 e, some true, _, _ => step0 keepL (ls0 e)
-  | ls1 e, some false, _, _ => step0 keepR (turn1 e)
-  | ls0 e, some false, _, _ => step0 keepL (ls3 e)
-  | turn1 e, some _, _, _ => step0 keepR (turn2 e)
-  | turn2 e, some _, _, _ => step0 keepR (le0 e)
-  -- Left cells rightward in stored order, emitting, up to the marked head:
-  -- restore the mark, require a whole number of groups, flush the hold.
-  | le0 e, some false, _, _ => step0 keepR (le1 e)
-  | le0 e, some true, _, _ =>
-      match e.pos with
-      | GroupPos.p0 => step02 (writeL (some false)) e.flushAction rw3
-      | _ => step0 keepR spin
-  | le1 e, some true, _, _ => step0 keepR (le2 e)
-  | le2 e, some v2, _, _ => step0 keepR (le3 v2 e)
-  | le3 false e, some true, _, _ => streamRight e false le0
-  | le3 true e, some false, _, _ => streamRight e true le0
-  | le3 false e, some false, _, _ => step0 keepR (le0 e)
-  -- Rewind to the header: the only aligned group with three false bits
-  -- after its first is the header, whose first bit is bit zero.
-  | rw3, some v3, _, _ => step0 keepL (rw2 (!v3))
-  | rw2 aF, some v2, _, _ => step0 keepL (rw1 (aF && !v2))
-  | rw1 true, some false, _, _ => step0 keepL halt
-  | rw1 true, some true, _, _ => step0 keepL rw0
-  | rw1 false, some _, _, _ => step0 keepL rw0
-  | rw0, some false, _, _ => step0 keepL rw3
-  -- Spin: move right forever.
-  | spin, _, _, _ => step0 keepR spin
-  | _, _, _, _ => none
+def next (n : Nat) (s : CoreState) :
+    Option Bool -> Option Bool -> Option Bool ->
+      Option (TypedStep CoreState) :=
+  match s with
+  | hdr0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR hdr1
+      | _ => none
+  | hdr1 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR hdr2
+      | _ => none
+  | hdr2 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR hdr3
+      | _ => none
+  | hdr3 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR inLen0
+      | _ => none
+  | inLen0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR inLen1
+      | _ => none
+  | inLen1 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR inLen2
+      | _ => none
+  | inLen2 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR inLen3
+      | _ => none
+  | inLen3 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR inLen0
+      | some true => step0 keepR inBits0
+      | _ => none
+  | inBits0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR inBits1
+      | _ => none
+  | inBits1 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR inBits2
+      | some false => step0 keepR stage2
+      | _ => none
+  | inBits2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR inBits3
+      | _ => none
+  | inBits3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR inBits0
+      | _ => none
+  | stage0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR stage1
+      | _ => none
+  | stage1 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR stage2
+      | _ => none
+  | stage2 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR stage3
+      | _ => none
+  | stage3 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR stage0
+      | some true => step0 keepR (chk 0 GroupPos.p0)
+      | _ => none
+  | chk j k => fun r0 _ _ =>
+      match k, r0 with
+      | GroupPos.p0, some false => step0 keepR (chk j GroupPos.p1)
+      | GroupPos.p1, some false => step0 keepR (chk j GroupPos.p2)
+      | GroupPos.p2, some true => step0 keepR (chk j GroupPos.p3)
+      | GroupPos.p3, some false =>
+          if j < n then step0 keepR (chk (j + 1) GroupPos.p0)
+          else step0 keepR spin
+      | GroupPos.p3, some true =>
+          if j = n then step0 keepR lLen0 else step0 keepR spin
+      | _, _ => none
+  | lLen0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR lLen1
+      | _ => none
+  | lLen1 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR lLen2
+      | _ => none
+  | lLen2 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR lLen3
+      | _ => none
+  | lLen3 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR lLen0
+      | some true => step0 keepR lb0
+      | _ => none
+  | lb0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR lb1
+      | _ => none
+  | lb1 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR lb2
+      | some false => step0 keepL lbB1
+      | _ => none
+  | lb2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lb3
+      | _ => none
+  | lb3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lb0
+      | _ => none
+  | lbB1 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL lbB2
+      | _ => none
+  | lbB2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL lbB3
+      | _ => none
+  | lbB3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL lbB4
+      | _ => none
+  | lbB4 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL lbMark
+      | _ => none
+  | lbMark => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 (writeR (some true)) lbR1
+      | _ => none
+  | lbR1 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lbR2
+      | _ => none
+  | lbR2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lbR3
+      | _ => none
+  | lbR3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lbR4
+      | _ => none
+  | lbR4 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR lbR5
+      | _ => none
+  | lbR5 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR rLen2
+      | _ => none
+  | rLen0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR rLen1
+      | _ => none
+  | rLen1 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR rLen2
+      | _ => none
+  | rLen2 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR rLen3
+      | _ => none
+  | rLen3 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR rLen0
+      | some true => step0 keepR rb0
+      | _ => none
+  | rb0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR rb1
+      | none => step0 keepL hit3
+      | _ => none
+  | rb1 => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR rb2
+      | _ => none
+  | rb2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR rb3
+      | _ => none
+  | rb3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR rb0
+      | _ => none
+  | hit3 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL hit2
+      | _ => none
+  | hit2 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL hit1
+      | _ => none
+  | hit1 => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL hit0
+      | _ => none
+  | hit0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepL (re3 Emission.start)
+      | _ => none
+  | re3 e => fun r0 _ _ =>
+      match r0 with
+      | some v3 => step0 keepL (re2 v3 e)
+      | _ => none
+  | re2 v3 e => fun r0 _ _ =>
+      match r0 with
+      | some v2 => step0 keepL (re1 v3 v2 e)
+      | _ => none
+  | re1 v3 v2 e => fun r0 _ _ =>
+      match v3, v2, r0 with
+      | true, false, some true => streamLeft e false re0
+      | false, true, some true => streamLeft e true re0
+      | false, false, some true => step0 keepL (re0 e)
+      | true, true, some false => step0 keepL (rt0 e)
+      | _, _, _ => none
+  | re0 e => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepL (re3 e)
+      | _ => none
+  | rt3 e => fun r0 _ _ =>
+      match r0 with
+      | some v3 => step0 keepL (rt2 v3 e)
+      | _ => none
+  | rt2 v3 e => fun r0 _ _ =>
+      match r0 with
+      | some v2 => step0 keepL (rt1 v3 v2 e)
+      | _ => none
+  | rt1 v3 v2 e => fun r0 _ _ =>
+      match v3, v2, r0 with
+      | false, true, some false => step0 keepL (rt0 e)
+      | v3', v2', some true => step0 keepL (hd0 v3' v2' e)
+      | _, _, _ => none
+  | rt0 e => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepL (rt3 e)
+      | _ => none
+  | hd0 v3 v2 e => fun r0 _ _ =>
+      match v3, v2, r0 with
+      | true, false, some true => streamLeft e false ls3
+      | false, true, some true => streamLeft e true ls3
+      | false, false, some true => step0 keepL (ls3 e)
+      | _, _, _ => none
+  | ls3 e => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL (ls2 e)
+      | _ => none
+  | ls2 e => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepL (ls1 e)
+      | _ => none
+  | ls1 e => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepL (ls0 e)
+      | some false => step0 keepR (turn1 e)
+      | _ => none
+  | ls0 e => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepL (ls3 e)
+      | _ => none
+  | turn1 e => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR (turn2 e)
+      | _ => none
+  | turn2 e => fun r0 _ _ =>
+      match r0 with
+      | some _ => step0 keepR (le0 e)
+      | _ => none
+  | le0 e => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepR (le1 e)
+      | some true =>
+          match e.pos with
+          | GroupPos.p0 => step02 (writeL (some false)) e.flushAction rw3
+          | _ => step0 keepR spin
+      | _ => none
+  | le1 e => fun r0 _ _ =>
+      match r0 with
+      | some true => step0 keepR (le2 e)
+      | _ => none
+  | le2 e => fun r0 _ _ =>
+      match r0 with
+      | some v2 => step0 keepR (le3 v2 e)
+      | _ => none
+  | le3 v2 e => fun r0 _ _ =>
+      match v2, r0 with
+      | false, some true => streamRight e false le0
+      | true, some false => streamRight e true le0
+      | false, some false => step0 keepR (le0 e)
+      | _, _ => none
+  | rw3 => fun r0 _ _ =>
+      match r0 with
+      | some v3 => step0 keepL (rw2 (!v3))
+      | _ => none
+  | rw2 aF => fun r0 _ _ =>
+      match r0 with
+      | some v2 => step0 keepL (rw1 (aF && !v2))
+      | _ => none
+  | rw1 aF => fun r0 _ _ =>
+      match aF, r0 with
+      | true, some false => step0 keepL halt
+      | true, some true => step0 keepL rw0
+      | false, some _ => step0 keepL rw0
+      | _, _ => none
+  | rw0 => fun r0 _ _ =>
+      match r0 with
+      | some false => step0 keepL rw3
+      | _ => none
+  | spin => fun _ _ _ => step0 keepR spin
+  | halt => fun _ _ _ => none
 
 end CoreState
 
@@ -377,6 +566,170 @@ theorem mem_coreStates_of_emission {n : Nat} {s : CoreState}
     (Or.inr
       (List.mem_append.mpr
         (Or.inr (List.mem_flatMap.mpr ⟨e, mem_emissionAll e, h⟩))))
+
+/-!
+## Table instance
+-/
+
+theorem chk_mem_bound {n j : Nat} {k : GroupPos}
+    (h : CoreState.chk j k ∈ coreStates n) : j ≤ n := by
+  rcases List.mem_append.mp h with hfix | hrest
+  · exfalso
+    simp [fixedStates] at hfix
+  · rcases List.mem_append.mp hrest with hchain | hemit
+    · rcases List.mem_flatMap.mp hchain with ⟨j', hj', hmem⟩
+      have hj'n : j' < n + 1 := List.mem_range.mp hj'
+      have hjj : j = j' := by
+        simp at hmem
+        rcases hmem with ⟨h1, _⟩ | ⟨h1, _⟩ | ⟨h1, _⟩ | ⟨h1, _⟩ <;>
+          exact h1
+      rw [hjj]
+      exact Nat.le_of_lt_succ hj'n
+    · exfalso
+      rcases List.mem_flatMap.mp hemit with ⟨e, _, hmem⟩
+      simp [emissionBlock] at hmem
+
+private theorem mem_cs_re3 {n : Nat} (e : Emission) :
+    CoreState.re3 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_re2 {n : Nat} (v3 : Bool) (e : Emission) :
+    CoreState.re2 v3 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by cases v3 <;> simp [emissionBlock])
+
+private theorem mem_cs_re1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+    CoreState.re1 v3 v2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e)
+    (by cases v3 <;> cases v2 <;> simp [emissionBlock])
+
+private theorem mem_cs_re0 {n : Nat} (e : Emission) :
+    CoreState.re0 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_rt3 {n : Nat} (e : Emission) :
+    CoreState.rt3 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_rt2 {n : Nat} (v3 : Bool) (e : Emission) :
+    CoreState.rt2 v3 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by cases v3 <;> simp [emissionBlock])
+
+private theorem mem_cs_rt1 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+    CoreState.rt1 v3 v2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e)
+    (by cases v3 <;> cases v2 <;> simp [emissionBlock])
+
+private theorem mem_cs_rt0 {n : Nat} (e : Emission) :
+    CoreState.rt0 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_hd0 {n : Nat} (v3 v2 : Bool) (e : Emission) :
+    CoreState.hd0 v3 v2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e)
+    (by cases v3 <;> cases v2 <;> simp [emissionBlock])
+
+private theorem mem_cs_ls3 {n : Nat} (e : Emission) :
+    CoreState.ls3 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_ls2 {n : Nat} (e : Emission) :
+    CoreState.ls2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_ls1 {n : Nat} (e : Emission) :
+    CoreState.ls1 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_ls0 {n : Nat} (e : Emission) :
+    CoreState.ls0 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_turn1 {n : Nat} (e : Emission) :
+    CoreState.turn1 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_turn2 {n : Nat} (e : Emission) :
+    CoreState.turn2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_le0 {n : Nat} (e : Emission) :
+    CoreState.le0 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_le1 {n : Nat} (e : Emission) :
+    CoreState.le1 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_le2 {n : Nat} (e : Emission) :
+    CoreState.le2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by simp [emissionBlock])
+
+private theorem mem_cs_le3 {n : Nat} (v2 : Bool) (e : Emission) :
+    CoreState.le3 v2 e ∈ coreStates n :=
+  mem_coreStates_of_emission (e := e) (by cases v2 <;> simp [emissionBlock])
+
+set_option maxHeartbeats 1600000 in
+theorem next_target_mem (n : Nat) :
+    forall s : CoreState, s ∈ coreStates n ->
+      forall (r0 r1 r2 : Option Bool) (st : TypedStep CoreState),
+        CoreState.next n s r0 r1 r2 = some st ->
+          st.target ∈ coreStates n := by
+  intro s hs r0 r1 r2 st hnext
+  cases s <;> cases r0 <;> try (rename_i b; cases b)
+  all_goals simp only [CoreState.next] at hnext
+  all_goals repeat' split at hnext
+  all_goals
+    try
+      (delta CoreState.streamLeft CoreState.streamRight Emission.stream at hnext;
+        repeat' split at hnext)
+  all_goals
+    first
+      | (cases hnext;
+         first
+           | (apply mem_coreStates_of_fixed; decide)
+           | (apply mem_coreStates_of_fixed; simp [fixedStates]; done)
+           | (rename_i a;
+              cases a <;>
+                (apply mem_coreStates_of_fixed;
+                  simp [fixedStates]; done))
+           | exact mem_coreStates_chk (chk_mem_bound hs) _
+           | exact mem_coreStates_chk (Nat.zero_le n) _
+           | (refine mem_coreStates_chk ?_ _;
+              refine Nat.succ_le_of_lt ?_;
+              assumption)
+           | exact mem_cs_re3 _
+           | exact mem_cs_re2 _ _
+           | exact mem_cs_re1 _ _ _
+           | exact mem_cs_re0 _
+           | exact mem_cs_rt3 _
+           | exact mem_cs_rt2 _ _
+           | exact mem_cs_rt1 _ _ _
+           | exact mem_cs_rt0 _
+           | exact mem_cs_hd0 _ _ _
+           | exact mem_cs_ls3 _
+           | exact mem_cs_ls2 _
+           | exact mem_cs_ls1 _
+           | exact mem_cs_ls0 _
+           | exact mem_cs_turn1 _
+           | exact mem_cs_turn2 _
+           | exact mem_cs_le0 _
+           | exact mem_cs_le1 _
+           | exact mem_cs_le2 _
+           | exact mem_cs_le3 _ _)
+      | cases hnext
+
+/-- The typed state table of the fuel-output core for halt parameter n. -/
+def table (n : Nat) : TypedStateTable CoreState :=
+  TypedStateTable.ofList (coreStates n) CoreState.hdr0 CoreState.halt
+    (CoreState.next n)
+    (mem_coreStates_of_fixed (by decide))
+    (mem_coreStates_of_fixed (by decide))
+    (by
+      intro r0 r1 r2
+      cases r0 with
+      | none => rfl
+      | some b => cases b <;> rfl)
+    (next_target_mem n)
 
 end FuelOutputCore
 end StructuredConstructionTargets
