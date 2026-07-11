@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.Shape
+import FoC.Computability.Compiler.Core.EncodingLemmas
 
 set_option doc.verso true
 
@@ -68,6 +69,50 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_add_one
     fixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_eq_length_sub_one]
   have hlen := simulatorLayout_asBoolInput_length_ge_two L
   lia
+
+private theorem encodeNat_length_for_selector (n : Nat) :
+    (encodeNat n).length = n + 1 := by
+  induction n with
+  | zero => rfl
+  | succ n ih => simp [encodeNat, ih]
+
+private theorem word_length_append_for_selector
+    {α : Type} (pre suffix : Word α) :
+    (List.append pre suffix).length = pre.length + suffix.length := by
+  change List α at pre suffix
+  exact List.length_append
+
+/-- The original scratch reservoir can hold a branch token followed by the
+complete unary encoding of the configuration state.  This permits a
+fixed-description classifier to use the reservoir temporarily without
+increasing the exact tape window. -/
+theorem scratchWidth_ge_stateSelectorBits
+    (L : SimulatorLayout) :
+    4 * (L.config.state + 2) <=
+      FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner L := by
+  cases L with
+  | mk input stage config hit =>
+    change List Bool at input
+    cases config with
+    | mk state tape =>
+      cases tape with
+      | mk left head right =>
+        change List (Option Bool) at left right
+        rw [fixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_eq_length_sub_one]
+        rw [SimulatorLayout.asBoolInput, encodeCodeWordAsInput_length]
+        unfold SimulatorLayout.encode SimulatorLayout.encodeAppend
+        simp only [List.length_cons]
+        unfold encodeBoolWordAppend encodeCellListAppend
+          encodeConfigurationAppend encodeTapeAppend encodeNatAppend
+          encodeBoolAppend encodeCellAppend
+        simp only [word_length_append_for_selector,
+          encodeNat_length_for_selector]
+        simp only [encodeCellsAppend_length]
+        simp only [List.length_map]
+        rw [word_length_append_for_selector (encodeNat stage)]
+        rw [word_length_append_for_selector (encodeNat state)]
+        rw [encodeNat_length_for_selector, encodeNat_length_for_selector]
+        lia
 
 /-- Unary marker block that can carry the original scratch width through the
 destructive simulation and serializer phases. -/
