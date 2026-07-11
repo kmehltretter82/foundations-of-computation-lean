@@ -1,5 +1,4 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.TargetSerializer
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.EgressSemantics
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.PipelineContracts
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.LoopDispatcher
@@ -130,18 +129,6 @@ def Index.fields (i : Index) : ExactCloseout.Fields :=
 /-- Exact right-shifted target expected by the final one-cell parking phase. -/
 def Index.target (i : Index) : Tape Bool :=
   i.fields.rightScratchTape i.scratchWidth
-
-/-- Conditional extractor index that becomes applicable only after the actual
-guarded parser/assembler has materialized the serialized target on tape 2. -/
-def Index.conditionalExtractorIndex (i : Index) : TargetSerializer.Index where
-  tape0 := i.finalTape
-  tape1 := i.consumedStageTape
-  fields := i.fields
-  scratchWidth := i.scratchWidth
-
-theorem Index.conditionalExtractorTarget (i : Index) :
-    i.conditionalExtractorIndex.target = i.target := by
-  rfl
 
 theorem Index.fields_eq_semantic (i : Index) :
     i.fields = ExactCloseout.semanticFields i.description i.sourceLayout := by
