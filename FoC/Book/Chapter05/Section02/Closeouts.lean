@@ -175,14 +175,14 @@ theorem recursive_language_iff_re_and_co_re_of_semantic_surface
 theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :
-    LanguagePartiallyListable L <-> ConcreteCompiledPartialUnaryRange L :=
+    PartiallyListable L <-> ConcreteCompiledPartialUnaryRange L :=
   partially_listable_language_iff_concrete_compiled_partial_unary_range_of_concrete_compiler
     hclose.partialUnaryRangeDescription L
 
 theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout)
     (L : Language Bool) :
-    LanguagePartiallyListable L <->
+    PartiallyListable L <->
       ConcreteCompiledPartialUnaryFunctionProgramRange L :=
   partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_concrete_compiler
     hclose.partialUnaryRangeDescription L
