@@ -34,7 +34,6 @@ theorem acceptThroughOuterHitPull1Description_subroutineReady :
     acceptThroughRejectHitPull4Description_subroutineReady
     pullOneBitJ2Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughOuterHitPull1Description_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -102,7 +101,6 @@ theorem acceptThroughOuterHitPull2Description_subroutineReady :
     acceptThroughOuterHitPull1Description_subroutineReady
     pullOneBitJ2Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughOuterHitPull2Description_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -154,7 +152,6 @@ theorem acceptThroughOuterHitPull3Description_subroutineReady :
     acceptThroughOuterHitPull2Description_subroutineReady
     pullOneBitJ2Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughOuterHitPull3Description_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -206,7 +203,6 @@ theorem acceptThroughOuterHitPull4Description_subroutineReady :
     acceptThroughOuterHitPull3Description_subroutineReady
     pullOneBitJ2Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughOuterHitPull4Description_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -302,7 +298,6 @@ theorem acceptThroughRejectConfigPullDescription_subroutineReady :
     acceptThroughOuterHitPull4Description_subroutineReady
     pullLoopJ1Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughRejectConfigPullDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -325,10 +320,8 @@ theorem acceptThroughRejectConfigPullDescription_haltsFrom
           [p.S.hit, !p.S.hit, false, true, p.L.rejectHit, !p.L.rejectHit]
           (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p)
           (stageTail.length + 8) false
-          (none :: none :: none :: List.replicate 5 none) := by
-    simp [acceptJ2OutputTape,
-      CommonGround.FiniteTransducers.tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
+          (none :: none :: none :: List.replicate 5 none) :=
+    Tape.move_left_move_right_eq_self_of_right_cons _ rfl
   exact
     canonicalSeqDescription_haltsFromTape_of_haltsFromTape
       acceptThroughOuterHitPull4Description_subroutineReady
@@ -361,8 +354,6 @@ def acceptAfterOuterConfigPullTape
                     (none :: none :: none :: none :: none ::
                       List.replicate 5 none)))))))
 
-set_option maxHeartbeats 10000000 in
-set_option maxRecDepth 1000000 in
 theorem acceptOuterConfigPull_haltsFrom
     (p : SelectedMergeEmitterPayload) (acTail stageTail : Word Bool) :
     pullLoopJ1Description.HaltsFromTape
@@ -434,7 +425,6 @@ theorem acceptThroughOuterConfigPullDescription_subroutineReady :
     acceptThroughRejectConfigPullDescription_subroutineReady
     pullLoopJ1Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptThroughOuterConfigPullDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,
@@ -493,8 +483,6 @@ def acceptAfterOutputPrefixPullTape
                         (none :: none :: none :: none :: none ::
                           List.replicate 5 none))))))))
 
-set_option maxHeartbeats 10000000 in
-set_option maxRecDepth 1000000 in
 theorem acceptOutputPrefixPull_haltsFrom
     (p : SelectedMergeEmitterPayload) (acTail stageTail : Word Bool) :
     pullLoopJ0Description.HaltsFromTape
@@ -543,7 +531,6 @@ theorem acceptFieldTransportDescription_subroutineReady :
     acceptThroughOuterConfigPullDescription_subroutineReady
     pullLoopJ0Description_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem acceptFieldTransportDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     exists acTail stageTail : Word Bool,

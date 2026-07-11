@@ -193,7 +193,6 @@ theorem rejectAcceptConfigScan_haltsFrom
           congrArg Configuration.tape hsteps)
       htarget
 
-set_option maxHeartbeats 1000000 in
 theorem rejectThroughAcceptConfigScanDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     rejectThroughAcceptConfigScanDescription.HaltsFromTape
@@ -252,7 +251,6 @@ theorem rejectThroughSentinelRestoreDescription_subroutineReady :
     rejectThroughRejectConfigEraseDescription_subroutineReady
     sentinelRestoreDescription_subroutineReady
 
-set_option maxHeartbeats 1000000 in
 theorem rejectThroughSentinelRestoreDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     rejectThroughSentinelRestoreDescription.HaltsFromTape
@@ -516,7 +514,6 @@ theorem rejectMidEraser_haltsFrom
         (List.append ((rejectOuterConfigHitBits p).map some)
           commonRightPadding)
 
-set_option maxHeartbeats 1000000 in
 theorem rejectThroughMidEraseDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     rejectThroughMidEraseDescription.HaltsFromTape
@@ -712,7 +709,6 @@ theorem rejectHitScannerDescription_haltsFrom
       (congrArg Configuration.tape hrun)
       (congrArg Configuration.tape htarget)
 
-set_option maxHeartbeats 1000000 in
 theorem rejectDeleteDescription_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     rejectDeleteDescription.HaltsFromTape
@@ -771,7 +767,6 @@ def rejectJ2OutputTape
                     (none ::
                       List.append (field.map some) (none :: none :: R)))))))
 
-set_option maxRecDepth 200000 in
 theorem rejectJ2_haltsFrom
     (p : SelectedMergeEmitterPayload)
     (b1 : Bool) (blkT field : Word Bool)
@@ -848,8 +843,6 @@ def rejectAfterFirstPullTape
                         [false, true, p.S.hit]).map some)
                       (none :: commonRightPadding))))))
 
-set_option maxHeartbeats 1000000 in
-set_option maxRecDepth 200000 in
 theorem rejectFirstPull_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     pullFirstRejectDescription.HaltsFromTape
@@ -903,7 +896,6 @@ theorem rejectFirstPull_haltsFrom
 @[irreducible] def rejectThroughFirstPullDescription : MachineDescription :=
   seqSubroutine rejectDeleteDescription pullFirstRejectDescription Direction.left
 
-set_option maxHeartbeats 1000000
 
 theorem rejectThroughFirstPullDescription_subroutineReady :
     rejectThroughFirstPullDescription.SubroutineReady := by
@@ -1093,7 +1085,6 @@ def rejectAfterAcceptHitPullTape
                         ((SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).map some)
                         (List.append (List.replicate 4 none) commonRightPadding))))))))
 
-set_option maxRecDepth 200000 in
 theorem rejectAcceptHitPull_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     pullLoopJ1Description.HaltsFromTape
@@ -1188,8 +1179,6 @@ def rejectAfterOuterConfigPullTape
                       (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
                     (List.append (List.replicate 4 none) commonRightPadding)))))))
 
-set_option maxHeartbeats 10000000 in
-set_option maxRecDepth 1000000 in
 theorem rejectOuterConfigPull_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     pullLoopJ1Description.HaltsFromTape
@@ -1291,8 +1280,6 @@ def rejectAfterOutputPrefixPullTape
                           (SelectedMergePaddedEmitterParsedInnerOuterConfigFieldBits p).length none)
                         (List.append (List.replicate 4 none) commonRightPadding))))))))
 
-set_option maxHeartbeats 10000000 in
-set_option maxRecDepth 1000000 in
 theorem rejectOutputPrefixPull_haltsFrom
     (p : SelectedMergeEmitterPayload) :
     pullLoopJ0Description.HaltsFromTape
