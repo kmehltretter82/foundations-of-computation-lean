@@ -211,6 +211,28 @@ comparison.
   already available from the canonical construction or indexed family. Add
   only that consumer-facing record; do not restore the scalar/bundle lattice.
 
+### Superseded #18 input-decomposition and metadata-reparse routes
+
+- Deleting commit: `11514cfd` (`Close metadata prefix run obligation`).
+- Net reduction within the checkpoint: zero; 473 lines of exact lag/run proof
+  replaced 473 lines of obsolete parser, contract, and pipeline code.
+- Old surface: `InputDecompositionPipeline.lean`, the reusable raw Boolean
+  decoder detour in `FieldDecomposition.lean`, the generic unclassified loop
+  target/specification, and MetadataPrefix's second input/stage/state reparse.
+- Potentially reusable ideas: a standalone Boolean-field decoder ingress and a
+  generic unclassified three-tape loop target.
+- Why retired: the exact D-specific classified boundary is the real #18
+  consumer. The old decoder required incompatible padding adapters, and the
+  metadata prefix reparsed fields that the following configuration phase must
+  parse again.
+- Current route: the four-cell-lag metadata copier returns tape 0 directly to
+  the complete layout header; the next phase owns the single forward prefix
+  and configuration scan. `RunConfigEmitterCore.lean` imports the live input
+  materializer directly.
+- Reconsider only if: a second checked consumer genuinely needs the old
+  unclassified target or standalone decoder boundary. Recover a focused
+  theorem over that consumer's exact tape shape, not the retired pipeline.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
