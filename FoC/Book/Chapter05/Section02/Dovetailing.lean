@@ -306,17 +306,6 @@ theorem re_and_co_re_have_dovetailing_program
     exact ⟨accept, reject, acceptDecidable, rejectDecidable, htraces,
       complementary_traces_dovetailing_program_decides htraces⟩
 
-theorem re_and_co_re_have_paired_bounded_search_decider
-    {L : Language alpha}
-    (h : RecursivelyEnumerableWithComplement L) :
-    exists accept reject : Word alpha -> Nat -> Prop,
-      (exists _ : (forall w n, Decidable (accept w n)),
-        exists _ : (forall w n, Decidable (reject w n)),
-          ComplementaryAcceptanceTraces accept reject L ∧
-            ProgramBoolDecides
-              (Computability.DovetailProgram accept reject) L) :=
-  re_and_co_re_have_dovetailing_program h
-
 theorem re_and_co_re_have_program_bool_decider
     {L : Language alpha}
     (h : RecursivelyEnumerableWithComplement L) :
