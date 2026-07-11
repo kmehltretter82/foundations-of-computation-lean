@@ -8,7 +8,6 @@ import FoC.Computability.Compiler.Structured.Lowering.StructuredRefresh
 import FoC.Computability.Compiler.Structured.Lowering.SelectedSeparatorRefresh
 import FoC.Computability.Compiler.Structured.Lowering.SelectedSeparatorRefreshRuns
 import FoC.Computability.Compiler.Structured.Lowering.SingletonRefresh
-import FoC.Computability.Compiler.Structured.Lowering.SingletonRefreshRuns
 import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
 import FoC.Computability.Compiler.Structured.Lowering.CursorComposition
 import FoC.Computability.Compiler.Structured.Lowering.CursorSeek
@@ -27,12 +26,10 @@ import FoC.Computability.Compiler.Structured.Lowering.RunsStructuredSingleton3
 import FoC.Computability.Compiler.Structured.Lowering.Dispatcher
 import FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly
 import FoC.Computability.Compiler.Structured.Lowering.Projection
-import FoC.Computability.Compiler.Structured.ProjectionContracts
 import FoC.Computability.Compiler.Structured.HeadRoutes
 import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
 import FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor
 import FoC.Computability.Compiler.Structured.Lowering.TypedStateTable
-import FoC.Computability.Compiler.Structured.Lowering.TypedStateTableExecution
 
 set_option doc.verso true
 

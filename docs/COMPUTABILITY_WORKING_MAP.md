@@ -70,8 +70,8 @@ Common starting points:
 - `AppendWord.lean`, `MapAppend.lean`, `OptionAppend.lean`,
   `StatefulOptionAppend.lean`, `StatefulOptionAppendGenerated.lean`: append and
   map-style stream machines.
-- `FixedBlankMoves.lean`, `FixedSkips.lean`, `RightEdgeRewind.lean`: small
-  movement and positioning machines.
+- `FixedSkips.lean`, `RightEdgeRewind.lean`: small movement and positioning
+  machines.
 - `Compaction.lean`, `LeftShiftCompactor.lean`, `SentinelGapCompactor.lean`,
   `GapPayloadLocalCompactor.lean`: gap/window compaction families.
 - `Structured.lean`, `StructuredPrimitives.lean`, `StructuredTableChecks.lean`:
