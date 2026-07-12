@@ -241,19 +241,30 @@ def RunObligation : Prop :=
       (targetTapes D L)
 
 /-- Final construction after metadata materialization: decode the encoded
-prefix and left/head/right fields on tape 0 exactly, decode the hit token, and
-overwrite the temporary false tape-2 head with the actual hit. -/
+prefix and left/head/right fields on tape 0, decode the hit token, and
+overwrite the temporary false tape-2 head with the actual hit.
+
+The exact represented logical tapes are carried explicitly. Their components
+must be tape-equivalent to the classified loop tapes, but their guarded
+physical encodings are not identified with the canonical guarded encoding:
+guard encoding observes represented context lengths and is not invariant under
+{name}`LogicalTapeListEquiv`. -/
 def ConfigTapeAndHitSpec
-    (D : MachineDescription) (materializer : MachineDescription) : Prop :=
+    (D : MachineDescription) (materializer : MachineDescription)
+    (represented : SimulatorLayout → List (Tape Bool)) : Prop :=
   materializer.SubroutineReady ∧
+    (forall L : SimulatorLayout,
+      LogicalTapeListEquiv (represented L)
+        (ClassifiedBoundary.classifiedLoopTapes D L)) ∧
     forall L : SimulatorLayout,
       materializer.HaltsFromTapeEquiv
         (targetTape D L)
-        (ClassifiedBoundary.classifiedLoopTargetTape D L)
+        (encodedGuardedStructuredTapes (represented L))
 
 def ConfigTapeAndHitConstruction (D : MachineDescription) : Prop :=
   exists materializer : MachineDescription,
-    ConfigTapeAndHitSpec D materializer
+    exists represented : SimulatorLayout → List (Tape Bool),
+      ConfigTapeAndHitSpec D materializer represented
 
 end MetadataPrefix
 end FieldDecomposition
