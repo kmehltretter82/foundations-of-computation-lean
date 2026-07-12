@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorInputMaterializer
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorCore.Shape
 
 set_option doc.verso true
 
