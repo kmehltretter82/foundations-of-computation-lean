@@ -4,7 +4,7 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Lo
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.ExactTapeSerializer
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.FiniteRealization
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.CfgHitClose
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.SelectorIngress
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.SelectorSplice
 
 /-!
 # Fixed-description bounded simulator run-config emitter core
