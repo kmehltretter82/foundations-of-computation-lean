@@ -256,34 +256,6 @@ theorem quotedPairBits_map_logicalCellPair
               encodeCell, encodeCodeWordAsInput,
               encodeCodeSymbolAsInput, ih]
 
-theorem quotedPairBits_logicalTapePairs (T : Tape Bool) :
-    quotedPairBits (logicalTapePairs T) =
-      List.append
-        (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
-          T.left.reverse)
-        (List.append [false, true, true, true]
-          (List.append
-            (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
-              T.head)
-            (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
-              T.right))) := by
-  unfold logicalTapePairs
-  rw [quotedPairBits_append]
-  rw [quotedPairBits_map_logicalCellPair]
-  rw [quotedPairBits_append]
-  cases T.head with
-  | none =>
-      simp [logicalCellPair, quotedPairBits,
-        quotedPairBits_map_logicalCellPair,
-        EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
-        encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
-  | some bit =>
-      cases bit <;>
-        simp [logicalCellPair, quotedPairBits,
-          quotedPairBits_map_logicalCellPair,
-          EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
-          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
-
 def pairRewriterHalt : Nat := 5
 
 def pairRewriterDescription : MachineDescription where
