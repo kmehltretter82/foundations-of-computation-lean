@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Fi
 set_option doc.verso true
 
 /-!
-# Exact configuration-tape and hit materializer
+# Exact configuration and hit materializer
 
 This target-specific three-tape table consumes the header-start boundary left
 by the metadata-prefix phase. It erases the already-preserved layout prefix,
