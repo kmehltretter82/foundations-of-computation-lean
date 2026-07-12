@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorCore.Shape
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorCore.Machine
 
 set_option doc.verso true
 
