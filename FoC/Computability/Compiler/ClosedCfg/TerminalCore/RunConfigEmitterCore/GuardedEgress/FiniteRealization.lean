@@ -54,6 +54,40 @@ def Spec (normalizer : MachineDescription) : Prop :=
 def Construction : Prop :=
   exists normalizer : MachineDescription, Spec normalizer
 
+/-- It is enough to realize the checked transform from each canonical guarded
+source.  Run equivalence transports the resulting execution to every
+far-edge-padded representative, and output equivalence composes with the
+canonical result. -/
+def CanonicalSpec (normalizer : MachineDescription) : Prop :=
+  normalizer.SubroutineReady ∧
+    forall i : Index,
+      normalizer.HaltsFromTapeEquiv i.source i.target
+
+def CanonicalConstruction : Prop :=
+  exists normalizer : MachineDescription, CanonicalSpec normalizer
+
+theorem spec_of_canonicalSpec
+    {normalizer : MachineDescription}
+    (hcanonical : CanonicalSpec normalizer) : Spec normalizer := by
+  constructor
+  · exact hcanonical.left
+  · intro i actual target hequiv htarget
+    rw [SemanticAssembly.assembleTarget_index] at htarget
+    cases htarget
+    rcases hcanonical.right i with
+      ⟨canonicalOutput, hcanonicalRun, hcanonicalOutput⟩
+    rcases MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+        (Tape.Equiv.symm hequiv) hcanonicalRun with
+      ⟨actualOutput, hactualRun, hactualOutput⟩
+    exact
+      ⟨actualOutput, hactualRun,
+        Tape.Equiv.trans hactualOutput hcanonicalOutput⟩
+
+theorem construction_of_canonicalConstruction
+    (hcanonical : CanonicalConstruction) : Construction := by
+  rcases hcanonical with ⟨normalizer, hnormalizer⟩
+  exact ⟨normalizer, spec_of_canonicalSpec hnormalizer⟩
+
 theorem guardedEgressSpec_of_spec
     {normalizer : MachineDescription} (hspec : Spec normalizer) :
     GuardedEgress.Spec normalizer := by
