@@ -6,7 +6,7 @@ set_option doc.verso true
 # Fuel-simulator structured-core shapes
 
 Pure source and target decompositions used by the finite three-tape
-constructor for sorry 13.
+constructor for former sorry 13.
 -/
 
 namespace FoC
@@ -19,6 +19,8 @@ namespace StructuredConstructionTargets
 namespace FuelSimulatorCore
 
 open EncRewriters.CanonicalLayouts.DovetailStagePrefix
+open DovetailInitialLayoutInitializer
+open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 /-- The stage-input code before the final fuel field. -/
 def stageCode (i : FuelSimulatorStructuredIndex) :
@@ -50,6 +52,22 @@ theorem inputBits_eq_stageBits_append_fuel
   rw [fuelSimulatorInputBits, inputCode_eq_stageCode_append_fuel,
     encodeCodeWordAsInput_append]
   rfl
+
+/-- Uniform Boolean decomposition of the stage prefix. -/
+theorem stageBits_eq_length_cells_limit
+    (i : FuelSimulatorStructuredIndex) :
+    stageBits i =
+      List.append (stageNatBits i.w.length)
+        (List.append (cellsBits i.w) (stageNatBits i.limit)) := by
+  cases i with | mk w limit fuel =>
+  change stageInputBits w limit = _
+  rw [stageInputBits_eq_false_false_tail,
+    stageInputSecondBitTail_eq_prefix_stageNat]
+  cases w with
+  | nil =>
+      simp [stageInputSecondBitTailPrefix]
+  | cons bit rest =>
+      simp [stageInputSecondBitTailPrefix, List.append_assoc]
 
 /-- Every stage-input expansion has a Boolean head cell. -/
 theorem stageBits_cons
@@ -115,6 +133,66 @@ theorem outputCode_decomp
         simpa [PairedRecognizerDovetailStageInputCode, stageBits, stageCode]
           using hx]
   exact simulatorInitial_encode_cons attempt i.fuel b rest
+
+private theorem encodeNatAppend_input
+    (n : Nat) (suffix : Word MachineCodeSymbol) :
+    encodeCodeWordAsInput (encodeNatAppend n suffix) =
+      List.append (stageNatBits n) (encodeCodeWordAsInput suffix) := by
+  rw [show encodeNatAppend n suffix =
+      List.append (encodeNatAppend n []) suffix by
+    simpa using encodeNatAppend_append n [] suffix]
+  rw [encodeCodeWordAsInput_append]
+  simp [encodeNatAppend, stageNatBits]
+
+private theorem encodeCellsAppend_input
+    (bits : Word Bool) (suffix : Word MachineCodeSymbol) :
+    encodeCodeWordAsInput
+        (encodeCellsAppend (bits.map some) suffix) =
+      List.append (cellsBits bits) (encodeCodeWordAsInput suffix) := by
+  rw [show encodeCellsAppend (bits.map some) suffix =
+      List.append (encodeCellsAppend (bits.map some) []) suffix by
+    simpa using encodeCellsAppend_append (bits.map some) [] suffix]
+  rw [encodeCodeWordAsInput_append]
+  rfl
+
+private theorem encodeCellAppend_input
+    (bit : Bool) (suffix : Word MachineCodeSymbol) :
+    encodeCodeWordAsInput (encodeCellAppend (some bit) suffix) =
+      List.append (cellBits bit) (encodeCodeWordAsInput suffix) := by
+  rw [show encodeCellAppend (some bit) suffix =
+      List.append (encodeCellAppend (some bit) []) suffix by
+    simpa using encodeCellAppend_append (some bit) [] suffix]
+  rw [encodeCodeWordAsInput_append]
+  cases bit <;>
+    rfl
+
+/-- Exact Boolean-field decomposition of the simulator-layout output. -/
+theorem outputBits_decomp
+    (attempt : MachineDescription) (i : FuelSimulatorStructuredIndex)
+    (head : Bool) (tail : Word Bool)
+    (hx : stageBits i = head :: tail) :
+    encodeCodeWordAsInput
+        (SimulatorLayout.encode
+          (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+            attempt i.w i.limit i.fuel)) =
+      List.append [false, false, false, false]
+        (List.append (stageNatBits (head :: tail).length)
+          (List.append (cellsBits (head :: tail))
+            (List.append (stageNatBits i.fuel)
+              (List.append (stageNatBits attempt.start)
+                (List.append (stageNatBits 0)
+                  (List.append (cellBits head)
+                    (List.append (stageNatBits tail.length)
+                      (List.append (cellsBits tail)
+                        (cellBits false))))))))) := by
+  rw [outputCode_decomp attempt i head tail hx]
+  change List.append [false, false, false, false]
+    (encodeCodeWordAsInput _) = _
+  simp only [encodeCellListAppend, encodeBoolAppend, encodeCellsAppend,
+    List.length_map, List.length_cons, List.length_nil,
+    encodeNatAppend_input, encodeCellsAppend_input,
+    encodeCellAppend_input]
+  rfl
 
 end FuelSimulatorCore
 end StructuredConstructionTargets

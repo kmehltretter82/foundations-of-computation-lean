@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelOutputCore.Stream
+import FoC.Computability.Compiler.Structured.Lowering.TypedStateRuns
 
 set_option doc.verso true
 
@@ -42,27 +43,20 @@ Step-count-free reachability: {lit}`d` continues exactly like {lit}`c` after
 some fixed number of steps.
 -/
 def Leads (n : Nat) (c d : CommonGround.FiniteTransducers.Structured.Configuration) : Prop :=
-  exists j : Nat,
-    forall k : Nat, (coreD n).runConfig (k + j) c = (coreD n).runConfig k d
+  (table n).Leads c d
 
 namespace Leads
 
 theorem refl (n : Nat) (c : CommonGround.FiniteTransducers.Structured.Configuration) : Leads n c c :=
-  ⟨0, fun _ => rfl⟩
+  TypedStateTable.Leads.refl (table n) c
 
 theorem trans {n : Nat} {c d e : CommonGround.FiniteTransducers.Structured.Configuration}
-    (h1 : Leads n c d) (h2 : Leads n d e) : Leads n c e := by
-  rcases h1 with ⟨j1, hj1⟩
-  rcases h2 with ⟨j2, hj2⟩
-  refine ⟨j2 + j1, fun k => ?_⟩
-  rw [show k + (j2 + j1) = (k + j2) + j1 by lia, hj1 (k + j2), hj2 k]
+    (h1 : Leads n c d) (h2 : Leads n d e) : Leads n c e :=
+  TypedStateTable.Leads.trans h1 h2
 
 theorem to_runConfig {n : Nat} {c d : CommonGround.FiniteTransducers.Structured.Configuration}
-    (h : Leads n c d) : exists j : Nat, (coreD n).runConfig j c = d := by
-  rcases h with ⟨j, hj⟩
-  have := hj 0
-  rw [Nat.zero_add] at this
-  exact ⟨j, this⟩
+    (h : Leads n c d) : exists j : Nat, (coreD n).runConfig j c = d :=
+  TypedStateTable.Leads.to_runConfig h
 
 end Leads
 
@@ -84,59 +78,16 @@ theorem leads_step {n : Nat} {s : CoreState} (hs : s ∈ coreStates n)
     (h0 : st.action0.apply T0 = T0')
     (h2 : st.action2.apply T2 = T2') :
     Leads n (coreCfg n s T0 T2) (coreCfg n st.target T0' T2') := by
-  refine ⟨1, fun k => ?_⟩
-  show
-    (table n).description.runConfig (k + 1)
-        (ThreeTape.config ((table n).stateId s) T0 Tape.blank T2) =
-      (table n).description.runConfig k
-        (ThreeTape.config ((table n).stateId st.target) T0' Tape.blank T2')
-  have hstep :=
-    (table n).runConfig_succ_config hs
-      (T0 := T0) (T1 := Tape.blank) (T2 := T2) hnext k
-  rw [hstep, h0, h2, h1]
-  rfl
-
-/-!
-## Tape-window calculus
-
-Cursor movement over an explicit window: {lit}`tapeAtCells leftRev cells`
-keeps the left context nearest-first and the head at the front of
-{lit}`cells`.
--/
-
-theorem read_tapeAtCells_cons
-    (L : List (Option Bool)) (c : Option Bool) (R : List (Option Bool)) :
-    Tape.read (tapeAtCells L (c :: R)) = c := rfl
-
-theorem read_tapeAtCells_nil (L : List (Option Bool)) :
-    Tape.read (tapeAtCells L []) = none := rfl
-
-theorem keepR_apply_tapeAtCells
-    (L : List (Option Bool)) (c : Option Bool) (R : List (Option Bool)) :
-    keepR.apply (tapeAtCells L (c :: R)) = tapeAtCells (c :: L) R := by
-  cases R <;> rfl
-
-theorem keepL_apply_tapeAtCells
-    (L : List (Option Bool)) (c' c : Option Bool) (R : List (Option Bool)) :
-    keepL.apply (tapeAtCells (c' :: L) (c :: R)) =
-      tapeAtCells L (c' :: c :: R) := rfl
-
-theorem keepL_apply_tapeAtCells_nil
-    (L : List (Option Bool)) (c' : Option Bool) :
-    keepL.apply (tapeAtCells (c' :: L) []) =
-      tapeAtCells L [c', none] := rfl
-
-theorem writeR_apply_tapeAtCells
-    (v : Option Bool) (L : List (Option Bool)) (c : Option Bool)
-    (R : List (Option Bool)) :
-    (writeR v).apply (tapeAtCells L (c :: R)) = tapeAtCells (v :: L) R := by
-  cases R <;> rfl
-
-theorem writeL_apply_tapeAtCells
-    (v : Option Bool) (L : List (Option Bool)) (c' c : Option Bool)
-    (R : List (Option Bool)) :
-    (writeL v).apply (tapeAtCells (c' :: L) (c :: R)) =
-      tapeAtCells L (c' :: v :: R) := rfl
+  have hblank : st.action1.apply Tape.blank = Tape.blank := by
+    rw [h1]
+    rfl
+  have hnext' :
+      (table n).next s (Tape.read T0) (Tape.read Tape.blank)
+          (Tape.read T2) = some st := by
+    change CoreState.next n s (Tape.read T0) none (Tape.read T2) = some st
+    exact hnext
+  simpa [Leads, coreCfg, TypedStateTable.config] using
+    (TypedStateTable.leads_step (table n) hs hnext' h0 hblank h2)
 
 /-!
 ## Specialized step forms

@@ -318,11 +318,35 @@ def check_campaign(root: Path, path: Path) -> CampaignResult:
             failures.append(
                 f"{path}: historical_debt requires historical_debt_reason"
             )
-    elif allowance > 3_000:
-        failures.append(
-            f"{path}: growth loans above 3000 require an explicitly reviewed "
-            "historical-debt manifest"
-        )
+    elif allowance > 5_000:
+        failures.append(f"{path}: ordinary growth loans may not exceed 5000")
+    elif allowance > 1_500:
+        review = campaign.get("architecture_review")
+        if not isinstance(review, dict):
+            failures.append(
+                f"{path}: growth loans above 1500 require architecture_review"
+            )
+        else:
+            reason = review.get("reason")
+            recorded_against = str(review.get("recorded_against", ""))
+            if not isinstance(reason, str) or not reason.strip():
+                failures.append(
+                    f"{path}: architecture_review.reason must be nonempty"
+                )
+            if not re.fullmatch(r"[0-9a-f]{40}", recorded_against):
+                failures.append(
+                    f"{path}: architecture_review.recorded_against must be a "
+                    "full Git hash"
+                )
+            elif not git_commit_exists(root, recorded_against):
+                failures.append(
+                    f"{path}: reviewed commit is absent: {recorded_against}"
+                )
+            elif not git_is_ancestor(root, recorded_against):
+                failures.append(
+                    f"{path}: reviewed commit is not an ancestor of HEAD: "
+                    f"{recorded_against}"
+                )
 
     if failures or not paths:
         return CampaignResult(name, allowance, failures, historical_debt)

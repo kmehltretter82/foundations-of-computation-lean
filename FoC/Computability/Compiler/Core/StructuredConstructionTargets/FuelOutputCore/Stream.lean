@@ -125,6 +125,21 @@ theorem streamFold?_snoc_hold
       rw [← he2]
       exact stream_hold hstep
 
+theorem streamFold?_start_hold
+    {e : Emission} {s : List Bool}
+    (h : streamFold? Emission.start s = some e) :
+    e.hold = s.getLast? := by
+  cases hlast : s.getLast? with
+  | none =>
+      have hs : s = [] := List.getLast?_eq_none_iff.mp hlast
+      subst s
+      have he : Emission.start = e := by simpa using h
+      rw [← he]
+      rfl
+  | some last =>
+      rcases List.getLast?_eq_some_iff.mp hlast with ⟨front, rfl⟩
+      simpa using streamFold?_snoc_hold h
+
 /-!
 ## Position tracking
 -/
@@ -230,9 +245,9 @@ shape after a given stream prefix.
 /-- Tape 2 after streaming {lit}`s`: all but the held last bit, written
 leftward. -/
 def emissionTape (s : List Bool) : Tape Bool where
-  left := []
-  head := none
-  right := (s.dropLast.reverse).map some
+  left := (delayedLeftEmissionTape s).left
+  head := (delayedLeftEmissionTape s).head
+  right := (delayedLeftEmissionTape s).right
 
 @[simp] theorem emissionTape_nil : emissionTape [] = Tape.blank := rfl
 
@@ -244,63 +259,15 @@ theorem emitAction_apply_emissionTape
     (hacc : streamFold? Emission.start acc = some e) (bit : Bool) :
     e.emitAction.apply (emissionTape acc) =
       emissionTape (List.append acc [bit]) := by
-  cases hlast : acc.getLast? with
-  | none =>
-      have haccNil : acc = [] := List.getLast?_eq_none_iff.mp hlast
-      subst haccNil
-      have he : Emission.start = e := by simpa using hacc
-      subst he
-      rfl
-  | some last =>
-      rcases List.getLast?_eq_some_iff.mp hlast with ⟨front, hfront⟩
-      subst hfront
-      have hhold : e.hold = some last := streamFold?_snoc_hold (by
-        simpa using hacc)
-      show
-        (match e.hold with
-          | none => keepS
-          | some b => writeL (some b)).apply
-            (emissionTape (front ++ [last])) = _
-      rw [hhold]
-      show
-        Tape.moveLeft
-            (Tape.write (some last) (emissionTape (front ++ [last]))) =
-          emissionTape (List.append (front ++ [last]) [bit])
-      simp [emissionTape, Tape.write, Tape.moveLeft]
+  simpa [Emission.emitAction, emissionTape] using
+    delayedLeftEmitAction_apply (streamFold?_start_hold hacc) bit
 
 theorem flushAction_apply_emissionTape
     {acc : List Bool} {e : Emission}
     (hacc : streamFold? Emission.start acc = some e) :
     e.flushAction.apply (emissionTape acc) = Tape.input acc.reverse := by
-  cases hlast : acc.getLast? with
-  | none =>
-      have haccNil : acc = [] := List.getLast?_eq_none_iff.mp hlast
-      subst haccNil
-      have he : Emission.start = e := by simpa using hacc
-      subst he
-      rfl
-  | some last =>
-      rcases List.getLast?_eq_some_iff.mp hlast with ⟨front, hfront⟩
-      subst hfront
-      have hhold : e.hold = some last := streamFold?_snoc_hold (by
-        simpa using hacc)
-      show
-        (match e.hold with
-          | none => keepS
-          | some b => writeS (some b)).apply
-            (emissionTape (front ++ [last])) = _
-      rw [hhold]
-      show
-        Tape.write (some last) (emissionTape (front ++ [last])) =
-          Tape.input (front ++ [last]).reverse
-      cases hrev : front.reverse with
-      | nil =>
-          have hfrontNil : front = [] := by
-            simpa using congrArg List.reverse hrev
-          subst hfrontNil
-          rfl
-      | cons b rest =>
-          simp [emissionTape, Tape.write, Tape.input, hrev]
+  simpa [Emission.flushAction, emissionTape] using
+    delayedLeftFlushAction_apply (streamFold?_start_hold hacc)
 
 /-!
 ## Acceptance versus token alignment

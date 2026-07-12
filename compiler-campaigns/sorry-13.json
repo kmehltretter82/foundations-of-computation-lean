@@ -1,5 +1,9 @@
 {
-  "allow_net_growth": 500,
+  "allow_net_growth": 3000,
+  "architecture_review": {
+    "reason": "User approved up to 5000 net lines per genuinely closed sorry; sorry 13 requests only the measured post-proof 3000-line ceiling while cleanup continues.",
+    "recorded_against": "37e19cb2111ab893dd1fbc29d31279ce675824ce"
+  },
   "base_commit": "d662077bd2d31c489fdf17e179a05e9a4c94cd53",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean",
@@ -10,10 +14,16 @@
   "paths": [
     "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean",
     "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulatorCore",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutputCore/Machine.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutputCore/Runs.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutputCore/Stream.lean",
+    "FoC/Computability/Compiler/Structured/Lowering/DelayedLeftEmitter.lean",
+    "FoC/Computability/Compiler/Structured/Lowering/TypedStateRuns.lean",
     "FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerOutputLevelSimulator.lean"
   ],
   "required_axiom_clean": [
+    "FoC.Computability.StructuredConstructionTargets.fuelSimulatorStructuredLoweredCore_forward",
     "FoC.Computability.StructuredConstructionTargets.fuelSimulatorStructuredEquivLoweredCoreConstruction_core",
-    "FoC.Computability.pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf"
+    "FoC.Computability.StructuredConstructionTargets.FuelSimulatorCore.leads_halt"
   ]
 }

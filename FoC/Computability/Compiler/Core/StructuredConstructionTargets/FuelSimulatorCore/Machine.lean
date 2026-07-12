@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorCore.Shape
+import FoC.Computability.Compiler.Structured.Lowering.DelayedLeftEmitter
 import FoC.Computability.Compiler.Structured.Lowering.TypedStateTable
 
 set_option doc.verso true
@@ -29,12 +30,10 @@ open CommonGround.FiniteTransducers.Structured.MultiTapeLowering.ThreeTape
 abbrev Hold := Option Bool
 
 def emitAction : Hold -> TapeAction
-  | none => keepS
-  | some bit => writeBitL bit
+  := delayedLeftEmitAction
 
 def flushAction : Hold -> TapeAction
-  | none => keepS
-  | some bit => writeS (some bit)
+  := delayedLeftFlushAction
 
 inductive State where
   | len0 | len1 | len2 | len3
@@ -299,6 +298,27 @@ def startBlock (start : Nat) (h : Hold) : List State :=
 def states (start : Nat) : List State :=
   fixedStates ++
     holdValues.flatMap fun h => emissionBlock h ++ startBlock start h
+
+theorem mem_states_fixed {start : Nat} {s : State}
+    (hs : s ∈ fixedStates) : s ∈ states start :=
+  List.mem_append.mpr (Or.inl hs)
+
+theorem mem_holdValues (h : Hold) : h ∈ holdValues := by
+  cases h with
+  | none => simp [holdValues]
+  | some bit => cases bit <;> simp [holdValues]
+
+theorem mem_states_emission {start : Nat} {s : State} {h : Hold}
+    (hs : s ∈ emissionBlock h) : s ∈ states start := by
+  refine List.mem_append.mpr (Or.inr (List.mem_flatMap.mpr ⟨h, ?_, ?_⟩))
+  · exact mem_holdValues h
+  · exact List.mem_append.mpr (Or.inl hs)
+
+theorem mem_states_start {start : Nat} {s : State} {h : Hold}
+    (hs : s ∈ startBlock start h) : s ∈ states start := by
+  refine List.mem_append.mpr (Or.inr (List.mem_flatMap.mpr ⟨h, ?_, ?_⟩))
+  · exact mem_holdValues h
+  · exact List.mem_append.mpr (Or.inr hs)
 
 set_option maxRecDepth 10000 in
 theorem startLoop_pred_mem {start j : Nat} {h : Hold}

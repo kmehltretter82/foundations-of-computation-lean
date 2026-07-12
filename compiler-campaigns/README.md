@@ -14,7 +14,7 @@ A campaign manifest is a JSON file with these required fields:
   "paths": ["FoC/Computability/Compiler/Owned/Subtree"],
   "focused_checks": ["lake env lean FoC/Path/To/Frontier.lean"],
   "required_axiom_clean": ["Fully.Qualified.Consumer"],
-  "allow_net_growth": 500
+  "allow_net_growth": 1500
 }
 ```
 
@@ -27,10 +27,12 @@ scripts/check-compiler-growth.py \
   --campaign compiler-campaigns/sorry-N.json
 ```
 
-The initial allowance is normally 500 lines.  Raising it to 1,500 requires an
-axiom-clean end-to-end vertical slice.  Larger loans require explicit review as
-described in `../COMPILER_SIZE_REDUCTION_AND_GROWTH_CONTROL_PLAN.md`.
-The sum of ordinary outstanding loans may not exceed 5,000 lines.
+The initial finite-machine allowance is normally 1,500 lines.  A reviewed
+campaign may rise as high as 5,000 lines once its exact in-scope leaf is
+axiom-clean, its current consumer compiles, and the manifest records an
+`architecture_review` reason plus the full Git commit against which that review
+was made.  The allowance is a ceiling, not a target.  The sum of ordinary
+outstanding loans may not exceed 5,000 lines.
 
 Pre-policy work that already exceeds the circuit breakers must not reset its
 starting commit.  Record it honestly with:

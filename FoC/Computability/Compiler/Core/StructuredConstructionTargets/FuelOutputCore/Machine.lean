@@ -1,3 +1,4 @@
+import FoC.Computability.Compiler.Structured.Lowering.DelayedLeftEmitter
 import FoC.Computability.Compiler.Structured.Lowering.TypedStateTable
 
 set_option doc.verso true
@@ -83,15 +84,11 @@ def Emission.stream (e : Emission) (bit : Bool) : Option Emission :=
 
 /-- Tape-2 action releasing the current hold buffer into a fresh blank. -/
 def Emission.emitAction (e : Emission) : TapeAction :=
-  match e.hold with
-  | none => keepS
-  | some bit => writeL (some bit)
+  delayedLeftEmitAction e.hold
 
 /-- Tape-2 action flushing the final hold buffer in place. -/
 def Emission.flushAction (e : Emission) : TapeAction :=
-  match e.hold with
-  | none => keepS
-  | some bit => writeS (some bit)
+  delayedLeftFlushAction e.hold
 
 /--
 Typed control states of the fuel-output core.
