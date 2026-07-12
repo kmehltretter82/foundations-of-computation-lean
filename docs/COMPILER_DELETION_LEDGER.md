@@ -393,6 +393,28 @@ projector and is not widened to cover this interior-separator target.
   invariant absent from the shared theorem. Add that invariant as a thin local
   theorem; do not restore the duplicate action or reachability implementations.
 
+### Superseded #18 terminal route and endpoint-shape lattice
+
+- Deleting commit: `8a01ac7b` (`Close the configuration materializer`).
+- Reduction: 2,159 Compiler lines; the same checkpoint added the concrete
+  `ConfigTapeAndHit` execution proof, for a net increase of 134 lines.
+- Old surface: the exact/output/equivalence route bundles in
+  `ClosedCfg/TerminalCore/Routes.lean`, the aggregate endpoint-shape record,
+  and the unconsumed tape-shape/normalized-output adapters in
+  `ClosedCfg/TerminalCore/Core.lean`.
+- Potentially reusable ideas: right-end-left route composition, normalized
+  terminal endpoint views, and aggregate scratch/target shape packaging.
+- Why retired: declaration-level reference searches found no consumer outside
+  the retired route module. The live padded-emitter and controller consumers
+  compile through `RunConfigEmitter` and the retained right-scratch surfaces.
+- Current route: the concrete `ConfigTapeAndHit` typed-table run carries the
+  actual represented logical tapes, proves their component equivalence, and
+  lowers their exact guarded representation. `Routes.lean` remains a stable
+  import facade over the one live terminal contract.
+- Reconsider only if: a checked consumer needs one specific endpoint adapter.
+  Recover that theorem from `8a01ac7b^`, state it in the consumer's honest
+  exact/equivalence currency, and do not restore the aggregate route lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

@@ -2,6 +2,7 @@
   "allow_net_growth": 13364,
   "base_commit": "0d7ecaf4bc1d420f661412bee50ca3a90f3cda80",
   "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/CfgHitClose.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitter.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/Routes.lean",
     "lake env lean FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter.lean",
@@ -16,6 +17,7 @@
     "FoC/Computability/Compiler/ClosedCfg/TerminalCore.lean"
   ],
   "required_axiom_clean": [
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit.construction_core",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner"
   ]
