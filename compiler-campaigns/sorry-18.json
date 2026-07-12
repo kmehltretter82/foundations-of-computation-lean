@@ -25,6 +25,8 @@
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.RawPairQuoter.chunkExpandDescription_haltsFromTape",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.RawPairQuoter.pairRewriterDescription_haltsFromTape",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.RawPairDecoder.decoderDescription_haltsFromTape",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.RawPairDecoder.rightBlankRewindDescription_haltsFrom_decoderTarget",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.RawPairDecoder.pairRewriterDescription_haltsFrom_decoder",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit.construction_core",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.SelectorSplice.loweredDescription_haltsFromTapeEquiv",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner",

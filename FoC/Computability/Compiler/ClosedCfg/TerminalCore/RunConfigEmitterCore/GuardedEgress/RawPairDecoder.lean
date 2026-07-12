@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.RawPairQuoter
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.DecoderRuns
 
 set_option doc.verso true
@@ -190,6 +191,103 @@ theorem decoderDescription_haltsFromTape (i : Index) :
         filterMap_expandedCells, interleavedBits] using
         decoderDescription_haltsFromTape_withRight false [] 2
           (remainingExpandedCells (rawBits i)) (decoderRightPadding i)
+
+/-!
+## Variable-workspace rewind and pair-rewriter handoff
+-/
+
+def decoderGap (i : Index) : Nat :=
+  decoderFinalGap 2 (remainingExpandedCells (rawBits i))
+
+def rewindPadding (i : Index) : List (Option Bool) :=
+  List.append (List.replicate (decoderGap i + 1) (none : Option Bool))
+    (decoderRightPadding i)
+
+def rewindSourceTape (i : Index) : Tape Bool :=
+  rightEdgeRewindSourceTape (decodedBits i) (rewindPadding i)
+
+theorem decodedBits_ne_nil (i : Index) : decodedBits i ≠ [] := by
+  intro hnil
+  cases hraw : rawBits i with
+  | nil => exact rawBits_ne_nil i hraw
+  | cons bit rest => simp [decodedBits, hraw, interleavedBits] at hnil
+
+private def paddedRewindSourceTape (i : Index) : Tape Bool :=
+  tapeAtCells
+    (List.append
+      (List.replicate (decoderGap i + 1) (none : Option Bool))
+      (List.append ((decodedBits i).reverse.map some) [none]))
+    (none :: decoderRightPadding i)
+
+private def paddedRewindTargetTape (i : Index) : Tape Bool :=
+  rightEdgeRewindSourceTapeWithBase [] (decodedBits i) (rewindPadding i)
+
+private theorem decoderTargetTape_equiv_paddedRewindSource (i : Index) :
+    Tape.Equiv (decoderTargetTape i) (paddedRewindSourceTape i) := by
+  simpa [decoderTargetTape, decoderGap, paddedRewindSourceTape,
+    decoderPaddedHaltTape, List.replicate_succ,
+    List.append_assoc] using
+    tapeAtCells_pad_left_none_equiv
+      (none :: List.append
+        (List.replicate (decoderGap i) (none : Option Bool))
+        ((decodedBits i).reverse.map some))
+      (none :: decoderRightPadding i)
+
+private theorem paddedRewindDescription_haltsFromTape (i : Index) :
+    rightBlankRewindDescription.HaltsFromTape
+      (paddedRewindSourceTape i) (paddedRewindTargetTape i) := by
+  cases hrev : (decodedBits i).reverse with
+  | nil =>
+      have hempty := congrArg List.reverse hrev
+      simp at hempty
+      exact False.elim (decodedBits_ne_nil i hempty)
+  | cons first rest =>
+      have hdecoded : (first :: rest).reverse = decodedBits i := by
+        rw [← hrev]
+        simp
+      simpa [paddedRewindSourceTape, paddedRewindTargetTape,
+        rewindPadding, hrev, hdecoded, List.append_assoc] using
+        rightBlankRewindDescription_haltsFromTape_from_leftStack
+          [] first rest (decoderGap i + 1) (decoderRightPadding i)
+
+private theorem paddedRewindTargetTape_equiv_rewindSource (i : Index) :
+    Tape.Equiv (paddedRewindTargetTape i) (rewindSourceTape i) := by
+  exact Tape.Equiv.symm (by
+    simpa [paddedRewindTargetTape, rewindSourceTape,
+      rightEdgeRewindSourceTapeWithBase, rightEdgeRewindSourceTape] using
+      tapeAtCells_pad_left_none_equiv
+        ((decodedBits i).reverse.map some)
+        (none :: rewindPadding i))
+
+theorem rightBlankRewindDescription_haltsFrom_decoderTarget (i : Index) :
+    rightBlankRewindDescription.HaltsFromTapeEquiv
+      (decoderTargetTape i) (rewindSourceTape i) := by
+  have hrun := MachineDescription.HaltsFromTapeEquiv_of_input_equiv
+    (Tape.Equiv.symm (decoderTargetTape_equiv_paddedRewindSource i))
+    (paddedRewindDescription_haltsFromTape i)
+  exact haltsFromTapeEquiv_across_output_equiv hrun
+    (paddedRewindTargetTape_equiv_rewindSource i)
+
+def pairList (i : Index) : List (Bool × Bool) :=
+  logicalTapePairs (guardLogicalTape i.finalTape)
+
+theorem decodedBits_eq_pairStream (i : Index) :
+    decodedBits i = interleavedBits (pairStream (pairList i)) := by
+  rw [decodedBits, rawBits_eq_pairStream]
+  rfl
+
+theorem rightEdgeRewindDescription_haltsFrom_decoderRewind (i : Index) :
+    rightEdgeRewindDescription.HaltsFromTape
+      (rewindSourceTape i) (pairRewriteSourceTape (pairList i) (rewindPadding i)) := by
+  simpa [rewindSourceTape, rightEdgeRewindTargetTape,
+    pairRewriteSourceTape, pairRewriteScanTape, decodedBits_eq_pairStream] using
+    rightEdgeRewindDescription_haltsFromTape (decodedBits i) (rewindPadding i)
+
+theorem pairRewriterDescription_haltsFrom_decoder (i : Index) :
+    pairRewriterDescription.HaltsFromTape
+      (pairRewriteSourceTape (pairList i) (rewindPadding i))
+      (pairRewriteTargetTape (pairList i) (rewindPadding i)) :=
+  pairRewriterDescription_haltsFromTape (pairList i) (rewindPadding i)
 
 end RawPairDecoder
 end GuardedEgress
