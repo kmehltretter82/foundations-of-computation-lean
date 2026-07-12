@@ -17,6 +17,28 @@ comparison.
 
 ## Retired surfaces
 
+### FuelSimulator fixed scratch representatives and endpoint adapters
+
+- Deleting commit: this change (`Carry actual FuelSimulator representatives`).
+- Net reduction: 136 Compiler lines in the contract-repair checkpoint.
+- Old surface: `fuelSimulatorStructuredLoweredTape`; the fixed-representative
+  `FuelSimulatorStructuredCanonicalEndpointEquiv*` component aliases and their
+  materializer/projector adapters.
+- Potentially reusable idea: an endpoint that restores logical tape 0 to the
+  pristine public input and logical tape 1 to exactly `Tape.blank` before
+  lowering.
+- Why retired: the sole real consumer immediately projects logical tape 2 and
+  observes neither working tape. Moreover, logical blank padding becomes
+  nonblank guarded code, so the outer physical `Tape.Equiv` contract does not
+  itself discharge exact logical scratch cleanup.
+- Current route: `FuelSimulatorStructuredEquivLoweredCoreComponents` carries
+  the actual tape-0, tape-1, and lowered representative families. Logical tape
+  2 must still contain the exact `SimulatorLayout.initial` encoding, and the
+  existing shared projector accepts the carried representatives directly.
+- Reconsider only if: a checked consumer genuinely observes a restored input
+  or exactly blank scratch tape. Add that cleanup to the specific construction;
+  do not restore the fixed-representative component/adapter lattice wholesale.
+
 ### Legacy RawBoundary route families
 
 - Deleting commit: `bb4f8907` (`Retire legacy RawBoundary routes`)

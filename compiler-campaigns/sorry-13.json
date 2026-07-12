@@ -1,0 +1,19 @@
+{
+  "allow_net_growth": 500,
+  "base_commit": "d662077bd2d31c489fdf17e179a05e9a4c94cd53",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerOutputLevelSimulator.lean"
+  ],
+  "frontier": "FoC.Computability.StructuredConstructionTargets.fuelSimulatorStructuredEquivLoweredCoreConstruction_core",
+  "name": "sorry-13-fuel-simulator-structured-constructor",
+  "paths": [
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulatorCore",
+    "FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerOutputLevelSimulator.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.StructuredConstructionTargets.fuelSimulatorStructuredEquivLoweredCoreConstruction_core",
+    "FoC.Computability.pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction_finite_leaf"
+  ]
+}

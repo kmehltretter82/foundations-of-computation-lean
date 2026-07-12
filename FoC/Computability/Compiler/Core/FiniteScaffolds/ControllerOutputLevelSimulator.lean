@@ -538,12 +538,12 @@ private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
   rcases structured3EndpointTape2ProjectorConstruction_core with
     ⟨projector, hprojector⟩
   let W : Structured3EndpointWrapper :=
-    { core := C.core
+    { core := C.components.core
       initializer := structured3InputEmbeddingEmitterDescription
       projector := projector
-      coreWellFormed := C.coreWellFormed
-      coreHaltTransitionFree := C.coreHaltTransitionFree
-      coreSupportsRows := C.coreSupportsRows
+      coreWellFormed := C.components.coreWellFormed
+      coreHaltTransitionFree := C.components.coreHaltTransitionFree
+      coreSupportsRows := C.components.coreSupportsRows
       initializerSubroutineReady :=
         structured3InputEmbeddingEmitterDescription_spec.left
       projectorSubroutineReady := hprojector.subroutineReady }
@@ -551,19 +551,19 @@ private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
   intro i
   apply W.haltsFromTapeEquivGeneral
     (Tinit := fuelSimulatorStructuredInitializedTape i)
-    (Tlowered := fuelSimulatorStructuredLoweredTape attempt i)
+    (Tlowered := C.lowered i)
   · simpa [W, fuelSimulatorStructuredInputTape,
       fuelSimulatorStructuredInitializedTape,
       fuelSimulatorStructuredOutputBuffer] using
       structured3InputEmbeddingEmitterDescription_spec.right
         (encodeCodeWordAsInput (fuelSimulatorStructuredInputCode i))
   · simpa [W, Structured3EndpointWrapper.lowered] using
-      C.loweredCore.forward i
-  · rw [C.loweredShape i]
+      C.components.loweredCore.forward i
+  · rw [C.components.loweredShape i]
     simpa [W] using
       hprojector.forward
-        (fuelSimulatorStructuredInputTape i)
-        Tape.blank
+        (C.tape0 i)
+        (C.tape1 i)
         (fuelSimulatorStructuredOutputTape attempt i)
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
