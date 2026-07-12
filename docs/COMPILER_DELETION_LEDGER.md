@@ -509,6 +509,29 @@ projector and is not widened to cover this interior-separator target.
   Recover only the required selected-segment seek, not the full scan/identity
   lattice.
 
+### Superseded #18 finite-realization wrapper
+
+- Deleting commit: `023d63dc` (`Split the guarded head marker`).
+- Reduction: the 152-line `GuardedEgress/FiniteRealization.lean` wrapper and a
+  14-line unused pair-fold theorem were removed. The same checkpoint added the
+  160-line exact marker scanner and direct suffix ownership, for zero net
+  Compiler growth.
+- Old surface: a second semantic `Spec`/`Construction`, canonical-source
+  wrappers, round-trip adapters to `GuardedEgress.Spec`, and a leaf alias whose
+  construction proposition was definitionally the parent construction.
+- Potentially reusable idea: reducing an all-equivalent-input/equivalent-output
+  contract to canonical-source runs by standard run-equivalence transport.
+- Why retired: no external declaration referenced the wrapper lattice. The
+  actual repaired contract already lives in `GuardedEgress.lean`, while the
+  physical implementation now proceeds through `RawPairQuoter`,
+  `RawPairDecoder`, and `RawPairMarker`.
+- Current route: `RawPairQuoter.suffixCells` owns the exact carried tape-1/tape-2
+  suffix, and `RawPairMarker.markerScanDescription_haltsFromTape` proves the
+  first post-rewrite semantic split.
+- Reconsider only if: final composition needs a canonical-source adapter not
+  already supplied by `PipelineContracts`. Restore one theorem directly over
+  `GuardedEgress.Spec`; do not recreate the duplicate local contract lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
