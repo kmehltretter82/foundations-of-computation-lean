@@ -148,6 +148,138 @@ def quotedPairBits : List (Bool × Bool) -> Word Bool
   | (first, second) :: rest =>
       false :: true :: first :: second :: quotedPairBits rest
 
+def logicalCellPair : Option Bool -> Bool × Bool
+  | none => (false, false)
+  | some false => (false, true)
+  | some true => (true, false)
+
+def logicalTapePairs (T : Tape Bool) : List (Bool × Bool) :=
+  List.append (T.left.reverse.map logicalCellPair)
+    (List.append [(true, true)]
+      (logicalCellPair T.head :: T.right.map logicalCellPair))
+
+theorem pairStream_append
+    (left right : List (Bool × Bool)) :
+    pairStream (List.append left right) =
+      List.append (pairStream left) (pairStream right) := by
+  induction left with
+  | nil =>
+      rfl
+  | cons pair rest ih =>
+      rcases pair with ⟨first, second⟩
+      change
+        first :: second :: pairStream (List.append rest right) =
+          first :: second ::
+            List.append (pairStream rest) (pairStream right)
+      rw [ih]
+
+theorem quotedPairBits_append
+    (left right : List (Bool × Bool)) :
+    quotedPairBits (List.append left right) =
+      List.append (quotedPairBits left) (quotedPairBits right) := by
+  induction left with
+  | nil =>
+      rfl
+  | cons pair rest ih =>
+      rcases pair with ⟨first, second⟩
+      change
+        false :: true :: first :: second ::
+            quotedPairBits (List.append rest right) =
+          false :: true :: first :: second ::
+            List.append (quotedPairBits rest) (quotedPairBits right)
+      rw [ih]
+
+theorem pairStream_map_logicalCellPair
+    (cells : List (Option Bool)) :
+    pairStream (cells.map logicalCellPair) =
+      logicalCellListBits cells := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simp [logicalCellPair, pairStream, logicalCellListBits,
+            logicalCellBits, ih]
+      | some bit =>
+          cases bit <;>
+            simp [logicalCellPair, pairStream, logicalCellListBits,
+              logicalCellBits, ih]
+
+theorem pairStream_logicalTapePairs (T : Tape Bool) :
+    pairStream (logicalTapePairs T) = logicalTapeBits T := by
+  cases T with
+  | mk left head right =>
+      unfold logicalTapePairs logicalTapeBits
+      rw [pairStream_append]
+      rw [pairStream_map_logicalCellPair]
+      rw [pairStream_append]
+      cases head with
+      | none =>
+          simp [pairStream, logicalCellPair,
+            pairStream_map_logicalCellPair, logicalCellBits]
+      | some bit =>
+          cases bit <;>
+            simp [pairStream, logicalCellPair,
+              pairStream_map_logicalCellPair, logicalCellBits]
+
+theorem rawBits_eq_pairStream (i : Index) :
+    rawBits i =
+      pairStream (logicalTapePairs (guardLogicalTape i.finalTape)) := by
+  exact (pairStream_logicalTapePairs _).symm
+
+theorem quotedPairBits_map_logicalCellPair
+    (cells : List (Option Bool)) :
+    quotedPairBits (cells.map logicalCellPair) =
+      EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+        cells := by
+  induction cells with
+  | nil =>
+      rfl
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          simp [logicalCellPair, quotedPairBits,
+            EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+            EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+            encodeCell, encodeCodeWordAsInput,
+            encodeCodeSymbolAsInput, ih]
+      | some bit =>
+          cases bit <;>
+            simp [logicalCellPair, quotedPairBits,
+              EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits,
+              EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+              encodeCell, encodeCodeWordAsInput,
+              encodeCodeSymbolAsInput, ih]
+
+theorem quotedPairBits_logicalTapePairs (T : Tape Bool) :
+    quotedPairBits (logicalTapePairs T) =
+      List.append
+        (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+          T.left.reverse)
+        (List.append [false, true, true, true]
+          (List.append
+            (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits
+              T.head)
+            (EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellsCodeBits
+              T.right))) := by
+  unfold logicalTapePairs
+  rw [quotedPairBits_append]
+  rw [quotedPairBits_map_logicalCellPair]
+  rw [quotedPairBits_append]
+  cases T.head with
+  | none =>
+      simp [logicalCellPair, quotedPairBits,
+        quotedPairBits_map_logicalCellPair,
+        EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+        encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+  | some bit =>
+      cases bit <;>
+        simp [logicalCellPair, quotedPairBits,
+          quotedPairBits_map_logicalCellPair,
+          EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
+          encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
+
 theorem interleavedBits_pairStream
     (pairs : List (Bool × Bool)) :
     interleavedBits (pairStream pairs) =

@@ -586,6 +586,196 @@ theorem decoderDescription_haltsFromTape
   constructor <;>
     rw [decoderDescription_run]
 
+/-!
+# Blank-guarded right padding
+The decoder never crosses the guard blank after its false end sentinel, so an unrelated
+physical suffix may remain beyond it.
+-/
+def decoderPaddedSourceTapeRev (outputRev : Word Bool) (gap : Nat) (cells : List (Option Bool))
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append
+      (List.replicate gap (none : Option Bool))
+      (outputRev.map some))
+    (List.append ((logicalCellListBits cells).map some)
+      (some false :: none :: rightPadding))
+def decoderPaddedHaltTapeRev (outputRev : Word Bool) (gap : Nat) (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (none ::
+      List.append
+        (List.replicate gap (none : Option Bool))
+        (outputRev.map some))
+    (none :: rightPadding)
+private theorem decoderDescription_run_end_sentinel_withRight (left rightPadding : List (Option Bool)) :
+    decoderDescription.runConfig 3
+        { state := 0
+          tape := tapeAtCells left
+            (some false :: none :: rightPadding) } =
+      { state := decoderDescription.halt
+        tape := tapeAtCells (none :: left)
+          (none :: rightPadding) } := by
+  cases left <;> cases rightPadding <;>
+    simp [decoderDescription, runConfig, stepConfig,
+      lookupTransition, Matches, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+private theorem decoderDescription_run_rev_withRight (cells : List (Option Bool))
+    (gap : Nat) (anchor : Bool) (base : Word Bool)
+    (rightPadding : List (Option Bool)) :
+    decoderDescription.runConfig (decoderRunSteps gap cells)
+        { state := 0
+          tape :=
+            decoderPaddedSourceTapeRev
+              (anchor :: base) gap cells rightPadding } =
+      { state := decoderDescription.halt
+        tape := decoderPaddedHaltTapeRev
+          (List.append (decodedLogicalCells cells).reverse (anchor :: base))
+          (decoderFinalGap gap cells) rightPadding } := by
+  induction cells generalizing gap anchor base with
+  | nil =>
+      exact decoderDescription_run_end_sentinel_withRight
+        (List.append
+          (List.replicate gap (none : Option Bool))
+          ((anchor :: base).map some))
+        rightPadding
+  | cons cell rest ih =>
+      cases cell with
+      | none =>
+          rw [decoderRunSteps]
+          rw [runConfig_add]
+          change
+            decoderDescription.runConfig (decoderRunSteps (gap + 2) rest)
+                (decoderDescription.runConfig (2 * gap + 6)
+                  { state := 0
+                    tape := tapeAtCells
+                      (List.append
+                        (List.replicate gap (none : Option Bool))
+                        (some anchor :: base.map some))
+                      (some false :: some false ::
+                        List.append
+                          ((logicalCellListBits rest).map some)
+                          (some false :: none :: rightPadding)) }) =
+              { state := decoderDescription.halt
+                tape := decoderPaddedHaltTapeRev
+                  (List.append
+                    (decodedLogicalCells (none :: rest)).reverse
+                    (anchor :: base))
+                  (decoderFinalGap gap (none :: rest)) rightPadding }
+          rw [decoderDescription_run_pair_none]
+          simpa [decoderPaddedSourceTapeRev,
+            decoderPaddedHaltTapeRev, decodedLogicalCells,
+            decoderFinalGap] using
+            ih (gap + 2) anchor base
+      | some bit =>
+          cases bit with
+          | false =>
+              rw [decoderRunSteps]
+              rw [runConfig_add]
+              change
+                decoderDescription.runConfig (decoderRunSteps (gap + 1) rest)
+                    (decoderDescription.runConfig (2 * gap + 6)
+                      { state := 0
+                        tape := tapeAtCells
+                          (List.append
+                            (List.replicate gap (none : Option Bool))
+                            (some anchor :: base.map some))
+                          (some false :: some true ::
+                            List.append
+                              ((logicalCellListBits rest).map some)
+                              (some false :: none :: rightPadding)) }) =
+                  { state := decoderDescription.halt
+                    tape := decoderPaddedHaltTapeRev
+                      (List.append
+                        (decodedLogicalCells (some false :: rest)).reverse
+                        (anchor :: base))
+                      (decoderFinalGap gap (some false :: rest))
+                      rightPadding }
+              rw [decoderDescription_run_pair_false]
+              simpa [decoderPaddedSourceTapeRev,
+                decoderPaddedHaltTapeRev, decodedLogicalCells,
+                decoderFinalGap, List.reverse_cons,
+                List.append_assoc] using
+                ih (gap + 1) false (anchor :: base)
+          | true =>
+              rw [decoderRunSteps]
+              rw [runConfig_add]
+              change
+                decoderDescription.runConfig (decoderRunSteps (gap + 1) rest)
+                    (decoderDescription.runConfig (2 * gap + 6)
+                      { state := 0
+                        tape := tapeAtCells
+                          (List.append
+                            (List.replicate gap (none : Option Bool))
+                            (some anchor :: base.map some))
+                          (some true :: some false ::
+                            List.append
+                              ((logicalCellListBits rest).map some)
+                              (some false :: none :: rightPadding)) }) =
+                  { state := decoderDescription.halt
+                    tape := decoderPaddedHaltTapeRev
+                      (List.append
+                        (decodedLogicalCells (some true :: rest)).reverse
+                        (anchor :: base))
+                      (decoderFinalGap gap (some true :: rest))
+                      rightPadding }
+              rw [decoderDescription_run_pair_true]
+              simpa [decoderPaddedSourceTapeRev,
+                decoderPaddedHaltTapeRev, decodedLogicalCells,
+                decoderFinalGap, List.reverse_cons,
+                List.append_assoc] using
+                ih (gap + 1) true (anchor :: base)
+def decoderPaddedSourceTape (outputPrefix : Word Bool) (gap : Nat) (cells : List (Option Bool))
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append
+      (List.replicate gap (none : Option Bool))
+      (outputPrefix.reverse.map some))
+    (List.append ((logicalCellListBits cells).map some)
+      (some false :: none :: rightPadding))
+def decoderPaddedHaltTape (outputPrefix : Word Bool) (gap : Nat) (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (none ::
+      List.append
+        (List.replicate gap (none : Option Bool))
+        (outputPrefix.reverse.map some))
+    (none :: rightPadding)
+theorem decoderDescription_haltsFromTape_withRight (outputFirst : Bool)
+    (outputRest : Word Bool) (gap : Nat) (cells : List (Option Bool))
+    (rightPadding : List (Option Bool)) :
+    decoderDescription.HaltsFromTape
+      (decoderPaddedSourceTape
+        (outputFirst :: outputRest) gap cells rightPadding)
+      (decoderPaddedHaltTape
+        (List.append (outputFirst :: outputRest)
+          (decodedLogicalCells cells))
+        (decoderFinalGap gap cells) rightPadding) := by
+  cases hbackward : (outputFirst :: outputRest).reverse with
+  | nil =>
+      simp at hbackward
+  | cons anchor base =>
+      have hforward :
+          (anchor :: base).reverse = outputFirst :: outputRest := by
+        rw [← hbackward]
+        simp
+      have htail :
+          some anchor :: base.map some =
+            outputRest.reverse.map some ++ [some outputFirst] := by
+        have hmapped := congrArg (List.map some) hbackward.symm
+        simpa [List.reverse_cons, List.map_append] using hmapped
+      refine ⟨decoderRunSteps gap cells, ?_⟩
+      have hrun := decoderDescription_run_rev_withRight
+        cells gap anchor base rightPadding
+      constructor
+      · simpa [decoderDescription, decoderPaddedSourceTape,
+          decoderPaddedSourceTapeRev, decoderPaddedHaltTape,
+          decoderPaddedHaltTapeRev, List.reverse_append,
+          hbackward, hforward, htail] using
+          congrArg (fun c => c.state) hrun
+      · simpa [decoderDescription, decoderPaddedSourceTape,
+          decoderPaddedSourceTapeRev, decoderPaddedHaltTape,
+          decoderPaddedHaltTapeRev, List.reverse_append,
+          hbackward, hforward, htail] using
+          congrArg (fun c => c.tape) hrun
+
 theorem decoderDescription_haltsFrom_parserTargetTape
     (metadataFirst : Bool) (metadataRest bits : Word Bool)
     (gap : Nat) :
