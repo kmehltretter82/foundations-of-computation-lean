@@ -415,6 +415,30 @@ projector and is not widened to cover this interior-separator target.
   Recover that theorem from `8a01ac7b^`, state it in the consumer's honest
   exact/equivalence currency, and do not restore the aggregate route lattice.
 
+### Superseded #18 standalone selector execution lattice
+
+- Deleting commit: `0e5733b9` (`Splice the selector into the dispatcher`).
+- Net reduction at the checkpoint: 43 Compiler lines; 365 deleted standalone
+  selector-run lines were replaced by the 317-line combined table and its
+  import wiring.
+- Old surface: the exact standalone `SelectorIngress` execution lattice whose
+  `.done` states were terminal/stuck endpoints, plus its duplicated Boolean,
+  natural-number, scan, restoration, and layout composition proofs.
+- Potentially reusable idea: exact restoration of the selector field and
+  scratch-marker window after parsing the classified-state selector.
+- Why retired: the only current consumer must continue immediately from the
+  selected `.done tag` state into the matching dispatcher branch. Treating
+  that boundary as a standalone halt forced a second execution lattice and an
+  adapter at the real consumer boundary.
+- Current route: `SelectorSplice` preserves all existing dispatcher/closeout
+  state identifiers, assigns the selector a disjoint state range, and redirects
+  each selector completion row directly to `.base (.dispatch tag)`. Its exact
+  fixed-start execution and lowered tape-equivalence proof are maintained as
+  one integrated route.
+- Reconsider only if: a checked consumer genuinely needs the selector to halt
+  after restoring its source tape. Recover only the restoration contract; do
+  not duplicate the combined selector-to-dispatcher execution proof.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
