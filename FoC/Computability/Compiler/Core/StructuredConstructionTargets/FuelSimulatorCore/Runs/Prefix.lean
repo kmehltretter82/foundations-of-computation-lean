@@ -578,7 +578,7 @@ theorem tapeAtCells_single_blank_eq_nil
     (left : List (Option Bool)) :
     tapeAtCells left [none] = tapeAtCells left [] := rfl
 
-theorem map_some_append (left right : Word Bool) :
+private theorem map_some_append (left right : Word Bool) :
     (List.append left right).map some =
       List.append (left.map some) (right.map some) := by
   induction left with

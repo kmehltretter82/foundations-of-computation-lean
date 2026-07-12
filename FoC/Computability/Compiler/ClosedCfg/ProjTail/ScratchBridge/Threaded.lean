@@ -330,27 +330,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
     (segmentNormalizerConstruction_ofBranchFootprintCases
       heraser hcases)
 
-theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
-    (hnormalizer :
-      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction := by
-  rcases
-      structuredTape2ProjectorConstruction_of_segmentNormalizerConstruction
-        hnormalizer with
-    ⟨projector, hprojectorReady, hprojectorRun⟩
-  refine ⟨projector, hprojectorReady, ?_⟩
-  intro useAccept L deletedTail
-  exact
-    hprojectorRun
-      (structuredBoolWordRawBitsDecoderSourceTargetTape
-        (ParsedLayoutBits L)
-        (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
-        (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-          useAccept L deletedTail))
-      (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-        ((ParsedLayoutBits L).length + 1))
-      (postFieldDecodedPrefixScanSourceTape useAccept L)
-
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
     (hnormalizer :
       Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
@@ -369,6 +348,14 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
         ((ParsedLayoutBits L).length + 1))
       (postFieldDecodedPrefixScanSourceTape useAccept L)
       physical hseparator
+
+theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
+    (hnormalizer :
+      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
+    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
+  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
+    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
+      hnormalizer)
 
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by

@@ -99,24 +99,26 @@ comparison.
   an exact stored-tape endpoint.
 - Why retired: no consumer used the over-strong exact lattice; the live route
   uses honest tape equivalence.
-- Current route: the equivalence/representative contracts remaining in the
-  same HeadRoutes modules.
+- Current route: the direct marker-preserving tape-2 projector under
+  `Structured/HeadRoutes/Tape2Projector/`; the later cleanup entry records the
+  deletion of the remaining representative adapter lattice.
 - Reconsider only if: a checked consumer genuinely observes exact stored
   windows. Prove that one boundary directly; do not reintroduce symmetric
   exact/equivalence adapter forests.
 
-### False lossy selected-head cleanup construction route
+### False lossy selected-head cleanup and projector adapter lattice
 
-- Deleting commit: this change (`Repair sorry #17 projector contract`).
-- Net change at the contract-repair checkpoint: +236/-88, net +148 Compiler
-  lines before machine implementation.  The endpoint lattice itself shrank by
-  51 net lines; the replacement is the tracked counterexamples, isolated live
-  frontier, and corrected route documentation.
-- Old surface: the padded representative forward/handoff split constructions,
-  their equivalence cleanup and head-cleanup adapters, the bundled
-  `StructuredSelectedHeadDecoderRouteConstruction`, and its segment decoder,
-  segment normalizer, standalone projector, and cleanup-derived implementation
-  of the shared projector theorem in `Structured/HeadRoutes/Endpoints.lean`.
+- Deleting commit: this change (`Close sorry #17 projector`).
+- Campaign change from pinned base `402d1269`: +3,579/-2,096, net +1,483
+  Compiler lines after the checked projector implementation and deletion pass.
+- Old paths: `Structured/HeadRoutes/Projectors.lean`, `Pipeline.lean`, and
+  `RepresentativeProjectors.lean`; the padded representative split/adapters
+  formerly in `ExactCleanup.lean` and `RepresentativeCleanup.lean`; and the
+  cleanup-derived shared-projector route formerly in
+  `Structured/HeadRoutes/Endpoints.lean`.
+- Old surface: padded representative forward/handoff splits, equivalence and
+  head-cleanup adapters, `StructuredSelectedHeadDecoderRouteConstruction`,
+  segment decoder/normalizer projections, and standalone projector aliases.
 - Potentially reusable ideas: nil/cons padding decomposition and reconstruction
   of an exact padded logical-tape representative after a finite scanner.
 - Why retired: the selected-segment scanner has already erased the raw
@@ -126,11 +128,14 @@ comparison.
   forward split. Exhaustive declaration-reference search found no external
   consumer of the cleanup-derived existence lattice.
 - Current route: `Structured/HeadRoutes/ContractGuardrails.lean` preserves the
-  counterexamples and proves source-class functionality for the direct
-  marker-preserving target. The sole #17 frontier is
-  `HeadRoutes/Tape2Projector/EndpointFrontier.lean`, whose source is the full
-  canonical guarded three-tape encoding and whose public target is tape 2 up
-  to `Tape.Equiv`.
+  counterexamples and proves source-class functionality. The checked
+  `HeadRoutes/Tape2Projector/` stack erases the structured prefix, parses the
+  retained endpoint mode/head marker, streams logical cells, and finalizes the
+  requested head position. `EndpointFrontier.lean` exposes the full canonical
+  guarded three-tape source and tape 2 up to `Tape.Equiv`. The concrete
+  count-window caller in `ScratchBridge/Threaded.lean` now preserves its wider
+  segment-normalizer contract instead of coercing it through the narrower
+  shared endpoint family.
 - Reconsider only if: a checked source still contains a detectable head marker
   and first proves target functionality on source-equivalence classes. Recover
   only a useful scan or reconstruction lemma; never restore the refuted

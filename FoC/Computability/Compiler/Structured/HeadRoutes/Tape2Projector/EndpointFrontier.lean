@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Structured.HeadRoutes.ContractGuardrails
+import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.Assembly
 
 set_option doc.verso true
 
@@ -29,9 +29,9 @@ by all current endpoint users.
 -/
 theorem structuredTape2ProjectorConstruction_core :
     StructuredTape2ProjectorConstruction := by
-  -- Remaining finite-machine obligation: project logical tape 2 directly
-  -- from `encodedGuardedStructured3Tapes T0 T1 T2`.
-  sorry
+  exact
+    ⟨Tape2Projector.endpointTape2ProjectorDescription,
+      Tape2Projector.endpointTape2ProjectorDescription_spec⟩
 
 end MultiTapeLowering
 end Structured

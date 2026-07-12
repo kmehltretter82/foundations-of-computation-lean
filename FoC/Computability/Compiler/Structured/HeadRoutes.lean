@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Structured.HeadRoutes.RepresentativeProjectors
+import FoC.Computability.Compiler.Structured.HeadRoutes.RawHeadNormalizer
 
 set_option doc.verso true
 

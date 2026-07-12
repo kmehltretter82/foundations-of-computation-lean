@@ -1,21 +1,19 @@
-import FoC.Computability.Compiler.Structured.HeadRoutes.RawHeadNormalizer
+import FoC.Computability.Compiler.Structured.HeadRoutes.Base
 
 set_option doc.verso true
 
 /-!
-# Historical selected-head cleanup contracts
+# Retired selected-head cleanup guardrail contract
 
-This module records equivalence-facing padded and selected-head cleanup
-contracts and their conditional adapters.  No public endpoint construction now
-inhabits them: {lit}`ContractGuardrails.lean` proves that the lossy scanner
-source does not determine the requested tape even up to tape equivalence.  The
-live #17 endpoint uses the full marker-preserving guarded encoding instead.
+The post-scanner source has lost the logical head marker, so it cannot support cleanup to an
+arbitrary logical tape.  This minimal contract preserves the checked impossibility result in
+{lit}`ContractGuardrails.lean`; the retired
+adapters remain recoverable from Git history.
 -/
 
 namespace FoC
 namespace Computability
 
-open Languages
 open MachineDescription
 
 namespace CommonGround
@@ -23,137 +21,15 @@ namespace FiniteTransducers
 namespace Structured
 namespace MultiTapeLowering
 
-def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec
-    (cleanup : MachineDescription) : Prop :=
+def SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec (cleanup : MachineDescription) : Prop :=
   cleanup.SubroutineReady ∧
-    forall (target : Tape Bool) (padding : List (Option Bool))
-      (encodedPrefix : List (Option Bool)),
+    forall (target : Tape Bool) (padding : List (Option Bool)) (encodedPrefix : List (Option Bool)),
       cleanup.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
-          target padding encodedPrefix)
+        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape target padding encodedPrefix)
         target
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_guardedCellShapeSpec
-    {cleanup : MachineDescription}
-    (hcleanup :
-      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupSpec cleanup) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup := by
-  rcases hcleanup with ⟨hready, hrun⟩
-  refine ⟨hready, ?_⟩
-  intro target padding encodedPrefix
-  rcases hrun target padding encodedPrefix with
-    ⟨actual, hhalts, hequiv⟩
-  exact
-    ⟨actual, hhalts,
-      Tape.Equiv.trans hequiv (guardLogicalTape_equiv target)⟩
 
 def SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction : Prop :=
-  exists cleanup : MachineDescription,
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_guardedCellShape
-    (hcleanup :
-      SelectedSegmentLogicalTapeDecoderGuardedCellShapeCleanupConstruction) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction := by
-  rcases hcleanup with ⟨cleanup, hspec⟩
-  exact
-    ⟨cleanup,
-      selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_guardedCellShapeSpec
-        hspec⟩
-
-def SelectedSegmentLogicalTapeDecoderPaddedCleanupNilPaddingSpec
-    (cleanup : MachineDescription) : Prop :=
-  cleanup.SubroutineReady ∧
-    forall (target : Tape Bool) (encodedPrefix : List (Option Bool)),
-      cleanup.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
-          target [] encodedPrefix)
-        target
-
-def SelectedSegmentLogicalTapeDecoderPaddedCleanupConsPaddingSpec
-    (cleanup : MachineDescription) : Prop :=
-  cleanup.SubroutineReady ∧
-    forall (target : Tape Bool) (pad : Option Bool)
-      (padding encodedPrefix : List (Option Bool)),
-      cleanup.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderPaddedCleanupSourceTape
-          target (pad :: padding) encodedPrefix)
-        target
-
-def SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec
-    (cleanup : MachineDescription) : Prop :=
-  SelectedSegmentLogicalTapeDecoderPaddedCleanupNilPaddingSpec cleanup ∧
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupConsPaddingSpec cleanup
-
-def SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction : Prop :=
-  exists cleanup : MachineDescription,
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec cleanup
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec_of_spec
-    {cleanup : MachineDescription}
-    (hcleanup :
-      SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec cleanup := by
-  rcases hcleanup with ⟨hready, hrun⟩
-  constructor
-  · exact
-      ⟨hready, fun target encodedPrefix =>
-        hrun target [] encodedPrefix⟩
-  · exact
-      ⟨hready, fun target pad padding encodedPrefix =>
-        hrun target (pad :: padding) encodedPrefix⟩
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_splitSpec
-    {cleanup : MachineDescription}
-    (hsplit :
-      SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec cleanup) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup := by
-  rcases hsplit with ⟨hnil, hcons⟩
-  rcases hnil with ⟨hready, hnilRun⟩
-  rcases hcons with ⟨_hreadyCons, hconsRun⟩
-  refine ⟨hready, ?_⟩
-  intro target padding encodedPrefix
-  cases padding with
-  | nil =>
-      exact hnilRun target encodedPrefix
-  | cons pad padding =>
-      exact hconsRun target pad padding encodedPrefix
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_split
-    (hsplit :
-      SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction := by
-  rcases hsplit with ⟨cleanup, hsplitSpec⟩
-  exact
-    ⟨cleanup,
-      selectedSegmentLogicalTapeDecoderPaddedCleanupSpec_of_splitSpec
-        hsplitSpec⟩
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction_of_construction
-    (hcleanup :
-      SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction) :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupSplitConstruction := by
-  rcases hcleanup with ⟨cleanup, hspec⟩
-  exact
-    ⟨cleanup,
-      selectedSegmentLogicalTapeDecoderPaddedCleanupSplitSpec_of_spec
-        hspec⟩
-
-/-- Cleanup needed after the padded selected-head bit decoder. -/
-def SelectedSegmentLogicalTapeDecoderHeadCleanupSpec
-    (cleanup : MachineDescription) : Prop :=
-  cleanup.SubroutineReady ∧
-    forall (target : Tape Bool) (rest : List (Tape Bool))
-      (encodedPrefix : List (Option Bool)),
-      cleanup.HaltsFromTapeEquiv
-        (selectedSegmentLogicalTapeDecoderHeadTargetTape
-          target rest encodedPrefix)
-        target
-
-/-- Existence wrapper for the padded selected-head cleanup phase. -/
-def SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction : Prop :=
-  exists cleanup : MachineDescription,
-    SelectedSegmentLogicalTapeDecoderHeadCleanupSpec cleanup
+  exists cleanup, SelectedSegmentLogicalTapeDecoderPaddedCleanupSpec cleanup
 
 end MultiTapeLowering
 end Structured

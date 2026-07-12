@@ -738,18 +738,12 @@ endpoints.
 structure Structured3EndpointTape2ProjectorSpec
     (projector : MachineDescription) : Prop where
   subroutineReady : projector.SubroutineReady
-  forward :
-    forall T0 T1 T2 : Tape Bool,
-      StructuredTape2EndpointTape T2 ->
-        projector.HaltsFromTapeEquiv
-          (encodedGuardedStructured3Tapes T0 T1 T2)
-          T2
-  closed :
-    forall T0 T1 T2 : Tape Bool,
-      StructuredTape2EndpointTape T2 ->
-        projector.ClosedFromTapeEquiv
-          (encodedGuardedStructured3Tapes T0 T1 T2)
-          T2
+  forward : forall T0 T1 T2 : Tape Bool, StructuredTape2EndpointTape T2 ->
+    projector.HaltsFromTapeEquiv
+      (encodedGuardedStructured3Tapes T0 T1 T2) T2
+  closed : forall T0 T1 T2 : Tape Bool, StructuredTape2EndpointTape T2 ->
+    projector.ClosedFromTapeEquiv
+      (encodedGuardedStructured3Tapes T0 T1 T2) T2
 
 /-- Existence wrapper for the equivalence-facing shared tape-2 projector. -/
 def Structured3EndpointTape2ProjectorConstruction : Prop :=
@@ -808,8 +802,7 @@ structure Structured3CanonicalEquivEndpointSharedProjectorComponents
       lowered i =
         encodedGuardedStructured3Tapes
           (tape0 i) (tape1 i) (output i)
-  outputProjectable :
-    forall i : ι, StructuredTape2EndpointTape (output i)
+  outputProjectable : forall i : ι, StructuredTape2EndpointTape (output i)
   materializer :
     Structured3EndpointExactMaterializerSpec
       input initialized initializer
@@ -979,8 +972,7 @@ def toEquivSharedProjectorComponents
     {projector : MachineDescription}
     (hprojector :
       Structured3EndpointTape2ProjectorSpec projector)
-    (houtput :
-      forall i : ι, StructuredTape2EndpointTape (output i)) :
+    (houtput : forall i : ι, StructuredTape2EndpointTape (output i)) :
     Structured3CanonicalEquivEndpointSharedProjectorComponents
       input initialized lowered output tape0 tape1 where
   core := C.core
@@ -1013,8 +1005,7 @@ theorem structured3CanonicalEquivEndpointSharedProjectorConstruction_of_coreComp
         input initialized lowered output tape0 tape1)
     (hprojector :
       Structured3EndpointTape2ProjectorConstruction)
-    (houtput :
-      forall i : ι, StructuredTape2EndpointTape (output i)) :
+    (houtput : forall i : ι, StructuredTape2EndpointTape (output i)) :
     Structured3CanonicalEquivEndpointSharedProjectorConstruction
       input initialized lowered output tape0 tape1 := by
   rcases hcore with ⟨C⟩
@@ -2115,8 +2106,7 @@ structure Structured3CanonicalEquivEndpointComponents
       lowered i =
         encodedGuardedStructured3Tapes
           (tape0 i) (tape1 i) (output i)
-  outputProjectable :
-    forall i : ι, StructuredTape2EndpointTape (output i)
+  outputProjectable : forall i : ι, StructuredTape2EndpointTape (output i)
   materializer :
     Structured3EndpointEquivIndexedMaterializerSpec
       input initialized initializer
@@ -2152,8 +2142,7 @@ def toEndpointComponents
     {projector : MachineDescription}
     (hprojector :
       Structured3EndpointTape2ProjectorSpec projector)
-    (houtput :
-      forall i : ι, StructuredTape2EndpointTape (output i)) :
+    (houtput : forall i : ι, StructuredTape2EndpointTape (output i)) :
     Structured3CanonicalEquivEndpointComponents
       input initialized lowered output tape0 tape1 where
   core := C.core
@@ -2184,8 +2173,7 @@ theorem structured3CanonicalEquivEndpointComponentConstruction_of_coreComponents
         input initialized lowered output tape0 tape1)
     (hprojector :
       Structured3EndpointTape2ProjectorConstruction)
-    (houtput :
-      forall i : ι, StructuredTape2EndpointTape (output i)) :
+    (houtput : forall i : ι, StructuredTape2EndpointTape (output i)) :
     Structured3CanonicalEquivEndpointComponentConstruction
       input initialized lowered output tape0 tape1 := by
   rcases hcore with ⟨C⟩
@@ -2231,18 +2219,15 @@ theorem equivIndexedFamilySpec
     · exact C.loweredCore.forward
     · intro i
       rw [C.loweredShape i]
-      exact
-        C.projectorRoute.forward
-          (tape0 i) (tape1 i) (output i) (C.outputProjectable i)
+      exact C.projectorRoute.forward (tape0 i) (tape1 i) (output i) (C.outputProjectable i)
     · intro i
       exact
         C.materializer.closed C.initializerSubroutineReady i
     · exact C.loweredCore.closed
     · intro i T hhalt
       rw [C.loweredShape i] at hhalt
-      exact
-        C.projectorRoute.closed
-          (tape0 i) (tape1 i) (output i) (C.outputProjectable i) T hhalt
+      exact C.projectorRoute.closed (tape0 i) (tape1 i) (output i)
+        (C.outputProjectable i) T hhalt
   initializerClosedIndex := C.materializer.closedIndex
 
 end Structured3CanonicalEquivEndpointComponents
@@ -2278,9 +2263,7 @@ theorem equivIndexedFamilySpec
               C.loweredCore.forward i)
     · intro i
       rw [C.loweredShape i]
-      exact
-        C.projectorRoute.forward
-          (tape0 i) (tape1 i) (output i) (C.outputProjectable i)
+      exact C.projectorRoute.forward (tape0 i) (tape1 i) (output i) (C.outputProjectable i)
     · intro i T hhalt
       rw [C.materializer.closed i T hhalt]
       exact Tape.Equiv.refl (initialized i)
@@ -2304,9 +2287,8 @@ theorem equivIndexedFamilySpec
       exact Tape.Equiv.symm hequiv
     · intro i T hhalt
       rw [C.loweredShape i] at hhalt
-      exact
-        C.projectorRoute.closed
-          (tape0 i) (tape1 i) (output i) (C.outputProjectable i) T hhalt
+      exact C.projectorRoute.closed (tape0 i) (tape1 i) (output i)
+        (C.outputProjectable i) T hhalt
   initializerClosedIndex := by
     intro Tin T hhalt
     rcases C.materializer.closedIndex Tin T hhalt with

@@ -55,14 +55,15 @@ replay rather than adding another execution abstraction. Expected saving:
 approximately 700–900 lines, subject to a focused `RawCellsOutput.lean` and
 `Quoter/Main.lean` check.
 
-### HeadRoutes projection aliases
+### HeadRoutes projection aliases — completed
 
-`Structured/HeadRoutes/Pipeline.lean` still has eleven exact duplicate groups:
-top-level `selectedHeadRoute_*` theorems repeat projections from
-`StructuredSelectedHeadDecoderRouteConstruction`. Only `Endpoints.lean` and
-`RepresentativeProjectors.lean` consume a subset. Migrate those consumers to
-the bundle fields and remove unused projection aliases. This should be a small,
-low-risk reduction; retain the bundle and honest equivalence contracts.
+The #17 declaration-reference audit found no external consumer of the lossy
+selected-head route bundle or its eleven projection aliases. The checked
+source-collision guardrail refuted the route's construction contract, so the
+closure deletion removed `Pipeline.lean`, `Projectors.lean`, and
+`RepresentativeProjectors.lean` and retained only the minimal guardrail
+shapes in `ExactCleanup.lean` and `RepresentativeCleanup.lean`. The live
+marker-preserving replacement is `Structured/HeadRoutes/Tape2Projector/`.
 
 ### Structured-prefix eraser endpoint lattice
 
