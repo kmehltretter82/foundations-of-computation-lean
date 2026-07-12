@@ -1,8 +1,9 @@
 {
-  "allow_net_growth": 13364,
+  "allow_net_growth": 14507,
   "base_commit": "0d7ecaf4bc1d420f661412bee50ca3a90f3cda80",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/FieldDecomposition/CfgHitClose.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitterCore/SelectorSpliceRuns.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitter.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/TerminalCore/Routes.lean",
     "lake env lean FoC/Computability/Compiler/Core/EncRewriters/ClosedCfgRunner/Simulator/PaddedEmitter.lean",
@@ -10,7 +11,7 @@
   ],
   "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner",
   "historical_debt": true,
-  "historical_debt_reason": "The 13,364-line replacement stack predates the growth-loan policy. This manifest preserves its original base, freezes the measured ceiling, and authorizes no further net growth.",
+  "historical_debt_reason": "The replacement stack predates the growth-loan policy. The user explicitly accepted its size and directed continuation on 2026-07-12; the original base remains fixed, and this 14,507-line ceiling records the measured selector-proof checkpoint rather than resetting campaign history.",
   "name": "sorry-18-fixed-description-bounded-emitter",
   "paths": [
     "FoC/Computability/Compiler/ClosedCfg/TerminalCore",
@@ -20,6 +21,7 @@
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.PipelineContracts.equivInputExactOutputConstruction_impossible",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.exactOutputConstruction_impossible",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit.construction_core",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.SelectorSplice.loweredDescription_haltsFromTapeEquiv",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner"
   ]

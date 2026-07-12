@@ -439,6 +439,28 @@ projector and is not widened to cover this interior-separator target.
   after restoring its source tape. Recover only the restoration contract; do
   not duplicate the combined selector-to-dispatcher execution proof.
 
+### Refuted #18 all-equivalent-input exact-output pipeline
+
+- Deleting commit: `d7c72a5b` (`Repair the guarded egress contract`).
+- Replacement size: 72 lines deleted and 110 added across the contract,
+  semantic egress, finite-realization boundary, and campaign manifest. The
+  added lines include the generic kernel-checked impossibility theorem.
+- Old surface: `EquivInputExactOutputSpec` canonical/target-functionality
+  adapters and the first-equivalent/second-exact sequential composition
+  lattice.
+- Potentially reusable idea: exact target functionality for canonical source
+  indices remains useful as a semantic collision audit, but it cannot justify
+  a machine contract quantified over every padding-equivalent physical input.
+- Why retired: any source has equivalent representatives with arbitrarily
+  large far-edge blank context. Tape context length cannot decrease during a
+  machine run, so no fixed exact target is reachable from all of them.
+- Current route: the guarded egress uses `EquivInputEquivOutputSpec`. It fixes
+  the exact normalized output and head-relative layout while retaining
+  harmless represented padding, and composes with an upstream equivalence run.
+- Reconsider only if: a caller supplies a bounded, explicitly indexed padding
+  family whose context length is proved no larger than its exact target. Do
+  not restore the unrestricted equivalent-input/exact-output quantifier.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

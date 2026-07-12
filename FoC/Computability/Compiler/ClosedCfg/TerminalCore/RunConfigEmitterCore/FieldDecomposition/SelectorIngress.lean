@@ -465,6 +465,113 @@ theorem description_supportsReadWriteRows3 (D : MachineDescription) :
   (table D).description_supportsReadWriteRows3
 
 /-!
+## Exact selector cell shapes
+
+These helpers expose the self-delimiting selector layout used by the combined
+selector/dispatcher execution proof.
+-/
+
+def natSelectorTail
+    (state : Nat) (nextCell : Option Bool)
+    (left : List (Option Bool)) : List (Option Bool) :=
+  match state with
+  | 0 => [some false, some true, some true, nextCell] ++ left
+  | state + 1 =>
+      [some false, some true, some false, some false] ++
+        natSelectorTail state nextCell left
+
+theorem encodeNatCells_eq_natSelectorTail
+    (state : Nat) (nextCell : Option Bool)
+    (left : List (Option Bool)) :
+    (encodeCodeWordAsInput (encodeNat state)).map some ++ nextCell :: left =
+      some false :: natSelectorTail state nextCell left := by
+  induction state with
+  | zero => rfl
+  | succ state ih =>
+      simp [encodeNat, natSelectorTail, ih]
+  done
+
+def restoredNatRight
+    (state : Nat) (right : List (Option Bool)) : List (Option Bool) :=
+  match state with
+  | 0 => [some true, some true, some true, some true] ++ right
+  | state + 1 =>
+      restoredNatRight state
+        ([some true, some true, some true, some true] ++ right)
+
+theorem restoredNatRight_eq
+    (state : Nat) (right : List (Option Bool)) :
+    restoredNatRight state right =
+      List.replicate (4 * (state + 1)) (some true) ++ right := by
+  induction state generalizing right with
+  | zero => rfl
+  | succ state ih =>
+      rw [restoredNatRight, ih]
+      change
+        List.replicate (4 * (state + 1)) (some true) ++
+            (List.replicate 4 (some true) ++ right) =
+          List.replicate (4 * (state + 1 + 1)) (some true) ++ right
+      rw [← FoC.Computability.list_replicate_add_append
+        (some true : Option Bool) (4 * (state + 1)) 4 right]
+      congr 2
+  done
+
+theorem selectorBits_known_cells
+    {D : MachineDescription} {state : Nat}
+    (hstate : state ∈ fixedStepValues D)
+    (nextCell : Option Bool) (left : List (Option Bool)) :
+    (selectorBits (StateClass.known state hstate)).map some ++
+        nextCell :: left =
+      some false :: some true :: some true :: some false :: some false ::
+        natSelectorTail state nextCell left := by
+  rw [selectorBits_known hstate]
+  have hcode :
+      encodeBoolAppend true (encodeNatAppend state []) =
+        MachineCodeSymbol.one :: encodeNat state := by
+    simp [encodeBoolAppend, encodeCellAppend, encodeCell, encodeNatAppend]
+  rw [hcode]
+  change
+    (List.append [false, true, true, false]
+      (encodeCodeWordAsInput (encodeNat state))).map some ++
+        nextCell :: left = _
+  rw [CanonicalLayouts.DovetailLayoutScanner.map_some_append]
+  change
+    [some false, some true, some true, some false] ++
+        ((encodeCodeWordAsInput (encodeNat state)).map some ++
+          nextCell :: left) = _
+  rw [encodeNatCells_eq_natSelectorTail]
+  rfl
+  done
+
+theorem selectorBits_other_cells
+    (D : MachineDescription) (nextCell : Option Bool)
+    (left : List (Option Bool)) :
+    (selectorBits (StateClass.other : StateClass D)).map some ++
+        nextCell :: left =
+      some false :: some true :: some false :: some true ::
+        nextCell :: left := by
+  rfl
+
+def selectorTailCells
+    {D : MachineDescription} (tag : StateClass D)
+    (nextCell : Option Bool) (left : List (Option Bool)) :
+    List (Option Bool) :=
+  match tag with
+  | .other => some true :: some false :: some true :: nextCell :: left
+  | .known state _ =>
+      some true :: some true :: some false :: some false ::
+        natSelectorTail state nextCell left
+
+theorem selectorBits_cells_eq
+    {D : MachineDescription} (tag : StateClass D)
+    (nextCell : Option Bool) (left : List (Option Bool)) :
+    (selectorBits tag).map some ++ nextCell :: left =
+      some false :: selectorTailCells tag nextCell left := by
+  cases tag with
+  | other => exact selectorBits_other_cells D nextCell left
+  | known state hstate => exact selectorBits_known_cells hstate nextCell left
+
+/-!
 The standalone exact-run lattice was retired when the scanner was spliced into
 the fixed-start selector/dispatcher table. Its {lit}`done` states are not
 halting endpoints: the combined table bridges them directly into classified
