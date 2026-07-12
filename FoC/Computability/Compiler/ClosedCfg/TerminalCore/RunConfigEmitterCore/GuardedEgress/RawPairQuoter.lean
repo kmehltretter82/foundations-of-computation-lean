@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.FiniteRealization
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary
 
 set_option doc.verso true
@@ -38,7 +38,12 @@ def rawBits (i : Index) : Word Bool :=
 /-- The untouched physical suffix beginning after the closing tape-0
 separator. -/
 def suffixCells (i : Index) : List (Option Bool) :=
-  FiniteRealization.tape0PayloadPadding i
+  List.append
+    (logicalTapeCode (guardLogicalTape i.consumedStageTape))
+    (List.append tapeSeparatorCells
+      (List.append
+        (logicalTapeCode (guardLogicalTape i.doneWitnessTape))
+        tapeSeparatorCells))
 
 /-- CountWindow separator view of the real guarded source. -/
 def sourceTape (i : Index) : Tape Bool :=
@@ -60,7 +65,6 @@ theorem index_source_eq_sourceTape (i : Index) :
         [i.finalTape, i.consumedStageTape, i.doneWitnessTape] = _
   simp [sourceTape, rawBits, suffixCells,
     rawBoundaryChunkExpandSeparatorTape,
-    FiniteRealization.tape0PayloadPadding,
     encodedGuardedStructuredTapes, encodedStructuredTapes,
     guardLogicalTapes, encodedStructuredTapeCells,
     logicalTapeCode_eq_map_some, tapeSeparatorCells]
@@ -279,20 +283,6 @@ theorem quotedPairBits_logicalTapePairs (T : Tape Bool) :
           quotedPairBits_map_logicalCellPair,
           EncRewriters.CanonicalLayouts.DovetailLayoutScanner.cellCodeBits,
           encodeCell, encodeCodeWordAsInput, encodeCodeSymbolAsInput]
-
-theorem interleavedBits_pairStream
-    (pairs : List (Bool × Bool)) :
-    interleavedBits (pairStream pairs) =
-      pairs.foldr
-        (fun pair rest =>
-          false :: pair.1 :: false :: pair.2 :: rest)
-        [] := by
-  induction pairs with
-  | nil =>
-      rfl
-  | cons pair rest ih =>
-      rcases pair with ⟨first, second⟩
-      simp [pairStream, interleavedBits, ih]
 
 def pairRewriterHalt : Nat := 5
 
