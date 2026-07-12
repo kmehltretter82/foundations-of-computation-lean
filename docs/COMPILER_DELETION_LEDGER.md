@@ -299,6 +299,27 @@ comparison.
   unclassified target or standalone decoder boundary. Recover a focused
   theorem over that consumer's exact tape shape, not the retired pipeline.
 
+### FuelOutput-local typed-run and delayed-emitter duplicates
+
+- Deleting commit: `2300dad7` (`Close the FuelSimulator structured core`).
+- Net reduction in the three FuelOutput files: 85 lines; their 127 deleted
+  lines were replaced by 42 target-specific adapter lines.
+- Old surface: local delayed-emitter action matches, full emission-tape update
+  and flush proofs, a private `Leads` reflexive/transitive/run extraction
+  implementation, and duplicated explicit tape-window action lemmas.
+- Potentially reusable ideas: all behavior is retained, not discarded, in
+  `Structured/Lowering/DelayedLeftEmitter.lean` and
+  `Structured/Lowering/TypedStateRuns.lean`.
+- Why retired: FuelSimulator became the second current construction family for
+  both abstractions. Keeping the FuelOutput copies would make later fixes and
+  proof compression diverge across two live finite-machine stacks.
+- Current route: FuelOutput keeps its stable target-facing aliases while both
+  FuelOutput and FuelSimulator use the shared delayed-emission and typed-run
+  algebra.
+- Reconsider only if: a checked consumer needs a genuinely target-specific
+  invariant absent from the shared theorem. Add that invariant as a thin local
+  theorem; do not restore the duplicate action or reachability implementations.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
