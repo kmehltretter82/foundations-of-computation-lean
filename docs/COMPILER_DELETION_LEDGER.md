@@ -461,6 +461,29 @@ projector and is not widened to cover this interior-separator target.
   family whose context length is proved no larger than its exact target. Do
   not restore the unrestricted equivalent-input/exact-output quantifier.
 
+### Superseded #18 nested structured tape serializer prototype
+
+- Deleting commit: `20eaa3c4` (`Quote guarded egress pairs`).
+- Reduction: 413 Compiler lines removed. The replacement adds the checked
+  physical-source adapter and pair rewriter while keeping the frozen #18
+  historical-debt ceiling unchanged.
+- Old surface: `GuardedEgress/ExactTapeSerializer.lean`, especially the
+  three-logical-tape left-length emitter over a tape 0 that already contained
+  the raw logical-tape representation.
+- Potentially reusable idea: scan the pair-coded left window to the preserved
+  head marker and emit one unary tick per stored left cell.
+- Why retired: the real post-dispatch source is itself the guarded physical
+  lowering of the three logical tapes. Running the old structured component
+  there would decode physical tape 0 as a logical tape and therefore require a
+  second, nested encoding that no current producer supplies.
+- Current route: `GuardedEgress/RawPairQuoter.lean` starts directly on the real
+  outer separator, reuses the checked CountWindow raw-boundary emitter, and
+  retains the `11` marker as a distinct quoted pair for later exact tape-field
+  assembly.
+- Reconsider only if: a checked producer genuinely supplies the nested source
+  shape expected by the old component. Recover only its left-length table and
+  exact run proof; do not restore the unused wrapper module.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
