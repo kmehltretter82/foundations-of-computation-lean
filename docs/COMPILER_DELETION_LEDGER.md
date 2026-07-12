@@ -141,6 +141,33 @@ comparison.
   only a useful scan or reconstruction lemma; never restore the refuted
   post-scanner construction or its adapter lattice.
 
+### False raw-head ingress and unconsumed three-tape normalizer
+
+- Deleting commit: this change (`Retire false raw-head route`).
+- Net Compiler change: +141/-1,312, net -1,171 lines.
+- Old paths: `Structured/HeadRoutes/Endpoints.lean` and
+  `RawHeadNormalizer.lean`; the raw-head source/target families, ingress
+  adapters, and normalizer contracts formerly at the end of
+  `Structured/HeadRoutes/Base.lean`.
+- Potentially reusable idea: the checked three-tape table copied the logical
+  cells around a retained raw head marker to tape 2 and rewound to the decoded
+  head. Recover that local scan from Git history only if a live route already
+  has a collision-safe ingress.
+- Why retired: sources differing only by one outer represented blank are tape
+  equivalent, but the requested guarded structured targets have different
+  normalized outputs. Determinism therefore refutes the #16 target-family
+  construction. Exhaustive declaration-reference search found that the
+  derived ingress wrappers and the otherwise checked normalizer had no
+  external consumer; compatibility barrels supplied only transitive imports.
+- Current route: `Structured/HeadRoutes/ContractGuardrails.lean` preserves the
+  historical source and target shapes and the kernel-checked impossibility
+  theorem. Actual structured endpoints import the independent marker-
+  preserving `HeadRoutes/Tape2Projector/EndpointFrontier.lean` directly.
+- Reconsider only if: a current consumer exposes a detectable physical
+  boundary and first proves its target functional on source-equivalence
+  classes. Design the narrowest contract at that consumer; do not restore the
+  arbitrary-prefix target family or its adapter wrappers.
+
 ### Unused ProjTail route and case-contract island
 
 - Deleting commit: `83cbe6a2` (`Remove unused ProjTail contract routes`)

@@ -65,6 +65,22 @@ closure deletion removed `Pipeline.lean`, `Projectors.lean`, and
 shapes in `ExactCleanup.lean` and `RepresentativeCleanup.lean`. The live
 marker-preserving replacement is `Structured/HeadRoutes/Tape2Projector/`.
 
+### False raw-head ingress and unused normalizer — completed
+
+The #16 declaration-reference audit found no external consumer of the
+raw-head source/target families, ingress adapters, endpoint wrappers, or the
+checked three-tape normalizer. Their only declaration references formed a
+closed island across `HeadRoutes/Base.lean`, `RawHeadNormalizer.lean`, and
+`Endpoints.lean`; two higher modules imported `Endpoints.lean` only to reach
+the independent tape-2 projector.
+
+The promoted outer-blank collision proves the ingress target family
+impossible. The closure deletion retained that self-contained guardrail,
+replaced the transitive imports with the actual projector boundary, and
+removed 1,305 lines of obsolete route implementation and contracts. No
+replacement contract was introduced because there is no current consumer to
+justify one; a future consumer must first supply a collision-safe boundary.
+
 ### Structured-prefix eraser endpoint lattice
 
 The duplicate inventory reports six groups between

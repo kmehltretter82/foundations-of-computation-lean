@@ -27,7 +27,7 @@ import FoC.Computability.Compiler.Structured.Lowering.Dispatcher
 import FoC.Computability.Compiler.Structured.Lowering.DispatcherAssembly
 import FoC.Computability.Compiler.Structured.Lowering.Projection
 import FoC.Computability.Compiler.Structured.HeadRoutes
-import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
+import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.EndpointFrontier
 import FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor
 import FoC.Computability.Compiler.Structured.Lowering.TypedStateTable
 

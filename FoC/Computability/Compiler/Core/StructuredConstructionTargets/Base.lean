@@ -5,7 +5,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.OptionCellExpandAppendImpl
 import FoC.Computability.Compiler.Structured.Lowering.Composition
 import FoC.Computability.Compiler.Structured.Lowering.ConcreteRefresh
-import FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints
+import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.EndpointFrontier
 import FoC.Computability.Compiler.Structured.HeadRoutes
 
 set_option doc.verso true
