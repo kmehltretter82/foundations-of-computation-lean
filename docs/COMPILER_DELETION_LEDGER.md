@@ -484,6 +484,31 @@ projector and is not widened to cover this interior-separator target.
   shape expected by the old component. Recover only its left-length table and
   exact run proof; do not restore the unused wrapper module.
 
+### Superseded #18 original-source navigation and scan lattice
+
+- Deleting commit: `3719336d` (`Decode guarded egress pairs`).
+- Reduction: 380 lines removed from `GuardedEgress/FiniteRealization.lean`;
+  the same checkpoint added the shared padded-decoder API, exact guarded
+  pair semantics, and the 201-line physical decoder seam, for net growth of
+  149 lines.
+- Old surface: separate tape-0 entry/scan, tape-1 separator seek, tape-2
+  seek/scan, raw-payload shape, and identity-handoff adapters over the original
+  guarded source.
+- Potentially reusable idea: non-mutating navigation to one selected guarded
+  segment before any source transformation.
+- Why retired: the live egress starts with a destructive tape-0 chunk expansion.
+  The old tape-1/tape-2 endpoints therefore cannot compose after the current
+  first phase, and no declaration outside `FiniteRealization.lean` referenced
+  them. Keeping a second pre-transformation route would obscure which physical
+  representative owns the final metadata assembly.
+- Current route: `RawPairQuoter.lean` carries the untouched tape-1/tape-2 suffix
+  through the tape-0 rewrite, and `RawPairDecoder.lean` reaches the shared
+  padded decoder endpoint without crossing that suffix.
+- Reconsider only if: a checked consumer must parse tape 2 before mutating tape
+  0 and also provides an explicit storage/return path for the parsed fields.
+  Recover only the required selected-segment seek, not the full scan/identity
+  lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
