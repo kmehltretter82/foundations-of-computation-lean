@@ -118,6 +118,15 @@ theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_componen
     StageAttemptFramedStructuredSemanticCoreConstruction] using
     structured3EndpointWordStartEquivIndexedConstruction_of_components
       hmaterializer hcore
+      (by
+        intro i
+        simpa [stageAttemptFramedStructuredOutputTape,
+          CommonGround.ControllerInvocation.StageAttemptFramedOutputTape,
+          Tape.output] using
+          structuredTape2EndpointTape_input_word
+            (encodeCodeWordAsInput
+              (DovetailControllerLayout.encode
+                (DovetailControllerLayout.withResult i.C i.result))))
       structured3EndpointTape2ProjectorConstruction_core
 
 

@@ -48,28 +48,9 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
     selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_of_targetFamilyConstruction
       selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTargetFamilyConstruction_core
 
-theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction := by
-  exact
-    selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_of_tape2ProjectorConstruction
-      structuredTape2ProjectorConstruction_core
-
 theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction := by
   exact SelectedSegmentLogicalTapeDecoderRawHeadNormalizer.construction
-
-theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core :
-    SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction := by
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core with
-    ⟨ingress, hingress⟩
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core with
-    ⟨normalizer, hnormalizer⟩
-  rcases
-      selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core with
-    ⟨egress, hegress⟩
-  exact ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
 
 end MultiTapeLowering
 end Structured

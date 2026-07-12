@@ -187,20 +187,69 @@ theorem structuredTape1ProjectorConstruction_of_segmentNormalizerConstruction
       structuredTape1ProjectorSpec_of_segmentNormalizerSpec
         hnormalizerSpec⟩
 
-/--
-Finite-machine contract for extracting logical tape 2 from a guarded
-three-logical-tape encoding.
+/-!
+## Endpoint tape-2 family
 
-The target is stated up to {name}`Tape.Equiv` so an implementation may preserve
-or introduce harmless guard blanks around the extracted logical tape.
+The current projector consumers do not expose arbitrary logical tapes.  Their
+logical tape 2 is always a Boolean word in one of two sequencer positions:
+either the canonical {name}`Tape.input` position, or (for a nonempty word) one
+move to the right so the following handoff move restores that canonical
+position.  Keeping this family explicit avoids imposing reconstruction of
+unused interior head positions and represented blank windows.
+-/
+
+/--
+The canonical word representatives used by every tape-2 endpoint.
+
+Exact word outputs may be empty.  The one-step-right handoff form is restricted
+to nonempty words; all current right-shifted consumers satisfy that invariant.
+-/
+def StructuredTape2EndpointTape (T : Tape Bool) : Prop :=
+  (exists bits : Word Bool, T = Tape.input bits) \/
+    (exists first : Bool, exists rest : Word Bool,
+      T = Tape.move Direction.right (Tape.input (first :: rest)))
+
+theorem structuredTape2EndpointTape_input_word
+    (bits : Word Bool) :
+    StructuredTape2EndpointTape (Tape.input bits) := by
+  exact Or.inl ⟨bits, rfl⟩
+
+theorem structuredTape2EndpointTape_input
+    (first : Bool) (rest : Word Bool) :
+    StructuredTape2EndpointTape (Tape.input (first :: rest)) := by
+  exact structuredTape2EndpointTape_input_word (first :: rest)
+
+theorem structuredTape2EndpointTape_moveRight_input
+    (first : Bool) (rest : Word Bool) :
+    StructuredTape2EndpointTape
+      (Tape.move Direction.right (Tape.input (first :: rest))) := by
+  exact Or.inr ⟨first, rest, rfl⟩
+
+theorem structuredTape2EndpointTape_moveRight_encodeCodeWordAsInput_cons
+    (symbol : MachineCodeSymbol) (tail : Word MachineCodeSymbol) :
+    StructuredTape2EndpointTape
+      (Tape.move Direction.right
+        (Tape.input (encodeCodeWordAsInput (symbol :: tail)))) := by
+  cases symbol <;>
+    simp only [encodeCodeWordAsInput, encodeCodeSymbolAsInput] <;>
+    apply structuredTape2EndpointTape_moveRight_input
+
+/--
+Finite-machine contract for extracting the projectable logical tape 2 from a
+guarded three-logical-tape encoding.
+
+The source retains the logical head marker, which distinguishes the two live
+sequencer positions.  The target is stated up to {name}`Tape.Equiv` so harmless
+trailing guard blanks remain unobservable.
 -/
 def StructuredTape2ProjectorSpec
     (projector : MachineDescription) : Prop :=
   projector.SubroutineReady ∧
     forall T0 T1 T2 : Tape Bool,
-      projector.HaltsFromTapeEquiv
-        (encodedGuardedStructured3Tapes T0 T1 T2)
-        T2
+      StructuredTape2EndpointTape T2 ->
+        projector.HaltsFromTapeEquiv
+          (encodedGuardedStructured3Tapes T0 T1 T2)
+          T2
 
 /-- Existence wrapper for {name}`StructuredTape2ProjectorSpec`. -/
 def StructuredTape2ProjectorConstruction : Prop :=
@@ -852,7 +901,7 @@ theorem structuredTape2ProjectorSpec_of_segmentNormalizerSpec
   · exact
       structuredTape2ProjectorDescription_subroutineReady
         hnormalizer.left
-  · intro T0 T1 T2
+  · intro T0 T1 T2 _hT2
     have hsource :
         exists A : Tape Bool, exists B : Tape Bool, exists C : Tape Bool,
           guardLogicalTapes [T0, T1, T2] = [A, B, C] ∧

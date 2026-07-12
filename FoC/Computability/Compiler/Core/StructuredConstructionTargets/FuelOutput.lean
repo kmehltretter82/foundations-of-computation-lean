@@ -185,6 +185,15 @@ theorem fuelOutputStructuredEndpointEquivIndexedConstruction_of_components
     structured3EndpointWordStartEquivIndexedConstruction_of_components
       hmaterializer
       hcore
+      (by
+        intro i
+        simpa [
+          PairedRecognizerDovetailControllerStageAttemptFuelOutputTape,
+          CommonGround.CodeWordEmitters.ExactOutputTape] using
+          structuredTape2EndpointTape_input_word
+            (encodeCodeWordAsInput
+              (PairedRecognizerDovetailControllerStageAttemptFuelOutputOutputCode
+                i)))
       structured3EndpointTape2ProjectorConstruction_core
 
 /--

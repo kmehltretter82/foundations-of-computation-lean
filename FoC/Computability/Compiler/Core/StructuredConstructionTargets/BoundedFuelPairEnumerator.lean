@@ -131,6 +131,16 @@ theorem boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_of_c
     structured3EndpointWordStartEquivIndexedConstruction_of_components
       hmaterializer
       (structured3EndpointEquivSemanticCoreConstruction_of_exact hcore)
+      (by
+        intro i
+        rcases EncRewriters.encodeBoolWord_cons i.result with
+          ⟨symbol, tail, hcode⟩
+        simpa [
+          PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape,
+          PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorOutputCode,
+          hcode] using
+          structuredTape2EndpointTape_moveRight_encodeCodeWordAsInput_cons
+            symbol tail)
       structured3EndpointTape2ProjectorConstruction_core
 theorem boundedFuelPairEnumeratorStructuredEndpointEquivIndexedConstruction_core
     (runner : MachineDescription)

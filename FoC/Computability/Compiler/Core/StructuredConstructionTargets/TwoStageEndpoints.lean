@@ -293,6 +293,8 @@ theorem structured3EndpointWordStartEquivIndexedConstruction_of_components
     (hcore :
       Structured3EndpointEquivSemanticCoreConstruction
         syntaxOf initialized lowered output tape0 tape1)
+    (houtput :
+      forall i : ι, StructuredTape2EndpointTape (output i))
     (hprojector : Structured3EndpointTape2ProjectorConstruction) :
     exists W : Structured3EndpointWrapper,
       Structured3EndpointWordStartEquivIndexedFamilySpec
@@ -321,7 +323,7 @@ theorem structured3EndpointWordStartEquivIndexedConstruction_of_components
           rw [C.loweredShape i]
           exact
             hprojectorSpec.forward
-              (tape0 i) (tape1 i) (output i))
+              (tape0 i) (tape1 i) (output i) (houtput i))
   · intro w T hhalt
     rcases
         canonicalPrimitiveSeqDescription_haltsFromTape_inv
@@ -389,7 +391,7 @@ theorem structured3EndpointWordStartEquivIndexedConstruction_of_components
     have hTprojected :
         Tape.Equiv TprojectedFromIndex (output i) :=
       hprojectorSpec.closed
-        (tape0 i) (tape1 i) (output i)
+        (tape0 i) (tape1 i) (output i) (houtput i)
         TprojectedFromIndex hprojectorFromIndex
     refine ⟨i, ?_, ?_⟩
     · simpa [hsyntax] using hw

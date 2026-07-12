@@ -116,6 +116,11 @@ theorem boundedFuelPairBoolSearchStructuredEndpointConstruction_of_components
     structured3EndpointWordStartEquivIndexedConstruction_of_components
       boundedFuelPairBoolSearchStructuredMaterializerConstruction_core
       (structured3EndpointEquivSemanticCoreConstruction_of_exact hcore)
+      (by
+        intro _i
+        simpa [
+          PairedRecognizerDovetailControllerStageAttemptFuelPairBoolRightShiftedOutputTape] using
+          structuredTape2EndpointTape_moveRight_input b [])
       structured3EndpointTape2ProjectorConstruction_core
 
 /-- A fixed-output structured endpoint realizes the public Boolean search contract. -/

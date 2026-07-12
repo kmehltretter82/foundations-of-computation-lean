@@ -565,6 +565,24 @@ private theorem fuelSimulatorStructuredPointwiseEndpointEquivConstruction_core :
         (C.tape0 i)
         (C.tape1 i)
         (fuelSimulatorStructuredOutputTape attempt i)
+        (by
+          rcases
+              EncRewriters.CanonicalLayouts.Simulator.encode_cons
+                (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+                  attempt i.w i.limit i.fuel) with
+            ⟨symbol, tail, hcode⟩
+          have hcode' :
+              SimulatorLayout.encode
+                  (PairedRecognizerDovetailControllerStageAttemptFuelSimulatorLayout
+                    attempt i.w i.limit i.fuel) =
+                symbol :: tail := by
+            simpa [EncRewriters.CanonicalLayouts.Simulator.encode] using hcode
+          rw [fuelSimulatorStructuredOutputTape,
+            PairedRecognizerDovetailControllerStageAttemptFuelSimulatorOutputTape,
+            hcode']
+          exact
+            CommonGround.FiniteTransducers.Structured.MultiTapeLowering.structuredTape2EndpointTape_moveRight_encodeCodeWordAsInput_cons
+              symbol tail)
 
 private theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction_finite_leaf :
     PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :=

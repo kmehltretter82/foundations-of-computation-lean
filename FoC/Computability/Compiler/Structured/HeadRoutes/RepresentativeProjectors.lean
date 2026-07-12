@@ -492,7 +492,7 @@ theorem toProjectorSpec
     StructuredTape2ProjectorSpec projector := by
   constructor
   · exact hprojector.subroutineReady
-  · intro T0 T1 T2
+  · intro T0 T1 T2 _hT2
     exact
       ⟨structuredTape2RepresentativeProjectorOutputTape T0 T1 T2,
         hprojector.forward T0 T1 T2,
