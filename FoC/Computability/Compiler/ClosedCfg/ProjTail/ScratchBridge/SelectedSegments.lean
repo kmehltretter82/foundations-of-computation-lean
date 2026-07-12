@@ -376,7 +376,7 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpe
   compactor.SubroutineReady ∧
     forall (useAccept : Bool) (L : DovetailLayout),
       compactor.HaltsFromTapeEquiv
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+        (countWindowPostFieldDecodedPrefixSelectedSegmentMarkedFootprintCompactorSourceTape
           useAccept L)
         (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
           useAccept L)
@@ -387,15 +387,34 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorCon
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorSpec
       compactor
 
+/-- Historical unmarked contract retained only for implication-style wrappers
+whose caller already assumes an arbitrary footprint compactor.  The live #15
+construction uses the marker-bearing contract above. -/
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorSpec
+    (compactor : MachineDescription) : Prop :=
+  compactor.SubroutineReady ∧
+    forall (useAccept : Bool) (L : DovetailLayout),
+      compactor.HaltsFromTapeEquiv
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+          useAccept L)
+        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
+          useAccept L)
+
+def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorConstruction :
+    Prop :=
+  exists compactor : MachineDescription,
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorSpec
+      compactor
+
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierComponentsConstruction :
     Prop :=
   CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction ∧
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorConstruction
 
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierComponentsConstruction :
     Prop :=
   CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction ∧
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorConstruction
 
 def countWindowPostFieldDecodedPrefixSelectedSegmentDecoderDensifierDescription
     (eraser compactor : MachineDescription) : MachineDescription :=
@@ -800,10 +819,10 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
     countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix] using
     hdecoderRun useAccept L deletedTail
 
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_of_generic
+theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorConstruction_of_generic
     (hgeneric :
       SelectedSegmentLogicalTapeDecoderFootprintCompactorConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by
+    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorConstruction := by
   rcases hgeneric with ⟨compactor, hready, hrun⟩
   refine ⟨compactor, hready, ?_⟩
   intro useAccept L

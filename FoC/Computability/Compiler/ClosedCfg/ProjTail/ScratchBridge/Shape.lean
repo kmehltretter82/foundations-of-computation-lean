@@ -654,6 +654,22 @@ def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
     (postFieldDecodedPrefixScanSourceTape useAccept L)
     []
 
+/-- Repaired live ingress for the selected-footprint compactor.
+
+The marker-preserving structured-prefix eraser leaves the adjacent
+{lit}`[true, false]` sentinel before the alignment blank. Decoder pairs never
+contain adjacent represented cells, so the sentinel gives the downstream
+finite machine a detectable left boundary without strengthening the false
+unmarked arbitrary-payload contract. -/
+def countWindowPostFieldDecodedPrefixSelectedSegmentMarkedFootprintCompactorSourceTape
+    (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
+  rightEndCompactionSourceTape
+    ([some true, some false, none] ++
+      selectedSegmentLogicalTapeDecoderDensifierFootprintCells
+        (ParsedLayoutBits L)
+        (postFieldDecodedPrefixScanPadding useAccept L) ++
+      [none])
+
 def countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape
     (useAccept : Bool) (L : DovetailLayout) : Tape Bool :=
   rightEdgeRewindSourceTape (ParsedLayoutBits L)

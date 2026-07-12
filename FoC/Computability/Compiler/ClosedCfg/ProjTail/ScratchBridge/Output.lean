@@ -300,7 +300,7 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorOut
   compactor.SubroutineReady ∧
     forall (useAccept : Bool) (L : DovetailLayout),
       compactor.HaltsFromTapeWithOutput
-        (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorSourceTape
+        (countWindowPostFieldDecodedPrefixSelectedSegmentMarkedFootprintCompactorSourceTape
           useAccept L)
         (Tape.normalizedOutput
           (countWindowPostFieldDecodedPrefixSelectedSegmentFootprintCompactorTargetTape

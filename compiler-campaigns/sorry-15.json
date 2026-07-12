@@ -5,7 +5,8 @@
     "lake env lean FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionShape.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ContractGuardrails.lean",
-    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/LiveIngress/EndMarker.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/LiveIngress/MarkerCompactor.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Impl/MarkerHandoff.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/EndpointFrontier.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
@@ -20,11 +21,15 @@
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionEndpoint.lean",
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionPaddingSplit.lean",
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionPaddingOutput.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Impl/MarkerHandoff.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Shape.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/SelectedSegments.lean",
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
     "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Output.lean"
   ],
   "required_axiom_clean": [
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core",
-    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_core"
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_core",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixConstruction_core"
   ]
 }

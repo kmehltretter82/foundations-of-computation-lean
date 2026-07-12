@@ -187,9 +187,13 @@ comparison.
   lattice.
 - Current route: `SelectedFootprintCompaction/ContractGuardrails.lean` records
   both counterexamples and proves target functionality for the narrower live
-  `(useAccept, DovetailLayout)` family. `EndpointFrontier.lean` contains the
-  sole indexed construction obligation. The seven externally used facts moved
-  to the shape, output, and guardrail modules that own them.
+  `(useAccept, DovetailLayout)` family. The marker-preserving pair-parity
+  eraser now retains a `[true, false]` sentinel immediately before the decoder
+  footprint, and `LiveIngress/MarkerCompactor.lean` consumes that detectable
+  boundary directly. `EndpointFrontier.lean` is closed by the resulting live
+  construction, and the structured-prefix densifier composes the two machines.
+  The seven externally used facts remain in the shape, output, and guardrail
+  modules that own them.
 - Algorithms kept: the completed lowered pair-encoded compactor and its
   projectable separator focus remain in
   `Structured/Lowering/PairEncodedOptionCellCompactor/Lowered.lean` and
@@ -203,6 +207,12 @@ comparison.
   first proves target functionality on `Tape.Equiv` classes. Recover only the
   needed endpoint theorem or adapter from Git; do not restore the arbitrary
   payload/padding lattice wholesale.
+
+The preliminary `LiveIngress/EndMarker.lean` phase was also deleted at closure.
+It marked only the right boundary and therefore could not make the blank-led
+left footprint boundary observable. Its replacement is the upstream
+marker-preserving eraser; #17 remains the separate endpoint-only tape-2
+projector and is not widened to cover this interior-separator target.
 
 ### Unreachable padded-output and run-loop branches
 
