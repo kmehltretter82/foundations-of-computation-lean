@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompaction.ContractGuardrails
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.SelectedFootprintCompaction.LiveIngress.EndMarker
 
 set_option doc.verso true
 
@@ -34,6 +35,12 @@ For each live branch and parsed layout, compact the decoder footprint to the
 right-edge rewind tape.  {name}`ParsedLayoutBits` begins with two represented bits,
 which is the clean source premise missing from the old arbitrary-payload
 frontier.
+
+The first live ingress phase is now checked in {lit}`LiveIngress/EndMarker.lean`:
+it marks the two blank right-boundary cells and aligns the head with the final
+pair-encoded payload cell.  The remaining obligation must traverse that marked
+pair stream, build the retained three-tape compactor input, and compose the
+already-proved compactor/focus/projector phases.
 -/
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction := by

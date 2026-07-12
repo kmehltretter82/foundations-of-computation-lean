@@ -5,6 +5,7 @@
     "lake env lean FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompactionShape.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/ContractGuardrails.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/LiveIngress/EndMarker.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/SelectedFootprintCompaction/EndpointFrontier.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/StructuredPrefixEraserHandoff/Base.lean",
     "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
