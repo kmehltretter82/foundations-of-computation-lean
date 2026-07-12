@@ -4,12 +4,13 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.RepresentativeCleanup
 set_option doc.verso true
 
 /-!
-# Representative selected-head projector contracts
+# Historical representative selected-head projector contracts
 
-Representative cleanup gives exact behavior to a canonical padded output tape.
-This module lifts that shape through the selected-head decoder and names the
-parallel representative contracts for tape-2 projection.  Public adapters stay
-equivalence-facing.
+This module conditionally lifts the attempted exact padded cleanup through the
+selected-head decoder and names parallel representative contracts for tape-2
+projection.  The context and equivalence lemmas remain valid, but the cleanup
+existence premise is refuted in {lit}`ContractGuardrails.lean`.  The live #17
+projector no longer passes through these adapters.
 -/
 
 namespace FoC
@@ -105,10 +106,10 @@ private theorem selectedSegmentLogicalTapeDecoderSource_contextLength_le_handoff
           lia
 
 /--
-Context-length guard for the selected-head representative output.
+Context-length guard for the historical selected-head representative output.
 
-The proof is part of the representative cleanup closure work; it should be
-proved before concrete transition-table closure starts.
+This proves physical-window feasibility only.  It does not repair the erased
+head-marker collision recorded in {lit}`ContractGuardrails.lean`.
 -/
 theorem structuredSelectedHeadSegmentDecoderRepresentativeOutputTape_contextLength_ge_source
     (target : Tape Bool) (rest : List (Tape Bool))

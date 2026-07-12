@@ -3,13 +3,16 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.ExactCleanup
 set_option doc.verso true
 
 /-!
-# Representative selected-head cleanup contracts
+# Historical representative selected-head cleanup contracts
 
 The legacy exact padded-cleanup contract targeted an arbitrary public tape
-literally.  That is too strong when the public tape has less visible context
-than the scanner handoff source.  This module records the replacement
-contract: exact finite-machine behavior targets a canonical padded
-representative, and the public route is exposed through tape equivalence.
+literally.  This module records the attempted padded-representative repair and
+its context-length/equivalence lemmas.  The repair solves the physical window
+size issue but not source injectivity: the scanner handoff has erased the head
+marker.  {lit}`ContractGuardrails.lean` therefore refutes both this exact
+representative construction and the weaker equivalence cleanup.  These
+definitions remain as historical guardrail inputs; the live #17 projector
+starts from the full marker-preserving guarded encoding.
 -/
 
 namespace FoC

@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredInputMaterializer
 import FoC.Computability.Compiler.Structured.HeadRoutes
+import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.EndpointFrontier
 
 set_option doc.verso true
 
@@ -7,10 +8,10 @@ set_option doc.verso true
 # Structured selected-head endpoint constructions
 
 This module contains the concrete endpoint-construction leaves for the raw
-selected-head three-tape route.  The route contracts and reusable adapters live
-in {module}`FoC.Computability.Compiler.Structured.HeadRoutes`;
-the remaining endpoint bridge obligations are kept near the top here so they
-are easy to find and work on independently.
+marker-preserving three-tape route.  The lossy post-scanner cleanup frontier is
+retired: {module}`FoC.Computability.Compiler.Structured.HeadRoutes.ContractGuardrails`
+proves that it cannot recover arbitrary logical tapes.  The live tape-2
+projector therefore starts from the canonical guarded three-tape encoding.
 -/
 
 namespace FoC
@@ -41,43 +42,6 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadStructuredInputMaterializerConst
     selectedSegmentLogicalTapeDecoderRawHeadStructuredInputTargetFamilyConstruction_core
     selectedSegmentLogicalTapeDecoderRawHeadIngressMaterializerTarget_eq
 
-theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction := by
-  -- Remaining finite-table obligation for representative cleanup after the
-  -- generated scanner.  The nil/nonempty branches target the canonical padded
-  -- representative, not an arbitrary public target literally.
-  sorry
-
-theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction :=
-  selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupHandoffSplitConstruction_of_forwardSplit
-    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction :=
-  selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_of_forwardSplit
-    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupForwardSplitConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderPaddedCleanupConstruction :=
-  selectedSegmentLogicalTapeDecoderPaddedCleanupConstruction_of_representative
-    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
-
-theorem selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_core :
-    SelectedSegmentLogicalTapeDecoderHeadCleanupConstruction :=
-  selectedSegmentLogicalTapeDecoderHeadCleanupConstruction_of_representative
-    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
-
-theorem structuredSelectedHeadDecoderRouteConstruction_core :
-    StructuredSelectedHeadDecoderRouteConstruction :=
-  structuredSelectedHeadDecoderRouteConstruction_of_representativeCleanup
-    selectedSegmentLogicalTapeDecoderPaddedRepresentativeCleanupConstruction_core
-
-theorem structuredTape2ProjectorStandaloneConstruction_core :
-    StructuredTape2ProjectorConstruction :=
-  selectedHeadRoute_tape2Projector
-    structuredSelectedHeadDecoderRouteConstruction_core
-
 theorem selectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadIngressBridgeConstruction := by
   exact
@@ -88,7 +52,7 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction := by
   exact
     selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_of_tape2ProjectorConstruction
-      structuredTape2ProjectorStandaloneConstruction_core
+      structuredTape2ProjectorConstruction_core
 
 theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction_core :
     SelectedSegmentLogicalTapeDecoderRawHeadThreeTapeNormalizerConstruction := by
@@ -106,21 +70,6 @@ theorem selectedSegmentLogicalTapeDecoderRawHeadThreeTapeBridgeConstruction_core
       selectedSegmentLogicalTapeDecoderRawHeadEgressBridgeConstruction_core with
     ⟨egress, hegress⟩
   exact ⟨ingress, normalizer, egress, hingress, hnormalizer, hegress⟩
-
-theorem structuredSelectedHeadSegmentDecoderConstruction_core :
-    StructuredSelectedHeadSegmentDecoderConstruction :=
-  selectedHeadRoute_headDecoder
-    structuredSelectedHeadDecoderRouteConstruction_core
-
-theorem structuredTape2SegmentNormalizerConstruction_core :
-    StructuredTape2SegmentNormalizerConstruction :=
-  selectedHeadRoute_tape2SegmentNormalizer
-    structuredSelectedHeadDecoderRouteConstruction_core
-
-theorem structuredTape2ProjectorConstruction_core :
-    StructuredTape2ProjectorConstruction :=
-  selectedHeadRoute_tape2Projector
-    structuredSelectedHeadDecoderRouteConstruction_core
 
 end MultiTapeLowering
 end Structured

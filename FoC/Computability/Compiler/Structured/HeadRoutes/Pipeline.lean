@@ -3,10 +3,13 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.Projectors
 set_option doc.verso true
 
 /-!
-# Selected-head route pipeline
+# Historical selected-head route pipeline
 
-This module assembles cleanup, scanner, and projector contracts into the
-selected-head route bundles consumed by endpoint construction leaves.
+This module conditionally assembles cleanup, scanner, and projector contracts
+into selected-head route bundles.  The cleanup premise is uninhabitable for
+arbitrary logical tapes because its source has lost the head marker, so no live
+endpoint construction uses this bundle.  The direct marker-preserving tape-2
+projector is the #17 frontier.
 -/
 
 namespace FoC

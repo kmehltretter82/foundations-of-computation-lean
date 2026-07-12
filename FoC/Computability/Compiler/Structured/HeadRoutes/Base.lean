@@ -9,20 +9,22 @@ import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
 set_option doc.verso true
 
 /-!
-# Structured selected-head projection routes
+# Historical selected-head projection route contracts
 
 The base projection module proves the selected singleton decoder route: the
 selected logical tape is the last encoded structured tape segment, so the
 generated bit scanner halts on the blank separator immediately after that
 segment.
 
-This module records the matching selected-head route.  The selected logical
-tape may have additional encoded structured segments to its right.  The
-scanner proof is still the same generated finite-control scanner, but its
-target carries a padding tail made from the remaining structured block.  A
-cleanup machine over this padded target is therefore enough to build the full
-selected-head decoder spec, and from there the tape
-0/1/2 segment normalizers and projectors.
+This module records the matching selected-head route shapes.  The selected
+logical tape may have additional encoded structured segments to its right, so
+the scanner target carries a padding tail made from the remaining structured
+block.  These declarations remain useful as conditional adapters and as the
+source of the tracked #17 counterexample.  They do not provide a live cleanup
+construction: the scanner erases the logical head marker, and
+{lit}`ContractGuardrails.lean` refutes recovery of arbitrary targets.  The
+live tape-2 projector starts directly from the marker-preserving canonical
+guarded three-tape encoding.
 -/
 
 namespace FoC

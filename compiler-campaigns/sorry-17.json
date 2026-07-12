@@ -1,0 +1,38 @@
+{
+  "allow_net_growth": 1500,
+  "base_commit": "402d1269b1678caed4a708283db4bee95f40da03",
+  "focused_checks": [
+    "lake build FoC.Computability.Compiler.Structured.HeadRoutes.ContractGuardrails",
+    "lake build FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.EndpointFrontier",
+    "lake build FoC.Computability.Compiler.Structured.HeadRoutes.Endpoints",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/Base.lean",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutput.lean",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairSearch.lean",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerOutputLevelSimulator.lean"
+  ],
+  "frontier": "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.structuredTape2ProjectorConstruction_core",
+  "name": "sorry-17-marker-preserving-tape2-projector",
+  "paths": [
+    "FoC/Computability/Compiler/Structured/HeadRoutes.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/Base.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/ContractGuardrails.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/Endpoints.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/ExactCleanup.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/Pipeline.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/Projectors.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/RepresentativeCleanup.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/RepresentativeProjectors.lean",
+    "FoC/Computability/Compiler/Structured/HeadRoutes/Tape2Projector"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.SelectedSegmentLogicalTapeDecoderCleanupContractGuardrails.paddedCleanupConstruction_impossible",
+    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.SelectedSegmentLogicalTapeDecoderCleanupContractGuardrails.paddedRepresentativeCleanupForwardSplitConstruction_impossible",
+    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.SelectedSegmentLogicalTapeDecoderCleanupContractGuardrails.tape2ProjectorTarget_equiv_of_source_equiv",
+    "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.structuredTape2ProjectorConstruction_core",
+    "FoC.Computability.StructuredConstructionTargets.structured3EndpointTape2ProjectorConstruction_core",
+    "FoC.Computability.StructuredConstructionTargets.fuelOutputStructuredEndpointEquivIndexedConstruction_core",
+    "FoC.Computability.StructuredConstructionTargets.boundedFuelPairBoolSearchStructuredEndpointConstruction_of_components"
+  ]
+}

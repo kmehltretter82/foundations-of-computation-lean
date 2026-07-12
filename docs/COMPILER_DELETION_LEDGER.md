@@ -105,6 +105,37 @@ comparison.
   windows. Prove that one boundary directly; do not reintroduce symmetric
   exact/equivalence adapter forests.
 
+### False lossy selected-head cleanup construction route
+
+- Deleting commit: this change (`Repair sorry #17 projector contract`).
+- Net change at the contract-repair checkpoint: +236/-88, net +148 Compiler
+  lines before machine implementation.  The endpoint lattice itself shrank by
+  51 net lines; the replacement is the tracked counterexamples, isolated live
+  frontier, and corrected route documentation.
+- Old surface: the padded representative forward/handoff split constructions,
+  their equivalence cleanup and head-cleanup adapters, the bundled
+  `StructuredSelectedHeadDecoderRouteConstruction`, and its segment decoder,
+  segment normalizer, standalone projector, and cleanup-derived implementation
+  of the shared projector theorem in `Structured/HeadRoutes/Endpoints.lean`.
+- Potentially reusable ideas: nil/cons padding decomposition and reconstruction
+  of an exact padded logical-tape representative after a finite scanner.
+- Why retired: the selected-segment scanner has already erased the raw
+  two-cell head marker. Two concrete logical tapes therefore have literally
+  equal post-scanner sources but different head cells and non-equivalent
+  targets. Determinism refutes both the equivalence cleanup and exact padded
+  forward split. Exhaustive declaration-reference search found no external
+  consumer of the cleanup-derived existence lattice.
+- Current route: `Structured/HeadRoutes/ContractGuardrails.lean` preserves the
+  counterexamples and proves source-class functionality for the direct
+  marker-preserving target. The sole #17 frontier is
+  `HeadRoutes/Tape2Projector/EndpointFrontier.lean`, whose source is the full
+  canonical guarded three-tape encoding and whose public target is tape 2 up
+  to `Tape.Equiv`.
+- Reconsider only if: a checked source still contains a detectable head marker
+  and first proves target functionality on source-equivalence classes. Recover
+  only a useful scan or reconstruction lemma; never restore the refuted
+  post-scanner construction or its adapter lattice.
+
 ### Unused ProjTail route and case-contract island
 
 - Deleting commit: `83cbe6a2` (`Remove unused ProjTail contract routes`)

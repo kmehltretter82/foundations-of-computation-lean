@@ -3,12 +3,13 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.RawHeadNormalizer
 set_option doc.verso true
 
 /-!
-# Selected-head cleanup contracts
+# Historical selected-head cleanup contracts
 
 This module records equivalence-facing padded and selected-head cleanup
-contracts. Public endpoint construction uses canonical representative cleanup,
-whose exact finite-machine result is related to these public contracts by tape
-equivalence.
+contracts and their conditional adapters.  No public endpoint construction now
+inhabits them: {lit}`ContractGuardrails.lean` proves that the lossy scanner
+source does not determine the requested tape even up to tape equivalence.  The
+live #17 endpoint uses the full marker-preserving guarded encoding instead.
 -/
 
 namespace FoC

@@ -6,7 +6,9 @@ set_option doc.verso true
 # Selected-head cleanup adapters
 
 This module derives selected-head cleanup and projector-facing route contracts
-from the public tape-equivalence cleanup specifications.
+from the tape-equivalence cleanup specifications.  These are conditional
+historical adapters: the cleanup construction itself is refuted by the #17
+guardrails, and the live projector starts from the marker-preserving encoding.
 -/
 
 namespace FoC
