@@ -17,6 +17,8 @@
     "FoC/Computability/Compiler/ClosedCfg/TerminalCore.lean"
   ],
   "required_axiom_clean": [
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.PipelineContracts.equivInputExactOutputConstruction_impossible",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.exactOutputConstruction_impossible",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit.construction_core",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner",
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction_configRunner"

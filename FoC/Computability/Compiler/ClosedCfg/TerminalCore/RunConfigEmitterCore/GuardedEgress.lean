@@ -20,9 +20,9 @@ that state from the compact metadata.
 The branch witness must be materialized before a uniform tape-only serializer
 can run.  The committed dispatcher closeout appends its self-delimiting witness
 to logical tape 2, after the live hit and its separating blank; logical tape 1
-remains the consumed counter.  This makes the exact target a function of the
-physical source and therefore meets the collision guardrail required by
-{name (full := FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.PipelineContracts.EquivInputExactOutputSpec)}`PipelineContracts.EquivInputExactOutputSpec`.
+remains the consumed counter.  This makes the semantic target a function of
+the physical source and therefore meets the determinism guardrail for the
+repaired equivalence-output contract.
 
 The semantic decoder below is executable and exact.  In particular it parses
 the guarded logical-tape payload rather than using
@@ -775,22 +775,33 @@ theorem target_eq_of_source_equiv
 end SemanticAssembly
 
 /-!
-## Honest exact-output contract
+## Honest equivalence-output contract
 -/
 
-/-- The final normalizer must accept every far-edge-padded representative of
-the guarded source and produce the one exact right-scratch target. -/
+/-- The former all-equivalent-input/exact-tape contract is impossible even
+for this target-functional source family, because an equivalent source can
+carry arbitrarily much invisible far-edge padding. -/
+theorem exactOutputConstruction_impossible (i : Index) :
+    ¬ PipelineContracts.EquivInputExactOutputConstruction
+        Index.source Index.target :=
+  PipelineContracts.equivInputExactOutputConstruction_impossible
+    i Index.source Index.target
+
+/-- The final normalizer accepts every far-edge-padded representative of the
+guarded source and produces a tape equivalent to the exact right-scratch
+target.  Equivalence retains the exact normalized output and head split while
+allowing the represented blank window to remain large enough for monotonicity. -/
 def Spec (normalizer : MachineDescription) : Prop :=
-  PipelineContracts.EquivInputExactOutputSpec
+  PipelineContracts.EquivInputEquivOutputSpec
     Index.source Index.target normalizer
 
 def Construction : Prop :=
-  PipelineContracts.EquivInputExactOutputConstruction
+  PipelineContracts.EquivInputEquivOutputConstruction
     Index.source Index.target
 
-/-- The sole remaining leaf: realize the already-checked exact
-parse-and-assemble semantics by a finite normalizer satisfying the strong
-equivalent-input contract. -/
+/-- The sole remaining leaf: realize the already-checked exact semantic
+parse-and-assemble transform by a finite normalizer satisfying the viable
+equivalent-input/equivalent-output contract. -/
 def FiniteRealizationConstruction : Prop := Construction
 
 theorem construction_of_finiteRealization

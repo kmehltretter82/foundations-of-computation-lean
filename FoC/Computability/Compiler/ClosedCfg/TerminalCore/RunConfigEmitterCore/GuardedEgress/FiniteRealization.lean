@@ -8,10 +8,10 @@ set_option doc.verso true
 
 The parent module proves an executable exact decoder for the guarded tape-0
 payload, an executable metadata/scratch/witness decoder for tape 2, and exact
-assembly of the required right-scratch target.  This module isolates the one
-remaining implementation question: realize that checked transform by a finite
-one-tape description while accepting every far-edge-padded representative of
-the guarded source.
+semantic assembly of the required right-scratch target.  This module isolates
+the one remaining implementation question: realize that checked transform by
+a finite one-tape description while accepting every far-edge-padded
+representative of the guarded source and retaining its harmless outer padding.
 
 The concrete navigation prefix below is already closed.  It reaches the raw
 tape-0 payload in one step, or the raw tape-2 payload through the verified
@@ -40,7 +40,8 @@ open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 -/
 
 /-- A finite normalizer realizes every successful result of the checked
-parse-and-assemble transform on every equivalent physical representative. -/
+parse-and-assemble transform on every equivalent physical representative, up
+to far-edge blank padding. -/
 def Spec (normalizer : MachineDescription) : Prop :=
   normalizer.SubroutineReady ∧
     forall (i : Index) (actual target : Tape Bool),
@@ -48,7 +49,7 @@ def Spec (normalizer : MachineDescription) : Prop :=
         SemanticAssembly.assembleTarget
             (SemanticAssembly.tape0Payload i) i.doneWitnessTape =
           some target ->
-        normalizer.HaltsFromTape actual target
+        normalizer.HaltsFromTapeEquiv actual target
 
 def Construction : Prop :=
   exists normalizer : MachineDescription, Spec normalizer
