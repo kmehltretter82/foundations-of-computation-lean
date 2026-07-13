@@ -1289,5 +1289,93 @@ theorem correctedTapeFieldDescription_haltsFrom_markerTarget (i : Index) :
       (rightGuardRemovedTape_move_left_move_right i)
       hright
 
+theorem rightTicksBits_append_tickBits_commute (n : Nat) :
+    List.append (RightLengthCopyScratch.ticksBits n)
+        RightLengthCopyScratch.tickBits =
+      List.append RightLengthCopyScratch.tickBits
+        (RightLengthCopyScratch.ticksBits n) := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        List.append (RightLengthCopyScratch.ticksBits (Nat.succ n))
+            RightLengthCopyScratch.tickBits =
+          List.append
+            (List.append (RightLengthCopyScratch.ticksBits n)
+              RightLengthCopyScratch.tickBits)
+            RightLengthCopyScratch.tickBits := by
+              rfl
+        _ = List.append
+              (List.append RightLengthCopyScratch.tickBits
+                (RightLengthCopyScratch.ticksBits n))
+              RightLengthCopyScratch.tickBits := by
+                rw [ih]
+        _ = List.append RightLengthCopyScratch.tickBits
+              (RightLengthCopyScratch.ticksBits (Nat.succ n)) := by
+                simp [RightLengthCopyScratch.ticksBits,
+                  List.append_assoc]
+
+theorem rightTicksDoneBits_eq_stageNatBits (n : Nat) :
+    List.append (RightLengthCopyScratch.ticksBits n)
+        RightLengthCopyScratch.doneBits =
+      stageNatBits n := by
+  induction n with
+  | zero =>
+      rfl
+  | succ n ih =>
+      calc
+        List.append (RightLengthCopyScratch.ticksBits (Nat.succ n))
+            RightLengthCopyScratch.doneBits =
+          List.append
+            (List.append (RightLengthCopyScratch.ticksBits n)
+              RightLengthCopyScratch.tickBits)
+            RightLengthCopyScratch.doneBits := by
+              rfl
+        _ = List.append
+              (List.append RightLengthCopyScratch.tickBits
+                (RightLengthCopyScratch.ticksBits n))
+              RightLengthCopyScratch.doneBits := by
+                rw [rightTicksBits_append_tickBits_commute]
+        _ = List.append RightLengthCopyScratch.tickBits
+              (List.append (RightLengthCopyScratch.ticksBits n)
+                RightLengthCopyScratch.doneBits) := by
+                simp [List.append_assoc]
+        _ = List.append RightLengthCopyScratch.tickBits
+              (stageNatBits n) := by
+                rw [ih]
+        _ = stageNatBits (Nat.succ n) := by
+              simpa [RightLengthCopyScratch.tickBits,
+                encodeCodeSymbolAsInput] using
+                (stageNatBits_succ n).symm
+
+theorem rightCellTokenBits_map_logicalCellPair
+    (cells : List (Option Bool)) :
+    RightLengthCopyScratch.cellTokenBits
+        (cells.map logicalCellPair) =
+      cellsCodeBits cells := by
+  rw [rightCellTokenBits_eq_quotedPairBits]
+  exact RawPairQuoter.quotedPairBits_map_logicalCellPair cells
+
+theorem compactedRightPayloadBits_eq_fields (T : Tape Bool) :
+    RightLengthCopyScratch.compactedPayloadBits
+        (T.right.map logicalCellPair) =
+      List.append (stageNatBits T.right.length)
+        (cellsCodeBits T.right) := by
+  unfold RightLengthCopyScratch.compactedPayloadBits
+  rw [rightTicksDoneBits_eq_stageNatBits]
+  rw [rightCellTokenBits_map_logicalCellPair]
+  simp
+
+theorem leftHead_compactedRight_eq_exactTapeFieldBits (T : Tape Bool) :
+    List.append (leftHeadFieldBits T)
+        (RightLengthCopyScratch.compactedPayloadBits
+          (T.right.map logicalCellPair)) =
+      LengthAssemblyScratch.exactTapeFieldBits T [] := by
+  rw [compactedRightPayloadBits_eq_fields]
+  simp [leftHeadFieldBits, leftFieldBits,
+    LengthAssemblyScratch.exactTapeFieldBits,
+    List.append_assoc]
+
 end GuardedEgress.EgressIntegrationScratch
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
