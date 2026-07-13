@@ -1,7 +1,7 @@
-import scratch_u18_egress_integration
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.TapeFieldPipeline
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.MetadataTokenCopyScratch
+namespace GuardedEgress.MetadataTokenCopy
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -694,5 +694,176 @@ private theorem run_gap_to_prepend_start
       rw [replicate_none_append_none_cons]
       rfl
 
-end GuardedEgress.MetadataTokenCopyScratch
+private def prependScanTape (remainingRev : Word Bool)
+    (scratchBase right : List (Option Bool)) : Tape Bool :=
+  match remainingRev with
+  | [] => tapeAtCells scratchBase (none :: right)
+  | bit :: rest =>
+      tapeAtCells (List.append (rest.map some) (none :: scratchBase))
+        (some bit :: right)
+
+set_option maxRecDepth 100000 in
+private theorem step_prepend_start
+    (kind : TokenKind) (hit : Bool) (emitted : Word Bool)
+    (scratchBase tail : List (Option Bool)) :
+    description.runConfig 1
+        { state := prependStartState kind
+          tape := tapeAtCells
+            (List.append (emitted.reverse.map some)
+              (none :: scratchBase))
+            (some hit :: tail) } =
+      { state := prependScanState kind hit
+        tape := prependScanTape emitted.reverse scratchBase
+          (none :: tail) } := by
+  cases kind <;> cases hit <;> cases hrev : emitted.reverse <;>
+    simp_all [description, commonTransitions, kinds,
+      tokenRouteTransitions, toGuardState, scanGapState,
+      backTwoState, backOneState, prependStartState, prependScanState,
+      prependWriteTwoState, prependWriteOneState,
+      prependWriteZeroState, prependReturnState,
+      TokenKind.b0, TokenKind.b1, TokenKind.b2, TokenKind.b3,
+      prependScanTape,
+      runConfig, stepConfig, lookupTransition, Matches, transition,
+      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+set_option maxRecDepth 100000 in
+private theorem lookup_prepend_scan_present
+    (kind : TokenKind) (hit bit : Bool) :
+    lookupTransition description (prependScanState kind hit) (some bit) =
+      some (transition (prependScanState kind hit) (some bit) (some bit)
+        Direction.left (prependScanState kind hit)) := by
+  cases kind <;> cases hit <;> cases bit <;> decide
+
+set_option maxRecDepth 100000 in
+private theorem step_prepend_scan
+    (kind : TokenKind) (hit bit : Bool) (rest : Word Bool)
+    (scratchBase right : List (Option Bool)) :
+    description.runConfig 1
+        { state := prependScanState kind hit
+          tape := prependScanTape (bit :: rest) scratchBase right } =
+      { state := prependScanState kind hit
+        tape := prependScanTape rest scratchBase (some bit :: right) } := by
+  cases rest <;>
+    simp [prependScanTape, runConfig, stepConfig,
+      lookup_prepend_scan_present, transition, tapeAtCells,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+
+private theorem run_prepend_scan
+    (kind : TokenKind) (hit : Bool) (remainingRev : Word Bool)
+    (scratchBase right : List (Option Bool)) :
+    description.runConfig remainingRev.length
+        { state := prependScanState kind hit
+          tape := prependScanTape remainingRev scratchBase right } =
+      { state := prependScanState kind hit
+        tape := tapeAtCells scratchBase
+          (none :: List.append (remainingRev.reverse.map some) right) } := by
+  induction remainingRev generalizing right with
+  | nil =>
+      simp [prependScanTape, runConfig]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length = 1 + rest.length by simp; lia]
+      rw [runConfig_add]
+      rw [step_prepend_scan]
+      rw [ih (some bit :: right)]
+      simp [List.reverse_cons, List.map_append, List.append_assoc]
+
+set_option maxRecDepth 100000 in
+private theorem lookup_prepend_write
+    (kind : TokenKind) (hit : Bool) :
+    lookupTransition description (prependScanState kind hit) none =
+        some (transition (prependScanState kind hit) none (some kind.b3)
+          Direction.left (prependWriteTwoState kind hit)) ∧
+      lookupTransition description (prependWriteTwoState kind hit) none =
+        some (transition (prependWriteTwoState kind hit) none (some kind.b2)
+          Direction.left (prependWriteOneState kind hit)) ∧
+      lookupTransition description (prependWriteOneState kind hit) none =
+        some (transition (prependWriteOneState kind hit) none (some kind.b1)
+          Direction.left (prependWriteZeroState kind hit)) ∧
+      lookupTransition description (prependWriteZeroState kind hit) none =
+        some (transition (prependWriteZeroState kind hit) none (some kind.b0)
+          Direction.right (prependReturnState kind hit)) := by
+  cases kind <;> cases hit <;> decide
+
+private theorem run_prepend_write
+    (kind : TokenKind) (hit : Bool)
+    (baseLeft right : List (Option Bool)) :
+    description.runConfig 4
+        { state := prependScanState kind hit
+          tape := tapeAtCells
+            (List.append (List.replicate 3 (none : Option Bool)) baseLeft)
+            (none :: right) } =
+      { state := prependReturnState kind hit
+        tape := tapeAtCells (some kind.b0 :: baseLeft)
+          (some kind.b1 :: some kind.b2 :: some kind.b3 :: right) } := by
+  rcases lookup_prepend_write kind hit with
+    ⟨hscan, htwo, hone, hzero⟩
+  simp [runConfig, stepConfig, hscan, htwo, hone, hzero,
+    transition, tapeAtCells, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft, Tape.moveRight, List.replicate_succ]
+
+set_option maxRecDepth 100000 in
+private theorem lookup_prepend_return
+    (kind : TokenKind) (hit bit : Bool) :
+    lookupTransition description (prependReturnState kind hit) (some bit) =
+        some (transition (prependReturnState kind hit) (some bit) (some bit)
+          Direction.right (prependReturnState kind hit)) ∧
+      lookupTransition description (prependReturnState kind hit) none =
+        some (transition (prependReturnState kind hit) none (some hit)
+          Direction.left 85) := by
+  cases kind <;> cases hit <;> cases bit <;> decide
+
+private theorem step_prepend_return_present
+    (kind : TokenKind) (hit bit : Bool)
+    (left right : List (Option Bool)) :
+    description.runConfig 1
+        { state := prependReturnState kind hit
+          tape := tapeAtCells left (some bit :: right) } =
+      { state := prependReturnState kind hit
+        tape := tapeAtCells (some bit :: left) right } := by
+  cases right <;>
+    simp [runConfig, stepConfig,
+      (lookup_prepend_return kind hit bit).1,
+      transition, tapeAtCells, Tape.read, Tape.write,
+      Tape.move, Tape.moveRight]
+
+private theorem run_prepend_return_present
+    (kind : TokenKind) (hit : Bool) (bits : Word Bool)
+    (left right : List (Option Bool)) :
+    description.runConfig bits.length
+        { state := prependReturnState kind hit
+          tape := tapeAtCells left
+            (List.append (bits.map some) right) } =
+      { state := prependReturnState kind hit
+        tape := tapeAtCells
+          (List.append (bits.reverse.map some) left) right } := by
+  induction bits generalizing left with
+  | nil =>
+      simp [runConfig]
+  | cons bit rest ih =>
+      rw [show (bit :: rest).length = 1 + rest.length by simp; lia]
+      rw [runConfig_add]
+      change
+        description.runConfig rest.length
+            (description.runConfig 1
+              { state := prependReturnState kind hit
+                tape := tapeAtCells left
+                  (some bit :: List.append (rest.map some) right) }) = _
+      rw [step_prepend_return_present]
+      rw [ih (some bit :: left)]
+      simp [List.reverse_cons, List.map_append, List.append_assoc]
+
+private theorem step_prepend_restore
+    (kind : TokenKind) (hit cell : Bool)
+    (left tail : List (Option Bool)) :
+    description.runConfig 1
+        { state := prependReturnState kind hit
+          tape := tapeAtCells (some cell :: left) (none :: tail) } =
+      { state := 85
+        tape := tapeAtCells left (some cell :: some hit :: tail) } := by
+  simp [runConfig, stepConfig,
+    (lookup_prepend_return kind hit cell).2,
+    transition, tapeAtCells, Tape.read, Tape.write,
+    Tape.move, Tape.moveLeft]
+
+end GuardedEgress.MetadataTokenCopy
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore

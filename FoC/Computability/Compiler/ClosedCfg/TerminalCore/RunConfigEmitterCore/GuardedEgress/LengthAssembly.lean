@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Dovetail.Scanner.Simulator.Definitions
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorLoop
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.LengthAssemblyScratch
+namespace GuardedEgress.LengthAssembly
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -178,5 +178,5 @@ theorem lengthCursor_haltsFrom_cellList
     rawBoundaryLengthCursorLoopDescription_haltsFrom_cellTokens
       (cells.map logicalCellPair) blankTail right
 
-end GuardedEgress.LengthAssemblyScratch
+end GuardedEgress.LengthAssembly
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore

@@ -2,7 +2,7 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Gu
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorLoop
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.ChunkReverseScratch
+namespace GuardedEgress.ChunkReverse
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -1244,5 +1244,5 @@ theorem leftPreparedDescription_haltsFrom_markerTarget
     exact Tape.Equiv.refl _
   · exact hlength
 
-end GuardedEgress.ChunkReverseScratch
+end GuardedEgress.ChunkReverse
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore

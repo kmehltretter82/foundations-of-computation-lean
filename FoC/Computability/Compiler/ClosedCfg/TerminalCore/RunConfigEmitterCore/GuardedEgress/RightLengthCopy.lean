@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.SentinelGa
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorLoop
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.RightLengthCopyScratch
+namespace GuardedEgress.RightLengthCopy
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -1476,5 +1476,5 @@ theorem rewindPadding_eq_rightAssemblyPrefix (i : Index) :
         rw [hthree]
         simp [List.append_assoc]
 
-end GuardedEgress.RightLengthCopyScratch
+end GuardedEgress.RightLengthCopy
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore

@@ -1,10 +1,10 @@
-import scratch_u18_chunk_reverse
-import scratch_u18_length_assembly
-import scratch_u18_right_assembly
-import scratch_u18_right_length_copy
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.ChunkReverse
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.HeadCellExtractor
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.LengthAssembly
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.RightLengthCopy
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.EgressIntegrationScratch
+namespace GuardedEgress.TapeFieldSerializer
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -38,61 +38,61 @@ theorem leftHeadFieldBits_ne_nil (T : Tape Bool) :
 
 theorem headDescription_haltsFrom_leftTarget
     (T : Tape Bool) (padding : List (Option Bool)) :
-    HeadCellExtractorScratch.description.HaltsFromTape
-      (ChunkReverseScratch.leftLengthTargetTape T padding)
-      (HeadCellExtractorScratch.headExtractedTape
+    HeadCellExtractor.description.HaltsFromTape
+      (ChunkReverse.leftLengthTargetTape T padding)
+      (HeadCellExtractor.headExtractedTape
         (leftFieldBits T) (headScratch T) T padding) := by
-  simpa [ChunkReverseScratch.leftLengthTargetTape,
-    ChunkReverseScratch.InstallLeftGuard.markerRightPayload,
+  simpa [ChunkReverse.leftLengthTargetTape,
+    ChunkReverse.InstallLeftGuard.markerRightPayload,
     leftFieldBits, headScratch] using
-    HeadCellExtractorScratch.description_haltsFrom_separator_cellList
+    HeadCellExtractor.description_haltsFrom_separator_cellList
       (leftFieldBits T) (headScratch T) T padding
       (leftFieldBits_ne_nil T)
 
 def leftAndHeadDescription : MachineDescription :=
-  canonicalSeqDescription ChunkReverseScratch.leftPreparedDescription
-    HeadCellExtractorScratch.description
+  canonicalSeqDescription ChunkReverse.leftPreparedDescription
+    HeadCellExtractor.description
 
 theorem leftAndHeadDescription_subroutineReady :
     leftAndHeadDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
-    ChunkReverseScratch.leftPreparedDescription_subroutineReady
-    HeadCellExtractorScratch.description_subroutineReady
+    ChunkReverse.leftPreparedDescription_subroutineReady
+    HeadCellExtractor.description_subroutineReady
 
 theorem leftAndHeadDescription_haltsFrom_markerTarget
     (T : Tape Bool) (padding : List (Option Bool)) :
     leftAndHeadDescription.HaltsFromTapeEquiv
       (RawPairMarker.targetTape T padding)
-      (HeadCellExtractorScratch.headExtractedTape
+      (HeadCellExtractor.headExtractedTape
         (leftFieldBits T) (headScratch T) T padding) := by
   have hleft :=
-    ChunkReverseScratch.leftPreparedDescription_haltsFrom_markerTarget T padding
+    ChunkReverse.leftPreparedDescription_haltsFrom_markerTarget T padding
   have hhead := headDescription_haltsFrom_leftTarget T padding
   have hbridge :
       Tape.move Direction.left
           (Tape.move Direction.right
-            (ChunkReverseScratch.leftLengthTargetTape T padding)) =
-        ChunkReverseScratch.leftLengthTargetTape T padding := by
-    exact ChunkReverseScratch.separator_move_left_move_right
+            (ChunkReverse.leftLengthTargetTape T padding)) =
+        ChunkReverse.leftLengthTargetTape T padding := by
+    exact ChunkReverse.separator_move_left_move_right
       (leftFieldBits T) (4 * T.left.length + 6)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload T padding)
+      (ChunkReverse.InstallLeftGuard.markerRightPayload T padding)
   exact
     canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
-      ChunkReverseScratch.leftPreparedDescription_subroutineReady
-      HeadCellExtractorScratch.description_subroutineReady hleft hbridge hhead
+      ChunkReverse.leftPreparedDescription_subroutineReady
+      HeadCellExtractor.description_subroutineReady hleft hbridge hhead
 
 theorem rightCellTokenBits_eq_quotedPairBits
     (cells : List (Bool × Bool)) :
-    RightLengthCopyScratch.cellTokenBits cells = quotedPairBits cells := by
+    RightLengthCopy.cellTokenBits cells = quotedPairBits cells := by
   induction cells with
   | nil =>
       rfl
   | cons pair rest ih =>
       rcases pair with ⟨first, second⟩
-      simp [RightLengthCopyScratch.cellTokenBits, quotedPairBits, ih]
+      simp [RightLengthCopy.cellTokenBits, quotedPairBits, ih]
 
 theorem rightCells_valid (cells : List (Option Bool)) :
-    RightLengthCopyScratch.validCells (cells.map logicalCellPair) := by
+    RightLengthCopy.validCells (cells.map logicalCellPair) := by
   intro pair hpair
   rw [List.mem_map] at hpair
   rcases hpair with ⟨cell, _hcell, rfl⟩
@@ -114,52 +114,52 @@ theorem cellCodeBits_reverse_map_some (cell : Option Bool) :
 
 theorem headExtractedTape_eq_rightSource (i : Index) :
     let T := guardLogicalTape i.finalTape
-    HeadCellExtractorScratch.headExtractedTape
+    HeadCellExtractor.headExtractedTape
         (leftFieldBits T) (headScratch T) T (rewindPadding i) =
-      RightLengthCopyScratch.sourceTape
+      RightLengthCopy.sourceTape
         (leftHeadFieldBits T) (headScratch T)
         (T.right.map logicalCellPair)
         (none :: none ::
-          RightLengthCopyScratch.rightAssemblyPaddingTail i) := by
+          RightLengthCopy.rightAssemblyPaddingTail i) := by
   dsimp only
-  rw [RightLengthCopyScratch.rewindPadding_eq_rightAssemblyPrefix]
-  simp [HeadCellExtractorScratch.headExtractedTape,
-    HeadCellExtractorScratch.targetTape,
-    RightLengthCopyScratch.sourceTape, leftHeadFieldBits,
+  rw [RightLengthCopy.rewindPadding_eq_rightAssemblyPrefix]
+  simp [HeadCellExtractor.headExtractedTape,
+    HeadCellExtractor.targetTape,
+    RightLengthCopy.sourceTape, leftHeadFieldBits,
     rightCellTokenBits_eq_quotedPairBits,
     cellCodeBits_reverse_map_some,
     headScratch, List.append_assoc]
 
 def leftHeadRightDescription : MachineDescription :=
   canonicalSeqDescription leftAndHeadDescription
-    RightLengthCopyScratch.rightLengthAssemblyDescription
+    RightLengthCopy.rightLengthAssemblyDescription
 
 theorem leftHeadRightDescription_subroutineReady :
     leftHeadRightDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
     leftAndHeadDescription_subroutineReady
-    RightLengthCopyScratch.rightLengthAssemblyDescription_subroutineReady
+    RightLengthCopy.rightLengthAssemblyDescription_subroutineReady
 
 def serializedTapeFieldTarget (i : Index) : Tape Bool :=
   let T := guardLogicalTape i.finalTape
   leadingBlankLeftShiftTargetTapeWithPadding
     ((leftHeadFieldBits T).reverse.map some)
-    (RightLengthCopyScratch.compactedPayloadBits
+    (RightLengthCopy.compactedPayloadBits
       (T.right.map logicalCellPair))
     (sentinelGapCompactorFinalPadding (headScratch T) 2
-      (none :: RightLengthCopyScratch.rightAssemblyPaddingTail i))
+      (none :: RightLengthCopy.rightAssemblyPaddingTail i))
 
 theorem headExtractedTape_move_left_move_right (i : Index) :
     let T := guardLogicalTape i.finalTape
     Tape.move Direction.left
         (Tape.move Direction.right
-          (HeadCellExtractorScratch.headExtractedTape
+          (HeadCellExtractor.headExtractedTape
             (leftFieldBits T) (headScratch T) T (rewindPadding i))) =
-      HeadCellExtractorScratch.headExtractedTape
+      HeadCellExtractor.headExtractedTape
         (leftFieldBits T) (headScratch T) T (rewindPadding i) := by
   dsimp only
-  simp [HeadCellExtractorScratch.headExtractedTape,
-    HeadCellExtractorScratch.targetTape, headScratch,
+  simp [HeadCellExtractor.headExtractedTape,
+    HeadCellExtractor.targetTape, headScratch,
     tapeAtCells, Tape.move, Tape.moveLeft, Tape.moveRight,
     List.replicate_succ]
 
@@ -174,28 +174,28 @@ theorem leftHeadRightDescription_haltsFrom_markerTarget (i : Index) :
     leftAndHeadDescription_haltsFrom_markerTarget
       T (rewindPadding i)
   have hright :=
-    RightLengthCopyScratch.rightLengthAssemblyDescription_haltsFromTape
+    RightLengthCopy.rightLengthAssemblyDescription_haltsFromTape
       (leftHeadFieldBits T) (headScratch T)
       (T.right.map logicalCellPair)
-      (RightLengthCopyScratch.rightAssemblyPaddingTail i)
+      (RightLengthCopy.rightAssemblyPaddingTail i)
       (leftHeadFieldBits_ne_nil T)
       (rightCells_valid T.right)
   have hbridge :
       Tape.move Direction.left
           (Tape.move Direction.right
-            (HeadCellExtractorScratch.headExtractedTape
+            (HeadCellExtractor.headExtractedTape
               (leftFieldBits T) (headScratch T) T (rewindPadding i))) =
-        RightLengthCopyScratch.sourceTape
+        RightLengthCopy.sourceTape
           (leftHeadFieldBits T) (headScratch T)
           (T.right.map logicalCellPair)
           (none :: none ::
-            RightLengthCopyScratch.rightAssemblyPaddingTail i) := by
+            RightLengthCopy.rightAssemblyPaddingTail i) := by
     rw [show
       Tape.move Direction.left
           (Tape.move Direction.right
-            (HeadCellExtractorScratch.headExtractedTape
+            (HeadCellExtractor.headExtractedTape
               (leftFieldBits T) (headScratch T) T (rewindPadding i))) =
-        HeadCellExtractorScratch.headExtractedTape
+        HeadCellExtractor.headExtractedTape
           (leftFieldBits T) (headScratch T) T (rewindPadding i) by
       simpa [T] using headExtractedTape_move_left_move_right i]
     simpa [T] using headExtractedTape_eq_rightSource i
@@ -203,7 +203,7 @@ theorem leftHeadRightDescription_haltsFrom_markerTarget (i : Index) :
     serializedTapeFieldTarget, T] using
     canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
       leftAndHeadDescription_subroutineReady
-      RightLengthCopyScratch.rightLengthAssemblyDescription_subroutineReady
+      RightLengthCopy.rightLengthAssemblyDescription_subroutineReady
       hfirst hbridge hright
 
 /-!
@@ -316,34 +316,34 @@ theorem guardedLeftQuotedBits_eq
 
 theorem guardedReverseTarget_eq_leftGuardSource
     (T : Tape Bool) (padding : List (Option Bool)) :
-    ChunkReverseScratch.targetTape
+    ChunkReverse.targetTape
         ((guardLogicalTape T).left.reverse.map logicalCellPair)
-        (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+        (ChunkReverse.InstallLeftGuard.markerRightPayload
           (guardLogicalTape T) padding) =
       LeftGuardRemover.sourceTape
         (cellsCodeBits T.left)
         (guardedLeftReverseBlankTail T)
-        (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+        (ChunkReverse.InstallLeftGuard.markerRightPayload
           (guardLogicalTape T) padding) := by
-  unfold ChunkReverseScratch.targetTape LeftGuardRemover.sourceTape
+  unfold ChunkReverse.targetTape LeftGuardRemover.sourceTape
   rw [guardedLeftQuotedBits_eq]
   simp [guardedLeftReverseBlankTail, guardLogicalTape]
 
 def setupRemoveLeftGuardDescription : MachineDescription :=
-  canonicalSeqDescription ChunkReverseScratch.setupAndReverseDescription
+  canonicalSeqDescription ChunkReverse.setupAndReverseDescription
     LeftGuardRemover.description
 
 theorem setupRemoveLeftGuardDescription_subroutineReady :
     setupRemoveLeftGuardDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
-    ChunkReverseScratch.setupAndReverseDescription_subroutineReady
+    ChunkReverse.setupAndReverseDescription_subroutineReady
     LeftGuardRemover.description_subroutineReady
 
 def leftGuardRemovedSeparatorTape
     (T : Tape Bool) (padding : List (Option Bool)) : Tape Bool :=
   rawBoundaryLengthCursorSeparatorTape
     (cellsCodeBits T.left) (correctedLeftBlankTail T)
-    (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+    (ChunkReverse.InstallLeftGuard.markerRightPayload
       (guardLogicalTape T) padding)
 
 theorem setupRemoveLeftGuardDescription_haltsFrom_markerTarget
@@ -352,18 +352,18 @@ theorem setupRemoveLeftGuardDescription_haltsFrom_markerTarget
       (RawPairMarker.targetTape (guardLogicalTape T) padding)
       (leftGuardRemovedSeparatorTape T padding) := by
   have hsetup :=
-    ChunkReverseScratch.setupAndReverseDescription_haltsFrom_markerTarget
+    ChunkReverse.setupAndReverseDescription_haltsFrom_markerTarget
       (guardLogicalTape T) padding
   have hremove0 :=
     LeftGuardRemover.description_haltsFromTape
       (cellsCodeBits T.left) (guardedLeftReverseBlankTail T)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+      (ChunkReverse.InstallLeftGuard.markerRightPayload
         (guardLogicalTape T) padding)
   have hremove :
       LeftGuardRemover.description.HaltsFromTape
         (LeftGuardRemover.sourceTape
           (cellsCodeBits T.left) (guardedLeftReverseBlankTail T)
-          (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+          (ChunkReverse.InstallLeftGuard.markerRightPayload
             (guardLogicalTape T) padding))
         (leftGuardRemovedSeparatorTape T padding) := by
     simpa [leftGuardRemovedSeparatorTape,
@@ -372,23 +372,23 @@ theorem setupRemoveLeftGuardDescription_haltsFrom_markerTarget
   have hbridge :
       Tape.move Direction.left
           (Tape.move Direction.right
-            (ChunkReverseScratch.targetTape
+            (ChunkReverse.targetTape
               ((guardLogicalTape T).left.reverse.map logicalCellPair)
-              (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+              (ChunkReverse.InstallLeftGuard.markerRightPayload
                 (guardLogicalTape T) padding))) =
         LeftGuardRemover.sourceTape
           (cellsCodeBits T.left) (guardedLeftReverseBlankTail T)
-          (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+          (ChunkReverse.InstallLeftGuard.markerRightPayload
             (guardLogicalTape T) padding) := by
     rw [guardedReverseTarget_eq_leftGuardSource T padding]
-    exact ChunkReverseScratch.separator_move_left_move_right
+    exact ChunkReverse.separator_move_left_move_right
       (List.append (cellsCodeBits T.left) (cellCodeBits none))
       (guardedLeftReverseBlankTail T)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+      (ChunkReverse.InstallLeftGuard.markerRightPayload
         (guardLogicalTape T) padding)
   exact
     canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
-      ChunkReverseScratch.setupAndReverseDescription_subroutineReady
+      ChunkReverse.setupAndReverseDescription_subroutineReady
       LeftGuardRemover.description_subroutineReady
       hsetup hbridge hremove
 
@@ -396,7 +396,7 @@ def correctedLeftLengthTargetTape
     (T : Tape Bool) (padding : List (Option Bool)) : Tape Bool :=
   rawBoundaryLengthCursorSeparatorTape
     (leftFieldBits T) (correctedLeftBlankTail T)
-    (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+    (ChunkReverse.InstallLeftGuard.markerRightPayload
       (guardLogicalTape T) padding)
 
 def correctedLeftPreparedDescription : MachineDescription :=
@@ -417,18 +417,18 @@ theorem correctedLeftPreparedDescription_haltsFrom_markerTarget
   have hfirst :=
     setupRemoveLeftGuardDescription_haltsFrom_markerTarget T padding
   have hlength :=
-    LengthAssemblyScratch.lengthCursor_haltsFrom_cellList
+    LengthAssembly.lengthCursor_haltsFrom_cellList
       T.left (correctedLeftBlankTail T)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+      (ChunkReverse.InstallLeftGuard.markerRightPayload
         (guardLogicalTape T) padding)
   have hbridge :
       Tape.move Direction.left
           (Tape.move Direction.right
             (leftGuardRemovedSeparatorTape T padding)) =
         leftGuardRemovedSeparatorTape T padding := by
-    exact ChunkReverseScratch.separator_move_left_move_right
+    exact ChunkReverse.separator_move_left_move_right
       (cellsCodeBits T.left) (correctedLeftBlankTail T)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+      (ChunkReverse.InstallLeftGuard.markerRightPayload
         (guardLogicalTape T) padding)
   simpa [correctedLeftPreparedDescription,
     leftGuardRemovedSeparatorTape,
@@ -450,34 +450,34 @@ theorem correctedLeftBlankTail_eq_headScratch_add_three
 
 def correctedHeadExtractedTape
     (T : Tape Bool) (padding : List (Option Bool)) : Tape Bool :=
-  HeadCellExtractorScratch.headExtractedTape
+  HeadCellExtractor.headExtractedTape
     (leftFieldBits T) (correctedHeadScratch T)
     (guardLogicalTape T) padding
 
 theorem headDescription_haltsFrom_correctedLeftTarget
     (T : Tape Bool) (padding : List (Option Bool)) :
-    HeadCellExtractorScratch.description.HaltsFromTape
+    HeadCellExtractor.description.HaltsFromTape
       (correctedLeftLengthTargetTape T padding)
       (correctedHeadExtractedTape T padding) := by
   have hrun :=
-    HeadCellExtractorScratch.description_haltsFrom_separator_cellList
+    HeadCellExtractor.description_haltsFrom_separator_cellList
       (leftFieldBits T) (correctedHeadScratch T)
       (guardLogicalTape T) padding (leftFieldBits_ne_nil T)
   simpa [correctedLeftLengthTargetTape,
     correctedHeadExtractedTape,
     correctedLeftBlankTail_eq_headScratch_add_three,
-    ChunkReverseScratch.InstallLeftGuard.markerRightPayload,
+    ChunkReverse.InstallLeftGuard.markerRightPayload,
     leftFieldBits] using hrun
 
 def correctedLeftAndHeadDescription : MachineDescription :=
   canonicalSeqDescription correctedLeftPreparedDescription
-    HeadCellExtractorScratch.description
+    HeadCellExtractor.description
 
 theorem correctedLeftAndHeadDescription_subroutineReady :
     correctedLeftAndHeadDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
     correctedLeftPreparedDescription_subroutineReady
-    HeadCellExtractorScratch.description_subroutineReady
+    HeadCellExtractor.description_subroutineReady
 
 theorem correctedLeftAndHeadDescription_haltsFrom_markerTarget
     (T : Tape Bool) (padding : List (Option Bool)) :
@@ -493,14 +493,14 @@ theorem correctedLeftAndHeadDescription_haltsFrom_markerTarget
           (Tape.move Direction.right
             (correctedLeftLengthTargetTape T padding)) =
         correctedLeftLengthTargetTape T padding := by
-    exact ChunkReverseScratch.separator_move_left_move_right
+    exact ChunkReverse.separator_move_left_move_right
       (leftFieldBits T) (correctedLeftBlankTail T)
-      (ChunkReverseScratch.InstallLeftGuard.markerRightPayload
+      (ChunkReverse.InstallLeftGuard.markerRightPayload
         (guardLogicalTape T) padding)
   simpa [correctedLeftAndHeadDescription] using
     canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
       correctedLeftPreparedDescription_subroutineReady
-      HeadCellExtractorScratch.description_subroutineReady
+      HeadCellExtractor.description_subroutineReady
       hleft hbridge hhead
 
 namespace RightGuardRemover
@@ -510,11 +510,11 @@ def markerBits : List Bool := [false, true, true, true]
 def guardBits : List Bool := cellCodeBits none
 
 def payloadBits (cells : List (Bool × Bool)) : List Bool :=
-  List.append markerBits (RightLengthCopyScratch.cellTokenBits cells)
+  List.append markerBits (RightLengthCopy.cellTokenBits cells)
 
 def scanTailBits (cells : List (Bool × Bool)) : List Bool :=
   List.append [true, true, true]
-    (List.append (RightLengthCopyScratch.cellTokenBits cells) guardBits)
+    (List.append (RightLengthCopy.cellTokenBits cells) guardBits)
 
 theorem presentBits_eq_false_scanTail
     (cells : List (Bool × Bool)) :
@@ -1056,7 +1056,7 @@ theorem guardedRightQuotedBits_eq
     quotedPairBits
         ((guardLogicalTape T).right.map logicalCellPair) =
       List.append
-        (RightLengthCopyScratch.cellTokenBits
+        (RightLengthCopy.cellTokenBits
           (T.right.map logicalCellPair))
         RightGuardRemover.guardBits := by
   calc
@@ -1073,7 +1073,7 @@ theorem guardedRightQuotedBits_eq
       rw [hsingle] at happ
       exact happ
     _ = List.append
-          (RightLengthCopyScratch.cellTokenBits
+          (RightLengthCopy.cellTokenBits
             (T.right.map logicalCellPair))
           RightGuardRemover.guardBits := by
       rw [rightCellTokenBits_eq_quotedPairBits]
@@ -1087,8 +1087,8 @@ theorem correctedHeadExtractedTape_eq_rightGuardSource
         (leftHeadFieldBits T) (correctedHeadScratch T)
         (T.right.map logicalCellPair) padding := by
   rw [correctedHeadExtractedTape]
-  unfold HeadCellExtractorScratch.headExtractedTape
-  unfold HeadCellExtractorScratch.targetTape
+  unfold HeadCellExtractor.headExtractedTape
+  unfold HeadCellExtractor.targetTape
   unfold RightGuardRemover.sourceTape
   rw [guardedRightQuotedBits_eq]
   cases hhead : T.head with
@@ -1163,7 +1163,7 @@ theorem correctedLeftHeadRightGuardRemovedDescription_haltsFrom_markerTarget
 
 def correctedRightPaddingTail (i : Index) : List (Option Bool) :=
   List.append (List.replicate 8 (none : Option Bool))
-    (RightLengthCopyScratch.rightAssemblyPaddingTail i)
+    (RightLengthCopy.rightAssemblyPaddingTail i)
 
 private theorem fiveBlankPrefix_commutesAcross_noneBlock
     (n : Nat) (tail : List (Option Bool)) :
@@ -1182,12 +1182,12 @@ private theorem fiveBlankPrefix_commutesAcross_noneBlock
 
 theorem rightGuardRemovedTape_eq_rightLengthSource (i : Index) :
     rightGuardRemovedTape i.finalTape (rewindPadding i) =
-      RightLengthCopyScratch.sourceTape
+      RightLengthCopy.sourceTape
         (leftHeadFieldBits i.finalTape)
         (correctedHeadScratch i.finalTape)
         (i.finalTape.right.map logicalCellPair)
         (none :: none :: correctedRightPaddingTail i) := by
-  rw [RightLengthCopyScratch.rewindPadding_eq_rightAssemblyPrefix]
+  rw [RightLengthCopy.rewindPadding_eq_rightAssemblyPrefix]
   rw [show
     4 * (guardLogicalTape i.finalTape).right.length =
       4 * i.finalTape.right.length + 4 by
@@ -1199,19 +1199,19 @@ theorem rightGuardRemovedTape_eq_rightLengthSource (i : Index) :
           (List.replicate (4 * i.finalTape.right.length + 4)
             (none : Option Bool))
           (none :: none :: none ::
-            RightLengthCopyScratch.rightAssemblyPaddingTail i) =
+            RightLengthCopy.rightAssemblyPaddingTail i) =
         List.append
           (List.replicate (4 * i.finalTape.right.length) none)
           (List.append (List.replicate 4 none)
             (none :: none :: none ::
-              RightLengthCopyScratch.rightAssemblyPaddingTail i)) := by
+              RightLengthCopy.rightAssemblyPaddingTail i)) := by
     exact FoC.Computability.list_replicate_add_append
       (none : Option Bool) (4 * i.finalTape.right.length) 4 _
   rw [hsplit]
   simp [RightGuardRemover.payloadBits,
     RightGuardRemover.markerBits,
-    RightLengthCopyScratch.sourceTape,
-    RightLengthCopyScratch.markerBits_eq,
+    RightLengthCopy.sourceTape,
+    RightLengthCopy.markerBits_eq,
     correctedRightPaddingTail, guardLogicalTape,
     List.map_append, List.append_assoc,
     List.replicate_succ]
@@ -1223,27 +1223,27 @@ theorem rightGuardRemovedTape_eq_rightLengthSource (i : Index) :
           (List.replicate (correctedHeadScratch i.finalTape) none)
           (some false :: some true :: some true :: some true ::
             List.append
-              ((RightLengthCopyScratch.cellTokenBits
+              ((RightLengthCopy.cellTokenBits
                 (i.finalTape.right.map logicalCellPair)).map some)
               suffix))
     (fiveBlankPrefix_commutesAcross_noneBlock
       (4 * i.finalTape.right.length)
-      (RightLengthCopyScratch.rightAssemblyPaddingTail i))
+      (RightLengthCopy.rightAssemblyPaddingTail i))
 
 def correctedTapeFieldDescription : MachineDescription :=
   canonicalSeqDescription correctedLeftHeadRightGuardRemovedDescription
-    RightLengthCopyScratch.rightLengthAssemblyDescription
+    RightLengthCopy.rightLengthAssemblyDescription
 
 theorem correctedTapeFieldDescription_subroutineReady :
     correctedTapeFieldDescription.SubroutineReady :=
   canonicalSeqDescription_subroutineReady
     correctedLeftHeadRightGuardRemovedDescription_subroutineReady
-    RightLengthCopyScratch.rightLengthAssemblyDescription_subroutineReady
+    RightLengthCopy.rightLengthAssemblyDescription_subroutineReady
 
 def correctedSerializedTapeFieldTarget (i : Index) : Tape Bool :=
   leadingBlankLeftShiftTargetTapeWithPadding
     ((leftHeadFieldBits i.finalTape).reverse.map some)
-    (RightLengthCopyScratch.compactedPayloadBits
+    (RightLengthCopy.compactedPayloadBits
       (i.finalTape.right.map logicalCellPair))
     (sentinelGapCompactorFinalPadding
       (correctedHeadScratch i.finalTape) 2
@@ -1253,13 +1253,13 @@ theorem rightGuardRemovedTape_move_left_move_right (i : Index) :
     Tape.move Direction.left
         (Tape.move Direction.right
           (rightGuardRemovedTape i.finalTape (rewindPadding i))) =
-      RightLengthCopyScratch.sourceTape
+      RightLengthCopy.sourceTape
         (leftHeadFieldBits i.finalTape)
         (correctedHeadScratch i.finalTape)
         (i.finalTape.right.map logicalCellPair)
         (none :: none :: correctedRightPaddingTail i) := by
   rw [rightGuardRemovedTape_eq_rightLengthSource]
-  simp [RightLengthCopyScratch.sourceTape,
+  simp [RightLengthCopy.sourceTape,
     correctedHeadScratch, tapeAtCells,
     Tape.move, Tape.moveLeft, Tape.moveRight,
     List.replicate_succ]
@@ -1273,7 +1273,7 @@ theorem correctedTapeFieldDescription_haltsFrom_markerTarget (i : Index) :
     correctedLeftHeadRightGuardRemovedDescription_haltsFrom_markerTarget
       i.finalTape (rewindPadding i)
   have hright :=
-    RightLengthCopyScratch.rightLengthAssemblyDescription_haltsFromTape
+    RightLengthCopy.rightLengthAssemblyDescription_haltsFromTape
       (leftHeadFieldBits i.finalTape)
       (correctedHeadScratch i.finalTape)
       (i.finalTape.right.map logicalCellPair)
@@ -1284,98 +1284,141 @@ theorem correctedTapeFieldDescription_haltsFrom_markerTarget (i : Index) :
     correctedSerializedTapeFieldTarget] using
     canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv_haltsFromTape
       correctedLeftHeadRightGuardRemovedDescription_subroutineReady
-      RightLengthCopyScratch.rightLengthAssemblyDescription_subroutineReady
+      RightLengthCopy.rightLengthAssemblyDescription_subroutineReady
       hfirst
       (rightGuardRemovedTape_move_left_move_right i)
       hright
 
+theorem markerTarget_move_left_move_right (i : Index) :
+    Tape.move Direction.left
+        (Tape.move Direction.right
+          (RawPairMarker.targetTape
+            (guardLogicalTape i.finalTape) (rewindPadding i))) =
+      RawPairMarker.targetTape
+        (guardLogicalTape i.finalTape) (rewindPadding i) := by
+  apply Tape.move_left_move_right_eq_self_of_right_cons
+    (cell := some true)
+    (right :=
+      some (logicalCellPair (guardLogicalTape i.finalTape).head).1 ::
+        some (logicalCellPair (guardLogicalTape i.finalTape).head).2 ::
+        List.append
+          ((quotedPairBits
+            ((guardLogicalTape i.finalTape).right.map
+              logicalCellPair)).map some)
+          (none :: rewindPadding i))
+  simp [RawPairMarker.targetTape, quotedPairBits, tapeAtCells,
+    List.map_append, List.append_assoc]
+
+def markedTapeFieldSerializerDescription : MachineDescription :=
+  canonicalSeqDescription RawPairMarker.markerScanDescription
+    correctedTapeFieldDescription
+
+theorem markedTapeFieldSerializerDescription_subroutineReady :
+    markedTapeFieldSerializerDescription.SubroutineReady :=
+  canonicalSeqDescription_subroutineReady
+    RawPairMarker.markerScanDescription_subroutineReady
+    correctedTapeFieldDescription_subroutineReady
+
+theorem markedTapeFieldSerializerDescription_haltsFrom_source (i : Index) :
+    markedTapeFieldSerializerDescription.HaltsFromTapeEquiv
+      (RawPairMarker.sourceTape
+        (guardLogicalTape i.finalTape) (rewindPadding i))
+      (correctedSerializedTapeFieldTarget i) := by
+  exact canonicalSeqDescription_haltsFromTapeEquiv_of_haltsFromTape
+    RawPairMarker.markerScanDescription_subroutineReady
+    correctedTapeFieldDescription_subroutineReady
+    (RawPairMarker.markerScanDescription_haltsFromTape
+      (guardLogicalTape i.finalTape) (rewindPadding i))
+    (markerTarget_move_left_move_right i)
+    (correctedTapeFieldDescription_haltsFrom_markerTarget i)
+
 theorem rightTicksBits_append_tickBits_commute (n : Nat) :
-    List.append (RightLengthCopyScratch.ticksBits n)
-        RightLengthCopyScratch.tickBits =
-      List.append RightLengthCopyScratch.tickBits
-        (RightLengthCopyScratch.ticksBits n) := by
+    List.append (RightLengthCopy.ticksBits n)
+        RightLengthCopy.tickBits =
+      List.append RightLengthCopy.tickBits
+        (RightLengthCopy.ticksBits n) := by
   induction n with
   | zero =>
       rfl
   | succ n ih =>
       calc
-        List.append (RightLengthCopyScratch.ticksBits (Nat.succ n))
-            RightLengthCopyScratch.tickBits =
+        List.append (RightLengthCopy.ticksBits (Nat.succ n))
+            RightLengthCopy.tickBits =
           List.append
-            (List.append (RightLengthCopyScratch.ticksBits n)
-              RightLengthCopyScratch.tickBits)
-            RightLengthCopyScratch.tickBits := by
+            (List.append (RightLengthCopy.ticksBits n)
+              RightLengthCopy.tickBits)
+            RightLengthCopy.tickBits := by
               rfl
         _ = List.append
-              (List.append RightLengthCopyScratch.tickBits
-                (RightLengthCopyScratch.ticksBits n))
-              RightLengthCopyScratch.tickBits := by
+              (List.append RightLengthCopy.tickBits
+                (RightLengthCopy.ticksBits n))
+              RightLengthCopy.tickBits := by
                 rw [ih]
-        _ = List.append RightLengthCopyScratch.tickBits
-              (RightLengthCopyScratch.ticksBits (Nat.succ n)) := by
-                simp [RightLengthCopyScratch.ticksBits,
+        _ = List.append RightLengthCopy.tickBits
+              (RightLengthCopy.ticksBits (Nat.succ n)) := by
+                simp [RightLengthCopy.ticksBits,
                   List.append_assoc]
 
 theorem rightTicksDoneBits_eq_stageNatBits (n : Nat) :
-    List.append (RightLengthCopyScratch.ticksBits n)
-        RightLengthCopyScratch.doneBits =
+    List.append (RightLengthCopy.ticksBits n)
+        RightLengthCopy.doneBits =
       stageNatBits n := by
   induction n with
   | zero =>
       rfl
   | succ n ih =>
       calc
-        List.append (RightLengthCopyScratch.ticksBits (Nat.succ n))
-            RightLengthCopyScratch.doneBits =
+        List.append (RightLengthCopy.ticksBits (Nat.succ n))
+            RightLengthCopy.doneBits =
           List.append
-            (List.append (RightLengthCopyScratch.ticksBits n)
-              RightLengthCopyScratch.tickBits)
-            RightLengthCopyScratch.doneBits := by
+            (List.append (RightLengthCopy.ticksBits n)
+              RightLengthCopy.tickBits)
+            RightLengthCopy.doneBits := by
               rfl
         _ = List.append
-              (List.append RightLengthCopyScratch.tickBits
-                (RightLengthCopyScratch.ticksBits n))
-              RightLengthCopyScratch.doneBits := by
+              (List.append RightLengthCopy.tickBits
+                (RightLengthCopy.ticksBits n))
+              RightLengthCopy.doneBits := by
                 rw [rightTicksBits_append_tickBits_commute]
-        _ = List.append RightLengthCopyScratch.tickBits
-              (List.append (RightLengthCopyScratch.ticksBits n)
-                RightLengthCopyScratch.doneBits) := by
+        _ = List.append RightLengthCopy.tickBits
+              (List.append (RightLengthCopy.ticksBits n)
+                RightLengthCopy.doneBits) := by
                 simp [List.append_assoc]
-        _ = List.append RightLengthCopyScratch.tickBits
+        _ = List.append RightLengthCopy.tickBits
               (stageNatBits n) := by
                 rw [ih]
         _ = stageNatBits (Nat.succ n) := by
-              simpa [RightLengthCopyScratch.tickBits,
+              simpa [RightLengthCopy.tickBits,
                 encodeCodeSymbolAsInput] using
                 (stageNatBits_succ n).symm
 
 theorem rightCellTokenBits_map_logicalCellPair
     (cells : List (Option Bool)) :
-    RightLengthCopyScratch.cellTokenBits
+    RightLengthCopy.cellTokenBits
         (cells.map logicalCellPair) =
       cellsCodeBits cells := by
   rw [rightCellTokenBits_eq_quotedPairBits]
   exact RawPairQuoter.quotedPairBits_map_logicalCellPair cells
 
 theorem compactedRightPayloadBits_eq_fields (T : Tape Bool) :
-    RightLengthCopyScratch.compactedPayloadBits
+    RightLengthCopy.compactedPayloadBits
         (T.right.map logicalCellPair) =
       List.append (stageNatBits T.right.length)
         (cellsCodeBits T.right) := by
-  unfold RightLengthCopyScratch.compactedPayloadBits
+  unfold RightLengthCopy.compactedPayloadBits
   rw [rightTicksDoneBits_eq_stageNatBits]
   rw [rightCellTokenBits_map_logicalCellPair]
   simp
 
 theorem leftHead_compactedRight_eq_exactTapeFieldBits (T : Tape Bool) :
     List.append (leftHeadFieldBits T)
-        (RightLengthCopyScratch.compactedPayloadBits
+        (RightLengthCopy.compactedPayloadBits
           (T.right.map logicalCellPair)) =
-      LengthAssemblyScratch.exactTapeFieldBits T [] := by
+      LengthAssembly.exactTapeFieldBits T [] := by
   rw [compactedRightPayloadBits_eq_fields]
   simp [leftHeadFieldBits, leftFieldBits,
-    LengthAssemblyScratch.exactTapeFieldBits,
+    LengthAssembly.exactTapeFieldBits,
     List.append_assoc]
 
-end GuardedEgress.EgressIntegrationScratch
+end GuardedEgress.TapeFieldSerializer
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore

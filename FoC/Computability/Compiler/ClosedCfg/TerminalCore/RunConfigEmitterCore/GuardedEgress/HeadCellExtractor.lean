@@ -2,7 +2,7 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Gu
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorLoop
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
-namespace GuardedEgress.HeadCellExtractorScratch
+namespace GuardedEgress.HeadCellExtractor
 
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
@@ -505,5 +505,5 @@ theorem description_haltsFrom_separator_cellList
     rawBoundaryLengthCursorSeparatorTape, quotedPairBits,
     List.replicate_succ, List.map_append, List.append_assoc] using hrun
 
-end GuardedEgress.HeadCellExtractorScratch
+end GuardedEgress.HeadCellExtractor
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
