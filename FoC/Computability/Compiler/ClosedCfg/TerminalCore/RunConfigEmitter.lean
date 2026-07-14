@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Specs
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.TerminalAdapter
 
 set_option doc.verso true
@@ -15,10 +15,11 @@ namespace BoundedLayoutRunner
 /-!
 # Terminal run-config field emitter
 
-This module isolates the finite-machine leaf that must turn the FST source
-encoding of terminal simulator fields into the field-FST target containing the
-fixed description run result.  Terminal source tapes are adapted to that FST
-source shape by exact tape equality.
+This module connects the restored terminal source to the checked run-config
+pipeline while keeping its output in the honest tape-equivalence currency.
+The retired exact scratch/FST facade is intentionally absent: downstream
+consumers observe the normalized output word, not a canonical blank-window
+representative.
 -/
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
@@ -35,73 +36,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_eq
       RunConfigEmitterCore.InputMaterializer.rightEndLeftSourceTape
         (SimulatorLayout.asBoolInput L) := by
   rfl
-
--- The post-scan leaf starts on the last source bit immediately left of the
--- terminal blank; its visible cells are still the canonical field source.
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner
-    (L : SimulatorLayout) :
-    Tape.cells
-        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
-          L) =
-      none ::
-        List.append ((SimulatorLayout.asBoolInput L).map some) [none] := by
-  cases hbits : SimulatorLayout.asBoolInput L with
-  | nil =>
-      simp [
-        FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
-        DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
-        Tape.move, Tape.moveLeft, hbits]
-  | cons bit rest =>
-      cases hrev : rest.reverse with
-      | nil =>
-          have hrest : rest = [] := by
-            simpa using congrArg List.reverse hrev
-          simp [
-            FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
-            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
-            Tape.move, Tape.moveLeft, hbits, hrest]
-      | cons head tail =>
-          have hrest : rest = (head :: tail).reverse := by
-            rw [← hrev, List.reverse_reverse]
-          simp [
-            FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner,
-            DovetailInitialLayoutInitializer.tapeAtCells, Tape.cells,
-            Tape.move, Tape.moveLeft, hbits, hrest, List.map_reverse,
-            List.append_assoc]
-
--- The same source bits are preserved after scanning to the right-end-left
--- position; only the head location changes.
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_normalizedOutput_configRunner
-    (L : SimulatorLayout) :
-    Tape.normalizedOutput
-        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
-          L) =
-      SimulatorLayout.asBoolInput L := by
-  rw [Tape.normalizedOutput]
-  rw [
-    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner]
-  cases SimulatorLayout.asBoolInput L <;>
-    simp [Function.comp_def]
-
--- Expanded field form for the source boundary consumed by the remaining
--- post-scan run-config emitter leaf.
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_eq_fields_configRunner
-    (L : SimulatorLayout) :
-    Tape.cells
-        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
-          L) =
-      none ::
-        List.append
-          ((encodeCodeWordAsInput
-            (MachineCodeSymbol.header ::
-              encodeBoolWordAppend L.input
-                (encodeNatAppend L.stage
-                  (encodeConfigurationAppend L.config
-                    (encodeBoolAppend L.hit []))))).map some)
-          [none] := by
-  rw [
-    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_cells_configRunner,
-    fixedDescriptionBoundedSimulatorLayout_asBoolInput_eq_fields_configRunner]
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_move_left_move_right_configRunner
     (L : SimulatorLayout) :
@@ -272,23 +206,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLef
     fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftDescription_subroutineReady_configRunner,
     fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftDescription_haltsFromTape_configRunner⟩
 
-def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchSpec_configRunner
-    (D postScan : MachineDescription) : Prop :=
-  postScan.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      postScan.HaltsFromTape
-        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
-          L)
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L)
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_configRunner :
-    Prop :=
-  forall D : MachineDescription,
-    exists postScan : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchSpec_configRunner
-        D postScan
-
 def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivSpec_configRunner
     (D postScan : MachineDescription) : Prop :=
   postScan.SubroutineReady ∧
@@ -319,63 +236,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEq
   simpa only [
     fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_eq_pipelineSource_configRunner]
     using hpostScan.right L
-
-/--
-Post-scan finite-table leaf: parse the encoded simulator layout from the
-right-end-left position, run the fixed description, and emit the exact
-scratch-padded output.
--/
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_configRunner := by
-  intro D
-  -- Remaining obligation: decode the padded layout, run the fixed description
-  -- for the encoded stage count, and emit the scratch-padded result.
-  sorry
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceSpec_configRunner
-    (D body : MachineDescription) : Prop :=
-  body.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      body.HaltsFromTape
-        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
-          L)
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L)
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_configRunner :
-    Prop :=
-  forall D : MachineDescription,
-    exists body : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceSpec_configRunner
-        D body
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_of_rightEndLeft_configRunner
-    (hscan :
-      FixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_configRunner)
-    (hpost :
-      FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_configRunner := by
-  rcases hscan with ⟨scanner, hscanner⟩
-  intro D
-  rcases hpost D with ⟨postScan, hpostScan⟩
-  refine ⟨SeqViaCanonical scanner postScan, ?_⟩
-  constructor
-  · exact SeqViaCanonical_subroutineReady hscanner.left hpostScan.left
-  · intro L
-    exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        hscanner.left
-        hpostScan.left
-        (hscanner.right L)
-        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_move_left_move_right_configRunner
-          L)
-        (hpostScan.right L)
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_core_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_of_rightEndLeft_configRunner
-    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_core_configRunner
-    fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner
 
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_rightEndLeft_configRunner
     (hscan :
@@ -409,128 +269,6 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fu
     fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_core_configRunner
     (fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_of_fullPipeline_configRunner
       hfull)
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceSpec_configRunner
-    (D body : MachineDescription) : Prop :=
-  body.SubroutineReady ∧
-    forall L : SimulatorLayout,
-      body.HaltsFromTape
-        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-          L)
-        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-          D L)
-
-def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceConstruction_configRunner :
-    Prop :=
-  forall D : MachineDescription,
-    exists body : MachineDescription,
-      FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceSpec_configRunner
-        D body
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceConstruction_of_source_configRunner
-    (hsource :
-      FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceConstruction_configRunner := by
-  intro D
-  rcases hsource D with ⟨body, hbody⟩
-  refine
-    ⟨SeqViaCanonical
-      CommonGround.FiniteTransducers.leftMoveOnceDescription
-      body, ?_⟩
-  constructor
-  · exact
-      SeqViaCanonical_subroutineReady
-        CommonGround.FiniteTransducers.leftMoveOnceDescription_subroutineReady
-        hbody.left
-  · intro L
-    have hleft :
-        CommonGround.FiniteTransducers.leftMoveOnceDescription.HaltsFromTape
-          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-            L)
-          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
-            L) := by
-      simpa [
-        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner,
-        fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
-          L] using
-        CommonGround.FiniteTransducers.leftMoveOnceDescription_haltsFromTape
-          (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightShiftedSourceTape_configRunner
-            L)
-    exact
-      SeqViaCanonical_haltsFromTape_of_haltsFromTape
-        CommonGround.FiniteTransducers.leftMoveOnceDescription_subroutineReady
-        hbody.left
-        hleft
-        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_move_left_move_right_configRunner
-          L)
-        (hbody.right L)
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_of_scratch_configRunner
-    (hscratch :
-      FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner := by
-  intro D
-  rcases hscratch D with ⟨body, hbody⟩
-  refine ⟨seqSubroutine body ExactIdentityDescription Direction.right, ?_⟩
-  constructor
-  · exact
-      seqSubroutine_subroutineReady
-        hbody.left
-        CommonGround.Identity.exactIdentityDescription_subroutineReady
-  · intro L
-    have hidentity :
-        exists nB : Nat,
-          ExactIdentityDescription.runConfig nB
-              { state := ExactIdentityDescription.start,
-                tape :=
-                  Tape.move Direction.right
-                    (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
-                      D L) } =
-            { state := ExactIdentityDescription.halt,
-              tape :=
-                FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
-                  D L } := by
-      rcases
-          CommonGround.Identity.exactIdentityDescription_run_from_start
-            (FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner
-              D L) with
-        ⟨nB, hnB⟩
-      exact ⟨nB, by
-        simpa [
-          FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_configRunner] using
-          hnB⟩
-    simpa using
-      seqSubroutine_haltsFromTape_of_haltsFromTape
-        hbody.left
-        CommonGround.Identity.exactIdentityDescription_subroutineReady
-        (hbody.right L)
-        hidentity
-
-theorem fieldTargetFromTerminalConstruction_ofRightScratchRunner
-    (hright :
-      FixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalRightShiftedSourceConstruction_configRunner := by
-  intro D
-  rcases hright D with ⟨rightBody, hrightBody⟩
-  refine ⟨rightBody, hrightBody.left, ?_⟩
-  intro L
-  simpa [
-    fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchTape_eq_FSTTargetTape_configRunner,
-    fixedDescriptionBoundedSimulatorPaddedEmitterOutputBits_eq_fieldOutputBits_configRunner]
-    using hrightBody.right L
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_core_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_of_rightShiftedFields_configRunner
-    (fieldTargetFromTerminalConstruction_ofRightScratchRunner
-      (fixedDescriptionBoundedSimulatorPaddedEmitterRightScratchFromTerminalRightShiftedSourceConstruction_of_scratch_configRunner
-        (fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceConstruction_of_source_configRunner
-          fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_core_configRunner)))
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_configRunner :
-    FixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_configRunner :=
-  fixedDescriptionBoundedSimulatorPaddedEmitterFieldFSTTargetFromTerminalSourceConstruction_of_FSTSourceToField_configRunner
-    fixedDescriptionBoundedSimulatorPaddedEmitterFSTSourceToFieldFSTTargetConstruction_core_configRunner
 
 end BoundedLayoutRunner
 end EncRewriters
