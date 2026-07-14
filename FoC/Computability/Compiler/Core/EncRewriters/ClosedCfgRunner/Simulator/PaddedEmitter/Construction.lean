@@ -34,12 +34,4 @@ theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_metadataWitnessBrid
       (fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_metadataWitnessBridge_configRunner
         hbridge)
 
-/-- Premise-free fixed-description simulator construction through the checked
-tape-equivalence terminal route. -/
-theorem fixedDescriptionBoundedSimulatorEquivConstruction_configRunner :
-    FixedDescriptionBoundedSimulatorEquivConstruction := by
-  exact
-    fixedDescriptionBoundedSimulatorEquivConstruction_of_terminalCoreEquiv_configRunner
-      fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner
-
 end FoC.Computability.EncRewriters.BoundedLayoutRunner

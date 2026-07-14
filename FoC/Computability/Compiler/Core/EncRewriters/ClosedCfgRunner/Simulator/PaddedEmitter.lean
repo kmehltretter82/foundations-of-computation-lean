@@ -26,7 +26,8 @@ window to avoid a forced shrink.
 -/
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorEquivConstruction :=
-  fixedDescriptionBoundedSimulatorEquivConstruction_configRunner
+  fixedDescriptionBoundedSimulatorEquivConstruction_of_terminalCoreEquiv_configRunner
+    fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner
 
 end BoundedLayoutRunner
 end EncRewriters
