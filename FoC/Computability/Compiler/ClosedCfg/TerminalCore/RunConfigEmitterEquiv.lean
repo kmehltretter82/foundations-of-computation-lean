@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Equiv
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepRepair
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FullPipeline
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.Assembly
 
@@ -17,6 +18,11 @@ namespace FoC.Computability.EncRewriters.BoundedLayoutRunner
 
 open Languages MachineDescription
 
+theorem runConfigEmitterCanonicalCfgHitConstruction_configRunner :
+    RunConfigEmitterCore.FullPipeline.CanonicalCfgHitConstruction := by
+  exact
+    RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit.canonical_construction_core
+
 theorem runConfigEmitterFullPipelineConstruction_of_leaves
     (hcfg :
       RunConfigEmitterCore.FullPipeline.CanonicalCfgHitConstruction)
@@ -29,6 +35,14 @@ theorem runConfigEmitterFullPipelineConstruction_of_leaves
       (RunConfigEmitterCore.GuardedEgress.Assembly.construction_of_metadataWitnessBridge
         hbridge)
 
+theorem runConfigEmitterFullPipelineConstruction_of_metadataWitnessBridge_configRunner
+    (hbridge :
+      RunConfigEmitterCore.GuardedEgress.MetadataWitnessBridge.Construction) :
+    RunConfigEmitterCore.FullPipeline.Construction := by
+  exact
+    runConfigEmitterFullPipelineConstruction_of_leaves
+      runConfigEmitterCanonicalCfgHitConstruction_configRunner hbridge
+
 theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_runConfigEmitterLeaves_configRunner
     (hcfg :
       RunConfigEmitterCore.FullPipeline.CanonicalCfgHitConstruction)
@@ -40,5 +54,13 @@ theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivCon
       fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindConstruction_configRunner
       (fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fullPipeline_configRunner
         (runConfigEmitterFullPipelineConstruction_of_leaves hcfg hbridge))
+
+theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_metadataWitnessBridge_configRunner
+    (hbridge :
+      RunConfigEmitterCore.GuardedEgress.MetadataWitnessBridge.Construction) :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner := by
+  exact
+    fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_runConfigEmitterLeaves_configRunner
+      runConfigEmitterCanonicalCfgHitConstruction_configRunner hbridge
 
 end FoC.Computability.EncRewriters.BoundedLayoutRunner

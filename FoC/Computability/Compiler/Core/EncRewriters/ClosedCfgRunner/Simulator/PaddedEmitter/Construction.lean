@@ -24,4 +24,13 @@ theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_runConfigEmitterLea
       (fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_runConfigEmitterLeaves_configRunner
         hcfg hbridge)
 
+theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_metadataWitnessBridge_configRunner
+    (hbridge :
+      RunConfigEmitterCore.GuardedEgress.MetadataWitnessBridge.Construction) :
+    FixedDescriptionBoundedSimulatorEquivConstruction := by
+  exact
+    fixedDescriptionBoundedSimulatorEquivConstruction_of_terminalCoreEquiv_configRunner
+      (fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_metadataWitnessBridge_configRunner
+        hbridge)
+
 end FoC.Computability.EncRewriters.BoundedLayoutRunner
