@@ -36,22 +36,6 @@ def CandidateSimulatorEquivConstruction : Prop :=
     exists simulator : MachineDescription,
       CandidateSimulatorEquivSpec runner simulator
 
-/-- Exact padded bounded simulation, suitable for halt retargeting. -/
-def CandidateSimulatorPaddedSpec
-    (runner simulator : MachineDescription) : Prop :=
-  simulator.SubroutineReady ∧
-    forall w : Word Bool,
-    forall i : ScheduleIndex,
-      simulator.HaltsFromTape
-        (Tape.input (SerializedPhaseBits .ready runner w i))
-        (FixedDescriptionBoundedSimulatorPaddedOutputTape runner
-          (CandidateInitialLayout runner w i))
-
-def CandidateSimulatorPaddedConstruction : Prop :=
-  forall runner : MachineDescription,
-    exists simulator : MachineDescription,
-      CandidateSimulatorPaddedSpec runner simulator
-
 theorem candidateSimulatorEquivConstruction_of_fixedDescription
     (hconstruction : FixedDescriptionBoundedSimulatorEquivConstruction) :
     CandidateSimulatorEquivConstruction := by
@@ -61,21 +45,6 @@ theorem candidateSimulatorEquivConstruction_of_fixedDescription
   intro w i
   exact hsimulator.haltsFromTapeEquiv
     (CandidateInitialLayout runner w i)
-
-theorem candidateSimulatorPaddedConstruction_of_fixedDescription
-    (hconstruction : FixedDescriptionBoundedSimulatorPaddedConstruction) :
-    CandidateSimulatorPaddedConstruction := by
-  intro runner
-  rcases hconstruction runner with ⟨simulator, hsimulator⟩
-  refine ⟨simulator, hsimulator.left, ?_⟩
-  intro w i
-  rcases hsimulator.right.left (CandidateInitialLayout runner w i) with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  simpa [MachineDescription.HaltsWithTapeIn,
-    MachineDescription.HaltsFromTapeIn,
-    MachineDescription.initial,
-    serializedReadyBits_eq_fixedSimulatorInput] using hsteps
 
 end BoundedFuelPairSearch
 

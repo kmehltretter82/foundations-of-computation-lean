@@ -11,7 +11,7 @@ halt is its endpoint.  Fuel-pair search instead needs a copied simulator block
 that returns to a caller-owned continuation state.  This module supplies that
 semantic adapter without constructing the simulator: all results are
 conditional on
-{name (full := FoC.Computability.BoundedFuelPairSearch.CandidateSimulatorPaddedSpec)}`CandidateSimulatorPaddedSpec`.
+{name (full := FoC.Computability.BoundedFuelPairSearch.CandidateSimulatorEquivSpec)}`CandidateSimulatorEquivSpec`.
 
 The caller continuation is required to lie below the copied state block.  This
 both makes halt retargeting sound and gives the source-disjointness facts used
