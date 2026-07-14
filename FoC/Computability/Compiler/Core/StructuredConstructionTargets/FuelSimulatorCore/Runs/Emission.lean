@@ -526,17 +526,13 @@ theorem cellStream_eq_cellsBits_reverse (bits : List Bool) :
         _ = (Word.Concat (cellsBits rest.reverse) (cellsBits [bit])).reverse := by
           cases bit with
           | false =>
-              simpa [Word.Concat, cellsBits, encodeCellsAppend,
+              simp [Word.Concat, cellsBits, encodeCellsAppend,
                 encodeCellAppend, encodeCell, encodeCodeWordAsInput,
-                encodeCodeSymbolAsInput] using
-                (List.reverse_append (cellsBits rest.reverse)
-                  (cellsBits [false])).symm
+                encodeCodeSymbolAsInput]
           | true =>
-              simpa [Word.Concat, cellsBits, encodeCellsAppend,
+              simp [Word.Concat, cellsBits, encodeCellsAppend,
                 encodeCellAppend, encodeCell, encodeCodeWordAsInput,
-                encodeCodeSymbolAsInput] using
-                (List.reverse_append (cellsBits rest.reverse)
-                  (cellsBits [true])).symm
+                encodeCodeSymbolAsInput]
         _ = (cellsBits (Word.Concat rest.reverse [bit])).reverse :=
           congrArg List.reverse (cellsBits_append rest.reverse [bit]).symm
 
