@@ -9,9 +9,10 @@ set_option doc.verso true
 /-!
 # Equivalence-valued fixed-description emitter construction
 
-This module connects the two remaining finite leaves to the already checked
-guarded-egress, full-pipeline, and terminal adapters.  It keeps the honest
-tape-equivalence currency through the final scratch-output boundary.
+This module connects the checked guarded-egress construction to the
+full-pipeline and terminal adapters.  It keeps the honest tape-equivalence
+currency through the final scratch-output boundary while retaining the
+parameterized integration theorems for reuse.
 -/
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner
@@ -43,6 +44,15 @@ theorem runConfigEmitterFullPipelineConstruction_of_metadataWitnessBridge_config
     runConfigEmitterFullPipelineConstruction_of_leaves
       runConfigEmitterCanonicalCfgHitConstruction_configRunner hbridge
 
+/-- The checked configuration/hit repair and guarded-egress construction give
+the premise-free full run-config emitter pipeline. -/
+theorem runConfigEmitterFullPipelineConstruction_configRunner :
+    RunConfigEmitterCore.FullPipeline.Construction := by
+  exact
+    RunConfigEmitterCore.FullPipeline.construction_of_components
+      runConfigEmitterCanonicalCfgHitConstruction_configRunner
+      RunConfigEmitterCore.GuardedEgress.construction_core
+
 theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_runConfigEmitterLeaves_configRunner
     (hcfg :
       RunConfigEmitterCore.FullPipeline.CanonicalCfgHitConstruction)
@@ -62,5 +72,15 @@ theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivCon
   exact
     fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_runConfigEmitterLeaves_configRunner
       runConfigEmitterCanonicalCfgHitConstruction_configRunner hbridge
+
+/-- Premise-free terminal construction in the honest tape-equivalence
+currency. -/
+theorem fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner :
+    FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner := by
+  exact
+    fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_of_rewind_body_configRunner
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRewindConstruction_configRunner
+      (fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fullPipeline_configRunner
+        runConfigEmitterFullPipelineConstruction_configRunner)
 
 end FoC.Computability.EncRewriters.BoundedLayoutRunner

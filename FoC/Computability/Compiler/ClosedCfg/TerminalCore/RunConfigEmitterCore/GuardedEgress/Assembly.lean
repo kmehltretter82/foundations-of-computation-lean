@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessBridge
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessBuild
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.PostCopyCloseout
 
 set_option doc.verso true
@@ -8,8 +8,8 @@ set_option doc.verso true
 
 This module composes the checked tape-field serializer, the witness-sensitive
 metadata bridge, the token copier, and the final header/parking closeout.  The
-two remaining finite leaves are explicit components so their proofs can be
-completed independently without changing the integration theorem.
+generic component theorem retains the explicit bridge and copier contracts,
+while the production theorem instantiates both checked finite machines.
 -/
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
@@ -168,4 +168,20 @@ theorem construction_of_metadataWitnessBridge
   exact construction_of_leaves hbridge metadataTokenCopyConstruction
 
 end GuardedEgress.Assembly
+
+namespace GuardedEgress
+
+/-- Premise-free guarded-egress construction assembled from the checked
+metadata-witness bridge and metadata-token copier. -/
+theorem construction_core : Construction := by
+  exact
+    Assembly.construction_of_metadataWitnessBridge
+      MetadataWitnessBuild.construction
+
+/-- The checked guarded-egress machine inhabits the finite-realization leaf. -/
+theorem finiteRealizationConstruction_core :
+    FiniteRealizationConstruction := by
+  exact construction_core
+
+end GuardedEgress
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
