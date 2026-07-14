@@ -1,8 +1,9 @@
 {
   "limits": {
-    "default_net_growth": 10000,
+    "default_campaign_net_growth": 10000,
+    "default_net_growth": 15000,
     "max_new_file_lines": 1500,
-    "max_outstanding_growth_loans": 10000
+    "max_outstanding_growth_loans": 15000
   },
   "metrics": {
     "direct_sorries": 18,
@@ -103,7 +104,7 @@
     ]
   },
   "review": {
-    "reason": "Raise the reviewed global Compiler growth allowance to 10000 per user instruction on 2026-07-14; source metrics remain pinned to the post-deletion 8d84d908 baseline",
-    "recorded_against": "66f821b8b216c04fb7c96b89d899a0c3e6460b74"
+    "reason": "Set the ordinary per-sorry campaign allowance to 10000 and raise both the aggregate ordinary-loan cap and global raw Compiler growth allowance to 15000 per user instruction on 2026-07-14; source metrics remain pinned to the post-deletion 8d84d908 baseline",
+    "recorded_against": "a5d59c0c09f0ef7d81af259d91237d7e7faa5898"
   }
 }

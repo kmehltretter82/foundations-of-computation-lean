@@ -718,8 +718,9 @@ projector and is not widened to cover this interior-separator target.
   FST, and right-shift wrapper lattice.
 
 The four tranches above remove 2,366 net Compiler lines in total. They are the
-causal cleanup used to bring global raw Compiler growth below the reviewed
-`+10,000` ceiling; no active future frontier was deleted.
+causal cleanup used to bring global raw Compiler growth below the then-reviewed
+`+10,000` ceiling; no active future frontier was deleted. The later policy
+increase does not change this cleanup accounting.
 
 ## Required entry for future deletions
 

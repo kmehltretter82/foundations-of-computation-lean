@@ -27,8 +27,9 @@ FOC_ROOT_MODULE = "FoC"
 FOC_ROOT_FILE = Path("FoC.lean")
 COMPILER_ROOT = Path("FoC/Computability/Compiler")
 MAX_NEW_FILE_LINES = 1_500
-DEFAULT_NET_GROWTH = 10_000
-MAX_OUTSTANDING_GROWTH_LOANS = 10_000
+DEFAULT_CAMPAIGN_NET_GROWTH = 10_000
+DEFAULT_NET_GROWTH = 15_000
+MAX_OUTSTANDING_GROWTH_LOANS = 15_000
 
 IMPORT_RE = re.compile(r"^import\s+([^\s]+)\s*$", re.MULTILINE)
 DIRECT_SORRY_RE = re.compile(r"^\s*sorry(?:\s|$)", re.MULTILINE)
@@ -138,6 +139,7 @@ def baseline_json(metrics: Metrics) -> dict[str, Any]:
     return {
         "limits": {
             "max_new_file_lines": MAX_NEW_FILE_LINES,
+            "default_campaign_net_growth": DEFAULT_CAMPAIGN_NET_GROWTH,
             "default_net_growth": DEFAULT_NET_GROWTH,
             "max_outstanding_growth_loans": MAX_OUTSTANDING_GROWTH_LOANS,
         },
@@ -319,35 +321,11 @@ def check_campaign(root: Path, path: Path) -> CampaignResult:
             failures.append(
                 f"{path}: historical_debt requires historical_debt_reason"
             )
-    elif allowance > 5_000:
-        failures.append(f"{path}: ordinary growth loans may not exceed 5000")
-    elif allowance > 1_500:
-        review = campaign.get("architecture_review")
-        if not isinstance(review, dict):
-            failures.append(
-                f"{path}: growth loans above 1500 require architecture_review"
-            )
-        else:
-            reason = review.get("reason")
-            recorded_against = str(review.get("recorded_against", ""))
-            if not isinstance(reason, str) or not reason.strip():
-                failures.append(
-                    f"{path}: architecture_review.reason must be nonempty"
-                )
-            if not re.fullmatch(r"[0-9a-f]{40}", recorded_against):
-                failures.append(
-                    f"{path}: architecture_review.recorded_against must be a "
-                    "full Git hash"
-                )
-            elif not git_commit_exists(root, recorded_against):
-                failures.append(
-                    f"{path}: reviewed commit is absent: {recorded_against}"
-                )
-            elif not git_is_ancestor(root, recorded_against):
-                failures.append(
-                    f"{path}: reviewed commit is not an ancestor of HEAD: "
-                    f"{recorded_against}"
-                )
+    elif allowance > DEFAULT_CAMPAIGN_NET_GROWTH:
+        failures.append(
+            f"{path}: ordinary growth loans may not exceed "
+            f"{DEFAULT_CAMPAIGN_NET_GROWTH}"
+        )
 
     if failures or not paths:
         return CampaignResult(name, allowance, failures, historical_debt)
@@ -691,7 +669,7 @@ def main(argv: list[str]) -> int:
     )
     if outstanding_allowances > MAX_OUTSTANDING_GROWTH_LOANS:
         failures.append(
-            "outstanding Compiler growth loans exceed the global cap: "
+            "outstanding Compiler growth loans exceed the aggregate cap: "
             f"{outstanding_allowances} > {MAX_OUTSTANDING_GROWTH_LOANS}"
         )
     effective_global_growth = max(args.allow_net_growth, outstanding_allowances)
