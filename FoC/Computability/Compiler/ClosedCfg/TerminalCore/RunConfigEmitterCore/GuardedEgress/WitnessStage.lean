@@ -41,12 +41,6 @@ theorem boolWord_append_nil (bits : Word Bool) :
   change List Bool at bits
   exact List.append_nil bits
 
-theorem map_some_append_boolWords (left right : Word Bool) :
-    List.map some (List.append left right) =
-      List.append (List.map some left) (List.map some right) := by
-  change List Bool at left right
-  exact List.map_append
-
 theorem tokenBits_rawMetadataTokens (i : Index) :
     MetadataTokenCopy.tokenBits (rawMetadataTokens i) =
       FieldDecomposition.metadataBits i.sourceLayout := by
@@ -149,7 +143,7 @@ theorem encodedTokens_eq_logicalCellListBits
       rw [MetadataTokenCopy.encodedTokens_cons,
         MetadataTokenCopy.tokenBits_cons]
       rw [logicalCellListBits_map_some_append,
-        map_some_append_boolWords,
+        CanonicalLayouts.DovetailLayoutScanner.map_some_append,
         encodedTokenCells_eq_logicalCellListBits, ih]
       rfl
 
@@ -309,7 +303,7 @@ theorem witnessCells_known
           (MetadataWitnessBridge.natTokens finalState)) := by
   unfold witnessCells
   rw [hwitness, witnessBits_known]
-  rw [map_some_append_boolWords]
+  rw [CanonicalLayouts.DovetailLayoutScanner.map_some_append]
   rw [logicalCellListCode_map_some_append]
   rw [logicalCellListCode_eq_map_some,
     logicalCellListCode_eq_map_some]

@@ -222,14 +222,14 @@ def description : MachineDescription :=
 
 theorem description_subroutineReady : description.SubroutineReady :=
   SeqViaCanonical_subroutineReady
-    RawPairQuoter.chunkExpandDescription_subroutineReady
+    rawBoundaryChunkExpandLoopDescription_subroutineReady
     installSentinelAndSerializeDescription_subroutineReady
 
 theorem description_haltsFrom_source (i : Index) :
     description.HaltsFromTapeEquiv i.source
       (TapeFieldSerializer.correctedSerializedTapeFieldTarget i) := by
   exact SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
-    RawPairQuoter.chunkExpandDescription_subroutineReady
+    rawBoundaryChunkExpandLoopDescription_subroutineReady
     installSentinelAndSerializeDescription_subroutineReady
     (RawPairQuoter.chunkExpandDescription_haltsFromTape i).toEquiv
     (moveLeft_moveRight_equiv_self _)

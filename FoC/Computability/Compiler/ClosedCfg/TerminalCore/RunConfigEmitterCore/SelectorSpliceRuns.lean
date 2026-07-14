@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.SelectorSplice
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.StateSelector
 
 set_option doc.verso true
 
@@ -584,18 +585,6 @@ theorem leads_ingress_startSelector
       (some false) (some hit) [none]
   done
 
-theorem selectorBits_length_pos
-    {D : MachineDescription} (tag : StateClass D) :
-    0 < (selectorBits tag).length := by
-  cases tag with
-  | other =>
-      rw [selectorBits_length_other D]
-      decide
-  | known state hstate =>
-      rw [selectorBits_length_known hstate]
-      lia
-  done
-
 theorem leads_ingress_selectorLayout
     (D : MachineDescription) (hit : Bool) (tag : StateClass D)
     (remaining : Nat) (T0 T1 : Tape Bool)
@@ -615,7 +604,8 @@ theorem leads_ingress_selectorLayout
   | zero =>
       cases hlen : (selectorBits tag).length with
       | zero =>
-          have hpos := selectorBits_length_pos tag
+          have hpos :=
+            FieldDecomposition.StateSelector.selectorBits_length_pos tag
           rw [hlen] at hpos
           lia
       | succ count =>

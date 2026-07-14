@@ -77,10 +77,6 @@ theorem chunkExpandDescription_haltsFromTape (i : Index) :
     rawBoundaryChunkExpandLoopDescription_haltsFrom_separator_obligation
       (rawBits i) [] 0 (suffixCells i)
 
-theorem chunkExpandDescription_subroutineReady :
-    rawBoundaryChunkExpandLoopDescription.SubroutineReady :=
-  rawBoundaryChunkExpandLoopDescription_subroutineReady
-
 /-!
 ## Chunk semantics
 

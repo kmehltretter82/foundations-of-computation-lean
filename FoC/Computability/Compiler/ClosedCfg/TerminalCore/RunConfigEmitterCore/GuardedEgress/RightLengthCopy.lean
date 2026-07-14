@@ -1346,7 +1346,7 @@ theorem decoderGap_rawBits_lower_bound (i : Index) :
         remainingExpandedCells]
       exact Nat.le_trans (by lia) hgap
 
-theorem logicalCellBits_length_local (cell : Option Bool) :
+private theorem logicalCellBits_length_local (cell : Option Bool) :
     (logicalCellBits cell).length = 2 := by
   cases cell with
   | none =>
@@ -1354,7 +1354,7 @@ theorem logicalCellBits_length_local (cell : Option Bool) :
   | some bit =>
       cases bit <;> rfl
 
-theorem logicalCellListBits_length_local
+private theorem logicalCellListBits_length_local
     (cells : List (Option Bool)) :
     (logicalCellListBits cells).length = 2 * cells.length := by
   induction cells with
