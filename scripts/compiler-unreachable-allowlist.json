@@ -31,6 +31,12 @@
       "reason": "Stable thin import facade for focused QuoteRest development."
     },
     {
+      "category": "guardrail",
+      "intended_consumer": "Sorry #18 represented-boundary contract reviews",
+      "module": "FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepBoundary",
+      "reason": "Checked impossibility theorems retain the represented-window boundary and prevent revival of the false canonical physical-equivalence route."
+    },
+    {
       "category": "active",
       "intended_consumer": "Sorry #12 bounded fuel-pair search driver",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Layout",

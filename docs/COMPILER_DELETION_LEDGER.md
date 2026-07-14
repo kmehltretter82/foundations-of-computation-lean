@@ -313,9 +313,9 @@ projector and is not widened to cover this interior-separator target.
 - Why retired: the dependency-closed branches had no tracked importer; the old
   padded-emitter run-loop was the documented circular/decoy route for sorry
   #18, not an independent implementation.
-- Current route: the live padded projection and TerminalCore construction
-  stacks, focused structured lowering modules, and consumer-local honest
-  projection contracts.
+- Current route: the public padded-emitter equivalence scaffold through
+  `RunConfigEmitterEquiv` and guarded egress, focused structured lowering
+  modules, and consumer-local honest projection contracts.
 - Reconsider only if: a new checked consumer needs one specific output or
   refresh theorem. Re-derive it over the live construction and verify it does
   not recreate the #18 circular dependency.
@@ -466,8 +466,9 @@ projector and is not widened to cover this interior-separator target.
   compile through `RunConfigEmitter` and the retained right-scratch surfaces.
 - Current route: the concrete `ConfigTapeAndHit` typed-table run carries the
   actual represented logical tapes, proves their component equivalence, and
-  lowers their exact guarded representation. `Routes.lean` remains a stable
-  import facade over the one live terminal contract.
+  lowers their exact guarded representation. At this checkpoint `Routes.lean`
+  remained temporarily; it was later retired in `ed1bc3a6` after
+  equivalence-consumer migration.
 - Reconsider only if: a checked consumer needs one specific endpoint adapter.
   Recover that theorem from `8a01ac7b^`, state it in the consumer's honest
   exact/equivalence currency, and do not restore the aggregate route lattice.
@@ -501,8 +502,11 @@ projector and is not widened to cover this interior-separator target.
   `fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fullPipeline_configRunner`.
   `runConfigEmitterFullPipelineConstruction_configRunner` and
   `fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner`
-  feed `fixedDescriptionBoundedSimulatorEquivConstruction_configRunner`; the
-  stable public scaffold theorem delegates to that construction.  The
+  feed the stable
+  `fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner`
+  theorem directly. Commit `d59ece33` removed the redundant premise-free
+  construction alias so that this scaffold is the sole public acceptance
+  surface with that type. The
   represented-boundary impossibility facts in
   `FieldDecomposition/RepBoundary.lean` remain as guardrails.
 - Reconsider only if: a checked caller demonstrably observes the exact
@@ -608,6 +612,10 @@ projector and is not widened to cover this interior-separator target.
 ### Superseded #18 finite-realization wrapper
 
 - Deleting commit: `023d63dc` (`Split the guarded head marker`).
+- Final alias cleanup: `b00c26a6` (`Remove the stale #18 realization wrapper`)
+  deleted the last definitionally duplicate `FiniteRealizationConstruction`
+  alias, its identity conversion theorem, and the unreferenced production
+  witness after exhaustive declaration-reference checks found no consumer.
 - Reduction: the 152-line `GuardedEgress/FiniteRealization.lean` wrapper and a
   14-line unused pair-fold theorem were removed. The same checkpoint added the
   160-line exact marker scanner and direct suffix ownership, for zero net

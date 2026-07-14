@@ -5,8 +5,8 @@ graph, and exact theorem-type baseline. It records places where deleting a
 lower route exposed a higher redundant layer, or where one missing canonical
 theorem could replace repeated proof blocks.
 
-The current checked declaration export contains 23,571 Compiler declarations
-and 144 exact duplicate theorem-type groups. A duplicate type is an audit
+The current checked declaration export contains 24,782 Compiler declarations
+and 94 exact duplicate theorem-type groups. A duplicate type is an audit
 signal, not sufficient evidence for deletion.
 
 ## Ready or completed
@@ -34,6 +34,20 @@ Boolean-indexed #12 family consumer. The unused scalar routes, aggregate
 finite-route bundles, and sorry-dependent aliases were removed in
 `59985a4d`: 16 insertions, 1,371 deletions. Both direct modules and the
 `FiniteScaffolds.lean` barrel pass.
+
+### #18 exact terminal facade and duplicate construction — completed
+
+The public migration in `206a31b2` left the equivalence-valued padded-emitter
+scaffold as the only externally used acceptance surface. Commit `ed1bc3a6`
+then removed the uninhabited exact post-scan theorem, its scratch/FST adapter
+lattice, seven dead wrapper modules, and unused diagnostics for a net reduction
+of 820 Compiler lines. Commit `b00c26a6` removed the last unreferenced
+finite-realization alias, and `d59ece33` removed a duplicate premise-free
+construction theorem so the stable scaffold is the sole public theorem with
+that construction type. Commit `66f821b8` then reused canonical proof facts in
+place of five newly exposed duplicate declarations. The fresh declaration
+export reports no exact-duplicate regression, and the full Compiler build and
+the #12/#14 consumers compile through the surviving tape-equivalence route.
 
 ## High-value next audits
 
