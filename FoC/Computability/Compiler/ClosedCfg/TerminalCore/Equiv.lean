@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Contracts
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
 
 set_option doc.verso true
 
