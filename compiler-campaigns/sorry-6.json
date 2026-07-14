@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 1950,
+  "architecture_review": {
+    "reason": "Close the Chapter 5.2 StageAttempt word-start materializer with the measured cleaned finite-recognizer implementation; 1,250 lines were reassigned from the unopened sorry #12 campaign while preserving the aggregate Compiler cap.",
+    "recorded_against": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerInvocation.lean"
+  ],
+  "frontier": "FoC.Computability.StructuredConstructionTargets.stageAttemptFramedStructuredMaterializerConstruction_core",
+  "name": "sorry-6-stage-attempt-framed-materializer",
+  "paths": [
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed/Materializer.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed/RecognizerForward.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed/RecognizerClosed.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.StructuredConstructionTargets.stageAttemptFramedStructuredMaterializerConstruction_core"
+  ]
+}

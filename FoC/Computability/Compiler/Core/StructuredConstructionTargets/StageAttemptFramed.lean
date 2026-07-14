@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulator
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed.Materializer
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 
 set_option doc.verso true
@@ -87,9 +88,10 @@ Finite-table leaf for the framed-invocation public-input materializer.
 -/
 theorem stageAttemptFramedStructuredMaterializerConstruction_core
     : StageAttemptFramedStructuredMaterializerConstruction := by
-  -- Remaining parser/materializer obligation: recognize controller layout
-  -- inputs and materialize the guarded three-logical-tape input.
-  sorry
+  unfold StageAttemptFramedStructuredMaterializerConstruction
+  unfold stageAttemptFramedStructuredInitializedTape stageAttemptFramedStructuredInputBits
+  exact
+    StageAttemptFramedMaterializer.stageAttemptFramedWordStartEquivMaterializerConstruction_core
 
 /--
 Finite-table leaf for the lowered framed-invocation structured core.
