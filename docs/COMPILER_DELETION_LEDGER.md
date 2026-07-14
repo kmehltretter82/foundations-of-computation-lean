@@ -38,6 +38,25 @@ comparison.
   padding.  Add normalization at that caller and prove its necessity; do not
   restore the exact adapter family merely for halt retargeting.
 
+### Represented #18 selector diagnostic island
+
+- Deleting commit: `49a37fad` (`Retire the represented #18 selector island`).
+- Reduction: 259 Compiler lines.
+- Old paths:
+  `Structured/Lowering/LogicalEquivRuns.lean` and
+  `ClosedCfg/TerminalCore/RunConfigEmitterCore/SelectorSpliceRepresentedRuns.lean`.
+- Potentially reusable idea: structured execution preserves equal control
+  states and pointwise `Tape.Equiv` logical-tape representatives.
+- Why retired: the selector application was only a diagnostic theorem and had
+  no importer.  It could not bridge the actual guarded physical encodings,
+  because represented blank workspace becomes nonblank guarded code.
+- Current route: `FieldDecomposition/RepRepair.lean` marks the surplus
+  represented boundary and physically repairs it to the canonical classified
+  source up to outer `Tape.Equiv` before the selector splice begins.
+- Reconsider only if: a current structured consumer needs the generic
+  logical-execution congruence lemma.  Recover that lemma alone; do not restore
+  the obsolete represented-selector route.
+
 ### FuelSimulator fixed scratch representatives and endpoint adapters
 
 - Deleting commit: this change (`Carry actual FuelSimulator representatives`).
