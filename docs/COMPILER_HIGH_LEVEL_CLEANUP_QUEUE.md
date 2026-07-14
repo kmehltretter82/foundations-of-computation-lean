@@ -5,8 +5,8 @@ graph, and exact theorem-type baseline. It records places where deleting a
 lower route exposed a higher redundant layer, or where one missing canonical
 theorem could replace repeated proof blocks.
 
-The current checked declaration export contains 24,782 Compiler declarations
-and 94 exact duplicate theorem-type groups. A duplicate type is an audit
+The current checked declaration export contains 24,634 Compiler declarations
+and 93 exact duplicate theorem-type groups. A duplicate type is an audit
 signal, not sufficient evidence for deletion.
 
 ## Ready or completed
@@ -49,25 +49,26 @@ place of five newly exposed duplicate declarations. The fresh declaration
 export reports no exact-duplicate regression, and the full Compiler build and
 the #12/#14 consumers compile through the surviving tape-equivalence route.
 
+### Quoter raw-cell execution stack — completed
+
+The declaration-reference audit found no external reference to any of the 34
+local state-100 through state-210 replay theorems in
+`Projection/Quoter/RawCells.lean`. The sole externally consumed final theorem
+now specializes the canonical with-base execution from
+`QuoteAssembly/Finish.lean`. This removes 866 net Compiler lines; the direct
+module, `RawCellsOutput.lean`, `Quoter/Main.lean`, and the full Compiler build
+pass.
+
+### Post-#18 source shapes and Dovetail return predecessors — completed
+
+The post-migration #18 audit removed 921 net lines of unused source-shape,
+exact/FST, and right-shift adapters while preserving direct terminal tapes,
+the public equivalence scaffold, and the #14/#12 consumers. A separate
+Dovetail audit kept the live `ReturnAppend`/`ReturnAppendDirect` stack but
+removed 251 lines of superseded start machines and unchecked wrappers. The
+deletion ledger records the exact live replacements and recovery conditions.
+
 ## High-value next audits
-
-### Quoter raw-cell execution stack
-
-`Projection/Quoter/RawCells.lean` is 1,584 lines. Its first roughly 900 lines
-reprove the same `AssemblyPrefixDescription` state-100 through state-210 runs
-that are already exposed as `*_core` theorems by
-`ClosedCfg/QuoteAssembly/MarkingLoop.lean` and `Finish.lean`. There are 29
-matching core phase theorems, including the complete
-`run_stageInput_to_sourceRest_boundary_cells_withBase_core` route. The only
-external consumer of the duplicated stack needs the final exact
-source-to-prefix-boundary result, not the intermediate unsuffixed lemmas.
-
-The import graph confirms that `RawCells.lean` may import
-`QuoteAssembly/Finish.lean` without a cycle. Replace its public final theorem
-with a thin specialization of the with-base core, then delete the private/local
-replay rather than adding another execution abstraction. Expected saving:
-approximately 700–900 lines, subject to a focused `RawCellsOutput.lean` and
-`Quoter/Main.lean` check.
 
 ### HeadRoutes projection aliases — completed
 
@@ -95,15 +96,18 @@ removed 1,305 lines of obsolete route implementation and contracts. No
 replacement contract was introduced because there is no current consumer to
 justify one; a future consumer must first supply a collision-safe boundary.
 
-### Structured-prefix eraser endpoint lattice
+### Structured-prefix eraser endpoint lattice — generic output tranche complete
 
-The duplicate inventory reports six groups between
+The first audit removed the 328-line self-contained generic branch-output
+lattice from `StructuredPrefixEraserOutput.lean`; every deleted declaration was
+referenced only inside that block, while canonical output specs and all current
+consumers remain. The duplicate inventory still reports six groups between
 `StructuredPrefixEraserHandoff/Base.lean` and
 `StructuredPrefixEraserShape.lean`, plus repeated normalized-output equalities
-across `StructuredPrefixEraserBoundaryPhases.lean`, `Output.lean`, and
-`Endpoint.lean`. Audit whether one canonical endpoint-shape theorem can replace
-the branch/output restatements. The implementation is live, so migrate direct
-consumers before deleting aliases.
+across `StructuredPrefixEraserBoundaryPhases.lean` and `Endpoint.lean`. Audit
+whether one canonical endpoint-shape theorem can replace those remaining
+restatements. The implementation is live, so migrate direct consumers before
+deleting aliases.
 
 ## Missing theorem/API candidates
 

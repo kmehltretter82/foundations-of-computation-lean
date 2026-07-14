@@ -636,6 +636,91 @@ projector and is not widened to cover this interior-separator target.
   already supplied by `PipelineContracts`. Restore one theorem directly over
   `GuardedEgress.Spec`; do not recreate the duplicate local contract lattice.
 
+### Duplicated Quoter assembly-prefix execution replay
+
+- Deleting commit: this change (`Reduce Compiler code below the growth ceiling`).
+- Reduction: 866 net Compiler lines (885 deleted, 19 added).
+- Old surface: 34 local lookup, step, exact-run, marking-loop, restoration,
+  and boundary theorems in `Projection/Quoter/RawCells.lean` that replayed
+  states 100 through 210 of `AssemblyPrefixDescription`.
+- Potentially reusable idea: specializing the assembly-prefix run to an exact
+  source-rest boundary with a clean one-blank right window.
+- Why retired: none of the 34 replay declarations had a reference outside
+  `RawCells.lean`. The sole externally consumed final source-to-boundary
+  theorem can be proved directly from the earlier with-base core execution.
+- Current route: `RawCells.lean` imports `QuoteAssembly/Finish.lean` and
+  specializes
+  `assemblyPrefixDescription_run_stageInput_to_sourceRest_boundary_cells_withBase_core`;
+  `RawCellsOutput.lean` and `Quoter/Main.lean` retain the same public contract.
+- Reconsider only if: a checked consumer needs one intermediate state of the
+  prefix run that the canonical core does not expose. Add that one projection
+  beside `QuoteAssembly/Finish.lean`; do not restore the complete replay.
+
+### Unused structured-prefix generic branch-output lattice
+
+- Deleting commit: this change (`Reduce Compiler code below the growth ceiling`).
+- Reduction: 328 Compiler lines.
+- Old surface: the generic case, bit-padding, nil, cons, and split output
+  specifications in `StructuredPrefixEraserOutput.lean`, together with their
+  construction wrappers, conversions, and iff aliases.
+- Potentially reusable idea: packaging branch-dependent output facts for a
+  caller that chooses among all structured-prefix footprint cases.
+- Why retired: every declaration in the block was referenced only inside the
+  same block. The live implementation and its consumers use the canonical
+  output/footprint specs and concrete boundary-phase bundles directly.
+- Current route: `StructuredPrefixEraserOutput.lean` retains the canonical
+  `OutputSpec`, `FootprintOutputSpec`, and boundary-route acceptance surfaces;
+  the handoff, threaded ScratchBridge, output, and scaffold consumers compile.
+- Reconsider only if: two checked consumers need the same branch-generic
+  packaging. Reintroduce one bundle over the canonical specs rather than the
+  old conversion lattice.
+
+### Superseded Dovetail return/append predecessors
+
+- Deleting commit: this change (`Reduce Compiler code below the growth ceiling`).
+- Reduction: 251 Compiler lines.
+- Old surface: the pre-handoff right-cells copier start machine, an unused
+  transition-prefixed natural-number return wrapper, and an obsolete unchecked
+  stage-input append-return proof chain with its private forward-spec wrapper.
+- Potentially reusable idea: a short start adapter for a copier entered before
+  the current explicit handoff marker.
+- Why retired: declaration-reference checks found no consumer of those
+  predecessors. `InputTape`, `BoolWordQuoter`, and the initializer assembly use
+  the checked marked-prefix/first-bit routes and the direct copier instead.
+- Current route: `RightCellsCopierStartHandoffDescription`, the live
+  `ReturnAppend`/`ReturnAppendDirect` stack, and `DovetailInitLayout.Compiled`.
+- Reconsider only if: a checked caller presents exactly the old pre-handoff
+  tape. Recover the smallest start adapter; do not restore the unchecked
+  stage-input wrapper chain.
+
+### Superseded #18 source-shape and exact-adapter lattice
+
+- Deleting commit: this change (`Reduce Compiler code below the growth ceiling`).
+- Reduction: 921 net Compiler lines after making the one retained canonical
+  layout-length dependency explicit.
+- Old surface: the 481-line
+  `PaddedEmitter/SourceShapeCore.lean` module, exact/FST/right-shift contracts
+  in `TerminalCore/Specs.lean`, duplicate shape theorems in `SourceTapes.lean`,
+  and unused right-shift execution adapters in `Core.lean` and
+  `RightShiftedSource.lean`.
+- Potentially reusable idea: a one-step source-left machine and exact physical
+  source-rewind/right-shift tape equalities.
+- Why retired: after equivalence-consumer migration, only the two terminal
+  source-tape definitions and the body/terminal equivalence constructions had
+  external declaration references. A full Compiler rebuild confirmed the one
+  remaining output-length proof uses the canonical padded-parser scanner lemma
+  directly rather than any retired shape facade.
+- Current route: direct terminal source tapes, `RunConfigEmitterEquiv`, the
+  padded-emitter public scaffold, and the #14/#12 equivalence consumers.
+- Reconsider only if: a checked exact-physical consumer first proves that its
+  required context length is reachable. Recover only the specific rewind
+  machine or shape lemma from this commit's parent; do not restore the exact,
+  FST, and right-shift wrapper lattice.
+
+The four tranches above remove 2,366 net Compiler lines in total. They are the
+causal cleanup used to bring global raw Compiler growth below the reviewed
+`+10,000` ceiling; no active future frontier was deleted.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

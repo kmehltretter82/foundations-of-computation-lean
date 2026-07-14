@@ -410,57 +410,6 @@ private theorem appendCodeWordReturnToCurrentMarkerDescription_run_from_scan
   simpa [AppendCodeWordReturnToCurrentMarkerDescription,
     A, B, preAll] using! hn
 
-def RightCellsCopierStartDescription :
-    MachineDescription where
-  stateCount := 9
-  start := 0
-  halt := 8
-  transitions :=
-    [ transition
-        0 (some false) (some false) Direction.right 1
-    , transition
-        1 (some false) none Direction.right 2
-    , transition
-        2 (some false) (some false) Direction.right 3
-    , transition
-        3 (some true) (some true) Direction.right 4
-    , transition
-        4 (some false) (some false) Direction.right 5
-    , transition
-        5 (some false) (some false) Direction.right 6
-    , transition
-        6 (some true) (some true) Direction.right 7
-    , transition
-        7 (some false) (some false) Direction.right 8
-    ]
-
-private theorem rightCellsCopierStartDescription_subroutineReady :
-    RightCellsCopierStartDescription.SubroutineReady :=
-  machineDescription_subroutineReady_of_transition_checks
-    RightCellsCopierStartDescription
-    (by decide) (by decide) (by decide)
-    (by decide) (by decide) (by decide)
-
-private theorem rightCellsCopierStartDescription_run
-    (tail : List (Option Bool)) :
-    RightCellsCopierStartDescription.runConfig 8
-        (config 0 []
-          (List.append
-            [some false, some false, some false, some true,
-              some false, some false, some true, some false]
-            tail)) =
-      config 8
-        [some false, some true, some false, some false,
-          some true, some false, none, some false]
-        tail := by
-  cases tail <;>
-    simp [RightCellsCopierStartDescription,
-      config, tapeAtCells,
-      runConfig, stepConfig,
-      lookupTransition, Matches,
-      transition, Tape.read, Tape.write, Tape.move,
-      Tape.moveRight]
-
 def InputTapeRightCellsDirectCopierDescription :
     MachineDescription where
   stateCount := 100
@@ -1319,58 +1268,6 @@ theorem stageInputBits_exists_cons
   | cons b rest =>
       exact ⟨b, rest, rfl⟩
 
-private theorem markedPrefixAppendCodeWordReturnDescription_run_stageInput
-    (code : Word MachineCodeSymbol) (hcode : code ≠ [])
-    (w : Word Bool) (stage : Nat) :
-    exists steps : Nat,
-      (MarkedPrefixAppendCodeWordReturnDescription code).runConfig steps
-          ((MarkedPrefixAppendCodeWordReturnDescription
-            code).initial
-            (encodeCodeWordAsInput
-              (PairedRecognizerDovetailStageInputCode w stage))) =
-        { state :=
-            (MarkedPrefixAppendCodeWordReturnDescription code).halt
-          tape :=
-            tapeAtCells [some false]
-              (some false ::
-                ((List.append [false, true]
-                  (List.append
-                    (encodeCodeWordAsInput
-                      (PairedRecognizerDovetailStageInputCode w stage))
-                    (encodeCodeWordAsInput code))).map
-                  some)) } := by
-  rcases stageInputBits_exists_cons w stage with
-    ⟨b, rest, hbits⟩
-  rcases
-      markedPrefixAppendCodeWordReturnDescription_run
-        code hcode b rest with
-    ⟨steps, hsteps⟩
-  refine ⟨steps, ?_⟩
-  simpa [hbits, initial, List.append_assoc] using hsteps
-theorem markedPrefixAppendNatReturnDescription_run_stageInput
-    (n : Nat) (w : Word Bool) (stage : Nat) :
-    exists steps : Nat,
-      (MarkedPrefixAppendNatReturnDescription n).runConfig steps
-          ((MarkedPrefixAppendNatReturnDescription
-            n).initial
-            (encodeCodeWordAsInput
-              (PairedRecognizerDovetailStageInputCode w stage))) =
-        { state :=
-            (MarkedPrefixAppendNatReturnDescription n).halt
-          tape :=
-            tapeAtCells [some false]
-              (some false ::
-                ((List.append [false, true]
-                  (List.append
-                    (encodeCodeWordAsInput
-                      (PairedRecognizerDovetailStageInputCode w stage))
-                    (encodeCodeWordAsInput
-                      (encodeNat n)))).map some)) } := by
-  simpa [MarkedPrefixAppendNatReturnDescription] using
-    markedPrefixAppendCodeWordReturnDescription_run_stageInput
-      (encodeNat n)
-      (encodeNat_ne_nil n)
-      w stage
 theorem markedPrefixAppendNatReturnDescription_run_stageInput_checked
     (n : Nat) (w : Word Bool) (stage : Nat) :
     exists steps : Nat,
@@ -1494,45 +1391,6 @@ theorem transitionPrefixedAppendCodeWordReturnDescription_run
   refine ⟨n, ?_⟩
   simpa [TransitionPrefixedAppendCodeWordReturnDescription,
     A, B] using hn
-
-def TransitionPrefixedAppendNatReturnDescription
-    (n : Nat) : MachineDescription :=
-  TransitionPrefixedAppendCodeWordReturnDescription
-    (encodeNat n)
-
-private theorem transitionPrefixedAppendNatReturnDescription_subroutineReady
-    (n : Nat) :
-    (TransitionPrefixedAppendNatReturnDescription
-      n).SubroutineReady :=
-  transitionPrefixedAppendCodeWordReturnDescription_subroutineReady
-    (encodeNat n)
-    (encodeNat_ne_nil n)
-private theorem transitionPrefixedAppendNatReturnDescription_run
-    (n : Nat) (payload : Word Bool) :
-    exists steps : Nat,
-      (TransitionPrefixedAppendNatReturnDescription
-        n).runConfig steps
-          { state :=
-              (TransitionPrefixedAppendNatReturnDescription
-                n).start
-            tape :=
-              tapeAtCells [some false]
-                (some false ::
-                  ((List.append [false, true] payload).map some)) } =
-        { state :=
-            (TransitionPrefixedAppendNatReturnDescription n).halt
-          tape :=
-            tapeAtCells [some false]
-              (some false ::
-                ((List.append (false :: true :: payload)
-                  (encodeCodeWordAsInput
-                    (encodeNat n))).map some)) } := by
-  simpa [TransitionPrefixedAppendNatReturnDescription] using
-    transitionPrefixedAppendCodeWordReturnDescription_run
-      (encodeNat n)
-      (encodeNat_ne_nil n)
-      payload
-
 
 end DovetailInitialLayoutInitializer
 end Computability

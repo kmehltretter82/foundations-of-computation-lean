@@ -388,94 +388,6 @@ theorem appendFirstInputTapeThenRejectDescription_run
   simpa [AppendFirstInputTapeThenRejectDescription,
     A, B] using hn
 
-private theorem descriptionWithCopier_run_bits
-    {accept reject copier : MachineDescription}
-    (hcopier : AppendInputTapeReturnSpec copier)
-    (w : Word Bool) (stage : Nat) :
-    exists steps : Nat,
-      (DWC accept reject copier).runConfig steps
-          ((DWC accept reject copier).initial
-            (encodeCodeWordAsInput
-              (PairedRecognizerDovetailStageInputCode w stage))) =
-        { state :=
-            (DWC accept reject copier).halt
-          tape :=
-            tapeAtCells [some false]
-              (some false ::
-                ((List.append [false, true]
-                  (List.append (stageInputBits w stage)
-                    (List.append (natBits accept.start)
-                      (List.append (inputTapeBits w)
-                        (List.append (natBits reject.start)
-                          (List.append (inputTapeBits w)
-                            (encodeCodeWordAsInput
-                              finalBoolFlagsCode))))))).map some)) } := by
-  let A := MPANR accept.start
-  let B := AFITR reject copier
-  let acceptSuffix :=
-    List.append (stageInputBits w stage)
-      (natBits accept.start)
-  let Tmid :=
-    tapeAtCells [some false]
-      (some false ::
-        ((List.append [false, true] acceptSuffix).map some))
-  have hAready : A.SubroutineReady := by
-    exact
-      markedPrefixAppendNatReturnDescription_subroutineReady
-        accept.start
-  have hBready : B.SubroutineReady := by
-    exact
-      appendFirstInputTapeThenRejectDescription_subroutineReady
-        hcopier
-  rcases
-      markedPrefixAppendNatReturnDescription_run_stageInput
-        accept.start w stage with
-    ⟨nA, hA⟩
-  have hArun :
-      A.runConfig nA
-          { state := A.start
-            tape :=
-              Tape.input
-                (encodeCodeWordAsInput
-                  (PairedRecognizerDovetailStageInputCode w stage)) } =
-        { state := A.halt, tape := Tmid } := by
-    simpa [A, Tmid, acceptSuffix, stageInputBits,
-      natBits, initial, List.append_assoc]
-      using hA
-  have hBReach :
-      exists nB : Nat,
-        B.runConfig nB
-            { state := B.start
-              tape := Tape.move Direction.left Tmid } =
-          { state := B.halt
-            tape :=
-              tapeAtCells [some false]
-                (some false ::
-                  ((List.append [false, true]
-                    (List.append (stageInputBits w stage)
-                      (List.append (natBits accept.start)
-                        (List.append (inputTapeBits w)
-                          (List.append (natBits reject.start)
-                            (List.append (inputTapeBits w)
-                              (encodeCodeWordAsInput
-                                finalBoolFlagsCode))))))).map some)) } := by
-    rcases
-        appendFirstInputTapeThenRejectDescription_run
-          (reject := reject) hcopier w stage
-          (natBits accept.start) with
-      ⟨nB, hB⟩
-    refine ⟨nB, ?_⟩
-    simpa [B, Tmid, acceptSuffix, tapeAtCells,
-      Tape.move, Tape.moveLeft, List.append_assoc] using hB
-  rcases
-      seqSubroutine_reaches_of_runConfig_eq
-        (A := A) (B := B) (handoffMove := Direction.left)
-        hAready hBready hArun hBReach with
-    ⟨n, hn⟩
-  refine ⟨n, ?_⟩
-  simpa [DescriptionWithCopier,
-    initial, A, B] using hn
-
 theorem descriptionWithCopier_run_bits_checked
     {accept reject copier : MachineDescription}
     (hcopier : AppendInputTapeReturnSpec copier)
@@ -1052,27 +964,6 @@ private theorem inputTapeRightCellsDirectCopierCoreOutputBits_eq
     inputTapeRightCellsDirectCopierPreludeBits,
     encodeCodeSymbolAsInput,
     List.append_assoc]
-
-private theorem descriptionWithCopier_forward
-    {accept reject copier : MachineDescription}
-    (hcopier : AppendInputTapeReturnSpec copier) :
-    ForwardSpec
-      accept reject
-      (DWC accept reject copier) := by
-  intro w stage
-  rcases
-      descriptionWithCopier_run_bits
-        (accept := accept) (reject := reject) hcopier w stage with
-    ⟨n, hn⟩
-  refine ⟨n, ?_⟩
-  constructor
-  · simpa [HaltsWithTapeIn] using
-      congrArg Configuration.state hn
-  · have htape :=
-      congrArg Configuration.tape hn
-    exact htape.trans
-      (outputTape_eq_bits
-        accept reject w stage).symm
 
 private theorem appendInputTapeRightCellsReturnSpec_realizer :
     AppendInputTapeRightCellsReturnConstruction := by
