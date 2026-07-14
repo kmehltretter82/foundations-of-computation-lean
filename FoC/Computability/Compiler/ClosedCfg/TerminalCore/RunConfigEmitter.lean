@@ -1,5 +1,4 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.FieldTapes
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.TerminalAdapter
 
 set_option doc.verso true
