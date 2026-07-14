@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.Terminal
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.Construction
 
 set_option doc.verso true
 
@@ -15,32 +15,6 @@ open MachineDescription
 namespace EncRewriters
 namespace BoundedLayoutRunner
 
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_of_scratch_configRunner
-    {D emitter : MachineDescription}
-    (hemits :
-      FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeSpec_configRunner
-        D emitter) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
-      D emitter := by
-  constructor
-  · exact hemits.left
-  · intro L
-    simpa [
-      fixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_eq_outputTape_configRunner
-        D L] using
-      hemits.right L
-
-theorem fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_scratch_configRunner
-    (hemits :
-      FixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_configRunner) :
-    FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner := by
-  intro D
-  rcases hemits D with ⟨emitter, hemitsD⟩
-  exact
-    ⟨emitter,
-      fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_of_scratch_configRunner
-        hemitsD⟩
-
 /--
 Finite-machine leaf for the config-runner fixed-description simulators.
 
@@ -52,11 +26,7 @@ window to avoid a forced shrink.
 -/
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner :
     FixedDescriptionBoundedSimulatorEquivConstruction :=
-  fixedDescriptionBoundedSimulatorEquivConstruction_of_parserEquivEmitter_configRunner
-    ⟨fixedDescriptionBoundedSimulatorPaddedParserEquivConstruction_scaffold_configRunner,
-      fixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_of_scratch_configRunner
-        (fixedDescriptionBoundedSimulatorPaddedScratchEmitterExactShapeConstruction_of_terminal_configRunner
-          FixedDescriptionBoundedSimulator.PaddedEmitter.Terminal.construction)⟩
+  fixedDescriptionBoundedSimulatorEquivConstruction_configRunner
 
 end BoundedLayoutRunner
 end EncRewriters
