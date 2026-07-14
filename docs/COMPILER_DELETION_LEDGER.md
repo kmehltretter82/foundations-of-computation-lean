@@ -57,6 +57,23 @@ comparison.
   logical-execution congruence lemma.  Recover that lemma alone; do not restore
   the obsolete represented-selector route.
 
+### Unused #18 exact field-tape island
+
+- Deleting commit: `7ec5adeb` (`Remove the unused #18 field-tape island`).
+- Reduction: 167 Compiler lines.
+- Old path: `ClosedCfg/TerminalCore/FieldTapes.lean`.
+- Old surface: named exact FST source/target cell layouts and their
+  normalized-output expansion lemmas.
+- Why retired: the live terminal construction carries the simulator result in
+  `HaltsFromTapeEquiv` currency and serializes the exact normalized word
+  directly.  No declaration imported or referenced the exact field-tape
+  wrapper after the equivalence route was connected.
+- Current route: `RunConfigEmitterCore/GuardedEgress` emits the exact semantic
+  fields, and `RunConfigEmitterEquiv.lean` carries their tape-equivalence
+  result through the terminal adapter.
+- Reconsider only if: a current consumer needs one of these exact FST cell
+  decompositions.  Recover that lemma at the consumer, not the whole island.
+
 ### FuelSimulator fixed scratch representatives and endpoint adapters
 
 - Deleting commit: this change (`Carry actual FuelSimulator representatives`).
