@@ -8,6 +8,8 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Gu
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessBridge
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.Assembly
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.CfgHitClose
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepBoundary
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepRepair
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.SelectorSpliceRuns
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.TerminalAdapter
 
