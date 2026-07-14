@@ -1,8 +1,8 @@
 {
   "limits": {
-    "default_net_growth": 0,
+    "default_net_growth": 10000,
     "max_new_file_lines": 1500,
-    "max_outstanding_growth_loans": 5000
+    "max_outstanding_growth_loans": 10000
   },
   "metrics": {
     "direct_sorries": 18,
@@ -103,7 +103,7 @@
     ]
   },
   "review": {
-    "reason": "Freeze the post-deletion Compiler baseline at commit 8d84d908",
-    "recorded_against": "8d84d908f37eac881d2282ae52850c03092307be"
+    "reason": "Raise the reviewed global Compiler growth allowance to 10000 per user instruction on 2026-07-14; source metrics remain pinned to the post-deletion 8d84d908 baseline",
+    "recorded_against": "66f821b8b216c04fb7c96b89d899a0c3e6460b74"
   }
 }

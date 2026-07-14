@@ -32,7 +32,8 @@ campaign may rise as high as 5,000 lines once its exact in-scope leaf is
 axiom-clean, its current consumer compiles, and the manifest records an
 `architecture_review` reason plus the full Git commit against which that review
 was made.  The allowance is a ceiling, not a target.  The sum of ordinary
-outstanding loans may not exceed 5,000 lines.
+outstanding loans may not exceed 10,000 lines. The reviewed global Compiler
+growth allowance is likewise 10,000 lines above the pinned baseline.
 
 Pre-policy work that already exceeds the circuit breakers must not reset its
 starting commit.  Record it honestly with:

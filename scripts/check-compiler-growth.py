@@ -27,7 +27,8 @@ FOC_ROOT_MODULE = "FoC"
 FOC_ROOT_FILE = Path("FoC.lean")
 COMPILER_ROOT = Path("FoC/Computability/Compiler")
 MAX_NEW_FILE_LINES = 1_500
-MAX_OUTSTANDING_GROWTH_LOANS = 5_000
+DEFAULT_NET_GROWTH = 10_000
+MAX_OUTSTANDING_GROWTH_LOANS = 10_000
 
 IMPORT_RE = re.compile(r"^import\s+([^\s]+)\s*$", re.MULTILINE)
 DIRECT_SORRY_RE = re.compile(r"^\s*sorry(?:\s|$)", re.MULTILINE)
@@ -137,7 +138,7 @@ def baseline_json(metrics: Metrics) -> dict[str, Any]:
     return {
         "limits": {
             "max_new_file_lines": MAX_NEW_FILE_LINES,
-            "default_net_growth": 0,
+            "default_net_growth": DEFAULT_NET_GROWTH,
             "max_outstanding_growth_loans": MAX_OUTSTANDING_GROWTH_LOANS,
         },
         "metrics": metrics.to_json(),
@@ -593,7 +594,7 @@ def main(argv: list[str]) -> int:
         "--allow-net-growth",
         type=int,
         default=0,
-        help="temporary global growth allowance above the baseline",
+        help="temporary total global growth allowance override",
     )
     parser.add_argument(
         "--campaign",
@@ -693,11 +694,25 @@ def main(argv: list[str]) -> int:
             "outstanding Compiler growth loans exceed the global cap: "
             f"{outstanding_allowances} > {MAX_OUTSTANDING_GROWTH_LOANS}"
         )
-    effective_global_growth = args.allow_net_growth + outstanding_allowances
+    effective_global_growth = max(args.allow_net_growth, outstanding_allowances)
 
     if args.baseline is not None:
         baseline = read_json(args.baseline)
         failures.extend(baseline_review_failures(root, args.baseline, baseline))
+        limits = baseline.get("limits", {})
+        reviewed_default_growth = limits.get("default_net_growth", 0)
+        if (
+            not isinstance(reviewed_default_growth, int)
+            or reviewed_default_growth < 0
+        ):
+            failures.append(
+                f"{args.baseline}: limits.default_net_growth must be a "
+                "nonnegative integer"
+            )
+            reviewed_default_growth = 0
+        effective_global_growth = max(
+            effective_global_growth, reviewed_default_growth
+        )
         failures.extend(
             compare(
                 metrics,
