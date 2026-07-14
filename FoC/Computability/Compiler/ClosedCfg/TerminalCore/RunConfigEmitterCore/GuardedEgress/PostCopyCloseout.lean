@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.MetadataWitnessBridge
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessBridge
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.PaddedIdentity
 import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.PrependFixedFourBits
 
