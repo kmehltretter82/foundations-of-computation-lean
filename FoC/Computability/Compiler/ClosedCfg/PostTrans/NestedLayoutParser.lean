@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Restorer
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer
 
 set_option doc.verso true
 
@@ -615,9 +616,33 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConst
 Finite-machine obligation that exposes the nested raw layout field from the
 restored outer source fields.
 -/
+theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_canonical
+    (hcanonical :
+      NestedLayoutMaterializer.CanonicalBoolWordSuffixMaterializerConstruction) :
+    SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction := by
+  rcases hcanonical with ⟨materializer, hmaterializer⟩
+  refine ⟨NestedLayoutMaterializer.description materializer,
+    NestedLayoutMaterializer.description_subroutineReady hmaterializer.left,
+    ?_⟩
+  intro p
+  rcases
+      NestedLayoutMaterializer.description_haltsFromTapeEquiv
+        hmaterializer p with
+    ⟨actual, hactual, hequiv⟩
+  exact ⟨actual, hactual,
+    Tape.Equiv.trans hequiv
+      (by
+        simpa [SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape]
+          using
+            NestedLayoutMaterializer.projectedOutputTape_equiv_targetTape
+              p)⟩
+
 theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction := by
-  sorry
+  exact selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_canonical
+    ⟨CommonGround.FiniteTransducers.Structured.MultiTapeLowering.NestedLayoutMaterializerInternal.CanonicalBoolWordSuffixMaterializer.description,
+      CommonGround.FiniteTransducers.Structured.MultiTapeLowering.NestedLayoutMaterializerInternal.CanonicalBoolWordSuffixMaterializer.description_subroutineReady,
+      CommonGround.FiniteTransducers.Structured.MultiTapeLowering.NestedLayoutMaterializerInternal.CanonicalBoolWordSuffixMaterializer.description_haltsFromTapeEquiv⟩
 
 /--
 Finite-machine obligation that scans the contextual nested layout window while

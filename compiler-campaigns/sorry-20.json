@@ -1,0 +1,21 @@
+{
+  "allow_net_growth": 92,
+  "architecture_review": {
+    "reason": "Close the exact local QuoteRest live-tail emitter that supplies the separated tape consumed by sorry 19; 1,608 provisional lines are temporarily reassigned to the measured sorry #24 implementation and this unopened campaign must be reviewed again before implementation.",
+    "recorded_against": "2c46ca2e"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTEmitterConstruction.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTOutputRoute.lean"
+  ],
+  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction",
+  "name": "sorry-20-quote-rest-live-tail-emitter",
+  "paths": [
+    "FoC/Computability/Compiler/ClosedCfg/QuoteRest"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest"
+  ]
+}
