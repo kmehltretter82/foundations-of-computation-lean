@@ -281,18 +281,15 @@ private theorem run_write_cell (x y : Bool)
           (some y :: some x :: some true :: some false :: left) right } := by
   cases x <;> cases y
   · cases right <;>
-      simp [description, writeZeroState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, writeZeroState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells,
         Tape.read, Tape.write, Tape.move, Tape.moveRight]
   · cases right <;>
-      simp [description, writeZeroState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, writeZeroState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells,
         Tape.read, Tape.write, Tape.move, Tape.moveRight]
   · cases right <;>
-      simp [description, writeZeroState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, writeZeroState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells,
         Tape.read, Tape.write, Tape.move, Tape.moveRight]
   · exact False.elim (hvalid rfl)
@@ -469,8 +466,7 @@ theorem description_haltsFromTape
         rw [runConfig_add]
         rw [hboundary']
         rw [hwrite']
-        simp [targetTape, tail, hrev, List.reverse_append,
-          List.map_append, List.replicate_succ, List.append_assoc]
+        simp [targetTape, tail, hrev, List.reverse_append]
       constructor
       · simpa using congrArg Configuration.state hfull
       · simpa using congrArg Configuration.tape hfull

@@ -241,7 +241,7 @@ private theorem run_scan_blanks (n : Nat)
             (none : Option Bool)) right <;>
           simp [description, runConfig, stepConfig, lookupTransition,
             Matches, transition, tapeAtCells, Tape.read, Tape.write,
-            Tape.move, Tape.moveRight, hrest]
+            Tape.move, Tape.moveRight]
       change description.runConfig n
           (description.runConfig 1
             { state := description.start
@@ -315,8 +315,7 @@ private theorem source_run_to_cycle
     rfl]
   rw [hscan]
   rw [run_rewrite_marker]
-  simp [cycleTape, ticksBits, gapBaseLeft, cellTokenBits,
-    List.append_assoc]
+  simp [cycleTape, ticksBits, gapBaseLeft, cellTokenBits]
 
 private theorem run_select_cell_raw
     (x y : Bool) (left right : List (Option Bool))
@@ -419,17 +418,17 @@ private theorem run_scan_right
               List.append (rest.map some) right <;>
             simp [description, scanState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · cases bit <;> cases htail :
               List.append (rest.map some) right <;>
             simp [description, scanState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · cases bit <;> cases htail :
               List.append (rest.map some) right <;>
             simp [description, scanState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · exact False.elim (hvalid rfl)
       rw [hstep]
       rw [ih (some bit :: left)]
@@ -495,17 +494,17 @@ private theorem run_scan_copied
               List.append (rest.map some) right <;>
             simp [description, scanCopiedState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · cases bit <;> cases htail :
               List.append (rest.map some) right <;>
             simp [description, scanCopiedState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · cases bit <;> cases htail :
               List.append (rest.map some) right <;>
             simp [description, scanCopiedState, runConfig, stepConfig,
               lookupTransition, Matches, transition, tapeAtCells,
-              Tape.read, Tape.write, Tape.move, Tape.moveRight, htail]
+              Tape.read, Tape.write, Tape.move, Tape.moveRight]
         · exact False.elim (hvalid rfl)
       rw [hstep]
       rw [ih (some bit :: left)]
@@ -524,18 +523,15 @@ private theorem run_write_copied_cell
           (some x :: some y :: right) } := by
   cases x <;> cases y
   · cases right <;>
-      simp [description, scanCopiedState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, scanCopiedState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells, Tape.read,
         Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
   · cases right <;>
-      simp [description, scanCopiedState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, scanCopiedState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells, Tape.read,
         Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
   · cases right <;>
-      simp [description, scanCopiedState, writeOneState,
-        writeXState, writeYState, runConfig, stepConfig,
+      simp [description, scanCopiedState, runConfig, stepConfig,
         lookupTransition, Matches, transition, tapeAtCells, Tape.read,
         Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
   · exact False.elim (hvalid rfl)
@@ -690,7 +686,7 @@ private theorem reverseTokenStack_reverse
           reverseTokenStack_append rest.reverse [(x, y)]
         _ = (cellTokenBits ((x, y) :: rest)).reverse.map some := by
           simp [reverseTokenStack, cellTokenBits, ih,
-            List.reverse_append, List.map_append, List.append_assoc]
+            List.map_append, List.append_assoc]
 
 private theorem cellTokenBits_append
     (left right : List (Bool × Bool)) :
@@ -763,7 +759,7 @@ private theorem run_back_rev
       rw [run_skip_to_next]
       rw [ih]
       rcases pair with ⟨x, y⟩
-      simp only [Prod.fst, Prod.snd, List.reverse_cons]
+      simp only [List.reverse_cons]
       have hbits :
           cellTokenBits (List.append rest.reverse [(x, y)]) =
             List.append (cellTokenBits rest.reverse)
@@ -900,7 +896,7 @@ private theorem run_cycle
     rw [show 4 * (remaining.length + 1) =
         Nat.succ (Nat.succ (Nat.succ (Nat.succ
           (4 * remaining.length)))) by lia]
-    simp only [List.replicate_succ, List.cons_append, scratchTail]
+    simp only [List.replicate_succ, scratchTail]
     rfl
   have hwrite :=
     run_write_copied_cell x y
@@ -928,7 +924,7 @@ private theorem run_cycle
               (List.append (doneBits.reverse.map some)
                 (List.append ((ticksBits (count + 1)).reverse.map some)
                   (gapBaseLeft base gap)))) := by
-    simp [countLeft, List.map_append, List.append_assoc]
+    simp [countLeft]
   have hback :=
     run_back_to_done remaining
       (List.append ((ticksBits (count + 1)).reverse.map some)
@@ -941,7 +937,7 @@ private theorem run_cycle
             [x]).map some)
           (some y :: scratchTail) =
         List.append (copiedNextBits.map some) scratchTail := by
-    simp [copiedNextBits, List.reverse_append, List.map_append,
+    simp [copiedNextBits, List.map_append,
       List.append_assoc]
   let cycleSteps : Nat :=
     10 +
@@ -1002,8 +998,7 @@ private theorem run_finish
   simp [description, cycleTape, copiedTargetTape, cellTokenBits,
     runConfig, stepConfig, lookupTransition, Matches, transition,
     tapeAtCells, Tape.read, Tape.write, Tape.move,
-    Tape.moveLeft, Tape.moveRight, List.reverse_append,
-    List.map_append, List.append_assoc]
+    Tape.moveRight, List.reverse_append]
   generalize htail :
       ((cellTokenBits cells).map some ++ (none :: padding)) = tail
   cases tail <;> rfl
@@ -1109,14 +1104,12 @@ theorem copiedTargetTape_move_left
   | nil =>
       simp [copiedTargetTape, shiftedBaseLeft, cellTokenBits,
         leadingBlankLeftShiftSourceTapeWithPadding, tapeAtCells,
-        Tape.move, Tape.moveLeft, List.reverse_append,
-        List.map_append, List.append_assoc]
+        Tape.move, Tape.moveLeft, List.reverse_append]
   | cons pair rest =>
       rcases pair with ⟨x, y⟩
       simp [copiedTargetTape, shiftedBaseLeft, cellTokenBits,
         leadingBlankLeftShiftSourceTapeWithPadding, tapeAtCells,
-        Tape.move, Tape.moveLeft, List.reverse_append,
-        List.map_append, List.append_assoc]
+        Tape.move, Tape.moveLeft, List.reverse_append]
 
 def copyThenLeftShiftDescription : MachineDescription :=
   seqSubroutine description leadingBlankLeftShiftDescription Direction.left
@@ -1190,8 +1183,7 @@ theorem leftShiftTarget_eq_gapSource
     shiftedBaseLeft, gapBaseLeft,
     rightBlankLocalGapCompactorSourceTapeWithBaseAndRight,
     rightBlankLocalGapBaseLeft, tapeAtCells,
-    hbaseMap, List.reverse_append,
-    List.map_append, List.append_assoc]
+    hbaseMap, List.reverse_append]
   have hgap :
       List.replicate (gap + 1) (none : Option Bool) =
         none :: List.replicate gap none := by

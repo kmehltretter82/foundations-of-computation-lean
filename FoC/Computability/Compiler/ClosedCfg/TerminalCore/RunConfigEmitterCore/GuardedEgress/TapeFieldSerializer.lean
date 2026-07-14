@@ -128,7 +128,7 @@ theorem headExtractedTape_eq_rightSource (i : Index) :
     RightLengthCopy.sourceTape, leftHeadFieldBits,
     rightCellTokenBits_eq_quotedPairBits,
     cellCodeBits_reverse_map_some,
-    headScratch, List.append_assoc]
+    headScratch]
 
 def leftHeadRightDescription : MachineDescription :=
   canonicalSeqDescription leftAndHeadDescription
@@ -260,7 +260,7 @@ theorem description_run
     encodeCodeSymbolAsInput, runConfig, stepConfig,
     lookupTransition, Matches, transition, tapeAtCells,
     Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight,
-    List.reverse_append, List.map_append, List.append_assoc]
+    List.reverse_append]
 
 theorem description_haltsFromTape
     (pre : Word Bool) (blankTail : Nat)
@@ -280,7 +280,7 @@ theorem targetTape_eq_separator
     targetTape pre blankTail right =
       rawBoundaryLengthCursorSeparatorTape pre (blankTail + 4) right := by
   simp [targetTape, rawBoundaryLengthCursorSeparatorTape,
-    List.replicate_succ, List.append_assoc]
+    List.replicate_succ]
 
 end LeftGuardRemover
 
@@ -601,7 +601,7 @@ private theorem run_seek_blanks (n : Nat)
             List.append (List.replicate n (none : Option Bool)) right <;>
           simp [seekEraseDescription, runConfig, stepConfig,
             lookupTransition, Matches, transition, tapeAtCells,
-            Tape.read, Tape.write, Tape.move, Tape.moveRight, hrest]
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
       rw [hstep]
       have ih' := ih (none :: left)
       rw [ih']
@@ -641,7 +641,7 @@ private theorem run_scan_present (bits : List Bool)
           cases hrest : List.append (rest.map some) right <;>
           simp [seekEraseDescription, runConfig, stepConfig,
             lookupTransition, Matches, transition, tapeAtCells,
-            Tape.read, Tape.write, Tape.move, Tape.moveRight, hrest]
+            Tape.read, Tape.write, Tape.move, Tape.moveRight]
       rw [hstep]
       rw [ih (some bit :: left)]
       simp [List.reverse_cons, List.map_append, List.append_assoc]
@@ -755,7 +755,7 @@ theorem seekEraseDescription_haltsFromTape
         List.append (List.replicate blankSteps none)
           (List.append ((false :: tail).map some) (none :: padding)) by
       simp [blankSteps, tail,
-        List.replicate_succ, List.append_assoc]]
+        List.replicate_succ]]
     rw [hseek]
     rw [runConfig_add]
     simp only [List.map_cons]
@@ -769,10 +769,7 @@ theorem seekEraseDescription_haltsFromTape
     rw [hboundary]
     rw [hboundaryShape]
     rw [herase]
-    simp [erasedBoundaryTape, blankSteps, tail,
-      payloadBits, scanTailBits, guardBits,
-      cellCodeBits, encodeCell, encodeCodeWordAsInput,
-      encodeCodeSymbolAsInput,
+    simp [erasedBoundaryTape, blankSteps, payloadBits,
       List.reverse_append, List.map_append, List.append_assoc]
   constructor
   · simpa using congrArg Configuration.state hfull
@@ -972,8 +969,7 @@ theorem gapLocatorDescription_haltsFrom_rewoundPayload
           rw [runConfig_add]
           rw [hblanks]
           rw [hfinish]
-          simp [restoredSourceTape, right, hrev,
-            List.replicate_succ, List.append_assoc]
+          simp [restoredSourceTape, right, hrev]
         exact hfull
 
 def seekEraseRewindDescription : MachineDescription :=
@@ -1212,8 +1208,7 @@ theorem rightGuardRemovedTape_eq_rightLengthSource (i : Index) :
     RightGuardRemover.markerBits,
     RightLengthCopy.sourceTape,
     RightLengthCopy.markerBits_eq,
-    correctedRightPaddingTail, guardLogicalTape,
-    List.map_append, List.append_assoc,
+    correctedRightPaddingTail,
     List.replicate_succ]
   congr 1
   exact congrArg
@@ -1306,8 +1301,7 @@ theorem markerTarget_move_left_move_right (i : Index) :
             ((guardLogicalTape i.finalTape).right.map
               logicalCellPair)).map some)
           (none :: rewindPadding i))
-  simp [RawPairMarker.targetTape, quotedPairBits, tapeAtCells,
-    List.map_append, List.append_assoc]
+  simp [RawPairMarker.targetTape, quotedPairBits, tapeAtCells]
 
 def markedTapeFieldSerializerDescription : MachineDescription :=
   canonicalSeqDescription RawPairMarker.markerScanDescription
@@ -1356,8 +1350,7 @@ theorem rightTicksBits_append_tickBits_commute (n : Nat) :
                 rw [ih]
         _ = List.append RightLengthCopy.tickBits
               (RightLengthCopy.ticksBits (Nat.succ n)) := by
-                simp [RightLengthCopy.ticksBits,
-                  List.append_assoc]
+                simp [RightLengthCopy.ticksBits]
 
 theorem rightTicksDoneBits_eq_stageNatBits (n : Nat) :
     List.append (RightLengthCopy.ticksBits n)
@@ -1383,14 +1376,13 @@ theorem rightTicksDoneBits_eq_stageNatBits (n : Nat) :
         _ = List.append RightLengthCopy.tickBits
               (List.append (RightLengthCopy.ticksBits n)
                 RightLengthCopy.doneBits) := by
-                simp [List.append_assoc]
+                simp
         _ = List.append RightLengthCopy.tickBits
               (stageNatBits n) := by
                 rw [ih]
         _ = stageNatBits (Nat.succ n) := by
-              simpa [RightLengthCopy.tickBits,
-                encodeCodeSymbolAsInput] using
-                (stageNatBits_succ n).symm
+              simp [RightLengthCopy.tickBits,
+                encodeCodeSymbolAsInput]
 
 theorem rightCellTokenBits_map_logicalCellPair
     (cells : List (Option Bool)) :

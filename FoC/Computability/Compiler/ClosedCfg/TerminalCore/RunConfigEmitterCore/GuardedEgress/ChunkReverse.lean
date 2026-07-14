@@ -291,7 +291,7 @@ private theorem run_scan_blanks (n : Nat)
             List.append (List.replicate n (none : Option Bool)) right <;>
           simp [description, runConfig, stepConfig, lookupTransition,
             Matches, transition, tapeAtCells, Tape.read, Tape.write,
-            Tape.move, Tape.moveRight, htail]]
+            Tape.move, Tape.moveRight]]
       rw [ih (none :: left)]
       change
         Configuration.mk 5
@@ -515,11 +515,10 @@ private theorem run_skip_guard (x y : Bool)
         tape := outputAnchorTape bitsRev []
           (List.append (markerBits.map some) tail) } := by
   cases x <;> cases y <;> cases bitsRev <;> cases tail <;>
-    simp_all [description, markerBits, returnState, guardSkipOneState,
-      guardSkipTwoState, guardSkipThreeState, outputScanState,
+    simp_all [description, markerBits, returnState, outputScanState,
       outputAnchorTape, runConfig, stepConfig, lookupTransition, Matches,
       transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.append_assoc]
+      Tape.moveLeft]
 
 private theorem run_output_scan (x y : Bool)
     (hvalid : (x, y) ≠ (true, true))
@@ -564,8 +563,8 @@ private theorem run_write_cell (x y : Bool)
         tape := tapeAtCells
           [some y, some x, some true, some false] right } := by
   cases x <;> cases y <;> cases right <;>
-    simp_all [description, outputScanState, writeXState, writeOneState,
-      writeZeroState, runConfig, stepConfig, lookupTransition, Matches,
+    simp_all [description, outputScanState, runConfig, stepConfig,
+      lookupTransition, Matches,
       transition, tapeAtCells, Tape.read, Tape.write, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
@@ -641,8 +640,7 @@ private theorem run_check_cells (cells : List (Bool × Bool))
             List.append ((quotedPairBits rest).map some) right by rfl]
       rw [run_check_cell x y hxy]
       rw [ih (some y :: some x :: some true :: some false :: left) hrest]
-      simp [quotedPairBits, List.reverse_append, List.map_append,
-        List.append_assoc]
+      simp [quotedPairBits, List.map_append, List.append_assoc]
 
 private theorem run_check_cells_marker (cells : List (Bool × Bool))
     (first : Option Bool) (left right : List (Option Bool))
@@ -794,9 +792,7 @@ private theorem run_cycle (processed rest : List (Bool × Bool))
   rw [show outRev.reverse = quotedPairBits processed.reverse by
     simp [outRev]]
   rw [hcheck]
-  simp [gap, outRev, suffix, tail, cycleActualTape, markerBits,
-    quotedPairBits, List.reverse_append, List.map_append,
-    List.append_assoc, Nat.add_comm]
+  simp [gap, suffix, tail, cycleActualTape, markerBits, Nat.add_comm]
 
 private theorem run_cycles (processed remaining : List (Bool × Bool))
     (right : List (Option Bool))
