@@ -114,30 +114,60 @@ theorem candidateSimulatorRetargetedBlock_no_continuation_source
       hsimulator t ht
   lia
 
-/-- Exact candidate-simulator execution after copying and halt retargeting.
-The endpoint control state is the caller continuation, while the output tape is
-the exact padded tape promised by the #18-facing simulator contract. -/
+/-- Candidate-simulator execution after copying and halt retargeting under the
+honest equivalence-valued #18 contract.  The copied block reaches the caller's
+continuation state on an actual output tape equivalent to the canonical
+simulator result; no canonical blank-window representative is required. -/
+theorem candidateSimulatorRetargetedBlock_haltsFromTapeEquiv
+    {runner simulator : MachineDescription}
+    {offset continuation : Nat}
+    (hcontinuation : continuation < offset)
+    (hsimulator : CandidateSimulatorEquivSpec runner simulator)
+    (w : Word Bool) (i : ScheduleIndex) :
+    (CandidateSimulatorRetargetedBlock simulator offset continuation).HaltsFromTapeEquiv
+      (Tape.input (SerializedPhaseBits .ready runner w i))
+      (FixedDescriptionBoundedSimulatorCanonicalOutputTape runner
+        (CandidateInitialLayout runner w i)) := by
+  rcases hsimulator.right w i with ⟨actual, hactual, hequiv⟩
+  refine ⟨actual, ?_, hequiv⟩
+  apply MachineDescription.offsetRetargetDescription_haltsFromTape
+    hcontinuation hsimulator.left.right
+  simpa [serializedReadyBits_eq_fixedSimulatorInput,
+    FixedDescriptionBoundedSimulatorInput, SimulatorLayout.tape] using hactual
+
+/-- Candidate-simulator execution after copying and halt retargeting.  The
+endpoint control state is the caller continuation; the theorem exposes the
+actual output representative together with its equivalence to the padded
+candidate tape. -/
 theorem candidateSimulatorRetargetedBlock_runsToContinuation
     {runner simulator : MachineDescription}
     {offset continuation : Nat}
     (hcontinuation : continuation < offset)
-    (hsimulator : CandidateSimulatorPaddedSpec runner simulator)
+    (hsimulator : CandidateSimulatorEquivSpec runner simulator)
     (w : Word Bool) (i : ScheduleIndex) :
-    exists steps : Nat,
+    exists steps : Nat, exists actual : Tape Bool,
       (CandidateSimulatorRetargetedBlock simulator offset continuation).runConfig
           steps
           { state :=
               (CandidateSimulatorRetargetedBlock
                 simulator offset continuation).start
             tape := Tape.input (SerializedPhaseBits .ready runner w i) } =
-        { state := continuation
-          tape :=
-            FixedDescriptionBoundedSimulatorPaddedOutputTape runner
-              (CandidateInitialLayout runner w i) } := by
-  have hhalts :=
-    MachineDescription.offsetRetargetDescription_haltsFromTape
-      hcontinuation hsimulator.left.right (hsimulator.right w i)
-  exact MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts
+        { state := continuation, tape := actual } ∧
+      Tape.Equiv actual
+        (FixedDescriptionBoundedSimulatorPaddedOutputTape runner
+          (CandidateInitialLayout runner w i)) := by
+  rcases
+      candidateSimulatorRetargetedBlock_haltsFromTapeEquiv
+        hcontinuation hsimulator w i with
+    ⟨actual, hactual, hequiv⟩
+  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hactual with
+    ⟨steps, hrun⟩
+  refine ⟨steps, actual, ?_, ?_⟩
+  · simpa using hrun
+  · exact Tape.Equiv.trans hequiv
+      (Tape.Equiv.symm
+        (FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
+          runner (CandidateInitialLayout runner w i)))
 
 end BoundedFuelPairSearch
 
