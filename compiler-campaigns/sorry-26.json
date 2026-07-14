@@ -12,7 +12,7 @@
   "name": "sorry-26-contextual-nested-layout-restorer",
   "paths": [
     "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser.lean",
-    "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser"
+    "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser/Restorer.lean"
   ],
   "required_axiom_clean": [
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction",
