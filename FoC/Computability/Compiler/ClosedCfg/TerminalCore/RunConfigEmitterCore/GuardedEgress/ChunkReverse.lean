@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.RawPairMarker
-import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorLoop
+import FoC.Computability.Compiler.FST.CountWindow.RawBoundary.Impl.LengthCursorAddition
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
 namespace GuardedEgress.ChunkReverse
