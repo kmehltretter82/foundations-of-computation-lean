@@ -483,8 +483,10 @@ theorem leads_le
 ## Head repositioning and workspace cleanup
 -/
 
-/-- Cross the erased head marker, advancing tape 0 to the first reconstructed
-left cell and turning tape 2 back toward the copied fields. -/
+/-- Mark the first surplus tape-0 workspace cell, advance to the first
+reconstructed left cell, and turn tape 2 back toward the copied fields.  The
+temporary marker makes the semantic left boundary detectable after physical
+three-tape lowering. -/
 theorem leads_position_start
     (hit : Bool) (tape0Left tape0Right : List (Option Bool))
     (T1 : Tape Bool) (sourceLeft : List (Option Bool))
@@ -495,9 +497,9 @@ theorem leads_position_start
         (tapeAtCells tape0Left (none :: tape0Right)) T1
         (tapeAtCells sourceLeft (none :: erasedRight)))
       (cfg (.pos3 hit)
-        (tapeAtCells (none :: tape0Left) tape0Right) T1
+        (tapeAtCells (some false :: tape0Left) tape0Right) T1
         (headTape sourceLeft (none :: erasedRight))) :=
-  step0R2L_headTape (state_mem (.le0 hit)) (fun _ => rfl)
+  step0R_write2L_headTape (state_mem (.le0 hit)) (fun _ => rfl)
     tape0Left tape0Right T1 hsourceLeft erasedRight
 
 /-- Erase the copied left-cell tokens backward while moving tape 0 right once
@@ -865,6 +867,15 @@ def actualConfigTape (L : SimulatorLayout) : Tape Bool :=
       (none :: reconstructionBaseLeft L))
     (L.config.tape.head :: List.append L.config.tape.right [])
 
+/-- Exact configuration tape produced after the CfgHit table marks the first
+surplus reconstruction cell.  A later physical repair phase consumes this
+sentinel and restores the canonical guarded boundary. -/
+def markedActualConfigTape (L : SimulatorLayout) : Tape Bool :=
+  tapeAtCells
+    (emittedCells L.config.tape.left.reverse
+      (some false :: reconstructionBaseLeft L))
+    (L.config.tape.head :: List.append L.config.tape.right [])
+
 /-- Physical metadata tape produced by the concrete table.  Its only
 difference from the classified target is far-right blank residue. -/
 def actualMetadataTape
@@ -878,7 +889,7 @@ private theorem leads_layout
       (cfg .hdr0 (headerStartTape L)
         (FieldDecomposition.stageCounterTape L.stage)
         (ClassifiedBoundary.metadataHitTapeWithSelectorMarked D L))
-      (cfg .halt (actualConfigTape L)
+      (cfg .halt (markedActualConfigTape L)
         (FieldDecomposition.stageCounterTape L.stage)
         (actualMetadataTape D L)) := by
   refine Leads.trans
@@ -942,7 +953,7 @@ private theorem leads_layout
   rw [show doneBitsF.reverse = doneRevBits from rfl]
   refine Leads.trans
     (leads_pos_cells L.hit L.config.tape.left.reverse _ _ _ _ _) ?_
-  unfold actualConfigTape actualMetadataTape finalErasedRight
+  unfold markedActualConfigTape actualMetadataTape finalErasedRight
   unfold workspaceBaseLeft
   exact leads_erase_length_restore L.hit L.config.tape.left.length
     _ _ _ _
@@ -1121,6 +1132,16 @@ def representedTapes
   , FieldDecomposition.stageCounterTape L.stage
   , actualMetadataTape D L ]
 
+/-- Exact logical-tape representatives returned by the marked CfgHit table.
+Unlike {name}`representedTapes`, this family is an internal physical-repair
+boundary and is not logically equivalent to the canonical family: tape 0
+still contains the temporary nonblank sentinel. -/
+def markedRepresentedTapes
+    (D : MachineDescription) (L : SimulatorLayout) : List (Tape Bool) :=
+  [ markedActualConfigTape L
+  , FieldDecomposition.stageCounterTape L.stage
+  , actualMetadataTape D L ]
+
 theorem representedTapes_equiv
     (D : MachineDescription) (L : SimulatorLayout) :
     LogicalTapeListEquiv (representedTapes D L)
@@ -1137,7 +1158,7 @@ theorem haltsWithTapes_layout
         (headerStartTape L)
         (FieldDecomposition.stageCounterTape L.stage)
         (ClassifiedBoundary.metadataHitTapeWithSelectorMarked D L))
-      (representedTapes D L) := by
+      (markedRepresentedTapes D L) := by
   rcases (leads_layout D L).to_runConfig with ⟨steps, hrun⟩
   exact ⟨steps, hrun⟩
 
@@ -1149,11 +1170,11 @@ theorem loweredDescription_subroutineReady :
   lowerStructured3Description_subroutineReady
     description_wellFormed description_supportsReadWriteRows3
 
-theorem loweredDescription_haltsFromTapeEquiv
+theorem loweredDescription_haltsFromMarkedTapeEquiv
     (D : MachineDescription) (L : SimulatorLayout) :
     loweredDescription.HaltsFromTapeEquiv
       (targetTape D L)
-      (encodedGuardedStructuredTapes (representedTapes D L)) := by
+      (encodedGuardedStructuredTapes (markedRepresentedTapes D L)) := by
   unfold loweredDescription targetTape
   apply lowerStructured3Description_haltsFromConfigWithTapes
     description_wellFormed description_haltTransitionFree
@@ -1166,14 +1187,5 @@ theorem loweredDescription_haltsFromTapeEquiv
   · rfl
   · exact haltsWithTapes_layout D L
   done
-
-/-- The concrete table closes the honest represented-target materialization
-frontier. -/
-theorem construction_core
-    (D : MachineDescription) : ConfigTapeAndHitConstruction D :=
-  ⟨loweredDescription, representedTapes D,
-    loweredDescription_subroutineReady,
-    representedTapes_equiv D,
-    loweredDescription_haltsFromTapeEquiv D⟩
 
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.MetadataPrefix.ConfigTapeAndHit

@@ -485,6 +485,36 @@ theorem step0R2L_headTape
           (keepR_apply_tapeAtCells left0 cell0 right0) rfl
           (keepL_apply_tapeAtCells left2 previous2 cell2 right2)
 
+/-- Write while moving tape 0 right and move tape 2 left, re-splitting an
+abstract nonempty tape-2 left block. -/
+theorem step0R_write2L_headTape
+    {s target : State} (hs : s ∈ states)
+    {cell0 value0 cell2 : Option Bool}
+    (hnext : forall r1 : Option Bool,
+      next s cell0 r1 cell2 =
+        some ⟨target, writeR value0, keepS, keepL⟩)
+    (left0 right0 : List (Option Bool)) (T1 : Tape Bool)
+    {left2Full : List (Option Bool)} (hleft2 : left2Full ≠ [])
+    (right2 : List (Option Bool)) :
+    Leads
+      (cfg s
+        (tapeAtCells left0 (cell0 :: right0)) T1
+        (tapeAtCells left2Full (cell2 :: right2)))
+      (cfg target
+        (tapeAtCells (value0 :: left0) right0) T1
+        (headTape left2Full (cell2 :: right2))) := by
+  cases left2Full with
+  | nil => exact False.elim (hleft2 rfl)
+  | cons previous2 left2 =>
+      exact
+        leads_step (s := s) (target := target) hs
+          (T0 := tapeAtCells left0 (cell0 :: right0)) (T1 := T1)
+          (T2 := tapeAtCells (previous2 :: left2) (cell2 :: right2))
+          (a0 := writeR value0) (a1 := keepS) (a2 := keepL)
+          (hnext (Tape.read T1))
+          (writeR_apply_tapeAtCells value0 left0 cell0 right0) rfl
+          (keepL_apply_tapeAtCells left2 previous2 cell2 right2)
+
 /-- Move tape 0 right while erasing leftward on tape 2, re-splitting the
 remaining abstract tape-2 left block. -/
 theorem step0R2L_write_headTape

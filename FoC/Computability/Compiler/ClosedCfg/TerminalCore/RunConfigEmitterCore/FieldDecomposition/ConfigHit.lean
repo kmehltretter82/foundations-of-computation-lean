@@ -191,7 +191,8 @@ def next :
   | .turn1 hit, _, _, some _ => step2 keepR (.turn2 hit)
   | .turn2 hit, _, _, some _ => step2 keepR (.le0 hit)
   | .le0 hit, _, _, some false => step2 keepR (.le1 hit)
-  | .le0 hit, _, _, none => step02 keepR keepL (.pos3 hit)
+  | .le0 hit, _, _, none =>
+      step02 (writeR (some false)) keepL (.pos3 hit)
   | .le1 hit, _, _, some true => step2 keepR (.le2 hit)
   | .le2 hit, _, _, some v2 => step2 keepR (.le3 hit v2)
   | .le3 hit v2, _, _, some v3 =>
