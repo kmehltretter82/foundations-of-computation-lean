@@ -345,8 +345,10 @@ projector and is not widened to cover this interior-separator target.
   adapters for raw Boolean-word input decoding.
 - Why retired: both namespaces were facade-only and had no source, book, or
   semantic consumer.
-- Current route: the live BoolRawInput `Endpoint`, `EndpointContracts`, and
-  `Output` modules used by ProjTail.
+- Later retirement: the live base BoolRawInput specifications remain, but the
+  `Endpoint`, `EndpointContracts`, and `Output` facade branch was retired by
+  the sorry #22 cleanup checkpoint after its sole ProjTail importer was
+  removed. See the count-window input-materializer entry below.
 - Reconsider only if: a caller needs a statement not derivable directly from
   those three live modules; add only the caller-facing theorem.
 
@@ -367,6 +369,39 @@ projector and is not widened to cover this interior-separator target.
   modules, and `FST/CountWindow.lean`.
 - Reconsider only if: a real caller needs multiple fields of one route record.
   Prefer a direct theorem over recreating symmetric route/bundle conversions.
+
+### Facade-only count-window input-materializer output lattice
+
+- Deleting commit: this change (sorry #22 cleanup checkpoint).
+- Net reduction before the live #22 construction: 7,129 Compiler lines from
+  the deleted modules, plus the obsolete wrapper documentation.
+- Old paths: `ClosedCfg/ProjTail/ScratchBridge/Mat/{Endpoint,EndpointSpec,Generic,Output}.lean`
+  and `ClosedCfg/ProjTail/ScratchExtOutput.lean`, plus the unused
+  `ScratchBridge/InputMat/ConstWriters.lean` draft; the dependency-closed
+  `ScratchBridge/Output.lean`, `StructuredInputMaterializerOutput.lean`, and
+  `FST/BoolRawInput/{Endpoint,EndpointContracts,Output}.lean` facade branch.
+- Potentially reusable ideas: named separator/head positions for the guarded
+  three-tape input-materializer target and normalized-output conversions for
+  the scratch-extension boundary; a straight-line nine-cell guarded-blank
+  segment writer.
+- Why retired: every declaration in `ScratchExtOutput.lean` had no reference
+  outside that file, and the four `ScratchBridge/Mat` namespaces had no
+  qualified reference outside their own import chain. The only importer of
+  `ScratchExtOutput.lean` was the `ScratchExt.lean` barrel. Re-elaborating the
+  sole real facade consumer, `PostPaddingCloseout.lean`, with a direct
+  `ScratchBridge.Threaded` import passed before deletion. The growth checker
+  then exposed the five output/endpoint modules as an entirely unreachable
+  dependency-closed branch; import and declaration-reference audits found no
+  second consumer.
+- Current route: `ScratchExt.lean` re-exports the live
+  `ScratchBridge.Threaded` chain. Sorry #22 constructs the indexed guarded input
+  directly from the canonical `InputMatContracts`, the shared input-embedding
+  emitter (which already emits the guarded blank middle segment), and
+  target-local machine phases instead of traversing the symmetric
+  endpoint/output facade lattice.
+- Reconsider only if: a checked consumer needs one exact separator or head
+  projection not derivable from the live target definition. Add that fact at
+  the consumer; do not restore the conversion lattice wholesale.
 
 ### Superseded Dispatcher reader layout
 

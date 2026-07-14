@@ -1,0 +1,29 @@
+{
+  "allow_net_growth": 1500,
+  "architecture_review": {
+    "reason": "Close the count-window indexed guarded-input materializer with branch-padding canonicalization and target-local visible-layout length/output allocation; after migrating any genuinely used endpoint facts, retire the self-only ScratchBridge/Mat and ScratchExtOutput facade lattice that this live route supersedes.",
+    "recorded_against": "20ed5d892afedbd38e3509da11559b8d1d1be83c"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/InputMat/RejectPaddingCleaner.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/InputMatFrontier.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/Threaded.lean",
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/ProjTail/PostPaddingCloseout.lean"
+  ],
+  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core",
+  "name": "sorry-22-count-window-bool-word-materializer",
+  "paths": [
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExt.lean",
+    "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchExtOutput.lean",
+    "FoC/Computability/Compiler/Core/CommonGround/FiniteTransducers/StructuredInputMaterializerOutput.lean",
+    "FoC/Computability/Compiler/FST/BoolRawInput/Endpoint.lean",
+    "FoC/Computability/Compiler/FST/BoolRawInput/EndpointContracts.lean",
+    "FoC/Computability/Compiler/FST/BoolRawInput/Output.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixStructuredThreadedConstruction_core"
+  ]
+}

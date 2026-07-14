@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtOutput
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Threaded
 
 set_option doc.verso true
 
@@ -23,11 +23,4 @@ implementation is split by responsibility:
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Threaded` carries
   the lowered structured extractor bridge through the current scratch-count
   materializer scaffold.
-- {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Output` records
-  normalized-output endpoint views for the count-window bridge wrappers.
-- {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Mat.Output` records
-  normalized-output endpoint views for the structured input materializer
-  boundary inside the count-window bridge.
-- {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtOutput` records
-  normalized-output endpoint views for the scratch-extension boundary.
 -/

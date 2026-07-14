@@ -2,13 +2,7 @@
   "modules": [
     {
       "category": "active",
-      "intended_consumer": "Sorry #22 count-window input materializer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.ConstWriters",
-      "reason": "Checked constant-writer phase for the active materializer frontier."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "ScratchBridge.InputMat.ConstWriters and sorry #22",
+      "intended_consumer": "Sorry #22 target-local guarded-input phases",
       "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.Shapes",
       "reason": "Checked target and padding shape lemmas for the active materializer frontier."
     },
