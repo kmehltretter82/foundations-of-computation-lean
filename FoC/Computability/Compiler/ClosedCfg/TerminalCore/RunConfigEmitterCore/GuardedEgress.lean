@@ -799,15 +799,6 @@ def Construction : Prop :=
   PipelineContracts.EquivInputEquivOutputConstruction
     Index.source Index.target
 
-/-- The sole remaining leaf: realize the already-checked exact semantic
-parse-and-assemble transform by a finite normalizer satisfying the viable
-equivalent-input/equivalent-output contract. -/
-def FiniteRealizationConstruction : Prop := Construction
-
-theorem construction_of_finiteRealization
-    (hrealize : FiniteRealizationConstruction) : Construction :=
-  hrealize
-
 end GuardedEgress
 end RunConfigEmitterCore
 end BoundedLayoutRunner

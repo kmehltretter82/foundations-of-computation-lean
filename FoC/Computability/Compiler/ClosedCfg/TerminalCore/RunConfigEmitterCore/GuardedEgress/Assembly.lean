@@ -178,10 +178,5 @@ theorem construction_core : Construction := by
     Assembly.construction_of_metadataWitnessBridge
       MetadataWitnessBuild.construction
 
-/-- The checked guarded-egress machine inhabits the finite-realization leaf. -/
-theorem finiteRealizationConstruction_core :
-    FiniteRealizationConstruction := by
-  exact construction_core
-
 end GuardedEgress
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
