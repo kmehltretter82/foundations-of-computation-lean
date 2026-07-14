@@ -472,6 +472,45 @@ projector and is not widened to cover this interior-separator target.
   Recover that theorem from `8a01ac7b^`, state it in the consumer's honest
   exact/equivalence currency, and do not restore the aggregate route lattice.
 
+### Retired #18 exact post-scan, scratch, and FST facade
+
+- Deleting commit: `ed1bc3a6` (`Retire the exact #18 facade`).
+- Net reduction: 820 Compiler lines (`+6/-826`).
+- Old paths: `ClosedCfg/TerminalCore.lean`,
+  `TerminalCore/Adapters.lean`, `Contracts.lean`, `Routes.lean`, the broad
+  `RunConfigEmitterCore.lean` aggregator,
+  `RunConfigEmitterTheory/Output.lean`, and
+  `Simulator/PaddedEmitter/Terminal.lean`.
+- Old surface: the exact post-right-end-left-to-scratch construction (the last
+  direct #18 `sorry`), its exact terminal-source and right-shifted-source
+  descendants, the scratch/right-scratch/FST adapter chain, and the exact
+  padded-emitter terminal wrapper.  Unconsumed right-end-left cell and
+  normalized-output diagnostics were removed from `RunConfigEmitter.lean` at
+  the same checkpoint.
+- Potentially reusable idea: exact finite scans from the restored layout word
+  through a right-end-left handoff, plus conversions among scratch-padded and
+  FST endpoint presentations.
+- Why retired: exact conversion to one canonical scratch tape is stronger than
+  every current consumer needs and conflicts with the represented-window
+  contract repaired earlier in #18.  After the public migration in `206a31b2`,
+  declaration and import searches found no consumer of the exact facade;
+  `RunConfigEmitterEquiv.lean`, the public padded emitter, and the #12/#14
+  consumers compiled with warnings as errors through the equivalence route.
+- Current route: `RunConfigEmitter.lean` retains only the checked
+  right-end-left scan and
+  `fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fullPipeline_configRunner`.
+  `runConfigEmitterFullPipelineConstruction_configRunner` and
+  `fixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner`
+  feed `fixedDescriptionBoundedSimulatorEquivConstruction_configRunner`; the
+  stable public scaffold theorem delegates to that construction.  The
+  represented-boundary impossibility facts in
+  `FieldDecomposition/RepBoundary.lean` remain as guardrails.
+- Reconsider only if: a checked caller demonstrably observes the exact
+  physical padding or exact FST endpoint, and first proves both context-length
+  feasibility and target functionality on its source family.  Recover the
+  smallest required scan or shape lemma from `ed1bc3a6^`; do not restore the
+  exact construction lattice, compatibility aggregators, or terminal wrapper.
+
 ### Superseded #18 standalone selector execution lattice
 
 - Deleting commit: `0e5733b9` (`Splice the selector into the dispatcher`).
