@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessDispatch
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessKnownRuns
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.WitnessStageRuns
 
 set_option doc.verso true
@@ -213,6 +214,18 @@ def KnownNormalizerRun
     (MetadataWitnessStage.preMarkerTape i
       (MetadataWitnessBridge.sourceMetadataTokens i) rightPadding)
 
+theorem knownNormalizerRun
+    (i : Index) (finalState : Nat)
+    (hwitness :
+      loopDispatcherDoneWitness i.description i.sourceLayout =
+        .known finalState) :
+    KnownNormalizerRun i finalState
+      (MetadataWitnessStage.Normalizer.knownRightPadding i.scratchWidth
+        i.sourceLayout.config.state) := by
+  unfold KnownNormalizerRun
+  exact MetadataWitnessStage.Normalizer.description_runsFrom_known
+    i i.scratchWidth finalState hwitness
+
 theorem dispatch_haltsFromTapeEquiv_known_of_normalizer
     (i : Index) (finalState rightPadding : Nat)
     (hwitness :
@@ -295,6 +308,37 @@ theorem description_known_of_normalizer
   exact ⟨output, houtput,
     Tape.Equiv.trans hequiv
       (MetadataWitnessStage.markedTape_equiv_readyTape i rightPadding)⟩
+
+theorem description_known
+    (i : Index) (finalState : Nat)
+    (hwitness :
+      loopDispatcherDoneWitness i.description i.sourceLayout =
+        .known finalState)
+    (actual : Tape Bool)
+    (hactual : Tape.Equiv actual
+      (TapeFieldSerializer.correctedSerializedTapeFieldTarget i)) :
+    exists layout : MetadataWitnessBridge.ReadyLayout,
+      description.HaltsFromTapeEquiv actual
+        (MetadataWitnessBridge.readyTape i layout) := by
+  exact description_known_of_normalizer i finalState
+    (MetadataWitnessStage.Normalizer.knownRightPadding i.scratchWidth
+      i.sourceLayout.config.state)
+    hwitness (knownNormalizerRun i finalState hwitness) actual hactual
+
+/-!
+## Public construction
+-/
+
+theorem spec : MetadataWitnessBridge.Spec description := by
+  constructor
+  · exact description_subroutineReady
+  · intro i finalState hwitness actual hactual
+    exact description_known i finalState hwitness actual hactual
+  · intro i hwitness actual hactual
+    exact description_other i hwitness actual hactual
+
+theorem construction : MetadataWitnessBridge.Construction := by
+  exact ⟨description, spec⟩
 
 end GuardedEgress.MetadataWitnessBuild
 end FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
