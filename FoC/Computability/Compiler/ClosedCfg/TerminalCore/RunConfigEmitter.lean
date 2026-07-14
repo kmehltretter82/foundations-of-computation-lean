@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.FieldTapes
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.TerminalAdapter
 
 set_option doc.verso true
 
@@ -27,6 +28,14 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_config
     (DovetailInitialLayoutInitializer.tapeAtCells
       (List.append ((SimulatorLayout.asBoolInput L).reverse.map some)
         [none]) [none])
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_eq_pipelineSource_configRunner
+    (L : SimulatorLayout) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+        L =
+      RunConfigEmitterCore.InputMaterializer.rightEndLeftSourceTape
+        (SimulatorLayout.asBoolInput L) := by
+  rfl
 
 -- The post-scan leaf starts on the last source bit immediately left of the
 -- terminal blank; its visible cells are still the canonical field source.
@@ -281,6 +290,37 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstr
       FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchSpec_configRunner
         D postScan
 
+def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivSpec_configRunner
+    (D postScan : MachineDescription) : Prop :=
+  postScan.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      postScan.HaltsFromTapeEquiv
+        (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+          L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+          D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists postScan : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivSpec_configRunner
+        D postScan
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_of_fullPipeline_configRunner
+    (hfull : RunConfigEmitterCore.FullPipeline.Construction) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_configRunner := by
+  intro D
+  rcases
+      (RunConfigEmitterCore.FullPipeline.terminalConstruction_of_fullPipeline
+        hfull) D with
+    ⟨postScan, hpostScan⟩
+  refine ⟨postScan, hpostScan.left, ?_⟩
+  intro L
+  simpa only [
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_eq_pipelineSource_configRunner]
+    using hpostScan.right L
+
 /--
 Post-scan finite-table leaf: parse the encoded simulator layout from the
 right-end-left position, run the fixed description, and emit the exact
@@ -337,6 +377,39 @@ theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceCo
   fixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalSourceConstruction_of_rightEndLeft_configRunner
     fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_core_configRunner
     fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchConstruction_core_configRunner
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_rightEndLeft_configRunner
+    (hscan :
+      FixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_configRunner)
+    (hpost :
+      FixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_configRunner := by
+  rcases hscan with ⟨scanner, hscanner⟩
+  intro D
+  rcases hpost D with ⟨postScan, hpostScan⟩
+  refine ⟨SeqViaCanonical scanner postScan, ?_⟩
+  constructor
+  · exact SeqViaCanonical_subroutineReady hscanner.left hpostScan.left
+  intro L
+  apply SeqViaCanonical_haltsFromTapeEquiv_of_tapeEquiv
+  · exact hscanner.left
+  · exact hpostScan.left
+  · exact (hscanner.right L).toEquiv
+  · simpa only [
+      fixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_move_left_move_right_configRunner]
+      using
+        Tape.Equiv.refl
+          (FixedDescriptionBoundedSimulatorPaddedEmitterTerminalRightEndLeftTape_configRunner
+            L)
+  · exact hpostScan.right L
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_fullPipeline_configRunner
+    (hfull : RunConfigEmitterCore.FullPipeline.Construction) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_configRunner :=
+  fixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_of_rightEndLeft_configRunner
+    fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceToRightEndLeftConstruction_core_configRunner
+    (fixedDescriptionBoundedSimulatorPaddedEmitterPostRightEndLeftToScratchEquivConstruction_of_fullPipeline_configRunner
+      hfull)
 
 def FixedDescriptionBoundedSimulatorPaddedEmitterScratchFromTerminalRightShiftedSourceSpec_configRunner
     (D body : MachineDescription) : Prop :=
