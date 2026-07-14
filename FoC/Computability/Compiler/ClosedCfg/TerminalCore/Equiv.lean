@@ -1,4 +1,6 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Adapters
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Rewind
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RightShiftedSource
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.Specs
 
 set_option doc.verso true
 
