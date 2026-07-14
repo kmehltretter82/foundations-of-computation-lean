@@ -1,1 +1,1 @@
-import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitter
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterEquiv
