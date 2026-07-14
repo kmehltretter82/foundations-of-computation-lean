@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutScanner
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Restorer
 
 set_option doc.verso true
 
@@ -641,7 +641,11 @@ parsed source-fields shape.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction :
     SelectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction := by
-  sorry
+  refine ⟨nestedLayoutRestorerDescription,
+    nestedLayoutRestorerDescription_subroutineReady, ?_⟩
+  intro p
+  simpa [SelectedMergePaddedEmitterNestedLayoutContextParsedTape] using
+    nestedLayoutRestorerDescription_haltsFrom p
 
 /--
 Checked glue over the nested-layout materializer and restorer leaves.

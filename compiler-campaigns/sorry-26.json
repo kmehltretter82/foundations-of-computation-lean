@@ -1,0 +1,21 @@
+{
+  "allow_net_growth": 1200,
+  "architecture_review": {
+    "reason": "Close the exact contextual nested-layout restorer after the already-checked transition-remainder scanner; 400 lines were reassigned from the paired materializer after its reuse audit exposed a smaller route.",
+    "recorded_against": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser.lean"
+  ],
+  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction",
+  "name": "sorry-26-contextual-nested-layout-restorer",
+  "paths": [
+    "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser.lean",
+    "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterAfterHitPaddedNestedLayoutParsedConstruction"
+  ]
+}
