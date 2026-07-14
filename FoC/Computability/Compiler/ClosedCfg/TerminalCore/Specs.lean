@@ -35,6 +35,26 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterBodyConstruction_configRunner :
     exists body : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedEmitterBodySpec_configRunner D body
 
+/-- Honest terminal body contract.  The output word and head position are
+fixed, while irrelevant far-edge blank padding is retained only up to tape
+equivalence. -/
+def FixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivSpec_configRunner
+    (D body : MachineDescription) : Prop :=
+  body.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      body.HaltsFromTapeEquiv
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalSourceTape_configRunner
+          L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+          D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists body : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterBodyEquivSpec_configRunner
+        D body
+
 def FixedDescriptionBoundedSimulatorPaddedEmitterAfterTerminalRightShiftedSourceSpec_configRunner
     (D afterRight : MachineDescription) : Prop :=
   afterRight.SubroutineReady ∧
@@ -205,6 +225,24 @@ def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreConstruction
   forall D : MachineDescription,
     exists post : MachineDescription,
       FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreSpec_configRunner
+        D post
+
+def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivSpec_configRunner
+    (D post : MachineDescription) : Prop :=
+  post.SubroutineReady ∧
+    forall explicitLeftBlank : Bool,
+    forall L : SimulatorLayout,
+      post.HaltsFromTapeEquiv
+        (fixedDescriptionBoundedSimulatorPaddedEmitterTerminalTape_configRunner
+          explicitLeftBlank L)
+        (FixedDescriptionBoundedSimulatorPaddedEmitterScratchTape_configRunner
+          D L)
+
+def FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists post : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedScratchEmitterTerminalCoreEquivSpec_configRunner
         D post
 
 end BoundedLayoutRunner

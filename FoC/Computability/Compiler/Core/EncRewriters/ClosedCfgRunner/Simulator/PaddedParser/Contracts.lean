@@ -228,6 +228,33 @@ def FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRu
       FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
         D emitter
 
+/-- Honest emitter contract: the finite machine preserves the exact normalized
+simulator output while allowing harmless far-edge blank padding in its physical
+halting tape. -/
+def FixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_configRunner
+    (D emitter : MachineDescription) : Prop :=
+  emitter.SubroutineReady ∧
+    forall L : SimulatorLayout,
+      emitter.HaltsWithTapeEquiv
+        (SimulatorLayout.asBoolInput L)
+        (FixedDescriptionBoundedSimulatorPaddedOutputTape D L)
+
+def FixedDescriptionBoundedSimulatorPaddedEmitterEquivConstruction_configRunner :
+    Prop :=
+  forall D : MachineDescription,
+    exists emitter : MachineDescription,
+      FixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_configRunner
+        D emitter
+
+theorem fixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_of_exactShape_configRunner
+    {D emitter : MachineDescription}
+    (hemitter :
+      FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeSpec_configRunner
+        D emitter) :
+    FixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_configRunner
+      D emitter := by
+  exact ⟨hemitter.left, fun L => (hemitter.right L).toEquiv⟩
+
 def FixedDescriptionBoundedSimulatorPaddedParserEmitterConstruction_configRunner :
     Prop :=
   CommonGround.SimulatorLayouts.ClosedRecognizerConstruction ∧
@@ -260,6 +287,119 @@ def FixedDescriptionBoundedSimulatorPaddedParserEquivEmitterConstruction_configR
   FixedDescriptionBoundedSimulatorPaddedParserEquivConstruction_configRunner ∧
     FixedDescriptionBoundedSimulatorPaddedEmitterExactShapeConstruction_configRunner
 
+def FixedDescriptionBoundedSimulatorPaddedParserEquivEmitterEquivConstruction_configRunner :
+    Prop :=
+  FixedDescriptionBoundedSimulatorPaddedParserEquivConstruction_configRunner ∧
+    FixedDescriptionBoundedSimulatorPaddedEmitterEquivConstruction_configRunner
+
+theorem fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitterEquiv_configRunner
+    {D parser emitter : MachineDescription}
+    (hparser :
+      FixedDescriptionBoundedSimulatorPaddedParserEquivSpec_configRunner
+        parser)
+    (hemitter :
+      FixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_configRunner
+        D emitter) :
+    FixedDescriptionBoundedSimulatorEquivSpec D
+      (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+        parser emitter) := by
+  constructor
+  · exact seqSubroutine_subroutineReady hparser.left hemitter.left
+  · constructor
+    · intro L
+      rcases hparser.right.left L with
+        ⟨Tmid, hparserRun, hTmid⟩
+      have hbridge :
+          Tape.Equiv
+            (Tape.move Direction.left Tmid)
+            (Tape.input (SimulatorLayout.asBoolInput L)) := by
+        exact
+          Tape.Equiv.trans
+            (Tape.Equiv.move hTmid Direction.left)
+            (by
+              rw [CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape]
+              exact Tape.Equiv.refl _)
+      rcases hemitter.right L with
+        ⟨Temit, hemitterForwardWith, hTemit⟩
+      have hemitterFrom :
+          emitter.HaltsFromTape
+            (Tape.input (SimulatorLayout.asBoolInput L)) Temit := by
+        rcases hemitterForwardWith with ⟨n, hn⟩
+        exact
+          ⟨n, by
+            simpa [HaltsWithTapeIn, HaltsFromTapeIn,
+              initial] using hn⟩
+      rcases
+          HaltsFromTapeEquiv_of_input_equiv
+            (D := emitter) (Tape.Equiv.symm hbridge) hemitterFrom with
+        ⟨Tactual, hemitterActual, hTactual⟩
+      have hseq :
+          (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+            parser emitter).HaltsWithTape
+            (FixedDescriptionBoundedSimulatorInput L) Tactual :=
+        seqSubroutine_haltsWithTape_of_haltsWithTape
+          hparser.left hemitter.left hparserRun
+          (runConfig_eq_halt_of_haltsFromTape hemitterActual)
+      exact
+        ⟨Tactual, hseq,
+          Tape.Equiv.trans hTactual
+            (Tape.Equiv.trans hTemit
+              (FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
+                D L))⟩
+    · intro L
+      intro T
+      intro hhalt
+      rcases
+          seqSubroutine_haltsWithTape_inv
+            hparser.left hemitter.left hhalt with
+        ⟨Tmid, hparserRun, hemitterReach⟩
+      have hTmid :
+          Tape.Equiv Tmid
+            (CommonGround.SimulatorLayouts.handoffTape L) :=
+        hparser.right.right L Tmid hparserRun
+      have hbridge :
+          Tape.Equiv
+            (Tape.move Direction.left Tmid)
+            (Tape.input (SimulatorLayout.asBoolInput L)) := by
+        exact
+          Tape.Equiv.trans
+            (Tape.Equiv.move hTmid Direction.left)
+            (by
+              rw [CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape]
+              exact Tape.Equiv.refl _)
+      rcases hemitterReach with ⟨n, hn⟩
+      have hemitterRun :
+          emitter.HaltsFromTape (Tape.move Direction.left Tmid) T :=
+        ⟨n, by
+          constructor
+          · simpa [HaltsFromTapeIn] using
+              congrArg Configuration.state hn
+          · simpa [HaltsFromTapeIn] using
+              congrArg Configuration.tape hn⟩
+      rcases
+          HaltsFromTapeEquiv_of_input_equiv
+            (D := emitter) hbridge hemitterRun with
+        ⟨Tactual, hemitterActual, hTactual⟩
+      rcases hemitter.right L with
+        ⟨Temit, hemitterForwardWith, hTemit⟩
+      have hemitterForward :
+          emitter.HaltsFromTape
+            (Tape.input (SimulatorLayout.asBoolInput L)) Temit := by
+        rcases hemitterForwardWith with ⟨nForward, hforward⟩
+        exact
+          ⟨nForward, by
+            simpa [HaltsWithTapeIn, HaltsFromTapeIn,
+              initial] using hforward⟩
+      have hTactual_eq : Tactual = Temit :=
+        haltsFromTape_functional_of_haltTransitionFree
+          hemitter.left.right hemitterActual hemitterForward
+      rw [hTactual_eq] at hTactual
+      exact
+        Tape.Equiv.trans (Tape.Equiv.symm hTactual)
+          (Tape.Equiv.trans hTemit
+            (FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
+              D L))
+
 theorem fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitter_configRunner
     {D parser emitter : MachineDescription}
     (hparser :
@@ -271,102 +411,11 @@ theorem fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitter_configR
     FixedDescriptionBoundedSimulatorEquivSpec D
       (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
         parser emitter) := by
-  have hrunnerReady :
-      (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
-        parser emitter).SubroutineReady :=
-    seqSubroutine_subroutineReady hparser.left hemitter.left
-  constructor
-  · exact hrunnerReady
-  constructor
-  · intro L
-    rcases hparser.right.left L with
-      ⟨Tmid, hparserRun, hTmid⟩
-    have hbridge :
-        Tape.Equiv
-          (Tape.move Direction.left Tmid)
-          (Tape.input (SimulatorLayout.asBoolInput L)) := by
-      exact
-        Tape.Equiv.trans
-          (Tape.Equiv.move hTmid Direction.left)
-          (by
-            rw [CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape]
-            exact Tape.Equiv.refl _)
-    have hemitterFrom :
-        emitter.HaltsFromTape
-          (Tape.input (SimulatorLayout.asBoolInput L))
-          (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) := by
-      rcases hemitter.right L with ⟨n, hn⟩
-      exact
-        ⟨n, by
-          simpa [HaltsWithTapeIn, HaltsFromTapeIn,
-            initial] using hn⟩
-    rcases
-        HaltsFromTapeEquiv_of_input_equiv
-          (D := emitter)
-          (Tape.Equiv.symm hbridge) hemitterFrom with
-      ⟨Tactual, hemitterActual, hTactual⟩
-    have hseq :
-        (FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
-          parser emitter).HaltsWithTape
-          (FixedDescriptionBoundedSimulatorInput L) Tactual :=
-      seqSubroutine_haltsWithTape_of_haltsWithTape
-        hparser.left hemitter.left hparserRun
-        (runConfig_eq_halt_of_haltsFromTape hemitterActual)
-    exact
-      ⟨Tactual, hseq,
-        Tape.Equiv.trans hTactual
-          (FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
-            D L)⟩
-  · intro L T hhalt
-    rcases
-        seqSubroutine_haltsWithTape_inv
-          hparser.left hemitter.left hhalt with
-      ⟨Tmid, hparserRun, hemitterReach⟩
-    have hTmid :
-        Tape.Equiv Tmid
-          (CommonGround.SimulatorLayouts.handoffTape L) :=
-      hparser.right.right L Tmid hparserRun
-    have hbridge :
-        Tape.Equiv
-          (Tape.move Direction.left Tmid)
-          (Tape.input (SimulatorLayout.asBoolInput L)) := by
-      exact
-        Tape.Equiv.trans
-          (Tape.Equiv.move hTmid Direction.left)
-          (by
-            rw [CommonGround.SimulatorLayouts.handoffTape_move_left_eq_tape]
-            exact Tape.Equiv.refl _)
-    rcases hemitterReach with ⟨n, hn⟩
-    have hemitterRun :
-        emitter.HaltsFromTape (Tape.move Direction.left Tmid) T :=
-      ⟨n, by
-        constructor
-        · simpa [HaltsFromTapeIn] using
-            congrArg Configuration.state hn
-        · simpa [HaltsFromTapeIn] using
-            congrArg Configuration.tape hn⟩
-    rcases
-        HaltsFromTapeEquiv_of_input_equiv
-          (D := emitter) hbridge hemitterRun with
-      ⟨Tactual, hemitterActual, hTactual⟩
-    have hemitterForward :
-        emitter.HaltsFromTape
-          (Tape.input (SimulatorLayout.asBoolInput L))
-          (FixedDescriptionBoundedSimulatorPaddedOutputTape D L) := by
-      rcases hemitter.right L with ⟨nForward, hforward⟩
-      exact
-        ⟨nForward, by
-          simpa [HaltsWithTapeIn, HaltsFromTapeIn,
-            initial] using hforward⟩
-    have hTactual_eq :
-        Tactual = FixedDescriptionBoundedSimulatorPaddedOutputTape D L :=
-      haltsFromTape_functional_of_haltTransitionFree
-        hemitter.left.right hemitterActual hemitterForward
-    rw [hTactual_eq] at hTactual
-    exact
-      Tape.Equiv.trans (Tape.Equiv.symm hTactual)
-        (FixedDescriptionBoundedSimulatorPaddedOutputTape_equiv_canonical
-          D L)
+  exact
+    fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitterEquiv_configRunner
+      hparser
+      (fixedDescriptionBoundedSimulatorPaddedEmitterEquivSpec_of_exactShape_configRunner
+        hemitter)
 
 theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_parserEquivEmitter_configRunner
     (h :
@@ -379,6 +428,19 @@ theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_parserEquivEmitter_
     ⟨FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
         parser emitter,
       fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitter_configRunner
+        hparser hemits⟩
+
+theorem fixedDescriptionBoundedSimulatorEquivConstruction_of_parserEquivEmitterEquiv_configRunner
+    (h :
+      FixedDescriptionBoundedSimulatorPaddedParserEquivEmitterEquivConstruction_configRunner) :
+    FixedDescriptionBoundedSimulatorEquivConstruction := by
+  intro D
+  rcases h.left with ⟨parser, hparser⟩
+  rcases h.right D with ⟨emitter, hemits⟩
+  exact
+    ⟨FixedDescriptionBoundedSimulatorPaddedParserEmitterRunner
+        parser emitter,
+      fixedDescriptionBoundedSimulatorEquivSpec_of_parserEquiv_emitterEquiv_configRunner
         hparser hemits⟩
 
 theorem fixedDescriptionBoundedSimulatorPaddedExactShapeSpec_of_parser_emitter_configRunner
