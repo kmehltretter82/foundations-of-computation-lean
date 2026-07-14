@@ -17,6 +17,27 @@ comparison.
 
 ## Retired surfaces
 
+### Exact padded fuel-pair simulator seam
+
+- Deleting commit: `bc7bced1` (`Retire the exact #12 simulator seam`).
+- Reduction: 32 lines in the deletion checkpoint.
+- Old surface: `CandidateSimulatorPaddedSpec`,
+  `CandidateSimulatorPaddedConstruction`, and
+  `candidateSimulatorPaddedConstruction_of_fixedDescription`.
+- Potentially reusable idea: an exact retargeted simulator endpoint on the
+  canonical padded output representative.
+- Why retired: repaired #18 supplies the honest
+  `FixedDescriptionBoundedSimulatorEquivConstruction`; it cannot imply exact
+  identity of the physically padded blank window.  The exact candidate seam
+  had no external declaration consumer.
+- Current route: `CandidateSimulatorEquivSpec` and
+  `candidateSimulatorRetargetedBlock_runsToContinuation` carry the actual halt
+  tape and prove it equivalent to the padded reference.  The contract repair
+  is in `009807d6`.
+- Reconsider only if: a checked caller genuinely observes the exact physical
+  padding.  Add normalization at that caller and prove its necessity; do not
+  restore the exact adapter family merely for halt retargeting.
+
 ### FuelSimulator fixed scratch representatives and endpoint adapters
 
 - Deleting commit: this change (`Carry actual FuelSimulator representatives`).
