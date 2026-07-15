@@ -6,6 +6,7 @@
   },
   "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
   "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/StrictProbe/Machine.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Program.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Contracts.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/ExactFuel.lean"

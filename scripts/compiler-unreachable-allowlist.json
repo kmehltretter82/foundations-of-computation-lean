@@ -171,6 +171,12 @@
     {
       "category": "active",
       "intended_consumer": "Sorry #5 strict exact-fuel runner",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Machine",
+      "reason": "Finite selected-transition dispatch kernel for the active strict-probe machine construction."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #5 strict exact-fuel runner",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Semantics",
       "reason": "Generic exact-fuel outcome semantics for the active strict-probe machine construction."
     },
