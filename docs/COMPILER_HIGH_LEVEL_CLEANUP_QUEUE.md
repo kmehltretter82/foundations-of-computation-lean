@@ -50,7 +50,7 @@ outstanding-loan allowance; it does not remove their source lines from the
 independent global measurement or reset any pinned base. The repaired #12
 campaign now has an explicitly reviewed 7,000-line cumulative allowance. By
 user instruction, the aggregate outstanding-loan and global raw-growth caps
-are both 25,000 lines, while the ordinary per-campaign ceiling remains 10,000.
+are both 50,000 lines, while the ordinary per-campaign ceiling remains 10,000.
 Any reopened work on a retired frontier requires a new campaign and a new
 pinned base.
 
@@ -80,7 +80,7 @@ net +24,847, from the original #18 base. The frozen +14,507 historical
 checkpoint was not raised. Instead, after the proof frontier closed, repeated
 causal deletion passes, an axiom audit, and fresh builds of both real consumers,
 the completed historical manifest was retired. Global raw Compiler size is
-365,811 lines, or +18,745 against the independently reviewed +25,000 ceiling;
+365,811 lines, or +18,745 against the independently reviewed +50,000 ceiling;
 the source baseline remains pinned at 347,066. Any future #18 construction
 work requires a new current campaign and cannot reuse the retired debt record.
 
