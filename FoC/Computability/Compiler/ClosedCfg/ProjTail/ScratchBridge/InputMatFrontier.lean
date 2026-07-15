@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMatContracts
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.IndexedMaterializer.RejectCompose
 
 set_option doc.verso true
 
@@ -24,10 +24,7 @@ open CanonicalLayouts.DovetailLayoutScanner
 
 theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  -- Concrete narrowed finite-machine obligation: unlike the removed generic
-  -- raw-bits materializer, this family fixes the output buffer from the same
-  -- count-window input index as the source tape.
-  sorry
+  exact InputMat.Route.IndexedConstruction.indexedBoolWordMaterializerConstruction
 
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by

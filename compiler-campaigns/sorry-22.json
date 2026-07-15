@@ -1,5 +1,5 @@
 {
-  "allow_net_growth": 1500,
+  "allow_net_growth": 10000,
   "architecture_review": {
     "reason": "Close the count-window indexed guarded-input materializer with branch-padding canonicalization and target-local visible-layout length/output allocation; after migrating any genuinely used endpoint facts, retire the self-only ScratchBridge/Mat and ScratchExtOutput facade lattice that this live route supersedes.",
     "recorded_against": "20ed5d892afedbd38e3509da11559b8d1d1be83c"

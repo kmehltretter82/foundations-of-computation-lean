@@ -2,78 +2,6 @@
   "modules": [
     {
       "category": "active",
-      "intended_consumer": "Sorry #22 target-local guarded-input phases",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.Shapes",
-      "reason": "Checked target and padding shape lemmas for the active materializer frontier."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.AcceptConfigCopier",
-      "reason": "Checked accept-branch configuration copier for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.AcceptConfigLocator",
-      "reason": "Checked accept-branch configuration locator for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.AcceptInserterShapes",
-      "reason": "Checked accept-insertion shape facts for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.InPlaceDecoder",
-      "reason": "Checked in-place decoder phase for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.InPlaceDecoderCopier",
-      "reason": "Checked decoder-copy phase for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.OutputLengthAllocator",
-      "reason": "Checked output-length allocation phase for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.PrefixPipeline",
-      "reason": "Checked common prefix pipeline for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.RejectPaddingCleaner",
-      "reason": "Checked reject-branch padding cleanup for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.Tape2Rewinder",
-      "reason": "Checked tape-2 rewind phase for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.VisibleSpanAllocator",
-      "reason": "Checked visible-span allocation phase for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #22 InputMat frontier and ScratchBridge threaded consumer",
-      "module": "FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.WriteWordRight",
-      "reason": "Checked rightward Boolean-word writer for the active indexed materializer assembly."
-    },
-    {
-      "category": "active",
       "intended_consumer": "Sorry #19/#20 QuoteRest endpoint assembly",
       "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputProjectorRoutes",
       "reason": "Active output-projector route over the left-tailed implementation."
@@ -179,12 +107,6 @@
       "intended_consumer": "Sorry #12 persistent structured search loop",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Tape01Swap",
       "reason": "Exact typed run transfer for exchanging caller-owned logical tapes 0 and 1."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Tape2SubroutineLift",
-      "reason": "Checked logical-tape-2 lift for simulator subroutines that preserves both caller-owned tapes through physical lowering."
     },
     {
       "category": "active",

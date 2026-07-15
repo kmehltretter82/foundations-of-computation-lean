@@ -117,22 +117,6 @@ def tokenBlockRows (phase : Phase) : List Transition :=
   , wrappedBitRows (base + 30) (route phase .blank) (route phase .zero)
   , wrappedBitRows (base + 35) (route phase .one) halt ].flatten
 
-def pendingRows (b0 b1 b2 b3 : Bool) : List Transition :=
-  let source := pendingState b0 b1 b2 b3
-  [ rowsForSourceRead source (some false) keepR keepS keepS (source + 1)
-  , rowsForSourceRead (source + 1) (some false) keepL keepS keepS halt
-  , rowsForSourceRead (source + 1) (some true)
-      keepR keepS (writeBitR b0) (source + 2)
-  , rowsForSourceRead (source + 2) (some false)
-      keepR keepS keepS (source + 3)
-  , rowsForSourceRead (source + 2) (some true)
-      keepR keepS keepS (source + 4)
-  , rowsForSourceRead (source + 3) (some true)
-      keepR keepS keepS (pendingState b1 b2 b3 false)
-  , rowsForSourceRead (source + 4) (some false)
-      keepR keepS keepS (pendingState b1 b2 b3 true) ].flatten
-
-def bools : List Bool := [false, true]
 
 def layoutHeaderRows : List Transition :=
   tokenBlockRows .layoutHeader
@@ -146,14 +130,6 @@ def inputCellsRows : List Transition :=
 def stageRows : List Transition :=
   tokenBlockRows .stage
 
-def initializeRows : List Transition :=
-  tokenBlockRows .initialize
-
-def allPendingRows : List Transition :=
-  bools.flatMap (fun b0 =>
-    bools.flatMap (fun b1 =>
-      bools.flatMap (fun b2 =>
-        bools.flatMap (fun b3 => pendingRows b0 b1 b2 b3))))
 
 def prefixRows : List Transition :=
   List.append layoutHeaderRows
@@ -162,8 +138,6 @@ def prefixRows : List Transition :=
 def cellsStageRows : List Transition :=
   List.append inputCellsRows stageRows
 
-def copyRows : List Transition :=
-  List.append initializeRows allPendingRows
 
 def prefixDescription : Description :=
   ThreeTape.description (halt + 1)
@@ -173,8 +147,6 @@ def cellsStageDescription : Description :=
   ThreeTape.description (halt + 1)
     (tokenBase .inputCells) (tokenBase .initialize) cellsStageRows
 
-def copyDescription : Description :=
-  ThreeTape.description (halt + 1) (tokenBase .initialize) halt copyRows
 
 syntax "copy_step " "[" Lean.Parser.Tactic.simpLemma,* "]" : tactic
 
@@ -303,17 +275,6 @@ theorem stage_done_run :
   solve_token rest on T2 with [cellsStageDescription, cellsStageRows,
     inputCellsRows, stageRows]
 
-theorem initialize_tick_run :
-    TokenRun copyDescription .initialize .tick := by
-  simp only [TokenRun]
-  intro left rest T2
-  solve_token rest on T2 with [copyDescription, copyRows, initializeRows]
-
-theorem initialize_done_run :
-    TokenRun copyDescription .initialize .done := by
-  simp only [TokenRun]
-  intro left rest T2
-  solve_token rest on T2 with [copyDescription, copyRows, initializeRows]
 
 end AcceptConfigCopy
 end CountWindowInputMat

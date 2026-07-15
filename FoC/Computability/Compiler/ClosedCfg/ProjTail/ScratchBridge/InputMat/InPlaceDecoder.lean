@@ -140,12 +140,6 @@ def markedOutputTape (marked remaining : Nat) : Tape Bool :=
       (List.replicate marked (some true : Option Bool)) [none])
     (List.replicate (remaining + 1) (none : Option Bool))
 
-theorem markedOutputTape_zero (n : Nat) :
-    markedOutputTape 0 n =
-      structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding n [] := by
-  simp [markedOutputTape,
-    structuredBoolWordRawBitsDecoderInitialOutputTapeWithPadding,
-    tapeAtCells]
 
 theorem header_run
     (stage tail : Word Bool) (n : Nat) :

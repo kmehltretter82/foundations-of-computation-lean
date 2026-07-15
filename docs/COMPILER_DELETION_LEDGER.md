@@ -838,6 +838,45 @@ increase does not change this cleanup accounting.
   the parent of this change and compare it with a projection of the direct
   endpoint; do not restore the emitter/gap/joiner lattice wholesale.
 
+### Superseded #22 standalone and reverse-adapter lattices
+
+- Deleting commit: this change (`Close indexed count-window input materializer`).
+- Reduction: 3,107 Compiler lines: 1,077 from deleting
+  `AcceptConfigCopier.lean` and `VisibleSpanAllocator.lean`, 248 from the old
+  non-contextual `Tape2Rewinder` execution lattice, 39 from the unused
+  `AcceptConfigLocator` initialize/copy tail, and 315 from zero-reference tape
+  observation and reverse/iff adapters in `InputMatContracts.lean`, 347
+  from the self-only source-tape/guarded-segment decomposition lattice in
+  `Shapes.lean`, 64 from the superseded accept-inserter tail adapter plus
+  two zero-reference endpoint lemmas in `WriteWordRight.lean` and
+  `InPlaceDecoder.lean`, and 1,017 from the superseded structured-prefix,
+  selected-segment, densifier/footprint, and bridge-threading adapters in
+  `ScratchBridge/Shape.lean`, `SelectedSegments.lean`, and `Threaded.lean`.
+- Old surface: a standalone buffered accept-configuration copier and a
+  standalone logical-tape visible-span allocator prepared for the #22 input
+  materializer, a context-free tape-2 rewind wrapper, and reverse conversion
+  wrappers around the indexed materializer acceptance chain.
+- Potentially reusable ideas: copying a wrapped configuration through a
+  four-bit buffer, and allocating a caller-selected visible span before a
+  structured phase.
+- Why retired: exhaustive import, declaration-reference, and kernel-dependency
+  searches found no production consumer of the removed declarations. The
+  completed indexed materializer instead uses its checked configuration
+  locator, route-local copier/allocator phases, and contextual tape-2 rewind;
+  downstream acceptance uses only the forward
+  indexed-to-bool-word-to-input-to-initializer chain. A final external-root
+  audit retained all 42 declarations referenced outside the three broad bridge
+  modules, together with the required scratch-allocator consumer theorem, and
+  removed only declarations outside that dependency closure.
+- Current route: `InputMat/IndexedMaterializer/TokenDriver.lean` contains the
+  target-local token copier, while `AcceptAllocate.lean` provides the exact
+  accept-branch allocation and rewind contracts used by the indexed
+  construction.
+- Reconsider only if: two current construction families need the same
+  standalone buffered copier or generic visible-span contract. Recover only
+  the smallest checked phase from the parent of this change; do not restore
+  both provisional modules as a route lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

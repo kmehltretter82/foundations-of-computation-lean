@@ -63,91 +63,90 @@ theorem description_subroutineReady : description.SubroutineReady :=
 theorem description_supports : SupportsReadWriteRows3 description :=
   supportedReadWriteRows3_of_supports_eq_true (by decide)
 
-def sourceTape (bits : Word Bool) : Tape Bool :=
-  rightEdgeRewindSourceTape bits []
 
-def targetTape (bits : Word Bool) : Tape Bool :=
-  rightEdgeScanSourceTapeFromLeft [none] bits []
+def sourceTapeWithContext
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append (bits.reverse.map some) (none :: baseLeft))
+    (none :: rightPadding)
 
-def rewindTape
+def targetTapeWithContext
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells (none :: baseLeft)
+    (List.append (bits.map some) (none :: rightPadding))
+
+def rewindTapeWithContext
+    (baseLeft : List (Option Bool))
     (remainingRev : Word Bool) (current : Bool)
-    (processed : Word Bool) : Tape Bool :=
-  tapeAtCells (remainingRev.map some)
-    (some current :: List.append (processed.map some) [none])
+    (processed : Word Bool)
+    (rightPadding : List (Option Bool)) : Tape Bool :=
+  tapeAtCells
+    (List.append (remainingRev.map some) (none :: baseLeft))
+    (some current ::
+      List.append (processed.map some) (none :: rightPadding))
 
-def doneTape (bits : Word Bool) : Tape Bool :=
-  tapeAtCells []
-    (none :: List.append (bits.map some) [none])
 
-theorem enter_nil_step (T0 T1 : Tape Bool) :
-    description.runConfig 1
-        (config enter T0 T1 (sourceTape [])) =
-      config rewind T0 T1 (doneTape []) := by
-  cases h0 : T0.head with
-  | none =>
-      cases h1 : T1.head with
-      | none =>
-          tape2_rewind_step [sourceTape, doneTape,
-            rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-      | some b1 =>
-          cases b1 <;>
-            tape2_rewind_step [sourceTape, doneTape,
-              rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-  | some b0 =>
-      cases b0 <;>
-        cases h1 : T1.head with
-        | none =>
-            tape2_rewind_step [sourceTape, doneTape,
-              rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-        | some b1 =>
-            cases b1 <;>
-              tape2_rewind_step [sourceTape, doneTape,
-                rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-  done
-
-theorem enter_cons_step
+theorem enter_withContext_step
+    (baseLeft : List (Option Bool))
     (remainingRev : Word Bool) (current : Bool)
+    (rightPadding : List (Option Bool))
     (T0 T1 : Tape Bool) :
     description.runConfig 1
         (config enter T0 T1
-          (sourceTape ((current :: remainingRev).reverse))) =
-      config rewind T0 T1 (rewindTape remainingRev current []) := by
+          (tapeAtCells
+            (some current ::
+              (remainingRev.map some ++ none :: baseLeft))
+            (none :: rightPadding))) =
+      config rewind T0 T1
+        (rewindTapeWithContext baseLeft remainingRev current []
+          rightPadding) := by
   cases h0 : T0.head with
   | none =>
       cases h1 : T1.head with
       | none =>
           cases current <;>
-            tape2_rewind_step [sourceTape, rewindTape,
-              rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-      | some b1 =>
-          cases b1 <;> cases current <;>
-            tape2_rewind_step [sourceTape, rewindTape,
-              rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-  | some b0 =>
-      cases b0 <;>
+            tape2_rewind_step [rewindTapeWithContext,
+              tapeAtCells, h0, h1]
+      | some bit =>
+          cases bit <;> cases current <;>
+            tape2_rewind_step [rewindTapeWithContext,
+              tapeAtCells, h0, h1]
+  | some bit0 =>
+      cases bit0 <;>
         cases h1 : T1.head with
         | none =>
             cases current <;>
-              tape2_rewind_step [sourceTape, rewindTape,
-                rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
-        | some b1 =>
-            cases b1 <;> cases current <;>
-              tape2_rewind_step [sourceTape, rewindTape,
-                rightEdgeRewindSourceTape, tapeAtCells, h0, h1]
+              tape2_rewind_step [rewindTapeWithContext,
+                tapeAtCells, h0, h1]
+        | some bit1 =>
+            cases bit1 <;> cases current <;>
+              tape2_rewind_step [rewindTapeWithContext,
+                tapeAtCells, h0, h1]
   done
 
-theorem rewind_step
+
+theorem rewind_withContext_step
+    (baseLeft : List (Option Bool))
     (remainingRev processed : Word Bool) (current : Bool)
+    (rightPadding : List (Option Bool))
     (T0 T1 : Tape Bool) :
     description.runConfig 1
         (config rewind T0 T1
-          (rewindTape remainingRev current processed)) =
+          (rewindTapeWithContext baseLeft remainingRev current processed
+            rightPadding)) =
       match remainingRev with
       | [] =>
-          config rewind T0 T1 (doneTape (current :: processed))
-      | next :: tail =>
           config rewind T0 T1
-            (rewindTape tail next (current :: processed)) := by
+            (tapeAtCells baseLeft
+              (none :: some current ::
+                List.append (processed.map some)
+                  (none :: rightPadding)))
+      | next :: rest =>
+          config rewind T0 T1
+            (rewindTapeWithContext baseLeft rest next
+              (current :: processed) rightPadding) := by
   cases remainingRev with
   | nil =>
       cases h0 : T0.head with
@@ -155,128 +154,128 @@ theorem rewind_step
           cases h1 : T1.head with
           | none =>
               cases current <;>
-                tape2_rewind_step [rewindTape, doneTape,
+                tape2_rewind_step [rewindTapeWithContext,
                   tapeAtCells, h0, h1]
-          | some b1 =>
-              cases b1 <;> cases current <;>
-                tape2_rewind_step [rewindTape, doneTape,
+          | some bit =>
+              cases bit <;> cases current <;>
+                tape2_rewind_step [rewindTapeWithContext,
                   tapeAtCells, h0, h1]
-      | some b0 =>
-          cases b0 <;>
+      | some bit0 =>
+          cases bit0 <;>
             cases h1 : T1.head with
             | none =>
                 cases current <;>
-                  tape2_rewind_step [rewindTape, doneTape,
+                  tape2_rewind_step [rewindTapeWithContext,
                     tapeAtCells, h0, h1]
-            | some b1 =>
-                cases b1 <;> cases current <;>
-                  tape2_rewind_step [rewindTape, doneTape,
+            | some bit1 =>
+                cases bit1 <;> cases current <;>
+                  tape2_rewind_step [rewindTapeWithContext,
                     tapeAtCells, h0, h1]
-  | cons next tail =>
+  | cons next rest =>
       cases h0 : T0.head with
       | none =>
           cases h1 : T1.head with
           | none =>
-              cases current <;>
-                tape2_rewind_step [rewindTape, doneTape,
+              cases current <;> cases next <;>
+                tape2_rewind_step [rewindTapeWithContext,
                   tapeAtCells, h0, h1]
-          | some b1 =>
-              cases b1 <;> cases current <;>
-                tape2_rewind_step [rewindTape, doneTape,
+          | some bit =>
+              cases bit <;> cases current <;> cases next <;>
+                tape2_rewind_step [rewindTapeWithContext,
                   tapeAtCells, h0, h1]
-      | some b0 =>
-          cases b0 <;>
+      | some bit0 =>
+          cases bit0 <;>
             cases h1 : T1.head with
             | none =>
-                cases current <;>
-                  tape2_rewind_step [rewindTape, doneTape,
+                cases current <;> cases next <;>
+                  tape2_rewind_step [rewindTapeWithContext,
                     tapeAtCells, h0, h1]
-            | some b1 =>
-                cases b1 <;> cases current <;>
-                  tape2_rewind_step [rewindTape, doneTape,
+            | some bit1 =>
+                cases bit1 <;> cases current <;> cases next <;>
+                  tape2_rewind_step [rewindTapeWithContext,
                     tapeAtCells, h0, h1]
   done
 
-theorem rewind_run
+
+theorem rewind_withContext_run
+    (baseLeft : List (Option Bool))
     (remainingRev processed : Word Bool) (current : Bool)
+    (rightPadding : List (Option Bool))
     (T0 T1 : Tape Bool) :
     description.runConfig (remainingRev.length + 1)
         (config rewind T0 T1
-          (rewindTape remainingRev current processed)) =
+          (rewindTapeWithContext baseLeft remainingRev current processed
+            rightPadding)) =
       config rewind T0 T1
-        (doneTape
-          (List.append remainingRev.reverse (current :: processed))) := by
+        (tapeAtCells baseLeft
+          (none :: List.append
+            ((List.append remainingRev.reverse
+              (current :: processed)).map some)
+            (none :: rightPadding))) := by
   induction remainingRev generalizing current processed with
   | nil =>
-      simpa using rewind_step [] processed current T0 T1
-  | cons next tail ih =>
-      rw [show (next :: tail).length + 1 = 1 + (tail.length + 1) by
-        simp [Nat.add_comm]]
+      simpa [List.append_assoc] using
+        rewind_withContext_step baseLeft [] processed current
+          rightPadding T0 T1
+  | cons next rest ih =>
+      rw [show (next :: rest).length + 1 = 1 + (rest.length + 1) by
+        simp
+        lia]
       rw [Description.runConfig_add]
-      rw [rewind_step]
-      simp only
-      rw [ih (current :: processed) next]
-      simp [List.reverse_cons, List.append_assoc]
+      rw [rewind_withContext_step]
+      rw [ih]
+      simp [List.reverse_cons, List.map_append, List.append_assoc]
       done
 
-theorem rewind_finish (bits : Word Bool) (T0 T1 : Tape Bool) :
+
+theorem rewind_withContext_finish
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rightPadding : List (Option Bool))
+    (T0 T1 : Tape Bool) :
     description.runConfig 1
-        (config rewind T0 T1 (doneTape bits)) =
-      config halt T0 T1 (targetTape bits) := by
+        (config rewind T0 T1
+          (tapeAtCells baseLeft
+            (none :: List.append (bits.map some)
+              (none :: rightPadding)))) =
+      config halt T0 T1
+        (targetTapeWithContext baseLeft bits rightPadding) := by
   cases h0 : T0.head with
   | none =>
       cases h1 : T1.head with
       | none =>
-          cases bits with
-          | nil =>
-              tape2_rewind_step [doneTape, targetTape,
-                rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-          | cons bit rest =>
-              cases bit <;>
-                tape2_rewind_step [doneTape, targetTape,
-                  rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-      | some b1 =>
-          cases b1 <;>
-            cases bits with
-            | nil =>
-                tape2_rewind_step [doneTape, targetTape,
-                  rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-            | cons bit rest =>
-                cases bit <;>
-                  tape2_rewind_step [doneTape, targetTape,
-                    rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-  | some b0 =>
-      cases b0 <;>
+          cases bits <;>
+            tape2_rewind_step [targetTapeWithContext,
+              tapeAtCells, h0, h1]
+      | some bit =>
+          cases bit <;> cases bits <;>
+            tape2_rewind_step [targetTapeWithContext,
+              tapeAtCells, h0, h1]
+  | some bit0 =>
+      cases bit0 <;>
         cases h1 : T1.head with
         | none =>
-            cases bits with
-            | nil =>
-                tape2_rewind_step [doneTape, targetTape,
-                  rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-            | cons bit rest =>
-                cases bit <;>
-                  tape2_rewind_step [doneTape, targetTape,
-                    rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-        | some b1 =>
-            cases b1 <;>
-              cases bits with
-              | nil =>
-                  tape2_rewind_step [doneTape, targetTape,
-                    rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
-              | cons bit rest =>
-                  cases bit <;>
-                    tape2_rewind_step [doneTape, targetTape,
-                      rightEdgeScanSourceTapeFromLeft, tapeAtCells, h0, h1]
+            cases bits <;>
+              tape2_rewind_step [targetTapeWithContext,
+                tapeAtCells, h0, h1]
+        | some bit1 =>
+            cases bit1 <;> cases bits <;>
+              tape2_rewind_step [targetTapeWithContext,
+                tapeAtCells, h0, h1]
   done
 
 def fullFuel (bits : Word Bool) : Nat :=
   bits.length + 2
 
-theorem full_run (bits : Word Bool) (T0 T1 : Tape Bool) :
+
+theorem description_run_withContext
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rightPadding : List (Option Bool))
+    (T0 T1 : Tape Bool) :
     description.runConfig (fullFuel bits)
-        (config enter T0 T1 (sourceTape bits)) =
-      config halt T0 T1 (targetTape bits) := by
-  rw [fullFuel]
+        (config enter T0 T1
+          (sourceTapeWithContext baseLeft bits rightPadding)) =
+      config halt T0 T1
+        (targetTapeWithContext baseLeft bits rightPadding) := by
   cases hrev : bits.reverse with
   | nil =>
       have hbits : bits = [] := by
@@ -284,10 +283,40 @@ theorem full_run (bits : Word Bool) (T0 T1 : Tape Bool) :
         have hlength := congrArg List.length hrev
         simpa using hlength
       subst bits
-      rw [show [].length + 2 = 1 + 1 by rfl]
+      rw [show fullFuel [] = 1 + 1 by rfl]
       rw [Description.runConfig_add]
-      rw [enter_nil_step]
-      exact rewind_finish [] T0 T1
+      change description.runConfig 1
+        (description.runConfig 1
+          (config enter T0 T1
+            (tapeAtCells (none :: baseLeft)
+              (none :: rightPadding)))) = _
+      have henter :
+          description.runConfig 1
+              (config enter T0 T1
+                (tapeAtCells (none :: baseLeft)
+                  (none :: rightPadding))) =
+            config rewind T0 T1
+              (tapeAtCells baseLeft
+                (none :: none :: rightPadding)) := by
+        cases h0 : T0.head with
+        | none =>
+            cases h1 : T1.head with
+            | none =>
+                tape2_rewind_step [tapeAtCells, h0, h1]
+            | some bit =>
+                cases bit <;>
+                  tape2_rewind_step [tapeAtCells, h0, h1]
+        | some bit0 =>
+            cases bit0 <;>
+              cases h1 : T1.head with
+              | none =>
+                  tape2_rewind_step [tapeAtCells, h0, h1]
+              | some bit1 =>
+                  cases bit1 <;>
+                    tape2_rewind_step [tapeAtCells, h0, h1]
+      rw [henter]
+      simpa using
+        rewind_withContext_finish baseLeft [] rightPadding T0 T1
       done
   | cons current remainingRev =>
       have hbits : (current :: remainingRev).reverse = bits := by
@@ -296,16 +325,18 @@ theorem full_run (bits : Word Bool) (T0 T1 : Tape Bool) :
       have hlen : bits.length = remainingRev.length + 1 := by
         have hlength := congrArg List.length hrev
         simpa using hlength
+      rw [fullFuel]
       rw [show bits.length + 2 =
           1 + ((remainingRev.length + 1) + 1) by lia]
       rw [Description.runConfig_add]
-      rw [← hbits]
-      rw [enter_cons_step]
+      simp only [sourceTapeWithContext, hrev, List.map_cons,
+        List.append_eq, List.cons_append]
+      rw [enter_withContext_step]
       rw [Description.runConfig_add]
-      rw [rewind_run]
-      rw [show List.append remainingRev.reverse [current] =
-          (current :: remainingRev).reverse by simp]
-      exact rewind_finish (current :: remainingRev).reverse T0 T1
+      rw [rewind_withContext_run]
+      rw [show List.append remainingRev.reverse [current] = bits by
+        simpa using hbits]
+      exact rewind_withContext_finish baseLeft bits rightPadding T0 T1
       done
 
 def loweredDescription : MachineDescription :=
@@ -317,18 +348,28 @@ theorem loweredDescription_subroutineReady :
     lowerStructured3Description_subroutineReady
       description_subroutineReady.left description_supports
 
-theorem loweredDescription_realizes
-    (bits : Word Bool) (T0 T1 : Tape Bool) :
+
+theorem loweredDescription_realizes_withContext
+    (baseLeft : List (Option Bool)) (bits : Word Bool)
+    (rightPadding : List (Option Bool))
+    (T0 T1 : Tape Bool) :
     loweredDescription.HaltsFromTapeEquiv
-      (encodedGuardedStructured3Tapes T0 T1 (sourceTape bits))
-      (encodedGuardedStructured3Tapes T0 T1 (targetTape bits)) := by
+      (encodedGuardedStructured3Tapes T0 T1
+        (sourceTapeWithContext baseLeft bits rightPadding))
+      (encodedGuardedStructured3Tapes T0 T1
+        (targetTapeWithContext baseLeft bits rightPadding)) := by
   simpa [loweredDescription, encodedGuardedStructured3Tapes] using
     lowerStructured3Description_haltsFromConfigWithTapes
       description_subroutineReady.left description_subroutineReady.right
       description_supports
-      (c := config enter T0 T1 (sourceTape bits))
-      (tapes := [T0, T1, targetTape bits])
-      rfl rfl ⟨fullFuel bits, full_run bits T0 T1⟩
+      (c := config enter T0 T1
+        (sourceTapeWithContext baseLeft bits rightPadding))
+      (tapes :=
+        [T0, T1, targetTapeWithContext baseLeft bits rightPadding])
+      rfl rfl
+      ⟨fullFuel bits,
+        description_run_withContext baseLeft bits rightPadding T0 T1⟩
+  done
 
 end Tape2Rewinder
 end CountWindowInputMat

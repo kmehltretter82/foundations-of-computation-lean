@@ -44,18 +44,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction
                 (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
                   hcases)⟩)))
 
-theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintCases
-      hprefix
-      (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
-        hcases)
-
 theorem segmentNormalizerConstruction_ofBranchFootprintCases
     (heraser :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction)
@@ -74,146 +62,6 @@ theorem segmentNormalizerConstruction_ofBranchFootprintCases
                 (selectedSegmentLogicalTapeDecoderFootprintCompactorConstruction_of_cases
                   (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
                     hcases))⟩)))
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_of_prefixEraser
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  rcases hprefix with ⟨eraser, hready, hrun⟩
-  refine ⟨eraser, hready, ?_, ?_, ?_, ?_⟩
-  · intro L
-    simpa [
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
-      hrun true L
-        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          true L [])
-  · intro L bit rest
-    simpa [
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
-      hrun true L
-        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          true L (bit :: rest))
-  · intro L
-    simpa [
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
-      hrun false L
-        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          false L [])
-  · intro L bit rest
-    simpa [
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape] using
-      hrun false L
-        (countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix
-          false L (bit :: rest))
-
-theorem prefixEraserBranchCaseConstruction_ofTwoTapeEraser
-    (heraser :
-      SelectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction) :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  rcases heraser with ⟨eraser, hready, hrun⟩
-  refine ⟨eraser, hready, ?_, ?_, ?_, ?_⟩
-  · intro L
-    simpa [
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells,
-      postFieldDecodedPrefixScanSourceTape] using
-      hrun
-        (structuredBoolWordRawBitsDecoderSourceTargetTape
-          (ParsedLayoutBits L)
-          (countWindowPostFieldDecodedPrefixStructuredSuffixTail true L)
-          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-            true L []))
-        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-          ((ParsedLayoutBits L).length + 1))
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding true L)
-  · intro L bit rest
-    simpa [
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_accept_eq_prefixCells,
-      postFieldDecodedPrefixScanSourceTape] using
-      hrun
-        (structuredBoolWordRawBitsDecoderSourceTargetTape
-          (ParsedLayoutBits L)
-          (countWindowPostFieldDecodedPrefixStructuredSuffixTail true L)
-          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-            true L (bit :: rest)))
-        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-          ((ParsedLayoutBits L).length + 1))
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding true L)
-  · intro L
-    simpa [
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells,
-      postFieldDecodedPrefixScanSourceTape] using
-      hrun
-        (structuredBoolWordRawBitsDecoderSourceTargetTape
-          (ParsedLayoutBits L)
-          (countWindowPostFieldDecodedPrefixStructuredSuffixTail false L)
-          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-            false L []))
-        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-          ((ParsedLayoutBits L).length + 1))
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding false L)
-  · intro L bit rest
-    simpa [
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserSourceTape,
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserSourceTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixSelectedSegmentTargetTape,
-      countWindowPostFieldDecodedPrefixStructuredPrefixEraserTargetTape,
-      countWindowPostFieldDecodedPrefixSelectedSegmentEncodedPrefix_reject_eq_prefixCells,
-      postFieldDecodedPrefixScanSourceTape] using
-      hrun
-        (structuredBoolWordRawBitsDecoderSourceTargetTape
-          (ParsedLayoutBits L)
-          (countWindowPostFieldDecodedPrefixStructuredSuffixTail false L)
-          (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-            false L (bit :: rest)))
-        (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-          ((ParsedLayoutBits L).length + 1))
-        (ParsedLayoutBits L)
-        (postFieldDecodedPrefixScanPadding false L)
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction := by
-  exact
-    prefixEraserBranchCaseConstruction_ofTwoTapeEraser
-      selectedSegmentLogicalTapeDecoderTwoTapeStructuredPrefixEraserConstruction_core
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_of_cases
-      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchCaseConstruction_core
-
-theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_core :
-    CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction := by
-  exact
-    countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserConstruction_of_branches
-      countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixEraserBranchConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixCleanupConstruction := by
@@ -280,14 +128,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
           (by
             simpa [T0, T1, T2] using hseparator))
 
-theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_selectedSegmentDecoder
-    (hdecoder :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
-    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_selectedSegmentDecoder
-      hdecoder)
-
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_prefixAndFootprintCases
     (hprefix :
       CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
@@ -296,16 +136,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
     CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
   countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
     (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintCases
-      hprefix hcases)
-
-theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
-    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_prefixAndFootprintBitPaddingCases
       hprefix hcases)
 
 theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_structuredPrefixBranchCasesAndFootprintBitPaddingCases
@@ -317,33 +147,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_o
   countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
     (segmentNormalizerConstruction_ofBranchFootprintCases
       heraser hcases)
-
-theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
-    (hnormalizer :
-      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
-  rcases hnormalizer with ⟨normalizer, hnormalizerReady, hnormalizerRun⟩
-  refine ⟨normalizer, hnormalizerReady, ?_⟩
-  intro useAccept L deletedTail physical hseparator
-  exact
-    hnormalizerRun
-      (structuredBoolWordRawBitsDecoderSourceTargetTape
-        (ParsedLayoutBits L)
-        (countWindowPostFieldDecodedPrefixStructuredSuffixTail useAccept L)
-        (countWindowPostFieldDecodedPrefixStructuredSourcePadding
-          useAccept L deletedTail))
-      (structuredBoolWordRawBitsDecoderCounterDecodeTape 0
-        ((ParsedLayoutBits L).length + 1))
-      (postFieldDecodedPrefixScanSourceTape useAccept L)
-      physical hseparator
-
-theorem countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_segmentNormalizer
-    (hnormalizer :
-      Structured.MultiTapeLowering.StructuredTape2SegmentNormalizerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction :=
-  countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_countWindowSegmentNormalizer
-    (countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_of_segmentNormalizer
-      hnormalizer)
 
 theorem countWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredSegmentNormalizerConstruction := by
@@ -415,29 +218,9 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_l
     hextractor
     countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_core
 
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_selectedSegmentDecoder
-    (hdecoder :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction)
-    (hextractor :
-      LoweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_structuredParts
-    countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_core
-    hextractor
-    (countWindowPostFieldDecodedPrefixStructuredOutputProjectorConstruction_of_selectedSegmentDecoder
-      hdecoder)
-
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore :
     CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
   countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_loweredStructuredExtractor
-    loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
-
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
-    (hdecoder :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_selectedSegmentDecoder
-    hdecoder
     loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
 
 theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_prefixAndFootprintCases
@@ -463,17 +246,6 @@ theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_brid
   countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_of_prefixAndFootprintCases
     hprefix hcases
     loweredStructuredCountWindowPostFieldDecodedPrefixExtractorConstruction_core
-
-theorem countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_prefixAndFootprintBitPaddingCases
-    (hprefix :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      SelectedSegmentLogicalTapeDecoderFootprintCompactorBitPaddingCaseConstruction) :
-    CountWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction :=
-  countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_prefixAndFootprintCases
-    hprefix
-    (selectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction_of_bitPaddingCases
-      hcases)
 
 theorem scanSourceMaterializerConstruction_bridgeCore_ofBranchFootprintCases
     (heraser :
@@ -530,14 +302,6 @@ theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstru
     SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
   selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
     countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore
-
-theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
-    (hdecoder :
-      CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderConstruction) :
-    SelectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction :=
-  selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_of_scanSourceMaterializer
-    (countWindowPostFieldDecodedPrefixScanSourceMaterializerConstruction_bridgeCore_of_selectedSegmentDecoder
-      hdecoder)
 
 theorem selectedProjectionPaddedTailCleanupScratchCountWindowMaterializerConstruction_bridgeCore_of_prefixAndFootprintCases
     (hprefix :

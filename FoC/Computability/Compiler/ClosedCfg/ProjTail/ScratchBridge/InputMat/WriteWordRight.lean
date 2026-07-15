@@ -75,18 +75,6 @@ theorem writeWordRight_tapeAtCells_of_length_lt
           simp [List.reverse_cons, List.map_append, List.append_assoc]
           done
 
-theorem writeWordRight_acceptInsertedTail
-    (L : DovetailLayout) (left : List (Option Bool)) :
-    writeWordRight (acceptInsertedTail L)
-        (tapeAtCells left
-          (List.append ((acceptOldTail L).map some) [none])) =
-      tapeAtCells
-        (List.append ((acceptInsertedTail L).reverse.map some) left)
-        [none] := by
-  exact writeWordRight_tapeAtCells_of_length_lt
-    (acceptInsertedTail L) (acceptOldTail L) left
-    (acceptOldTail_length_lt_acceptInsertedTail L)
-  done
 
 end InputMat
 end SelectedProjectionPaddedTailCleanup

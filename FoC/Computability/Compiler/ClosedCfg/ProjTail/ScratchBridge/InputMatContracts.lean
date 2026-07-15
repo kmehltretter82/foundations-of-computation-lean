@@ -97,68 +97,6 @@ def countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
     (ParsedLayoutBits input.L).length
     (postFieldDecodedPrefixScanPadding useAccept input.L)
 
-theorem countWindowPostFieldDecodedPrefixStructuredEncodedInputTape_eq_inputMaterializerTargetTape
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
-        useAccept input.L input.pref input.leftBit input.deletedTail =
-      structured3InputMaterializerTargetTape
-        (countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
-          useAccept input)
-        (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-          useAccept input) := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerTargetTape_read
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.read
-        (structured3InputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
-            useAccept input)
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-            useAccept input)) =
-      none := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerTargetTape_cells_eq_encodedInputTape_cells
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.cells
-        (structured3InputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
-            useAccept input)
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-            useAccept input)) =
-      Tape.cells
-        (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
-          useAccept input.L input.pref input.leftBit input.deletedTail) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape_eq_inputMaterializerTargetTape]
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerTargetTape_normalizedOutput_eq_encodedInputTape
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.normalizedOutput
-        (structured3InputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource
-            useAccept input)
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-            useAccept input)) =
-      Tape.normalizedOutput
-        (countWindowPostFieldDecodedPrefixStructuredEncodedInputTape
-          useAccept input.L input.pref input.leftBit input.deletedTail) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape_eq_inputMaterializerTargetTape]
-
 def CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
     (useAccept : Bool) (initializer : MachineDescription) : Prop :=
   Structured3InputMaterializerSpec
@@ -220,129 +158,6 @@ def countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
       CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
         useAccept) : List (Option Bool) :=
   postFieldDecodedPrefixScanPadding useAccept input.L
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSource_eq_indexedSource
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSource
-        useAccept input =
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerSource
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-          useAccept)
-        input := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape_eq_indexedOutputTape
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-        useAccept input =
-      structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-          useAccept)
-        input := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_eq_materializerTargetTape
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-          useAccept)
-        (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-          useAccept)
-        input =
-      structured3InputMaterializerTargetTape
-        (countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSource
-          useAccept input)
-        (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-          useAccept input) := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_read
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.read
-        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-            useAccept)
-          input) =
-      none := by
-  rfl
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_cells_eq_materializerTargetTape_cells
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.cells
-        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-            useAccept)
-          input) =
-      Tape.cells
-        (structured3InputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSource
-            useAccept input)
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-            useAccept input)) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_eq_materializerTargetTape]
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_normalizedOutput_eq_materializerTargetTape
-    (useAccept : Bool)
-    (input :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerInput
-        useAccept) :
-    Tape.normalizedOutput
-        (structuredBoolWordRawBitsDecoderIndexedInputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordBits
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSuffixTail
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordSourcePadding
-            useAccept)
-          (countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordOutputPadding
-            useAccept)
-          input) =
-      Tape.normalizedOutput
-        (structured3InputMaterializerTargetTape
-          (countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSource
-            useAccept input)
-          (countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape
-            useAccept input)) := by
-  rw [
-    countWindowPostFieldDecodedPrefixStructuredBoolWordIndexedTargetTape_eq_materializerTargetTape]
 
 def CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerSpec
     (useAccept : Bool) (initializer : MachineDescription) : Prop :=
@@ -406,18 +221,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerSp
     structuredBoolWordRawBitsDecoderIndexedInputMaterializerOutputTape] using!
     hmaterializer
 
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_iff_indexedSpec
-    (useAccept : Bool) (initializer : MachineDescription) :
-    CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec
-        useAccept initializer ↔
-      CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerSpec
-        useAccept initializer := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerSpec_of_boolWordSpec
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_of_indexedSpec
-
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_of_indexed
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction) :
@@ -428,26 +231,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruct
     ⟨initializer,
       countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_of_indexedSpec
         hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_of_boolWord
-    (hmaterializer :
-      CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  intro useAccept
-  rcases hmaterializer useAccept with ⟨initializer, hspec⟩
-  exact
-    ⟨initializer,
-      countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerSpec_of_boolWordSpec
-        hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_iff_indexed :
-    CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction ↔
-      CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_of_boolWord
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_of_indexed
 
 theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_boolWordSpec
     {useAccept : Bool} {initializer : MachineDescription}
@@ -464,33 +247,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_bool
       useAccept input]
   exact hrun input
 
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_of_inputSpec
-    {useAccept : Bool} {initializer : MachineDescription}
-    (hmaterializer :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
-        useAccept initializer) :
-    CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec
-      useAccept initializer := by
-  rcases hmaterializer with ⟨hready, hrun⟩
-  refine ⟨hready, ?_⟩
-  intro input
-  rw [←
-    countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource_eq_boolWordSource
-      useAccept input]
-  exact hrun input
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_iff_boolWordSpec
-    (useAccept : Bool) (initializer : MachineDescription) :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
-        useAccept initializer ↔
-      CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec
-        useAccept initializer := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_of_inputSpec
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_boolWordSpec
-
 theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_of_boolWord
     (hmaterializer :
       CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction) :
@@ -501,26 +257,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction
     ⟨initializer,
       countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_boolWordSpec
         hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_of_input
-    (hmaterializer :
-      CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by
-  intro useAccept
-  rcases hmaterializer useAccept with ⟨initializer, hspec⟩
-  exact
-    ⟨initializer,
-      countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerSpec_of_inputSpec
-        hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_iff_boolWordConstruction :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction ↔
-      CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_of_input
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_of_boolWord
 
 theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
     {useAccept : Bool} {initializer : MachineDescription}
@@ -560,57 +296,6 @@ theorem countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_
     ⟨initializer,
       countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
         hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_initializerSpec
-    {useAccept : Bool} {initializer : MachineDescription}
-    (hinitializer :
-      CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
-        useAccept initializer) :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
-      useAccept initializer := by
-  rcases hinitializer with ⟨hready, hrun⟩
-  refine ⟨hready, ?_⟩
-  intro input
-  simpa [
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec,
-    countWindowPostFieldDecodedPrefixStructuredInputMaterializerSource,
-    countWindowPostFieldDecodedPrefixStructuredInputMaterializerOutputTape,
-    countWindowPostFieldDecodedPrefixStructuredEncodedInputTape,
-    structured3InputMaterializerTargetTape] using
-    hrun input.L input.pref input.leftBit input.deletedTail
-      input.hdeleted input.hpayload
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_of_initializer
-    (hinitializer :
-      CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction) :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction := by
-  intro useAccept
-  rcases hinitializer useAccept with ⟨initializer, hspec⟩
-  exact
-    ⟨initializer,
-      countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_initializerSpec
-        hspec⟩
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_iff_initializerSpec
-    (useAccept : Bool) (initializer : MachineDescription) :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec
-        useAccept initializer ↔
-      CountWindowPostFieldDecodedPrefixStructuredInputInitializerSpec
-        useAccept initializer := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputInitializerSpec_of_structured3InputMaterializerSpec
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputMaterializerSpec_of_initializerSpec
-
-theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_iff_initializerConstruction :
-    CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction ↔
-      CountWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction := by
-  constructor
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputInitializerConstruction_of_structured3InputMaterializer
-  · exact
-      countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_of_initializer
 
 end SelectedProjectionPaddedTailCleanup
 end BoundedLayoutRunner
