@@ -1018,6 +1018,26 @@ increase does not change this cleanup accounting.
   adapters. Recover only that smallest machine and its direct run theorem; do
   not restore either wrapper lattice wholesale.
 
+### Exact-empty product adapter lattice
+
+- Deleting commit: `0fef423b` (`Retire exact-empty product wrappers`).
+- Net reduction: 184 Compiler lines (`+19/-203`).
+- Old surface: decoded exact-output forward/closed specifications, their
+  primitive construction packages, transformer/decoded equivalences, and the
+  adapters from that exact-output route to the ordinary product runner.
+- Potentially reusable idea: translating a partial-transformer exact-output
+  contract into a decoded generated-call statement.
+- Why retired: declaration-reference searches found no consumer outside
+  `Product/Runner.lean`. The physical exact-empty target is false because a
+  nonempty generated input context cannot shrink to the literal blank tape.
+- Current route: `Product/Construction.lean` assembles the ordinary-halting
+  product specification from protected pair-prefix witnesses and the two
+  strict cyclic probes. `Runner.lean` retains the concise context-length
+  impossibility theorem for the rejected exact-empty contract.
+- Reconsider only if: a checked caller genuinely consumes exact physical
+  output rather than ordinary halting. Repair that caller's contract or add a
+  necessary normalizer; do not restore the decoded adapter lattice wholesale.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
