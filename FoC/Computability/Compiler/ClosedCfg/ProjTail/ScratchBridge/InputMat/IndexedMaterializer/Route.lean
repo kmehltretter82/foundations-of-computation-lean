@@ -1,5 +1,5 @@
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.IndexedMaterializer.ShapesAndInserter
-import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.IndexedMaterializer.TokenNavigation
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.IndexedMaterializer.ShapesInsert
+import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.IndexedMaterializer.TokenNav
 import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.PrefixPipeline
 
 set_option doc.verso true
