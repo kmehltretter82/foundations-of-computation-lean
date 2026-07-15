@@ -182,6 +182,12 @@
     },
     {
       "category": "active",
+      "intended_consumer": "Sorry #5 strict exact-fuel runner",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.SerializedShift",
+      "reason": "Finite insertion and compaction passes for preserving the caller suffix during variable-length exact-fuel field rewrites."
+    },
+    {
+      "category": "active",
       "intended_consumer": "ExactFuel parser and program closure",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser",
       "reason": "Checked unary parser phase for the active exact-fuel recognizer."

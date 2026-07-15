@@ -7,6 +7,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.U
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Program
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Contracts
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Machine
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.SerializedShift
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program
