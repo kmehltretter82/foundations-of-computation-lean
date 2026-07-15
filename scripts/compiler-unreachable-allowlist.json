@@ -92,9 +92,33 @@
     },
     {
       "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.FusedLayoutEmission",
+      "reason": "Single-lowering composition of raw-input preparation and exact simulator-layout emission."
+    },
+    {
+      "category": "active",
       "intended_consumer": "Sorry #12 bounded fuel-pair search driver",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Layout",
       "reason": "Checked physical candidate and simulator layout definitions for the active search repair."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutEmission",
+      "reason": "Checked raw Boolean-word to exact simulator-layout emission phase."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutHandoff",
+      "reason": "Exact one-move handoff from the raw emitter endpoint to canonical simulator input."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutPreparation",
+      "reason": "Checked preparation phase that preserves the public word while staging raw input and fuel."
     },
     {
       "category": "active",
@@ -110,9 +134,27 @@
     },
     {
       "category": "active",
-      "intended_consumer": "Sorry #12 master dispatcher after sorry #18 closes",
+      "intended_consumer": "Sorry #12 master dispatcher",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Simulation",
-      "reason": "Conditional adapter to the fixed-description simulator contract."
+      "reason": "Checked adapter to the fixed-description simulator contract."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SimulatorHitExtractor",
+      "reason": "Total finite-table extraction of the accumulated simulator hit bit."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 fixed-output search branches",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SuccessOnlyRecognizer",
+      "reason": "Closed fixed-Boolean recognizer and four-coordinate success semantics."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SuccessOnlySchedule",
+      "reason": "Pure fair enumeration and reachability for the four bounded search coordinates."
     },
     {
       "category": "active",

@@ -6,6 +6,9 @@
   },
   "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
   "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/BoundedFuelPairSearch/SuccessOnlySchedule.lean",
+    "lake env lean FoC/Computability/Compiler/Core/BoundedFuelPairSearch/FusedLayoutEmission.lean",
+    "lake env lean FoC/Computability/Compiler/Core/BoundedFuelPairSearch/SimulatorHitExtractor.lean",
     "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairSearch.lean",
     "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerFuelPairSearch.lean"
