@@ -93,6 +93,12 @@
     {
       "category": "active",
       "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DiagonalSchedule",
+      "reason": "Bound-free four-coordinate fair schedule used by the physical search cursor."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.FusedLayoutEmission",
       "reason": "Single-lowering composition of raw-input preparation and exact simulator-layout emission."
     },
@@ -101,6 +107,12 @@
       "intended_consumer": "Sorry #12 bounded fuel-pair search driver",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Layout",
       "reason": "Checked physical candidate and simulator layout definitions for the active search repair."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.PersistentRestaging",
+      "reason": "Checked failure-loop restager that preserves both fuels, recovers candidate input bits, and lowers through the physical three-tape backend."
     },
     {
       "category": "active",
@@ -155,6 +167,24 @@
       "intended_consumer": "Sorry #12 persistent structured search loop",
       "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SuccessOnlySchedule",
       "reason": "Pure fair enumeration and reachability for the four bounded search coordinates."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SwappedLayoutEmission",
+      "reason": "Scratch-preserving second simulator-layout emission with a checked physical lowering theorem."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Tape01Swap",
+      "reason": "Exact typed run transfer for exchanging caller-owned logical tapes 0 and 1."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #12 persistent structured search loop",
+      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Tape2SubroutineLift",
+      "reason": "Checked logical-tape-2 lift for simulator subroutines that preserves both caller-owned tapes through physical lowering."
     },
     {
       "category": "active",
