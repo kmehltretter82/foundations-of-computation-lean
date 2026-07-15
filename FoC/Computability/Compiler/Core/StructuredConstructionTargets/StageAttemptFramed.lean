@@ -34,11 +34,6 @@ def stageAttemptFramedStructuredInputBits
     (C : DovetailControllerLayout) : Word Bool :=
   encodeCodeWordAsInput (DovetailControllerLayout.encode C)
 
-def stageAttemptFramedStructuredInputTape
-    {attempt : MachineDescription}
-    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
-  Tape.input (stageAttemptFramedStructuredInputBits i.C)
-
 def stageAttemptFramedStructuredOutputTape
     {attempt : MachineDescription}
     (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
@@ -51,28 +46,39 @@ def stageAttemptFramedStructuredInitializedTape
     (Tape.input (stageAttemptFramedStructuredInputBits C))
     Tape.blank
 
-def stageAttemptFramedStructuredLoweredTape
-    {attempt : MachineDescription}
-    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
-  encodedGuardedStructured3Tapes
-    (stageAttemptFramedStructuredInputTape i)
-    Tape.blank
-    (stageAttemptFramedStructuredOutputTape i)
-
 def StageAttemptFramedStructuredMaterializerConstruction : Prop :=
   Structured3EndpointWordStartEquivMaterializerConstruction
     stageAttemptFramedStructuredInputBits
     stageAttemptFramedStructuredInitializedTape
 
+/--
+Semantic-core data with the concrete logical tape-0 and tape-1 representatives
+left by the construction.  The endpoint immediately projects tape 2, so these
+families are intentionally internal.
+
+Audit guardrail: a valid nonempty-input stage-zero attempt reaches the exact
+framed tape-2 result after 814 logical core steps while leaving tape 0 unequal
+to the pristine controller input and tape 1 nonblank.  Since equivalence of
+canonical guarded encodings forces equality of all three logical tapes, the
+former fixed-representative contract demanded an unused cleanup phase.
+-/
+structure StageAttemptFramedStructuredSemanticCoreComponents
+    (attempt : MachineDescription) where
+  tape0 : StageAttemptFramedStructuredIndex attempt -> Tape Bool
+  tape1 : StageAttemptFramedStructuredIndex attempt -> Tape Bool
+  components :
+    Structured3EndpointEquivSemanticCoreComponents
+      (fun i : StageAttemptFramedStructuredIndex attempt => i.C)
+      stageAttemptFramedStructuredInitializedTape
+      (fun i =>
+        encodedGuardedStructured3Tapes
+          (tape0 i) (tape1 i) (stageAttemptFramedStructuredOutputTape i))
+      stageAttemptFramedStructuredOutputTape
+      tape0 tape1
+
 def StageAttemptFramedStructuredSemanticCoreConstruction
     (attempt : MachineDescription) : Prop :=
-  Structured3EndpointEquivSemanticCoreConstruction
-    (fun i : StageAttemptFramedStructuredIndex attempt => i.C)
-    stageAttemptFramedStructuredInitializedTape
-    stageAttemptFramedStructuredLoweredTape
-    stageAttemptFramedStructuredOutputTape
-    stageAttemptFramedStructuredInputTape
-    (fun _i : StageAttemptFramedStructuredIndex attempt => Tape.blank)
+  Nonempty (StageAttemptFramedStructuredSemanticCoreComponents attempt)
 
 def StageAttemptFramedStructuredEndpointEquivIndexedConstruction
     (attempt : MachineDescription) : Prop :=
@@ -115,11 +121,11 @@ theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_componen
     (hmaterializer : StageAttemptFramedStructuredMaterializerConstruction)
     (hcore : StageAttemptFramedStructuredSemanticCoreConstruction attempt) :
     StageAttemptFramedStructuredEndpointEquivIndexedConstruction attempt := by
+  rcases hcore with ⟨C⟩
   simpa [StageAttemptFramedStructuredEndpointEquivIndexedConstruction,
-    StageAttemptFramedStructuredMaterializerConstruction,
-    StageAttemptFramedStructuredSemanticCoreConstruction] using
+    StageAttemptFramedStructuredMaterializerConstruction] using
     structured3EndpointWordStartEquivIndexedConstruction_of_components
-      hmaterializer hcore
+      hmaterializer ⟨C.components⟩
       (by
         intro i
         simpa [stageAttemptFramedStructuredOutputTape,
@@ -263,7 +269,6 @@ theorem stageAttemptFramedRealizes_of_endpointEquivIndexed
       MachineDescription.HaltsFromTapeWithOutputIn,
       MachineDescription.initial,
       stageAttemptFramedStructuredInputBits,
-      stageAttemptFramedStructuredInputTape,
       stageAttemptFramedStructuredOutputTape,
       CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput,
       i] using hforward
