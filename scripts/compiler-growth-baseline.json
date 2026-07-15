@@ -1,9 +1,9 @@
 {
   "limits": {
     "default_campaign_net_growth": 10000,
-    "default_net_growth": 22000,
+    "default_net_growth": 25000,
     "max_new_file_lines": 1500,
-    "max_outstanding_growth_loans": 22000
+    "max_outstanding_growth_loans": 25000
   },
   "metrics": {
     "direct_sorries": 18,
@@ -104,7 +104,7 @@
     ]
   },
   "review": {
-    "reason": "Keep the ordinary per-sorry campaign allowance at 10000 and raise both the aggregate ordinary-loan cap and global raw Compiler growth allowance from 15000 to 22000 per user instruction on 2026-07-15 so the proved sorry #7 route can be productionized; source metrics remain pinned to the post-deletion 8d84d908 baseline",
-    "recorded_against": "fcc28ce68f9d1e662295c15a9809c6a8037b7cfe"
+    "reason": "Keep the ordinary per-sorry campaign allowance at 10000 and raise both the aggregate ordinary-loan cap and global raw Compiler growth allowance from 22000 to 25000 per explicit user instruction on 2026-07-15 so the repaired sorry #12 route can be productionized without premature proof compression; source metrics remain pinned at 347066 lines and completed campaign retirement does not reset the baseline",
+    "recorded_against": "b7fa387d055b7ae51544e802f3e1d5607a404fac"
   }
 }

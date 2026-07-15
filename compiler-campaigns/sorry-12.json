@@ -1,0 +1,28 @@
+{
+  "allow_net_growth": 7000,
+  "architecture_review": {
+    "reason": "Replace the refuted all-result bounded fuel-pair enumerator with the output-indexed Chapter 5.2 search family. The user explicitly approved a 7000-line cumulative allowance on 2026-07-15 so the compiled fixed-output recognizer, fair four-coordinate semantics, reusable simulator-layout emitter, concrete dispatcher, and closedness proof can be productionized before causal cleanup of the obsolete route.",
+    "recorded_against": "b7fa387d055b7ae51544e802f3e1d5607a404fac"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairSearch.lean",
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerFuelPairSearch.lean"
+  ],
+  "frontier": "FoC.Computability.StructuredConstructionTargets.boundedFuelPairSearchFamilyConstruction_core",
+  "name": "sorry-12-output-indexed-bounded-fuel-pair-search",
+  "paths": [
+    "FoC/Computability/Compiler/Core/BoundedFuelPairSearch",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairSearch.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator",
+    "FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerFuelPairSearch.lean",
+    "FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerFuelPairSearchContracts.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.BoundedFuelPairEnumeratorContractGuardrails.currentExactSemanticCoreConstruction_impossible",
+    "FoC.Computability.BoundedFuelPairEnumeratorContractGuardrails.currentRightShiftedSpecConstruction_impossible",
+    "FoC.Computability.StructuredConstructionTargets.boundedFuelPairSearchFamilyConstruction_core"
+  ]
+}

@@ -35,6 +35,25 @@ finite-route bundles, and sorry-dependent aliases were removed in
 `59985a4d`: 16 insertions, 1,371 deletions. Both direct modules and the
 `FiniteScaffolds.lean` barrel pass.
 
+### Completed Chapter 5.2 campaign loans — retired
+
+The completed #6, #7, #19/#20, #24, and #26 campaigns were rechecked and
+retired on 2026-07-15. Their final cumulative nets from the original pinned
+bases are respectively +1,840, +7,563, +1,585, +2,008, and +1,099 Compiler
+lines: +14,095 total. Fresh focused checks passed for `StageAttemptFramed`,
+`ControllerInvocation`, `NestedLayoutParser`, `QuoteRest.Output`, `QuoteRest`,
+`RawCells`, and `RawCellsOutput`. The retained frontiers and their real
+consumers depend only on `propext`, `Classical.choice`, and `Quot.sound`.
+
+Removing the five completed manifests releases 14,363 lines of aggregate
+outstanding-loan allowance; it does not remove their source lines from the
+independent global measurement or reset any pinned base. The repaired #12
+campaign now has an explicitly reviewed 7,000-line cumulative allowance. By
+user instruction, the aggregate outstanding-loan and global raw-growth caps
+are both 25,000 lines, while the ordinary per-campaign ceiling remains 10,000.
+Any reopened work on a retired frontier requires a new campaign and a new
+pinned base.
+
 ### #18 exact terminal facade and duplicate construction — completed
 
 The public migration in `206a31b2` left the equivalence-valued padded-emitter
@@ -61,7 +80,7 @@ net +24,847, from the original #18 base. The frozen +14,507 historical
 checkpoint was not raised. Instead, after the proof frontier closed, repeated
 causal deletion passes, an axiom audit, and fresh builds of both real consumers,
 the completed historical manifest was retired. Global raw Compiler size is
-365,811 lines, or +18,745 against the independently reviewed +22,000 ceiling;
+365,811 lines, or +18,745 against the independently reviewed +25,000 ceiling;
 the source baseline remains pinned at 347,066. Any future #18 construction
 work requires a new current campaign and cannot reuse the retired debt record.
 

@@ -30,8 +30,8 @@ scripts/check-compiler-growth.py \
 The ordinary finite-machine allowance is 10,000 lines per sorry campaign. The
 manifest must request its cumulative allowance explicitly; 10,000 is a ceiling,
 not a target or an automatic baseline increase. The sum of ordinary outstanding
-loans may not exceed 22,000 lines. Independently, raw Compiler growth may not
-exceed 22,000 lines above the pinned baseline. Per-campaign allowances, the
+loans may not exceed 25,000 lines. Independently, raw Compiler growth may not
+exceed 25,000 lines above the pinned baseline. Per-campaign allowances, the
 aggregate loan cap, and the global raw-growth allowance are separate,
 non-additive circuit breakers. Existing manifests keep their recorded lower
 allowances unless they are deliberately reviewed.
