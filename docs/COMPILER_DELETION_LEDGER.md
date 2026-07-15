@@ -778,6 +778,38 @@ causal cleanup used to bring global raw Compiler growth below the then-reviewed
 `+10,000` ceiling; no active future frontier was deleted. The later policy
 increase does not change this cleanup accounting.
 
+### Superseded #18 semantic prototypes and standalone execution lattices
+
+- Deleting commit: this change (post-closure #18 hygiene cleanup).
+- Reduction: 2,715 net Compiler lines.
+- Old surface: the standalone exact logical-tape and metadata-witness decoders
+  in `GuardedEgress.lean`; the standalone `FixedStep`, `KnownStateLoop`, and
+  `OtherStateLoop` machine/run/lowering lattices; the unused exact serializer
+  and parking contracts in `ExactCloseout.lean`; the pre-guard tape serializer
+  chain; unused classified-boundary diagnostics/contracts; the
+  `SerializationGuardrails.lean` module; and the parameterized
+  `PaddedEmitter/Construction.lean` wrapper.
+- Potentially reusable ideas: an executable exact decoder for guarded logical
+  tapes, separately halting fixed-step and unary-loop machines, and exact
+  serializer contracts for a caller with a physically reachable fixed target.
+- Why retired: a kernel dependency walk through declaration types and opaque
+  values, rooted at the public padded-emitter scaffold and every retained #18
+  axiom-clean acceptance declaration, found no dependency on these blocks.
+  Source reference searches likewise found no `RunConfigEmitterCore` or
+  `RunConfigEmitterTheory` consumer outside the #18 subtree. The only real
+  external #18 consumers call
+  `fixedDescriptionBoundedSimulatorEquivConstruction_scaffold_configRunner`
+  from `ClosedCfgRunner/Assembly.lean` and
+  `ControllerOutputLevelSimulator.lean`.
+- Current route: `SelectorSplice` enters the integrated `LoopDispatcher`
+  directly; its done-witness closeout feeds the checked guarded serializer
+  chain, and `RunConfigEmitterEquiv` exposes the honest tape-equivalence
+  terminal construction through the single public padded-emitter scaffold.
+- Reconsider only if: a second checked consumer genuinely needs one phase to
+  halt in isolation, or an exact-padding consumer first proves context-length
+  feasibility. Recover only that smallest declaration block from the parent of
+  this change; do not restore the standalone route or exact-contract lattices.
+
 ### Superseded QuoteRest emitter, gap, and joiner route
 
 - Deleting commit: this change (`Close direct source-rest endpoint`).

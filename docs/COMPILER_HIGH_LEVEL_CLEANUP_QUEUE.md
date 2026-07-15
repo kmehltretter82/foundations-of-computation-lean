@@ -48,6 +48,22 @@ that construction type. Commit `66f821b8` then reused canonical proof facts in
 place of five newly exposed duplicate declarations. The fresh declaration
 export reports no exact-duplicate regression, and the full Compiler build and
 the #12/#14 consumers compile through the surviving tape-equivalence route.
+The post-closure kernel dependency audit then removed another 2,715 net lines:
+standalone fixed-step/loop machines, executable semantic-decoder prototypes,
+the retired exact-closeout contract lattice, the pre-guard serializer route,
+and two zero-live modules. The audit included every retained #18 axiom-clean
+acceptance declaration as a root; the public padded-emitter scaffold and its
+two real consumer modules compile through the integrated dispatcher and
+guarded-serializer route.
+
+The final permanent campaign review on 2026-07-15 records +28,966/-4,119,
+net +24,847, from the original #18 base. The frozen +14,507 historical
+checkpoint was not raised. Instead, after the proof frontier closed, repeated
+causal deletion passes, an axiom audit, and fresh builds of both real consumers,
+the completed historical manifest was retired. Global raw Compiler size is
+365,811 lines, or +18,745 against the independently reviewed +22,000 ceiling;
+the source baseline remains pinned at 347,066. Any future #18 construction
+work requires a new current campaign and cannot reuse the retired debt record.
 
 ### Quoter raw-cell execution stack — completed
 

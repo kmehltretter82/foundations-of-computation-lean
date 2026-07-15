@@ -1,4 +1,5 @@
-import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.Construction
+import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterEquiv
+import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter.Equiv
 
 set_option doc.verso true
 

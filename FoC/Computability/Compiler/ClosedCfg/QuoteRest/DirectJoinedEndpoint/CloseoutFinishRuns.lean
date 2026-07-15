@@ -892,28 +892,6 @@ theorem assemblyOutputPrefix_length
         preservingCellPassCellBits_length]
       lia
 
-theorem assemblySourceBits_lastSplit
-    (p : AssemblySourceRestLiveTailEmitterParam) :
-    exists sourceInit : Word Bool, exists last : Bool,
-      structuredLiveTailEmitterAssemblyInputBits p =
-        List.append sourceInit [last] := by
-  rcases assemblySourceRestFinishRawTailBits_lastSplit_exists
-      p.sourceRestBits p.stage with ⟨rawInit, last, hraw⟩
-  refine
-    ⟨List.append fixedSourcePrefix
-      (List.append
-        (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
-          p.w)
-        rawInit),
-      last, ?_⟩
-  rw [assemblySourceBits_eq_fixed_quote_raw]
-  have hraw' :
-      assemblySourceRestLiveTailEmitterRawTail p =
-        List.append rawInit [last] := by
-    simpa [assemblySourceRestLiveTailEmitterRawTail] using hraw
-  rw [hraw']
-  simp [List.append_assoc]
-
 def assemblyCloseoutSourceTape
     (p : AssemblySourceRestLiveTailEmitterParam) : Tape Bool :=
   cursorTape
@@ -958,7 +936,27 @@ theorem description_haltsWithTapes_assembly
         (outputFromBits
           (structuredLiveTailEmitterAssemblyOutputPrefix p)))
       (assemblyCloseoutFinalTapes p) := by
-  rcases assemblySourceBits_lastSplit p with
+  have hlastSplit :
+      exists sourceInit : Word Bool, exists last : Bool,
+        structuredLiveTailEmitterAssemblyInputBits p =
+          List.append sourceInit [last] := by
+    rcases assemblySourceRestFinishRawTailBits_lastSplit_exists
+        p.sourceRestBits p.stage with ⟨rawInit, last, hraw⟩
+    refine
+      ⟨List.append fixedSourcePrefix
+        (List.append
+          (DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageInputSecondBitTailPrefix
+            p.w)
+          rawInit),
+        last, ?_⟩
+    rw [assemblySourceBits_eq_fixed_quote_raw]
+    have hraw' :
+        assemblySourceRestLiveTailEmitterRawTail p =
+          List.append rawInit [last] := by
+      simpa [assemblySourceRestLiveTailEmitterRawTail] using hraw
+    rw [hraw']
+    simp [List.append_assoc]
+  rcases hlastSplit with
     ⟨sourceInit, last, hlast⟩
   refine
     ⟨closeoutFuel sourceInit.length

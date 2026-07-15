@@ -24,6 +24,6 @@
   ],
   "required_axiom_clean": [
     "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core",
-    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.countWindowPostFieldDecodedPrefixStructuredThreadedConstruction_core"
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedProjectionPaddedTailCleanupPostPaddingScratchAllocatorConstruction"
   ]
 }

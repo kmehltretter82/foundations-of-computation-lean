@@ -36,11 +36,6 @@ def rawMetadataTokens (i : Index) : List MetadataTokenCopy.TokenKind :=
     (List.append (MetadataWitnessBridge.natTokens i.sourceLayout.stage)
       (MetadataWitnessBridge.natTokens i.sourceLayout.config.state))
 
-theorem boolWord_append_nil (bits : Word Bool) :
-    List.append bits [] = bits := by
-  change List Bool at bits
-  exact List.append_nil bits
-
 theorem tokenBits_rawMetadataTokens (i : Index) :
     MetadataTokenCopy.tokenBits (rawMetadataTokens i) =
       FieldDecomposition.metadataBits i.sourceLayout := by

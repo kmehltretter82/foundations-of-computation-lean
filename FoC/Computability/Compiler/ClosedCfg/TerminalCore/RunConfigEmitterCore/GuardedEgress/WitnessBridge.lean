@@ -119,13 +119,16 @@ def selectedState (i : Index) : Nat :=
 
 theorem selectedState_eq_finalState (i : Index) :
     selectedState i = i.finalState := by
-  change
-    (MetadataWitnessDecoder.expected
-      i.description i.sourceLayout).finalState =
-      (SimulatorLayout.run i.description i.sourceLayout.stage
-        i.sourceLayout).config.state
-  exact MetadataWitnessDecoder.expected_finalState
-    i.description i.sourceLayout
+  unfold selectedState Index.finalState Index.finalLayout
+  cases hclass :
+      classifyState i.description i.sourceLayout.config.state with
+  | known state hstate =>
+      simp [loopDispatcherDoneWitness, hclass]
+  | other =>
+      simp [loopDispatcherDoneWitness, hclass]
+      exact
+        (EgressSemantics.finalState_eq_metadataState_of_other
+          i.description i.sourceLayout hclass).symm
 
 theorem witnessStateTokens_eq_selectedState (i : Index) :
     witnessStateTokens i.sourceLayout.config.state

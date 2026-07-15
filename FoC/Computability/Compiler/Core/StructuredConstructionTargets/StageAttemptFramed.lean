@@ -41,17 +41,6 @@ theorem stageAttemptFramedStructuredMaterializerConstruction_core
     StageAttemptFramedMaterializer.stageAttemptFramedWordStartEquivMaterializerConstruction_core
 
 /--
-Finite-table leaf for the lowered framed-invocation structured core.
--/
-theorem stageAttemptFramedStructuredSemanticCoreConstruction_core
-    (attempt : MachineDescription)
-    (hattempt : attempt.SubroutineReady) :
-    StageAttemptFramedStructuredSemanticCoreConstruction attempt := by
-  exact
-    StageAttemptFramed.SemanticCore.stageAttemptFramedStructuredSemanticCoreConstruction
-      attempt hattempt
-
-/--
 Target-local parser/core obligation for the framed-invocation target.  The
 public endpoint theorem below only composes this with a shared tape-2
 projector.
@@ -241,7 +230,7 @@ theorem stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
   stageAttemptFramedStructuredEndpointEquivIndexedConstruction_of_components
     attempt
     stageAttemptFramedStructuredMaterializerConstruction_core
-    (stageAttemptFramedStructuredSemanticCoreConstruction_core
+    (StageAttemptFramed.SemanticCore.stageAttemptFramedStructuredSemanticCoreConstruction
       attempt hattempt)
 
 end StructuredConstructionTargets
