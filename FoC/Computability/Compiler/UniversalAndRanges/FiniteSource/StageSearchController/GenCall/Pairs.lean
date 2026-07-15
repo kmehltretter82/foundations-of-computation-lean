@@ -222,14 +222,7 @@ theorem codePrefixNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedExactFuelSearchConstruction M := by
-  rcases
-      FiniteRecognizer.TupleSearch.generatedNestedExactFuelSearchFiniteLeafDecidable
-        M with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input
-  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
-    using hsearcher input
+  exact codePrefixNestedExactFuelSearchFiniteLeaf M
 
 /--
 Bounded generated-pair enumerator.  The input carries an outer budget; the
@@ -515,14 +508,7 @@ theorem codePrefixBoundedNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixBoundedNestedExactFuelSearchConstruction M := by
-  rcases
-      FiniteRecognizer.TupleSearch.generatedBoundedNestedExactFuelSearchFiniteLeafDecidable
-        M with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input budget
-  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
-    using hsearcher input budget
+  exact codePrefixBoundedNestedExactFuelSearchFiniteLeaf M
 
 end Computability
 end FoC

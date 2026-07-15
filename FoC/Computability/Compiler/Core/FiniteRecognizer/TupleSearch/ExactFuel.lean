@@ -70,10 +70,7 @@ theorem generatedStageProgramRunnerConstructionFiniteLeafDecidable
     {machineState : Type uMachine} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     ExactFuel.RunnerConstruction M GeneratedCode.stageCode := by
-  exact
-    FoC.Computability.FiniteRecognizer.ExactFuel.runnerConstruction_of_finStateConstructionDecidable
-      M
-      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf
+  exact generatedStageProgramRunnerConstructionFiniteLeaf M
 
 theorem generatedNestedExactFuelSearchFiniteLeaf
     {machineState : Type uMachine}
@@ -108,30 +105,7 @@ theorem generatedNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type uMachine} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     GeneratedNestedExactFuelSearchConstruction M := by
-  rcases generatedStageProgramRunnerConstructionFiniteLeafDecidable M with
-    ⟨selectedState, selected, hselected⟩
-  rcases generatedNestedPairEnumeratorFiniteLeaf selected with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input
-  constructor
-  · intro hhalt
-    rcases (hsearcher input).mp hhalt with
-      ⟨inner, outer, hselectedHalt⟩
-    exact
-      ⟨inner, outer,
-        (hselected (GeneratedCode.stageCode input inner) outer).mp
-          (by
-            simpa [GeneratedCode.nestedStageCode] using
-              hselectedHalt)⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hM⟩
-    exact (hsearcher input).mpr
-      ⟨inner, outer,
-        by
-          simpa [GeneratedCode.nestedStageCode] using
-            (hselected (GeneratedCode.stageCode input inner) outer).mpr
-              hM⟩
+  exact generatedNestedExactFuelSearchFiniteLeaf M
 
 theorem generatedBoundedNestedExactFuelSearchFiniteLeaf
     {machineState : Type uMachine}
@@ -166,30 +140,7 @@ theorem generatedBoundedNestedExactFuelSearchFiniteLeafDecidable
     {machineState : Type uMachine} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     GeneratedBoundedNestedExactFuelSearchConstruction M := by
-  rcases generatedStageProgramRunnerConstructionFiniteLeafDecidable M with
-    ⟨selectedState, selected, hselected⟩
-  rcases generatedBoundedNestedPairEnumeratorFiniteLeaf selected with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input budget
-  constructor
-  · intro hhalt
-    rcases (hsearcher input budget).mp hhalt with
-      ⟨inner, outer, hinner, houter, hselectedHalt⟩
-    exact
-      ⟨inner, outer, hinner, houter,
-        (hselected (GeneratedCode.stageCode input inner) outer).mp
-          (by
-            simpa [GeneratedCode.nestedStageCode] using
-              hselectedHalt)⟩
-  · intro htarget
-    rcases htarget with ⟨inner, outer, hinner, houter, hM⟩
-    exact (hsearcher input budget).mpr
-      ⟨inner, outer, hinner, houter,
-        by
-          simpa [GeneratedCode.nestedStageCode] using
-            (hselected (GeneratedCode.stageCode input inner) outer).mpr
-              hM⟩
+  exact generatedBoundedNestedExactFuelSearchFiniteLeaf M
 
 theorem generatedNestedHaltingSearchFiniteLeaf
     {machineState : Type uMachine}
@@ -207,13 +158,7 @@ theorem generatedNestedHaltingSearchFiniteLeafDecidable
     {machineState : Type uMachine} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     GeneratedNestedHaltingSearchConstruction M := by
-  rcases generatedNestedExactFuelSearchFiniteLeafDecidable M with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input
-  exact Iff.trans (hsearcher input)
-    (exists_pair_haltsOnInputIn_iff_exists_haltsOnInput
-      M (fun inner => GeneratedCode.stageCode input inner))
+  exact generatedNestedHaltingSearchFiniteLeaf M
 
 end TupleSearch
 end FiniteRecognizer

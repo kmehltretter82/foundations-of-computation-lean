@@ -179,14 +179,7 @@ theorem codePrefixNestedHaltingSearchFiniteLeafDecidable
     {machineState : Type u} [DecidableEq machineState]
     (M : TuringMachine MachineCodeSymbol machineState) :
     CodePrefixNestedHaltingSearchConstruction M := by
-  rcases
-      FiniteRecognizer.TupleSearch.generatedNestedHaltingSearchFiniteLeafDecidable
-        M with
-    ⟨searcherState, searcher, hsearcher⟩
-  refine ⟨searcherState, searcher, ?_⟩
-  intro input
-  simpa [FiniteRecognizer.GeneratedCode.stageCode_eq]
-    using hsearcher input
+  exact codePrefixNestedHaltingSearchFiniteLeaf M
 
 /--
 Unbounded product search for recognizer intersection, hiding both exact fuel

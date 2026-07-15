@@ -17,6 +17,69 @@ comparison.
 
 ## Retired surfaces
 
+### Exact-fuel finite-component and layout-pipeline lattice
+
+- Deleting commit: this change (planned subject:
+  `Close strict exact-fuel runner`; not yet committed).
+- Net reduction: exactly 6,320 Compiler lines. The
+  `LayoutCode.lean`/`StageProgram/InitialLayout.lean` lane accounts for 2,093
+  lines; the `StageProgram/Composition.lean`/`Contracts.lean` lane plus the
+  removed `TupleSearch/Contracts.lean` import accounts for 1,779; and the
+  whole-file `Program.lean` replacement accounts for 8. Two removed aggregate
+  imports account for 2 more lines. Retiring the standalone 327-line
+  `StageProgram/UnaryParser.lean` scaffold and its final aggregate import
+  accounts for another 328 lines. A post-closure dependency pass removed a
+  further 2,110 lines: 568 from runner/spec/generated-call compatibility
+  surfaces, 397 from obsolete layout projection and step lemmas, 459 from the
+  old frame semantic-exit layer, 357 from the retired standalone dispatch
+  machine, 234 from superseded serialized-shift runs, and 95 from duplicate
+  Decidable consumer adapters and an unused generated-call bridge.
+- Old surface: the `ExactFuelFiniteComponentRoute`, machine-route,
+  runner-route, and code-machine-route wrappers; the initial-layout exact and
+  normalized materializer constructions; the generic output-then-recognize
+  handoff machine and composition proofs; and the layout-code primitive,
+  runner, and finite-component construction ladder. It also included the
+  self-only unary-prefix parser specification, machine, and construction; the
+  superseded semantic-exit and dispatch-machine lattices; standalone shift run
+  proofs now owned by the composed restaged editor; and compatibility adapters
+  bypassed by the relational StrictProbe runner.
+- Potentially reusable ideas: exact initial-layout decode inversions, canonical
+  producer-to-recognizer handoff calculations, execution transport across
+  `Tape.Equiv`, and the executable layout-fuel-loop decomposition. Recover a
+  specific lemma or finite control block if a current caller needs it; the
+  retired route objects and conversion lattice are not useful as a unit.
+- Zero-reference evidence: after replacing the leaf, an exact production
+  declaration search found zero references to `ExactFuelFiniteComponentRoute`,
+  `InitialLayoutDecodedPrimitiveRoute`, `ExactFuelCodeMachineRoute`, the
+  `InitialLayout*Materializer*` family, `OutputThenRecognize*`, and
+  `FiniteComponentFinStateConstruction`. An exact import search likewise found
+  zero remaining imports of the deleted `ExactFuel.Contracts` and
+  `ExactFuel.StageProgram.InitialLayout` modules; the sole stale tuple-contract
+  import was removed in this change. The standalone unary parser had no
+  declaration consumer and only one import from the declaration-free aggregate
+  wrapper, which was removed with it. An opaque-body dependency closure rooted
+  at the frontier and both concrete consumers then confirmed that the pruned
+  compatibility, semantic-exit, dispatch, shift-run, and layout-lemma
+  declarations had no live production reference.
+- Why retired: the closed #5 construction no longer factors through a generic
+  materializer/layout-code pipeline. Keeping that unused lattice would retain
+  parallel contracts and conversion proofs around a runner now supplied by one
+  concrete finite machine.
+- Current route: `ExactFuel/Program.lean` imports
+  `StrictProbe/StageRunner/Construction.lean` and
+  `StrictProbe/Update/Runs.lean` directly. Its finite leaf composes
+  `StrictProbe.StageRunner.runnerConstruction`,
+  `StrictProbe.Update.Kernel.kernel`,
+  `StrictProbe.CyclicDriverWitnesses.runWitnesses`, and
+  `StrictProbe.Update.Runs.selectedUpdateRuns`.
+- Reconsider only if: a checked consumer needs a contract that the current
+  `StrictProbe` StageRunner/Update route cannot express. First demonstrate the
+  live reference and contract gap, then recover the smallest required idea
+  from the deleting commit's parent and compare its net LOC. If a checked
+  consumer specifically needs a separate unary-prefix recognizer, recover only
+  that parser. Do not restore the finite-component/materializer/layout-pipeline
+  lattice wholesale.
+
 ### StageAttempt exact-tape contract island
 
 - Deleting commit: this change (`Close the StageAttempt structured core`).

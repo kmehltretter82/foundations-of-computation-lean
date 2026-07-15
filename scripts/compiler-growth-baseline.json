@@ -1,7 +1,7 @@
 {
   "limits": {
     "default_campaign_net_growth": 10000,
-    "default_net_growth": 50000,
+    "default_net_growth": 63000,
     "max_new_file_lines": 1500,
     "max_outstanding_growth_loans": 50000
   },
@@ -104,7 +104,7 @@
     ]
   },
   "review": {
-    "reason": "Keep the ordinary per-sorry campaign allowance at 10000 and raise both the aggregate ordinary-loan cap and global raw Compiler growth allowance from 25000 to 50000 per explicit user instruction on 2026-07-15 so the remaining Chapter 5.2 proofs and preparatory Chapter 5.3 work are not forced into premature proof compression; source metrics remain pinned at 347066 lines and this policy review does not reset the baseline",
-    "recorded_against": "aa1126336327a9b5da9cf83ee86d70670d46811b"
+    "reason": "Keep the ordinary per-sorry campaign allowance at 10000 and aggregate ordinary-loan cap at 50000 while raising only the independent global raw Compiler growth allowance from 50000 to 63000 per explicit user approval on 2026-07-15 so the completed sorry #5 proof can pass its reviewed gate; source metrics remain pinned at 347066 lines and this policy review does not reset the baseline",
+    "recorded_against": "25c345bcab6077b2a15d9a944a4c0859074c3255"
   }
 }

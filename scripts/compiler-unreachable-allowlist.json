@@ -55,40 +55,10 @@
       "reason": "Contract boundary for an active finite-recognizer sorry."
     },
     {
-      "category": "active",
-      "intended_consumer": "ExactFuel.Program direct frontier",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Contracts",
-      "reason": "Exact-fuel recognizer contract used by the active program leaf."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #5 strict exact-fuel runner",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Frame",
-      "reason": "Real-layout frame and indexed exit API for the active strict-probe machine construction."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #5 strict exact-fuel runner",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Machine",
-      "reason": "Finite selected-transition dispatch kernel for the active strict-probe machine construction."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #5 strict exact-fuel runner",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Semantics",
-      "reason": "Generic exact-fuel outcome semantics for the active strict-probe machine construction."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #5 strict exact-fuel runner",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.SerializedShift",
-      "reason": "Finite insertion and compaction passes for preserving the caller suffix during variable-length exact-fuel field rewrites."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "ExactFuel parser and program closure",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser",
-      "reason": "Checked unary parser phase for the active exact-fuel recognizer."
+      "category": "guardrail",
+      "intended_consumer": "Exact-fuel layout-loop contract reviews",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.LayoutCode",
+      "reason": "Retained executable layout-fuel semantics and checked impossibility theorem prevent revival of the false literal-empty-output finite construction."
     },
     {
       "category": "active",

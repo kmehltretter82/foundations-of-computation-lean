@@ -266,14 +266,9 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteL
     (attempt : TuringMachine MachineCodeSymbol attemptState) :
     CodePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptObligation
       attempt := by
-  rcases codePrefixExactFuelRunnerFiniteLeafDecidable attempt with
-    ⟨selectedState, selected, hselected⟩
-  refine ⟨selectedState, selected, ?_⟩
-  intro encoded limit fuel
-  simpa [codePrefixStageSearchControllerBudgetFuelOuterLoopLimitFuelCode]
-    using!
-      codePrefixExactFuelRunner_haltsOnNested_iff
-        hselected encoded limit fuel
+  exact
+    codePrefixStageSearchControllerBudgetFuelOuterLoopSelectedAttemptFiniteLeaf
+      attempt
 
 /--
 Finite-machine leaf for the limit/fuel enumerator used by the raw outer-loop

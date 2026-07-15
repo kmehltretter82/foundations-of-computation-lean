@@ -1,14 +1,14 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.LayoutCode
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.StageRunner.Construction
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Update.Runs
 
 set_option doc.verso true
 
 /-!
 # Exact-fuel staged program boundary
 
-This module isolates the normalized code-machine boundary for exact-fuel
-generated calls.  The public generated-code runner can be obtained from any
-finite machine that realizes this staged predicate; the remaining concrete
-transition-table work is therefore focused on one exact parser/run program.
+This module exposes the normalized finite-state runner for exact-fuel generated
+calls.  The construction materializes the protected stage input and repeatedly
+executes the selected-machine update kernel until the exact fuel is exhausted.
 -/
 
 namespace FoC
@@ -20,24 +20,16 @@ namespace FiniteRecognizer
 namespace ExactFuel
 namespace StageProgram
 
-/--
-Remaining finite components for the normalized exact-fuel staged program. The
-first component materializes the protected initial layout exactly; the second
-recognizes protected layouts using ordinary halting semantics.
--/
-theorem finiteComponentFiniteLeaves :
-    FiniteComponentFinStateConstruction := by
-  -- Obligation: implement the exact materializer and protected-layout recognizer.
-  sorry
-
-theorem codeMachineFinStateFiniteLeaf :
-    FinStateCodeMachineConstruction :=
-  codeMachineFinStateConstruction_of_finiteComponents
-    finiteComponentFiniteLeaves
-
 theorem finStateRunnerConstructionFiniteLeaf :
-    FinStateRunnerConstruction stageCode :=
-  finStateRunnerConstruction_of_codeMachine codeMachineFinStateFiniteLeaf
+    FinStateRunnerConstruction stageCode := by
+  intro stateCount M
+  exact StrictProbe.StageRunner.runnerConstruction M
+    (StrictProbe.Update.Kernel.kernel stateCount)
+    (StrictProbe.CyclicDriverWitnesses.runWitnesses M
+      (StrictProbe.Update.Kernel.kernel stateCount)
+      ([] : Word MachineCodeSymbol)
+      (StrictProbe.Update.Runs.selectedUpdateRuns M
+        ([] : Word MachineCodeSymbol)))
 
 end StageProgram
 end ExactFuel
