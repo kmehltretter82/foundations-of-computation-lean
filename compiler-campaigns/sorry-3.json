@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 10000,
+  "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ProductContracts.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Product.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer.lean"
+  ],
+  "frontier": "FoC.Computability.FiniteRecognizer.generatedProductExactFuelRunnerFinStateFiniteLeaf",
+  "name": "sorry-3-generated-product-exact-fuel-runner",
+  "paths": [
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/Product",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/ProductContracts.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Product.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.FiniteRecognizer.generatedProductExactFuelRunnerFinStateFiniteLeaf",
+    "FoC.Computability.FiniteRecognizer.generatedProductExactFuelRunnerFiniteLeaf",
+    "FoC.Computability.codePrefixExactFuelProductRunnerFinStateFiniteLeaf"
+  ]
+}
