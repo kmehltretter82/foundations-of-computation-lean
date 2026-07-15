@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 10000,
+  "architecture_review": {
+    "reason": "Replace the self-only exact-materializer/layout-loop component lattice with one strict continuation-friendly exact-n probe and retain the externally consumed StageProgram exact-fuel runner. The full ordinary 10000-line ceiling is requested explicitly because the campaign must cover the protected frame, finite transition program, success/failure runs, inversion, the public stage runner, and its first clean code-prefix consumer; the allowance remains a ceiling and causal deletion follows consumer migration.",
+    "recorded_against": "7c97cc0f50d6aba265b46a42867a9304939f80e9"
+  },
+  "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Program.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Contracts.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/ExactFuel.lean"
+  ],
+  "frontier": "FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf",
+  "name": "sorry-5-strict-exact-fuel-runner",
+  "paths": [
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/ExactFuel.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf",
+    "FoC.Computability.codePrefixExactFuelRunnerFinStateFiniteLeaf"
+  ]
+}
