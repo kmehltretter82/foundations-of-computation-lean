@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.Layout
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Semantics
+import FoC.Computability.TapeLemmas
 
 set_option doc.verso true
 
@@ -153,6 +154,77 @@ theorem afterCallerTape_normalizedOutput {stateCount : Nat}
     simp [afterCallerTape, Tape.normalizedOutput, Tape.cells,
       Function.comp_def]
 
+/--
+Forward-run representative with far-right blank padding.  The padding records
+the visited physical window without changing the protected word.
+-/
+def afterCallerTapeWithRightPadding {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol)
+    (padding : Nat) : Tape MachineCodeSymbol :=
+  let clean := afterCallerTape L callerData
+  { clean with
+    right :=
+      List.append clean.right
+        (List.replicate padding (none : Option MachineCodeSymbol)) }
+
+/-- Zero right padding is the clean semantic target. -/
+theorem afterCallerTapeWithRightPadding_zero {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol) :
+    afterCallerTapeWithRightPadding L callerData 0 =
+      afterCallerTape L callerData := by
+  simp [afterCallerTapeWithRightPadding]
+
+/-- Far-right padding preserves the exact protected output word. -/
+theorem afterCallerTapeWithRightPadding_normalizedOutput
+    {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol)
+    (padding : Nat) :
+    Tape.normalizedOutput
+        (afterCallerTapeWithRightPadding L callerData padding) =
+      protectedWord L callerData := by
+  rw [protectedWord_eq_encode_append]
+  cases callerData <;>
+    simp [afterCallerTapeWithRightPadding, afterCallerTape,
+      Tape.normalizedOutput, Tape.cells, Function.comp_def]
+
+/-- Far-right padding is equivalent to the clean post-tag tape. -/
+theorem afterCallerTapeWithRightPadding_equiv {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol)
+    (padding : Nat) :
+    Tape.Equiv
+      (afterCallerTapeWithRightPadding L callerData padding)
+      (afterCallerTape L callerData) := by
+  cases callerData with
+  | nil =>
+      refine ⟨rfl, rfl, ?_⟩
+      change
+        Tape.dropTrailingNone
+            (List.replicate padding
+              (none : Option MachineCodeSymbol)) = []
+      exact dropTrailingNone_replicate_none padding
+  | cons first rest =>
+      simp [afterCallerTapeWithRightPadding, afterCallerTape,
+        Tape.Equiv, dropTrailingNone_append_replicate_none]
+
+/--
+Physical exit currency for forward composition.  Closed inversion continues to
+target the clean {name}`afterCallerTape`; forward runs may expose any equivalent
+visited-window representative.
+-/
+def PhysicalExitTapeAt {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol)
+    (T : Tape MachineCodeSymbol) : Prop :=
+  Tape.Equiv T (afterCallerTape L callerData)
+
+/-- Every right-padded representative satisfies the physical exit contract. -/
+theorem afterCallerTapeWithRightPadding_physicalExitTapeAt
+    {stateCount : Nat}
+    (L : Layout stateCount) (callerData : Word MachineCodeSymbol)
+    (padding : Nat) :
+    PhysicalExitTapeAt L callerData
+      (afterCallerTapeWithRightPadding L callerData padding) :=
+  afterCallerTapeWithRightPadding_equiv L callerData padding
+
 end Frame
 
 /-!
@@ -217,6 +289,18 @@ structure EncodedExitAt {stateCount : Nat}
   semantic : SemanticExitAt M outcome L
   frame : tokens = Frame.protectedWord L callerData
 
+/--
+A physical terminal exit retains the exact semantic layout while observing its
+tape only up to far-edge blank padding.
+-/
+structure PhysicalExitAt {stateCount : Nat}
+    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
+    (outcome : Outcome stateCount) (L : Layout stateCount)
+    (callerData : Word MachineCodeSymbol)
+    (T : Tape MachineCodeSymbol) : Prop where
+  semantic : SemanticExitAt M outcome L
+  frame : Frame.PhysicalExitTapeAt L callerData T
+
 /-- Decoding an encoded exit recovers its exact layout and caller suffix. -/
 theorem EncodedExitAt.decode
     {stateCount : Nat}
@@ -238,6 +322,29 @@ theorem EncodedExitAt.semanticOutcome
     (hexit : EncodedExitAt M outcome L callerData tokens) :
     semanticOutcome M L.fuel L.config = outcome :=
   semanticOutcome_eq_of_semanticExitAt hexit.semantic
+
+/-- A physical exit has the semantic outcome named by its outcome index. -/
+theorem PhysicalExitAt.semanticOutcome
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {outcome : Outcome stateCount} {L : Layout stateCount}
+    {callerData : Word MachineCodeSymbol}
+    {T : Tape MachineCodeSymbol}
+    (hexit : PhysicalExitAt M outcome L callerData T) :
+    semanticOutcome M L.fuel L.config = outcome :=
+  semanticOutcome_eq_of_semanticExitAt hexit.semantic
+
+/-- A physical exit preserves the exact protected frame as normalized output. -/
+theorem PhysicalExitAt.normalizedOutput
+    {stateCount : Nat}
+    {M : TuringMachine MachineCodeSymbol (Fin stateCount)}
+    {outcome : Outcome stateCount} {L : Layout stateCount}
+    {callerData : Word MachineCodeSymbol}
+    {T : Tape MachineCodeSymbol}
+    (hexit : PhysicalExitAt M outcome L callerData T) :
+    Tape.normalizedOutput T = Frame.protectedWord L callerData := by
+  exact (Tape.Equiv.normalizedOutput_eq hexit.frame).trans
+    (Frame.afterCallerTape_normalizedOutput L callerData)
 
 end StrictProbe
 end ExactFuel
