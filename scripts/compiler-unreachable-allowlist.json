@@ -1,18 +1,6 @@
 {
   "modules": [
     {
-      "category": "active",
-      "intended_consumer": "Sorry #19/#20 QuoteRest endpoint assembly",
-      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputProjectorRoutes",
-      "reason": "Active output-projector route over the left-tailed implementation."
-    },
-    {
-      "category": "public-facade",
-      "intended_consumer": "Optional source-rest live-tail imports",
-      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LiveTail",
-      "reason": "Stable thin import facade for focused QuoteRest development."
-    },
-    {
       "category": "guardrail",
       "intended_consumer": "Sorry #18 represented-boundary contract reviews",
       "module": "FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepBoundary",
@@ -23,6 +11,12 @@
       "intended_consumer": "Opt-in finite-machine debugging sessions",
       "module": "FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MachineDescriptionDebugExamples",
       "reason": "Deliberately excluded executable debugger examples."
+    },
+    {
+      "category": "debug",
+      "intended_consumer": "Opt-in tailed three-tape structured debugging sessions",
+      "module": "FoC.Computability.Compiler.Structured.Lowering.TailedThreeTapeDebug",
+      "reason": "Deliberately optional debugger for inspecting structured source, scratch, and work tapes; it is not a proof or production construction dependency."
     },
     {
       "category": "debug",
@@ -92,21 +86,9 @@
     },
     {
       "category": "public-facade",
-      "intended_consumer": "Sorry #15 live indexed footprint compactor",
+      "intended_consumer": "Optional pair-encoded ingress-shape imports",
       "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor",
-      "reason": "Optional barrel for the preserved pair-encoded implementation modules."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #15 live indexed footprint compactor",
-      "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor.Lowered",
-      "reason": "Completed lowered three-tape pair compactor retained as an implementation component for the repaired frontier."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #15 live indexed footprint compactor",
-      "module": "FoC.Computability.Compiler.Structured.Lowering.PairEncodedOptionCellCompactor.ProjectableFocus",
-      "reason": "Completed projectable separator-focus machine retained for a future source-functional endpoint route."
+      "reason": "Optional barrel for the live base shapes used by the marker compactor and collision guardrails."
     },
     {
       "category": "public-facade",

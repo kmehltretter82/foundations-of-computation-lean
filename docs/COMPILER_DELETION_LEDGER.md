@@ -974,6 +974,50 @@ increase does not change this cleanup accounting.
   declaration group; do not restore the scalar route lattice or its impossible
   all-result premise.
 
+### Superseded final Chapter 5.2 route lattices
+
+- Deleting commit: this change (post-Chapter 5.2 cleanup).
+- Reduction: 9,646 net raw Compiler lines (`+36/-9,682`): 5,484 net from
+  the separated QuoteRest structured joiner/output route, 2,000 from its
+  now-unconsumed generic raw-tail insertion component and umbrella import,
+  1,521 net from the generic pair-cell compactor route, and 641 net from the
+  final selected-head/fuel-pair contract audit.
+- Old surface: a separated live-tail emitter/joiner output-projector route;
+  the structured joiner, raw-tail insertion, restore, endpoint-component, and
+  readiness wrapper lattices; the generic three-tape raw-tail insertion
+  machine; one lowered pair-cell compactor; a projectable-focus preparatory
+  machine and its generic split-target contract lattice; the superseded #17
+  selected-head cleanup adapters; one unused #12 runner-family wrapper; and
+  one unused fuel-pair witness equivalence.
+- Potentially reusable ideas: composing a lowered structured endpoint with a
+  selected output projector, restoring a structured raw-tail joiner, and
+  focusing a pair-coded logical segment before compaction. The deleted #12
+  wrappers also packaged output-functional coherence and existential evidence.
+- Why retired: after the direct joined endpoint closed #19/#20, declaration-
+  level searches found no consumer of the old QuoteRest joiner branch or its
+  generic endpoint packaging. Only the emitter assembly shapes and two static
+  lowered facts remain live. That branch was also the sole production consumer
+  of `Structured/Lowering/RawTailInsertion.lean`; an import from the optional
+  lowering umbrella was not evidence of use. The #15 lowered/projectable
+  modules were likewise imported only by an unreachable optional barrel, and
+  every generic split-target declaration in their base was self-only. The live
+  marker compactor and collision guardrails need only the retained 166-line
+  pair-encoding and guarded-ingress shape surface. Repository-wide searches
+  likewise found only two externally used declarations in the old #17 base;
+  the #12 runner-family wrapper and witness equivalence were referenced only
+  at their declarations. A future consumer does not justify retaining any of
+  these implementation lattices.
+- Current route: `QuoteRest/DirectJoinedEndpoint/Construction.lean` owns the
+  joined output, while `SelectedFootprintCompaction/LiveIngress/MarkerCompactor.lean`
+  uses the retained pair-encoding base shapes. The marker-preserving tape-2
+  projector, attempt-facing fuel-pair family, and explicit evidence witness are
+  the corresponding live #17/#12 APIs.
+- Reconsider only if: two checked construction families need the same lowered
+  pair compactor or raw-tail inserter, or a caller genuinely requires a
+  separated QuoteRest joiner endpoint or one of the retired conditional
+  adapters. Recover only that smallest machine and its direct run theorem; do
+  not restore either wrapper lattice wholesale.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

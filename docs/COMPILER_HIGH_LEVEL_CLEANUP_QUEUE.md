@@ -45,14 +45,19 @@ lines: +14,095 total. Fresh focused checks passed for `StageAttemptFramed`,
 `RawCells`, and `RawCellsOutput`. The retained frontiers and their real
 consumers depend only on `propext`, `Classical.choice`, and `Quot.sound`.
 
-Removing the five completed manifests releases 14,363 lines of aggregate
-outstanding-loan allowance; it does not remove their source lines from the
-independent global measurement or reset any pinned base. The repaired #12
-campaign now has an explicitly reviewed 7,000-line cumulative allowance. By
-user instruction, the aggregate outstanding-loan and global raw-growth caps
-are both 50,000 lines, while the ordinary per-campaign ceiling remains 10,000.
-Any reopened work on a retired frontier requires a new campaign and a new
-pinned base.
+The final Chapter 5.2 retirement rechecked #12, #13, #15, #17, and #22 after
+all Chapter 5.2 frontiers had closed. Their cumulative nets from the original
+pinned bases were respectively +12,183, +2,866, -5,063, +1,264, and +9,962
+Compiler lines. Every required frontier, guardrail, and live consumer depends
+only on `propext`, `Classical.choice`, and `Quot.sound`. Removing these five
+completed manifests releases another 28,000 lines of aggregate outstanding
+allowance; it neither removes source lines from the independent global
+measurement nor resets any pinned base.
+
+The aggregate outstanding-loan cap is 50,000 lines, the independent global
+raw-growth cap is 63,000 lines, and the ordinary per-campaign ceiling remains
+10,000. Any reopened work on a retired frontier requires a new campaign and a
+new pinned base.
 
 ### #18 exact terminal facade and duplicate construction — completed
 
@@ -143,6 +148,30 @@ across `StructuredPrefixEraserBoundaryPhases.lean` and `Endpoint.lean`. Audit
 whether one canonical endpoint-shape theorem can replace those remaining
 restatements. The implementation is live, so migrate direct consumers before
 deleting aliases.
+
+### Final Chapter 5.2 unreachable route cleanup — completed
+
+The post-closure import and declaration-reference audit removed 9,646 net raw
+Compiler lines (`+36/-9,682`). The direct joined QuoteRest endpoint uses the
+structured emitter but not the old structured joiner, output-projector, restore,
+or generic endpoint-component lattice; pruning that isolated branch accounts
+for 5,484 net lines. It was also the sole production consumer of the 1,999-line
+generic raw-tail insertion machine; deleting that machine and its umbrella
+import accounts for another 2,000 lines. The lowered pair compactor and
+projectable-focus machine were imported only by an unreachable optional barrel,
+and their generic split-target contract lattice was self-only. The retained
+166-line base exposes exactly the pair-encoding and guarded-ingress shapes used
+by the live #15 marker compactor and collision guardrails; this accounts for
+another 1,521 net lines. The optional barrel now exposes only those live shapes,
+stale allowlist entries for deleted modules are gone, and the intentionally
+optional tailed three-tape debugger is classified explicitly as debug support.
+
+A final declaration-only pass removed another 641 net lines. The #17
+`HeadRoutes/Base.lean` module now retains only the two source shapes used by
+the collision guardrails and cleanup adapters; the marker-preserving tape-2
+projector remains the live construction. The #12 search contracts also lost
+one zero-use runner-family wrapper and one zero-use witness equivalence. Their
+attempt-facing family and explicit witness structure remain the live APIs.
 
 ## Missing theorem/API candidates
 

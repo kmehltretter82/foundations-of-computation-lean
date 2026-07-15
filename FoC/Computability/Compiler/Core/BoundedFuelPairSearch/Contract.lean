@@ -69,30 +69,6 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEvidence_iff_exist
     subst result
     exact ⟨limit, fuel, hrun⟩
 
-/-- A witness packages exactly the existential evidence for its public input. -/
-theorem pairedRecognizerDovetailControllerStageAttemptFuelPairEvidence_iff_nonempty_witness
-    {runner : MachineDescription} {w : Word Bool} {b : Bool} :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairEvidence runner w b <->
-      Nonempty
-        {i :
-          PairedRecognizerDovetailControllerStageAttemptFuelPairEvidenceWitness
-            runner b // i.input = w} := by
-  constructor
-  · intro h
-    rcases h with ⟨limit, fuel, hrun⟩
-    let i :
-        PairedRecognizerDovetailControllerStageAttemptFuelPairEvidenceWitness
-          runner b :=
-      { input := w
-        limit := limit
-        fuel := fuel
-        runner_halts := hrun }
-    exact ⟨⟨i, rfl⟩⟩
-  · intro h
-    rcases h with ⟨⟨i, hinput⟩⟩
-    subst w
-    exact ⟨i.limit, i.fuel, i.runner_halts⟩
-
 /-- The exact fixed-Boolean handoff tape used by an output-indexed searcher. -/
 def PairedRecognizerDovetailControllerStageAttemptFuelPairBoolRightShiftedOutputTape
     (b : Bool) : Tape Bool :=

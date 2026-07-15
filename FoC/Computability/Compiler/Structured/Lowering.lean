@@ -20,7 +20,6 @@ import FoC.Computability.Compiler.Structured.Lowering.RefreshedRows
 import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
 import FoC.Computability.Compiler.Structured.Lowering.TailedThreeTapeDebug
-import FoC.Computability.Compiler.Structured.Lowering.RawTailInsertion
 import FoC.Computability.Compiler.Structured.Lowering.Runs
 import FoC.Computability.Compiler.Structured.Lowering.RunsStructuredSingleton3
 import FoC.Computability.Compiler.Structured.Lowering.Dispatcher
