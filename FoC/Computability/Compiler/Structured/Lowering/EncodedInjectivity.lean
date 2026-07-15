@@ -11,7 +11,7 @@ of the encoded logical tape lists.  Construction leaves need this to turn
 per-step logical tape changes into per-step encoding changes: a spinning
 structured core moves a cursor on every step, and this module upgrades those
 moves to the per-step non-equivalence hypothesis of the divergence transfer
-{lit}`staticLoweredDescriptionWithRefresh_not_haltsFromTape_of_diverges`.
+{lit}`staticLoweredDescriptionWithRefresh_not_haltsFromTape_of_state_or_tape_progress`.
 
 The proof works on the raw Boolean payloads: logical cell codes are the
 two-bit groups {lit}`FF`/{lit}`FT`/{lit}`TF`, so the head marker {lit}`TT` is

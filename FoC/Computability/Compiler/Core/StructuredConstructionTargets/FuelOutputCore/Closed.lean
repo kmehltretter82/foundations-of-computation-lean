@@ -20,26 +20,6 @@ open CommonGround.FiniteTransducers.Structured
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering.ThreeTape
 
-private theorem action_apply_ne_of_move_ne_stay
-    (a : TapeAction) (T : Tape Bool)
-    (hmove : a.move ≠ HeadMove.stay) :
-    a.apply T ≠ T := by
-  rcases a with ⟨write?, move⟩
-  cases move with
-  | stay => exact absurd rfl hmove
-  | left =>
-      cases T with
-      | mk left head right =>
-          cases write? <;> cases left <;>
-            simp [TapeAction.apply, HeadMove.apply, Tape.move,
-              Tape.moveLeft, Tape.write]
-  | right =>
-      cases T with
-      | mk left head right =>
-          cases write? <;> cases right <;>
-            simp [TapeAction.apply, HeadMove.apply, Tape.move,
-              Tape.moveRight, Tape.write]
-
 private theorem transition_action0_moves
     {n : Nat} {t : Transition}
     (ht : t ∈ (coreD n).transitions) :
@@ -53,27 +33,17 @@ private theorem transition_action0_moves
     ⟨st.action0, st.action1, st.action2, rfl,
       next_action0_move_ne_stay n s r0 r1 r2 st hnext⟩
 
-private theorem stepConfig_tapes_ne
+private theorem stepConfig_state_ne_or_tapes_ne
     {n : Nat}
     {c d : CommonGround.FiniteTransducers.Structured.Configuration}
     (hstep : (coreD n).stepConfig c = some d) :
-    c.tapes ≠ d.tapes := by
-  unfold Description.stepConfig at hstep
-  cases hlookup : (coreD n).lookupTransition c with
-  | none => simp [hlookup] at hstep
-  | some t =>
-      have ht : t ∈ (coreD n).transitions :=
-        Description.lookupTransition_mem hlookup
-      rcases transition_action0_moves ht with
-        ⟨a0, a1, a2, hactions, hmove⟩
-      simp only [hlookup] at hstep
-      injection hstep with hd
-      subst d
-      intro heq
-      have hfirst := congrArg (fun ts => ts.getD 0 Tape.blank) heq
-      simp [Description.applyActions, hactions, coreD] at hfirst
-      exact action_apply_ne_of_move_ne_stay a0
-        (c.tapes.getD 0 Tape.blank) hmove hfirst.symm
+    c.state ≠ d.state ∨ c.tapes ≠ d.tapes := by
+  apply stepConfig_state_ne_or_tapes_ne_of_state_or_action_moves
+    (D := coreD n) rfl ?_ hstep
+  intro t ht
+  rcases transition_action0_moves ht with
+    ⟨a0, a1, a2, hactions, hmove⟩
+  exact ⟨a0, a1, a2, hactions, Or.inr (Or.inl hmove)⟩
 
 private theorem stepConfig_spin (n : Nat) (T0 T2 : Tape Bool) :
     (coreD n).stepConfig (coreCfg n CoreState.spin T0 T2) =
@@ -145,59 +115,6 @@ private theorem leadsSpin_state_ne_halt
     ((coreD n).runConfig k c) hhalt
   exact leadsSpin_stepConfig_ne_none hspin k hnone
 
-private theorem runConfig_tape_count
-    {D : Description}
-    {c : CommonGround.FiniteTransducers.Structured.Configuration}
-    (hc : c.tapes.length = D.tapeCount) :
-    forall k : Nat, (D.runConfig k c).tapes.length = D.tapeCount := by
-  intro k
-  induction k generalizing c with
-  | zero => exact hc
-  | succ k ih =>
-      change
-        (match D.stepConfig c with
-        | none => c
-        | some next => D.runConfig k next).tapes.length = D.tapeCount
-      cases hstep : D.stepConfig c with
-      | none => exact hc
-      | some next =>
-          exact ih (Description.stepConfig_tape_count hstep)
-
-private theorem runConfig_succ_of_stepConfig_some
-    {D : Description}
-    {c d : CommonGround.FiniteTransducers.Structured.Configuration}
-    {k : Nat}
-    (hstep : D.stepConfig (D.runConfig k c) = some d) :
-    D.runConfig (k + 1) c = d := by
-  rw [Description.runConfig_add D k 1 c]
-  change
-    (match D.stepConfig (D.runConfig k c) with
-    | none => D.runConfig k c
-    | some next => next) = d
-  rw [hstep]
-
-private theorem leadsSpin_progress
-    {n : Nat}
-    {c : CommonGround.FiniteTransducers.Structured.Configuration}
-    (hc : c.tapes.length = 3)
-    (hspin : LeadsSpin n c) (k : Nat) :
-    ¬ Tape.Equiv
-      (encodedGuardedStructuredTapes ((coreD n).runConfig k c).tapes)
-      (encodedGuardedStructuredTapes
-        ((coreD n).runConfig (k + 1) c).tapes) := by
-  have hdefined := leadsSpin_stepConfig_ne_none hspin k
-  cases hstep : (coreD n).stepConfig ((coreD n).runConfig k c) with
-  | none => exact False.elim (hdefined hstep)
-  | some d =>
-      have hlen := runConfig_tape_count
-        (D := coreD n) (c := c) (by simpa [coreD] using hc)
-      refine
-        encodedGuardedStructuredTapes_not_equiv_of_ne_of_length_three
-          (by simpa [coreD] using hlen k)
-          (by simpa [coreD] using hlen (k + 1)) ?_
-      rw [runConfig_succ_of_stepConfig_some hstep]
-      exact stepConfig_tapes_ne hstep
-
 private theorem not_halts_of_leadsSpin
     {n : Nat}
     {c : CommonGround.FiniteTransducers.Structured.Configuration}
@@ -206,45 +123,16 @@ private theorem not_halts_of_leadsSpin
     (hspin : LeadsSpin n c) (T : Tape Bool) :
     ¬ (lowerStructured3Description (coreD n)).HaltsFromTape
       (encodedGuardedStructuredTapes c.tapes) T := by
-  let D := coreD n
-  have hDwf : D.WellFormed := (table n).description_wellFormed
-  have hDhtf : D.HaltTransitionFree :=
-    (table n).description_haltTransitionFree
-  have hrows : SupportsReadWriteRows3 D :=
-    (table n).description_supportsReadWriteRows3
-  let L := lowerStructured3StaticDescription D hDwf hDhtf hrows
-  have hLhtf : L.machine.HaltTransitionFree := by
-    change (lowerStructured3Description D).HaltTransitionFree
-    exact (lowerStructured3Description_subroutineReady hDwf hrows).right
-  have hInjHalt :
-      forall s : Nat, s < D.stateCount ->
-        L.stateMap s = L.machine.halt -> s = D.halt := by
-    intro s _hs hs
-    have hs' : L.stateMap s = L.stateMap D.halt :=
-      hs.trans L.halt_eq.symm
-    simpa [L, lowerStructured3StaticDescription,
-      StaticDispatcherReaderAssembly.StaticLoweredDescription,
-      StaticDispatcherState.ready] using hs'
-  have hcBound : c.state < D.stateCount := by
-    rw [hcState]
-    exact hDwf.right.right.left
-  have hcThree : c.tapes.length = 3 := by
-    simpa only [coreD, TypedStateTable.description_tapeCount] using hcTapes
-  have hnot :=
-    staticLoweredDescriptionWithRefresh_not_haltsFromTape_of_diverges
-      L hLhtf hInjHalt c
-      (fun k => Description.runConfig_state_bound hDwf hcBound)
-      (runConfig_tape_count hcTapes)
-      (fun k => by
-        apply leadsSpin_progress
-        · exact hcThree
-        · exact hspin)
+  exact
+    lowerStructured3Description_not_halts_of_state_or_tape_progress
+      (table n).description_wellFormed
+      (table n).description_haltTransitionFree
+      (table n).description_supportsReadWriteRows3
+      c hcState hcTapes
+      (leadsSpin_stepConfig_ne_none hspin)
       (leadsSpin_state_ne_halt hspin)
-      (Tape.Equiv.refl (encodedGuardedStructuredTapes c.tapes))
-      hcState T
-  change ¬ L.machine.HaltsFromTape
-    (encodedGuardedStructuredTapes c.tapes) T
-  exact hnot
+      stepConfig_state_ne_or_tapes_ne
+      T
 
 private theorem leadsSpin_of_state_ne (n : Nat) (Lay : SimulatorLayout)
     (hstate : Lay.config.state ≠ n) :

@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulator
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed.Materializer
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed.SemanticCore.Build
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 
 set_option doc.verso true
@@ -15,70 +16,10 @@ namespace StructuredConstructionTargets
 open CommonGround.FiniteTransducers.Structured
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 
-/--
-Index for framed invocation endpoint runs: a controller layout, a boolean-word
-result, and a concrete fuel witness for the underlying attempt run.
--/
-structure StageAttemptFramedStructuredIndex
-    (attempt : MachineDescription) where
-  C : DovetailControllerLayout
-  result : Word Bool
-  fuel : Nat
-  attempt_halts :
-    attempt.HaltsWithOutputIn fuel
-      (encodeCodeWordAsInput
-        (PairedRecognizerDovetailControllerStageInputCode C))
-      (encodeCodeWordAsInput (encodeBoolWord result))
-
-def stageAttemptFramedStructuredInputBits
-    (C : DovetailControllerLayout) : Word Bool :=
-  encodeCodeWordAsInput (DovetailControllerLayout.encode C)
-
-def stageAttemptFramedStructuredOutputTape
-    {attempt : MachineDescription}
-    (i : StageAttemptFramedStructuredIndex attempt) : Tape Bool :=
-  CommonGround.ControllerInvocation.StageAttemptFramedOutputTape
-    i.C i.result
-
-def stageAttemptFramedStructuredInitializedTape
-    (C : DovetailControllerLayout) : Tape Bool :=
-  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
-    (Tape.input (stageAttemptFramedStructuredInputBits C))
-    Tape.blank
-
 def StageAttemptFramedStructuredMaterializerConstruction : Prop :=
   Structured3EndpointWordStartEquivMaterializerConstruction
     stageAttemptFramedStructuredInputBits
     stageAttemptFramedStructuredInitializedTape
-
-/--
-Semantic-core data with the concrete logical tape-0 and tape-1 representatives
-left by the construction.  The endpoint immediately projects tape 2, so these
-families are intentionally internal.
-
-Audit guardrail: a valid nonempty-input stage-zero attempt reaches the exact
-framed tape-2 result after 814 logical core steps while leaving tape 0 unequal
-to the pristine controller input and tape 1 nonblank.  Since equivalence of
-canonical guarded encodings forces equality of all three logical tapes, the
-former fixed-representative contract demanded an unused cleanup phase.
--/
-structure StageAttemptFramedStructuredSemanticCoreComponents
-    (attempt : MachineDescription) where
-  tape0 : StageAttemptFramedStructuredIndex attempt -> Tape Bool
-  tape1 : StageAttemptFramedStructuredIndex attempt -> Tape Bool
-  components :
-    Structured3EndpointEquivSemanticCoreComponents
-      (fun i : StageAttemptFramedStructuredIndex attempt => i.C)
-      stageAttemptFramedStructuredInitializedTape
-      (fun i =>
-        encodedGuardedStructured3Tapes
-          (tape0 i) (tape1 i) (stageAttemptFramedStructuredOutputTape i))
-      stageAttemptFramedStructuredOutputTape
-      tape0 tape1
-
-def StageAttemptFramedStructuredSemanticCoreConstruction
-    (attempt : MachineDescription) : Prop :=
-  Nonempty (StageAttemptFramedStructuredSemanticCoreComponents attempt)
 
 def StageAttemptFramedStructuredEndpointEquivIndexedConstruction
     (attempt : MachineDescription) : Prop :=
@@ -104,12 +45,11 @@ Finite-table leaf for the lowered framed-invocation structured core.
 -/
 theorem stageAttemptFramedStructuredSemanticCoreConstruction_core
     (attempt : MachineDescription)
-    (_hattempt : attempt.SubroutineReady) :
+    (hattempt : attempt.SubroutineReady) :
     StageAttemptFramedStructuredSemanticCoreConstruction attempt := by
-  -- Remaining structured-core obligation: install the witnessed
-  -- boolean-word result on logical tape 2 and recover the semantic witness
-  -- only from successful core runs.
-  sorry
+  exact
+    StageAttemptFramed.SemanticCore.stageAttemptFramedStructuredSemanticCoreConstruction
+      attempt hattempt
 
 /--
 Target-local parser/core obligation for the framed-invocation target.  The
@@ -150,50 +90,6 @@ theorem stageAttemptFramedInput_layout_eq_of_inputBits_eq
   apply DovetailControllerLayout.encode_injective
   apply encodeCodeWordAsInput_injective
   simpa [stageAttemptFramedStructuredInputBits] using h
-
-theorem stageAttemptFramedOutput_result_eq_of_tape_eq
-    {attempt : MachineDescription}
-    {C : DovetailControllerLayout}
-    {result : Word Bool}
-    {i : StageAttemptFramedStructuredIndex attempt}
-    {T : Tape Bool}
-    (hT : T = stageAttemptFramedStructuredOutputTape i)
-    (houtput :
-      Tape.normalizedOutput T =
-        encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult C result)))
-    (hC : C = i.C) :
-    i.result = result := by
-  have hout :
-      Tape.normalizedOutput
-          (stageAttemptFramedStructuredOutputTape i) =
-        encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult i.C i.result)) := by
-    simpa [stageAttemptFramedStructuredOutputTape] using
-      CommonGround.ControllerInvocation.stageAttemptFramedOutputTape_normalizedOutput
-        i.C i.result
-  have hbits :
-      encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult i.C i.result)) =
-        encodeCodeWordAsInput
-          (DovetailControllerLayout.encode
-            (DovetailControllerLayout.withResult i.C result)) := by
-    rw [← hout, ← hT, houtput, hC]
-  have hcode :
-      DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult i.C i.result) =
-        DovetailControllerLayout.encode
-          (DovetailControllerLayout.withResult i.C result) :=
-    encodeCodeWordAsInput_injective hbits
-  have hlayout :
-      DovetailControllerLayout.withResult i.C i.result =
-        DovetailControllerLayout.withResult i.C result :=
-    DovetailControllerLayout.encode_injective hcode
-  have hresult := congrArg DovetailControllerLayout.result hlayout
-  simpa [DovetailControllerLayout.withResult] using hresult
 
 theorem stageAttemptFramedOutput_result_eq_of_tape_equiv
     {attempt : MachineDescription}

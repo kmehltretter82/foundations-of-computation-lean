@@ -17,6 +17,27 @@ comparison.
 
 ## Retired surfaces
 
+### StageAttempt exact-tape contract island
+
+- Deleting commit: this change (`Close the StageAttempt structured core`).
+- Reduction: 119 Compiler lines across the structured target, canonical
+  controller contracts, and finite-scaffold facade.
+- Old surface: `stageAttemptFramedOutputTape_cells`,
+  `StageAttemptFramedExactSpec`, `StageAttemptFramedExactConstruction`, their
+  conversion theorems and facade aliases, and the target-local exact-tape
+  result inversion.
+- Why retired: the completed #7 endpoint carries the lowered representative in
+  `Tape.Equiv` currency and observes only its exact normalized output word.
+  Exhaustive declaration-reference search found no consumer of the stronger
+  physical-tape contract.
+- Current route: `StageAttemptFramedStructuredSemanticCoreComponents` carries
+  the actual logical tape-0 and tape-1 representatives, while
+  `stageAttemptFramedOutput_result_eq_of_tape_equiv` recovers the result from
+  the projected output.
+- Reconsider only if: a checked caller genuinely observes the exact physical
+  tape window. Prove the needed normalization at that caller; do not restore
+  the exact construction/adapter lattice wholesale.
+
 ### Exact padded fuel-pair simulator seam
 
 - Deleting commit: `bc7bced1` (`Retire the exact #12 simulator seam`).

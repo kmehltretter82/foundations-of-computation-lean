@@ -317,16 +317,6 @@ def PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :
     Prop :=
   CommonGround.ControllerInvocation.StageAttemptFramedConstruction
 
-def PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData :
-    Prop :=
-  CommonGround.ControllerInvocation.StageAttemptFramedExactConstruction
-
-private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_of_exact
-    (h :
-      PairedRecognizerDovetailStageAttemptFramedRunInvocationExactConstructionData) :
-    PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
-  CommonGround.ControllerInvocation.stageAttemptFramedConstruction_of_exact h
-
 private def PairedRecognizerDovetailStageAttemptWitnessedRunInvocationForwardSpec
     (attempt invoker : MachineDescription) : Prop :=
   CommonGround.ControllerInvocation.StageAttemptWitnessedForwardSpec
