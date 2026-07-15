@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 7600,
+  "architecture_review": {
+    "reason": "Close the Chapter 5.2 StageAttempt structured semantic core with the compiled and axiom-audited route measured at approximately 7400-7500 cumulative net lines; the user explicitly raised the aggregate and global Compiler ceilings from 15000 to 22000 on 2026-07-15.",
+    "recorded_against": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2"
+  },
+  "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteScaffolds/ControllerInvocation.lean"
+  ],
+  "frontier": "FoC.Computability.StructuredConstructionTargets.stageAttemptFramedStructuredSemanticCoreConstruction_core",
+  "name": "sorry-7-stage-attempt-framed-semantic-core",
+  "paths": [
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed/SemanticCore.lean",
+    "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed/SemanticCore"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.StructuredConstructionTargets.stageAttemptFramedStructuredSemanticCoreConstruction_core",
+    "FoC.Computability.StructuredConstructionTargets.stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core"
+  ]
+}

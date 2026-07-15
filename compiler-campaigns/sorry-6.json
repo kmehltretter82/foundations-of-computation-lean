@@ -1,7 +1,7 @@
 {
-  "allow_net_growth": 1950,
+  "allow_net_growth": 1955,
   "architecture_review": {
-    "reason": "Close the Chapter 5.2 StageAttempt word-start materializer with the measured cleaned finite-recognizer implementation; 1,250 lines were reassigned from the unopened sorry #12 campaign while preserving the aggregate Compiler cap.",
+    "reason": "Close the Chapter 5.2 StageAttempt word-start materializer at its final measured 1,955-line cumulative net size; the five-line reconciliation is covered by the user-reviewed 22,000-line aggregate/global ceilings recorded on 2026-07-15.",
     "recorded_against": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2"
   },
   "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
