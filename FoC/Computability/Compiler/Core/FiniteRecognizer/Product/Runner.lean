@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Composition
 
 set_option doc.verso true
 
