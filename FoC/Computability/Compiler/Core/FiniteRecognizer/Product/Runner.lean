@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Inversion
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Construction
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Duplicator
 
 set_option doc.verso true
