@@ -595,53 +595,26 @@ completed:
       normalized_duplicate_theorem_types: 0
       generated_from: "scripts/export-declarations.lean"
     open_sorries:
-      total: 20
+      total: 7
       by_file:
-        - file: "FoC/Computability/Compiler/ClosedCfg/PostTrans/NestedLayoutParser.lean"
-          count: 2
-          topic: "Contextual nested-layout materializer and exact local restorer leaves (#24/#26)."
         - file: "FoC/Computability/Compiler/ClosedCfg/ProjTail/ScratchBridge/InputMatFrontier.lean"
           count: 1
           topic: "Count-window structured indexed materializer leaf (#22)."
-        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelSimulator.lean"
-          count: 1
-          topic: "Fuel-simulator equivalence lowered-core leaf (#13)."
         - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/BoundedFuelPairEnumerator.lean"
           count: 1
           topic: "Bounded fuel-pair enumerator semantic-core leaf (#12)."
-        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/FuelOutput.lean"
-          count: 2
-          topic: "Fuel/output syntactic materializer and exact semantic-core leaves (#9/#10)."
-        - file: "FoC/Computability/Compiler/Core/StructuredConstructionTargets/StageAttemptFramed.lean"
-          count: 2
-          topic: "Framed-stage syntactic materializer and equivalence semantic-core leaves (#6/#7)."
-        - file: "FoC/Computability/Compiler/Structured/HeadRoutes/Endpoints.lean"
-          count: 2
-          topic: "Raw-head materializer and padded representative-cleanup leaves (#16/#17)."
         - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Program.lean"
           count: 1
           topic: "Exact-fuel initial-layout materializer and ordinary runner route leaf (#5)."
-        - file: "FoC/Computability/Compiler/Structured/Lowering/PairEncodedOptionCellCompactor/Base.lean"
-          count: 1
-          topic: "Pair-encoded payload ingress leaf (#15)."
-        - file: "FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTJoinerConstruction.lean"
-          count: 1
-          topic: "QuoteRest tape-equivalence joiner leaf (#19)."
         - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean"
           count: 1
           topic: "Ordinary-halting decoded-description interpreter leaf (#4)."
-        - file: "FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTEmitterConstruction.lean"
-          count: 1
-          topic: "QuoteRest exact local emitter leaf (#20)."
         - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean"
           count: 1
           topic: "Generated-product ordinary exact-fuel runner leaf (#3)."
         - file: "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean"
           count: 2
           topic: "Unbounded and budgeted tuple-search recognizer leaves (#1/#2)."
-        - file: "FoC/Computability/Compiler/ClosedCfg/TerminalCore/RunConfigEmitter.lean"
-          count: 1
-          topic: "Closed-configuration run-config emitter leaf (#18)."
     modules:
       - "FoC.Book.Chapter05.Section01"
       - "FoC.Book.Chapter05.Section02"

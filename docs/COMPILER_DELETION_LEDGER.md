@@ -778,6 +778,34 @@ causal cleanup used to bring global raw Compiler growth below the then-reviewed
 `+10,000` ceiling; no active future frontier was deleted. The later policy
 increase does not change this cleanup accounting.
 
+### Superseded QuoteRest emitter, gap, and joiner route
+
+- Deleting commit: this change (`Close direct source-rest endpoint`).
+- Reduction: 2,933 Compiler lines across
+  `LTEmitterConstruction.lean`, `LTEmitterContracts.lean`,
+  `LTGapOutput.lean`, `LTJoinerConstruction.lean`,
+  `LTJoinerContracts.lean`, and `LTOutputRoute.lean`. The direct replacement
+  adds 4,520 lines, for cumulative campaign net growth of 1,587 lines from the
+  pinned base.
+- Old surface: separate live-tail emitter and joiner construction lattices, a
+  gap-output adapter, and their duplicate contract/accessor wrappers.
+- Potentially reusable idea: materializing a separately quoted live tail and
+  subsequently joining it to the already-emitted prefix.
+- Why retired: the completed direct endpoint emits the joined normalized word
+  in one structured route. An exhaustive import and declaration-reference
+  audit found no production consumer of the six old modules after migrating
+  `QuoteRest.Output`, `RawCells`, and `RawCellsOutput`; the only remaining
+  edges were two obsolete wrapper re-exports removed in the same change.
+- Current route: `DirectJoinedEndpoint/Construction.lean` produces the joined
+  output, while `RawTailPositioner.lean` and `ExactConstruction.lean` scan the
+  canonical encoded prefix and restore the exact head position over the first
+  raw-tail bit. `QuoteRest.Output` exports this exact construction to the
+  selected-projection quoter.
+- Reconsider only if: two checked consumers genuinely require the intermediate
+  separated-tail representation. Recover the smallest emitter or adapter from
+  the parent of this change and compare it with a projection of the direct
+  endpoint; do not restore the emitter/gap/joiner lattice wholesale.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

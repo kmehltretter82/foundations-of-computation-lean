@@ -1,17 +1,16 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.PhaseOutputAdapters
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Construction
-import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTOutputRoute
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.DirectJoinedEndpoint
 
 set_option doc.verso true
 
 /-!
 # Source-rest finish output route
 
-The exact source-rest finisher still has exact endpoint obligations in the
-live-tail emitter and joiner leaves.  The lower live-tail route also exposes a
-normalized-output construction, which is enough for downstream phases that only
-care about the visible emitted word.  This module lifts that output route
-through the same scanner wrappers used by the exact construction.
+The direct joined endpoint emits the normalized source-rest word and then
+positions the head at the live raw-tail boundary.  This module lifts that exact
+inner construction through the scanner wrappers used by the public finish
+phase and also exposes normalized-output adapters.
 -/
 
 namespace FoC
@@ -773,12 +772,12 @@ theorem assemblySourceRestFinishEquivConstruction_of_innerLiveTail
 theorem assemblySourceRestFinishEquivConstruction_for_assemblySourceRest :
     AssemblySourceRestFinishEquivConstruction :=
   assemblySourceRestFinishEquivConstruction_of_innerLiveTail
-    mixedParserStackSourceRestFinishEquivConstruction_for_assemblySourceRest
+    directJoinedSourceRestFinishAssemblyEquivConstruction
 
 theorem mixedParserStackDefaultedInternalMarkerFinisherOutputConstruction_for_assemblySourceRest :
     MixedParserStackDefaultedInternalMarkerFinisherOutputConstructionForAssemblySourceRest :=
   MixedParserStackSourceRestFinishAssemblyOutputConstruction.toDefaultedInternalMarkerConstruction
-    mixedParserStackSourceRestFinishOutputConstruction_for_assemblySourceRest
+    directJoinedSourceRestFinishAssemblyOutputConstruction
 
 theorem mixedParserStackTrueLeftBoundaryFinisherOutputConstruction_for_assemblySourceRest :
     MixedParserStackTrueLeftBoundaryFinisherOutputConstructionForAssemblySourceRest :=

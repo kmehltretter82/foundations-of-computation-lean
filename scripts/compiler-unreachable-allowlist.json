@@ -8,12 +8,6 @@
     },
     {
       "category": "active",
-      "intended_consumer": "Sorry #19/#20 QuoteRest emitter and joiner routes",
-      "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredLowererReadiness",
-      "reason": "Readiness boundary for the active left-tailed structured implementation."
-    },
-    {
-      "category": "active",
       "intended_consumer": "Sorry #19/#20 QuoteRest endpoint assembly",
       "module": "FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTStructuredOutputProjectorRoutes",
       "reason": "Active output-projector route over the left-tailed implementation."

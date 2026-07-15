@@ -17,10 +17,6 @@
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.word_exists_reverse_append_singleton_of_cons",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.exists_reverse_append_singleton_of_cons"
     ],
-    "07582c5aff073d8f": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.LiveTailJoinerAssemblyShape.targetTapeNormalizedOutputEqFinishTarget",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.LiveTailJoinerAssemblyShape.targetTapeNormalizedOutputEqTargetTape"
-    ],
     "07c8e9fd4949b957": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.GuardedEgress.ExactLogicalTapeDecoder.no_unguarded_exact_serializer",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterTheory.not_exists_exactLogicalTapeSerializer"
@@ -73,10 +69,6 @@
       "FoC.Computability.CommonGround.FiniteTransducers.StructuredInputMaterializerRouteContracts.ExactMaterializerRoute.endpointShape",
       "FoC.Computability.CommonGround.FiniteTransducers.StructuredInputMaterializerRouteContracts.endpointShape_of_exactRoute"
     ],
-    "15928b52d1695ce0": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailEmitterAssemblyTargetTape_normalizedOutput_core",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailEmitterAssemblyTargetTape_normalizedOutput_eq_prefixQuotedSeparated"
-    ],
     "177504aa7179e63d": [
       "FoC.Computability.DovetailInitialLayoutInitializer.pairedRecognizerDovetailInitialLayoutCode_closedHandoffCompiledSubroutine",
       "FoC.Computability.EncRewriters.InitialLayout.closedHandoffCompiledSubroutine"
@@ -116,10 +108,6 @@
     "2501cde672f8034f": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.StageCounter.codeBits_encodeNat_succ",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.StateSelector.codeBits_encodeNat_succ"
-    ],
-    "28222deb13285419": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.assemblySourceRestLiveTailEmitterSourceBits_defaultedCells",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailEmitterAssemblySourceBits_defaultedCells_core"
     ],
     "2a23af91ee466b1d": [
       "FoC.Computability.CommonGround.ControllerLayouts.resultContinue_transform_eq_some_iff",
@@ -173,10 +161,6 @@
     "400e6f69a51f8a49": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedSegmentLogicalTapeDecoderDensifierSourceCells_eq_prefix_append_nil",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedSegmentLogicalTapeDecoderDensifierSourceCells_eq_prefix_append_nil_guardedShape"
-    ],
-    "419c2730a7ecfcca": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailEmitterAssemblyOutputPrefix_eq_emitted_quoteRest_core",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailEmitterAssemblyOutputPrefix_eq_emitted_quoteRest"
     ],
     "4984d39cf0f9f8fd": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.selectedSegmentLogicalTapeDecoderCellCells_flatten_length",
@@ -287,7 +271,6 @@
       "FoC.Computability.CommonGround.FiniteTransducers.StructuredInputMaterializerRouteContracts.outputRouteConstruction_of_exactRouteConstruction"
     ],
     "83256f20b269b15a": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailJoinerAssemblyTargetTape_normalizedOutput_core",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailJoinerAssemblyTargetTape_normalizedOutput_eq_finishTarget",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailJoinerAssemblyTargetTape_normalizedOutput_eq_targetTape"
     ],
@@ -307,10 +290,6 @@
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.guardedTwoTapeStructuredPrefixBetweenFieldsPositionerOutputTarget_eq_source",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.guardedTwoTapeStructuredPrefixFirstFieldBoundarySource_normalizedOutput"
     ],
-    "8c0fcdd366ff0528": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailJoinerAssemblyTargetOutput_eq_named_core",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailJoinerAssemblyTargetOutput_eq_named"
-    ],
     "8c30dbdbbddf06a8": [
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.StructuredSelectedHeadDecoderRouteConstruction.headDecoder",
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.selectedHeadRoute_headDecoder"
@@ -327,10 +306,6 @@
     "905a04d6e9168cec": [
       "FoC.Computability.CommonGround.FiniteTransducers.rightEdgeScanTargetTapeFromLeft_move_left_move_right",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.rightEdgeScanTargetTapeFromLeft_move_left_move_right"
-    ],
-    "91601a874b3fd7e8": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailJoinerAssemblySourceTape_eq_afterRawTailScan_core",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailJoinerAssemblySourceTape_eq_afterRawTailScan"
     ],
     "96126a0a2417bd57": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore.FieldDecomposition.StageCounter.pushBits_encodeNat_succ",
@@ -451,10 +426,6 @@
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.StructuredSelectedHeadDecoderRouteConstruction.tape0SegmentNormalizer",
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.selectedHeadRoute_tape0SegmentNormalizer"
     ],
-    "cd7b6284cb2fd276": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedOptionCellQuoteLiveTailStageSourceJoinerConstruction_impossible",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.not_MixedOptionCellQuoteLiveTailStageSourceJoinerConstruction"
-    ],
     "ced1c4cde231c837": [
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedMergePaddedEmitterNestedLayoutContextRawSourceTape_normalizedOutput",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.selectedMergePaddedEmitterNestedLayoutWindowContextRawSource_normalizedOutput_core"
@@ -494,10 +465,6 @@
     "d79298965bdc589d": [
       "FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.logicalCellListCode_length",
       "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.logicalCellListCode_length"
-    ],
-    "d7d0793bcc48d36c": [
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.liveTailJoinerAssemblyTargetOutput_eq_segments_core",
-      "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.structuredLiveTailJoinerAssemblyTargetOutput_eq_segments"
     ],
     "d8919bbe1bac4ddd": [
       "FoC.Computability.CommonGround.FiniteTransducers.countWindowRawSourceEncoderEquivConstruction_core",

@@ -1,21 +1,25 @@
 {
-  "allow_net_growth": 92,
+  "allow_net_growth": 1600,
   "architecture_review": {
-    "reason": "Close the exact local QuoteRest live-tail emitter that supplies the separated tape consumed by sorry 19; 1,608 provisional lines are temporarily reassigned to the measured sorry #24 implementation and this unopened campaign must be reviewed again before implementation.",
-    "recorded_against": "2c46ca2e"
+    "reason": "Close sorries #20 and #19 together through the exact direct joined source-rest endpoint. The measured +4,520/-2,933 campaign replaces and deletes the local emitter, gap, joiner, and adapter route while preserving the exact raw-tail head currency required by the checked RawCells consumer.",
+    "recorded_against": "3c192f4e"
   },
   "base_commit": "9489db7ebbebf5ab08eb3a2af86c114646c2a2b2",
   "focused_checks": [
-    "lake env lean FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTEmitterConstruction.lean",
-    "lake env lean FoC/Computability/Compiler/ClosedCfg/QuoteRest/LTOutputRoute.lean"
+    "lake build FoC.Computability.Compiler.ClosedCfg.QuoteRest.Output",
+    "lake build FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.RawCells",
+    "lake build FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.RawCellsOutput",
+    "lake build FoC.Computability.Compiler.ClosedCfg.QuoteRest"
   ],
-  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction",
-  "name": "sorry-20-quote-rest-live-tail-emitter",
+  "frontier": "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.directJoinedSourceRestFinishAssemblyEquivConstruction",
+  "name": "sorry-19-20-quote-rest-direct-endpoint",
   "paths": [
     "FoC/Computability/Compiler/ClosedCfg/QuoteRest"
   ],
   "required_axiom_clean": [
-    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedOptionCellQuoteLiveTailEmitterAssemblyFamilyConstruction",
-    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.mixedParserStackPrefixQuotedSeparatedFinisherConstruction_for_assemblySourceRest"
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.directJoinedSourceRestFinishAssemblyOutputConstruction",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.directJoinedSourceRestFinishAssemblyEquivConstruction",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.assemblySourceRestFinishEquivConstruction_for_assemblySourceRest",
+    "FoC.Computability.EncRewriters.BoundedLayoutRunner.SelectedProjectionInputQuoterFiniteLeaf.selectedProjectionInputQuoterAfterSourceRestShapeConstruction"
   ]
 }

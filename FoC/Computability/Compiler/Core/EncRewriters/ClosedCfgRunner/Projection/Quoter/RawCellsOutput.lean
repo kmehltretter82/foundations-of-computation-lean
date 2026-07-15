@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Projection.Quoter.RawCells
+import FoC.Computability.Compiler.ClosedCfg.QuoteRest.DirectJoinedEndpoint
 
 set_option doc.verso true
 
@@ -498,7 +499,9 @@ theorem SelectedProjectionInputQuoterPostBoundarySpec.toOutputSpec
 
 theorem selectedProjectionInputQuoterAfterSourceRestShapeOutputConstruction :
     SelectedProjectionInputQuoterAfterSourceRestShapeOutputConstruction := by
-  rcases assemblySourceRestFinishOutputConstruction_for_assemblySourceRest with
+  rcases
+      assemblySourceRestFinishOutputConstruction_of_innerLiveTail
+        directJoinedSourceRestFinishAssemblyOutputConstruction with
     ⟨finish, hfinish⟩
   refine ⟨finish, hfinish.left, ?_⟩
   intro L

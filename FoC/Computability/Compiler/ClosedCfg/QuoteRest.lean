@@ -1,7 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Final
 import FoC.Computability.Compiler.ClosedCfg.QuoteRest.Output
-import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTEmitterContracts
-import FoC.Computability.Compiler.ClosedCfg.QuoteRest.LTJoinerContracts
 
 set_option doc.verso true
 
