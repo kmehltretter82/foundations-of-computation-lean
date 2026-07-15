@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Composition
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Duplicator
 
 set_option doc.verso true
 
