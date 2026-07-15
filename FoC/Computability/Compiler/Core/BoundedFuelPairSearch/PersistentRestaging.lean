@@ -456,53 +456,6 @@ theorem restagedRawTape_equiv_input (raw : Word Bool) :
       Tape.dropTrailingNone,
       FoC.Computability.dropTrailingNone_append_none]
 
-theorem D_haltsWithTapes_restages
-    (checkerRaw candidateRaw : Word Bool)
-    (checkerFuel sourceFuel : Nat) :
-    D.HaltsWithTapes
-      (table.config .checkerSeek
-        (rawEmissionFinalScratch checkerRaw checkerFuel)
-        (rawEmissionFinalScratch candidateRaw sourceFuel)
-        Tape.blank)
-      [cleanedFuelTape checkerRaw checkerFuel,
-        cleanedFuelTape candidateRaw sourceFuel,
-        restagedRawTape candidateRaw] := by
-  rcases TypedStateTable.Leads.to_runConfig
-      (leads_restages checkerRaw candidateRaw checkerFuel sourceFuel) with
-    ⟨steps, hrun⟩
-  exact ⟨steps, hrun⟩
-
-theorem lowered_haltsFromTapeEquiv_restages
-    (checkerRaw candidateRaw : Word Bool)
-    (checkerFuel sourceFuel : Nat) :
-    (lowerStructured3Description D).HaltsFromTapeEquiv
-      (encodedGuardedStructured3Tapes
-        (rawEmissionFinalScratch checkerRaw checkerFuel)
-        (rawEmissionFinalScratch candidateRaw sourceFuel)
-        Tape.blank)
-      (encodedGuardedStructured3Tapes
-        (cleanedFuelTape checkerRaw checkerFuel)
-        (cleanedFuelTape candidateRaw sourceFuel)
-        (restagedRawTape candidateRaw)) := by
-  have hlowered :=
-    lowerStructured3Description_haltsFromConfigWithTapes
-      table.description_wellFormed
-      table.description_haltTransitionFree
-      table.description_supportsReadWriteRows3
-      (c := table.config .checkerSeek
-        (rawEmissionFinalScratch checkerRaw checkerFuel)
-        (rawEmissionFinalScratch candidateRaw sourceFuel)
-        Tape.blank)
-      (tapes :=
-        [cleanedFuelTape checkerRaw checkerFuel,
-          cleanedFuelTape candidateRaw sourceFuel,
-          restagedRawTape candidateRaw])
-      rfl (by rfl)
-      (D_haltsWithTapes_restages
-        checkerRaw candidateRaw checkerFuel sourceFuel)
-  simpa [D, encodedGuardedStructured3Tapes,
-    TypedStateTable.config, ThreeTape.config] using hlowered
-
 end PersistentRestaging
 end BoundedFuelPairSearch
 end Computability

@@ -877,6 +877,41 @@ increase does not change this cleanup accounting.
   the smallest checked phase from the parent of this change; do not restore
   both provisional modules as a route lattice.
 
+### Superseded #12 scalar-route preliminaries
+
+- Deleting commit: this change (`Close output-indexed fuel-pair search`).
+- Reduction: 2,262 net Compiler lines: 175 from the unused retargeted
+  simulator block, 111 from the superseded two-coordinate schedule, 552 from
+  the self-only scalar route-contract lattice, 102 from bounded-search
+  semantics, 52 from the unused simulator adapter, 234 from the unused
+  success-only schedule, 403 from obsolete physical-layout phases, and 304
+  from obsolete padded-validator contracts, and 329 from unused terminal
+  `HaltsWithTapes`, lowered, and high-level output facades after their logical
+  run lemmas became the sole live composition currency.
+- Old surface: a copied one-tape simulator block returning to a continuation,
+  a square `(bound, limit, candidateFuel)` cursor, and adapters that packaged
+  the refuted all-result enumerator as one scalar classifier/search route.
+- Potentially reusable ideas: offset retargeting a standalone description,
+  finite-square cursor advancement, serialized phase-layout bookkeeping, and
+  a standalone padded-output validator contract.
+- Why retired: an environment-level declaration-reference closure, including
+  the opt-in #12 impossibility guardrail, found no production root for any
+  declaration in the retired modules or declaration groups. The live
+  construction instead uses the four-coordinate success-only diagonal cursor,
+  logical tape-2 subroutine lifts, and one fixed-output machine per requested
+  Boolean. `Layout.lean` now retains only the live candidate encoding, and
+  `Validation.lean` retains only the semantic hit predicate.
+- Current route: `SuccessOnlyRecognizer.lean` provides the schedule index and
+  success semantics, while `DiagonalSchedule.lean` provides the fair cursor.
+  The repaired structured endpoint exposes
+  `PairedRecognizerDovetailControllerStageAttemptFuelPairSearchFamily` through
+  the family-facing controller/search-driver contracts.
+- Reconsider only if: a checked consumer needs a standalone retargeted block
+  or exactly the old finite-square cursor, serialized layout phase, or padded
+  validator independently of the repaired search. Recover only that smallest
+  declaration group; do not restore the scalar route lattice or its impossible
+  all-result premise.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

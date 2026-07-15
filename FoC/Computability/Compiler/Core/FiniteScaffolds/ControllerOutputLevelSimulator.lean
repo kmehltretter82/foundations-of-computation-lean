@@ -1,7 +1,8 @@
 import FoC.Computability.Compiler.Core.EncRewriters.ClosedCfgRunner.Simulator.PaddedEmitter
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelOutput
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulator
 
 set_option doc.verso true
 

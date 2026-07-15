@@ -36,6 +36,29 @@ aggregate loan cap, and the global raw-growth allowance are separate,
 non-additive circuit breakers. Existing manifests keep their recorded lower
 allowances unless they are deliberately reviewed.
 
+A specifically reviewed campaign may exceed the ordinary 10,000-line per-sorry
+ceiling only through a narrow, explicit review recorded in that campaign
+manifest:
+
+```json
+{
+  "allow_net_growth": 13000,
+  "reviewed_growth_exception": {
+    "reason": "Why this specific campaign needs the larger reviewed ceiling",
+    "recorded_against": "full 40-digit ancestor commit hash"
+  }
+}
+```
+
+The checker requires a nonempty reason and a recorded commit that exists and is
+an ancestor of the current HEAD. A reviewed growth exception conflicts with
+`historical_debt`: a campaign must use one policy mechanism or the other. The
+exception changes only that campaign's exact allowance. It does not reset the
+pinned campaign base, update or reset the global baseline, or waive the
+aggregate outstanding-loan cap or independent global raw-growth cap. The full
+exception allowance still counts toward both outstanding-loan and global-growth
+logic.
+
 Pre-policy work that already exceeds the circuit breakers must not reset its
 starting commit.  Record it honestly with:
 

@@ -1,5 +1,6 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StatefulOptionAppendGenerated
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelOutput
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 
 set_option doc.verso true
 
@@ -12,8 +13,8 @@ module records the generic target-functionality forced by determinism and a
 small concrete runner whose two witnesses share one public input but demand
 different targets.
 
-These guardrails intentionally do not use the construction theorem in
-{module}`FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator`.
+The obsolete construction module has been retired.  The small historical
+contract shapes needed to state the refutation live here with the guardrail.
 -/
 
 namespace FoC
@@ -26,6 +27,86 @@ open CommonGround.FiniteTransducers
 open CommonGround.FiniteTransducers.Structured.MultiTapeLowering
 
 namespace BoundedFuelPairEnumeratorContractGuardrails
+
+/-- Minimal witness shape from the retired all-result enumerator contract. -/
+structure HistoricalWitness (runner : MachineDescription) where
+  input : Word Bool
+  searchLimit : Nat
+  limit : Nat
+  fuel : Nat
+  result : Word Bool
+  limit_le_searchLimit : limit <= searchLimit
+  fuel_le_searchLimit : fuel <= searchLimit
+  runner_halts :
+    runner.HaltsWithOutput
+      (encodeCodeWordAsInput
+        (PairedRecognizerDovetailControllerStageAttemptFuelInputCode
+          input limit fuel))
+      (encodeCodeWordAsInput (encodeBoolWord result))
+
+/-- Conflicting public target from the retired all-result contract. -/
+def historicalRightShiftedOutputTape
+    {runner : MachineDescription} (i : HistoricalWitness runner) : Tape Bool :=
+  Tape.move Direction.right
+    (Tape.input (encodeCodeWordAsInput (encodeBoolWord i.result)))
+
+/-- Minimal historical public spec retained solely for the refutation. -/
+def HistoricalRightShiftedSpec
+    (runner enumerator : MachineDescription) : Prop :=
+  enumerator.SubroutineReady ∧
+    (forall i : HistoricalWitness runner,
+      enumerator.HaltsWithTape i.input
+        (historicalRightShiftedOutputTape i)) ∧
+      forall w : Word Bool, forall T : Tape Bool,
+        enumerator.HaltsWithTape w T ->
+          exists i : HistoricalWitness runner,
+            w = i.input ∧ T = historicalRightShiftedOutputTape i
+
+/-- Retired construction quantifier, localized with its checked guardrail. -/
+def HistoricalRightShiftedSpecConstruction : Prop :=
+  forall runner : MachineDescription,
+    runner.SubroutineReady ->
+      exists enumerator : MachineDescription,
+        HistoricalRightShiftedSpec runner enumerator
+
+/-- Public syntax map from the retired all-witness enumerator contract. -/
+def boundedFuelPairEnumeratorStructuredInputBits
+    (w : Word Bool) : Word Bool :=
+  w
+
+/-- Logical input tape from the retired all-witness enumerator contract. -/
+def boundedFuelPairEnumeratorStructuredInputTape
+    {runner : MachineDescription}
+    (i : HistoricalWitness runner) : Tape Bool :=
+  Tape.input (boundedFuelPairEnumeratorStructuredInputBits i.input)
+
+/-- Shared initialized tape from the retired all-witness contract. -/
+def boundedFuelPairEnumeratorStructuredInitializedTape
+    (w : Word Bool) : Tape Bool :=
+  CommonGround.FiniteTransducers.structured3InputMaterializerTargetTape
+    (Tape.input (boundedFuelPairEnumeratorStructuredInputBits w))
+    Tape.blank
+
+/-- Conflicting exact target from the retired all-witness contract. -/
+def boundedFuelPairEnumeratorStructuredLoweredTape
+    {runner : MachineDescription}
+    (i : HistoricalWitness runner) : Tape Bool :=
+  encodedGuardedStructured3Tapes
+    (boundedFuelPairEnumeratorStructuredInputTape i)
+    Tape.blank
+    (historicalRightShiftedOutputTape i)
+
+/-- Historical false exact semantic-core construction, retained only so the
+checked impossibility theorem continues to state the rejected contract. -/
+def BoundedFuelPairEnumeratorStructuredExactSemanticCoreConstruction
+    (runner : MachineDescription) : Prop :=
+  Structured3EndpointExactSemanticCoreConstruction
+    (fun i : HistoricalWitness runner => i.input)
+    boundedFuelPairEnumeratorStructuredInitializedTape
+    boundedFuelPairEnumeratorStructuredLoweredTape
+    historicalRightShiftedOutputTape
+    boundedFuelPairEnumeratorStructuredInputTape
+    (fun _i : HistoricalWitness runner => Tape.blank)
 
 /--
 An exact semantic core has a functional target on every fiber of its public
@@ -76,17 +157,11 @@ every fiber of the witness input field.
 -/
 theorem rightShiftedSpec_target_eq_of_input_eq
     {runner enumerator : MachineDescription}
-    (hspec :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpec
-        runner enumerator)
-    {i j :
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-        runner}
+    (hspec : HistoricalRightShiftedSpec runner enumerator)
+    {i j : HistoricalWitness runner}
     (hinput : i.input = j.input) :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-        i =
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-        j := by
+    historicalRightShiftedOutputTape i =
+      historicalRightShiftedOutputTape j := by
   exact
     MachineDescription.haltsWithTape_functional_of_haltTransitionFree
       hspec.left.right (hspec.right.left i)
@@ -233,8 +308,7 @@ theorem probeRunner_halts_true :
 /-- Witness with public input {lit}`[]`, pair {lit}`(0, 0)`, and result
 {lit}`[false]`. -/
 def falseWitness :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-      probeRunner where
+    HistoricalWitness probeRunner where
   input := []
   searchLimit := 0
   limit := 0
@@ -249,8 +323,7 @@ def falseWitness :
 /-- Witness with public input {lit}`[]`, pair {lit}`(1, 0)`, and result
 {lit}`[true]`. -/
 def trueWitness :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorWitness
-      probeRunner where
+    HistoricalWitness probeRunner where
   input := []
   searchLimit := 1
   limit := 1
@@ -270,10 +343,8 @@ theorem loweredTape_ne :
 
 /-- The two witnesses demand different public right-shifted targets. -/
 theorem rightShiftedOutputTape_ne :
-    PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-        falseWitness ≠
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedOutputTape
-        trueWitness := by
+    historicalRightShiftedOutputTape falseWitness ≠
+      historicalRightShiftedOutputTape trueWitness := by
   decide
 
 /--
@@ -294,8 +365,7 @@ The current public right-shifted construction is impossible for the same
 subroutine-ready finite probe runner.
 -/
 theorem currentRightShiftedSpecConstruction_impossible :
-    ¬
-      PairedRecognizerDovetailControllerStageAttemptBoundedFuelPairEnumeratorRightShiftedSpecConstruction := by
+    ¬ HistoricalRightShiftedSpecConstruction := by
   intro hconstruction
   rcases hconstruction probeRunner probeRunner_subroutineReady with
     ⟨enumerator, hspec⟩

@@ -190,6 +190,37 @@ def baseline_review_failures(
     return failures
 
 
+def reviewed_growth_exception_failures(
+    root: Path, path: Path, review: Any
+) -> list[str]:
+    if not isinstance(review, dict):
+        return [f"{path}: reviewed_growth_exception must be an object"]
+
+    reason = review.get("reason")
+    recorded_against = str(review.get("recorded_against", ""))
+    failures: list[str] = []
+    if not isinstance(reason, str) or not reason.strip():
+        failures.append(
+            f"{path}: reviewed_growth_exception.reason must be nonempty"
+        )
+    if not re.fullmatch(r"[0-9a-f]{40}", recorded_against):
+        failures.append(
+            f"{path}: reviewed_growth_exception.recorded_against must be "
+            "a full Git hash"
+        )
+    elif not git_commit_exists(root, recorded_against):
+        failures.append(
+            f"{path}: reviewed growth exception commit is absent: "
+            f"{recorded_against}"
+        )
+    elif not git_is_ancestor(root, recorded_against):
+        failures.append(
+            f"{path}: reviewed growth exception commit is not an ancestor "
+            f"of HEAD: {recorded_against}"
+        )
+    return failures
+
+
 def git_diff_net(root: Path, base: str, paths: list[str]) -> tuple[int, int]:
     command = ["git", "diff", "--numstat", base, "--", *paths]
     result = subprocess.run(
@@ -315,16 +346,34 @@ def check_campaign(root: Path, path: Path) -> CampaignResult:
         failures.append(f"{path}: allow_net_growth may not be negative")
 
     historical_debt = bool(campaign.get("historical_debt", False))
+    has_reviewed_growth_exception = "reviewed_growth_exception" in campaign
     if historical_debt:
         reason = campaign.get("historical_debt_reason")
         if not isinstance(reason, str) or not reason.strip():
             failures.append(
                 f"{path}: historical_debt requires historical_debt_reason"
             )
-    elif allowance > DEFAULT_CAMPAIGN_NET_GROWTH:
+        if has_reviewed_growth_exception:
+            failures.append(
+                f"{path}: historical_debt conflicts with "
+                "reviewed_growth_exception"
+            )
+    else:
+        if has_reviewed_growth_exception:
+            failures.extend(
+                reviewed_growth_exception_failures(
+                    root, path, campaign["reviewed_growth_exception"]
+                )
+            )
+    if (
+        not historical_debt
+        and allowance > DEFAULT_CAMPAIGN_NET_GROWTH
+        and not has_reviewed_growth_exception
+    ):
         failures.append(
-            f"{path}: ordinary growth loans may not exceed "
-            f"{DEFAULT_CAMPAIGN_NET_GROWTH}"
+            f"{path}: a non-historical growth allowance above "
+            f"{DEFAULT_CAMPAIGN_NET_GROWTH} requires a valid "
+            "reviewed_growth_exception"
         )
 
     if failures or not paths:

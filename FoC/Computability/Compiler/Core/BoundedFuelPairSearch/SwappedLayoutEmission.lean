@@ -67,58 +67,6 @@ theorem swappedFused_runs_prepare_then_rawEmission
     (cursorFuelSourceTape fuel) T1 (Tape.input (head :: tail))
     (Sum.inr FuelSimulatorCore.State.halt) U1 U0 U2 hrun
 
-/-- Halting form of the exact exchanged fused-emitter run. -/
-theorem swappedFusedD_haltsWithTapes_prepare_then_rawEmission
-    (attempt : MachineDescription)
-    (T1 : Tape Bool) (head : Bool) (tail : Word Bool) (fuel : Nat) :
-    exists A0 A1 A2 : Tape Bool,
-      (swappedFusedD attempt.start).HaltsWithTapes
-        (ThreeTape.config
-          ((fusedTable attempt.start).stateId
-            (Sum.inl RawLayoutPreparation.State.seekRawEnd))
-          (cursorFuelSourceTape fuel) T1
-          (Tape.input (head :: tail)))
-        [A0, A1, A2] ∧
-      Tape.Equiv A0 (rawEmissionFinalScratch (head :: tail) fuel) ∧
-      Tape.Equiv A1 T1 ∧
-      Tape.Equiv A2
-        (rawEmissionOutputTape attempt (head :: tail) fuel) := by
-  rcases swappedFused_runs_prepare_then_rawEmission
-      attempt T1 head tail fuel with
-    ⟨steps, A0, A1, A2, hrun, hA0, hA1, hA2⟩
-  exact ⟨A0, A1, A2, ⟨steps, hrun⟩, hA0, hA1, hA2⟩
-
-/-- Physical three-tape lowering of the scratch-preserving second emitter. -/
-theorem swappedFusedLowered_haltsFromTapeEquiv_prepare_then_rawEmission
-    (attempt : MachineDescription)
-    (T1 : Tape Bool) (head : Bool) (tail : Word Bool) (fuel : Nat) :
-    exists A0 A1 A2 : Tape Bool,
-      (lowerStructured3Description (swappedFusedD attempt.start)).HaltsFromTapeEquiv
-        (encodedGuardedStructured3Tapes
-          (cursorFuelSourceTape fuel) T1 (Tape.input (head :: tail)))
-        (encodedGuardedStructured3Tapes A0 A1 A2) ∧
-      Tape.Equiv A0 (rawEmissionFinalScratch (head :: tail) fuel) ∧
-      Tape.Equiv A1 T1 ∧
-      Tape.Equiv A2
-        (rawEmissionOutputTape attempt (head :: tail) fuel) := by
-  rcases swappedFusedD_haltsWithTapes_prepare_then_rawEmission
-      attempt T1 head tail fuel with
-    ⟨A0, A1, A2, hhalts, hA0, hA1, hA2⟩
-  have hlowered :=
-    lowerStructured3Description_haltsFromConfigWithTapes
-      (swappedFusedTable attempt.start).description_wellFormed
-      (swappedFusedTable attempt.start).description_haltTransitionFree
-      (swappedFusedTable attempt.start).description_supportsReadWriteRows3
-      (c := ThreeTape.config
-        ((fusedTable attempt.start).stateId
-          (Sum.inl RawLayoutPreparation.State.seekRawEnd))
-        (cursorFuelSourceTape fuel) T1 (Tape.input (head :: tail)))
-      (tapes := [A0, A1, A2])
-      rfl (by rfl) hhalts
-  refine ⟨A0, A1, A2, ?_, hA0, hA1, hA2⟩
-  simpa [swappedFusedD, swappedFusedTable,
-    encodedGuardedStructured3Tapes, ThreeTape.config] using hlowered
-
 end SwappedLayoutEmission
 end StructuredConstructionTargets
 

@@ -727,25 +727,8 @@ theorem Search.controllerCompilerOfGeneratedCallSearchOfProtectedInvocation
     (pairedRecognizerDovetailStageAttemptOutputFunctional_of_protectedInvocation
       hinvoker)
 
-theorem Search.protectedControllerFuelSearchDriverConstructionOfFiniteLeaf :
-    PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction :=
-  pairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction_finite_leaf
-
-theorem Search.protectedControllerSearchDriverConstructionOfFuel
-    (hcompile :
-      PairedRecognizerDovetailProtectedStageAttemptControllerFuelSearchDriverConstruction) :
-    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction :=
-  pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_of_fuel
-    hcompile
-
-theorem Search.protectedControllerSearchDriverConstructionOfFiniteLeaf :
-    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction := by
-  exact
-    Search.protectedControllerSearchDriverConstructionOfFuel
-      Search.protectedControllerFuelSearchDriverConstructionOfFiniteLeaf
-
 theorem Search.controllerCompilerOfGeneratedCallSearch
-    (_hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
+    (hcompile : DescriptionProgramBoolDeciderCompilationPrinciple) :
     PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction := by
   intro _accept _reject attempt hattemptReady
   rcases
@@ -753,8 +736,8 @@ theorem Search.controllerCompilerOfGeneratedCallSearch
         attempt hattemptReady with
     ⟨invoker, hinvoker⟩
   exact
-    pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverConstruction_finite_leaf
-      attempt invoker hinvoker
+    Search.controllerCompilerOfGeneratedCallSearchOfProtectedInvocation
+      hcompile hinvoker
 
 noncomputable def PairedRecognizerDovetailStageAttemptSearchProgram
     (accept reject attempt : MachineDescription) :

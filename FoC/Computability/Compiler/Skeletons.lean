@@ -573,41 +573,6 @@ theorem pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineCon
     pairedRecognizerDovetailTotalOutputEmitterOutputSubroutineRealizerConstruction_scaffold
     pairedRecognizerDovetailTotalStageAttemptOutputSubroutineSequencingConstruction_scaffold
 
-def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-    (hprojection :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
-  totalStageAttemptSubroutine :=
-    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold_of_selectedProjection
-      hprojection
-  finiteStageLoopController :=
-    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
-
-def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_postErase
-    (hpostEraseConstruction :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout :=
-  pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
-      hpostEraseConstruction)
-
-def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_prefixAndFootprintCases
-    (hprefix :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout :=
-  pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
-      hprefix hcases)
-
-def pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout where
-  totalStageAttemptSubroutine :=
-    pairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction_scaffold
-  finiteStageLoopController :=
-    pairedRecognizerDovetailFiniteStageLoopControllerConstruction_scaffold
-
 theorem pairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction_scaffold :
     PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencingConstruction := by
   intro accept reject initializer runner emitter
@@ -721,37 +686,6 @@ theorem pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerC
   pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler
     (pairedRecognizerBoundedDovetailTableCompiler_of_finiteControllerCompilerCloseout
       hclose)
-
-theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
-    (hprojection :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionFiniteDescriptionConstruction) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
-    (pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold_of_selectedProjection
-      hprojection)
-
-theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_postErase
-    (hpostEraseConstruction :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedProjectionPaddedTailCleanupPostEraseConstruction) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
-    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_postErase
-      hpostEraseConstruction)
-
-theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_prefixAndFootprintCases
-    (hprefix :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderPrefixEraserConstruction)
-    (hcases :
-      EncRewriters.BoundedLayoutRunner.SelectedProjectionPaddedTailCleanup.SelectedSegmentLogicalTapeDecoderFootprintCompactorCaseConstruction) :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold_of_selectedProjection
-    (EncRewriters.BoundedLayoutRunner.selectedProjectionFiniteDescriptionConstruction_scaffold_of_prefixAndFootprintCases
-      hprefix hcases)
-
-theorem finiteSourcePairedRecognizerDovetailCompilerConstruction_scaffold :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple :=
-  pairedRecognizerDovetailDescriptionCompiler_of_finiteControllerCompilerCloseout
-    pairedRecognizerDovetailFiniteControllerCompilerCloseout_scaffold
 
 theorem DescriptionCompiler.ofCompiledSubroutineAndDecider
     (hattempt :

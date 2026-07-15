@@ -94,12 +94,6 @@ theorem encodedControllerResultEmitterRewriterConstruction_scaffold :
     EncodedControllerResultEmitterRewriterConstruction :=
   encodedControllerResultEmitterRewriterConstruction_of_description
 
-theorem pairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction_scaffold :
-    PairedRecognizerDovetailControllerBoolWordRawOutputEmitterConstruction :=
-  ⟨DovetailControllerResultEmitterDescription,
-    dovetailControllerResultEmitterDescription_subroutineReady,
-    dovetailControllerResultEmitterDescription_haltsWithOutput_encodeBoolWord_iff⟩
-
 theorem encodedControllerResultContinueCodeWordSubroutineConstruction_scaffold :
     EncodedControllerResultContinueCodeWordSubroutineConstruction :=
   encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_closed

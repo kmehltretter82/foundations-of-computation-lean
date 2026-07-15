@@ -701,62 +701,6 @@ theorem fused_runs_prepare_then_rawEmission
     _ = (fusedTable attempt.start).config
         (Sum.inr FuelSimulatorCore.State.halt) A0 A1 A2 := hemitFused
 
-theorem fusedD_haltsWithTapes_prepare_then_rawEmission
-    (attempt : MachineDescription)
-    (T0 : Tape Bool) (head : Bool) (tail : Word Bool) (fuel : Nat) :
-    exists A0 A1 A2 : Tape Bool,
-      (fusedD attempt.start).HaltsWithTapes
-        ((fusedTable attempt.start).config
-          (Sum.inl RawLayoutPreparation.State.seekRawEnd)
-          T0 (cursorFuelSourceTape fuel) (Tape.input (head :: tail)))
-        [A0, A1, A2] ∧
-      Tape.Equiv A0 T0 ∧
-      Tape.Equiv A1 (rawEmissionFinalScratch (head :: tail) fuel) ∧
-      Tape.Equiv A2
-        (rawEmissionOutputTape attempt (head :: tail) fuel) := by
-  rcases fused_runs_prepare_then_rawEmission attempt T0 head tail fuel with
-    ⟨steps, A0, A1, A2, hrun, hA0, hA1, hA2⟩
-  refine ⟨A0, A1, A2, ⟨steps, ?_⟩, hA0, hA1, hA2⟩
-  change
-    (fusedD attempt.start).runConfig steps
-        ((fusedTable attempt.start).config
-          (Sum.inl RawLayoutPreparation.State.seekRawEnd)
-          T0 (cursorFuelSourceTape fuel) (Tape.input (head :: tail))) =
-      (fusedTable attempt.start).config
-        (Sum.inr FuelSimulatorCore.State.halt) A0 A1 A2
-  exact hrun
-
-/-- The requested single lowerer boundary: prep, the padding-aware handoff,
-and generic raw emission execute as one structured machine. -/
-theorem fusedLowered_haltsFromTapeEquiv_prepare_then_rawEmission
-    (attempt : MachineDescription)
-    (T0 : Tape Bool) (head : Bool) (tail : Word Bool) (fuel : Nat) :
-    exists A0 A1 A2 : Tape Bool,
-      (lowerStructured3Description (fusedD attempt.start)).HaltsFromTapeEquiv
-        (encodedGuardedStructured3Tapes T0
-          (cursorFuelSourceTape fuel) (Tape.input (head :: tail)))
-        (encodedGuardedStructured3Tapes A0 A1 A2) ∧
-      Tape.Equiv A0 T0 ∧
-      Tape.Equiv A1 (rawEmissionFinalScratch (head :: tail) fuel) ∧
-      Tape.Equiv A2
-        (rawEmissionOutputTape attempt (head :: tail) fuel) := by
-  rcases fusedD_haltsWithTapes_prepare_then_rawEmission
-      attempt T0 head tail fuel with
-    ⟨A0, A1, A2, hhalts, hA0, hA1, hA2⟩
-  have hlowered :=
-    lowerStructured3Description_haltsFromConfigWithTapes
-      (fusedTable attempt.start).description_wellFormed
-      (fusedTable attempt.start).description_haltTransitionFree
-      (fusedTable attempt.start).description_supportsReadWriteRows3
-      (c := (fusedTable attempt.start).config
-        (Sum.inl RawLayoutPreparation.State.seekRawEnd)
-        T0 (cursorFuelSourceTape fuel) (Tape.input (head :: tail)))
-      (tapes := [A0, A1, A2])
-      rfl (by rfl) hhalts
-  refine ⟨A0, A1, A2, ?_, hA0, hA1, hA2⟩
-  simpa [fusedD, encodedGuardedStructured3Tapes,
-    TypedStateTable.config, ThreeTape.config] using hlowered
-
 end FusedLayoutEmission
 end StructuredConstructionTargets
 

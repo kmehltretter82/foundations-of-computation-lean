@@ -1,4 +1,3 @@
-import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerFuelPairSearchContracts
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerFuelPairSearchFamilyContracts
 import FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerOutputLevelSimulatorContracts
 
@@ -152,6 +151,86 @@ def protectedControllerStageAttemptFuelSearchDriverFamilyRoute_of_exactFuelRunne
       hrunner.protectedInvocation
       (controllerStageAttemptFuelSearchDriverFamilyRoute_of_familyRoute
         fuelPairRoute)
+
+/-- Construct the protected search-driver route without collapsing its two
+observable Boolean fibers to one machine. -/
+def ProtectedControllerStageAttemptFuelSearchDriverFamilyRouteConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+      attempt invoker ->
+      exists runner : MachineDescription,
+        Nonempty
+          (ProtectedControllerStageAttemptFuelSearchDriverFamilyRoute
+            attempt invoker runner)
+
+theorem protectedControllerStageAttemptFuelSearchDriverFamilyRouteConstruction_of_exactFuelRunner_and_searchFamily
+    (hrunner :
+      PairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction)
+    (hsearch :
+      PairedRecognizerDovetailControllerStageAttemptFuelPairSearchFamilyConstruction) :
+    ProtectedControllerStageAttemptFuelSearchDriverFamilyRouteConstruction := by
+  intro attempt invoker hinvoker
+  rcases hrunner attempt invoker hinvoker with ⟨runner, hrunnerSpec⟩
+  rcases hsearch runner hrunnerSpec.left with ⟨family⟩
+  exact
+    ⟨runner,
+      ⟨protectedControllerStageAttemptFuelSearchDriverFamilyRoute_of_exactFuelRunner
+          (protectedControllerStageAttemptExactFuelRunnerRoute_of_realizes
+            hinvoker hrunnerSpec)
+          family⟩⟩
+
+/-- The direct family replacement for the historical scalar controller
+search-driver realization.  The Boolean is fixed before selecting a machine. -/
+def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverFamilyRealizes
+    (attempt : MachineDescription)
+    (family : Bool -> MachineDescription) : Prop :=
+  forall b : Bool,
+    (family b).WellFormed ∧
+      forall w : Word Bool,
+        (family b).HaltsWithOutput w [b] <->
+          exists limit : Nat,
+          exists result : Word Bool,
+            attempt.HaltsWithOutput
+              (encodeCodeWordAsInput
+                (PairedRecognizerDovetailStageInputCode w limit))
+              (encodeCodeWordAsInput (encodeBoolWord result)) ∧
+            PairedRecognizerDovetailControllerRawOutput result = some [b]
+
+/-- Protected construction of one honest search-driver machine per Boolean. -/
+def PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverFamilyConstruction :
+    Prop :=
+  forall attempt invoker : MachineDescription,
+    PairedRecognizerDovetailStageAttemptProtectedInvocationRealizes
+      attempt invoker ->
+      exists family : Bool -> MachineDescription,
+        PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverFamilyRealizes
+          attempt family
+
+/-- Honest finite-loop controller boundary for arbitrary stage attempts.  It
+returns one machine per observable Boolean and makes no cross-limit coherence
+claim. -/
+def PairedRecognizerDovetailFiniteStageLoopControllerFamilyConstruction :
+    Prop :=
+  forall attempt : MachineDescription,
+    attempt.SubroutineReady ->
+      exists family : Bool -> MachineDescription,
+        PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverFamilyRealizes
+          attempt family
+
+theorem pairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverFamilyConstruction_of_route
+    (hroute :
+      ProtectedControllerStageAttemptFuelSearchDriverFamilyRouteConstruction) :
+    PairedRecognizerDovetailProtectedStageAttemptControllerSearchDriverFamilyConstruction := by
+  intro attempt invoker hinvoker
+  rcases hroute attempt invoker hinvoker with ⟨runner, ⟨route⟩⟩
+  refine
+    ⟨fun b => route.fuelSearchFamily.fuelPairFamily.family.machine b, ?_⟩
+  intro b
+  constructor
+  · exact (route.fuelSearchFamily.subroutineReady b).left
+  · intro w
+    exact route.fuelSearchFamily.totalSearchIff w b
 
 end Computability
 end FoC

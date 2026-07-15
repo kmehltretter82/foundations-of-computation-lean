@@ -613,47 +613,6 @@ theorem leads_prepare_raw_emission
           (List.append ((stageNatBits fuel).reverse.map some)
             (none :: List.append (raw.reverse.map some) [none])) T0)
 
-theorem D_haltsWithTapes_prepare_raw_emission
-    (raw : Word Bool) (hraw : raw ≠ [])
-    (fuel : Nat) (T0 : Tape Bool) :
-    D.HaltsWithTapes
-      (cfg .seekRawEnd T0 (cursorFuelSourceTape fuel) (Tape.input raw))
-      [T0, preparedEntryScratch raw fuel, erasedRawTape raw] := by
-  rcases (leads_prepare_raw_emission raw hraw fuel T0).to_runConfig with
-    ⟨steps, hrun⟩
-  refine ⟨steps, ?_⟩
-  change
-    D.runConfig steps
-        (cfg .seekRawEnd T0 (cursorFuelSourceTape fuel) (Tape.input raw)) =
-      cfg .halt T0 (preparedEntryScratch raw fuel) (erasedRawTape raw)
-  exact hrun
-
-/-- Exact lowered endpoint for the dispatcher preparation phase.  The logical
-endpoint intentionally records the visited far-left blank on tape 1 and the
-erased raw window on tape 2; guarded physical encodings preserve those exact
-representatives. -/
-theorem lowered_haltsFromTapeEquiv_prepare_raw_emission
-    (raw : Word Bool) (hraw : raw ≠ [])
-    (fuel : Nat) (T0 : Tape Bool) :
-    (lowerStructured3Description D).HaltsFromTapeEquiv
-      (encodedGuardedStructured3Tapes T0
-        (cursorFuelSourceTape fuel) (Tape.input raw))
-      (encodedGuardedStructured3Tapes T0
-        (preparedEntryScratch raw fuel) (erasedRawTape raw)) := by
-  have h :=
-    lowerStructured3Description_haltsFromConfigWithTapes
-      table.description_wellFormed
-      table.description_haltTransitionFree
-      table.description_supportsReadWriteRows3
-      (c := cfg .seekRawEnd T0
-        (cursorFuelSourceTape fuel) (Tape.input raw))
-      (tapes :=
-        [T0, preparedEntryScratch raw fuel, erasedRawTape raw])
-      rfl (by rfl)
-      (D_haltsWithTapes_prepare_raw_emission raw hraw fuel T0)
-  simpa [D, encodedGuardedStructured3Tapes, cfg,
-    TypedStateTable.config, ThreeTape.config] using h
-
 theorem erasedRawTape_ne_blank (raw : Word Bool) :
     erasedRawTape raw ≠ Tape.blank := by
   intro h

@@ -50,10 +50,6 @@ theorem fixedBoolWordRecognizerDescription_subroutineReady (b : Bool) :
   apply machineDescription_subroutineReady_of_transition_checks
   all_goals cases b <;> decide
 
-theorem fixedBoolWordRecognizerDescription_wellFormed (b : Bool) :
-    (FixedBoolWordRecognizerDescription b).WellFormed :=
-  (fixedBoolWordRecognizerDescription_subroutineReady b).left
-
 theorem fixedBoolWordRecognizerDescription_haltTransitionFree (b : Bool) :
     (FixedBoolWordRecognizerDescription b).HaltTransitionFree :=
   (fixedBoolWordRecognizerDescription_subroutineReady b).right
@@ -63,112 +59,6 @@ theorem fixedBoolWordRecognizerDescription_accepts (b : Bool) :
       (encodeCodeWordAsInput (encodeBoolWord [b])) := by
   refine ⟨13, ?_⟩
   cases b <;> decide
-
-private theorem fixedBoolWordRecognizerDescription_rejects_empty
-    (b : Bool) :
-    ¬ (FixedBoolWordRecognizerDescription b).HaltsOnInput
-      (encodeCodeWordAsInput (encodeBoolWord [])) := by
-  rintro ⟨n, hn⟩
-  apply
-    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-      (fixedBoolWordRecognizerDescription_haltTransitionFree b)
-      (k := 3)
-      (c := (FixedBoolWordRecognizerDescription b).initial
-        (encodeCodeWordAsInput (encodeBoolWord [])))
-      (stuck :=
-        (FixedBoolWordRecognizerDescription b).runConfig 3
-          ((FixedBoolWordRecognizerDescription b).initial
-            (encodeCodeWordAsInput (encodeBoolWord []))))
-      rfl (by cases b <;> decide) (by cases b <;> decide))
-  exact hn
-
-private theorem fixedBoolWordRecognizerDescription_rejects_long
-    (b x y : Bool) (ys : Word Bool) :
-    ¬ (FixedBoolWordRecognizerDescription b).HaltsOnInput
-      (encodeCodeWordAsInput (encodeBoolWord (x :: y :: ys))) := by
-  rintro ⟨n, hn⟩
-  apply
-    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-      (fixedBoolWordRecognizerDescription_haltTransitionFree b)
-      (k := 7)
-      (c := (FixedBoolWordRecognizerDescription b).initial
-        (encodeCodeWordAsInput (encodeBoolWord (x :: y :: ys))))
-      (stuck :=
-        (FixedBoolWordRecognizerDescription b).runConfig 7
-          ((FixedBoolWordRecognizerDescription b).initial
-            (encodeCodeWordAsInput (encodeBoolWord (x :: y :: ys)))))
-      rfl (by cases b <;> rfl)
-      (by
-        change 7 ≠ 13
-        decide))
-  exact hn
-
-private theorem fixedBoolWordRecognizerDescription_rejects_true_for_false :
-    ¬ (FixedBoolWordRecognizerDescription false).HaltsOnInput
-      (encodeCodeWordAsInput (encodeBoolWord [true])) := by
-  rintro ⟨n, hn⟩
-  apply
-    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-      (fixedBoolWordRecognizerDescription_haltTransitionFree false)
-      (k := 10)
-      (c := (FixedBoolWordRecognizerDescription false).initial
-        (encodeCodeWordAsInput (encodeBoolWord [true])))
-      (stuck :=
-        (FixedBoolWordRecognizerDescription false).runConfig 10
-          ((FixedBoolWordRecognizerDescription false).initial
-            (encodeCodeWordAsInput (encodeBoolWord [true]))))
-      rfl (by decide) (by decide))
-  exact hn
-
-private theorem fixedBoolWordRecognizerDescription_rejects_false_for_true :
-    ¬ (FixedBoolWordRecognizerDescription true).HaltsOnInput
-      (encodeCodeWordAsInput (encodeBoolWord [false])) := by
-  rintro ⟨n, hn⟩
-  apply
-    (CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-      (fixedBoolWordRecognizerDescription_haltTransitionFree true)
-      (k := 10)
-      (c := (FixedBoolWordRecognizerDescription true).initial
-        (encodeCodeWordAsInput (encodeBoolWord [false])))
-      (stuck :=
-        (FixedBoolWordRecognizerDescription true).runConfig 10
-          ((FixedBoolWordRecognizerDescription true).initial
-            (encodeCodeWordAsInput (encodeBoolWord [false]))))
-      rfl (by decide) (by decide))
-  exact hn
-
-/-- Closed success-only behavior on the canonical Boolean-word family emitted
-by the checked-in fuel-output endpoint. -/
-theorem fixedBoolWordRecognizerDescription_haltsOnInput_iff
-    (b : Bool) (result : Word Bool) :
-    (FixedBoolWordRecognizerDescription b).HaltsOnInput
-        (encodeCodeWordAsInput (encodeBoolWord result)) ↔
-      result = [b] := by
-  constructor
-  · intro hhalt
-    cases result with
-    | nil =>
-        exact False.elim
-          (fixedBoolWordRecognizerDescription_rejects_empty b hhalt)
-    | cons x rest =>
-        cases rest with
-        | nil =>
-            cases b <;> cases x
-            · rfl
-            · exact False.elim
-                (fixedBoolWordRecognizerDescription_rejects_true_for_false
-                  hhalt)
-            · exact False.elim
-                (fixedBoolWordRecognizerDescription_rejects_false_for_true
-                  hhalt)
-            · rfl
-        | cons y ys =>
-            exact False.elim
-              (fixedBoolWordRecognizerDescription_rejects_long
-                b x y ys hhalt)
-  · intro hresult
-    rw [hresult]
-    exact fixedBoolWordRecognizerDescription_accepts b
 
 def fixedBoolWordRecognizerTargetTape (b : Bool) : Tape Bool :=
   ((FixedBoolWordRecognizerDescription b).runConfig 13
@@ -184,34 +74,6 @@ theorem fixedBoolWordRecognizerDescription_haltsFromTape
   constructor
   · cases b <;> decide
   · rfl
-
-/-- The fixed checker has no source-equivalence collision: on every tape
-equivalent to a canonical encoded Boolean word, halting is still exactly
-singleton equality with the construction-time Boolean. -/
-theorem fixedBoolWordRecognizerDescription_haltsFromEquiv_iff
-    (b : Bool) (result : Word Bool) (Tin : Tape Bool)
-    (hin : Tape.Equiv Tin
-      (Tape.input (encodeCodeWordAsInput (encodeBoolWord result)))) :
-    (exists Tout : Tape Bool,
-      (FixedBoolWordRecognizerDescription b).HaltsFromTape Tin Tout) ↔
-      result = [b] := by
-  constructor
-  · rintro ⟨Tout, hhalt⟩
-    rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv hin hhalt with
-      ⟨Tactual, hcanonical, _hactual⟩
-    apply
-      (fixedBoolWordRecognizerDescription_haltsOnInput_iff b result).mp
-    rcases hcanonical with ⟨n, hn⟩
-    exact ⟨n, hn.left⟩
-  · intro hresult
-    subst result
-    rcases
-        MachineDescription.HaltsFromTapeEquiv_of_input_equiv
-          (Tape.Equiv.symm hin)
-          (fixedBoolWordRecognizerDescription_haltsFromTape b) with
-      ⟨Tactual, hactual, _hTactual⟩
-    exact ⟨Tactual, hactual⟩
 
 private theorem fixedBoolWordRecognizerDescription_not_halts_of_stuck_at
     (b : Bool) (bits : Word Bool) (k : Nat)

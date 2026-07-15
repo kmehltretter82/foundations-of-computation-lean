@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteScaffolds.Basic
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.StageAttemptFramed
 
 set_option doc.verso true
 

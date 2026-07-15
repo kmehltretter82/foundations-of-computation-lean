@@ -19,102 +19,6 @@
       "reason": "Checked impossibility theorems retain the represented-window boundary and prevent revival of the false canonical physical-equivalence route."
     },
     {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DiagonalSchedule",
-      "reason": "Bound-free four-coordinate fair schedule used by the physical search cursor."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.FusedLayoutEmission",
-      "reason": "Single-lowering composition of raw-input preparation and exact simulator-layout emission."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 bounded fuel-pair search driver",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Layout",
-      "reason": "Checked physical candidate and simulator layout definitions for the active search repair."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.PersistentRestaging",
-      "reason": "Checked failure-loop restager that preserves both fuels, recovers candidate input bits, and lowers through the physical three-tape backend."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutEmission",
-      "reason": "Checked raw Boolean-word to exact simulator-layout emission phase."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutHandoff",
-      "reason": "Exact one-move handoff from the raw emitter endpoint to canonical simulator input."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RawLayoutPreparation",
-      "reason": "Checked preparation phase that preserves the public word while staging raw input and fuel."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 master dispatcher",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Retarget",
-      "reason": "Checked simulator-block retargeting for the active search repair."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 candidate advance loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Schedule",
-      "reason": "Checked finite-square schedule cursor advancement."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 master dispatcher",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Simulation",
-      "reason": "Checked adapter to the fixed-description simulator contract."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SimulatorHitExtractor",
-      "reason": "Total finite-table extraction of the accumulated simulator hit bit."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 fixed-output search branches",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SuccessOnlyRecognizer",
-      "reason": "Closed fixed-Boolean recognizer and four-coordinate success semantics."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SuccessOnlySchedule",
-      "reason": "Pure fair enumeration and reachability for the four bounded search coordinates."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SwappedLayoutEmission",
-      "reason": "Scratch-preserving second simulator-layout emission with a checked physical lowering theorem."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 persistent structured search loop",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Tape01Swap",
-      "reason": "Exact typed run transfer for exchanging caller-owned logical tapes 0 and 1."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "Sorry #12 payload-preserving branching validator",
-      "module": "FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Validation",
-      "reason": "Checked semantic validation and physical-validator contract for the active search repair."
-    },
-    {
       "category": "debug",
       "intended_consumer": "Opt-in finite-machine debugging sessions",
       "module": "FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.MachineDescriptionDebugExamples",
@@ -197,6 +101,12 @@
       "intended_consumer": "FiniteRecognizer.TupleSearch.Program direct frontiers",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Contracts",
       "reason": "Tuple-search recognizer contracts for active direct sorries."
+    },
+    {
+      "category": "public-facade",
+      "intended_consumer": "Optional structured-construction target imports",
+      "module": "FoC.Computability.Compiler.Core.StructuredConstructionTargets",
+      "reason": "Thin compatibility barrel retained while live consumers use explicit target imports."
     },
     {
       "category": "guardrail",

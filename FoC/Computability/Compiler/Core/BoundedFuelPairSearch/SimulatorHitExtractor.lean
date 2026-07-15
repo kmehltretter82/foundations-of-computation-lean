@@ -1,5 +1,3 @@
-import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Simulation
-import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Validation
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.AppendWord
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.RightEdgeRewind
 import FoC.Computability.Compiler.Core.EncRewriters.TotalOutputEmitter
@@ -293,54 +291,6 @@ theorem hitSentinelBoundaryOutputBits
       encodeCodeWordAsInput (encodeBoolWord [L.hit]) := by
   rw [scanBoundary_simulatorHitSentinelCode]
   cases L.hit <;> rfl
-
-theorem simulatorHitEmitterTargetTape_normalizedOutput
-    (L : SimulatorLayout) :
-    Tape.normalizedOutput (SimulatorHitEmitterTargetTape L) =
-      encodeCodeWordAsInput (encodeBoolWord [L.hit]) := by
-  rw [SimulatorHitEmitterTargetTape,
-    EncRewriters.TotalOutputEmitter.finalTape_normalizedOutput,
-    hitSentinelBoundaryOutputBits]
-
-/-- End-to-end total hit extraction from the canonical simulator-layout tape.
-This is the implementation-facing post-simulator leaf needed by the fixed
-output-indexed #12 route. -/
-theorem simulatorHitExtractorDescription_haltsFromTapeWithOutput
-    (L : SimulatorLayout) :
-    SimulatorHitExtractorDescription.HaltsFromTapeWithOutput
-      (SimulatorLayout.tape L)
-      (encodeCodeWordAsInput (encodeBoolWord [L.hit])) := by
-  have h :=
-    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTapeEquiv
-      (simulatorHitExtractorDescription_haltsFromTapeEquiv L)
-  rw [simulatorHitEmitterTargetTape_normalizedOutput] at h
-  exact h
-
-theorem simulatorHitExtractorDescription_haltsWithOutput
-    (L : SimulatorLayout) :
-    SimulatorHitExtractorDescription.HaltsWithOutput
-      (SimulatorLayout.asBoolInput L)
-      (encodeCodeWordAsInput (encodeBoolWord [L.hit])) := by
-  simpa [MachineDescription.HaltsWithOutput,
-    MachineDescription.HaltsFromTapeWithOutput,
-    MachineDescription.HaltsWithOutputIn,
-    MachineDescription.HaltsFromTapeWithOutputIn,
-    MachineDescription.initial, SimulatorLayout.tape] using
-      simulatorHitExtractorDescription_haltsFromTapeWithOutput L
-
-/-- A checked-in total finite table already extracts the simulator hit bit:
-append one {lit}`true` cell token and reuse the Dovetail total-output emitter. -/
-theorem totalOutputEmitter_haltsWithOutput_simulatorHit
-    (L : SimulatorLayout) :
-    EncRewriters.TotalOutputEmitter.Description.HaltsWithOutput
-      (encodeCodeWordAsInput (SimulatorHitSentinelCode L))
-      (encodeCodeWordAsInput (encodeBoolWord [L.hit])) := by
-  have h :=
-    EncRewriters.TotalOutputEmitter.haltsWithOutput_code
-      (SimulatorHitSentinelCode L)
-  rw [hitSentinelBoundaryOutputBits] at h
-  exact h
-
 
 end BoundedFuelPairSearch
 

@@ -1,5 +1,4 @@
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator
-import FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairSearch
+import FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairSearch.Assembly
 
 set_option doc.verso true
 

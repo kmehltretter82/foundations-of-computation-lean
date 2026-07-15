@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SearchSemantics
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.Contract
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.TwoStageEndpoints
 
 set_option doc.verso true
