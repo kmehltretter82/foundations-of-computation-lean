@@ -3,6 +3,8 @@ import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured
 import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeHelpers
 import FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic
 
+/-! Internal decoder setup for the canonical Boolean-word materializer. -/
+
 set_option maxRecDepth 10000
 set_option linter.unusedSimpArgs false
 

@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutShape
-import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.CanonicalBoolWordSuffixMaterializer
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.SuffixMaterializer
 import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 
 set_option doc.verso true

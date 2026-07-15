@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.CanonicalBoolWordDecoderSetup
+import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.DecoderSetup
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.PostDecodeSuffixCopier
 import FoC.Computability.Compiler.ClosedCfg.PostTrans.NestedLayoutParser.Materializer.RightEdgeTape2Projector
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.Base
