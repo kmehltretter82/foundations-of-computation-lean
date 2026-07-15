@@ -6,7 +6,7 @@ set_option doc.verso true
 # Fuel-simulator structured-core shapes
 
 Pure source and target decompositions used by the finite three-tape
-constructor for former sorry 13.
+fuel-simulator constructor.
 -/
 
 namespace FoC
