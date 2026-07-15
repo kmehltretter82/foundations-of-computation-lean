@@ -169,74 +169,6 @@ def GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :
       GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
         left right
 
-/--
-Decoded forward contract for one generated product exact-fuel call.
--/
-def GeneratedProductDecodedExactOutputForwardSpec
-    {leftN rightN : Nat}
-    (selected : TuringMachine MachineCodeSymbol selectedState)
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) : Prop :=
-  forall input : Word MachineCodeSymbol,
-  forall leftFuel rightFuel : Nat,
-    TuringMachine.HaltsWithExactOutput selected
-        (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-        ([] : Word MachineCodeSymbol) <->
-      TuringMachine.HaltsOnInputIn left leftFuel input ∧
-        TuringMachine.HaltsOnInputIn right rightFuel input
-
-/--
-Closed decoded-output contract for generated product exact-fuel calls.
--/
-def GeneratedProductDecodedExactOutputClosedSpec
-    {leftN rightN : Nat}
-    (selected : TuringMachine MachineCodeSymbol selectedState)
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) : Prop :=
-  forall tokens output : Word MachineCodeSymbol,
-    TuringMachine.HaltsWithExactOutput selected tokens output ->
-      exists input : Word MachineCodeSymbol,
-      exists leftFuel : Nat,
-      exists rightFuel : Nat,
-        tokens =
-            GeneratedCode.nestedStageCode input rightFuel leftFuel /\
-          output = ([] : Word MachineCodeSymbol) /\
-          TuringMachine.HaltsOnInputIn left leftFuel input ∧
-            TuringMachine.HaltsOnInputIn right rightFuel input
-
-def GeneratedProductDecodedExactOutputSpec
-    {leftN rightN : Nat}
-    (selected : TuringMachine MachineCodeSymbol selectedState)
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) : Prop :=
-  GeneratedProductDecodedExactOutputForwardSpec selected left right ∧
-    GeneratedProductDecodedExactOutputClosedSpec selected left right
-
-/--
-Sharper finite-table target for generated product exact-fuel calls.  It keeps
-the nested generated parameters visible instead of hiding them behind the raw
-partial transformer.
--/
-def GeneratedProductDecodedExactOutputPrimitiveConstruction
-    {leftN rightN : Nat}
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) : Prop :=
-  exists selectedState : Type,
-  exists selected : TuringMachine MachineCodeSymbol selectedState,
-    GeneratedProductDecodedExactOutputSpec selected left right ∧
-      FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputCanonicalSpec
-        selected
-        (generatedProductExactFuelRun left right) ∧
-      TuringMachine.HaltingTransitionsDisabled selected
-
-def GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction :
-    Prop :=
-  forall leftN rightN : Nat,
-    forall left : TuringMachine MachineCodeSymbol (Fin leftN),
-    forall right : TuringMachine MachineCodeSymbol (Fin rightN),
-      GeneratedProductDecodedExactOutputPrimitiveConstruction
-        left right
-
 private def generatedProductExactOutputCounterexampleMachine :
     TuringMachine MachineCodeSymbol (Fin 1) where
   start := 0
@@ -253,115 +185,37 @@ private theorem generatedProductExactOutputCounterexampleMachine_haltsIn
   · exact TuringMachine.ComputesIn.zero _
   · rfl
 
-/--
-The generated product runner cannot erase every nested generated call to the
-literal blank tape. The stored input context is nonempty and cannot shrink.
--/
-theorem not_generatedProductDecodedExactOutputPrimitiveFinStateConstruction :
-    ¬ GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction := by
+/-- The exact-empty product target is obstructed by tape-context monotonicity. -/
+theorem not_generatedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :
+    ¬ GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction := by
   intro hconstruction
   rcases hconstruction 1 1
       generatedProductExactOutputCounterexampleMachine
       generatedProductExactOutputCounterexampleMachine with
-    ⟨_state, selected, hspec, _hcanonical, _hstop⟩
-  have hhalt :=
-    (hspec.left ([] : Word MachineCodeSymbol) 0 0).mpr
+    ⟨_state, selected, hexact, _hcanonical, _hstop⟩
+  have hrun :
+      generatedProductExactFuelRun
+          generatedProductExactOutputCounterexampleMachine
+          generatedProductExactOutputCounterexampleMachine
+          (GeneratedCode.nestedStageCode
+            ([] : Word MachineCodeSymbol) 0 0) =
+        some ([] : Word MachineCodeSymbol) :=
+    (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
+      generatedProductExactOutputCounterexampleMachine
+      generatedProductExactOutputCounterexampleMachine [] 0 0).mpr
       ⟨generatedProductExactOutputCounterexampleMachine_haltsIn [],
         generatedProductExactOutputCounterexampleMachine_haltsIn []⟩
+  have hhalt :=
+    (hexact
+      (GeneratedCode.nestedStageCode
+        ([] : Word MachineCodeSymbol) 0 0)
+      ([] : Word MachineCodeSymbol)).mpr hrun
   apply
     TuringMachine.not_haltsWithExactOutput_empty_of_input_contextLength_pos
       (M := selected)
       (w := GeneratedCode.nestedStageCode
         ([] : Word MachineCodeSymbol) 0 0) ?_ hhalt
   decide
-
-theorem generatedProductExactOutputSpec_iff_decoded
-    {leftN rightN : Nat} {selectedState : Type}
-    (selected : TuringMachine MachineCodeSymbol selectedState)
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) :
-    FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.ExactOutputSpec
-        selected
-        (generatedProductExactFuelRun left right) <->
-      GeneratedProductDecodedExactOutputSpec selected left right := by
-  constructor
-  · intro hexact
-    constructor
-    · intro input leftFuel rightFuel
-      exact Iff.trans
-        (hexact
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-          ([] : Word MachineCodeSymbol))
-        (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
-          left right input leftFuel rightFuel)
-    · intro tokens output hhalt
-      exact
-        (generatedProductExactFuelRun_eq_some_iff
-          left right tokens output).mp
-          ((hexact tokens output).mp hhalt)
-  · intro hdecoded
-    intro tokens output
-    constructor
-    · intro hhalt
-      exact
-        (generatedProductExactFuelRun_eq_some_iff
-          left right tokens output).mpr
-          (hdecoded.right tokens output hhalt)
-    · intro hrun
-      rcases
-          (generatedProductExactFuelRun_eq_some_iff
-            left right tokens output).mp hrun with
-        ⟨input, leftFuel, rightFuel, htokens, houtput, htarget⟩
-      subst tokens
-      subst output
-      exact (hdecoded.left input leftFuel rightFuel).mpr htarget
-
-theorem generatedProductExactOutputPrimitiveConstruction_iff_decoded
-    {leftN rightN : Nat}
-    (left : TuringMachine MachineCodeSymbol (Fin leftN))
-    (right : TuringMachine MachineCodeSymbol (Fin rightN)) :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
-        left right <->
-      GeneratedProductDecodedExactOutputPrimitiveConstruction left right := by
-  constructor
-  · intro hprimitive
-    rcases hprimitive with
-      ⟨selectedState, selected, hexact, hcanonical, hstop⟩
-    refine ⟨selectedState, selected, ?_, hcanonical, hstop⟩
-    exact
-      (generatedProductExactOutputSpec_iff_decoded
-        selected left right).mp hexact
-  · intro hdecoded
-    rcases hdecoded with
-      ⟨selectedState, selected, hspec, hcanonical, hstop⟩
-    refine ⟨selectedState, selected, ?_, hcanonical, hstop⟩
-    exact
-      (generatedProductExactOutputSpec_iff_decoded
-        selected left right).mpr hspec
-
-theorem generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded :
-    GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction <->
-      GeneratedProductDecodedExactOutputPrimitiveFinStateConstruction := by
-  constructor
-  · intro hconstruction leftN rightN left right
-    exact
-      (generatedProductExactOutputPrimitiveConstruction_iff_decoded
-        left right).mp
-        (hconstruction leftN rightN left right)
-  · intro hconstruction leftN rightN left right
-    exact
-      (generatedProductExactOutputPrimitiveConstruction_iff_decoded
-        left right).mpr
-        (hconstruction leftN rightN left right)
-
-/-- The transformer-shaped exact-output product target is refuted as well. -/
-theorem not_generatedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction :
-    ¬ GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction := by
-  intro hconstruction
-  exact
-    not_generatedProductDecodedExactOutputPrimitiveFinStateConstruction
-      (generatedProductExactOutputPrimitiveFinStateConstruction_iff_decoded.mp
-        hconstruction)
 
 /--
 Concrete-state generated exact-fuel product runner target.
@@ -387,44 +241,6 @@ def GeneratedProductExactFuelRunnerConstruction
   exists selected : TuringMachine MachineCodeSymbol selectedState,
     ProductExactFuelRunnerSpec
       selected left right GeneratedCode.nestedStageCode
-
-theorem generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
-    {leftN rightN : Nat}
-    {left : TuringMachine MachineCodeSymbol (Fin leftN)}
-    {right : TuringMachine MachineCodeSymbol (Fin rightN)}
-    (hprimitive :
-      GeneratedProductExactFuelRunnerExactOutputPrimitiveConstruction
-        left right) :
-    GeneratedProductExactFuelRunnerConstruction left right := by
-  rcases hprimitive with
-    ⟨selectedState, selected, hexact, hcanonical, _hstop⟩
-  refine ⟨selectedState, selected, ?_⟩
-  intro input leftFuel rightFuel
-  have hselected :
-      TuringMachine.HaltsOnInput selected
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel) <->
-        generatedProductExactFuelRun left right
-          (GeneratedCode.nestedStageCode input rightFuel leftFuel) =
-          some ([] : Word MachineCodeSymbol) :=
-    ExactFuel.StageProgram.haltsOnInput_iff_some_empty_of_exactOutput
-      hexact hcanonical
-      (by
-        intro tokens output houtput
-        exact generatedProductExactFuelRun_eq_some_empty_of_eq_some
-          left right houtput)
-      (GeneratedCode.nestedStageCode input rightFuel leftFuel)
-  exact Iff.trans hselected
-    (generatedProductExactFuelRun_nestedStageCode_eq_some_iff
-      left right input leftFuel rightFuel)
-
-theorem generatedProductExactFuelRunnerFinStateConstruction_of_exactOutputPrimitive
-    (hprimitive :
-      GeneratedProductExactFuelRunnerExactOutputPrimitiveFinStateConstruction) :
-    GeneratedProductExactFuelRunnerFinStateConstruction := by
-  intro leftN rightN left right
-  exact
-    generatedProductExactFuelRunnerConstruction_of_exactOutputPrimitive
-      (hprimitive leftN rightN left right)
 
 /--
 Generated exact-fuel product runners are stable under replacing both
