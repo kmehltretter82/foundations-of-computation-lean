@@ -19,8 +19,7 @@ comparison.
 
 ### Exact-fuel finite-component and layout-pipeline lattice
 
-- Deleting commit: this change (planned subject:
-  `Close strict exact-fuel runner`; not yet committed).
+- Deleting commit: `2dc17e37` (`Close strict exact-fuel runner`).
 - Net reduction: exactly 6,320 Compiler lines. The
   `LayoutCode.lean`/`StageProgram/InitialLayout.lean` lane accounts for 2,093
   lines; the `StageProgram/Composition.lean`/`Contracts.lean` lane plus the
