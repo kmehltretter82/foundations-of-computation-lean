@@ -3,7 +3,7 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Construction
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CallerTail
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Contextual.Full
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Duplicator
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.RightPrefix
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Prefix
 
 set_option doc.verso true
 
