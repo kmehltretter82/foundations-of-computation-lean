@@ -164,6 +164,18 @@
     },
     {
       "category": "active",
+      "intended_consumer": "Sorry #5 strict exact-fuel runner",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Frame",
+      "reason": "Real-layout frame and indexed exit API for the active strict-probe machine construction."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "Sorry #5 strict exact-fuel runner",
+      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Semantics",
+      "reason": "Generic exact-fuel outcome semantics for the active strict-probe machine construction."
+    },
+    {
+      "category": "active",
       "intended_consumer": "ExactFuel parser and program closure",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.UnaryParser",
       "reason": "Checked unary parser phase for the active exact-fuel recognizer."
