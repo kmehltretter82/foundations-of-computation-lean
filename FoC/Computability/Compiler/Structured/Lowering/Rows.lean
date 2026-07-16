@@ -25,9 +25,9 @@ namespace MultiTapeLowering
 Compatibility exact row machine for a three-tape row whose actions are all
 {name}`TapeAction.stay`.
 
-New row-compiler APIs use the guarded/equivalence contracts below.  This
-zero-step no-op remains useful as a tight exact baseline and for older helper
-theorems that still mention {name}`LowersTransition`.
+The guarded/equivalence row APIs use this zero-step no-op as a tight exact
+baseline and as the compatibility implementation of
+{name}`LowersTransition`.
 -/
 def stayRow3Description (_t : Transition) : MachineDescription :=
   cursorNoopDescription
@@ -35,8 +35,8 @@ def stayRow3Description (_t : Transition) : MachineDescription :=
 /--
 Stay-capable version of the all-stay three-tape row machine.
 
-This is intentionally a no-transition stay machine: it validates the
-Milestone-8 stay-contract path without changing the existing exact
+This is intentionally a no-transition stay machine: it realizes the
+stay-action contract without changing the existing exact
 {lit}`cursorNoopDescription` row.
 -/
 def stayRow3DescriptionWithStay (_t : Transition) :
@@ -464,7 +464,7 @@ theorem readWriteMove0StayStayRow3Description_lowersGuardedTransitionLogicalEqui
 Extract the concrete read/write/stay lowering machine directly from a
 transition row.
 
-Rows outside this currently supported fragment map to the no-op placeholder;
+Rows outside this supported fragment map to the no-op fallback;
 the theorem below only exposes this definition under hypotheses proving the
 row has three reads and three {lit}`stay` actions.
 -/
@@ -483,8 +483,8 @@ def readWriteStayRow3DescriptionOfRow
 Row-shaped wrapper for
 {name}`readWriteStayRow3Description_lowersGuardedTransitionEquiv`.
 
-This is the API a later row selector can use: the machine is chosen from the
-row itself, while the proof only needs to establish that the row lies in the
+This row-shaped API chooses the machine from the row itself; its proof only
+needs to establish that the row lies in the
 supported read/write/stay fragment.
 -/
 theorem readWriteStayRow3DescriptionOfRow_lowersGuardedTransitionEquiv
@@ -681,11 +681,11 @@ theorem readWriteMove0StayStayRow3DescriptionOfRow_lowersGuardedTransitionLogica
           move0 rfl rfl
 
 /--
-Row selector for the currently supported guarded three-tape fragment.
+Row selector for the supported guarded three-tape fragment.
 
 The supported fragment allows all three actions to stay, or exactly one tape
 to use an arbitrary local move while the other two stay.  Non-supported rows
-map to a no-op placeholder; the theorems below expose this selector only under
+map to a no-op fallback; the theorems below expose this selector only under
 shape hypotheses proving the row is supported.
 -/
 def readWriteSingleMoveRow3DescriptionOfRow
@@ -718,7 +718,7 @@ def readWriteSingleMoveRow3DescriptionOfRow
   | _, _ => cursorNoopDescription
 
 /--
-Shape predicate for the currently implemented three-tape row fragment.
+Shape predicate for the supported three-tape row fragment.
 
 The row may have optional writes on every tape.  At most one tape may perform
 a non-stay move; that moving tape is scheduled last by the selected physical
@@ -1194,10 +1194,10 @@ theorem readWriteSingleMoveRow3DescriptionOfRowWithRefresh_lowersGuardedTransiti
     hrefresh
 
 /--
-Description-level support predicate for the current row compiler fragment.
+Description-level support predicate for the row compiler fragment.
 
-This is the table-level hypothesis a later run lowerer can use before there is
-a full compiler for arbitrary three-tape rows.
+This table-level hypothesis isolates the supported fragment consumed by the
+run lowerer from arbitrary three-tape rows.
 -/
 structure SupportsSingleMoveRows3
     (D : Description) : Prop where

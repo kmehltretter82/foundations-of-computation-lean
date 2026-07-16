@@ -12,7 +12,7 @@ Turing-machine mechanics, raises those mechanics to computable functions and
 language classes, and then uses diagonalization and reductions to mark the
 limits of computation.
 
-The reusable computability vocabulary lives in the {lit}`FoC.Computability`
+The reusable computability vocabulary lives in the {module}`FoC.Computability`
 module family.
 
 ## Story of the Chapter
@@ -30,36 +30,34 @@ deciders, characteristic functions, complement closure, and a stopped-decider
 to acceptor transformation.
 
 Section 5.2 compares recursive, recursively enumerable, listable, range, and
-general-grammar views. The formalization separates semantic equivalences from
-compiler assumptions: staged-program constructions are proved directly, while
-concrete machine-description compilers are exposed as named construction
-surfaces.
+general-grammar views. Its semantic equivalences and the finite-machine routes
+used by their concrete witnesses are formalized. Broad compiler principles
+remain named explicitly when a statement quantifies over every staged program
+or every acceptable language.
 
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
 machine-encoding, and universal-machine vocabulary. Finite-table execution,
-description encoding and parsing, semantic interpreter relations,
-compiled-machine simulation, and a faithful diagonal-pair copy-machine witness
-are present. The remaining implementation boundary is the finite-source
-compiler and universal-prefix runner machinery needed to realize the semantic
-interpreter by one finite universal machine without extra hypotheses.
+description encoding and parsing, the decoded-description interpreter, and a
+faithful diagonal-pair copy-machine witness are present. A finite prefix
+recognizer supplies one unconditional universal-prefix runner. Covering every
+acceptable-language row is a stronger statement and still consumes the named
+encoded-input description compiler principle.
 
-## Source Audit
+## Architecture and Scope
 
-The Chapter 5 formalization has been checked against the textbook source file
-{lit}`turing.tex`. The current Lean pages cover the book's main theorem shapes:
-Turing-machine semantics, decidability and recognizability, RE/listing/range
-equivalences, grammar-recognizer traces, diagonalization, self-halting and
-pair-halting reductions, concrete machine descriptions, and universal-machine
-row coverage. The places where the textbook says to construct a machine are now
-represented either by concrete descriptions/proofs or by named compiler
-principles and closeout records in the reusable computability layer.
+The pages cover the textbook's main theorem shapes: Turing-machine semantics,
+decidability and recognizability, RE/listing/range equivalences,
+grammar-recognizer traces, diagonalization, self-halting and pair-halting
+reductions, concrete machine descriptions, and universal-machine rows.
+Concrete finite constructions live in the reusable computability layer;
+book-facing results are thin semantic corollaries of those constructions.
 
 Some textbook presentations are deliberately recast. The book's two-tape
 listing-machine and enumerated {lit}`T_n`/{lit}`G`/{lit}`U` storyline is
 represented here by semantic listing/range witnesses, encoded machine
 descriptions, diagonal pair maps, and universal-prefix row coverage. That
-presentation keeps the theorem shapes but makes the remaining finite-source
-machine construction obligations explicit.
+presentation keeps the theorem shapes while separating the completed finite
+runner from the general compiler principle used to obtain row coverage.
 
 Two source discrepancies are not reproduced in Lean.  The range-machine
 discussion types its computed value as a symbol where the surrounding argument
@@ -86,15 +84,14 @@ languages, encodings, compiler bridges, and undecidability, inspect
 {module}`FoC.Computability.DiagonalPairMachine`, and
 {module}`FoC.Computability.Undecidable`.
 
-## Status Notes
+## Semantic Boundaries
 
-The semantic layer is proved: machine execution, computability and language
-classes, listing/range equivalences, grammar traces, reductions, and the
-abstract diagonal arguments do not rely on unfinished construction providers.
-Concrete finite descriptions are also proved for many scanners, encoders,
-transducers, and local compiler phases.  The remaining finite compiler leaves
-are exposed as construction records or explicit hypotheses; importing this
-chapter does not turn them into unconditional theorems through {lit}`sorryAx`.
+Machine execution, computability and language classes, listing/range
+equivalences, grammar traces, reductions, and the abstract diagonal arguments
+are unconditional. Concrete finite descriptions implement the scanners,
+encoders, transducers, decoded interpreter, and universal-prefix runner used by
+the chapter. General compiler principles stay visible in theorem hypotheses
+when the theorem genuinely needs them.
 
 Section 5.1 uses a partial transition function, so a missing row stops an
 execution without being the same event as entering the designated halt state.
@@ -107,13 +104,13 @@ Section 5.2 treats the Church–Turing thesis as explanatory motivation, not a
 Lean proposition.  The structured logical-tape layer is useful construction
 infrastructure, but it does not by itself prove the textbook's general
 multi-tape-to-one-tape equivalence: that claim requires a semantics-preserving
-lowering theorem.  Semantic RE/co-RE, listability, range, and grammar results
-are proved independently of that unfinished compiler boundary.
+lowering theorem. Semantic RE/co-RE, listability, range, and grammar results do
+not depend on such a blanket equivalence.
 
 Section 5.3 proves description syntax, parsing inversions, interpreter
 semantics, compiled-machine simulation interfaces, row-language facts, and
-conditional diagonal consequences.  A single finite universal-prefix machine
-is not yet constructed.  The live path is the finite-source closeout plus the
-prefix recognizer/runner contract; statements that require that machine retain
-the corresponding explicit hypothesis.
+conditional diagonal consequences. The finite prefix recognizer and its
+universal-prefix runner are constructed. Statements covering all acceptable
+languages retain only the encoded-input description compiler hypothesis needed
+to choose a description for an arbitrary acceptable language.
 -/

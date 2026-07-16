@@ -15,7 +15,7 @@ marker-preserving tape-2 projector contract that replaces it.
 
 The retired raw-head ingress target family has a separate collision: adding
 one outer blank leaves the public source tape equivalent but changes the
-requested guarded structured encoding.  That impossible #16 contract is
+requested guarded structured encoding. That impossible target family is
 recorded here independently of the deleted, unconsumed route.
 -/
 
@@ -88,7 +88,7 @@ theorem markerCollisionRepresentativeOutput_ne :
   cases hhead
 
 /--
-The exact representative forward-split frontier is impossible for the same
+The exact representative forward-split contract is impossible for the same
 collision; splitting on padding cannot restore the erased head marker.
 -/
 theorem paddedRepresentativeCleanupForwardSplitConstruction_impossible :
@@ -109,7 +109,8 @@ theorem paddedRepresentativeCleanupForwardSplitConstruction_impossible :
 
 /--
 Equivalent canonical guarded three-tape sources carry the same logical tape 2.
-This is the source-class functionality required by the repaired #17 target.
+This is the source-class functionality required by
+{name}`StructuredTape2ProjectorSpec`.
 -/
 theorem tape2ProjectorTarget_eq_of_source_equiv
     {T0 T1 T2 U0 U1 U2 : Tape Bool}
@@ -142,7 +143,7 @@ end SelectedSegmentLogicalTapeDecoderCleanupContractGuardrails
 
 namespace SelectedSegmentLogicalTapeDecoderRawHeadIngressContractGuardrails
 
-/-- Historical #16 index family, retained only to state its impossibility. -/
+/-- Historical raw-head ingress index family retained for the collision. -/
 abbrev HistoricalRawHeadIngressIndex : Type :=
   Tape Bool × (List (Tape Bool) × List (Option Bool))
 
@@ -153,7 +154,7 @@ def historicalRawHeadSourceTape
   tapeAtEncodedSplit encodedPrefix
     (encodedStructuredTapeCells (guardLogicalTape target :: rest))
 
-/-- Historical #16 guarded structured target shape. -/
+/-- Historical raw-head guarded structured target shape. -/
 def historicalRawHeadStructuredInputTape
     (target : Tape Bool) (rest : List (Tape Bool))
     (encodedPrefix : List (Option Bool)) : Tape Bool :=
@@ -162,12 +163,12 @@ def historicalRawHeadStructuredInputTape
     Tape.blank
     Tape.blank
 
-/-- Historical #16 public source family. -/
+/-- Historical raw-head public source family. -/
 def historicalRawHeadIngressSource
     (input : HistoricalRawHeadIngressIndex) : Tape Bool :=
   historicalRawHeadSourceTape input.1 input.2.1 input.2.2
 
-/-- Historical #16 requested target family. -/
+/-- Historical raw-head requested target family. -/
 def historicalRawHeadIngressTarget
     (input : HistoricalRawHeadIngressIndex) : Tape Bool :=
   historicalRawHeadStructuredInputTape input.1 input.2.1 input.2.2
@@ -218,7 +219,7 @@ theorem outerBlankCollisionTarget_not_equiv :
   exact outerBlankCollisionTarget_normalizedOutput_ne
     (Tape.Equiv.normalizedOutput_eq h)
 
-/-- The retired #16 target family is inconsistent with deterministic tape
+/-- The retired raw-head target family is inconsistent with deterministic tape
 equivalence semantics. -/
 theorem rawHeadStructuredInputTargetFamilyConstruction_impossible :
     ¬ Structured3InputTargetFamilyConstruction

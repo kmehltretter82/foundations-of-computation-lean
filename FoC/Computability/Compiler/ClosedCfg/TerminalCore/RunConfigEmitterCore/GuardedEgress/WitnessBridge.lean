@@ -4,18 +4,18 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Gu
 set_option doc.verso true
 
 /-!
-# Metadata-witness bridge for guarded #18 egress
+# Metadata-witness bridge for guarded run-config egress
 
 The tape-field pipeline has already serialized the exact final configuration
 tape, but its right suffix still contains the consumed stage tape and the
 guarded metadata/hit/witness tape.  The metadata copier needs a more specific
 one-tape source: the selected metadata tokens lie to the left of a positive
 blank gap, the exact four-bit final-hit field follows the assembled tape
-field, and four additional blanks remain available for the eventual header
+field, and four additional blanks remain available for the fixed header
 prepender.
 
 This module fixes that handoff without pretending that it is a definitional
-shape equality.  The finite bridge must inspect the committed branch witness:
+shape equality.  The finite bridge inspects the committed branch witness:
 a known witness supplies the final state, while the other witness selects the
 raw state retained in the compact metadata.  Its honest output is up to
 {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`, because input
@@ -260,10 +260,10 @@ theorem readyTape_has_positive_gap (i : Index) (layout : ReadyLayout) :
   exact ⟨layout.gapTail, rfl⟩
 
 /-!
-## Remaining finite bridge obligation
+## Finite metadata-witness bridge contract
 -/
 
-/-- The known and other source branches are separate proof obligations so a
+/-- The known and other source branches are separate contract clauses so a
 finite construction cannot silently assume that the witness always carries a
 state.  Each clause accepts every tape equivalent to the serializer endpoint
 and may retain only blank far-edge padding in its copier-ready representative. -/
@@ -299,7 +299,7 @@ theorem Spec.haltsFromTapeEquiv
   | other =>
       exact hbridge.other i hwitness actual hactual
 
-/-- Lowest remaining production construction after the tape-field pipeline. -/
+/-- Existence contract for the metadata-witness bridge. -/
 def Construction : Prop :=
   exists bridge : MachineDescription, Spec bridge
 

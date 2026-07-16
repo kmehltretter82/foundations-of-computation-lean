@@ -6,10 +6,10 @@ set_option doc.verso true
 # Count-window input materializer shapes
 
 Closed-form shape and padding lemmas for the count-window structured input
-materializer (the {lit}`InputMatFrontier` core obligation).  This module names
+materializer. This module names
 the intermediate tapes, proves the branch padding closed forms, and decomposes
-the guarded three-tape target into per-segment cell words so later machine
-phases can state exact write obligations.
+the guarded three-tape target into per-segment cell words for the exact machine
+phase specifications.
 
 The numeric closed forms used by the later machine phases are proved below.
 -/

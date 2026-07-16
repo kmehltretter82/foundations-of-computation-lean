@@ -6,29 +6,29 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeActionStateAssembly
+namespace FiniteRecognizer.Interpreter.RuntimeActionStateAssembly
 
 theorem compactor_computes_of_tape_equiv
-    (action : Section53RuntimeStateCompactor.Action)
+    (action : FiniteRecognizer.Interpreter.RuntimeStateCompactor.Action)
     (target oldState : Nat)
     (protectedSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource :
       Tape.Equiv
-        (Section53RuntimeStateCompactor.sourceConfig action target oldState
+        (FiniteRecognizer.Interpreter.RuntimeStateCompactor.sourceConfig action target oldState
           protectedSuffix).tape
         sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeStateCompactor.machine
-          { state := Section53RuntimeStateCompactor.Control.seekMarker action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeStateCompactor.machine
+          { state := FiniteRecognizer.Interpreter.RuntimeStateCompactor.Control.seekMarker action
             tape := sourceTape }
-          { state := Section53RuntimeStateCompactor.Control.ready action
+          { state := FiniteRecognizer.Interpreter.RuntimeStateCompactor.Control.ready action
             tape := targetTape } ∧
         Tape.Equiv
-          (Section53RuntimeStateCompactor.targetConfig
+          (FiniteRecognizer.Interpreter.RuntimeStateCompactor.targetConfig
             action target protectedSuffix).tape
           targetTape := by
-  rcases Section53RuntimeStateCompactor.run_exact
+  rcases FiniteRecognizer.Interpreter.RuntimeStateCompactor.run_exact
       action target oldState protectedSuffix with
     ⟨canonicalTarget, hrun, hcanonicalTarget⟩
   rcases
@@ -50,43 +50,43 @@ theorem selected_action_to_compacted_state
     (oldState : Nat)
     (protectedSuffix : Word MachineCodeSymbol) :
     exists cleanedTape finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeLeftCleanup.machine
-          (Section53RuntimeLeftCleanup.fromActionConfig
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
+          (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.fromActionConfig
             baseLeftRev selected
             (MachineCodeSymbol.header ::
               MachineDescription.encodeNatAppend oldState
                 protectedSuffix))
-          { state := Section53RuntimeLeftCleanup.Control.ready
-              (Section53RuntimeLeftCleanup.selectedAction selected)
+          { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.ready
+              (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
             tape := cleanedTape } ∧
-        TuringMachine.Computes Section53RuntimeStateCompactor.machine
-          { state := Section53RuntimeStateCompactor.Control.seekMarker
-              (Section53RuntimeLeftCleanup.selectedAction selected)
+        TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeStateCompactor.machine
+          { state := FiniteRecognizer.Interpreter.RuntimeStateCompactor.Control.seekMarker
+              (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
             tape := cleanedTape }
-          { state := Section53RuntimeStateCompactor.Control.ready
-              (Section53RuntimeLeftCleanup.selectedAction selected)
+          { state := FiniteRecognizer.Interpreter.RuntimeStateCompactor.Control.ready
+              (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
             tape := finalTape } ∧
         Tape.Equiv
-          (Section53RuntimeStateCompactor.targetConfig
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+          (FiniteRecognizer.Interpreter.RuntimeStateCompactor.targetConfig
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
             selected.target protectedSuffix).tape
           finalTape := by
-  rcases Section53RuntimeLeftCleanup.computes_from_action_target
+  rcases FiniteRecognizer.Interpreter.RuntimeLeftCleanup.computes_from_action_target
       baseLeftRev selected
       (MachineCodeSymbol.header ::
         MachineDescription.encodeNatAppend oldState protectedSuffix) with
     ⟨cleanedTape, hcleanup, hcleaned⟩
   have hsource :
       Tape.Equiv
-        (Section53RuntimeStateCompactor.sourceConfig
-          (Section53RuntimeLeftCleanup.selectedAction selected)
+        (FiniteRecognizer.Interpreter.RuntimeStateCompactor.sourceConfig
+          (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           selected.target oldState protectedSuffix).tape
         cleanedTape := by
     exact Tape.Equiv.symm (by
-      simpa [Section53RuntimeStateCompactor.sourceConfig,
-        Section53RuntimeStateCompactor.sourceWord] using hcleaned)
+      simpa [FiniteRecognizer.Interpreter.RuntimeStateCompactor.sourceConfig,
+        FiniteRecognizer.Interpreter.RuntimeStateCompactor.sourceWord] using hcleaned)
   rcases compactor_computes_of_tape_equiv
-      (Section53RuntimeLeftCleanup.selectedAction selected)
+      (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
       selected.target oldState
       protectedSuffix cleanedTape hsource with
     ⟨finalTape, hcompactor, hfinal⟩
@@ -94,7 +94,7 @@ theorem selected_action_to_compacted_state
   done
 
 
-end Section53RuntimeActionStateAssembly
+end FiniteRecognizer.Interpreter.RuntimeActionStateAssembly
 
 end Computability
 end FoC

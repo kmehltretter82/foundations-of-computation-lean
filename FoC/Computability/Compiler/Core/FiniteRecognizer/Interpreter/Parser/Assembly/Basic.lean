@@ -10,7 +10,7 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserAssembly
+namespace FiniteRecognizer.Interpreter.ParserAssembly
 
 /-!
 # Parser assembly
@@ -798,6 +798,6 @@ theorem headerEndpoint_prefixRightShiftOne_forward
       simpa [ContextualPrefixRightShiftOne.cursorSourceConfig,
         ContextualPrefixRightShiftOne.config] using hrun
 
-end Section53ParserAssembly
+end FiniteRecognizer.Interpreter.ParserAssembly
 end Computability
 end FoC

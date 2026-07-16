@@ -5,13 +5,13 @@ namespace Computability
 
 open Languages
 
-namespace Section53StackSkip
+namespace FiniteRecognizer.Interpreter.StackSkip
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
 
 /-!
 **Table-stack context scanner.** Entry records that the selected-action header
@@ -160,7 +160,7 @@ theorem run_scan_noheaders
 theorem rawTable_nonempty_shape
     (first : TransitionDescription)
     (rest : List TransitionDescription) :
-    Section53LoopRestagingAudit.rawTable (first :: rest) =
+    FiniteRecognizer.Interpreter.LoopRestagingAudit.rawTable (first :: rest) =
       MachineCodeSymbol.transition ::
         runtimeKeyRawTransitionTail first rest [] := by
   rfl
@@ -170,8 +170,8 @@ theorem rawTable_no_header
     (first : TransitionDescription)
     (rest : List TransitionDescription) :
     transitionListParserNoHeader
-      (Section53LoopRestagingAudit.rawTable (first :: rest)) := by
-  unfold Section53LoopRestagingAudit.rawTable
+      (FiniteRecognizer.Interpreter.LoopRestagingAudit.rawTable (first :: rest)) := by
+  unfold FiniteRecognizer.Interpreter.LoopRestagingAudit.rawTable
     MachineDescription.encodeTransitions
   apply transitionListParser_encodeTransitionsAppend_noHeader
   intro symbol hmem
@@ -182,7 +182,7 @@ theorem run_one_copy
     (baseLeftRev suffix : Word MachineCodeSymbol)
     (first : TransitionDescription)
     (rest : List TransitionDescription) :
-    let table := Section53LoopRestagingAudit.rawTable (first :: rest)
+    let table := FiniteRecognizer.Interpreter.LoopRestagingAudit.rawTable (first :: rest)
     machine.runConfigExact? (table.length + 1)
         (cursorConfig .afterHeader baseLeftRev
           (List.append table (MachineCodeSymbol.header :: suffix))) =
@@ -247,7 +247,7 @@ def sourceConfig
     TuringMachine.Configuration MachineCodeSymbol Control :=
   cursorConfig .afterHeader baseLeftRev
     (List.append
-      (Section53LoopRestagingAudit.tableStack (first :: rest) copies)
+      (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack (first :: rest) copies)
       context)
 
 def targetConfig
@@ -259,7 +259,7 @@ def targetConfig
     TuringMachine.Configuration MachineCodeSymbol Control :=
   cursorConfig .ready
     (List.append
-      (Section53LoopRestagingAudit.tableStack
+      (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack
         (first :: rest) copies).reverse
       baseLeftRev)
     context
@@ -273,13 +273,13 @@ theorem run_exact
     (copies : Nat)
     (context : Word MachineCodeSymbol) :
     machine.runConfigExact?
-        (Section53LoopRestagingAudit.tableStack
+        (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack
           (first :: rest) copies).length
         (sourceConfig baseLeftRev first rest copies context) =
       some (targetConfig baseLeftRev first rest copies context) := by
   induction copies generalizing baseLeftRev with
   | zero =>
-      rw [Section53LoopRestagingAudit.tableStack_zero]
+      rw [FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack_zero]
       change machine.runConfigExact? 1
         (cursorConfig .afterHeader baseLeftRev
           (MachineCodeSymbol.header :: context)) = _
@@ -287,11 +287,11 @@ theorem run_exact
       rw [step_terminal_header]
       rfl
   | succ copies ih =>
-      rw [Section53LoopRestagingAudit.tableStack_succ]
-      let table := Section53LoopRestagingAudit.rawTable (first :: rest)
+      rw [FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack_succ]
+      let table := FiniteRecognizer.Interpreter.LoopRestagingAudit.rawTable (first :: rest)
       have hone := run_one_copy baseLeftRev
         (List.append
-          (Section53LoopRestagingAudit.tableStack
+          (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack
             (first :: rest) copies)
           context)
         first rest
@@ -300,7 +300,7 @@ theorem run_exact
           List.append table.reverse baseLeftRev)
       have hall := runConfigExact_trans hone hrest
       simpa [sourceConfig, targetConfig, table,
-        Section53LoopRestagingAudit.tableStack_succ,
+        FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack_succ,
         List.reverse_append, List.append_assoc,
         Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hall
   done
@@ -316,20 +316,20 @@ theorem run_context_exact
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
     machine.runConfigExact?
-        (Section53LoopRestagingAudit.tableStack
+        (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack
           (first :: rest) copies).length
         (sourceConfig baseLeftRev first rest copies
-          (Section53LoopRestagingAudit.contextTail tape haltState
+          (FiniteRecognizer.Interpreter.LoopRestagingAudit.contextTail tape haltState
             callerSuffix)) =
       some
         (targetConfig baseLeftRev first rest copies
-          (Section53LoopRestagingAudit.contextTail tape haltState
+          (FiniteRecognizer.Interpreter.LoopRestagingAudit.contextTail tape haltState
             callerSuffix)) := by
   exact run_exact baseLeftRev first rest copies _
   done
 
 
-end Section53StackSkip
+end FiniteRecognizer.Interpreter.StackSkip
 
 end Computability
 end FoC

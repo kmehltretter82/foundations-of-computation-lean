@@ -1234,7 +1234,7 @@ theorem construction_core (D : MachineDescription) :
     fun L => logicalTapeListEquiv_refl _,
     canonicalDescription_haltsFromTapeEquiv D⟩
 
-/-- The cfg-side witness consumed by the full #18 pipeline, stated without an
+/-- The configuration-side witness consumed by the full emitter pipeline, without an
 upward import of the pipeline module. -/
 theorem canonical_construction_core :
     forall D : MachineDescription,

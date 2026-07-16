@@ -11,7 +11,7 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Section 5.2 listings and ranges
+# Section 5.2: Listings and Ranges
 -/
 
 open Languages

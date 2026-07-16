@@ -6,10 +6,10 @@ set_option doc.verso true
 /-!
 # Guarded-egress pipeline contracts
 
-The #18 input materializer, structured lowering, and physical handoffs may
-retain harmless far-edge blank padding.  The former attempt to normalize every
-such representative to one exact physical tape is impossible by context-length
-monotonicity.  The viable contract retains the padding up to tape equivalence,
+The input materializer, structured lowering, and physical handoffs may retain
+harmless far-edge blank padding.  Context-length monotonicity prevents uniform
+normalization of every representative to one exact physical tape.  The pipeline
+contract retains the padding up to tape equivalence,
 which still fixes the exact normalized output word and head-relative layout.
 -/
 

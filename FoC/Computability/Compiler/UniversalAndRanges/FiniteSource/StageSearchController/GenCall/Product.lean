@@ -51,9 +51,8 @@ theorem codePrefixExactFuelProductRunnerConstruction_of_generated
     using hselected input leftFuel rightFuel
 
 /--
-Concrete-state product exact-fuel runner target.  This is the remaining
-finite-table target after both recognizers have been reindexed to {lit}`Fin`
-state spaces.
+Concrete-state product exact-fuel runner target after both recognizers have
+been reindexed to {lit}`Fin` state spaces.
 -/
 def CodePrefixExactFuelProductRunnerFinStateConstruction : Prop :=
   forall leftN rightN : Nat,
@@ -155,8 +154,8 @@ theorem codePrefixExactFuelProductRunnerConstruction_of_finStateConstructionDeci
         (TuringMachine.indexedDecidable right))
 
 /--
-Remaining concrete finite-table leaf for the product exact-fuel runner over
-indexed recognizers.
+Concrete finite-table leaf for the product exact-fuel runner over indexed
+recognizers.
 -/
 theorem codePrefixExactFuelProductRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelProductRunnerFinStateConstruction := by

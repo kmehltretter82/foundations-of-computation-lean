@@ -5,23 +5,23 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextRawTailDriver
+namespace FiniteRecognizer.Interpreter.BooleanContextRawTailDriver
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53InitializerFrontier
-open Section53RuntimeEncodedList
-open Section53BooleanContextMaterializer
-open Section53BooleanContextLocator
-open Section53BooleanContextRawTail
-open Section53BooleanContextOneSymbolRound
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
+open FiniteRecognizer.Interpreter.BooleanContextMaterializer
+open FiniteRecognizer.Interpreter.BooleanContextLocator
+open FiniteRecognizer.Interpreter.BooleanContextRawTail
+open FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound
 
 namespace Driver
 
 inductive Control where
-  | round (inner : Section53BooleanContextOneSymbolRound.Machine.Control)
+  | round (inner : FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control)
   | loopBounce
-  | restart (inner : Section53BooleanContextLocator.Control)
+  | restart (inner : FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
   | restartBounce
   | finish (inner : RewindWord.Control)
 deriving DecidableEq
@@ -29,10 +29,10 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53BooleanContextOneSymbolRound.Machine.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.finite.elems.map
       Control.round ++
     [Control.loopBounce] ++
-    Section53BooleanContextLocator.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.elems.map
       Control.restart ++
     [Control.restartBounce] ++
     RewindWord.Control.finite.elems.map Control.finish
@@ -44,12 +44,12 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | round inner =>
         simp [elems,
-          Section53BooleanContextOneSymbolRound.Machine.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.finite.complete
             inner]
     | loopBounce => simp [elems]
     | restart inner =>
         simp [elems,
-          Section53BooleanContextLocator.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.complete inner]
     | restartBounce => simp [elems]
     | finish inner =>
         simp [elems, RewindWord.Control.finite.complete inner]
@@ -58,7 +58,7 @@ end Control
 
 def mapRoundAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextOneSymbolRound.Machine.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control) ->
       (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, next) =>
       (write, direction, .round next)
@@ -71,7 +71,7 @@ def mapFinishAction :
 
 def mapRestartAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextLocator.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control) ->
       (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, next) =>
       (write, direction, .restart next)
@@ -79,15 +79,15 @@ def mapRestartAction :
 def transition :
     Control -> Option MachineCodeSymbol ->
       Option (Option MachineCodeSymbol × Direction × Control)
-  | .round Section53BooleanContextOneSymbolRound.Machine.Control.ready, read =>
+  | .round FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.ready, read =>
       some (read, Direction.left, .loopBounce)
   | .round
-      (Section53BooleanContextOneSymbolRound.Machine.Control.pop
+      (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.pop
         RawTailPop.Control.empty), read =>
       some (read, Direction.left, .finish .scan)
   | .round inner, read =>
       Option.map mapRoundAction
-        (Section53BooleanContextOneSymbolRound.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.transition inner read)
   | .loopBounce, read =>
       some (read, Direction.right,
         .restart .fuel)
@@ -95,22 +95,22 @@ def transition :
       some (read, Direction.left, .restartBounce)
   | .restart inner, read =>
       Option.map mapRestartAction
-        (Section53BooleanContextLocator.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner read)
   | .restartBounce, read =>
       some (read, Direction.right,
-        .round Section53BooleanContextOneSymbolRound.Machine.machine.start)
+        .round FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine.start)
   | .finish inner, read =>
       Option.map mapFinishAction (RewindWord.transition inner read)
 
 def machine : TuringMachine MachineCodeSymbol Control where
-  start := .round Section53BooleanContextOneSymbolRound.Machine.machine.start
+  start := .round FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine.start
   halt := .finish .gate
   transition := transition
   statesFinite := Control.finite
 
 def roundConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextOneSymbolRound.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .round config.state
     tape := config.tape }
@@ -124,25 +124,25 @@ def finishConfig
 
 def restartConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .restart config.state
     tape := config.tape }
 
 theorem round_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextOneSymbolRound.Machine.Control)
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control)
     (hstep :
-      Section53BooleanContextOneSymbolRound.Machine.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine.stepConfig source =
         some target) :
     machine.stepConfig (roundConfig source) =
       some (roundConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextOneSymbolRound.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextOneSymbolRound.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -151,27 +151,27 @@ theorem round_step_of_some
           cases hstep
           have hnotReady :
               inner ≠
-                Section53BooleanContextOneSymbolRound.Machine.Control.ready := by
+                FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.ready := by
             intro heq
             subst inner
-            simp [Section53BooleanContextOneSymbolRound.Machine.transition]
+            simp [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.transition]
               at htransition
           have hnotEmpty :
               inner ≠
-                Section53BooleanContextOneSymbolRound.Machine.Control.pop
+                FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.pop
                   RawTailPop.Control.empty := by
             intro heq
             subst inner
-            simp [Section53BooleanContextOneSymbolRound.Machine.transition,
+            simp [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.transition,
               RawTailPop.transition] at htransition
           simp [machine, transition, roundConfig, mapRoundAction,
             htransition]
 
 theorem round_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextOneSymbolRound.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextOneSymbolRound.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine source target) :
     TuringMachine.Computes machine
       (roundConfig source) (roundConfig target) := by
   induction hrun with
@@ -185,35 +185,35 @@ theorem round_computes_lift
 
 theorem restart_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control)
-    (hstep : Section53BooleanContextLocator.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextLocator.machine.stepConfig source =
       some target) :
     machine.stepConfig (restartConfig source) =
       some (restartConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextLocator.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextLocator.machine] at hstep
       cases htransition :
-          Section53BooleanContextLocator.transition inner (Tape.read tape) with
+          FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
           rcases action with ⟨write, direction, next⟩
           simp only [htransition] at hstep
           cases hstep
           have hnotReady :
-              inner ≠ Section53BooleanContextLocator.Control.ready := by
+              inner ≠ FiniteRecognizer.Interpreter.BooleanContextLocator.Control.ready := by
             intro heq
             subst inner
-            simp [Section53BooleanContextLocator.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextLocator.transition] at htransition
           simp [machine, transition, restartConfig, mapRestartAction,
             htransition]
 
 theorem restart_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control}
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextLocator.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.machine source target) :
     TuringMachine.Computes machine
       (restartConfig source) (restartConfig target) := by
   induction hrun with
@@ -283,11 +283,11 @@ theorem loop_run_exact
     (word : Word MachineCodeSymbol) :
     machine.runConfigExact? 2
         { state := Control.round
-            Section53BooleanContextOneSymbolRound.Machine.Control.ready
+            FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.ready
           tape := Tape.input word } =
       some
         { state := Control.restart .fuel
-          tape := Section53BooleanContextOneSymbolRound.Machine.bounceTape
+          tape := FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.bounceTape
             (Tape.input word) } := by
   cases word <;> rfl
 
@@ -298,7 +298,7 @@ theorem loop_computes_of_tape_equiv
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         { state := Control.round
-            Section53BooleanContextOneSymbolRound.Machine.Control.ready
+            FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.ready
           tape := sourceTape }
         { state := Control.restart .fuel
           tape := targetTape } ∧
@@ -310,7 +310,7 @@ theorem loop_computes_of_tape_equiv
     ⟨targetTape, htransport, htransportTarget⟩
   refine ⟨targetTape, htransport, ?_⟩
   exact Tape.Equiv.trans
-    (Section53BooleanContextOneSymbolRound.Machine.bounceTape_input_equiv word)
+    (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.bounceTape_input_equiv word)
     htransportTarget
 
 theorem restart_to_round_run_exact
@@ -322,7 +322,7 @@ theorem restart_to_round_run_exact
           tape := (Prepend.sourceConfig baseLeftRev count suffix).tape } =
       some
         { state := Control.round
-            Section53BooleanContextOneSymbolRound.Machine.machine.start
+            FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine.start
           tape := (Prepend.sourceConfig baseLeftRev count suffix).tape } := by
   cases hbaseEq : baseLeftRev with
   | nil => contradiction
@@ -335,51 +335,51 @@ theorem restart_round_computes_of_tape_equiv
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table)
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table)
     (hsource : Tape.Equiv
       (Tape.input
-        (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
           fuel stateCount start halt rowCount table cells raw))
       sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         { state := Control.round
-            Section53BooleanContextOneSymbolRound.Machine.Control.ready
+            FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.Control.ready
           tape := sourceTape }
         { state := Control.round
-            Section53BooleanContextOneSymbolRound.Machine.machine.start
+            FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.machine.start
           tape := targetTape } ∧
       Tape.Equiv
         (RawTailPop.sourceConfig
-          (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
             fuel stateCount start halt rowCount table)
           cells raw).tape
         targetTape := by
   let baseLeftRev :=
-    Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+    FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
       fuel stateCount start halt rowCount table
   let suffix := MachineDescription.encodeCellsAppend cells
     (MachineCodeSymbol.header :: raw)
   rcases loop_computes_of_tape_equiv
-      (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+      (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
         fuel stateCount start halt rowCount table cells raw)
       sourceTape hsource with
     ⟨tape0, hloop, htape0⟩
   have hlocatorSource : Tape.Equiv
-      (Section53BooleanContextOneSymbolRound.Machine.locatorSource
+      (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.locatorSource
         fuel stateCount start halt rowCount table cells raw).tape
       tape0 := by
-    rw [Section53BooleanContextOneSymbolRound.Machine.locatorSource_tape_eq_input]
+    rw [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.locatorSource_tape_eq_input]
     exact htape0
   have hlocatorInner :=
-    Section53BooleanContextLocator.computes_to_right_count
+    FiniteRecognizer.Interpreter.BooleanContextLocator.computes_to_right_count
       fuel stateCount start halt rowCount table cells.length suffix hnoHeader
   have hlocator := restart_computes_lift hlocatorInner
   rcases computes_of_tape_equiv hlocator hlocatorSource with
     ⟨tape1, hlocatorTransport, htape1⟩
   have hbase : baseLeftRev ≠ [] := by
     exact
-      Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev_ne_nil
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev_ne_nil
         fuel stateCount start halt rowCount table
   have hhandoffExact := restart_to_round_run_exact
     baseLeftRev cells.length suffix hbase
@@ -393,9 +393,9 @@ theorem restart_round_computes_of_tape_equiv
   · simpa [baseLeftRev, suffix,
       RawTailPop.sourceConfig, Prepend.sourceConfig,
       RawTailPop.locateConfig, Prepend.locateConfig,
-      Section53BooleanContextOneSymbolRound.Machine.locatorTarget,
-      Section53BooleanContextLocator.targetConfig,
-      Section53BooleanContextLocator.rightCountBaseLeftRev] using htarget
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.locatorTarget,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.targetConfig,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountBaseLeftRev] using htarget
 
 theorem rewind_scan_step
     (current : MachineCodeSymbol)
@@ -441,7 +441,7 @@ theorem empty_handoff_run_exact
     (cells : List (Option Bool)) :
     machine.runConfigExact? 1
         (roundConfig
-          (Section53BooleanContextOneSymbolRound.Machine.popConfig
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig
             (RawTailPop.emptyConfig baseLeftRev cells))) =
       some
         (finishConfig
@@ -450,8 +450,8 @@ theorem empty_handoff_run_exact
             [MachineCodeSymbol.header] 0)) := by
   cases hbase : RawTailPop.payloadBaseLeftRev baseLeftRev cells <;>
     simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine,
-      Section53BooleanContextRawTailDriver.Driver.transition,
-      roundConfig, Section53BooleanContextOneSymbolRound.Machine.popConfig,
+      FiniteRecognizer.Interpreter.BooleanContextRawTailDriver.Driver.transition,
+      roundConfig, FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig,
       RawTailPop.emptyConfig, RawTailPop.rawBaseLeftRev,
       finishConfig, RewindWord.scanConfig, RewindWord.scanTape, hbase,
       RewindWord.paddingCells, SerializedShift.cursorTape,
@@ -464,25 +464,25 @@ theorem empty_tail_finishes
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         (roundConfig
-          (Section53BooleanContextOneSymbolRound.Machine.popConfig
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig
             (RawTailPop.sourceConfig
-              (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+              (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
                 fuel stateCount start halt rowCount table)
               cells [])))
         { state := Control.finish .gate
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
-          (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
             fuel stateCount start halt rowCount table cells []))
         targetTape := by
   let baseLeftRev :=
-    Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+    FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
       fuel stateCount start halt rowCount table
   let word := RawTailPop.wordBeforeRaw baseLeftRev cells
   have hraw := RawTailPop.empty_computes baseLeftRev cells
   have hone :=
-    Section53BooleanContextOneSymbolRound.Machine.pop_computes_lift hraw
+    FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.pop_computes_lift hraw
   have hround := round_computes_lift hone
   have hhandoffExact := empty_handoff_run_exact baseLeftRev cells
   have hhandoff := TuringMachine.computesIn_to_computes
@@ -512,10 +512,10 @@ theorem empty_tail_finishes
     simpa [baseLeftRev, word, targetTape, hword, finishConfig,
       RewindWord.gateConfig] using hrun
   · have hlayout :
-        Section53BooleanContextOneSymbolRound.Machine.layoutWord
+        FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
             fuel stateCount start halt rowCount table cells [] = word := by
       have hshape :=
-        Section53BooleanContextOneSymbolRound.Machine.popTargetWord_eq_layoutWord
+        FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popTargetWord_eq_layoutWord
           fuel stateCount start halt rowCount table cells []
       calc
         _ = List.append
@@ -547,20 +547,20 @@ theorem full_tail_reverse_computes
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool))
     (revRaw : List MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         (roundConfig
-          (Section53BooleanContextOneSymbolRound.Machine.popConfig
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig
             (RawTailPop.sourceConfig
-              (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+              (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
                 fuel stateCount start halt rowCount table)
               cells (reverseWord revRaw))))
         { state := Control.finish .gate
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
-          (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
             fuel stateCount start halt rowCount table
             (List.append
               ((MachineDescription.encodeCodeWordAsInput
@@ -580,7 +580,7 @@ theorem full_tail_reverse_computes
           ((MachineDescription.encodeCodeSymbolAsInput last).map some)
           cells
       rcases
-          Section53BooleanContextOneSymbolRound.Machine.nonempty_raw_symbol_round_computes
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.nonempty_raw_symbol_round_computes
             fuel stateCount start halt rowCount table cells raw last hnoHeader with
         ⟨tape1, honeRound, htape1⟩
       have hround := round_computes_lift honeRound
@@ -590,14 +590,14 @@ theorem full_tail_reverse_computes
         ⟨tape2, hrestart, htape2⟩
       have hrecursiveSource : Tape.Equiv
           (roundConfig
-            (Section53BooleanContextOneSymbolRound.Machine.popConfig
+            (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig
               (RawTailPop.sourceConfig
-                (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+                (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
                   fuel stateCount start halt rowCount table)
                 nextCells raw))).tape
           tape2 := by
         simpa [roundConfig,
-          Section53BooleanContextOneSymbolRound.Machine.popConfig] using
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig] using
             htape2
       rcases ih nextCells with
         ⟨recursiveTargetTape, hrecursive, hrecursiveShape⟩
@@ -639,7 +639,7 @@ theorem full_tail_reverse_computes
         have hinput := congrArg
           (fun theseCells : List (Option Bool) =>
             Tape.input
-              (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+              (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
                 fuel stateCount start halt rowCount table theseCells []))
           hcells
         rw [hinput]
@@ -650,20 +650,20 @@ theorem full_tail_computes
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         (roundConfig
-          (Section53BooleanContextOneSymbolRound.Machine.popConfig
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.popConfig
             (RawTailPop.sourceConfig
-              (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+              (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
                 fuel stateCount start halt rowCount table)
               cells raw)))
         { state := Control.finish .gate
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
-          (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
             fuel stateCount start halt rowCount table
             (List.append
               ((MachineDescription.encodeCodeWordAsInput raw).map some)
@@ -679,7 +679,7 @@ theorem full_tail_computes
 
 end Driver
 
-end Section53BooleanContextRawTailDriver
+end FiniteRecognizer.Interpreter.BooleanContextRawTailDriver
 
 end Computability
 end FoC

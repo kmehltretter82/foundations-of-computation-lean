@@ -6,8 +6,8 @@ set_option doc.verso true
 /-!
 This module packages the budget-and-fuel search layer for the finite-source
 stage-search controller. It defines the dovetail witness relation, enumerator
-construction, raw search obligations, and bounded-attempt obligations used by
-the controller closeout.
+construction, raw-search contracts, and bounded-attempt contracts used by the
+controller assembly.
 -/
 
 namespace FoC
@@ -339,8 +339,8 @@ theorem codePrefixStageSearchControllerBudgetFuelOuterLoopFuelSearchFiniteLeafDe
   exact codePrefixNestedExactFuelSearchFiniteLeafDecidable attempt
 
 /--
-Global wrapper for the raw stage-code/fuel search construction.  The concrete
-transition-table obligation is the per-machine outer-loop fuel-search leaf.
+Global wrapper for the raw stage-code/fuel search construction. Its
+per-machine component is the outer-loop fuel-search leaf.
 -/
 theorem codePrefixStageSearchControllerBudgetFuelEnumeratorConstruction_core :
     CodePrefixStageSearchControllerBudgetFuelEnumeratorConstruction := by
@@ -422,9 +422,9 @@ theorem codePrefixStageSearchControllerBudgetFuelRawDriverObligation_coreDecidab
   exact codePrefixNestedExactFuelSearchFiniteLeafDecidable checker
 
 /--
-Finite-machine construction for the budget-only searcher.  The remaining
-transition-table work is the unbounded budget dovetailer that rebuilds
-{name}`CodePrefixRecognizerStageCode` inputs and runs the checker.
+Finite-machine construction for the budget-only searcher. The unbounded budget
+dovetailer rebuilds {name}`CodePrefixRecognizerStageCode` inputs and runs the
+checker.
 -/
 theorem codePrefixStageSearchControllerBudgetRawSearchObligation_core
     {checkerState : Type}

@@ -5,9 +5,9 @@ namespace Computability
 
 open Languages
 
-namespace Section53SemanticIteration
+namespace FiniteRecognizer.Interpreter.SemanticIteration
 
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 theorem find?_eq_some_first_decompose
     {α : Type}
@@ -150,7 +150,7 @@ theorem runConfig_state_tape_stutter_of_lookup_none
   done
 
 
-end Section53SemanticIteration
+end FiniteRecognizer.Interpreter.SemanticIteration
 
 end Computability
 end FoC

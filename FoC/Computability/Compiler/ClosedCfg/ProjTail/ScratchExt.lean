@@ -19,8 +19,8 @@ implementation is split by responsibility:
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindowConstructions` contains the reusable
   construction leaves for the scratch-count materializer and restorer.
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge` exposes the structured
-  endpoint facts and remaining finite-machine leaves.
+  endpoint facts and completed finite-machine constructions.
 - {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.Threaded` carries
-  the lowered structured extractor bridge through the current scratch-count
-  materializer scaffold.
+  the lowered structured extractor bridge through the indexed scratch-count
+  materializer construction.
 -/

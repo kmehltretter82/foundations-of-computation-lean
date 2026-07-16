@@ -13,7 +13,7 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Section 5.2 closeout theorems
+# Section 5.2: Closeout Theorems
 -/
 
 open Languages
@@ -343,16 +343,14 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     hpair
 
 /-!
-## Section 5.2 Finite-Data Handoffs
+## Finite-Data Composition
 
-This is the explicit dependency graph
-for the remaining finite/effective route. The closeout records still carry the
-semantic acceptor bridge when a final recursive-language theorem needs it, but
-the handoff lemmas below do not manufacture a broad semantic closeout from
-finite data. The safe stopped-decider variant is recorded separately, while the
-finite consequences below keep the paired-dovetail compiler as an explicit
-hypothesis and use the checked-certificate grammar compiler only as an adapter
-to the first-order presentation compiler.
+These theorems make the finite-data dependency graph explicit. Closeout records
+carry the semantic acceptor bridge needed by recursive-language theorems, while
+the finite consequences consume the paired-dovetail and grammar-presentation
+interfaces directly. The stopped-decider conversion is stated separately, and
+the checked-certificate grammar compiler serves as an adapter to the
+first-order presentation compiler.
 -/
 
 theorem stopped_decidable_to_acceptable_construction_bool :
@@ -361,23 +359,23 @@ theorem stopped_decidable_to_acceptable_construction_bool :
   intro _L h
   exact TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
 
-theorem program_acceptable_by_description_to_finite_general_grammar_scaffold :
+theorem program_acceptable_by_description_to_finite_general_grammar :
     ProgramAcceptableByDescriptionToFiniteGeneralGrammarConstruction :=
   Computability.programAcceptableByDescriptionToFiniteGeneralGrammarConstruction_of_descriptionRecognizer
     (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
       concrete_machine_description_to_finite_general_grammar_construction)
 
-theorem program_acceptable_by_description_to_finite_general_grammar_presentation_scaffold :
+theorem program_acceptable_by_description_to_finite_general_grammar_presentation :
     ProgramAcceptableByDescriptionToFiniteGeneralGrammarPresentationConstruction :=
   Computability.programAcceptableByDescriptionToFiniteGeneralGrammarPresentationConstruction_of_descriptionRecognizer
     (Computability.machineDescriptionAcceptsToFiniteGeneralGrammarPresentationConstruction_of_machineConstruction
       concrete_machine_description_to_finite_general_grammar_presentation_construction)
 
-theorem program_acceptable_by_description_finite_general_grammar_scaffold
+theorem program_acceptable_by_description_finite_general_grammar
     {L : Language Bool}
     (hL : ProgramAcceptableByDescription L) :
     FiniteGeneralGrammarGenerated L :=
-  program_acceptable_by_description_to_finite_general_grammar_presentation_scaffold
+  program_acceptable_by_description_to_finite_general_grammar_presentation
     L hL
 
 theorem finite_general_grammar_pair_recursive_of_checked_presentation_compiler
@@ -441,52 +439,45 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_s
 /-!
 ## Semantic and Finite Grammar Boundaries
 
-The theorem equating general grammars with recursively enumerable languages is
-now split into two statements. For semantic unrestricted grammars, the reverse
-direction is proved by {name}`SemanticLanguageGrammar`: arbitrary production
-predicates can generate any language with one nonterminal. The finite/effective
-content is factored through {name}`ConcreteBooleanFiniteGrammarSection52Closeout`.
-Under that closeout,
+The theorem equating general grammars with recursively enumerable languages has
+two representation-level forms. For semantic unrestricted grammars, the
+reverse direction is proved by {name}`SemanticLanguageGrammar`: arbitrary
+production predicates can generate any language with one nonterminal. The
+finite-presentation form is factored through
+{name}`ConcreteBooleanFiniteGrammarSection52Closeout`. Under that interface,
 {name}`boolean_recursive_language_iff_finite_general_grammar_pair_of_finite_section52_closeout`
 proves the finite grammar pair characterization. The narrower
 {name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records concrete
 finite-data ingredients: the paired-recognizer dovetail compiler, the finite
 first-order grammar-presentation recognizer compiler, and the description-backed
 recognizer-to-finite grammar construction. The ordinary finite-grammar compiler
-is now a derived bridge: a finite grammar is converted to an explicit
-{lit}`Fin n` production-list presentation, and the compiled presentation
+is a derived bridge: a finite grammar is converted to an explicit
+{name}`Fin`-indexed production-list presentation, and the compiled presentation
 recognizer is transferred to the abstract recognizer by accepted-language
 extensionality. The presentation compiler itself is factored through a bounded
-derivation-search recognizer compiler. That bounded recognizer is now mirrored
+derivation-search recognizer compiler. That bounded recognizer is mirrored
 by explicit finite production-list certificate recognizers. The indexed
 certificate form names each rewrite rule by a finite index into the production
 list, and its recursive checked-data form is proved sound and complete for the
 indexed proof certificate. The checked-data trace and bounded search are proved
-equivalent to the derivation search, so the remaining finite grammar table
-construction is a first-order certificate-checking compiler problem: verify a
-bounded list of indexed sentential-form rewrites and emit acceptance exactly
-when such a certificate exists. The corresponding checked certificate-recognizer
-compiler target now implies the indexed, bounded, and first-order presentation
-compiler targets.
+equivalent to the derivation search. Consequently, the checked
+certificate-recognizer interface implies the indexed, bounded, and first-order
+presentation compiler interfaces.
 
-The declarations above now pin that infrastructure down as
+The declarations above expose that infrastructure as
 {name}`ConcreteBooleanSection52CompilerCloseout` for the semantic grammar page
 and {name}`ConcreteBooleanFiniteGrammarSection52Closeout` for the finite grammar
 page, while {name}`ConcreteBooleanFiniteDataSection52CompilerCloseout` records
-the narrowed finite/effective route. These closeouts carry
+the finite-data route. These closeouts carry
 {name}`Computability.BoundedTraceSearchConstruction` as the primary finite-trace handoff. The
 semantic closeout uses the semantic reverse grammar construction. The
-finite-data closeout replaces the older broad dovetail compiler by a paired
-recognizer dovetail compiler; the bounded-dovetail table target is proved
-equivalent to that paired-recognizer target. It also uses the first-order finite
-grammar-presentation compiler as its finite grammar-recognizer input, and uses the
+finite-data closeout uses the paired-recognizer dovetail compiler and the
+first-order finite grammar-presentation compiler, together with the
 description-backed construction
 {name}`DescriptionRecognizerToFiniteGeneralGrammarConstruction`.
-The first-order presentation, checked-certificate, and runner-search
-boundaries identify the remaining transition-table construction work. The
-checked-presentation wrapper above therefore takes both the paired-recognizer
-dovetail compiler and the checked-certificate presentation compiler explicitly
-instead of manufacturing either construction.
+The checked-presentation wrapper takes the paired-recognizer dovetail compiler
+and checked-certificate presentation compiler explicitly so that its dependency
+currency is visible in the theorem type.
 -/
 
 

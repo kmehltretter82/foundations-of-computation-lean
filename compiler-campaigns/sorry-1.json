@@ -7,7 +7,6 @@
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateKernel.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateRecovery.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
-    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Contracts.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean"
   ],
   "frontier": "FoC.Computability.FiniteRecognizer.TupleSearch.generatedUnboundedHiddenFuelPairFinStateFiniteLeaf",

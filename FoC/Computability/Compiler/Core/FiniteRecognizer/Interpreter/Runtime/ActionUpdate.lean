@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeActionPrefix
+namespace FiniteRecognizer.Interpreter.RuntimeActionPrefix
 
 /-!
 **Selected-row action handoff.** This finite prefix consumes a canonical
@@ -467,7 +467,7 @@ theorem run_exact
   exact runConfigExact_trans (runConfigExact_trans hentry hsource) hfields
   done
 
-end Section53RuntimeActionPrefix
+end FiniteRecognizer.Interpreter.RuntimeActionPrefix
 
 end Computability
 end FoC

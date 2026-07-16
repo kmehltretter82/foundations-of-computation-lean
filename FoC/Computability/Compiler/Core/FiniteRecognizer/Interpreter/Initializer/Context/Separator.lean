@@ -5,10 +5,10 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextSeparatorConverter
+namespace FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53InitializerPersistentCopy
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy
 
 namespace Machine
 
@@ -166,7 +166,7 @@ theorem scanUnary_computes
 def metadataWithHalt
     (fuel stateCount start halt : Nat) : Word MachineCodeSymbol :=
   List.append
-    (Section53BooleanContextHaltAppender.Machine.metadataPrefix
+    (FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.metadataPrefix
       fuel stateCount start)
     (MachineDescription.encodeNat halt)
 
@@ -254,7 +254,7 @@ theorem metadata_scan_computes
   have hrun := TuringMachine.computes_trans hrun (by
     simpa [afterStart, afterState] using hhalt)
   simpa [metadataWithHalt,
-    Section53BooleanContextHaltAppender.Machine.metadataPrefix,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.metadataPrefix,
     MachineDescription.encodeNatAppend, List.reverse_append,
     afterFuel, afterHeader, afterState, afterStart,
     List.append_assoc] using hrun
@@ -351,7 +351,7 @@ theorem table_computes
     (table : Word MachineCodeSymbol)
     (leftCells : List (Option MachineCodeSymbol))
     (suffix : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     TuringMachine.Computes machine
       (optionConfig .table leftCells
         (List.append table
@@ -365,7 +365,7 @@ theorem table_computes
   | cons symbol rest ih =>
       have hsymbol : symbol ≠ MachineCodeSymbol.header :=
         hnoHeader symbol (List.Mem.head rest)
-      have hrest : Section53BooleanContextLocator.noHeader rest := by
+      have hrest : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader rest := by
         intro current hmem
         exact hnoHeader current (List.Mem.tail symbol hmem)
       exact TuringMachine.Computes.step
@@ -613,7 +613,7 @@ theorem readyConfig_eq_targetConfig
 theorem canonical_computes
     (fuel stateCount start halt rowCount : Nat)
     (table tail : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     TuringMachine.Computes machine
       (sourceConfig fuel stateCount start halt rowCount table
         (MachineCodeSymbol.header :: tail))
@@ -715,7 +715,7 @@ theorem computes_of_tape_equiv
     (fuel stateCount start halt rowCount : Nat)
     (table tail : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table)
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table)
     (hsource : Tape.Equiv
       (sourceConfig fuel stateCount start halt rowCount table
         (MachineCodeSymbol.header :: tail)).tape
@@ -745,7 +745,7 @@ theorem computes_of_tape_equiv
 
 end Machine
 
-end Section53BooleanContextSeparatorConverter
+end FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter
 
 end Computability
 end FoC

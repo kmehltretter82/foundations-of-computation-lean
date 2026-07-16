@@ -6,7 +6,7 @@ import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.Lo
 set_option doc.verso true
 
 /-!
-# Exact guarded egress for #18
+# Exact guarded run-config egress
 
 This module starts from the real post-dispatch data currency.  Logical tape 0
 contains the exact final tape window, logical tape 1 is the consumed stage
@@ -23,9 +23,7 @@ the physical source and therefore meets the determinism guardrail for the
 repaired equivalence-output contract.
 
 The checked serializer chain consumes this witness-materialized source
-directly. The former standalone executable decoder and semantic-assembly
-prototype had no consumer after that chain became the live implementation and
-has been retired.
+directly and exposes one witness encoding and one guarded serializer API.
 -/
 
 namespace FoC
@@ -123,7 +121,7 @@ theorem Index.target_eq_semantic (i : Index) :
 ## Honest equivalence-output contract
 -/
 
-/-- The former all-equivalent-input/exact-tape contract is impossible even
+/-- An all-equivalent-input/exact-tape contract is impossible even
 for this target-functional source family, because an equivalent source can
 carry arbitrarily much invisible far-edge padding. -/
 theorem exactOutputConstruction_impossible (i : Index) :

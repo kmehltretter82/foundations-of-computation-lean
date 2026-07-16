@@ -66,7 +66,7 @@ theorem codePrefixParserNormalizerMachine_haltsOnInput_iff_decodeDescriptionPref
         ((codePrefixParserNormalizerMachine_code_spec
           encoded encoded).mpr htransform)
 
-theorem codePrefixDescriptionPrefixDecoderConstruction_scaffold :
+theorem codePrefixDescriptionPrefixDecoderConstruction :
     CodePrefixDescriptionPrefixDecoderConstruction :=
   ⟨CodePrefixParserNormalizerState,
     codePrefixParserNormalizerMachine,

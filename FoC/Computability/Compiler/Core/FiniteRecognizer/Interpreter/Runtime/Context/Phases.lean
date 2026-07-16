@@ -5,11 +5,11 @@ namespace Computability
 
 open Languages
 
-namespace Section53DirectContextUpdate
+namespace FiniteRecognizer.Interpreter.DirectContextUpdate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 ### Tape-equivalence phase adapters
@@ -79,22 +79,22 @@ theorem prepend_computes_of_tape_equiv
     (suffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         baseLeftRev count suffix).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine cell)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine cell)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
-          (Section53RuntimeEncodedList.Prepend.targetWord
+          (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord
             baseLeftRev count cell suffix))
         targetTape := by
-  rcases Section53RuntimeEncodedList.Prepend.run_exact
+  rcases FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.run_exact
       baseLeftRev count cell suffix with
     ⟨canonicalEndpoint, hrun, hstate, hcanonicalTape⟩
   rcases canonicalEndpoint with ⟨canonicalState, canonicalTape⟩
@@ -117,20 +117,20 @@ theorem pop_computes_of_tape_equiv
     (suffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         baseLeftRev remaining cell suffix).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready cell
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready cell
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
-          (Section53RuntimeEncodedList.Pop.targetWord
+          (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord
             baseLeftRev remaining suffix))
         targetTape := by
-  rcases Section53RuntimeEncodedList.Pop.run_exact
+  rcases FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.run_exact
       baseLeftRev remaining cell suffix with
     ⟨canonicalEndpoint, hrun, hstate, hcanonicalTape⟩
   rcases canonicalEndpoint with ⟨canonicalState, canonicalTape⟩
@@ -231,7 +231,7 @@ theorem right_cursor_eq_prepend_source
     (Boundary.targetConfig (prefixBaseLeftRev target)
       left right.length
       (MachineDescription.encodeCellsAppend right persistent)).tape =
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (rightBaseLeftRev target left) right.length
         (MachineDescription.encodeCellsAppend right persistent)).tape := by
   rfl
@@ -244,7 +244,7 @@ theorem left_cursor_eq_prepend_source
     (Prefix.targetConfig action target
       (RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
         { left := left, head := head, right := right } persistent)).tape =
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (prefixBaseLeftRev target) left.length
         (MachineDescription.encodeCellsAppend left
           (MachineDescription.encodeCellListAppend right persistent))).tape := by
@@ -254,14 +254,14 @@ theorem prepend_left_targetWord_eq_context
     (target : Nat) (write head : Option Bool)
     (left right : List (Option Bool))
     (persistent : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Prepend.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord
         (prefixBaseLeftRev target) left.length write
         (MachineDescription.encodeCellsAppend left
           (MachineDescription.encodeCellListAppend right persistent)) =
       contextSourceWord target
         { left := write :: left, head := head, right := right }
         persistent := by
-  unfold Section53RuntimeEncodedList.Prepend.targetWord contextSourceWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord contextSourceWord
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [prefixBaseLeftRev_reverse]
   cases write with
@@ -283,13 +283,13 @@ theorem prepend_right_targetWord_eq_context
     (target : Nat) (write head : Option Bool)
     (left right : List (Option Bool))
     (persistent : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Prepend.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord
         (rightBaseLeftRev target left) right.length write
         (MachineDescription.encodeCellsAppend right persistent) =
       contextSourceWord target
         { left := left, head := head, right := write :: right }
         persistent := by
-  unfold Section53RuntimeEncodedList.Prepend.targetWord contextSourceWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord contextSourceWord
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [rightBaseLeftRev_reverse]
   have hright :
@@ -327,14 +327,14 @@ theorem pop_left_targetWord_eq_context
     (target : Nat) (head : Option Bool)
     (remainingLeft right : List (Option Bool))
     (persistent : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Pop.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord
         (prefixBaseLeftRev target) remainingLeft.length
         (MachineDescription.encodeCellsAppend remainingLeft
           (MachineDescription.encodeCellListAppend right persistent)) =
       contextSourceWord target
         { left := remainingLeft, head := head, right := right }
         persistent := by
-  unfold Section53RuntimeEncodedList.Pop.targetWord contextSourceWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord contextSourceWord
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [prefixBaseLeftRev_reverse]
   simp [MachineDescription.encodeCellListAppend,
@@ -345,13 +345,13 @@ theorem pop_right_targetWord_eq_context
     (target : Nat) (head : Option Bool)
     (left remainingRight : List (Option Bool))
     (persistent : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Pop.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord
         (rightBaseLeftRev target left) remainingRight.length
         (MachineDescription.encodeCellsAppend remainingRight persistent) =
       contextSourceWord target
         { left := left, head := head, right := remainingRight }
         persistent := by
-  unfold Section53RuntimeEncodedList.Pop.targetWord contextSourceWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord contextSourceWord
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [rightBaseLeftRev_reverse]
   have hright :
@@ -391,7 +391,7 @@ theorem left_cursor_eq_pop_source
       (RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
         { left := nextHead :: remainingLeft, head := head, right := right }
         persistent)).tape =
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (prefixBaseLeftRev target) remainingLeft.length nextHead
         (MachineDescription.encodeCellsAppend remainingLeft
           (MachineDescription.encodeCellListAppend right persistent))).tape := by
@@ -408,7 +408,7 @@ theorem right_cursor_eq_pop_source
       left (remainingRight.length + 1)
       (MachineDescription.encodeCellAppend nextHead
         (MachineDescription.encodeCellsAppend remainingRight persistent))).tape =
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (rightBaseLeftRev target left) remainingRight.length nextHead
         (MachineDescription.encodeCellsAppend remainingRight persistent)).tape := by
   cases nextHead with
@@ -474,10 +474,10 @@ theorem prepend_left
       sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := targetTape } ∧
       Tape.Equiv
@@ -487,7 +487,7 @@ theorem prepend_left
             persistent))
         targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (prefixBaseLeftRev target) left.length
         (MachineDescription.encodeCellsAppend left
           (MachineDescription.encodeCellListAppend right persistent))).tape
@@ -517,10 +517,10 @@ theorem prepend_right
       sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := targetTape } ∧
       Tape.Equiv
@@ -530,7 +530,7 @@ theorem prepend_right
             persistent))
         targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (rightBaseLeftRev target left) right.length
         (MachineDescription.encodeCellsAppend right persistent)).tape
       sourceTape := by
@@ -558,10 +558,10 @@ theorem pop_left
           { left := nextHead :: remainingLeft, head := head, right := right }
           persistent)).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
@@ -570,7 +570,7 @@ theorem pop_left
             persistent))
         targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (prefixBaseLeftRev target) remainingLeft.length nextHead
         (MachineDescription.encodeCellsAppend remainingLeft
           (MachineDescription.encodeCellListAppend right persistent))).tape
@@ -600,10 +600,10 @@ theorem pop_right
           (MachineDescription.encodeCellsAppend remainingRight persistent))).tape
       sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
@@ -612,7 +612,7 @@ theorem pop_right
             persistent))
         targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (rightBaseLeftRev target left) remainingRight.length nextHead
         (MachineDescription.encodeCellsAppend remainingRight persistent)).tape
       sourceTape := by
@@ -702,10 +702,10 @@ theorem update_left_empty_to_next_key
         { state := Boundary.Control.locate .count, tape := leftTape }
         { state := Boundary.Control.ready, tape := rightTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := rightTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := contextTape } ∧
       TuringMachine.Computes KeyHead.machine
@@ -761,10 +761,10 @@ theorem update_right_empty_to_next_key
         { state := Prefix.Control.target action, tape := sourceTape }
         { state := Prefix.Control.ready action, tape := leftTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := leftTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := contextTape } ∧
       TuringMachine.Computes KeyHead.machine
@@ -823,19 +823,19 @@ theorem update_left_nonempty_to_next_key
         { state := Boundary.Control.locate .count, tape := leftTape }
         { state := Boundary.Control.ready, tape := rightTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := rightTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := writtenTape } ∧
       TuringMachine.Computes Prefix.machine
         { state := Prefix.Control.target action, tape := writtenTape }
         { state := Prefix.Control.ready action, tape := repointedTape } ∧
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := repointedTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := contextTape } ∧
       TuringMachine.Computes KeyHead.machine
         { state := KeyHead.Control.target nextHead, tape := contextTape }
@@ -907,10 +907,10 @@ theorem update_right_nonempty_to_next_key
         { state := Prefix.Control.target action, tape := sourceTape }
         { state := Prefix.Control.ready action, tape := leftTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := leftTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := writtenTape } ∧
       TuringMachine.Computes Prefix.machine
@@ -919,10 +919,10 @@ theorem update_right_nonempty_to_next_key
       TuringMachine.Computes Boundary.machine
         { state := Boundary.Control.locate .count, tape := repointedTape }
         { state := Boundary.Control.ready, tape := rightTape } ∧
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := rightTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := contextTape } ∧
       TuringMachine.Computes KeyHead.machine
         { state := KeyHead.Control.target nextHead, tape := contextTape }
@@ -975,7 +975,7 @@ theorem update_right_nonempty_to_next_key
 
 end DirectPhases
 
-end Section53DirectContextUpdate
+end FiniteRecognizer.Interpreter.DirectContextUpdate
 
 end Computability
 end FoC

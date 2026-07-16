@@ -5,10 +5,10 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextLocator
+namespace FiniteRecognizer.Interpreter.BooleanContextLocator
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53RuntimeEncodedList
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
 
 /-!
 # Boolean-context locator
@@ -446,7 +446,7 @@ theorem computes_to_right_count
     List.append_assoc] using hrun
 
 
-end Section53BooleanContextLocator
+end FiniteRecognizer.Interpreter.BooleanContextLocator
 
 end Computability
 end FoC

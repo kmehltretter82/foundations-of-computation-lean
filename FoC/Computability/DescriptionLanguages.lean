@@ -9,10 +9,11 @@ This module is the semantic bridge between description syntax and description
 execution.  It defines the languages obtained by decoding complete or
 prefix-coded descriptions and then running the decoded machine.
 
-Encoding and parser inversion remain in
-{module}`FoC.Computability.Encoding`; executable table semantics remain in
-{module}`FoC.Computability.MachineDescription`.  Nothing here claims that a
-single finite universal runner has been constructed.
+Encoding and parser inversion are provided by
+{module}`FoC.Computability.Encoding`; executable table semantics are provided
+by {module}`FoC.Computability.MachineDescription`.  The concrete finite
+universal-prefix runner is assembled separately in
+{module -checked}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`.
 -/
 
 namespace FoC

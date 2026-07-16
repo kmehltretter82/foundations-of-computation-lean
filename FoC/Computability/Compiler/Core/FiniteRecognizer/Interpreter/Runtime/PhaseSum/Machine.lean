@@ -6,22 +6,22 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimePhaseSum
+namespace FiniteRecognizer.Interpreter.RuntimePhaseSum
 
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53SelectedUpdateIntegration
-open Section53FinalGateMaterializer
-open Section53NoMatchFinalGate
-open Section53NoMatchFinalGate.LastMiss
-open Section53SemanticIteration
-open Section53BoundedLoopInduction
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.SelectedUpdateIntegration
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
+open FiniteRecognizer.Interpreter.NoMatchFinalGate
+open FiniteRecognizer.Interpreter.NoMatchFinalGate.LastMiss
+open FiniteRecognizer.Interpreter.SemanticIteration
+open FiniteRecognizer.Interpreter.BoundedLoopInduction
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
 
-abbrev Action := Section53RuntimeAction.Action
+abbrev Action := FiniteRecognizer.Interpreter.RuntimeAction.Action
 
 inductive PrefixPurpose where
   | initial
@@ -48,22 +48,22 @@ namespace StackPurpose
 
 def finite : Foundation.FiniteType StackPurpose where
   elems := .miss ::
-    (Section53RuntimeAction.Action.finite.elems.flatMap fun action =>
+    (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.flatMap fun action =>
       [StackPurpose.initial action false,
         StackPurpose.initial action true]) ++
-    Section53RuntimeAction.Action.finite.elems.map StackPurpose.leftPop ++
-    Section53RuntimeAction.Action.finite.elems.map StackPurpose.rightCheck
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map StackPurpose.leftPop ++
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map StackPurpose.rightCheck
   complete := by
     intro purpose
     cases purpose with
     | miss => simp
     | initial action zeroCopies =>
         cases zeroCopies <;>
-          simp [Section53RuntimeAction.Action.finite.complete action]
+          simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | leftPop action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | rightCheck action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
 
 end StackPurpose
 
@@ -76,17 +76,17 @@ namespace PrependMode
 
 def finite : Foundation.FiniteType PrependMode where
   elems :=
-    (Section53RuntimeAction.Action.finite.elems.flatMap fun action =>
+    (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.flatMap fun action =>
       [PrependMode.left action false, PrependMode.left action true]) ++
-    Section53RuntimeAction.Action.finite.elems.map PrependMode.right
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map PrependMode.right
   complete := by
     intro mode
     cases mode with
     | left action wasEmpty =>
         cases wasEmpty <;>
-          simp [Section53RuntimeAction.Action.finite.complete action]
+          simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | right action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
 
 end PrependMode
 
@@ -103,10 +103,10 @@ namespace BoundaryMode
 
 def finite : Foundation.FiniteType BoundaryMode where
   elems := [.missLeft, .missRight, .finalLeft, .finalRight] ++
-    (Section53RuntimeAction.Action.finite.elems.flatMap fun action =>
+    (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.flatMap fun action =>
       [BoundaryMode.leftWrite action false,
         BoundaryMode.leftWrite action true]) ++
-    Section53RuntimeAction.Action.finite.elems.map BoundaryMode.rightCheck
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map BoundaryMode.rightCheck
   complete := by
     intro mode
     cases mode with
@@ -116,9 +116,9 @@ def finite : Foundation.FiniteType BoundaryMode where
     | finalRight => simp
     | leftWrite action wasEmpty =>
         cases wasEmpty <;>
-          simp [Section53RuntimeAction.Action.finite.complete action]
+          simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | rightCheck action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
 
 end BoundaryMode
 
@@ -130,15 +130,15 @@ deriving DecidableEq
 namespace PopMode
 
 def finite : Foundation.FiniteType PopMode where
-  elems := Section53RuntimeAction.Action.finite.elems.map PopMode.left ++
-    Section53RuntimeAction.Action.finite.elems.map PopMode.right
+  elems := FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map PopMode.left ++
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map PopMode.right
   complete := by
     intro mode
     cases mode with
     | left action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | right action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
 
 end PopMode
 
@@ -152,44 +152,44 @@ namespace RewindMode
 
 def finite : Foundation.FiniteType RewindMode where
   elems := [.finalSuccess false, .finalSuccess true, .finalMiss] ++
-    Section53RuntimeAction.Action.finite.elems.map RewindMode.rightEmpty
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map RewindMode.rightEmpty
   complete := by
     intro mode
     cases mode with
     | finalSuccess haltToken => cases haltToken <;> simp
     | finalMiss => simp
     | rightEmpty action =>
-        simp [Section53RuntimeAction.Action.finite.complete action]
+        simp [FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
 
 end RewindMode
 
 inductive Control where
   | scan (inner : RuntimeKeySingleKeyRepair.ComparatorState)
   | extract (inner : RuntimeKeySelectedExtractorArbitrary.Control)
-  | action (inner : Section53RuntimeActionPrefix.Control)
-  | cleanup (inner : Section53RuntimeLeftCleanup.Control)
+  | action (inner : FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control)
+  | cleanup (inner : FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control)
   | prefixPhase (purpose : PrefixPurpose)
-      (inner : Section53DirectContextUpdate.Prefix.Control)
+      (inner : FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control)
   | stackProbe (action : Action)
   | stackProbeBounce (action : Action) (zeroCopies : Bool)
-  | stack (purpose : StackPurpose) (inner : Section53StackSkip.Control)
+  | stack (purpose : StackPurpose) (inner : FiniteRecognizer.Interpreter.StackSkip.Control)
   | leftProbe (action : Action)
   | leftProbeBounce (action : Action) (wasEmpty : Bool)
   | boundary (mode : BoundaryMode)
-      (inner : Section53DirectContextUpdate.Boundary.Control)
+      (inner : FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control)
   | prepend (mode : PrependMode)
-      (inner : Section53RuntimeEncodedList.Prepend.Control)
+      (inner : FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control)
   | rightProbe (action : Action)
   | rightProbeBounce (action : Action) (wasEmpty : Bool)
-  | pop (mode : PopMode) (inner : Section53RuntimeEncodedList.Pop.Control)
+  | pop (mode : PopMode) (inner : FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control)
   | restage (inner : NextCopyRestager.Control)
-  | haltMarker (inner : Section53FinalGateMaterializer.HaltMarker.Control)
-  | doubleMarker (inner : Section53NoMatchFinalGate.DoubleTransitionMarker.Control)
+  | haltMarker (inner : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control)
+  | doubleMarker (inner : FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control)
   | rewind (mode : RewindMode)
       (inner : RewindWord.Control)
-  | prefixBuilder (inner : Section53FinalGateMaterializer.PrefixBuilder.Control)
-  | currentBuilder (inner : Section53NoMatchFinalGate.CurrentBuilder.Control)
-  | haltCopier (inner : Section53FinalGateMaterializer.HaltCopier.Control)
+  | prefixBuilder (inner : FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control)
+  | currentBuilder (inner : FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control)
+  | haltCopier (inner : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control)
   | finalCompare (inner : RuntimeKeyComparatorState)
   | accept
   | reject
@@ -198,23 +198,23 @@ deriving DecidableEq
 namespace Control
 
 def prefixFinite := Foundation.FiniteType.prod PrefixPurpose.finite
-  Section53DirectContextUpdate.Prefix.Control.finite
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.finite
 
 def actionBoolFinite := Foundation.FiniteType.prod
-  Section53RuntimeAction.Action.finite
+  FiniteRecognizer.Interpreter.RuntimeAction.Action.finite
   { elems := [false, true], complete := by intro bit; cases bit <;> simp }
 
 def stackFinite := Foundation.FiniteType.prod StackPurpose.finite
-  Section53StackSkip.Control.finite
+  FiniteRecognizer.Interpreter.StackSkip.Control.finite
 
 def boundaryFinite := Foundation.FiniteType.prod BoundaryMode.finite
-  Section53DirectContextUpdate.Boundary.Control.finite
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.finite
 
 def prependFinite := Foundation.FiniteType.prod PrependMode.finite
-  Section53RuntimeEncodedList.Prepend.Control.finite
+  FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.finite
 
 def popFinite := Foundation.FiniteType.prod PopMode.finite
-  Section53RuntimeEncodedList.Pop.Control.finite
+  FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.finite
 
 def rewindFinite := Foundation.FiniteType.prod RewindMode.finite
   RewindWord.Control.finite
@@ -222,33 +222,33 @@ def rewindFinite := Foundation.FiniteType.prod RewindMode.finite
 def elems : List Control :=
   RuntimeKeySingleKeyRepair.ComparatorState.finite.elems.map scan ++
   RuntimeKeySelectedExtractorArbitrary.Control.finite.elems.map extract ++
-  Section53RuntimeActionPrefix.Control.finite.elems.map action ++
-  Section53RuntimeLeftCleanup.Control.finite.elems.map cleanup ++
+  FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.finite.elems.map action ++
+  FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.finite.elems.map cleanup ++
   prefixFinite.elems.map (fun payload => prefixPhase payload.1 payload.2) ++
-  Section53RuntimeAction.Action.finite.elems.map stackProbe ++
+  FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map stackProbe ++
   actionBoolFinite.elems.map
     (fun payload => stackProbeBounce payload.1 payload.2) ++
   stackFinite.elems.map (fun payload => stack payload.1 payload.2) ++
-  Section53RuntimeAction.Action.finite.elems.map leftProbe ++
+  FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map leftProbe ++
   actionBoolFinite.elems.map
     (fun payload => leftProbeBounce payload.1 payload.2) ++
   boundaryFinite.elems.map (fun payload => boundary payload.1 payload.2) ++
   prependFinite.elems.map (fun payload => prepend payload.1 payload.2) ++
-  Section53RuntimeAction.Action.finite.elems.map rightProbe ++
+  FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map rightProbe ++
   actionBoolFinite.elems.map
     (fun payload => rightProbeBounce payload.1 payload.2) ++
   popFinite.elems.map (fun payload => pop payload.1 payload.2) ++
   NextCopyRestager.Control.finite.elems.map restage ++
-  Section53FinalGateMaterializer.HaltMarker.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control.finite.elems.map
     haltMarker ++
-  Section53NoMatchFinalGate.DoubleTransitionMarker.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control.finite.elems.map
     doubleMarker ++
   rewindFinite.elems.map (fun payload => rewind payload.1 payload.2) ++
-  Section53FinalGateMaterializer.PrefixBuilder.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control.finite.elems.map
     prefixBuilder ++
-  Section53NoMatchFinalGate.CurrentBuilder.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control.finite.elems.map
     currentBuilder ++
-  Section53FinalGateMaterializer.HaltCopier.Control.finite.elems.map
+  FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control.finite.elems.map
     haltCopier ++
   RuntimeKeyComparatorState.finite.elems.map finalCompare ++
   [.accept, .reject]
@@ -260,26 +260,26 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | scan inner => simp [elems, RuntimeKeySingleKeyRepair.ComparatorState.finite.complete inner]
     | extract inner => simp [elems, RuntimeKeySelectedExtractorArbitrary.Control.finite.complete inner]
-    | action inner => simp [elems, Section53RuntimeActionPrefix.Control.finite.complete inner]
-    | cleanup inner => simp [elems, Section53RuntimeLeftCleanup.Control.finite.complete inner]
+    | action inner => simp [elems, FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.finite.complete inner]
+    | cleanup inner => simp [elems, FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.finite.complete inner]
     | prefixPhase purpose inner => simp [elems, prefixFinite.complete (purpose, inner)]
-    | stackProbe action => simp [elems, Section53RuntimeAction.Action.finite.complete action]
+    | stackProbe action => simp [elems, FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | stackProbeBounce action zeroCopies => simp [elems, actionBoolFinite.complete (action, zeroCopies)]
     | stack purpose inner => simp [elems, stackFinite.complete (purpose, inner)]
-    | leftProbe action => simp [elems, Section53RuntimeAction.Action.finite.complete action]
+    | leftProbe action => simp [elems, FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | leftProbeBounce action wasEmpty => simp [elems, actionBoolFinite.complete (action, wasEmpty)]
     | boundary mode inner => simp [elems, boundaryFinite.complete (mode, inner)]
     | prepend mode inner => simp [elems, prependFinite.complete (mode, inner)]
-    | rightProbe action => simp [elems, Section53RuntimeAction.Action.finite.complete action]
+    | rightProbe action => simp [elems, FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | rightProbeBounce action wasEmpty => simp [elems, actionBoolFinite.complete (action, wasEmpty)]
     | pop mode inner => simp [elems, popFinite.complete (mode, inner)]
     | restage inner => simp [elems, NextCopyRestager.Control.finite.complete inner]
-    | haltMarker inner => simp [elems, Section53FinalGateMaterializer.HaltMarker.Control.finite.complete inner]
-    | doubleMarker inner => simp [elems, Section53NoMatchFinalGate.DoubleTransitionMarker.Control.finite.complete inner]
+    | haltMarker inner => simp [elems, FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control.finite.complete inner]
+    | doubleMarker inner => simp [elems, FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control.finite.complete inner]
     | rewind mode inner => simp [elems, rewindFinite.complete (mode, inner)]
-    | prefixBuilder inner => simp [elems, Section53FinalGateMaterializer.PrefixBuilder.Control.finite.complete inner]
-    | currentBuilder inner => simp [elems, Section53NoMatchFinalGate.CurrentBuilder.Control.finite.complete inner]
-    | haltCopier inner => simp [elems, Section53FinalGateMaterializer.HaltCopier.Control.finite.complete inner]
+    | prefixBuilder inner => simp [elems, FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control.finite.complete inner]
+    | currentBuilder inner => simp [elems, FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control.finite.complete inner]
+    | haltCopier inner => simp [elems, FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control.finite.complete inner]
     | finalCompare inner => simp [elems, RuntimeKeyComparatorState.finite.complete inner]
     | accept => simp [elems]
     | reject => simp [elems]
@@ -304,18 +304,18 @@ def extractEmbed : RuntimeKeySelectedExtractorArbitrary.Control -> Control
   | .halt => .action .needTransition
   | inner => .extract inner
 
-def actionEmbed : Section53RuntimeActionPrefix.Control -> Control
+def actionEmbed : FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control -> Control
   | .ready write move =>
       .cleanup (.enter { write := write, move := move })
   | inner => .action inner
 
-def cleanupEmbed : Section53RuntimeLeftCleanup.Control -> Control
+def cleanupEmbed : FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control -> Control
   | .ready action => .prefixPhase .initial (.target action)
   | inner => .cleanup inner
 
 def prefixEmbed
     (purpose : PrefixPurpose) :
-    Section53DirectContextUpdate.Prefix.Control -> Control
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control -> Control
   | .ready action =>
       match purpose with
       | .initial => .stackProbe action
@@ -324,7 +324,7 @@ def prefixEmbed
   | inner => .prefixPhase purpose inner
 
 def stackEmbed
-    (purpose : StackPurpose) : Section53StackSkip.Control -> Control
+    (purpose : StackPurpose) : FiniteRecognizer.Interpreter.StackSkip.Control -> Control
   | .ready =>
       match purpose with
       | .miss => .boundary .missLeft (.locate .count)
@@ -341,7 +341,7 @@ def stackEmbed
 
 def boundaryEmbed
     (mode : BoundaryMode) :
-    Section53DirectContextUpdate.Boundary.Control -> Control
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control -> Control
   | .ready =>
       match mode with
       | .missLeft => .boundary .missRight (.locate .count)
@@ -355,7 +355,7 @@ def boundaryEmbed
 
 def prependEmbed
     (mode : PrependMode) :
-    Section53RuntimeEncodedList.Prepend.Control -> Control
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control -> Control
   | .insert (.rewind .gate) =>
       match mode with
       | .left action true => .restage (.target none)
@@ -364,7 +364,7 @@ def prependEmbed
   | inner => .prepend mode inner
 
 def popEmbed
-    (mode : PopMode) : Section53RuntimeEncodedList.Pop.Control -> Control
+    (mode : PopMode) : FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control -> Control
   | .ready nextHead => .restage (.target nextHead)
   | inner => .pop mode inner
 
@@ -373,12 +373,12 @@ def restageEmbed : NextCopyRestager.Control -> Control
   | inner => .restage inner
 
 def haltMarkerEmbed :
-    Section53FinalGateMaterializer.HaltMarker.Control -> Control
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control -> Control
   | .ready token => .rewind (.finalSuccess token) .scan
   | inner => .haltMarker inner
 
 def doubleMarkerEmbed :
-    Section53NoMatchFinalGate.DoubleTransitionMarker.Control -> Control
+    FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control -> Control
   | .ready => .rewind .finalMiss .scan
   | inner => .doubleMarker inner
 
@@ -391,17 +391,17 @@ def rewindEmbed (mode : RewindMode) : RewindWord.Control -> Control
   | inner => .rewind mode inner
 
 def prefixBuilderEmbed :
-    Section53FinalGateMaterializer.PrefixBuilder.Control -> Control
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control -> Control
   | .ready token => .haltCopier (.seekSource token)
   | inner => .prefixBuilder inner
 
 def currentBuilderEmbed :
-    Section53NoMatchFinalGate.CurrentBuilder.Control -> Control
+    FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control -> Control
   | .ready token => .haltCopier (.seekSource token)
   | inner => .currentBuilder inner
 
 def haltCopierEmbed :
-    Section53FinalGateMaterializer.HaltCopier.Control -> Control
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control -> Control
   | .ready => .finalCompare .needHeader
   | inner => .haltCopier inner
 
@@ -420,13 +420,13 @@ def transition :
         (RuntimeKeySelectedExtractorArbitrary.machine.transition inner read)
   | .action inner, read =>
       mapTransition actionEmbed
-        (Section53RuntimeActionPrefix.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine.transition inner read)
   | .cleanup inner, read =>
       mapTransition cleanupEmbed
-        (Section53RuntimeLeftCleanup.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine.transition inner read)
   | .prefixPhase purpose inner, read =>
       mapTransition (prefixEmbed purpose)
-        (Section53DirectContextUpdate.Prefix.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine.transition inner read)
   | .stackProbe action, some symbol =>
       some (some symbol, Direction.left,
         .stackProbeBounce action (symbol = MachineCodeSymbol.header))
@@ -435,7 +435,7 @@ def transition :
         .stack (.initial action zeroCopies) .afterHeader)
   | .stack purpose inner, read =>
       mapTransition (stackEmbed purpose)
-        (Section53StackSkip.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.StackSkip.machine.transition inner read)
   | .leftProbe action, some MachineCodeSymbol.done =>
       some (some MachineCodeSymbol.done, Direction.left,
         .leftProbeBounce action true)
@@ -447,10 +447,10 @@ def transition :
         .boundary (.leftWrite action wasEmpty) (.locate .count))
   | .boundary mode inner, read =>
       mapTransition (boundaryEmbed mode)
-        (Section53DirectContextUpdate.Boundary.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine.transition inner read)
   | .prepend mode inner, read =>
       mapTransition (prependEmbed mode)
-        ((Section53RuntimeEncodedList.Prepend.machine
+        ((FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine
           (match mode with
            | .left action _ => action.write
            | .right action => action.write)).transition inner read)
@@ -468,32 +468,32 @@ def transition :
         .pop (.right action) (.locate .count))
   | .pop mode inner, read =>
       mapTransition (popEmbed mode)
-        (Section53RuntimeEncodedList.Pop.machine.transition inner read)
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine.transition inner read)
   | .restage inner, read =>
       mapTransition restageEmbed
         (NextCopyRestager.machine.transition inner read)
   | .haltMarker inner, read =>
       mapTransition haltMarkerEmbed
-        (Section53FinalGateMaterializer.HaltMarker.machine.transition
+        (FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.machine.transition
           inner read)
   | .doubleMarker inner, read =>
       mapTransition doubleMarkerEmbed
-        (Section53NoMatchFinalGate.DoubleTransitionMarker.machine.transition
+        (FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.machine.transition
           inner read)
   | .rewind mode inner, read =>
       mapTransition (rewindEmbed mode)
         (RewindWord.machine.transition inner read)
   | .prefixBuilder inner, read =>
       mapTransition prefixBuilderEmbed
-        (Section53FinalGateMaterializer.PrefixBuilder.machine.transition
+        (FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.machine.transition
           inner read)
   | .currentBuilder inner, read =>
       mapTransition currentBuilderEmbed
-        (Section53NoMatchFinalGate.CurrentBuilder.machine.transition
+        (FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.machine.transition
           inner read)
   | .haltCopier inner, read =>
       mapTransition haltCopierEmbed
-        (Section53FinalGateMaterializer.HaltCopier.machine.transition
+        (FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.machine.transition
           inner read)
   | .finalCompare inner, read =>
       mapTransition finalCompareEmbed
@@ -615,30 +615,30 @@ theorem extract_transition_of_eq_some
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem action_transition_of_eq_some
-    (source target : Section53RuntimeActionPrefix.Control)
+    (source target : FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53RuntimeActionPrefix.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine.transition
       source read = some (write, direction, target)) :
     transition (actionEmbed source) read =
       some (write, direction, actionEmbed target) := by
   cases source <;>
-    simp [actionEmbed, Section53RuntimeActionPrefix.machine,
-      Section53RuntimeActionPrefix.transition, transition, mapTransition]
+    simp [actionEmbed, FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine,
+      FiniteRecognizer.Interpreter.RuntimeActionPrefix.transition, transition, mapTransition]
       at htransition ⊢
   all_goals simp [htransition, mapTransition]
 
 theorem cleanup_transition_of_eq_some
-    (source target : Section53RuntimeLeftCleanup.Control)
+    (source target : FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53RuntimeLeftCleanup.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine.transition
       source read = some (write, direction, target)) :
     transition (cleanupEmbed source) read =
       some (write, direction, cleanupEmbed target) := by
   cases source <;>
-    simp [cleanupEmbed, Section53RuntimeLeftCleanup.machine,
-      Section53RuntimeLeftCleanup.transition, transition, mapTransition]
+    simp [cleanupEmbed, FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine,
+      FiniteRecognizer.Interpreter.RuntimeLeftCleanup.transition, transition, mapTransition]
       at htransition ⊢
   all_goals simp [htransition, mapTransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
@@ -667,32 +667,32 @@ theorem extract_computes
 
 theorem action_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeActionPrefix.Control}
-    (hrun : TuringMachine.Computes Section53RuntimeActionPrefix.machine
+      FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control}
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
       source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig actionEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig actionEmbed target) :=
-  computes_of_transition_embedding Section53RuntimeActionPrefix.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
     actionEmbed action_transition_of_eq_some hrun
 
 theorem cleanup_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeLeftCleanup.Control}
-    (hrun : TuringMachine.Computes Section53RuntimeLeftCleanup.machine
+      FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control}
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
       source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig cleanupEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig cleanupEmbed target) :=
-  computes_of_transition_embedding Section53RuntimeLeftCleanup.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
     cleanupEmbed cleanup_transition_of_eq_some hrun
 
 theorem prefix_transition_of_eq_some
     (purpose : PrefixPurpose)
-    (source target : Section53DirectContextUpdate.Prefix.Control)
+    (source target : FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53DirectContextUpdate.Prefix.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine.transition
       source read = some (write, direction, target)) :
     transition (prefixEmbed purpose source) read =
       some (write, direction, prefixEmbed purpose target) := by
@@ -702,21 +702,21 @@ theorem prefix_transition_of_eq_some
     | target _ => rfl
     | guard _ => rfl
     | ready _ =>
-        simp [Section53DirectContextUpdate.Prefix.machine,
-          Section53DirectContextUpdate.Prefix.transition] at htransition
+        simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine,
+          FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.transition] at htransition
     | halt => rfl
   rw [hnormal]
   change mapTransition (prefixEmbed purpose)
-      (Section53DirectContextUpdate.Prefix.machine.transition source read) = _
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine.transition source read) = _
   rw [htransition]
   rfl
 
 theorem stack_transition_of_eq_some
     (purpose : StackPurpose)
-    (source target : Section53StackSkip.Control)
+    (source target : FiniteRecognizer.Interpreter.StackSkip.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53StackSkip.machine.transition source read =
+    (htransition : FiniteRecognizer.Interpreter.StackSkip.machine.transition source read =
       some (write, direction, target)) :
     transition (stackEmbed purpose source) read =
       some (write, direction, stackEmbed purpose target) := by
@@ -725,21 +725,21 @@ theorem stack_transition_of_eq_some
     | afterHeader => rfl
     | scan => rfl
     | ready =>
-        simp [Section53StackSkip.machine, Section53StackSkip.transition]
+        simp [FiniteRecognizer.Interpreter.StackSkip.machine, FiniteRecognizer.Interpreter.StackSkip.transition]
           at htransition
     | halt => rfl
   rw [hnormal]
   change mapTransition (stackEmbed purpose)
-      (Section53StackSkip.machine.transition source read) = _
+      (FiniteRecognizer.Interpreter.StackSkip.machine.transition source read) = _
   rw [htransition]
   rfl
 
 theorem boundary_transition_of_eq_some
     (mode : BoundaryMode)
-    (source target : Section53DirectContextUpdate.Boundary.Control)
+    (source target : FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53DirectContextUpdate.Boundary.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine.transition
       source read = some (write, direction, target)) :
     transition (boundaryEmbed mode source) read =
       some (write, direction, boundaryEmbed mode target) := by
@@ -750,12 +750,12 @@ theorem boundary_transition_of_eq_some
     | payload => rfl
     | bounce => rfl
     | ready =>
-        simp [Section53DirectContextUpdate.Boundary.machine,
-          Section53DirectContextUpdate.Boundary.transition] at htransition
+        simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine,
+          FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.transition] at htransition
     | halt => rfl
   rw [hnormal]
   change mapTransition (boundaryEmbed mode)
-      (Section53DirectContextUpdate.Boundary.machine.transition source read) = _
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine.transition source read) = _
   rw [htransition]
   rfl
 
@@ -765,21 +765,21 @@ def prependModeWrite : PrependMode -> Option Bool
 
 theorem prepend_transition_of_eq_some
     (mode : PrependMode)
-    (source target : Section53RuntimeEncodedList.Prepend.Control)
+    (source target : FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
     (htransition :
-      (Section53RuntimeEncodedList.Prepend.machine
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine
         (prependModeWrite mode)).transition source read =
           some (write, direction, target)) :
     transition (prependEmbed mode source) read =
       some (write, direction, prependEmbed mode target) := by
   have hterminal : source ≠
-      Section53RuntimeEncodedList.Prepend.Control.insert (.rewind .gate) := by
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert (.rewind .gate) := by
     intro heq
     subst source
-    simp [Section53RuntimeEncodedList.Prepend.machine,
-      Section53RuntimeEncodedList.Prepend.transition,
+    simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine,
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.transition,
       InsertRestagedMachine.transition, RewindWord.transition]
       at htransition
   have hnormal : prependEmbed mode source = .prepend mode source := by
@@ -796,23 +796,23 @@ theorem prepend_transition_of_eq_some
             | gate => exact False.elim (hterminal rfl)
   rw [hnormal]
   change mapTransition (prependEmbed mode)
-      ((Section53RuntimeEncodedList.Prepend.machine
+      ((FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine
         (prependModeWrite mode)).transition source read) = _
   rw [htransition]
   rfl
 
 theorem pop_transition_of_eq_some
     (mode : PopMode)
-    (source target : Section53RuntimeEncodedList.Pop.Control)
+    (source target : FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53RuntimeEncodedList.Pop.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine.transition
       source read = some (write, direction, target)) :
     transition (popEmbed mode source) read =
       some (write, direction, popEmbed mode target) := by
   cases mode <;> cases source <;>
-    simp [popEmbed, Section53RuntimeEncodedList.Pop.machine,
-      Section53RuntimeEncodedList.Pop.transition, transition,
+    simp [popEmbed, FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine,
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.transition, transition,
       mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
@@ -833,34 +833,34 @@ theorem restage_transition_of_eq_some
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem haltMarker_transition_of_eq_some
-    (source target : Section53FinalGateMaterializer.HaltMarker.Control)
+    (source target : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53FinalGateMaterializer.HaltMarker.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.machine.transition
       source read = some (write, direction, target)) :
     transition (haltMarkerEmbed source) read =
       some (write, direction, haltMarkerEmbed target) := by
   cases source <;>
-    simp [haltMarkerEmbed, Section53FinalGateMaterializer.HaltMarker.machine,
-      Section53FinalGateMaterializer.HaltMarker.transition, transition,
+    simp [haltMarkerEmbed, FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.machine,
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.transition, transition,
       mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem doubleMarker_transition_of_eq_some
     (source target :
-      Section53NoMatchFinalGate.DoubleTransitionMarker.Control)
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
     (htransition :
-      Section53NoMatchFinalGate.DoubleTransitionMarker.machine.transition
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.machine.transition
         source read = some (write, direction, target)) :
     transition (doubleMarkerEmbed source) read =
       some (write, direction, doubleMarkerEmbed target) := by
   cases source <;>
     simp [doubleMarkerEmbed,
-      Section53NoMatchFinalGate.DoubleTransitionMarker.machine,
-      Section53NoMatchFinalGate.DoubleTransitionMarker.transition,
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.machine,
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.transition,
       transition, mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
@@ -881,50 +881,50 @@ theorem rewind_transition_of_eq_some
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem prefixBuilder_transition_of_eq_some
-    (source target : Section53FinalGateMaterializer.PrefixBuilder.Control)
+    (source target : FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
     (htransition :
-      Section53FinalGateMaterializer.PrefixBuilder.machine.transition
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.machine.transition
         source read = some (write, direction, target)) :
     transition (prefixBuilderEmbed source) read =
       some (write, direction, prefixBuilderEmbed target) := by
   cases source <;>
     simp [prefixBuilderEmbed,
-      Section53FinalGateMaterializer.PrefixBuilder.machine,
-      Section53FinalGateMaterializer.PrefixBuilder.transition,
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.machine,
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.transition,
       transition, mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem currentBuilder_transition_of_eq_some
-    (source target : Section53NoMatchFinalGate.CurrentBuilder.Control)
+    (source target : FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
     (htransition :
-      Section53NoMatchFinalGate.CurrentBuilder.machine.transition
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.machine.transition
         source read = some (write, direction, target)) :
     transition (currentBuilderEmbed source) read =
       some (write, direction, currentBuilderEmbed target) := by
   cases source <;>
     simp [currentBuilderEmbed,
-      Section53NoMatchFinalGate.CurrentBuilder.machine,
-      Section53NoMatchFinalGate.CurrentBuilder.transition,
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.machine,
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.transition,
       transition, mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem haltCopier_transition_of_eq_some
-    (source target : Section53FinalGateMaterializer.HaltCopier.Control)
+    (source target : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53FinalGateMaterializer.HaltCopier.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.machine.transition
       source read = some (write, direction, target)) :
     transition (haltCopierEmbed source) read =
       some (write, direction, haltCopierEmbed target) := by
   cases source <;>
-    simp [haltCopierEmbed, Section53FinalGateMaterializer.HaltCopier.machine,
-      Section53FinalGateMaterializer.HaltCopier.transition,
+    simp [haltCopierEmbed, FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.machine,
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.transition,
       transition, mapTransition] at htransition ⊢
   all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
@@ -947,62 +947,62 @@ theorem finalCompare_transition_of_eq_some
 theorem prefix_computes
     (purpose : PrefixPurpose)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53DirectContextUpdate.Prefix.Control}
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control}
     (hrun : TuringMachine.Computes
-      Section53DirectContextUpdate.Prefix.machine source target) :
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig (prefixEmbed purpose) source)
       (TuringMachine.PhaseEmbedding.liftConfig (prefixEmbed purpose) target) :=
-  computes_of_transition_embedding Section53DirectContextUpdate.Prefix.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
     (prefixEmbed purpose) (prefix_transition_of_eq_some purpose) hrun
 
 theorem stack_computes
     (purpose : StackPurpose)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53StackSkip.Control}
-    (hrun : TuringMachine.Computes Section53StackSkip.machine source target) :
+      FiniteRecognizer.Interpreter.StackSkip.Control}
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig (stackEmbed purpose) source)
       (TuringMachine.PhaseEmbedding.liftConfig (stackEmbed purpose) target) :=
-  computes_of_transition_embedding Section53StackSkip.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.StackSkip.machine
     (stackEmbed purpose) (stack_transition_of_eq_some purpose) hrun
 
 theorem boundary_computes
     (mode : BoundaryMode)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53DirectContextUpdate.Boundary.Control}
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control}
     (hrun : TuringMachine.Computes
-      Section53DirectContextUpdate.Boundary.machine source target) :
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig (boundaryEmbed mode) source)
       (TuringMachine.PhaseEmbedding.liftConfig (boundaryEmbed mode) target) :=
-  computes_of_transition_embedding Section53DirectContextUpdate.Boundary.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
     (boundaryEmbed mode) (boundary_transition_of_eq_some mode) hrun
 
 theorem prepend_computes
     (mode : PrependMode)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeEncodedList.Prepend.Control}
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control}
     (hrun : TuringMachine.Computes
-      (Section53RuntimeEncodedList.Prepend.machine (prependModeWrite mode))
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine (prependModeWrite mode))
       source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig (prependEmbed mode) source)
       (TuringMachine.PhaseEmbedding.liftConfig (prependEmbed mode) target) :=
   computes_of_transition_embedding
-    (Section53RuntimeEncodedList.Prepend.machine (prependModeWrite mode))
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine (prependModeWrite mode))
     (prependEmbed mode) (prepend_transition_of_eq_some mode) hrun
 
 theorem pop_computes
     (mode : PopMode)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeEncodedList.Pop.Control}
-    (hrun : TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control}
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
       source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig (popEmbed mode) source)
       (TuringMachine.PhaseEmbedding.liftConfig (popEmbed mode) target) :=
-  computes_of_transition_embedding Section53RuntimeEncodedList.Pop.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
     (popEmbed mode) (pop_transition_of_eq_some mode) hrun
 
 theorem restage_computes
@@ -1017,26 +1017,26 @@ theorem restage_computes
 
 theorem haltMarker_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53FinalGateMaterializer.HaltMarker.Control}
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.Control}
     (hrun : TuringMachine.Computes
-      Section53FinalGateMaterializer.HaltMarker.machine source target) :
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig haltMarkerEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig haltMarkerEmbed target) :=
   computes_of_transition_embedding
-    Section53FinalGateMaterializer.HaltMarker.machine haltMarkerEmbed
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltMarker.machine haltMarkerEmbed
       haltMarker_transition_of_eq_some hrun
 
 theorem doubleMarker_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53NoMatchFinalGate.DoubleTransitionMarker.Control}
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.Control}
     (hrun : TuringMachine.Computes
-      Section53NoMatchFinalGate.DoubleTransitionMarker.machine source target) :
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig doubleMarkerEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig doubleMarkerEmbed target) :=
   computes_of_transition_embedding
-    Section53NoMatchFinalGate.DoubleTransitionMarker.machine
+    FiniteRecognizer.Interpreter.NoMatchFinalGate.DoubleTransitionMarker.machine
       doubleMarkerEmbed doubleMarker_transition_of_eq_some hrun
 
 theorem rewind_computes
@@ -1052,38 +1052,38 @@ theorem rewind_computes
 
 theorem prefixBuilder_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53FinalGateMaterializer.PrefixBuilder.Control}
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.Control}
     (hrun : TuringMachine.Computes
-      Section53FinalGateMaterializer.PrefixBuilder.machine source target) :
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig prefixBuilderEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig prefixBuilderEmbed target) :=
   computes_of_transition_embedding
-    Section53FinalGateMaterializer.PrefixBuilder.machine prefixBuilderEmbed
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.machine prefixBuilderEmbed
       prefixBuilder_transition_of_eq_some hrun
 
 theorem currentBuilder_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53NoMatchFinalGate.CurrentBuilder.Control}
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.Control}
     (hrun : TuringMachine.Computes
-      Section53NoMatchFinalGate.CurrentBuilder.machine source target) :
+      FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig currentBuilderEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig currentBuilderEmbed target) :=
   computes_of_transition_embedding
-    Section53NoMatchFinalGate.CurrentBuilder.machine currentBuilderEmbed
+    FiniteRecognizer.Interpreter.NoMatchFinalGate.CurrentBuilder.machine currentBuilderEmbed
       currentBuilder_transition_of_eq_some hrun
 
 theorem haltCopier_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53FinalGateMaterializer.HaltCopier.Control}
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.Control}
     (hrun : TuringMachine.Computes
-      Section53FinalGateMaterializer.HaltCopier.machine source target) :
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.machine source target) :
     TuringMachine.Computes machine
       (TuringMachine.PhaseEmbedding.liftConfig haltCopierEmbed source)
       (TuringMachine.PhaseEmbedding.liftConfig haltCopierEmbed target) :=
   computes_of_transition_embedding
-    Section53FinalGateMaterializer.HaltCopier.machine haltCopierEmbed
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.machine haltCopierEmbed
       haltCopier_transition_of_eq_some hrun
 
 theorem finalCompare_computes
@@ -1096,7 +1096,7 @@ theorem finalCompare_computes
   computes_of_transition_embedding runtimeKeyComparatorMachine
     finalCompareEmbed finalCompare_transition_of_eq_some hrun
 
-end Section53RuntimePhaseSum
+end FiniteRecognizer.Interpreter.RuntimePhaseSum
 
 end Computability
 end FoC

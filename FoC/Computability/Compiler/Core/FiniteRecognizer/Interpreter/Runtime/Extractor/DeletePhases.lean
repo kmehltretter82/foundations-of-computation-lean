@@ -12,7 +12,7 @@ namespace RuntimeKeySelectedExtractorArbitrary
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 **Arbitrary-rest selected-row extractor.** The selected target terminator is
@@ -216,7 +216,7 @@ def targetTape
     (selected : TransitionDescription)
     (protectedSuffix : Word MachineCodeSymbol) : Tape MachineCodeSymbol :=
   runtimeKeyComparatorTape
-    (Section53UniformInterpreterOneStep.RuntimeKeySelectedExtractor.actionBase
+    (FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySelectedExtractor.actionBase
       baseLeftRev queryState queryRead)
     (MachineDescription.encodeTransitionAppend selected
       (MachineCodeSymbol.header :: protectedSuffix))

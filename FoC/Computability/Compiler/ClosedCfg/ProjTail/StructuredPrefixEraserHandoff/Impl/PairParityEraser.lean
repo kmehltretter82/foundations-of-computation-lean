@@ -974,8 +974,8 @@ theorem pairParityEraserDescription_spec :
     List.replicate 1 (none : Option Bool) from rfl]
   rw [pairParityEraserDropTrailingNone_cons_blanks]
 
-/-- Split pad-symbol case form of the eraser contract, as consumed by the
-frontier construction leaf. -/
+/-- Split pad-symbol form of the eraser contract consumed by the public
+handoff construction. -/
 theorem pairParityEraserDescription_splitPadSymbolCaseSpec :
     GuardedTwoTapeStructuredPrefixEraserSplitPadSymbolCaseSpec
       pairParityEraserDescription :=

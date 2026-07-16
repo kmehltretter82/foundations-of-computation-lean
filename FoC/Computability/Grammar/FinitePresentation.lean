@@ -634,19 +634,11 @@ theorem of_descriptionCompiler
     hcompile
 
 /-!
-**Finite-source handoff.**  The remaining finite grammar compiler target is a
-first-order certificate checker for an explicit finite production-list
-presentation.  The scaffold declarations below no longer manufacture that
-compiler.  They expose the finite dependency graph: once a checked-indexed
-certificate compiler is supplied, the existing equivalence bridges derive the
-indexed, bounded, and full presentation recognizers.
+**Finite-source handoff.**  A first-order certificate checker for an explicit
+finite production-list presentation supplies the checked-indexed compiler
+interface.  The bridges below expose the finite dependency graph from that
+interface to the indexed, bounded, and full presentation recognizers.
 -/
-
-theorem scaffold
-    (hcompile :
-      FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
-    FiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
-  hcompile
 
 end CheckedIndexedCertificateRecognizerCompilerConstruction
 
@@ -690,8 +682,7 @@ theorem scaffold
     FiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction :=
   of_boundedRecognizerCompiler
     (BoundedRecognizerCompilerConstruction.of_checkedIndexedCertificateRecognizerCompiler
-      (CheckedIndexedCertificateRecognizerCompilerConstruction.scaffold
-        hcompile))
+      hcompile)
 
 end RecognizerCompilerConstruction
 

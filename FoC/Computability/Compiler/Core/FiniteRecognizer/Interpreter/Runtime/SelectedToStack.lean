@@ -6,12 +6,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53SelectedToStack
+namespace FiniteRecognizer.Interpreter.SelectedToStack
 
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53SelectedUpdateIntegration
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.SelectedUpdateIntegration
 
 /-- Exact successful-row phase chain up to the stack updater.  The selected
 finite write/move action remains in the cleanup control while the unbounded
@@ -46,18 +46,18 @@ theorem first_match_to_postSelected
         (extractorSourceConfig current before selected after protectedSuffix)
         { state := RuntimeKeySelectedExtractorArbitrary.Control.halt
           tape := extractedTape } /\
-      TuringMachine.Computes Section53RuntimeActionPrefix.machine
-        { state := Section53RuntimeActionPrefix.Control.needTransition
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.needTransition
           tape := extractedTape }
-        { state := Section53RuntimeActionPrefix.Control.ready
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.ready
             selected.write selected.move
           tape := actionTape } /\
-      TuringMachine.Computes Section53RuntimeLeftCleanup.machine
-        { state := Section53RuntimeLeftCleanup.Control.enter
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.enter
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := actionTape }
-        { state := Section53RuntimeLeftCleanup.Control.ready
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.ready
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := cleanedTape } /\
       Tape.Equiv cleanedTape
         (Tape.input
@@ -85,7 +85,7 @@ theorem first_match_to_postSelected
   done
 
 
-end Section53SelectedToStack
+end FiniteRecognizer.Interpreter.SelectedToStack
 
 end Computability
 end FoC

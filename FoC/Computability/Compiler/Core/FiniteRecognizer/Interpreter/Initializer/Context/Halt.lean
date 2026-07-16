@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextHaltAppender
+namespace FiniteRecognizer.Interpreter.BooleanContextHaltAppender
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
@@ -1113,7 +1113,7 @@ theorem computes_append_halt
 
 end Machine
 
-end Section53BooleanContextHaltAppender
+end FiniteRecognizer.Interpreter.BooleanContextHaltAppender
 
 end Computability
 end FoC

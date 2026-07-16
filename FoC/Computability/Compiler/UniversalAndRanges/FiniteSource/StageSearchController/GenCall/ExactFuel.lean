@@ -7,9 +7,9 @@ set_option doc.verso true
 /-!
 # Generated exact-fuel calls
 
-Exact-fuel generated-call runner definitions and semantic adapters.  The
-concrete finite-state leaf remains here so later work can focus on the exact
-simulator without the pair/product search algebra in scope.
+Exact-fuel generated-call runner definitions and semantic adapters. The
+concrete finite-state leaf isolates the exact simulator from the pair and
+product search algebra.
 -/
 
 namespace FoC
@@ -70,9 +70,8 @@ theorem codePrefixExactFuelRunnerConstruction_of_runnerConstruction
   (codePrefixExactFuelRunnerConstruction_iff_runnerConstruction M).mpr h
 
 /--
-Concrete-state version of the exact-fuel runner leaf.  This is the remaining
-finite-table target after reindexing arbitrary finite machines to {lit}`Fin n`
-state spaces.
+Concrete-state version of the exact-fuel runner construction after reindexing
+arbitrary finite machines to {lit}`Fin n` state spaces.
 -/
 def CodePrefixExactFuelRunnerFinStateConstruction : Prop :=
   forall n : Nat,
@@ -109,8 +108,8 @@ theorem codePrefixExactFuelRunnerConstruction_of_finStateConstruction
       (hFin M.statesFinite.elems.length (TuringMachine.indexed M))
 
 /--
-Remaining concrete finite-table leaf for exact-fuel simulation over concrete
-indexed state spaces.
+Concrete finite-table leaf for exact-fuel simulation over indexed state
+spaces.
 -/
 theorem codePrefixExactFuelRunnerFinStateFiniteLeaf :
     CodePrefixExactFuelRunnerFinStateConstruction := by

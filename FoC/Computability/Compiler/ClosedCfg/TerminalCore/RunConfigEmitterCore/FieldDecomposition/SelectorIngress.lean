@@ -572,10 +572,10 @@ theorem selectorBits_cells_eq
   | known state hstate => exact selectorBits_known_cells hstate nextCell left
 
 /-!
-The standalone exact-run lattice was retired when the scanner was spliced into
-the fixed-start selector/dispatcher table. Its {lit}`done` states are not
-halting endpoints: the combined table bridges them directly into classified
-dispatcher states, so execution proofs belong to that table.
+The scanner is spliced into the fixed-start selector/dispatcher table.  Its
+{lit}`done` states are internal handoffs: the combined table bridges them
+directly into classified dispatcher states, so execution proofs use that
+table.
 -/
 
 end SelectorIngress

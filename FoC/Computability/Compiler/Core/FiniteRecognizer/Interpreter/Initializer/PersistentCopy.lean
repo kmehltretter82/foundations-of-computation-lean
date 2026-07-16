@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53InitializerPersistentCopy
+namespace FiniteRecognizer.Interpreter.InitializerPersistentCopy
 
 open FiniteRecognizer ExactFuel StrictProbe
 
@@ -1115,7 +1115,7 @@ theorem move_left_readyConfig_tape_eq_sourceConfig_tape
 
 end PersistentMasterCopier
 
-end Section53InitializerPersistentCopy
+end FiniteRecognizer.Interpreter.InitializerPersistentCopy
 
 end Computability
 end FoC

@@ -529,7 +529,7 @@ theorem decodedBoundedSimulatorExactLayoutRun_iff_runConfig
 
 /--
 The transition-loop predicate is the same run-config halt-state predicate,
-with the loop operation named explicitly for the remaining finite runner.
+with the loop operation named explicitly for the finite runner.
 -/
 theorem decodedBoundedSimulatorTransitionLoopRun_iff_runConfig
     (tokens : Word MachineCodeSymbol) :

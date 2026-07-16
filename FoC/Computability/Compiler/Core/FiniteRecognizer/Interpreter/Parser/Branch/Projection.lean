@@ -4,25 +4,25 @@ import FoC.Computability.Compiler.Core.FiniteRecognizer.Interpreter.Outer.PhaseE
 namespace FoC
 namespace Computability
 
-namespace Section53ParserBranchProjection
+namespace FiniteRecognizer.Interpreter.ParserBranchProjection
 
-open Section53ParserBranchPhaseSum
+open FiniteRecognizer.Interpreter.ParserBranchPhaseSum
 
 private theorem stepConfig_eq_map_of_parserTarget_eq_parser
-    (state : Section53ParserPrefixPhaseSum.Control)
+    (state : FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
     (tape : Tape MachineCodeSymbol)
     (hstate : parserTarget state = .parser state) :
-    Section53ParserBranchPhaseSum.machine.stepConfig
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.stepConfig
         (parserConfig { state := state, tape := tape }) =
       Option.map parserConfig
-        (Section53ParserPrefixPhaseSum.machine.stepConfig
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig
           { state := state, tape := tape }) := by
   unfold TuringMachine.stepConfig
   simp only [parserConfig, TuringMachine.PhaseEmbedding.liftConfig]
   rw [hstate]
-  simp only [Section53ParserBranchPhaseSum.machine,
-    Section53ParserBranchPhaseSum.transition]
-  cases htransition : Section53ParserPrefixPhaseSum.machine.transition state
+  simp only [FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine,
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.transition]
+  cases htransition : FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.transition state
       (Tape.read tape) with
   | none => simp
   | some action =>
@@ -35,12 +35,12 @@ branch-machine step from an embedded prefix configuration is exactly one
 prefix-machine step with the target embedded by `parserTarget`. -/
 theorem active_stepConfig_eq_map
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source) :
-    Section53ParserBranchPhaseSum.machine.stepConfig
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source) :
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.stepConfig
         (parserConfig source) =
       Option.map parserConfig
-        (Section53ParserPrefixPhaseSum.machine.stepConfig source) := by
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig source) := by
   rcases source with ⟨state, tape⟩
   cases state with
   | fuel fuelZero state =>
@@ -64,30 +64,30 @@ theorem active_stepConfig_eq_map
       | halt =>
           simp [TuringMachine.stepConfig, parserConfig, parserTarget,
             TuringMachine.PhaseEmbedding.liftConfig,
-            Section53ParserBranchPhaseSum.machine,
-            Section53ParserBranchPhaseSum.transition,
-            Section53ParserPrefixPhaseSum.machine,
-            Section53ParserPrefixPhaseSum.transition,
-            Section53SavedCellTransitionParser.machine,
-            Section53SavedCellTransitionParser.transition]
+            FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine,
+            FiniteRecognizer.Interpreter.ParserBranchPhaseSum.transition,
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine,
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.transition,
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition]
 
 /-- Invert an outer step while the embedded parser prefix is still active. -/
 theorem active_step_inversion
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
     (target : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserBranchPhaseSum.Control)
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source)
-    (hstep : TuringMachine.Step Section53ParserBranchPhaseSum.machine
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source)
+    (hstep : TuringMachine.Step FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       (parserConfig source) target) :
     exists innerTarget : TuringMachine.Configuration MachineCodeSymbol
-        Section53ParserPrefixPhaseSum.Control,
-      TuringMachine.Step Section53ParserPrefixPhaseSum.machine
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control,
+      TuringMachine.Step FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
           source innerTarget ∧
         target = parserConfig innerTarget := by
   have houter := TuringMachine.stepConfig_eq_some_iff_step.mpr hstep
   rw [active_stepConfig_eq_map source hactive] at houter
-  cases hinner : Section53ParserPrefixPhaseSum.machine.stepConfig source with
+  cases hinner : FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig source with
   | none =>
       simp [hinner] at houter
   | some innerTarget =>
@@ -100,9 +100,9 @@ theorem active_step_inversion
 halt state; in particular this holds throughout the active prefix. -/
 theorem active_parserConfig_not_halted
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
-    (_hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source) :
-    ¬ TuringMachine.Halted Section53ParserBranchPhaseSum.machine
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
+    (_hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source) :
+    ¬ TuringMachine.Halted FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       (parserConfig source) := by
   rcases source with ⟨state, tape⟩
   cases state with
@@ -110,63 +110,63 @@ theorem active_parserConfig_not_halted
       cases state <;>
         simp [TuringMachine.Halted, parserConfig, parserTarget,
           TuringMachine.PhaseEmbedding.liftConfig,
-          Section53ParserBranchPhaseSum.machine]
+          FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
   | header fuelZero state =>
       cases state <;>
         simp [TuringMachine.Halted, parserConfig, parserTarget,
           TuringMachine.PhaseEmbedding.liftConfig,
-          Section53ParserBranchPhaseSum.machine]
+          FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
   | shift fuelZero state =>
       cases state <;>
         simp [TuringMachine.Halted, parserConfig, parserTarget,
           TuringMachine.PhaseEmbedding.liftConfig,
-          Section53ParserBranchPhaseSum.machine]
+          FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
   | countValidate fuelZero =>
       simp [TuringMachine.Halted, parserConfig, parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig,
-        Section53ParserBranchPhaseSum.machine]
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
   | countRewind fuelZero =>
       simp [TuringMachine.Halted, parserConfig, parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig,
-        Section53ParserBranchPhaseSum.machine]
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
   | table fuelZero state =>
       cases state with
       | parser parserState =>
           cases parserState <;>
             simp [TuringMachine.Halted, parserConfig, parserTarget,
               TuringMachine.PhaseEmbedding.liftConfig,
-              Section53ParserBranchPhaseSum.machine]
+              FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
       | ready saved =>
           cases fuelZero <;>
             simp [TuringMachine.Halted, parserConfig, parserTarget,
               TuringMachine.PhaseEmbedding.liftConfig,
-              Section53ParserBranchPhaseSum.machine]
+              FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
       | halt =>
           simp [TuringMachine.Halted, parserConfig, parserTarget,
             TuringMachine.PhaseEmbedding.liftConfig,
-            Section53ParserBranchPhaseSum.machine]
+            FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine]
 
 /-- Any exact branch-machine halting run from an embedded parser source must
 cross an honest successful parser-prefix terminal first. -/
 theorem exists_successfulTerminal_of_haltsFromIn
     {steps : Nat}
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control}
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control}
     (hhalts : TuringMachine.HaltsFromIn
-      Section53ParserBranchPhaseSum.machine steps (parserConfig source)) :
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine steps (parserConfig source)) :
     exists innerSteps : Nat,
     exists target : TuringMachine.Configuration MachineCodeSymbol
-        Section53ParserPrefixPhaseSum.Control,
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control,
       innerSteps ≤ steps ∧
-      TuringMachine.ComputesIn Section53ParserPrefixPhaseSum.machine
+      TuringMachine.ComputesIn FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
           innerSteps source target ∧
-        Section53ParserPrefixPhaseSum.SuccessfulTerminal target := by
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal target := by
   exact
     TuringMachine.PhaseExitProjection.exists_bounded_inner_exit_of_haltsFromIn_lift
-      parserTarget Section53ParserPrefixPhaseSum.SuccessfulTerminal
+      parserTarget FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal
       active_step_inversion active_parserConfig_not_halted hhalts
 
 
-end Section53ParserBranchProjection
+end FiniteRecognizer.Interpreter.ParserBranchProjection
 end Computability
 end FoC

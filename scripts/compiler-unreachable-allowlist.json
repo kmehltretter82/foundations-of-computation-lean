@@ -2,7 +2,7 @@
   "modules": [
     {
       "category": "guardrail",
-      "intended_consumer": "Sorry #18 represented-boundary contract reviews",
+      "intended_consumer": "Fixed-description bounded-simulator represented-boundary reviews",
       "module": "FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.FieldDecomposition.RepBoundary",
       "reason": "Checked impossibility theorems retain the represented-window boundary and prevent revival of the false canonical physical-equivalence route."
     },
@@ -40,31 +40,13 @@
       "category": "public-facade",
       "intended_consumer": "Optional finite-recognizer API imports",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer",
-      "reason": "Public barrel intentionally kept outside the default FoC import graph."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreterContracts",
-      "reason": "Contract boundary for an active finite-recognizer sorry."
+      "reason": "Public barrel intentionally remains outside the default FoC import graph; production consumers import focused finite-recognizer modules."
     },
     {
       "category": "guardrail",
       "intended_consumer": "Exact-fuel layout-loop contract reviews",
       "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.LayoutCode",
       "reason": "Retained executable layout-fuel semantics and checked impossibility theorem prevent revival of the false literal-empty-output finite construction."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "FiniteRecognizer.Product direct frontier",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.ProductContracts",
-      "reason": "Product recognizer contract for an active direct sorry."
-    },
-    {
-      "category": "active",
-      "intended_consumer": "FiniteRecognizer.TupleSearch.Program direct frontiers",
-      "module": "FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Contracts",
-      "reason": "Tuple-search recognizer contracts for active direct sorries."
     },
     {
       "category": "public-facade",
@@ -74,7 +56,7 @@
     },
     {
       "category": "guardrail",
-      "intended_consumer": "Sorry #12 repaired bounded-fuel-pair contract",
+      "intended_consumer": "Repaired bounded-fuel-pair enumerator contract reviews",
       "module": "FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator.ContractGuardrails",
       "reason": "Concrete impossibility theorems prevent resurrection of the false scalar-output contract."
     },

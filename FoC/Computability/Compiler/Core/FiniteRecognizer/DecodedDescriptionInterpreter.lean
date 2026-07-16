@@ -27,7 +27,7 @@ runner erases its complete physical tape.
 -/
 theorem decodedDescriptionInterpreterFinStateFiniteLeaf :
     DecodedDescriptionInterpreterFinStateConstruction :=
-  Section53ConcreteSpecialization.finStateConstruction
+  FiniteRecognizer.Interpreter.Construction.finStateConstruction
 
 theorem decodedDescriptionInterpreterFiniteLeaf :
     DecodedDescriptionInterpreterConstruction :=

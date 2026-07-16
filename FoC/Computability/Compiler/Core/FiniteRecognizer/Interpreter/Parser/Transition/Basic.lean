@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53TransitionParserHandoff
+namespace FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 /-!
 # Exact transition-parser handoff
@@ -926,7 +926,7 @@ theorem transitionListParserMachine_computes_final_mark_exact
                   parsedTableLeftRev, markedSuffixCells]
                   using hfinish)
 
-end Section53TransitionParserHandoff
+end FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 end Computability
 end FoC

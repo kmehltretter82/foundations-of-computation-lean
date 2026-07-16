@@ -11,7 +11,7 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Section 5.2 machine compiler boundaries
+# Section 5.2: Machine Compiler
 -/
 
 open Languages
@@ -27,89 +27,35 @@ normalized code output here.  The identity primitive satisfies both contracts,
 while erasure is impossible for the exact tape-window contract but is realized
 by a concrete finite normalized-output machine.
 
-## Finite-Source Finish Criteria
+## Finite-Source Compiler Architecture
 
-The remaining compiler work is deliberately
-tracked through named finite construction targets.  The goal is not to prove a
-compiler theorem for arbitrary staged programs or arbitrary
-{name}`MachineDescription.TapeCodePrimitive`s in one step; it is to close the
-finite parser, emitter, sequencer, branch, and stage-controller descriptions
-that the book-facing theorems already route through.
+The finite compiler is organized around canonical Boolean encodings and
+normalized output. Its primitive layer provides identity, erasure, fixed-symbol
+append, singleton Boolean emission, unary comparison, and one-step tape actions.
+These tables also have halt-transition-free subroutine packages, sequencing
+lemmas, and cell-sensitive branch tables.
 
-For the fixed one-step primitive, the new bridge says that it is enough to
-build a finite stepper on canonical encoded configurations.  Parser
-canonicalization lemmas then promote that theorem to the full
-{name}`TapeCodePrimitiveOutputRealizedByDescription` interface, covering any
-code word whose configuration decoder succeeds completely.
+The fixed-description route parses an encoded configuration, performs one
+lookup in a fixed description table, and emits the encoded successor.
+Canonicalization lemmas lift the exact canonical-input construction to the
+decoded-code contract
+{name}`TapeCodePrimitiveOutputRealizedByDescription`. Iterating that stepper
+supplies the bounded fixed-description simulator boundary used by the chapter.
 
-The two formulations are now proved equivalent.  This concentrates the
-construction interface into one finite transducer problem: build the concrete
-Boolean transition table that parses a canonical configuration, performs one
-fixed description-table lookup, and emits the re-encoded successor
-configuration.
+The paired-recognizer route composes four finite layers: dovetail-layout
+initialization, the bounded layout runner, a total single-stage attempt, and the
+stage-loop controller. A no-hit attempt produces the empty Boolean word; an
+accepting or rejecting hit produces the corresponding singleton word. The
+controller preserves the encoded input and registers between stages, advances
+the bound after no hit, and hands singleton results to the raw Boolean output
+branches. The runner-search bridge packages this controller as the unbounded
+paired-recognizer dovetailer.
 
-The concrete transducer pieces are retained as a small compiler core. A finite
-table appends one fixed encoded code symbol to the normalized Boolean output,
-while the code-primitive layer provides fixed unary comparisons and one-step
-tape write/move actions with canonical encode/decode theorems. A concrete
-Boolean-output table erases its input and emits either {lit}`true` or
-{lit}`false`, giving the eventual dovetail driver finite halt branches. The
-identity, erase, and one-symbol append tables are now recorded with the
-stronger normalized-output compiled-subroutine contract, and the Boolean-output
-table has an iff theorem ruling out non-singleton spurious outputs. The
-same tables are also packaged as halt-transition-free subroutines, so later
-control-flow tables can call them without adding outgoing transitions from
-their halting states. The subroutine layer also provides a description-level
-sequencer: a subroutine-ready table can be viewed as a fragment, composed with
-another such table, and reasoned about using the existing first-arrival
-fragment semantics. A finite cell-branch table is now separated out as the
-basic one-step controller primitive: it reads the current tape cell, preserves
-it while moving, and jumps to the blank, false, or true target state with
-proved well-formedness and halt-free packaging. The controller raw-output
-branch also has a code primitive that maps encoded singleton Boolean results
-to encoded raw outputs and rejects the empty no-hit result. Composing that
-branch after the total-attempt code recovers the older partial stage-attempt
-code contract, which is the executable no-hit/singleton split the controller
-loop has to implement. The no-hit branch now has its own controller-layout
-code primitive that rewrites an encoded controller layout to the next stage,
-while the hit branch has a matching emit primitive for the raw Boolean output.
-Their canonical-input theorems prove the exact disjunction: a no-hit stage
-enables only the continue branch, while a hit stage enables only the matching
-encoded Boolean emit branch.
-For the paired-recognizer dovetailer, the layout runner
-now has a halt-free output-realizer contract and the search-driver interface
-has a subroutine-ready variant, isolating the exact contract needed by the
-future finite transition table that loops around a compiled layout subroutine.
-The controller boundary is now split further into canonical machine-code
-operations: build the initial dovetail layout from the input word and stage
-limit, run the paired layout subroutine, and inspect the resulting hit flags
-as a Boolean output code. These operations are also packaged as a single-stage
-attempt primitive whose canonical-input theorem returns exactly the encoded
-bounded-dovetail result for that stage. The direct-controller interface uses
-a total variant of this primitive: no hit is encoded as the empty Boolean word,
-while accepting and rejecting hits are encoded as singleton Boolean words.
-That total result now has its own controller layout and branch view: decoding
-the total attempt output and taking the singleton raw-output branch is proved
-equivalent to the bounded dovetail result for the current stage. The
-controller path also records the stronger normalized-output compiler contract
-needed for sound branching on a subroutine's observed output: the old
-output-realizer contract is one-way, so it cannot rule out spurious halting
-outputs from an arbitrary subroutine. Under the stronger contract, a
-controller-search driver again yields the paired-recognizer dovetail compiler,
-and the finite-source construction target is now the stage-loop controller
-itself: one machine that iterates stage bounds, calls the total-attempt
-subroutine on the canonical stage input, and branches only on singleton raw
-outputs. The semantic staged-program driver remains as a bridge theorem, but
-the closeout route can now be stated using the finite stage-loop controller
-construction directly. The transition table still to build is the controller
-that preserves the input/register layout across attempts and hands singleton
-results to the raw Boolean output branches.
-Exact compilation of every code primitive is proved
-impossible because erasure cannot produce an exact empty tape window from
-nonempty input. The viable boundary is therefore a normalized-output tape-code
-compiler: if that one generic compiler principle is supplied, the fixed
-stepper, bounded simulator, and dovetail-layout machine-description obligations
-all follow.
+Exact compilation of every code primitive is impossible because erasure cannot
+produce an exact empty tape window from nonempty input. Normalized output is
+therefore the common compiler currency. Generic principles that compile
+arbitrary semantic staged programs remain explicit in theorem signatures;
+concrete finite descriptions use the construction layers above directly.
 -/
 
 /-!

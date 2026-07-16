@@ -6,7 +6,7 @@ set_option doc.verso true
 /-!
 # Fuel-output structured core machine
 
-The typed three-tape machine for construction target {lit}`#10`: it reads an
+The fuel-output core is a typed three-tape machine that reads an
 encoded halted simulator layout on logical tape 0, checks that the encoded state
 field equals the attempt's halt state (a unary chain parametric in that
 state), and emits the normalized Boolean result code of the encoded

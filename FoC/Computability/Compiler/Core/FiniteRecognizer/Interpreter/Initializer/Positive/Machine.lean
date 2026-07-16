@@ -6,25 +6,25 @@ namespace Computability
 
 open Languages
 
-namespace Section53PositiveInitializerMachine
+namespace FiniteRecognizer.Interpreter.PositiveInitializerMachine
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53InitializerFrontier
-open Section53InitializerPersistentCopy
-open Section53InitializerPersistentCopy.PersistentMasterCopier
-open Section53InitializerRepeatedCopy
-open Section53LoopRestagingAudit
-open Section53BoundedLoopInduction
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53PositiveInitializerPhase
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy.PersistentMasterCopier
+open FiniteRecognizer.Interpreter.InitializerRepeatedCopy
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.BoundedLoopInduction
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.PositiveInitializerPhase
 
 namespace Machine
 
 inductive Control where
   | materializer
       (saved : Option MachineCodeSymbol)
-      (inner : Section53BooleanContextPhase.Machine.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control)
   | copier
       (saved : Option MachineCodeSymbol)
       (inner : PersistentMasterCopier.Control)
@@ -71,7 +71,7 @@ theorem savedInnerControls_complete
 
 def elems : List Control :=
   savedInnerControls
-      Section53BooleanContextPhase.Machine.Control.finite.elems materializer ++
+      FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control.finite.elems materializer ++
     savedInnerControls PersistentMasterCopier.Control.finite.elems copier ++
     savedInnerControls CopyDriver.Control.finite.elems driver ++
     savedInnerControls GapCompactor.Control.finite.elems compactor ++
@@ -85,7 +85,7 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | materializer saved inner =>
         simp [elems, savedInnerControls_complete _
-          Section53BooleanContextPhase.Machine.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control.finite.complete
           materializer saved inner]
     | copier saved inner =>
         simp [elems, savedInnerControls_complete _
@@ -105,8 +105,8 @@ end Control
 
 def liftMaterializerControl
     (saved : Option MachineCodeSymbol)
-    (inner : Section53BooleanContextPhase.Machine.Control) : Control :=
-  if inner = Section53BooleanContextPhase.Machine.halt then
+    (inner : FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control) : Control :=
+  if inner = FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.halt then
     .copier saved PersistentMasterCopier.Control.enter
   else
     .materializer saved inner
@@ -125,7 +125,7 @@ def liftDriverControl
 
 def savedRead
     (saved : Option MachineCodeSymbol) : Option Bool :=
-  saved.map Section53InitializerFrontier.codeSymbolFirstBit
+  saved.map FiniteRecognizer.Interpreter.InitializerFrontier.codeSymbolFirstBit
 
 def liftCompactorControl
     (saved : Option MachineCodeSymbol) : GapCompactor.Control -> Control
@@ -148,7 +148,7 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .materializer saved inner, read =>
       Option.map (mapAction (liftMaterializerControl saved))
-        (Section53BooleanContextPhase.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.transition inner read)
   | .copier saved inner, read =>
       Option.map (mapAction (liftCopierControl saved))
         (PersistentMasterCopier.transition inner read)
@@ -165,7 +165,7 @@ def transition :
 
 def entry (saved : Option MachineCodeSymbol) : Control :=
   liftMaterializerControl saved
-    (Section53BooleanContextPhase.Machine.entry saved)
+    (FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.entry saved)
 
 def ready : Control := .ready
 
@@ -178,7 +178,7 @@ def machine : TuringMachine MachineCodeSymbol Control where
 def materializerConfig
     (saved : Option MachineCodeSymbol)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextPhase.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := liftMaterializerControl saved config.state, tape := config.tape }
 
@@ -357,7 +357,7 @@ def compactorRest
   List.append
     (MachineDescription.encodeTransitions (first :: rest)).tail
     (MachineCodeSymbol.header ::
-      Section53InitializerRepeatedCopy.stackSuffix
+      FiniteRecognizer.Interpreter.InitializerRepeatedCopy.stackSuffix
         (first :: rest) copies context)
 
 theorem savedRead_savedHead_eq_initial_read
@@ -420,7 +420,7 @@ theorem restagerTarget_tape_eq_loopSource
   rw [hword]
   simp [NextCopyRestager.targetConfig, loopSourceConfig,
     canonicalScanRowsConfig, initialConfiguration,
-    activeProtectedSuffix, Section53LoopRestagingAudit.contextTail,
+    activeProtectedSuffix, FiniteRecognizer.Interpreter.LoopRestagingAudit.contextTail,
     compactorRest, stackSuffix, positiveInitialContextTail,
     SerializedShift.cursorTape, runtimeKeyComparatorTape,
     MachineDescription.encodeTransitionsAppend, processedRows,
@@ -574,17 +574,17 @@ namespace Machine
 theorem materializer_step_of_some
     (saved : Option MachineCodeSymbol)
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextPhase.Machine.Control)
-    (hstep : Section53BooleanContextPhase.Machine.machine.stepConfig
+      FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.machine.stepConfig
       source = some target) :
     machine.stepConfig (materializerConfig saved source) =
       some (materializerConfig saved target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextPhase.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextPhase.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -595,9 +595,9 @@ theorem materializer_step_of_some
             rw [liftMaterializerControl, if_neg]
             intro heq
             subst inner
-            simp [Section53BooleanContextPhase.Machine.halt,
-              Section53BooleanContextPhase.Machine.transition,
-              Section53BooleanContextSeparatorConverter.Machine.transition]
+            simp [FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.halt,
+              FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.transition,
+              FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.transition]
               at htransition
           cases hstep
           simp [machine, transition, materializerConfig, hsourceLift,
@@ -606,9 +606,9 @@ theorem materializer_step_of_some
 theorem materializer_computes_lift
     (saved : Option MachineCodeSymbol)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextPhase.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextPhase.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.machine source target) :
     TuringMachine.Computes machine
       (materializerConfig saved source) (materializerConfig saved target) := by
   induction hrun with
@@ -797,7 +797,7 @@ theorem positive_nonempty_computes_from_parser_tape
     (parserTape : Tape MachineCodeSymbol)
     (hparser : Tape.Equiv
       (markedParserMaterializerSourceTape
-        (Section53ParserAssembly.headerAfterHaltLeftRev D (remaining + 1))
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D (remaining + 1))
         first rest input)
       parserTape) :
     exists targetTape : Tape MachineCodeSymbol,
@@ -813,7 +813,7 @@ theorem positive_nonempty_computes_from_parser_tape
   let context := positiveInitialContextTail D input
   let base := positiveMaterializerCopierBaseLeftRev D (remaining + 1)
   let table := MachineDescription.encodeTransitions (first :: rest)
-  rcases Section53BooleanContextPhase.Machine.saved_positive_materializer
+  rcases FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.saved_positive_materializer
       D remaining input first rest htransitions with
     ⟨materializerCanonicalTape, hmaterializerCanonical,
       hmaterializerCanonicalShape⟩
@@ -927,10 +927,10 @@ theorem positive_nonempty_computes_from_parser_tape
         Machine.liftRestagerControl, saved, context, base, table,
         compactorTail, nextHead, restagerRest,
         NextCopyRestager.targetConfig,
-        Section53BooleanContextPhase.Machine.halt] at hrun
+        FiniteRecognizer.Interpreter.BooleanContextPhase.Machine.halt] at hrun
       exact hrun
 
-end Section53PositiveInitializerMachine
+end FiniteRecognizer.Interpreter.PositiveInitializerMachine
 
 end Computability
 end FoC

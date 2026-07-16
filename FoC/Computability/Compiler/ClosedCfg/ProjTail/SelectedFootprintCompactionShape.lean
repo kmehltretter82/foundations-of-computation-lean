@@ -612,9 +612,9 @@ theorem selectedSegmentLogicalTapeDecoderFootprintLeftCells_cons_some_eq_fromPay
       (bit :: rest) (some padBit :: padding)
 
 /--
-Reusable interface for the finite compactor still missing below the selected
-cleanup stack.  It states the exact selected decoder footprint in the generic
-payload form and keeps the public target as a right-edge rewind source.
+Reusable interface for the finite compactor below the selected cleanup stack.
+It states the exact selected decoder footprint in the generic payload form and
+keeps the public target as a right-edge rewind source.
 -/
 def GuardedLogicalTapeDecoderFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=

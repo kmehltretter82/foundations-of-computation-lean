@@ -5,14 +5,14 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextOneSymbolRound
+namespace FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53InitializerFrontier
-open Section53RuntimeEncodedList
-open Section53BooleanContextMaterializer
-open Section53BooleanContextLocator
-open Section53BooleanContextRawTail
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
+open FiniteRecognizer.Interpreter.BooleanContextMaterializer
+open FiniteRecognizer.Interpreter.BooleanContextLocator
+open FiniteRecognizer.Interpreter.BooleanContextRawTail
 open ExactFuel.StrictProbe.SerializedFieldComposer
 
 inductive BitPhase where
@@ -97,7 +97,7 @@ inductive Control where
   | pop (inner : RawTailPop.Control)
   | popBounce (saved : MachineCodeSymbol) (phase : BitPhase)
   | locate (saved : MachineCodeSymbol) (phase : BitPhase)
-      (inner : Section53BooleanContextLocator.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
   | locatorBounce (saved : MachineCodeSymbol) (phase : BitPhase)
   | prepend (saved : MachineCodeSymbol) (phase : BitPhase)
       (inner : Prepend.Control)
@@ -148,7 +148,7 @@ def elems : List Control :=
   RawTailPop.Control.finite.elems.map Control.pop ++
     savedPhaseControls Control.popBounce ++
     savedPhaseInnerControls
-      Section53BooleanContextLocator.Control.finite.elems Control.locate ++
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.elems Control.locate ++
     savedPhaseControls Control.locatorBounce ++
     savedPhaseInnerControls Prepend.Control.finite.elems Control.prepend ++
     savedPhaseControls Control.prependBounce ++
@@ -166,8 +166,8 @@ def finite : Foundation.FiniteType Control where
         simp [elems, h]
     | locate saved phase inner =>
         have h := savedPhaseInnerControls_complete
-          Section53BooleanContextLocator.Control.finite.elems
-          Section53BooleanContextLocator.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.elems
+          FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.complete
           Control.locate saved phase inner
         simp [elems, h]
     | locatorBounce saved phase =>
@@ -196,7 +196,7 @@ def mapPopAction :
 def mapLocatorAction
     (saved : MachineCodeSymbol) (phase : BitPhase) :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextLocator.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control) ->
       (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, next) =>
       (write, direction, .locate saved phase next)
@@ -222,7 +222,7 @@ def transition :
       some (read, Direction.left, .locatorBounce saved phase)
   | .locate saved phase inner, read =>
       Option.map (mapLocatorAction saved phase)
-        (Section53BooleanContextLocator.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner read)
   | .locatorBounce saved phase, read =>
       some (read, Direction.right,
         .prepend saved phase (.locate .count))
@@ -258,7 +258,7 @@ def popConfig
 def locatorConfig
     (saved : MachineCodeSymbol) (phase : BitPhase)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .locate saved phase config.state, tape := config.tape }
 
@@ -332,35 +332,35 @@ theorem pop_computes_lift
 theorem locator_step_of_some
     (saved : MachineCodeSymbol) (phase : BitPhase)
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control)
-    (hstep : Section53BooleanContextLocator.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextLocator.machine.stepConfig source =
       some target) :
     machine.stepConfig (locatorConfig saved phase source) =
       some (locatorConfig saved phase target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextLocator.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextLocator.machine] at hstep
       cases htransition :
-          Section53BooleanContextLocator.transition inner (Tape.read tape) with
+          FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
           rcases action with ⟨write, direction, next⟩
           simp only [htransition] at hstep
           cases hstep
-          have hnot : inner ≠ Section53BooleanContextLocator.Control.ready := by
+          have hnot : inner ≠ FiniteRecognizer.Interpreter.BooleanContextLocator.Control.ready := by
             intro heq
             subst inner
-            simp [Section53BooleanContextLocator.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextLocator.transition] at htransition
           simp [machine, transition, locatorConfig, mapLocatorAction,
             htransition]
 
 theorem locator_computes_lift
     (saved : MachineCodeSymbol) (phase : BitPhase)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control}
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextLocator.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.machine source target) :
     TuringMachine.Computes machine
       (locatorConfig saved phase source)
       (locatorConfig saved phase target) := by
@@ -454,7 +454,7 @@ theorem computes_of_tape_equiv
 def materializerBaseLeftRev
     (fuel stateCount start halt rowCount : Nat)
     (table : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
-  Section53BooleanContextLocator.rightCountBaseLeftRev
+  FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountBaseLeftRev
     fuel stateCount start halt rowCount table
 
 def layoutWord
@@ -462,7 +462,7 @@ def layoutWord
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
-  Section53BooleanContextLocator.locatorWord
+  FiniteRecognizer.Interpreter.BooleanContextLocator.locatorWord
     fuel stateCount start halt rowCount table cells.length
     (MachineDescription.encodeCellsAppend cells
       (MachineCodeSymbol.header :: raw))
@@ -472,7 +472,7 @@ def locatorSource
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol) :=
-  Section53BooleanContextLocator.sourceConfig
+  FiniteRecognizer.Interpreter.BooleanContextLocator.sourceConfig
     fuel stateCount start halt rowCount table cells.length
     (MachineDescription.encodeCellsAppend cells
       (MachineCodeSymbol.header :: raw))
@@ -482,7 +482,7 @@ def locatorTarget
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol) :=
-  Section53BooleanContextLocator.targetConfig
+  FiniteRecognizer.Interpreter.BooleanContextLocator.targetConfig
     fuel stateCount start halt rowCount table cells.length
     (MachineDescription.encodeCellsAppend cells
       (MachineCodeSymbol.header :: raw))
@@ -501,7 +501,7 @@ theorem materializerBaseLeftRev_reverse
     (fuel stateCount start halt rowCount : Nat)
     (table : Word MachineCodeSymbol) :
     (materializerBaseLeftRev fuel stateCount start halt rowCount table).reverse =
-      Section53BooleanContextLocator.rightCountPrefix
+      FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix
         fuel stateCount start halt rowCount table := by
   unfold materializerBaseLeftRev
   exact List.reverse_reverse _
@@ -521,8 +521,8 @@ theorem layoutWord_eq_prepend_targetWord
           (MachineCodeSymbol.header :: raw)) := by
   rw [prepend_targetWord_eq_encoded_list]
   rw [materializerBaseLeftRev_reverse]
-  simp [layoutWord, Section53BooleanContextLocator.locatorWord,
-    Section53BooleanContextLocator.rightCountPrefix,
+  simp [layoutWord, FiniteRecognizer.Interpreter.BooleanContextLocator.locatorWord,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix,
     MachineDescription.encodeCellListAppend,
     MachineDescription.encodeNatAppend]
 
@@ -541,7 +541,7 @@ theorem popTargetWord_eq_layoutWord
   change
     Word.Concat
         (Word.Concat
-          (Section53BooleanContextLocator.rightCountPrefix
+          (FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix
             fuel stateCount start halt rowCount table)
           (MachineDescription.encodeCellListAppend cells
             [MachineCodeSymbol.header]))
@@ -549,20 +549,20 @@ theorem popTargetWord_eq_layoutWord
       layoutWord fuel stateCount start halt rowCount table cells raw
   calc
     _ = Word.Concat
-          (Section53BooleanContextLocator.rightCountPrefix
+          (FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix
             fuel stateCount start halt rowCount table)
           (Word.Concat
             (MachineDescription.encodeCellListAppend cells
               [MachineCodeSymbol.header]) raw) :=
       Word.concat_assoc _ _ _
     _ = Word.Concat
-          (Section53BooleanContextLocator.rightCountPrefix
+          (FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix
             fuel stateCount start halt rowCount table)
           (MachineDescription.encodeCellListAppend cells
             (Word.Concat [MachineCodeSymbol.header] raw)) := by
       exact congrArg
         (Word.Concat
-          (Section53BooleanContextLocator.rightCountPrefix
+          (FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix
             fuel stateCount start halt rowCount table))
         (encodeCellListAppend_append cells
           [MachineCodeSymbol.header] raw).symm
@@ -621,8 +621,8 @@ theorem materializerBaseLeftRev_ne_nil
     (fun word : Word MachineCodeSymbol => word.reverse) hnil
   rw [materializerBaseLeftRev_reverse] at hreverse
   cases fuel <;>
-    simp [Section53BooleanContextLocator.rightCountPrefix,
-      Section53BooleanContextLocator.parsedMetadataAppend,
+    simp [FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.parsedMetadataAppend,
       MachineDescription.encodeNatAppend,
       MachineDescription.encodeNat] at hreverse
 
@@ -659,7 +659,7 @@ theorem phase_computes_of_tape_equiv
     (cells : List (Option Bool))
     (raw : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table)
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table)
     (hsource : Tape.Equiv
       (locatorSource fuel stateCount start halt rowCount table cells raw).tape
       sourceTape) :
@@ -679,7 +679,7 @@ theorem phase_computes_of_tape_equiv
   let suffix := MachineDescription.encodeCellsAppend cells
     (MachineCodeSymbol.header :: raw)
   have hlocatorInner :=
-    Section53BooleanContextLocator.computes_to_right_count
+    FiniteRecognizer.Interpreter.BooleanContextLocator.computes_to_right_count
       fuel stateCount start halt rowCount table cells.length suffix hnoHeader
   have hlocator := locator_computes_lift saved phase hlocatorInner
   have hbase : baseLeftRev ≠ [] := by
@@ -706,8 +706,8 @@ theorem phase_computes_of_tape_equiv
     ⟨targetTape, htransport, htransportTarget⟩
   refine ⟨targetTape, ?_, ?_⟩
   · simpa [locatorConfig, locatorSource,
-      Section53BooleanContextLocator.sourceConfig,
-      Section53BooleanContextLocator.config,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.sourceConfig,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.config,
       prependConfig, prependTerminal] using htransport
   · rw [layoutWord_eq_prepend_targetWord]
     exact Tape.Equiv.trans htarget htransportTarget
@@ -807,7 +807,7 @@ theorem nonempty_raw_symbol_round_computes
     (cells : List (Option Bool))
     (rawPrefix : Word MachineCodeSymbol)
     (last : MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         (popConfig
@@ -902,7 +902,7 @@ theorem nonempty_raw_symbol_round_computes
 
 end Machine
 
-end Section53BooleanContextOneSymbolRound
+end FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound
 
 end Computability
 end FoC

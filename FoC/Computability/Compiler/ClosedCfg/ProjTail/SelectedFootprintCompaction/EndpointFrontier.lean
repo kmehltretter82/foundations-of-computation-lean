@@ -5,11 +5,11 @@ import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHando
 set_option doc.verso true
 
 /-!
-# Live selected-footprint compactor frontier
+# Marker-bearing selected-footprint compactor
 
-The retired frontier quantified over arbitrary payloads, bits, and padding.
+The retired contract quantified over arbitrary payloads, bits, and padding.
 That family is inconsistent modulo {lit}`Tape.Equiv`; the guardrail module
-records two concrete collisions.  The remaining construction is indexed only
+records two concrete collisions. The completed construction is indexed only
 by the count-window inputs that reach this phase.  Its target is functional on
 source equivalence classes by the functionality theorem in the imported
 guardrail module.
@@ -30,29 +30,29 @@ namespace SelectedProjectionPaddedTailCleanup
 open CanonicalLayouts.DovetailLayoutScanner
 
 /--
-The sole remaining selected-footprint construction obligation.
+The marker-bearing selected-footprint construction.
 
-For each live branch and parsed layout, compact the decoder footprint to the
+For each selected branch and parsed layout, compact the decoder footprint to the
 right-edge rewind tape.  {name}`ParsedLayoutBits` begins with two represented bits,
 which is the clean source premise missing from the old arbitrary-payload
-frontier.
+contract.
 
 The repaired boundary is marker-bearing. The upstream pair-parity eraser keeps
 its final two represented prefix cells as {lit}`[true, false]`; decoder pairs
 cannot contain adjacent represented cells, so this is a detectable left
 sentinel. The direct moving-marker compactor consumes that source and halts on
-the interior payload separator. This target is outside #17's deliberately
-narrow endpoint-projector contract, so #17 is neither duplicated nor widened.
+the interior payload separator. This target is separate from the narrow
+{lit}`StructuredTape2ProjectorConstruction`; neither contract is duplicated or widened.
 -/
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorConstruction :=
   ⟨LiveIngress.MarkerCompactor.description,
     LiveIngress.MarkerCompactor.description_liveSpec⟩
 
-/-- The current structured-prefix densifier composes the marker-preserving
-upstream handoff with the repaired live compactor. Keeping this integration
-beside the #15 frontier prevents the historical unmarked component wrappers
-from being mistaken for the active route. -/
+/-- The structured-prefix densifier composes the marker-preserving upstream
+handoff with the marker-bearing compactor. Keeping this integration beside the
+completed compactor contract distinguishes it from the historical unmarked
+component wrappers. -/
 theorem countWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction_core :
     CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderStructuredPrefixDensifierConstruction := by
   refine

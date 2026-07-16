@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 namespace RuntimeKeySingleKeyRepair
 
 open FiniteRecognizer ExactFuel StrictProbe
@@ -1467,6 +1467,6 @@ theorem comparator_computes_equal_state_finish_separated
   done
 
 end RuntimeKeySingleKeyRepair
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 end Computability
 end FoC

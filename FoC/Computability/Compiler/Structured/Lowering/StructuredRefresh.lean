@@ -7,9 +7,9 @@ set_option doc.verso true
 # Structured refresh composition
 
 This module contains the proof-side bridge from a one-segment head refresh to
-the three-segment structured singleton refresh target.  The remaining machine
-work is to build concrete selected-segment refreshers for interior segments;
-the theorem here records exactly the contracts those machines must satisfy.
+the three-segment structured singleton refresh target.  It factors interior
+refresh through selected-segment contracts and composes those machines into
+the full target.
 -/
 
 namespace FoC

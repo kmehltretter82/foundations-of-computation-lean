@@ -6,15 +6,15 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextIngress
+namespace FiniteRecognizer.Interpreter.BooleanContextIngress
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53InitializerFrontier
-open Section53RuntimeEncodedList
-open Section53BooleanContextLocator
-open Section53BooleanContextRawTail
-open Section53BooleanContextOneSymbolRound
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
+open FiniteRecognizer.Interpreter.BooleanContextLocator
+open FiniteRecognizer.Interpreter.BooleanContextRawTail
+open FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound
 
 /-- The three tokens installed after the parser's preserved table marker:
 the empty left-list count, the empty right-list count, and the raw-tail
@@ -39,7 +39,7 @@ inductive Control where
       (inner : InsertRestagedMachine.Control)
   | insertBounce (saved : Option MachineCodeSymbol)
   | locate (saved : Option MachineCodeSymbol)
-      (inner : Section53BooleanContextLocator.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
   | locateBounce (saved : Option MachineCodeSymbol)
   | ready (saved : Option MachineCodeSymbol)
 deriving DecidableEq
@@ -92,7 +92,7 @@ def elems : List Control :=
     savedInnerControls InsertRestagedMachine.Control.finite.elems
       Control.insert ++
     savedControls Control.insertBounce ++
-    savedInnerControls Section53BooleanContextLocator.Control.finite.elems
+    savedInnerControls FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.elems
       Control.locate ++
     savedControls Control.locateBounce ++
     savedControls Control.ready
@@ -128,8 +128,8 @@ def finite : Foundation.FiniteType Control where
         simp [elems, h]
     | locate saved inner =>
         have h := savedInnerControls_complete
-          Section53BooleanContextLocator.Control.finite.elems
-          Section53BooleanContextLocator.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.elems
+          FiniteRecognizer.Interpreter.BooleanContextLocator.Control.finite.complete
           Control.locate saved inner
         simp [elems, h]
     | locateBounce saved =>
@@ -152,7 +152,7 @@ def mapInsertAction
 def mapLocatorAction
     (saved : Option MachineCodeSymbol) :
     (Option MachineCodeSymbol × Direction ×
-        Section53BooleanContextLocator.Control) ->
+        FiniteRecognizer.Interpreter.BooleanContextLocator.Control) ->
       (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, target) =>
       (write, direction, .locate saved target)
@@ -184,12 +184,12 @@ def transition :
         (InsertRestagedMachine.transition inner read)
   | .insertBounce saved, read =>
       some (read, Direction.right,
-        .locate saved Section53BooleanContextLocator.Control.fuel)
+        .locate saved FiniteRecognizer.Interpreter.BooleanContextLocator.Control.fuel)
   | .locate saved .ready, read =>
       some (read, Direction.left, .locateBounce saved)
   | .locate saved inner, read =>
       Option.map (mapLocatorAction saved)
-        (Section53BooleanContextLocator.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner read)
   | .locateBounce saved, read =>
       some (read, Direction.right, .ready saved)
   | .ready _, _ => none
@@ -213,7 +213,7 @@ def insertConfig
 def locatorConfig
     (saved : Option MachineCodeSymbol)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .locate saved config.state, tape := config.tape }
 
@@ -275,36 +275,36 @@ theorem insert_run_of_some
 theorem locator_step_of_some
     (saved : Option MachineCodeSymbol)
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control)
-    (hstep : Section53BooleanContextLocator.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextLocator.machine.stepConfig source =
       some target) :
     machine.stepConfig (locatorConfig saved source) =
       some (locatorConfig saved target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextLocator.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextLocator.machine] at hstep
       cases htransition :
-          Section53BooleanContextLocator.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextLocator.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
           rcases action with ⟨write, direction, next⟩
           simp only [htransition] at hstep
           cases hstep
-          have hnot : inner ≠ Section53BooleanContextLocator.Control.ready := by
+          have hnot : inner ≠ FiniteRecognizer.Interpreter.BooleanContextLocator.Control.ready := by
             intro heq
             subst inner
-            simp [Section53BooleanContextLocator.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextLocator.transition] at htransition
           simp [machine, transition, locatorConfig, htransition,
             hnot, mapLocatorAction]
 
 theorem locator_computes_lift
     (saved : Option MachineCodeSymbol)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextLocator.Control}
+      FiniteRecognizer.Interpreter.BooleanContextLocator.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextLocator.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextLocator.machine source target) :
     TuringMachine.Computes machine
       (locatorConfig saved source) (locatorConfig saved target) := by
   induction hrun with
@@ -528,7 +528,7 @@ theorem tableRight_header_step
 theorem tableRight_computes
     (saved : Option MachineCodeSymbol)
     (leftRev table raw : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     TuringMachine.Computes machine
       (tableRightConfig saved leftRev
         (List.append table (MachineCodeSymbol.header :: raw)))
@@ -546,7 +546,7 @@ theorem tableRight_computes
   | cons symbol rest ih =>
       have hsymbol : symbol ≠ MachineCodeSymbol.header :=
         hnoHeader symbol (List.Mem.head rest)
-      have hrest : Section53BooleanContextLocator.noHeader rest := by
+      have hrest : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader rest := by
         intro current hmem
         exact hnoHeader current (List.Mem.tail symbol hmem)
       exact TuringMachine.Computes.step
@@ -583,7 +583,7 @@ theorem parser_setup_computes
     (extraRows : Nat)
     (tableHead : MachineCodeSymbol)
     (tableTail raw : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader
       (tableHead :: tableTail)) :
     TuringMachine.Computes machine
       (parserSourceConfig saved baseLeftRev extraRows tableHead
@@ -689,22 +689,22 @@ theorem setupWord_eq_locatorWord
     (D : MachineDescription)
     (fuel : Nat)
     (table raw : Word MachineCodeSymbol) :
-    setupWord (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+    setupWord (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
         D.transitions.length table raw =
-      Section53BooleanContextOneSymbolRound.Machine.layoutWord
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
         fuel D.stateCount D.start D.halt D.transitions.length
         table [] raw := by
   simp [setupWord, setupLeftRev, PhysicalBranch.insertOutput,
     contextBuffer,
-    Section53BooleanContextOneSymbolRound.Machine.layoutWord,
-    Section53BooleanContextLocator.locatorWord,
-    Section53BooleanContextLocator.rightCountPrefix,
-    Section53BooleanContextLocator.parsedMetadataAppend,
-    Section53BooleanContextLocator.parserTailBeforeRightCount,
-    Section53ParserAssembly.headerAfterHaltLeftRev,
-    Section53ParserAssembly.headerAfterStartLeftRev,
-    Section53ParserAssembly.headerAfterStateLeftRev,
-    Section53ParserAssembly.headerAfterHeaderLeftRev,
+    FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.locatorWord,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.parsedMetadataAppend,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.parserTailBeforeRightCount,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterStartLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterStateLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHeaderLeftRev,
     MachineDescription.encodeNatAppend,
     MachineDescription.encodeNat,
     MachineDescription.encodeCellsAppend,
@@ -777,50 +777,50 @@ theorem locator_from_setup_computes
     (D : MachineDescription)
     (fuel : Nat)
     (table raw : Word MachineCodeSymbol)
-    (hnoHeader : Section53BooleanContextLocator.noHeader table) :
+    (hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes machine
         { state := .locate saved .fuel
           tape := RewindWord.gateTape
             (setupWord
-              (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
               D.transitions.length table raw) 0 }
         { state := .ready saved, tape := targetTape } ∧
       Tape.Equiv
         (RawTailPop.sourceConfig
-          (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
             fuel D.stateCount D.start D.halt D.transitions.length table)
           [] raw).tape
         targetTape := by
   let canonicalSource :=
-    Section53BooleanContextLocator.sourceConfig
+    FiniteRecognizer.Interpreter.BooleanContextLocator.sourceConfig
       fuel D.stateCount D.start D.halt D.transitions.length table 0
       (MachineCodeSymbol.header :: raw)
   let canonicalTarget :=
-    Section53BooleanContextLocator.targetConfig
+    FiniteRecognizer.Interpreter.BooleanContextLocator.targetConfig
       fuel D.stateCount D.start D.halt D.transitions.length table 0
       (MachineCodeSymbol.header :: raw)
   have hcanonical : TuringMachine.Computes
-      Section53BooleanContextLocator.machine canonicalSource
+      FiniteRecognizer.Interpreter.BooleanContextLocator.machine canonicalSource
       canonicalTarget := by
-    exact Section53BooleanContextLocator.computes_to_right_count
+    exact FiniteRecognizer.Interpreter.BooleanContextLocator.computes_to_right_count
       fuel D.stateCount D.start D.halt D.transitions.length table 0
       (MachineCodeSymbol.header :: raw) hnoHeader
   have hsource : Tape.Equiv canonicalSource.tape
       (RewindWord.gateTape
         (setupWord
-          (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
           D.transitions.length table raw) 0) := by
     rw [show canonicalSource =
-        Section53BooleanContextOneSymbolRound.Machine.locatorSource
+        FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.locatorSource
           fuel D.stateCount D.start D.halt D.transitions.length table [] raw
       by rfl]
-    rw [Section53BooleanContextOneSymbolRound.Machine.locatorSource_tape_eq_input]
+    rw [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.locatorSource_tape_eq_input]
     rw [← setupWord_eq_locatorWord D fuel table raw]
     exact Tape.Equiv.symm
       (RewindWord.gateTape_equiv_input
         (setupWord
-          (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
           D.transitions.length table raw) 0)
   rcases TuringMachine.computes_to_computesIn hcanonical with
     ⟨steps, hcanonicalIn⟩
@@ -831,18 +831,18 @@ theorem locator_from_setup_computes
   simp only at hactualState
   subst actualState
   have hinner : TuringMachine.Computes
-      Section53BooleanContextLocator.machine
-        { state := Section53BooleanContextLocator.Control.fuel
+      FiniteRecognizer.Interpreter.BooleanContextLocator.machine
+        { state := FiniteRecognizer.Interpreter.BooleanContextLocator.Control.fuel
           tape := RewindWord.gateTape
             (setupWord
-              (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
               D.transitions.length table raw) 0 }
-        { state := Section53BooleanContextLocator.Control.ready
+        { state := FiniteRecognizer.Interpreter.BooleanContextLocator.Control.ready
           tape := actualTape } := by
     simpa [canonicalSource, canonicalTarget,
-      Section53BooleanContextLocator.sourceConfig,
-      Section53BooleanContextLocator.targetConfig,
-      Section53BooleanContextLocator.config] using
+      FiniteRecognizer.Interpreter.BooleanContextLocator.sourceConfig,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.targetConfig,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.config] using
       TuringMachine.computesIn_to_computes hactualRun
   have hlift := locator_computes_lift saved hinner
   have hbounce := locator_to_ready_computes saved actualTape
@@ -850,14 +850,14 @@ theorem locator_from_setup_computes
     TuringMachine.computes_trans hlift hbounce, ?_⟩
   have htarget : Tape.Equiv
       (RawTailPop.sourceConfig
-        (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
           fuel D.stateCount D.start D.halt D.transitions.length table)
         [] raw).tape
       actualTape := by
     simpa [canonicalTarget,
-      Section53BooleanContextLocator.targetConfig,
-      Section53BooleanContextLocator.config,
-      Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.targetConfig,
+      FiniteRecognizer.Interpreter.BooleanContextLocator.config,
+      FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev,
       RawTailPop.sourceConfig, PayloadLocator.sourceConfig,
       RawTailPop.locateConfig, MachineDescription.encodeCellsAppend] using
         hactualTape
@@ -875,13 +875,13 @@ theorem parsed_ingress_computes
       TuringMachine.Computes machine
         { state := entry (transitionListParserSavedHead input)
           tape := markedParserMaterializerSourceTape
-            (Section53ParserAssembly.headerAfterHaltLeftRev D
+            (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
               (remainingFuel + 1)) first rest input }
         { state := .ready (transitionListParserSavedHead input)
           tape := targetTape } ∧
       Tape.Equiv
         (RawTailPop.sourceConfig
-          (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+          (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
             (remainingFuel + 1) D.stateCount D.start D.halt
             D.transitions.length
             (MachineDescription.encodeTransitions (first :: rest)))
@@ -900,34 +900,34 @@ theorem parsed_ingress_computes
           (first :: rest) (suffix := []) (by
             intro symbol hmem
             simp at hmem)
-      have hnoHeader : Section53BooleanContextLocator.noHeader
+      have hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader
           (tableHead :: tableTail) := by
         change transitionListParserNoHeader
           (MachineDescription.encodeTransitions (first :: rest)) at hnoHeaderRaw
         rw [htable] at hnoHeaderRaw
         exact hnoHeaderRaw
       have hsource := marked_source_eq_parserSourceConfig
-        (Section53ParserAssembly.headerAfterHaltLeftRev D
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
           (remainingFuel + 1)) first rest input tableHead tableTail htable
       have hsetup := parser_setup_computes
         (transitionListParserSavedHead input)
-        (Section53ParserAssembly.headerAfterHaltLeftRev D
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
           (remainingFuel + 1)) rest.length tableHead tableTail input.tail
         hnoHeader
       have hinsert := setup_to_locator_computes
         (transitionListParserSavedHead input)
-        (Section53ParserAssembly.headerAfterHaltLeftRev D
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
           (remainingFuel + 1)) (rest.length + 1)
         (tableHead :: tableTail) input.tail
       have hprefix : TuringMachine.Computes machine
           { state := entry (transitionListParserSavedHead input)
             tape := markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                 (remainingFuel + 1)) first rest input }
           { state := .locate (transitionListParserSavedHead input) .fuel
             tape := RewindWord.gateTape
               (setupWord
-                (Section53ParserAssembly.headerAfterHaltLeftRev D
+                (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                   (remainingFuel + 1))
                 (rest.length + 1) (tableHead :: tableTail) input.tail) 0 } := by
         rw [hsource]
@@ -942,12 +942,12 @@ theorem parsed_ingress_computes
       have hprefix' : TuringMachine.Computes machine
           { state := entry (transitionListParserSavedHead input)
             tape := markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                 (remainingFuel + 1)) first rest input }
           { state := .locate (transitionListParserSavedHead input) .fuel
             tape := RewindWord.gateTape
               (setupWord
-                (Section53ParserAssembly.headerAfterHaltLeftRev D
+                (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                   (remainingFuel + 1))
                 D.transitions.length (tableHead :: tableTail) input.tail) 0 } := by
         simpa [hlength] using hprefix
@@ -959,7 +959,7 @@ theorem parsed_ingress_computes
 
 end Machine
 
-end Section53BooleanContextIngress
+end FiniteRecognizer.Interpreter.BooleanContextIngress
 
 end Computability
 end FoC

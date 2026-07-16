@@ -5,18 +5,18 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimePhaseSum
+namespace FiniteRecognizer.Interpreter.RuntimePhaseSum
 
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53SelectedUpdateIntegration
-open Section53FinalGateMaterializer
-open Section53NoMatchFinalGate
-open Section53NoMatchFinalGate.LastMiss
-open Section53SemanticIteration
-open Section53BoundedLoopInduction
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.SelectedUpdateIntegration
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
+open FiniteRecognizer.Interpreter.NoMatchFinalGate
+open FiniteRecognizer.Interpreter.NoMatchFinalGate.LastMiss
+open FiniteRecognizer.Interpreter.SemanticIteration
+open FiniteRecognizer.Interpreter.BoundedLoopInduction
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
 
@@ -31,13 +31,13 @@ theorem stackProbe_zero_computes
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
     let stackSource :=
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest 0 (contextTail tape haltState callerSuffix)).tape
     TuringMachine.Computes machine
       { state := Control.stackProbe action, tape := stackSource }
       { state := Control.stack (.initial action true)
-          Section53StackSkip.Control.afterHeader
+          FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
         tape := stackSource } := by
   dsimp only
   apply TuringMachine.Computes.step
@@ -78,14 +78,14 @@ theorem stackProbe_succ_computes
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
     let stackSource :=
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail tape haltState callerSuffix)).tape
     TuringMachine.Computes machine
       { state := Control.stackProbe action, tape := stackSource }
       { state := Control.stack (.initial action false)
-          Section53StackSkip.Control.afterHeader
+          FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
         tape := stackSource } := by
   dsimp only
   apply TuringMachine.Computes.step
@@ -107,8 +107,8 @@ theorem leftProbe_empty_computes
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
     let stackTarget :=
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail { left := [], head := head, right := right }
           haltState callerSuffix)).tape
@@ -119,8 +119,8 @@ theorem leftProbe_empty_computes
         tape := stackTarget } := by
   dsimp only
   let stackTarget :=
-    (Section53StackSkip.targetConfig
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest (copies + 1)
       (contextTail { left := [], head := head, right := right }
         haltState callerSuffix)).tape
@@ -139,13 +139,13 @@ theorem leftProbe_empty_computes
   have hleft : stackTarget.left ≠ [] := by
     change List.map some
       (List.append
-        (Section53LoopRestagingAudit.tableStack (first :: rest)
+        (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack (first :: rest)
           (copies + 1)).reverse
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)) ≠ []
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)) ≠ []
     intro hnil
     have happend := List.map_eq_nil_iff.mp hnil
     have hbase := (List.append_eq_nil_iff.mp happend).2
-    simp [Section53DirectContextUpdate.Prefix.targetBaseLeftRev] at hbase
+    simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev] at hbase
   rw [bounce_tape_eq_self stackTarget MachineCodeSymbol.done hread hleft]
   exact TuringMachine.Computes.refl _
 
@@ -162,8 +162,8 @@ theorem leftProbe_nonempty_computes
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
     let stackTarget :=
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail
           { left := nextHead :: remainingLeft, head := head, right := right }
@@ -175,8 +175,8 @@ theorem leftProbe_nonempty_computes
         tape := stackTarget } := by
   dsimp only
   let stackTarget :=
-    (Section53StackSkip.targetConfig
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest (copies + 1)
       (contextTail
         { left := nextHead :: remainingLeft, head := head, right := right }
@@ -196,13 +196,13 @@ theorem leftProbe_nonempty_computes
   have hleft : stackTarget.left ≠ [] := by
     change List.map some
       (List.append
-        (Section53LoopRestagingAudit.tableStack (first :: rest)
+        (FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack (first :: rest)
           (copies + 1)).reverse
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)) ≠ []
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)) ≠ []
     intro hnil
     have happend := List.map_eq_nil_iff.mp hnil
     have hbase := (List.append_eq_nil_iff.mp happend).2
-    simp [Section53DirectContextUpdate.Prefix.targetBaseLeftRev] at hbase
+    simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev] at hbase
   rw [bounce_tape_eq_self stackTarget MachineCodeSymbol.tick hread hleft]
   exact TuringMachine.Computes.refl _
 
@@ -212,7 +212,7 @@ theorem rightProbe_empty_computes
     (left : List (Option Bool))
     (suffix : Word MachineCodeSymbol) :
     let boundaryTarget :=
-      (Section53DirectContextUpdate.Boundary.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
         baseLeftRev left 0 suffix).tape
     TuringMachine.Computes machine
       { state := Control.rightProbe action, tape := boundaryTarget }
@@ -220,7 +220,7 @@ theorem rightProbe_empty_computes
         tape := boundaryTarget } := by
   dsimp only
   let boundaryTarget :=
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       baseLeftRev left 0 suffix).tape
   change TuringMachine.Computes machine
     { state := Control.rightProbe action, tape := boundaryTarget }
@@ -236,10 +236,10 @@ theorem rightProbe_empty_computes
     rfl
   have hleft : boundaryTarget.left ≠ [] := by
     change List.map some
-      (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
         baseLeftRev left) ≠ []
     intro hnil
-    exact Section53DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
+    exact FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
       baseLeftRev left (List.map_eq_nil_iff.mp hnil)
   rw [bounce_tape_eq_self boundaryTarget MachineCodeSymbol.done hread hleft]
   exact TuringMachine.Computes.refl _
@@ -251,7 +251,7 @@ theorem rightProbe_nonempty_computes
     (remaining : Nat)
     (suffix : Word MachineCodeSymbol) :
     let boundaryTarget :=
-      (Section53DirectContextUpdate.Boundary.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
         baseLeftRev left (remaining + 1) suffix).tape
     TuringMachine.Computes machine
       { state := Control.rightProbe action, tape := boundaryTarget }
@@ -259,7 +259,7 @@ theorem rightProbe_nonempty_computes
         tape := boundaryTarget } := by
   dsimp only
   let boundaryTarget :=
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       baseLeftRev left (remaining + 1) suffix).tape
   change TuringMachine.Computes machine
     { state := Control.rightProbe action, tape := boundaryTarget }
@@ -275,10 +275,10 @@ theorem rightProbe_nonempty_computes
     rfl
   have hleft : boundaryTarget.left ≠ [] := by
     change List.map some
-      (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
         baseLeftRev left) ≠ []
     intro hnil
-    exact Section53DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
+    exact FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
       baseLeftRev left (List.map_eq_nil_iff.mp hnil)
   rw [bounce_tape_eq_self boundaryTarget MachineCodeSymbol.tick hread hleft]
   exact TuringMachine.Computes.refl _
@@ -295,8 +295,8 @@ theorem left_empty_tail
     (callerSuffix : Word MachineCodeSymbol)
     (contextTape : Tape MachineCodeSymbol)
     (hcontext : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail { left := [], head := oldHead, right := right }
           haltState callerSuffix)).tape contextTape) :
@@ -368,8 +368,8 @@ theorem left_nonempty_tail
     (callerSuffix : Word MachineCodeSymbol)
     (contextTape : Tape MachineCodeSymbol)
     (hcontext : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail
           { left := nextHead :: remainingLeft, head := oldHead,
@@ -469,8 +469,8 @@ theorem right_nonempty_tail
     (callerSuffix : Word MachineCodeSymbol)
     (contextTape : Tape MachineCodeSymbol)
     (hcontext : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail
           { left := left, head := oldHead,
@@ -577,8 +577,8 @@ theorem right_empty_tail
     (callerSuffix : Word MachineCodeSymbol)
     (contextTape : Tape MachineCodeSymbol)
     (hcontext : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail { left := left, head := oldHead, right := [] }
           haltState callerSuffix)).tape contextTape) :
@@ -629,7 +629,7 @@ theorem right_empty_tail
     RewindWord.Control.scan at hprobeState
   subst probeState
   let rewindLeftRev :=
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev boundaryBase
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev boundaryBase
       (write :: left)
   let fullWord : Word MachineCodeSymbol :=
     List.append rewindLeftRev.reverse
@@ -640,7 +640,7 @@ theorem right_empty_tail
   have hrewindCanonical : TuringMachine.Computes RewindWord.machine
       { state := RewindWord.Control.scan
         tape :=
-          (Section53DirectContextUpdate.Boundary.targetConfig boundaryBase
+          (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig boundaryBase
             (write :: left) 0 boundarySuffix).tape }
       { state := RewindWord.Control.gate
         tape :=
@@ -651,7 +651,7 @@ theorem right_empty_tail
       Dispatch.NeighborProbe.PrefixRewind.scanConfig,
       Dispatch.NeighborProbe.PrefixRewind.scanTape,
       Dispatch.NeighborProbe.PrefixRewind.gateConfig,
-      Section53DirectContextUpdate.Boundary.targetConfig,
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig,
       MachineDescription.encodeNatAppend,
       runtimeKey_encodeNat_eq_replicate_tick_done, List.reverse_cons,
       List.append_assoc] using hrewindRaw
@@ -672,7 +672,7 @@ theorem right_empty_tail
       rfl
     let activePrefix : Word MachineCodeSymbol :=
       MachineCodeSymbol.header ::
-        Section53LoopRestagingAudit.tableStack (first :: rest) (copies + 1)
+        FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack (first :: rest) (copies + 1)
     calc
       fullWord =
           Word.Concat
@@ -682,7 +682,7 @@ theorem right_empty_tail
               emptyRight) := by
                 simp [fullWord, rewindLeftRev, boundaryBase, boundarySuffix,
                   activePrefix,
-                  Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse,
+                  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse,
                   stackBaseLeftRev_reverse, hemptyRight, Word.Concat,
                   List.append_assoc]
       _ = Word.Concat
@@ -872,21 +872,21 @@ theorem lastSuccess_route
       hlookup with ⟨before, after, hdecompose, hmiss, hmatch⟩
   have hrows : first :: rest = List.append before (selected :: after) :=
     htransitions.symm.trans hdecompose
-  rcases Section53SelectedToStack.first_match_to_postSelected
+  rcases FiniteRecognizer.Interpreter.SelectedToStack.first_match_to_postSelected
       current before selected after 0 haltState callerSuffix hmiss hmatch with
     ⟨extractedTape, actionTape, cleanedTape, hscan, hextract,
       haction, hcleanup, hcleaned⟩
   let action : Action :=
-    Section53RuntimeLeftCleanup.selectedAction selected
+    FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected
   have hprefixSource : Tape.Equiv
-      (Section53DirectContextUpdate.Prefix.sourceConfig action
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.sourceConfig action
         selected.target
         (activeProtectedSuffix (first :: rest) 0 current.tape haltState
           callerSuffix)).tape cleanedTape := by
     rw [prefix_source_tape_eq_postSelected]
     exact Tape.Equiv.symm (by
       simpa [action, hrows] using hcleaned)
-  rcases Section53DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
       action selected.target
       (activeProtectedSuffix (first :: rest) 0 current.tape haltState
         callerSuffix)
@@ -895,8 +895,8 @@ theorem lastSuccess_route
   have hprobeCanonical := stackProbe_zero_computes action selected.target
     first rest current.tape haltState callerSuffix
   have hprobeSource : Tape.Equiv
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev
           selected.target)
         first rest 0 (contextTail current.tape haltState callerSuffix)).tape
       prefixTape := by
@@ -906,10 +906,10 @@ theorem lastSuccess_route
     ⟨probeConfig, hprobe, hprobeState, hprobeTape⟩
   rcases probeConfig with ⟨probeState, probeTape⟩
   change probeState = Control.stack (.initial action true)
-    Section53StackSkip.Control.afterHeader at hprobeState
+    FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader at hprobeState
   subst probeState
   rcases stackSkip_computes_of_tape_equiv
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev
         selected.target)
       first rest 0 (contextTail current.tape haltState callerSuffix)
       probeTape (by simpa using hprobeTape) with
@@ -919,13 +919,13 @@ theorem lastSuccess_route
       callerSuffix contextTape hcontext with
     ⟨leftBoundaryTape, hleftBoundary, hleftTape⟩
   have hrightSource : Tape.Equiv
-      (Section53DirectContextUpdate.Boundary.sourceConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
         (stackRightBaseLeftRev selected.target first rest 0
           current.tape.left)
         current.tape.right haltState callerSuffix).tape leftBoundaryTape := by
-    rw [← Section53FinalGateMaterializer.leftBoundary_target_tape_eq_rightBoundary_source]
+    rw [← FiniteRecognizer.Interpreter.FinalGateMaterializer.leftBoundary_target_tape_eq_rightBoundary_source]
     exact hleftTape
-  rcases Section53DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
       (stackRightBaseLeftRev selected.target first rest 0
         current.tape.left)
       current.tape.right haltState callerSuffix leftBoundaryTape
@@ -978,17 +978,17 @@ theorem lastSuccess_route
           extract_computes hextract)
     apply TuringMachine.computes_trans
       (by simpa [actionEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         action_computes haction)
     apply TuringMachine.computes_trans
       (by simpa [cleanupEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         cleanup_computes hcleanup)
     apply TuringMachine.computes_trans
       (by simpa [prefixEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         prefix_computes PrefixPurpose.initial hprefix)
     apply TuringMachine.computes_trans hprobe
@@ -1106,18 +1106,18 @@ theorem nextSuccess_route
     ⟨selectedTape, extractedTape, actionTape, hscan, hextract,
       haction, hcleanup, hcleaned⟩
   let action : Action :=
-    Section53RuntimeLeftCleanup.selectedAction
+    FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction
       (⟨selectedSource, selectedRead, write, selectedMove, target⟩ :
         TransitionDescription)
   have hprefixSource : Tape.Equiv
-      (Section53DirectContextUpdate.Prefix.sourceConfig action target
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.sourceConfig action target
         (activeProtectedSuffix (first :: rest) (copies + 1)
           { left := left, head := oldHead, right := right }
           haltState callerSuffix)).tape cleanedTape := by
     rw [prefix_source_tape_eq_postSelected]
     exact Tape.Equiv.symm (by
       simpa [action, hrows] using hcleaned)
-  rcases Section53DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
       action target
       (activeProtectedSuffix (first :: rest) (copies + 1)
         { left := left, head := oldHead, right := right }
@@ -1128,8 +1128,8 @@ theorem nextSuccess_route
     copies { left := left, head := oldHead, right := right }
     haltState callerSuffix
   have hprobeSource : Tape.Equiv
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest (copies + 1)
         (contextTail { left := left, head := oldHead, right := right }
           haltState callerSuffix)).tape prefixTape := by
@@ -1139,10 +1139,10 @@ theorem nextSuccess_route
     ⟨probeConfig, hprobe, hprobeState, hprobeTape⟩
   rcases probeConfig with ⟨probeState, probeTape⟩
   change probeState = Control.stack (.initial action false)
-    Section53StackSkip.Control.afterHeader at hprobeState
+    FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader at hprobeState
   subst probeState
   rcases stackSkip_computes_of_tape_equiv
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest (copies + 1)
       (contextTail { left := left, head := oldHead, right := right }
         haltState callerSuffix)
@@ -1154,7 +1154,7 @@ theorem nextSuccess_route
           tape := { left := left, head := oldHead, right := right } }
         (first :: rest) (copies + 1) haltState callerSuffix sourceTape)
       { state := Control.stack (.initial action false)
-          Section53StackSkip.Control.afterHeader
+          FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
         tape := probeTape } := by
     apply TuringMachine.computes_trans
       (by simpa [outerLoopConfig, loopSourceWithTape, loopSourceConfig,
@@ -1166,20 +1166,20 @@ theorem nextSuccess_route
         extract_computes hextract)
     apply TuringMachine.computes_trans
       (by simpa [actionEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         action_computes haction)
     apply TuringMachine.computes_trans
       (by simpa [cleanupEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         cleanup_computes hcleanup)
     apply TuringMachine.computes_trans
       (by simpa [prefixEmbed, action,
-          Section53RuntimeLeftCleanup.selectedAction,
+          FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
           TuringMachine.PhaseEmbedding.liftConfig] using
         prefix_computes PrefixPurpose.initial hprefix)
-    simpa [action, Section53RuntimeLeftCleanup.selectedAction] using hprobe
+    simpa [action, FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction] using hprobe
   cases selectedMove with
   | left =>
       cases left with
@@ -1189,11 +1189,11 @@ theorem nextSuccess_route
             ⟨scanTape, htail, hnext⟩
           have hstack : TuringMachine.Computes machine
               { state := Control.stack (.initial action false)
-                  Section53StackSkip.Control.afterHeader
+                  FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
                 tape := probeTape }
               { state := Control.leftProbe action, tape := contextTape } := by
             simpa [stackEmbed, action,
-              Section53RuntimeLeftCleanup.selectedAction,
+              FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
               TuringMachine.PhaseEmbedding.liftConfig] using
               stack_computes (StackPurpose.initial action false) hskip
           refine ⟨scanTape, ?_, ?_⟩
@@ -1212,11 +1212,11 @@ theorem nextSuccess_route
             ⟨scanTape, htail, hnext⟩
           have hstack : TuringMachine.Computes machine
               { state := Control.stack (.initial action false)
-                  Section53StackSkip.Control.afterHeader
+                  FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
                 tape := probeTape }
               { state := Control.leftProbe action, tape := contextTape } := by
             simpa [stackEmbed, action,
-              Section53RuntimeLeftCleanup.selectedAction,
+              FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
               TuringMachine.PhaseEmbedding.liftConfig] using
               stack_computes (StackPurpose.initial action false) hskip
           refine ⟨scanTape, ?_, ?_⟩
@@ -1236,12 +1236,12 @@ theorem nextSuccess_route
             ⟨scanTape, htail, hnext⟩
           have hstack : TuringMachine.Computes machine
               { state := Control.stack (.initial action false)
-                  Section53StackSkip.Control.afterHeader
+                  FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
                 tape := probeTape }
               { state := Control.prepend (.right action) (.locate .count),
                 tape := contextTape } := by
             simpa [stackEmbed, action,
-              Section53RuntimeLeftCleanup.selectedAction,
+              FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
               TuringMachine.PhaseEmbedding.liftConfig] using
               stack_computes (StackPurpose.initial action false) hskip
           refine ⟨scanTape, ?_, ?_⟩
@@ -1260,12 +1260,12 @@ theorem nextSuccess_route
             ⟨scanTape, htail, hnext⟩
           have hstack : TuringMachine.Computes machine
               { state := Control.stack (.initial action false)
-                  Section53StackSkip.Control.afterHeader
+                  FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
                 tape := probeTape }
               { state := Control.prepend (.right action) (.locate .count),
                 tape := contextTape } := by
             simpa [stackEmbed, action,
-              Section53RuntimeLeftCleanup.selectedAction,
+              FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction,
               TuringMachine.PhaseEmbedding.liftConfig] using
               stack_computes (StackPurpose.initial action false) hskip
           refine ⟨scanTape, ?_, ?_⟩
@@ -1313,7 +1313,7 @@ theorem runtime_bounded_loop_computes
     htransitions copies current haltState callerSuffix sourceTape hsource
 
 
-end Section53RuntimePhaseSum
+end FiniteRecognizer.Interpreter.RuntimePhaseSum
 
 end Computability
 end FoC

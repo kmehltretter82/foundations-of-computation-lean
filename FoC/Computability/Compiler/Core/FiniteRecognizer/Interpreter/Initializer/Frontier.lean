@@ -10,13 +10,13 @@ namespace Computability
 
 open Languages
 
-namespace Section53InitializerFrontier
+namespace FiniteRecognizer.Interpreter.InitializerFrontier
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.InitialMaterializer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53InitializerPersistentCopy
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy
 
 /-!
 # Initializer contract boundary
@@ -538,7 +538,7 @@ def savedParserMaterializerSourceConfig
     (rest : List TransitionDescription)
     (input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
   { state :=
       .ready (transitionListParserSavedHead input)
     tape :=
@@ -617,7 +617,7 @@ def positiveMaterializerCopierBaseLeftRev
   List.append
     (List.replicate D.transitions.length MachineCodeSymbol.blank)
     (MachineCodeSymbol.blank ::
-      Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+      FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
 
 def positiveMaterializerTargetConfig
     (D : MachineDescription)
@@ -656,7 +656,7 @@ def SavedPositiveBooleanContextMaterializerContract
         { state := entry (transitionListParserSavedHead input)
           tape :=
             markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                 (remainingFuel + 1))
               first rest input }
         { state := halt, tape := targetTape } ∧
@@ -666,7 +666,7 @@ def SavedPositiveBooleanContextMaterializerContract
         targetTape
 
 
-end Section53InitializerFrontier
+end FiniteRecognizer.Interpreter.InitializerFrontier
 
 end Computability
 end FoC

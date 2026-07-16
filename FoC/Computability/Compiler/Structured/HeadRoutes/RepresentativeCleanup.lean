@@ -7,7 +7,7 @@ set_option doc.verso true
 
 This module keeps only the exact representative shapes needed for the kernel-checked
 source-collision guardrail.  The unused padding lattice and projector routes were deleted after
-the marker-preserving #17 projector closed.
+the marker-preserving tape-2 projector was completed.
 -/
 
 namespace FoC

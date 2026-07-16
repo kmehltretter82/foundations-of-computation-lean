@@ -14,10 +14,10 @@ open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 open CommonGround.FiniteTransducers.CountWindowRawSourceEncoder.RawBoundaryRightEdgeEmitter
 
 /-!
-Durable #18 proof sketch for the post-marker serialization frontier.
+Post-marker serialization identities.
 
 The first group of lemmas fixes the exact semantic currency required by the
-remaining finite machine.  In particular, the left cells must be emitted in
+tape-field serializer.  In particular, the left cells must be emitted in
 `Tape.left` order even though the guarded logical representation stores their
 physical chunks in the reverse traversal order.
 -/

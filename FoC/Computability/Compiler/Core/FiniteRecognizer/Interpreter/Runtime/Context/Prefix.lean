@@ -8,13 +8,13 @@ namespace Computability
 
 open Languages
 
-namespace Section53DirectContextUpdate
+namespace FiniteRecognizer.Interpreter.DirectContextUpdate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
-abbrev Action := Section53RuntimeAction.Action
+abbrev Action := FiniteRecognizer.Interpreter.RuntimeAction.Action
 
 def apply (action : Action) (tape : Tape Bool) : Tape Bool :=
   Tape.move action.move (Tape.write action.write tape)
@@ -101,9 +101,9 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53RuntimeAction.Action.finite.elems.map target ++
-    Section53RuntimeAction.Action.finite.elems.map guard ++
-    Section53RuntimeAction.Action.finite.elems.map ready ++ [halt]
+  FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map target ++
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map guard ++
+    FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map ready ++ [halt]
 
 def finite : Foundation.FiniteType Control where
   elems := elems
@@ -112,13 +112,13 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | target action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | guard action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | ready action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | halt => simp [elems]
 
 end Control
@@ -294,7 +294,7 @@ theorem run_exact
 
 end Prefix
 
-end Section53DirectContextUpdate
+end FiniteRecognizer.Interpreter.DirectContextUpdate
 
 end Computability
 end FoC

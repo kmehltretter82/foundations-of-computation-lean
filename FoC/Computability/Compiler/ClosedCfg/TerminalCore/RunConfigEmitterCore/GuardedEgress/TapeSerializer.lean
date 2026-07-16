@@ -54,7 +54,7 @@ theorem rightCells_valid (cells : List (Option Bool)) :
 ## Removing the lowering guards
 
 The guarded theorem above deliberately preserves both representation guards.
-The semantic #18 target stores the original logical tape window, so the two
+The semantic run-config target stores the original logical tape window, so the two
 known `none` cell tokens must be erased before their respective length cursors
 run.
 -/

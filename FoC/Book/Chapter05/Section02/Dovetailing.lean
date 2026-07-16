@@ -9,7 +9,7 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Section 5.2 dovetailing
+# Section 5.2: Dovetailing
 -/
 
 open Languages

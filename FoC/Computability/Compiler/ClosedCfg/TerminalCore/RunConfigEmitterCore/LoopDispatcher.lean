@@ -1163,13 +1163,12 @@ def loopDispatcherDoneWitnessTapes
   , loopDispatcherConsumedStageCounterTape L.stage
   , loopDispatcherDoneWitnessTape D L ]
 
-/-- Exact remaining finite-table leaf before common halt.
+/-- Exact finite-table dispatch leaf before common halt.
 
 For fixed {lit}`D`, the known cases range only over {lit}`fixedStepValues D`,
 so a finite q-specific emitter can append the known marker and
 {lit}`encodeNat q`.  The generic branch appends only the other marker and
-leaves the raw state in {name}`FieldDecomposition.metadata`.  No theorem in
-this module assumes this construction before it is implemented.
+leaves the raw state in {name}`FieldDecomposition.metadata`.
 -/
 def LoopDispatcherDoneWitnessCloseoutSpec
     (D : MachineDescription) (closeout : Description) : Prop :=

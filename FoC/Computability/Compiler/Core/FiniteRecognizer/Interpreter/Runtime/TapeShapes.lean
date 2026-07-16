@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeTapeUpdateShapes
+namespace FiniteRecognizer.Interpreter.RuntimeTapeUpdateShapes
 
 /-!
 **Runtime tape-update shapes.** These semantic and serialized lemmas expose the
@@ -13,7 +13,7 @@ four physical motion cases without placing the runtime state or either logical
 context in finite control.
 -/
 
-abbrev Action := Section53RuntimeStateCompactor.Action
+abbrev Action := FiniteRecognizer.Interpreter.RuntimeStateCompactor.Action
 
 def apply (action : Action) (tape : Tape Bool) : Tape Bool :=
   Tape.move action.move (Tape.write action.write tape)
@@ -188,7 +188,7 @@ theorem targetWord_right_nonempty
   rfl
 
 
-end Section53RuntimeTapeUpdateShapes
+end FiniteRecognizer.Interpreter.RuntimeTapeUpdateShapes
 
 end Computability
 end FoC

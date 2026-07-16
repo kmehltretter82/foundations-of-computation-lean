@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 theorem runtimeKeyComparatorMachine_step_rewind_symbol
     (leftHead current : MachineCodeSymbol)
@@ -1230,6 +1230,6 @@ theorem runtimeKeyComparatorMachine_computes_equal_state_finish
                       using hrestore)))))))
   done
 
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 end Computability
 end FoC

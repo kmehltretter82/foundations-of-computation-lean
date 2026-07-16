@@ -821,7 +821,7 @@ theorem concrete_diagonal_pair_map_computable :
   concrete_diagonal_pair_map_computable_noninjective
 
 /-!
-# Faithful copy machine
+## Faithful copy machine
 
 The faithful machine below preserves the concrete pair-code alphabet through an
 injective output encoding. It scans the input once to append the separator,

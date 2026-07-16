@@ -6,10 +6,10 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserPrefixPhaseSum
+namespace FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 
-open Section53ParserAssembly
-open Section53OuterParserInversion
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.OuterParserInversion
 
 def countValidateConfig
     (fuelZero : Bool) (tape : Tape MachineCodeSymbol) :
@@ -25,7 +25,7 @@ def tableStartConfig
     (fuelZero : Bool) (tape : Tape MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state :=
-      .table fuelZero Section53SavedCellTransitionParser.machine.start
+      .table fuelZero FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start
     tape := tape }
 
 def countValidatorSourceTape
@@ -346,8 +346,8 @@ def canonicalSavedTableSourceConfig
     (D : MachineDescription) (fuel : Nat)
     (input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
-  Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+  FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
     (TransitionParserContextTransport.contextualCanonicalSource
       (headerAfterHaltLeftRev D fuel) D.transitions input)
 
@@ -450,7 +450,7 @@ theorem canonical_computes_to_count_validation
   exact
     Tape.Equiv.trans (Tape.Equiv.symm (by
       simpa [canonicalSavedTableSourceConfig,
-        Section53SavedCellTransitionParser.parserConfig,
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig,
         TuringMachine.PhaseEmbedding.liftConfig] using hcanonical))
       hshiftTape
 
@@ -467,7 +467,7 @@ theorem canonical_saved_source_tape_eq_validator_source
         (MachineDescription.encodeTransitionsAppend D.transitions input)).map
           some <;>
     simp [canonicalSavedTableSourceConfig,
-    Section53SavedCellTransitionParser.parserConfig,
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
     TransitionParserContextTransport.contextualCanonicalSource,
     TransitionParserContextTransport.appendLeftContextConfig,
@@ -483,12 +483,12 @@ theorem canonical_computes_to_table_ingress
     (input : Word MachineCodeSymbol) :
     exists tableSource :
         TuringMachine.Configuration MachineCodeSymbol
-          Section53SavedCellTransitionParser.Control,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
       TuringMachine.Computes machine
         (canonicalSourceConfig D fuel input)
         (tableConfig (fuelZeroFlag fuel) tableSource) ∧
       tableSource.state =
-        Section53SavedCellTransitionParser.machine.start ∧
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start ∧
       Tape.Equiv
         (canonicalSavedTableSourceConfig D fuel input).tape
         tableSource.tape := by
@@ -520,8 +520,8 @@ theorem canonical_computes_to_table_ingress
       tape := shiftEndpoint.tape }
   let tableSource :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control :=
-    { state := Section53SavedCellTransitionParser.machine.start
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+    { state := FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start
       tape := actualTarget.tape }
   have hshiftHandoff :
       shiftConfig (fuelZeroFlag fuel) shiftEndpoint = actualSource := by
@@ -551,15 +551,15 @@ theorem canonical_computes_to_table_ingress
 theorem table_stepConfig
     (fuelZero : Bool)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control) :
     machine.stepConfig (tableConfig fuelZero config) =
       Option.map (tableConfig fuelZero)
-        (Section53SavedCellTransitionParser.machine.stepConfig config) := by
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig config) := by
   cases config with
   | mk state tape =>
       unfold TuringMachine.stepConfig
       cases haction :
-          Section53SavedCellTransitionParser.machine.transition state
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.transition state
             (Tape.read tape) with
       | none =>
           simp [machine, transition, tableConfig, haction,
@@ -572,9 +572,9 @@ theorem table_stepConfig
 theorem table_computes_lift
     (fuelZero : Bool)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source target) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source target) :
     TuringMachine.Computes machine
       (tableConfig fuelZero source) (tableConfig fuelZero target) := by
   exact
@@ -584,19 +584,19 @@ theorem table_computes_lift
 theorem table_step_inversion
     (fuelZero : Bool)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     {outerTarget : TuringMachine.Configuration MachineCodeSymbol Control}
     (hstep : TuringMachine.Step machine
       (tableConfig fuelZero source) outerTarget) :
     exists target : TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control,
-      TuringMachine.Step Section53SavedCellTransitionParser.machine
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
+      TuringMachine.Step FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
           source target ∧
         outerTarget = tableConfig fuelZero target := by
   have houter := TuringMachine.stepConfig_eq_some_iff_step.mpr hstep
   rw [table_stepConfig] at houter
   cases hinner :
-      Section53SavedCellTransitionParser.machine.stepConfig source with
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig source with
   | none => simp [hinner] at houter
   | some target =>
       simp [hinner] at houter
@@ -609,13 +609,13 @@ of the saved parser's own stuck endpoints; strip the inert phase tag. -/
 theorem table_computes_project
     (fuelZero : Bool)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     {outerTarget : TuringMachine.Configuration MachineCodeSymbol Control}
     (hrun : TuringMachine.Computes machine
       (tableConfig fuelZero source) outerTarget) :
     exists target : TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control,
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
           source target ∧
         outerTarget = tableConfig fuelZero target := by
   generalize hsourceEq : tableConfig fuelZero source = outerSource at hrun
@@ -636,17 +636,17 @@ theorem table_computes_project
 def zeroSavedTableSourceConfig
     (baseLeftRev input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
-  Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+  FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
     (TransitionParserContextTransport.contextualCanonicalSource
       baseLeftRev [] input)
 
 def zeroSavedTableTargetConfig
     (baseLeftRev input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
   { state :=
-      Section53SavedCellTransitionParser.Control.parser
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
         TransitionListParserState.halt
     tape :=
       transitionListParserOptionTape
@@ -655,14 +655,14 @@ def zeroSavedTableTargetConfig
 
 theorem zeroSavedTable_step
     (baseLeftRev input : Word MachineCodeSymbol) :
-    Section53SavedCellTransitionParser.machine.stepConfig
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig
         (zeroSavedTableSourceConfig baseLeftRev input) =
       some (zeroSavedTableTargetConfig baseLeftRev input) := by
   cases input <;> rfl
 
 theorem zeroSavedTable_computes
     (baseLeftRev input : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
       (zeroSavedTableSourceConfig baseLeftRev input)
       (zeroSavedTableTargetConfig baseLeftRev input) := by
   exact
@@ -681,7 +681,7 @@ theorem canonical_zeroTable_computes_to_terminal_with_tape_equiv
         (canonicalSourceConfig D fuel input) final ∧
       final.state =
         Control.table (fuelZeroFlag fuel)
-          (Section53SavedCellTransitionParser.Control.parser
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
             TransitionListParserState.halt) ∧
       Tape.Equiv
         (zeroSavedTableTargetConfig
@@ -700,7 +700,7 @@ theorem canonical_zeroTable_computes_to_terminal_with_tape_equiv
     exact htape
   have hcanonicalRunIn :
       TuringMachine.ComputesIn
-        Section53SavedCellTransitionParser.machine 1 canonicalLocal
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine 1 canonicalLocal
         (zeroSavedTableTargetConfig
           (headerAfterHaltLeftRev D fuel) input) := by
     apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp
@@ -712,17 +712,17 @@ theorem canonical_zeroTable_computes_to_terminal_with_tape_equiv
     ⟨actualTarget, hactualRunIn, hactualState, hactualTape⟩
   let actualSource :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control :=
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
     { state := canonicalLocal.state
       tape := tableSource.tape }
   have hactualRun :
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
         actualSource actualTarget := by
     apply TuringMachine.computesIn_to_computes
     simpa [actualSource] using hactualRunIn
   have hcanonicalState :
       canonicalLocal.state =
-        Section53SavedCellTransitionParser.machine.start := by
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start := by
     rfl
   have hhandoff :
       tableConfig (fuelZeroFlag fuel) tableSource =
@@ -753,7 +753,7 @@ theorem canonical_zeroTable_computes_to_terminal
         (canonicalSourceConfig D fuel input) final ∧
       final.state =
         Control.table (fuelZeroFlag fuel)
-          (Section53SavedCellTransitionParser.Control.parser
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
             TransitionListParserState.halt) := by
   rcases
       canonical_zeroTable_computes_to_terminal_with_tape_equiv
@@ -771,25 +771,25 @@ theorem canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
     (fuel : Nat) (input : Word MachineCodeSymbol) :
     exists final : TuringMachine.Configuration MachineCodeSymbol Control,
     exists canonicalTarget : TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control,
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
       TuringMachine.Computes machine
         (canonicalSourceConfig D fuel input) final ∧
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
         (canonicalSavedTableSourceConfig D fuel input) canonicalTarget ∧
       final.state =
         Control.table (fuelZeroFlag fuel)
-          (Section53SavedCellTransitionParser.Control.ready
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input)) ∧
       canonicalTarget.state =
-        Section53SavedCellTransitionParser.Control.ready
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
           (transitionListParserSavedHead input) ∧
       Tape.Equiv canonicalTarget.tape final.tape := by
   rcases canonical_computes_to_table_ingress D fuel input with
     ⟨tableSource, hprefix, htableState, htape⟩
   let canonicalLocal :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control :=
-    Section53SavedCellTransitionParser.parserConfig
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
       (TransitionParserContextTransport.contextualCanonicalSource
         (headerAfterHaltLeftRev D fuel) (t :: rest) input)
   have hcanonicalSource :
@@ -799,7 +799,7 @@ theorem canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
     rw [← hcanonicalSource]
     exact htape
   rcases
-      Section53SavedCellTransitionParser.contextual_nonempty_computes_to_ready
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.contextual_nonempty_computes_to_ready
         (headerAfterHaltLeftRev D fuel) t rest input with
     ⟨canonicalTarget, hcanonicalRun, hcanonicalTargetState⟩
   rcases TuringMachine.computes_to_computesIn hcanonicalRun with
@@ -810,17 +810,17 @@ theorem canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
     ⟨actualTarget, hactualRunIn, hactualState, hactualTape⟩
   let actualSource :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control :=
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
     { state := canonicalLocal.state
       tape := tableSource.tape }
   have hactualRun :
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
         actualSource actualTarget := by
     apply TuringMachine.computesIn_to_computes
     simpa [actualSource] using hactualRunIn
   have hcanonicalState :
       canonicalLocal.state =
-        Section53SavedCellTransitionParser.machine.start := by
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start := by
     rfl
   have hhandoff :
       tableConfig (fuelZeroFlag fuel) tableSource =
@@ -843,7 +843,7 @@ theorem canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
   · change
       Control.table (fuelZeroFlag fuel) actualTarget.state =
         Control.table (fuelZeroFlag fuel)
-          (Section53SavedCellTransitionParser.Control.ready
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input))
     rw [hactualState, hcanonicalTargetState]
   · simpa [tableConfig, TuringMachine.PhaseEmbedding.liftConfig] using
@@ -860,7 +860,7 @@ theorem canonical_nonemptyTable_computes_to_terminal
         (canonicalSourceConfig D fuel input) final ∧
       final.state =
         Control.table (fuelZeroFlag fuel)
-          (Section53SavedCellTransitionParser.Control.ready
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input)) := by
   rcases
       canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
@@ -869,6 +869,6 @@ theorem canonical_nonemptyTable_computes_to_terminal
       _hcanonicalState, _htape⟩
   exact ⟨final, hrun, hstate⟩
 
-end Section53ParserPrefixPhaseSum
+end FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 end Computability
 end FoC

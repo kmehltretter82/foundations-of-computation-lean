@@ -4,10 +4,10 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.StageSearchCon
 set_option doc.verso true
 
 /-!
-This module states the bounded-simulator loop obligations used by the
+This module states the bounded-simulator loop contracts used by the
 finite-source stage-search controller. It connects the canonical input parser,
-fuel-pair loop, raw loop, and decoded natural-number routes to finite-leaf
-constructions.
+fuel-pair loop, raw loop, and decoded natural-number routes to the completed
+finite constructions.
 -/
 
 namespace FoC

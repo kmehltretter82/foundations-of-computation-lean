@@ -1137,10 +1137,9 @@ private theorem run_start_nil
 /-!
 **Forward proof split.**  The exported specification only needs an existential
 run length, so the nonempty case is split around named phase contracts instead
-of carrying one large arithmetic expression.  The first remaining obligation is
-the marking loop from state {lit}`120` to the beginning of the finish pass; the
-second is the finish pass from that intermediate configuration to the checked
-handoff tape.
+of carrying one large arithmetic expression.  The two phases are the marking
+loop from state {lit}`120` to the beginning of the finish pass and the finish
+pass from that intermediate configuration to the checked handoff tape.
 -/
 
 def markedStartConfig (w : Word Bool) (stage : Nat) :

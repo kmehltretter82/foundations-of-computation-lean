@@ -17,9 +17,9 @@ running those tokens live in
 {module -checked}`FoC.Computability.DescriptionLanguages`.  Concrete universal-runner
 constructions belong to the compiler layer.
 
-Missing transition rows make {lit}`MachineDescription.runConfig` stutter.
-The halting predicates still require the designated halt state, so being stuck
-in any other state is not acceptance.
+Missing transition rows make execution stutter. The halting predicates still
+require the designated halt state, so being stuck in any other state is not
+acceptance.
 -/
 
 namespace FoC
@@ -48,9 +48,8 @@ deriving DecidableEq
 /--
 A finite transition-table machine with natural-numbered states.
 
-The bounds and determinism requirements are exposed separately through
-{lit}`MachineDescription.WellFormed`; the raw structure remains executable
-even before those properties are proved.
+The bounds and determinism requirements are exposed separately; the raw
+structure remains executable even before those properties are proved.
 -/
 structure MachineDescription where
   stateCount : Nat

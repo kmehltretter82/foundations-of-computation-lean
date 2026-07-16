@@ -3,8 +3,8 @@ import FoC.Computability.Compiler.UniversalAndRanges.Ranges
 set_option doc.verso true
 
 /-!
-# UniversalAndRanges
+# Universal-Prefix Machines and Compiled Ranges
 
-Supporting declarations and helper lemmas for Computability Compiler UniversalAndRanges.
+This facade exports the universal-prefix machine interfaces and theorems about
+ranges computed by finite machine descriptions.
 -/
-

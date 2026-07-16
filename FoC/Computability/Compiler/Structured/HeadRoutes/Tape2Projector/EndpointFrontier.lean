@@ -3,12 +3,12 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.Assembly
 set_option doc.verso true
 
 /-!
-# Marker-preserving tape-2 projector frontier
+# Marker-preserving tape-2 projector construction
 
-The former selected-head cleanup source had already erased the logical head
-marker and is refuted by the imported guardrails.  The live #17 frontier starts
-from the canonical guarded three-tape encoding used by every current endpoint
-consumer and exposes only the required tape-equivalence target.
+The retired selected-head cleanup source had already erased the logical head
+marker and is refuted by the imported guardrails. The completed construction
+starts from the canonical guarded three-tape encoding used by endpoint
+consumers and exposes only the required tape-equivalence target.
 -/
 
 namespace FoC
@@ -23,9 +23,9 @@ namespace Structured
 namespace MultiTapeLowering
 
 /--
-The live #17 construction frontier.  Its source retains every separator and
-logical head marker, while its target uses the equivalence contract consumed
-by all current endpoint users.
+The completed marker-preserving projector. Its source retains every separator
+and logical head marker, while its target uses the equivalence contract
+consumed by endpoint users.
 -/
 theorem structuredTape2ProjectorConstruction_core :
     StructuredTape2ProjectorConstruction := by

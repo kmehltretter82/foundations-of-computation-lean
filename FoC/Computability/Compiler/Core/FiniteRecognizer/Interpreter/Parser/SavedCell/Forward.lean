@@ -4,9 +4,9 @@ namespace FoC
 namespace Computability
 
 open Languages
-open Section53ParserAssembly
+open FiniteRecognizer.Interpreter.ParserAssembly
 
-namespace Section53SavedCellTransitionParser
+namespace FiniteRecognizer.Interpreter.SavedCellTransitionParser
 
 def finalReadyConfig
     (rowCount : Nat)
@@ -614,6 +614,6 @@ theorem contextual_nonempty_computes_to_ready
   · simpa [appendLeftContextConfig, finalReadyConfig, readyConfig]
       using hcleanState
 
-end Section53SavedCellTransitionParser
+end FiniteRecognizer.Interpreter.SavedCellTransitionParser
 end Computability
 end FoC

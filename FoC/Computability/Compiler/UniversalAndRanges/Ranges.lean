@@ -81,7 +81,7 @@ def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
 
 The partial-unary compiler principle is intentionally strong: its source is an
 arbitrary semantic Lean partial function, not a finite program syntax.  The
-following consequences make that strength explicit.  Concrete closeouts should
+following consequences make that strength explicit. Concrete APIs should
 therefore keep this principle as a named construction boundary unless a finite
 source syntax is supplied.
 -/

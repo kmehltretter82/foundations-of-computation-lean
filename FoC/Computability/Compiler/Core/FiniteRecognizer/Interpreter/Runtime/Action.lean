@@ -3,7 +3,7 @@ import FoC.Computability.MachineBuilder.Encoding
 namespace FoC
 namespace Computability
 
-namespace Section53RuntimeAction
+namespace FiniteRecognizer.Interpreter.RuntimeAction
 
 /-- The finite part of a selected runtime transition.  The unbounded target
 state remains serialized on tape. -/
@@ -49,7 +49,7 @@ def finite : Foundation.FiniteType Action where
 
 end Action
 
-end Section53RuntimeAction
+end FiniteRecognizer.Interpreter.RuntimeAction
 
 end Computability
 end FoC

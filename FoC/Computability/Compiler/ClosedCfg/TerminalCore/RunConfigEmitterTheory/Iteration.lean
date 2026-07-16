@@ -6,9 +6,9 @@ set_option doc.verso true
 /-!
 # Fixed-description run-loop iteration
 
-The #18 emitter must account for a halted configuration at stage zero and then
-execute exactly the encoded number of fixed-description steps.  This module
-states that executable loop independently of the eventual tape layout and
+The run-config emitter accounts for a halted configuration at stage zero and
+then executes exactly the encoded number of fixed-description steps.  This module
+states that executable loop independently of the physical tape layout and
 proves that it is exactly the semantic simulator-layout run.
 -/
 

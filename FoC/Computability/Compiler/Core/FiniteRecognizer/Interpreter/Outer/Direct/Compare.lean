@@ -5,12 +5,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53ZeroEmptyMetadataFinal
+namespace FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ParserAssembly
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 def headerBuffer : InsertBlock.Buffer :=
   ⟨[MachineCodeSymbol.header], by decide⟩
@@ -381,8 +381,8 @@ namespace SavedParserFinalHandoff
 
 inductive Control where
   | parser (fuelZero : Bool)
-      (state : Section53SavedCellTransitionParser.Control)
-  | final (state : Section53ZeroEmptyMetadataFinal.Control)
+      (state : FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control)
+  | final (state : FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control)
   | positiveReady (saved : Option MachineCodeSymbol)
   | finalReady
   | halt
@@ -391,11 +391,11 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53SavedCellTransitionParser.Control.elems.map
+  FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.elems.map
       (Control.parser false) ++
-    Section53SavedCellTransitionParser.Control.elems.map
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.elems.map
       (Control.parser true) ++
-    Section53ZeroEmptyMetadataFinal.Control.elems.map Control.final ++
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.elems.map Control.final ++
     TransitionListParserState.optionCells.map Control.positiveReady ++
     [Control.finalReady, Control.halt]
 
@@ -406,17 +406,17 @@ def finite : Foundation.FiniteType Control where
     cases state with
     | parser fuelZero parserState =>
         have hparser :=
-          Section53SavedCellTransitionParser.Control.finite.complete
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.finite.complete
             parserState
         change parserState ∈
-          Section53SavedCellTransitionParser.Control.elems at hparser
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.elems at hparser
         cases fuelZero <;> simp [elems, hparser]
     | final finalState =>
         have hfinal :=
-          Section53ZeroEmptyMetadataFinal.Control.finite.complete
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.finite.complete
             finalState
         change finalState ∈
-          Section53ZeroEmptyMetadataFinal.Control.elems at hfinal
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.elems at hfinal
         simp [elems, hfinal]
     | positiveReady saved =>
         have hsaved :=
@@ -429,7 +429,7 @@ end Control
 
 def parserTarget
     (fuelZero : Bool) :
-    Section53SavedCellTransitionParser.Control -> Control
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control -> Control
   | .parser TransitionListParserState.halt =>
       .final .preserveNoBarrierBlank
   | .ready saved =>
@@ -439,7 +439,7 @@ def parserTarget
   | state => .parser fuelZero state
 
 def finalTarget :
-    Section53ZeroEmptyMetadataFinal.Control -> Control
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control -> Control
   | .ready => .finalReady
   | .halt => .halt
   | state => .final state
@@ -456,14 +456,14 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .parser fuelZero state, cell =>
       Option.map (mapAction (parserTarget fuelZero))
-        (Section53SavedCellTransitionParser.transition state cell)
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition state cell)
   | .final state, cell =>
       Option.map (mapAction finalTarget)
-        (Section53ZeroEmptyMetadataFinal.transition state cell)
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.transition state cell)
   | _, _ => none
 
 def machine : TuringMachine MachineCodeSymbol Control where
-  start := .parser false Section53SavedCellTransitionParser.machine.start
+  start := .parser false FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start
   halt := .halt
   transition := transition
   statesFinite := Control.finite
@@ -471,22 +471,22 @@ def machine : TuringMachine MachineCodeSymbol Control where
 def parserConfig
     (fuelZero : Bool)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   TuringMachine.PhaseEmbedding.liftConfig
     (parserTarget fuelZero) config
 
 def finalConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroEmptyMetadataFinal.Control) :
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   TuringMachine.PhaseEmbedding.liftConfig finalTarget config
 
 theorem parserTarget_eq_parser_of_step
     (fuelZero : Bool)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
-    (hstep : Section53SavedCellTransitionParser.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
+    (hstep : FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig source =
       some target) :
     parserTarget fuelZero source.state =
       .parser fuelZero source.state := by
@@ -496,24 +496,24 @@ theorem parserTarget_eq_parser_of_step
       | parser parserState =>
           cases parserState <;> try rfl
           cases hcell : Tape.read tape <;>
-            simp [Section53SavedCellTransitionParser.machine,
-              Section53SavedCellTransitionParser.transition,
+            simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+              FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition,
               transitionListParserMachine,
               TuringMachine.stepConfig, hcell] at hstep
       | ready saved =>
-          simp [Section53SavedCellTransitionParser.machine,
-            Section53SavedCellTransitionParser.transition,
+          simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition,
             TuringMachine.stepConfig] at hstep
       | halt =>
-          simp [Section53SavedCellTransitionParser.machine,
-            Section53SavedCellTransitionParser.transition,
+          simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition,
             TuringMachine.stepConfig] at hstep
 
 theorem parser_step_lift_active
     (fuelZero : Bool)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
-    (hstep : Section53SavedCellTransitionParser.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
+    (hstep : FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig source =
       some target) :
     machine.stepConfig (parserConfig fuelZero source) =
       some (parserConfig fuelZero target) := by
@@ -524,14 +524,14 @@ theorem parser_step_lift_active
       simp only [parserConfig, TuringMachine.PhaseEmbedding.liftConfig]
       rw [hsource]
       cases haction :
-          Section53SavedCellTransitionParser.transition state
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition state
             (Tape.read tape) with
       | none =>
-          simp [Section53SavedCellTransitionParser.machine, haction]
+          simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine, haction]
             at hstep
       | some action =>
           rcases action with ⟨write, direction, next⟩
-          simp [Section53SavedCellTransitionParser.machine, haction]
+          simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine, haction]
             at hstep
           cases hstep
           simp [machine, transition, haction, mapAction]
@@ -539,9 +539,9 @@ theorem parser_step_lift_active
 theorem parser_computes_lift
     (fuelZero : Bool)
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source target) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source target) :
     TuringMachine.Computes machine
       (parserConfig fuelZero source) (parserConfig fuelZero target) := by
   rcases TuringMachine.computes_to_computesIn hrun with
@@ -556,8 +556,8 @@ theorem parser_computes_lift
 
 theorem finalTarget_eq_final_of_step
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroEmptyMetadataFinal.Control}
-    (hstep : Section53ZeroEmptyMetadataFinal.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control}
+    (hstep : FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine.stepConfig source =
       some target) :
     finalTarget source.state = .final source.state := by
   cases source with
@@ -565,14 +565,14 @@ theorem finalTarget_eq_final_of_step
       cases state <;> try rfl
       all_goals
         cases hcell : Tape.read tape <;>
-          simp [Section53ZeroEmptyMetadataFinal.machine,
-            Section53ZeroEmptyMetadataFinal.transition,
+          simp [FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine,
+            FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.transition,
             TuringMachine.stepConfig, hcell] at hstep
 
 theorem final_step_lift_active
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroEmptyMetadataFinal.Control}
-    (hstep : Section53ZeroEmptyMetadataFinal.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control}
+    (hstep : FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine.stepConfig source =
       some target) :
     machine.stepConfig (finalConfig source) =
       some (finalConfig target) := by
@@ -583,23 +583,23 @@ theorem final_step_lift_active
       simp only [finalConfig, TuringMachine.PhaseEmbedding.liftConfig]
       rw [hsource]
       cases haction :
-          Section53ZeroEmptyMetadataFinal.transition state
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.transition state
             (Tape.read tape) with
       | none =>
-          simp [Section53ZeroEmptyMetadataFinal.machine, haction]
+          simp [FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine, haction]
             at hstep
       | some action =>
           rcases action with ⟨write, direction, next⟩
-          simp [Section53ZeroEmptyMetadataFinal.machine, haction]
+          simp [FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine, haction]
             at hstep
           cases hstep
           simp [machine, transition, haction, mapAction]
 
 theorem final_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroEmptyMetadataFinal.Control}
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control}
     (hrun : TuringMachine.Computes
-      Section53ZeroEmptyMetadataFinal.machine source target) :
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine source target) :
     TuringMachine.Computes machine
       (finalConfig source) (finalConfig target) := by
   rcases TuringMachine.computes_to_computesIn hrun with
@@ -616,12 +616,12 @@ theorem parserConfig_parser_halt
     (fuelZero : Bool) (tape : Tape MachineCodeSymbol) :
     parserConfig fuelZero
         { state :=
-            Section53SavedCellTransitionParser.Control.parser
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
               TransitionListParserState.halt
           tape := tape } =
       finalConfig
         { state :=
-            Section53ZeroEmptyMetadataFinal.Control.preserveNoBarrierBlank
+            FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveNoBarrierBlank
           tape := tape } := by
   rfl
 
@@ -629,46 +629,46 @@ theorem parserConfig_ready_fuelZero
     (saved : Option MachineCodeSymbol)
     (tape : Tape MachineCodeSymbol) :
     parserConfig true
-        (Section53SavedCellTransitionParser.readyConfig saved tape) =
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig saved tape) =
       finalConfig
         { state :=
-            Section53ZeroEmptyMetadataFinal.Control.preserveContextBlank
+            FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveContextBlank
           tape := tape } := by
   rfl
 
 theorem zero_count_halt_retarget_computes
     (fuelZero : Bool)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     {targetTape : Tape MachineCodeSymbol}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
         { state :=
-            Section53SavedCellTransitionParser.Control.parser
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
               TransitionListParserState.halt
           tape := targetTape }) :
     TuringMachine.Computes machine
       (parserConfig fuelZero source)
       (finalConfig
         { state :=
-            Section53ZeroEmptyMetadataFinal.Control.preserveNoBarrierBlank
+            FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveNoBarrierBlank
           tape := targetTape }) := by
   simpa [parserConfig_parser_halt] using
     parser_computes_lift fuelZero hrun
 
 theorem positive_fuelZero_ready_retarget_computes
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     {saved : Option MachineCodeSymbol}
     {targetTape : Tape MachineCodeSymbol}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
-        (Section53SavedCellTransitionParser.readyConfig saved targetTape)) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig saved targetTape)) :
     TuringMachine.Computes machine
       (parserConfig true source)
       (finalConfig
         { state :=
-            Section53ZeroEmptyMetadataFinal.Control.preserveContextBlank
+            FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveContextBlank
           tape := targetTape }) := by
   simpa [parserConfig_ready_fuelZero] using
     parser_computes_lift true hrun
@@ -678,8 +678,8 @@ def savedContextualParserSourceConfig
     (count : Nat)
     (tokens : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
-  Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+  FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
     { state :=
         TransitionListParserState.findCount
           TransitionListParserMarker.initial
@@ -691,20 +691,20 @@ def savedContextualParserSourceConfig
 def savedZeroTransitionHaltConfig
     (baseLeftRev input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control :=
-  Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+  FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
     (contextualZeroTransitionHaltConfig baseLeftRev input)
 
 theorem savedParser_zero_context_step
     (baseLeftRev input : Word MachineCodeSymbol) :
-    Section53SavedCellTransitionParser.machine.stepConfig
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.stepConfig
         (savedContextualParserSourceConfig baseLeftRev 0 input) =
       some (savedZeroTransitionHaltConfig baseLeftRev input) := by
   cases baseLeftRev <;> cases input <;> rfl
 
 theorem savedParser_zero_context_computes
     (baseLeftRev input : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
       (savedContextualParserSourceConfig baseLeftRev 0 input)
       (savedZeroTransitionHaltConfig baseLeftRev input) := by
   exact TuringMachine.computes_of_step
@@ -714,7 +714,7 @@ theorem savedParser_zero_context_computes
 theorem contextualZeroTransitionHalt_tape_eq_noBarrierSource
     (baseLeftRev input : Word MachineCodeSymbol) :
     (contextualZeroTransitionHaltConfig baseLeftRev input).tape =
-      (Section53ZeroEmptyMetadataFinal.noBarrierSourceConfig
+      (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.noBarrierSourceConfig
         baseLeftRev input).tape := by
   cases input <;> rfl
 
@@ -725,18 +725,18 @@ theorem zero_count_parser_retarget_computes
       (parserConfig fuelZero
         (savedContextualParserSourceConfig baseLeftRev 0 input))
       (finalConfig
-        (Section53ZeroEmptyMetadataFinal.noBarrierSourceConfig
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.noBarrierSourceConfig
           baseLeftRev input)) := by
   have hrun := savedParser_zero_context_computes baseLeftRev input
   have hretarget := zero_count_halt_retarget_computes fuelZero
     (by
       simpa [savedZeroTransitionHaltConfig,
         contextualZeroTransitionHaltConfig,
-        Section53SavedCellTransitionParser.parserConfig,
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig,
         TuringMachine.PhaseEmbedding.liftConfig] using hrun)
   cases input <;>
-    simpa [Section53ZeroEmptyMetadataFinal.noBarrierSourceConfig,
-      Section53ZeroEmptyMetadataFinal.contextCursorTape,
+    simpa [FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.noBarrierSourceConfig,
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextCursorTape,
       transitionListParserOptionTape] using hretarget
 
 theorem zero_count_computes_to_finalReady
@@ -746,26 +746,26 @@ theorem zero_count_computes_to_finalReady
     TuringMachine.Computes machine
       (parserConfig fuelZero
         (savedContextualParserSourceConfig
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel stateCount start halt)
           0 input))
       { state := Control.finalReady
         tape :=
-          (Section53ZeroEmptyMetadataFinal.readyConfig
-            ((Section53ZeroEmptyMetadataFinal.olderMetadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig
+            ((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.olderMetadataLeftRev
               fuel stateCount).length + 2)
-            (Section53ZeroEmptyMetadataFinal.extractedWord start halt)
-            (((Section53ZeroEmptyMetadataFinal.noBarrierPayloadTail
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.extractedWord start halt)
+            (((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.noBarrierPayloadTail
               input).length + 1).succ)).tape } := by
   apply TuringMachine.computes_trans
     (zero_count_parser_retarget_computes fuelZero
-      (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+      (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
         fuel stateCount start halt) input)
   have hfinal := final_computes_lift
-    (Section53ZeroEmptyMetadataFinal.noBarrier_extractor_computes
+    (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.noBarrier_extractor_computes
       fuel stateCount start halt input)
   simpa [finalConfig, finalTarget,
-    Section53ZeroEmptyMetadataFinal.readyConfig,
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig,
     TuringMachine.PhaseEmbedding.liftConfig] using hfinal
 
 theorem positive_canonical_ready_retarget_computes
@@ -773,27 +773,27 @@ theorem positive_canonical_ready_retarget_computes
     (rowCount : Nat)
     (saved : Option MachineCodeSymbol)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (first : MachineCodeSymbol)
     (rest : Word MachineCodeSymbol)
     (hpayload :
-      Section53ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
         first :: rest)
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
-        (Section53SavedCellTransitionParser.readyConfig saved
-          (Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig saved
+          (FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
             baseLeftRev
             (parsedTransitionHaltConfig rowCount symbols suffix).tape))) :
     TuringMachine.Computes machine
       (parserConfig true source)
       (finalConfig
-        (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
           (parsedTableLeftRev rowCount ++ baseLeftRev.map some)
           first rest)) := by
   have hretarget := positive_fuelZero_ready_retarget_computes hrun
   have htape :=
-    Section53ZeroEmptyMetadataFinal.contextual_parser_endpoint_tape
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_parser_endpoint_tape
       baseLeftRev symbols suffix rowCount first rest hpayload
   rw [htape] at hretarget
   exact hretarget
@@ -803,28 +803,28 @@ theorem positive_canonical_ready_retarget_exists
     (rowCount : Nat)
     (saved : Option MachineCodeSymbol)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
-        (Section53SavedCellTransitionParser.readyConfig saved
-          (Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig saved
+          (FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
             baseLeftRev
             (parsedTransitionHaltConfig rowCount symbols suffix).tape))) :
     exists first : MachineCodeSymbol,
     exists rest : Word MachineCodeSymbol,
-      Section53ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
           first :: rest ∧
         TuringMachine.Computes machine
           (parserConfig true source)
           (finalConfig
-            (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
               (parsedTableLeftRev rowCount ++ baseLeftRev.map some)
               first rest)) := by
   cases hpayload :
-      Section53ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix with
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix with
   | nil =>
       exact False.elim
-        (Section53ZeroEmptyMetadataFinal.parserPayloadWord_ne_nil
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord_ne_nil
           symbols suffix hpayload)
   | cons first rest =>
       exact ⟨first, rest, rfl,
@@ -837,41 +837,41 @@ theorem positive_canonical_computes_to_finalReady
     (symbols suffix : Word MachineCodeSymbol)
     (saved : Option MachineCodeSymbol)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
-        (Section53SavedCellTransitionParser.readyConfig saved
-          (Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
-            (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig saved
+          (FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
               fuel stateCount start halt)
             (parsedTransitionHaltConfig rowCount symbols suffix).tape))) :
     exists first : MachineCodeSymbol,
     exists rest : Word MachineCodeSymbol,
-      Section53ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord symbols suffix =
           first :: rest ∧
         TuringMachine.Computes machine
           (parserConfig true source)
           { state := Control.finalReady
             tape :=
-              (Section53ZeroEmptyMetadataFinal.readyConfig
-                ((Section53ZeroEmptyMetadataFinal.olderMetadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig
+                ((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.olderMetadataLeftRev
                   fuel stateCount).length + 2)
-                (Section53ZeroEmptyMetadataFinal.extractedWord start halt)
+                (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.extractedWord start halt)
                 ((MachineCodeSymbol.done ::
                   List.replicate rowCount MachineCodeSymbol.blank).length +
                   (rest.length + 1)).succ).tape } := by
   rcases positive_canonical_ready_retarget_exists
-      (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+      (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
         fuel stateCount start halt)
       symbols suffix rowCount saved hrun with
     ⟨first, rest, hpayload, hretarget⟩
   refine ⟨first, rest, hpayload, ?_⟩
   apply TuringMachine.computes_trans hretarget
   have hfinal := final_computes_lift
-    (Section53ZeroEmptyMetadataFinal.contextual_extractor_computes
+    (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_extractor_computes
       fuel stateCount start halt rowCount first rest)
   simpa [finalConfig, finalTarget,
-    Section53ZeroEmptyMetadataFinal.readyConfig,
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig,
     TuringMachine.PhaseEmbedding.liftConfig] using hfinal
 
 end SavedParserFinalHandoff
@@ -969,12 +969,12 @@ theorem positive_fuelZero_finalComparator_bundle
       D.transitions = firstTransition :: remainingTransitions)
     (_hfuelZero : fuel = 0)
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control}
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control}
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine source
-        (Section53SavedCellTransitionParser.readyConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine source
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig
           (transitionListParserSavedHead input)
-          (Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
+          (FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
             (metadataLeftRev fuel D.stateCount D.start D.halt)
             (parsedTransitionHaltConfig
               (firstTransition :: remainingTransitions).length
@@ -1026,6 +1026,6 @@ theorem positive_fuelZero_finalComparator_bundle
             MachineCodeSymbol.blank).length +
           (payloadRest.length + 1)).succ⟩
 
-end Section53ZeroEmptyMetadataFinal
+end FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 end Computability
 end FoC

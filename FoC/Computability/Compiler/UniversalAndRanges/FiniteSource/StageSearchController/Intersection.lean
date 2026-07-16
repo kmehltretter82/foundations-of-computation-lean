@@ -258,9 +258,9 @@ theorem codePrefixStageSearchControllerBudgetCheckerIntersectionObligation_coreD
   exact codePrefixProductHaltingSearchFiniteLeafDecidable left right
 
 /--
-Concrete finite-machine construction for the bounded checker driver.  This is
-the remaining transition-table obligation after factoring out the semantic
-adapter from the description decoder's recognizer spec.
+Concrete finite-machine construction for the bounded checker driver, factored
+from the semantic adapter for the description decoder's recognizer
+specification.
 -/
 theorem codePrefixStageSearchControllerBudgetCheckerDriverFiniteMachineObligation_core
     (descriptionDecoder : TuringMachine MachineCodeSymbol descriptionState)
@@ -298,9 +298,8 @@ theorem codePrefixStageSearchControllerBudgetCheckerDriverFiniteMachineObligatio
           (hsimulatorRunner encoded budget).mpr hsimulator⟩
 
 /--
-Concrete finite-machine leaf for the bounded checker sequencing.  This is the
-remaining transition-table construction after reusing the common stage-code and
-description-prefix decoders.
+Concrete finite-machine construction for bounded-checker sequencing, reusing
+the common stage-code and description-prefix decoders.
 -/
 theorem codePrefixStageSearchControllerBudgetCheckerSequencingConstruction_core :
     CodePrefixStageSearchControllerBudgetCheckerSequencingConstruction := by

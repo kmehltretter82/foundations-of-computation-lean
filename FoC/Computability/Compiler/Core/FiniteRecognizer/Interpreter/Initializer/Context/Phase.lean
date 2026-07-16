@@ -5,16 +5,16 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextPhase
+namespace FiniteRecognizer.Interpreter.BooleanContextPhase
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53InitializerFrontier
-open Section53BooleanContextRawTail
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.BooleanContextRawTail
 
 def inputRightCells
     (input : Word MachineCodeSymbol) : List (Option Bool) :=
-  Section53BooleanContextSavedCloseout.savedTailCells
+  FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.savedTailCells
     (transitionListParserSavedHead input)
     ((MachineDescription.encodeCodeWordAsInput input.tail).map some)
 
@@ -26,12 +26,12 @@ theorem inputRightCells_eq_initialTape_right
   | cons symbol rest =>
       cases symbol <;>
         simp [inputRightCells, transitionListParserSavedHead,
-          Section53BooleanContextSavedCloseout.savedTailCells,
+          FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.savedTailCells,
           initialTape_cons, inputBits,
           codeSymbolTailBits,
-          Section53BooleanContextOneSymbolRound.codeSymbolSecondBit,
-          Section53BooleanContextOneSymbolRound.codeSymbolThirdBit,
-          Section53BooleanContextOneSymbolRound.codeSymbolFourthBit]
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.codeSymbolSecondBit,
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.codeSymbolThirdBit,
+          FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.codeSymbolFourthBit]
 
 def layoutBody
     (rowCount : Nat)
@@ -49,9 +49,9 @@ theorem layoutWord_eq_appender_workWord
     (fuel stateCount start halt rowCount : Nat)
     (table : Word MachineCodeSymbol)
     (cells : List (Option Bool)) :
-    Section53BooleanContextOneSymbolRound.Machine.layoutWord
+    FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
         fuel stateCount start halt rowCount table cells [] =
-      Section53BooleanContextHaltAppender.Machine.workWord
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.workWord
         fuel stateCount start 0 halt (layoutBody rowCount table cells) := by
   have hcells :
       MachineDescription.encodeCellsAppend cells
@@ -60,15 +60,15 @@ theorem layoutWord_eq_appender_workWord
           [MachineCodeSymbol.header] := by
     simpa using encodeCellsAppend_append cells
       ([] : Word MachineCodeSymbol) [MachineCodeSymbol.header]
-  simp [Section53BooleanContextOneSymbolRound.Machine.layoutWord,
-    Section53BooleanContextLocator.locatorWord,
-    Section53BooleanContextLocator.rightCountPrefix,
-    Section53BooleanContextLocator.parsedMetadataAppend,
-    Section53BooleanContextLocator.parserTailBeforeRightCount,
-    Section53BooleanContextHaltAppender.Machine.workWord,
-    Section53BooleanContextHaltAppender.Machine.metadataPrefix,
-    Section53BooleanContextHaltAppender.Machine.markedHaltField,
-    Section53BooleanContextHaltAppender.Machine.copiedTicks,
+  simp [FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.locatorWord,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.rightCountPrefix,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.parsedMetadataAppend,
+    FiniteRecognizer.Interpreter.BooleanContextLocator.parserTailBeforeRightCount,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.workWord,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.metadataPrefix,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.markedHaltField,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.copiedTicks,
     layoutBody, MachineDescription.encodeNatAppend,
     MachineDescription.encodeCellListAppend,
     MachineDescription.encodeCellsAppend, MachineDescription.encodeNat,
@@ -97,7 +97,7 @@ theorem targetSuffix_eq_positiveInitialStackSuffix
   unfold targetSuffix initialContextPrefix positiveInitialStackSuffix
     positiveInitialContextTail
   rw [inputRightCells_eq_initialTape_right]
-  unfold Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
+  unfold FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [hleft]
   have hright :
       MachineDescription.encodeCellsAppend (initialTape input).right
@@ -117,16 +117,16 @@ theorem appender_finalWord_eq_separator_sourceWord
     (fuel : Nat)
     (input : Word MachineCodeSymbol)
     (table : Word MachineCodeSymbol) :
-    Section53BooleanContextHaltAppender.Machine.finalWord
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.finalWord
         fuel D.stateCount D.start D.halt
         (layoutBody D.transitions.length table (inputRightCells input)) =
-      Section53BooleanContextSeparatorConverter.Machine.sourceWord
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.sourceWord
         fuel D.stateCount D.start D.halt D.transitions.length table
         (targetSuffix D input) := by
-  simp [Section53BooleanContextHaltAppender.Machine.finalWord,
-    Section53BooleanContextHaltAppender.Machine.metadataPrefix,
-    Section53BooleanContextSeparatorConverter.Machine.sourceWord,
-    Section53BooleanContextSeparatorConverter.Machine.metadataWithHalt,
+  simp [FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.finalWord,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.metadataPrefix,
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.sourceWord,
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.metadataWithHalt,
     layoutBody, targetSuffix, initialContextPrefix,
     MachineDescription.encodeNatAppend,
     MachineDescription.encodeCellListAppend,
@@ -136,17 +136,17 @@ theorem appender_finalWord_eq_separator_sourceWord
 theorem separatorBaseLeftRev_eq_positiveBase
     (D : MachineDescription)
     (fuel : Nat) :
-    Section53BooleanContextSeparatorConverter.Machine.baseLeftRev
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.baseLeftRev
         fuel D.stateCount D.start D.halt D.transitions.length =
       positiveMaterializerCopierBaseLeftRev D fuel := by
-  simp [Section53BooleanContextSeparatorConverter.Machine.baseLeftRev,
-    Section53BooleanContextSeparatorConverter.Machine.metadataWithHalt,
-    Section53BooleanContextHaltAppender.Machine.metadataPrefix,
+  simp [FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.baseLeftRev,
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.metadataWithHalt,
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.metadataPrefix,
     positiveMaterializerCopierBaseLeftRev,
-    Section53ParserAssembly.headerAfterHaltLeftRev,
-    Section53ParserAssembly.headerAfterStartLeftRev,
-    Section53ParserAssembly.headerAfterStateLeftRev,
-    Section53ParserAssembly.headerAfterHeaderLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterStartLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterStateLeftRev,
+    FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHeaderLeftRev,
     MachineDescription.encodeNatAppend, List.reverse_append,
     List.append_assoc]
 
@@ -156,39 +156,39 @@ theorem separatorTarget_eq_positiveTarget
     (input : Word MachineCodeSymbol)
     (first : TransitionDescription)
     (rest : List TransitionDescription) :
-    Section53BooleanContextSeparatorConverter.Machine.targetConfig
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.targetConfig
         (remainingFuel + 1) D.stateCount D.start D.halt
         D.transitions.length
         (MachineDescription.encodeTransitions (first :: rest))
         (targetSuffix D input) =
       { state :=
-          Section53BooleanContextSeparatorConverter.Machine.Control.ready
+          FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.ready
         tape :=
           (positiveMaterializerTargetConfig D remainingFuel input
             first rest).tape } := by
   rw [targetSuffix_eq_positiveInitialStackSuffix]
-  simp [Section53BooleanContextSeparatorConverter.Machine.targetConfig,
+  simp [FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.targetConfig,
     positiveMaterializerTargetConfig,
     separatorBaseLeftRev_eq_positiveBase,
-    Section53InitializerPersistentCopy.PersistentMasterCopier.sourceConfig]
+    FiniteRecognizer.Interpreter.InitializerPersistentCopy.PersistentMasterCopier.sourceConfig]
 
 namespace Machine
 
 inductive Control where
   | ingress
-      (inner : Section53BooleanContextIngress.Machine.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control)
   | ingressBridge (saved : Option MachineCodeSymbol)
   | ingressBounce (saved : Option MachineCodeSymbol)
   | saved
-      (inner : Section53BooleanContextSavedCloseout.Machine.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control)
   | savedBridge
   | savedBounce
   | appender
-      (inner : Section53BooleanContextHaltAppender.Machine.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control)
   | appenderBridge
   | appenderBounce
   | separator
-      (inner : Section53BooleanContextSeparatorConverter.Machine.Control)
+      (inner : FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control)
 deriving DecidableEq
 
 namespace Control
@@ -204,16 +204,16 @@ theorem savedOptions_complete
       simp [savedOptions, MachineCodeSymbol.finite.complete symbol]
 
 def elems : List Control :=
-  Section53BooleanContextIngress.Machine.Control.finite.elems.map ingress ++
+  FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control.finite.elems.map ingress ++
     savedOptions.map ingressBridge ++
     savedOptions.map ingressBounce ++
-    Section53BooleanContextSavedCloseout.Machine.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control.finite.elems.map
       saved ++
     [savedBridge, savedBounce] ++
-    Section53BooleanContextHaltAppender.Machine.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.finite.elems.map
       appender ++
     [appenderBridge, appenderBounce] ++
-    Section53BooleanContextSeparatorConverter.Machine.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.finite.elems.map
       separator
 
 def finite : Foundation.FiniteType Control where
@@ -223,48 +223,48 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | ingress inner =>
         simp [elems,
-          Section53BooleanContextIngress.Machine.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control.finite.complete inner]
     | ingressBridge saved =>
         simp [elems, savedOptions_complete saved]
     | ingressBounce saved =>
         simp [elems, savedOptions_complete saved]
     | saved inner =>
         simp [elems,
-          Section53BooleanContextSavedCloseout.Machine.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control.finite.complete
             inner]
     | savedBridge => simp [elems]
     | savedBounce => simp [elems]
     | appender inner =>
         simp [elems,
-          Section53BooleanContextHaltAppender.Machine.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.finite.complete
             inner]
     | appenderBridge => simp [elems]
     | appenderBounce => simp [elems]
     | separator inner =>
         simp [elems,
-          Section53BooleanContextSeparatorConverter.Machine.Control.finite.complete
+          FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.finite.complete
             inner]
 
 end Control
 
 def liftIngressControl :
-    Section53BooleanContextIngress.Machine.Control -> Control
+    FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control -> Control
   | .ready saved => .ingressBridge saved
   | inner => .ingress inner
 
 def liftSavedControl :
-    Section53BooleanContextSavedCloseout.Machine.Control -> Control
+    FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control -> Control
   | .ready => .savedBridge
   | inner => .saved inner
 
 def liftAppenderControl :
-    Section53BooleanContextHaltAppender.Machine.Control -> Control
+    FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control -> Control
   | .ready => .appenderBridge
   | inner => .appender inner
 
 def mapIngressAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextIngress.Machine.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control) ->
     (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, .ready saved) =>
       (write, direction, .ingressBridge saved)
@@ -274,14 +274,14 @@ def mapIngressAction :
 theorem mapIngressAction_eq_lift
     (write : Option MachineCodeSymbol)
     (direction : Direction)
-    (target : Section53BooleanContextIngress.Machine.Control) :
+    (target : FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control) :
     mapIngressAction (write, direction, target) =
       (write, direction, liftIngressControl target) := by
   cases target <;> rfl
 
 def mapSavedAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextSavedCloseout.Machine.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control) ->
     (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, .ready) =>
       (write, direction, .savedBridge)
@@ -291,14 +291,14 @@ def mapSavedAction :
 theorem mapSavedAction_eq_lift
     (write : Option MachineCodeSymbol)
     (direction : Direction)
-    (target : Section53BooleanContextSavedCloseout.Machine.Control) :
+    (target : FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control) :
     mapSavedAction (write, direction, target) =
       (write, direction, liftSavedControl target) := by
   cases target <;> rfl
 
 def mapAppenderAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextHaltAppender.Machine.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control) ->
     (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, .ready) =>
       (write, direction, .appenderBridge)
@@ -308,14 +308,14 @@ def mapAppenderAction :
 theorem mapAppenderAction_eq_lift
     (write : Option MachineCodeSymbol)
     (direction : Direction)
-    (target : Section53BooleanContextHaltAppender.Machine.Control) :
+    (target : FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control) :
     mapAppenderAction (write, direction, target) =
       (write, direction, liftAppenderControl target) := by
   cases target <;> rfl
 
 def mapSeparatorAction :
     (Option MachineCodeSymbol × Direction ×
-      Section53BooleanContextSeparatorConverter.Machine.Control) ->
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control) ->
     (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, target) =>
       (write, direction, .separator target)
@@ -325,37 +325,37 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .ingress inner, read =>
       Option.map mapIngressAction
-        (Section53BooleanContextIngress.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.transition inner read)
   | .ingressBridge saved, read =>
       some (read, Direction.right, .ingressBounce saved)
   | .ingressBounce saved, read =>
       some (read, Direction.left,
-        .saved (Section53BooleanContextSavedCloseout.Machine.entry saved))
+        .saved (FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.entry saved))
   | .saved inner, read =>
       Option.map mapSavedAction
-        (Section53BooleanContextSavedCloseout.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.transition inner read)
   | .savedBridge, read =>
       some (read, Direction.right, .savedBounce)
   | .savedBounce, read =>
       some (read, Direction.left,
-        .appender Section53BooleanContextHaltAppender.Machine.Control.fuel)
+        .appender FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.fuel)
   | .appender inner, read =>
       Option.map mapAppenderAction
-        (Section53BooleanContextHaltAppender.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.transition inner read)
   | .appenderBridge, read =>
       some (read, Direction.right, .appenderBounce)
   | .appenderBounce, read =>
       some (read, Direction.left,
-        .separator Section53BooleanContextSeparatorConverter.Machine.Control.fuel)
+        .separator FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.fuel)
   | .separator inner, read =>
       Option.map mapSeparatorAction
-        (Section53BooleanContextSeparatorConverter.Machine.transition inner read)
+        (FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.transition inner read)
 
 def entry (saved : Option MachineCodeSymbol) : Control :=
-  .ingress (Section53BooleanContextIngress.Machine.entry saved)
+  .ingress (FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.entry saved)
 
 def halt : Control :=
-  .separator Section53BooleanContextSeparatorConverter.Machine.Control.ready
+  .separator FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.ready
 
 def machine : TuringMachine MachineCodeSymbol Control where
   start := entry none
@@ -365,25 +365,25 @@ def machine : TuringMachine MachineCodeSymbol Control where
 
 def ingressConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextIngress.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := liftIngressControl config.state, tape := config.tape }
 
 def savedConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSavedCloseout.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := liftSavedControl config.state, tape := config.tape }
 
 def appenderConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextHaltAppender.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := liftAppenderControl config.state, tape := config.tape }
 
 def separatorConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSeparatorConverter.Machine.Control) :
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .separator config.state, tape := config.tape }
 
@@ -393,17 +393,17 @@ namespace Machine
 
 theorem ingress_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextIngress.Machine.Control)
-    (hstep : Section53BooleanContextIngress.Machine.machine.stepConfig
+      FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.machine.stepConfig
       source = some target) :
     machine.stepConfig (ingressConfig source) =
       some (ingressConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextIngress.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextIngress.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -411,16 +411,16 @@ theorem ingress_step_of_some
           simp only [htransition] at hstep
           have hsourceLift : liftIngressControl inner = .ingress inner := by
             cases inner <;> try rfl
-            simp [Section53BooleanContextIngress.Machine.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.transition] at htransition
           cases hstep
           simp [machine, transition, ingressConfig, hsourceLift,
             htransition, mapIngressAction_eq_lift]
 
 theorem ingress_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextIngress.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextIngress.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.machine source target) :
     TuringMachine.Computes machine
       (ingressConfig source) (ingressConfig target) := by
   induction hrun with
@@ -434,17 +434,17 @@ theorem ingress_computes_lift
 
 theorem saved_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSavedCloseout.Machine.Control)
-    (hstep : Section53BooleanContextSavedCloseout.Machine.machine.stepConfig
+      FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.machine.stepConfig
       source = some target) :
     machine.stepConfig (savedConfig source) =
       some (savedConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextSavedCloseout.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextSavedCloseout.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -452,16 +452,16 @@ theorem saved_step_of_some
           simp only [htransition] at hstep
           have hsourceLift : liftSavedControl inner = .saved inner := by
             cases inner <;> try rfl
-            simp [Section53BooleanContextSavedCloseout.Machine.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.transition] at htransition
           cases hstep
           simp [machine, transition, savedConfig, hsourceLift,
             htransition, mapSavedAction_eq_lift]
 
 theorem saved_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSavedCloseout.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextSavedCloseout.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.machine source target) :
     TuringMachine.Computes machine
       (savedConfig source) (savedConfig target) := by
   induction hrun with
@@ -475,17 +475,17 @@ theorem saved_computes_lift
 
 theorem appender_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextHaltAppender.Machine.Control)
-    (hstep : Section53BooleanContextHaltAppender.Machine.machine.stepConfig
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control)
+    (hstep : FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.machine.stepConfig
       source = some target) :
     machine.stepConfig (appenderConfig source) =
       some (appenderConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextHaltAppender.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextHaltAppender.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -494,16 +494,16 @@ theorem appender_step_of_some
           have hsourceLift :
               liftAppenderControl inner = .appender inner := by
             cases inner <;> try rfl
-            simp [Section53BooleanContextHaltAppender.Machine.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.transition] at htransition
           cases hstep
           simp [machine, transition, appenderConfig, hsourceLift,
             htransition, mapAppenderAction_eq_lift]
 
 theorem appender_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextHaltAppender.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextHaltAppender.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.machine source target) :
     TuringMachine.Computes machine
       (appenderConfig source) (appenderConfig target) := by
   induction hrun with
@@ -517,18 +517,18 @@ theorem appender_computes_lift
 
 theorem separator_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSeparatorConverter.Machine.Control)
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control)
     (hstep :
-      Section53BooleanContextSeparatorConverter.Machine.machine.stepConfig
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.machine.stepConfig
         source = some target) :
     machine.stepConfig (separatorConfig source) =
       some (separatorConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53BooleanContextSeparatorConverter.Machine.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.machine] at hstep
       cases htransition :
-          Section53BooleanContextSeparatorConverter.Machine.transition inner
+          FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -540,9 +540,9 @@ theorem separator_step_of_some
 
 theorem separator_computes_lift
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53BooleanContextSeparatorConverter.Machine.Control}
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control}
     (hrun : TuringMachine.Computes
-      Section53BooleanContextSeparatorConverter.Machine.machine source target) :
+      FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.machine source target) :
     TuringMachine.Computes machine
       (separatorConfig source) (separatorConfig target) := by
   induction hrun with
@@ -572,11 +572,11 @@ theorem ingress_boundary_run_exact
     (tape : Tape MachineCodeSymbol) :
     machine.runConfigExact? 2
         (ingressConfig
-          { state := Section53BooleanContextIngress.Machine.Control.ready saved
+          { state := FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control.ready saved
             tape := tape }) =
       some
         (savedConfig
-          { state := Section53BooleanContextSavedCloseout.Machine.entry saved
+          { state := FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.entry saved
             tape := boundaryTape tape }) := by
   cases tape <;> rfl
 
@@ -585,10 +585,10 @@ theorem ingress_boundary_computes
     (tape : Tape MachineCodeSymbol) :
     TuringMachine.Computes machine
       (ingressConfig
-        { state := Section53BooleanContextIngress.Machine.Control.ready saved
+        { state := FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.Control.ready saved
           tape := tape })
       (savedConfig
-        { state := Section53BooleanContextSavedCloseout.Machine.entry saved
+        { state := FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.entry saved
           tape := boundaryTape tape }) := by
   exact TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp
@@ -598,11 +598,11 @@ theorem saved_boundary_run_exact
     (tape : Tape MachineCodeSymbol) :
     machine.runConfigExact? 2
         (savedConfig
-          { state := Section53BooleanContextSavedCloseout.Machine.Control.ready
+          { state := FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control.ready
             tape := tape }) =
       some
         (appenderConfig
-          { state := Section53BooleanContextHaltAppender.Machine.Control.fuel
+          { state := FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.fuel
             tape := boundaryTape tape }) := by
   cases tape <;> rfl
 
@@ -610,10 +610,10 @@ theorem saved_boundary_computes
     (tape : Tape MachineCodeSymbol) :
     TuringMachine.Computes machine
       (savedConfig
-        { state := Section53BooleanContextSavedCloseout.Machine.Control.ready
+        { state := FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.Control.ready
           tape := tape })
       (appenderConfig
-        { state := Section53BooleanContextHaltAppender.Machine.Control.fuel
+        { state := FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.fuel
           tape := boundaryTape tape }) := by
   exact TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp
@@ -623,12 +623,12 @@ theorem appender_boundary_run_exact
     (tape : Tape MachineCodeSymbol) :
     machine.runConfigExact? 2
         (appenderConfig
-          { state := Section53BooleanContextHaltAppender.Machine.Control.ready
+          { state := FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.ready
             tape := tape }) =
       some
         (separatorConfig
           { state :=
-              Section53BooleanContextSeparatorConverter.Machine.Control.fuel
+              FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.fuel
             tape := boundaryTape tape }) := by
   cases tape <;> rfl
 
@@ -636,11 +636,11 @@ theorem appender_boundary_computes
     (tape : Tape MachineCodeSymbol) :
     TuringMachine.Computes machine
       (appenderConfig
-        { state := Section53BooleanContextHaltAppender.Machine.Control.ready
+        { state := FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.Control.ready
           tape := tape })
       (separatorConfig
         { state :=
-            Section53BooleanContextSeparatorConverter.Machine.Control.fuel
+            FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.Control.fuel
           tape := boundaryTape tape }) := by
   exact TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp
@@ -658,7 +658,7 @@ theorem saved_positive_materializer
         { state := entry (transitionListParserSavedHead input)
           tape :=
             markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
                 (remainingFuel + 1))
               first rest input }
         { state := halt, tape := targetTape } ∧
@@ -678,33 +678,33 @@ theorem saved_positive_materializer
       (first :: rest) (suffix := []) (by
         intro symbol hmem
         simp at hmem)
-  have hnoHeader : Section53BooleanContextLocator.noHeader table := by
+  have hnoHeader : FiniteRecognizer.Interpreter.BooleanContextLocator.noHeader table := by
     change transitionListParserNoHeader
       (MachineDescription.encodeTransitions (first :: rest)) at hnoHeaderRaw
     exact hnoHeaderRaw
-  rcases Section53BooleanContextIngress.Machine.parsed_ingress_computes
+  rcases FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.parsed_ingress_computes
       D remainingFuel input first rest htransitions with
     ⟨ingressTape, hingress, hingressShape⟩
   have hingressLift := ingress_computes_lift hingress
   have hingressBoundary := ingress_boundary_computes saved ingressTape
   have hingressBoundaryShape : Tape.Equiv
       (RawTailPop.sourceConfig
-        (Section53BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.materializerBaseLeftRev
           fuel D.stateCount D.start D.halt D.transitions.length table)
         [] input.tail).tape
       (boundaryTape ingressTape) := by
     exact Tape.Equiv.trans (by simpa [fuel, table] using hingressShape)
       (Tape.Equiv.symm (boundaryTape_equiv ingressTape))
-  rcases Section53BooleanContextSavedCloseout.Machine.full_saved_tail_computes
+  rcases FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.full_saved_tail_computes
       saved fuel D.stateCount D.start D.halt D.transitions.length table
       input.tail hnoHeader with
     ⟨savedCanonicalTape, hsavedCanonical, hsavedCanonicalShape⟩
-  rcases Section53BooleanContextSavedCloseout.Machine.computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.BooleanContextSavedCloseout.Machine.computes_of_tape_equiv
       hsavedCanonical hingressBoundaryShape with
     ⟨savedTape, hsaved, hsavedTransportShape⟩
   have hsavedShape : Tape.Equiv
       (Tape.input
-        (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
           fuel D.stateCount D.start D.halt D.transitions.length table
           cells []))
       savedTape := by
@@ -715,7 +715,7 @@ theorem saved_positive_materializer
   have hsavedBoundary := saved_boundary_computes savedTape
   have hsavedBoundaryShape : Tape.Equiv
       (Tape.input
-        (Section53BooleanContextOneSymbolRound.Machine.layoutWord
+        (FiniteRecognizer.Interpreter.BooleanContextOneSymbolRound.Machine.layoutWord
           fuel D.stateCount D.start D.halt D.transitions.length table
           cells []))
       (boundaryTape savedTape) :=
@@ -723,12 +723,12 @@ theorem saved_positive_materializer
       (Tape.Equiv.symm (boundaryTape_equiv savedTape))
   have happenderSource : Tape.Equiv
       (Tape.input
-        (Section53BooleanContextHaltAppender.Machine.workWord
+        (FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.workWord
           fuel D.stateCount D.start 0 D.halt body))
       (boundaryTape savedTape) := by
     rw [← layoutWord_eq_appender_workWord]
     simpa [fuel, table, cells, body] using hsavedBoundaryShape
-  rcases Section53BooleanContextHaltAppender.Machine.computes_append_halt
+  rcases FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.computes_append_halt
       fuel D.stateCount D.start D.halt body (boundaryTape savedTape)
       happenderSource with
     ⟨appenderTape, happender, happenderShape⟩
@@ -736,19 +736,19 @@ theorem saved_positive_materializer
   have happenderBoundary := appender_boundary_computes appenderTape
   have happenderBoundaryShape : Tape.Equiv
       (Tape.input
-        (Section53BooleanContextHaltAppender.Machine.finalWord
+        (FiniteRecognizer.Interpreter.BooleanContextHaltAppender.Machine.finalWord
           fuel D.stateCount D.start D.halt body))
       (boundaryTape appenderTape) :=
     Tape.Equiv.trans happenderShape
       (Tape.Equiv.symm (boundaryTape_equiv appenderTape))
   have hseparatorSource : Tape.Equiv
-      (Section53BooleanContextSeparatorConverter.Machine.sourceConfig
+      (FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.sourceConfig
         fuel D.stateCount D.start D.halt D.transitions.length table
         (MachineCodeSymbol.header :: contextTail)).tape
       (boundaryTape appenderTape) := by
     change Tape.Equiv
       (Tape.input
-        (Section53BooleanContextSeparatorConverter.Machine.sourceWord
+        (FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.sourceWord
           fuel D.stateCount D.start D.halt D.transitions.length table
           (MachineCodeSymbol.header :: contextTail)))
       (boundaryTape appenderTape)
@@ -756,7 +756,7 @@ theorem saved_positive_materializer
       D fuel input table
     simpa [fuel, table, cells, body, contextTail, targetSuffix] using
       hword ▸ happenderBoundaryShape
-  rcases Section53BooleanContextSeparatorConverter.Machine.computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.computes_of_tape_equiv
       fuel D.stateCount D.start D.halt D.transitions.length table
       contextTail (boundaryTape appenderTape) hnoHeader hseparatorSource with
     ⟨targetTape, hseparator, hseparatorShape⟩
@@ -765,7 +765,7 @@ theorem saved_positive_materializer
       (positiveMaterializerTargetConfig D remainingFuel input
         first rest).tape targetTape := by
     have hseparatorShape' : Tape.Equiv
-        (Section53BooleanContextSeparatorConverter.Machine.targetConfig
+        (FiniteRecognizer.Interpreter.BooleanContextSeparatorConverter.Machine.targetConfig
           (remainingFuel + 1) D.stateCount D.start D.halt
           D.transitions.length
           (MachineDescription.encodeTransitions (first :: rest))
@@ -782,7 +782,7 @@ theorem saved_positive_materializer
   have hrun := TuringMachine.computes_trans hrun hseparatorLift
   refine ⟨targetTape, ?_, htargetShape⟩
   simpa [entry, halt, saved, ingressConfig, separatorConfig,
-    liftIngressControl, Section53BooleanContextIngress.Machine.entry] using
+    liftIngressControl, FiniteRecognizer.Interpreter.BooleanContextIngress.Machine.entry] using
     hrun
 
 theorem contract :
@@ -794,7 +794,7 @@ theorem contract :
 
 end Machine
 
-end Section53BooleanContextPhase
+end FiniteRecognizer.Interpreter.BooleanContextPhase
 
 end Computability
 end FoC

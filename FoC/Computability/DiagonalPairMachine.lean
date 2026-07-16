@@ -3,8 +3,9 @@ import FoC.Computability.DiagonalPairMachinePart2
 set_option doc.verso true
 
 /-!
-# DiagonalPairMachine
+# Faithful Diagonal-Pair Map Machine
 
-Supporting declarations and helper lemmas for Computability DiagonalPairMachine.
+This facade exports the concrete diagonal-pair construction. Part 1 defines the
+legacy marker route and the faithful copy machine; Part 2 proves the faithful
+machine's execution and computability specification.
 -/
-

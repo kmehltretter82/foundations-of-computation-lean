@@ -49,9 +49,9 @@ def AssemblySourceRestFinishBoundaryConstruction : Prop :=
 **Mixed parser-stack finisher target.**  The low-level boundary mechanics are
 provided by
 {module}`FoC.Computability.Compiler.ClosedCfg.QuoteRest.ConstructionBoundaryCore`.
-The remaining concrete leaf should prove the mixed parser-stack finisher
-construction below; the adapter then turns it into the public left-boundary
-core without inspecting the transition table.
+The construction below packages the mixed parser-stack finisher, and the
+adapter turns it into the public left-boundary core without inspecting the
+transition table.
 -/
 
 def MixedParserStackFinisherAssemblySourceRestSpec
@@ -525,10 +525,9 @@ private theorem assemblySourceRestFinishTailCopiedTape_eq_targetTape
     assemblySourceRestFinishQuoteRestJoinedTape_eq_targetTape]
 
 /-!
-**Phase composition.**  The remaining lemmas compose the small scanners around
-the left-boundary core.  The only finite-machine leaf still hidden behind the
-core construction is the copier that consumes the mixed parser-stack layout and
-emits the normalized target tape.
+**Phase composition.**  These lemmas compose the small scanners around the
+left-boundary core.  Its copier consumes the mixed parser-stack layout and emits
+the normalized target tape.
 -/
 
 private theorem preservingCellPassHaltTape_eq_assemblySourceRestFinishSourceTape

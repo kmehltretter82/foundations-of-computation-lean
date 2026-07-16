@@ -363,11 +363,10 @@ theorem pairedRecognizerDovetailStageAttemptInvocationConstructionData_of_protec
     · exact (hinvoker.right C result).mp hrun
 
 /--
-Finite-machine leaf for the framed protected stage-attempt wrapper.  This is
-the remaining transition-table obligation after CommonGround has named the
-protected/framed/witnessed controller-invocation contracts; it emits the
-controller layout with the simulated boolean-word result installed as
-normalized output.
+Finite-machine implementation of the framed protected stage-attempt wrapper.
+It instantiates the protected/framed/witnessed controller-invocation contracts
+from CommonGround and emits the controller layout with the simulated
+boolean-word result installed as normalized output.
 -/
 private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData_finite_leaf :
     PairedRecognizerDovetailStageAttemptFramedRunInvocationConstructionData :=
@@ -375,8 +374,8 @@ private theorem pairedRecognizerDovetailStageAttemptFramedRunInvocationConstruct
     stageAttemptFramedStructuredEndpointEquivIndexedConstruction_core
 
 /--
-Finite-machine leaf for witnessed controller stage-attempt invocation.  This is
-now packaging around the framed protected wrapper construction.
+Finite-machine packaging of witnessed controller stage-attempt invocation
+around the framed protected wrapper construction.
 -/
 private theorem controllerStageAttemptWitnessedInvocationConstruction_leaf :
     CommonGround.ControllerInvocation.StageAttemptWitnessedConstruction := by

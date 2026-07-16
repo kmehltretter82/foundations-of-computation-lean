@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53SavedCellTransitionParser
+namespace FiniteRecognizer.Interpreter.SavedCellTransitionParser
 
 /-!
 # Saved-cell transition-parser handoff
@@ -450,11 +450,11 @@ theorem contextual_ready_only_encoded
         tokens =
           MachineDescription.encodeTransitionsAppend transitions suffix := by
   exact
-    Section53ParserAssembly.contextualTransitionParserHaltInversion
+    FiniteRecognizer.Interpreter.ParserAssembly.contextualTransitionParserHaltInversion
       baseLeftRev count tokens
       (parser_haltsFrom_of_computes_ready hrun)
 
 
-end Section53SavedCellTransitionParser
+end FiniteRecognizer.Interpreter.SavedCellTransitionParser
 end Computability
 end FoC

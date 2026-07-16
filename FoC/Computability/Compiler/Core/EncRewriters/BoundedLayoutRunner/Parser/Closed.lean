@@ -511,9 +511,9 @@ theorem layoutParserConstruction_of_rightShifted
 /-!
 **Parser field inversions.**  The checked layout scanner already exposes the
 subscanner runs for the input word, stage number, configurations, and final
-flags.  The parser closed proof still needs code-origin wrappers: from an
-accepted canonical code word, each subscanner run forces the next suffix to be
-the corresponding
+flags.  The closedness argument wraps those runs with code-origin inversions:
+from an accepted canonical code word, each subscanner run forces the next
+suffix to be the corresponding
 {name (full := FoC.Computability.MachineDescription.DovetailLayout)}`DovetailLayout`
 field.
 -/
@@ -633,18 +633,16 @@ theorem checkedDovetailLayoutScannerDescription_haltsWithTape_stage_inv
   exact ⟨stage, symbol :: suffix, hstageRest⟩
 
 /-!
-The three field-level inversions below all depend on the same remaining
-closed-body fact: after the input word and stage have been accepted, the
-scanner must consume two encoded configurations and the two final hit flags,
-then return to the checked input tape.  Keeping that as one named obligation
-avoids proving the same handoff chain separately for the accept config, reject
-config, and final flags.
+The three field-level inversions below share one closed-body fact: after the
+input word and stage have been accepted, the scanner consumes two encoded
+configurations and the two final hit flags, then returns to the checked input
+tape.  One named theorem avoids repeating that handoff chain for the accept
+configuration, reject configuration, and final flags.
 -/
 
 /--
-Remaining closed-body scanner inversion: once the input word and stage prefix
-have been accepted, the scanner must validate the two configurations and final
-hit flags.
+Closed-body scanner inversion after the input word and stage prefix have been
+accepted: the scanner validates the two configurations and final hit flags.
 -/
 theorem checkedDovetailLayoutScannerDescription_haltsWithTape_body_fields_inv
     {code : Word MachineCodeSymbol} {Tout : Tape Bool}

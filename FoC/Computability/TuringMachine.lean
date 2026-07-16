@@ -14,13 +14,11 @@ A machine has a start state, a halting state, a partial transition function, and
 a finite-state witness.  Configurations pair a state with a tape, and
 computation is the reflexive-transitive closure of single-machine steps.
 
-A missing transition means that no further {lit}`TuringMachine.Step` exists.
-This is not by itself semantic halting: {lit}`TuringMachine.Halted` means that
-the designated halt state has been reached.  A machine stuck in any other state
-does not satisfy the halting predicates.  The separate
-{lit}`TuringMachine.HaltingTransitionsDisabled` condition guarantees that the
-designated halt state has no outgoing transitions when a proof needs halted
-runs to be stable.
+A missing transition means that no further machine step exists. This is not by
+itself semantic halting: the designated halt state must have been reached. A
+machine stuck in any other state does not satisfy the halting predicates. A
+separate transition-disabled condition guarantees that the halt state has no
+outgoing transitions when a proof needs halted runs to be stable.
 
 ## Book coordinates
 
@@ -473,13 +471,6 @@ theorem computesIn_empty_not_exact_output_single {M : TuringMachine symbol state
 
 All halting predicates require reachability of the designated halt state; a
 missing transition in another state is merely a stuck computation.
-
-| Predicate | Observable contract |
-|---|---|
-| {lit}`TuringMachine.HaltsFrom` / {lit}`TuringMachine.HaltsOnInput` | ordinary halting; the final tape is unconstrained |
-| {lit}`TuringMachine.HaltsWithExactOutput` | literal equality with the canonical {name}`Tape.output` tape, including head position and stored blank context |
-| {lit}`TuringMachine.HaltsWithOutput` | equality only of {name}`Tape.normalizedOutput` words |
-| {lit}`TuringMachine.Accepts` | language acceptance by ordinary halting, with no output condition |
 -/
 
 /-- The configuration's control state is the machine's designated halt state. -/
@@ -564,6 +555,17 @@ def AcceptedLanguage (M : TuringMachine symbol state) : Language symbol :=
 /-- Extensional equality between a machine's accepted language and a language. -/
 def Recognizes (M : TuringMachine symbol state) (L : Language symbol) : Prop :=
   Language.Equal (AcceptedLanguage M) L
+
+/-!
+## Observable Contracts
+
+| Predicate | Observable contract |
+|---|---|
+| {name}`TuringMachine.HaltsFrom` / {name}`TuringMachine.HaltsOnInput` | ordinary halting; the final tape is unconstrained |
+| {name}`TuringMachine.HaltsWithExactOutput` | literal equality with the canonical {name}`Tape.output` tape, including head position and stored blank context |
+| {name}`TuringMachine.HaltsWithOutput` | equality only of {name}`Tape.normalizedOutput` words |
+| {name}`TuringMachine.Accepts` | language acceptance by ordinary halting, with no output condition |
+-/
 
 theorem indexed_haltsFrom_iff
     (M : TuringMachine symbol state)

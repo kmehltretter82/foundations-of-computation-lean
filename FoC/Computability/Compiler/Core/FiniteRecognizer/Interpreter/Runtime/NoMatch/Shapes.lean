@@ -5,15 +5,15 @@ namespace Computability
 
 open Languages
 
-namespace Section53NoMatchFinalGate
+namespace FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53FinalGateMaterializer
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 namespace LastMiss
 
@@ -653,14 +653,14 @@ def leftBoundaryBaseLeftRev
     (current : MachineDescription.Configuration)
     (skipped : List TransitionDescription)
     (left : List (Option Bool)) : Word MachineCodeSymbol :=
-  Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
     (zeroStackBaseLeftRev current skipped) left
 
 def haltBaseLeftRev
     (current : MachineDescription.Configuration)
     (skipped : List TransitionDescription)
     (left right : List (Option Bool)) : Word MachineCodeSymbol :=
-  Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
     (leftBoundaryBaseLeftRev current skipped left) right
 
 theorem exhaustedBaseLeftRev_reverse
@@ -690,9 +690,9 @@ theorem haltBaseLeftRev_reverse
         (exhaustedBaseLeftRev current skipped).reverse
         (MachineCodeSymbol.header :: contextPrefix left right) := by
   rw [haltBaseLeftRev,
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   rw [leftBoundaryBaseLeftRev,
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   simp [zeroStackBaseLeftRev, contextPrefix,
     List.reverse_cons, List.append_assoc]
   change
@@ -812,7 +812,7 @@ theorem canonicalExhausted_zero_tape_eq_stackSkip_source
     (canonicalExhaustedRowsTarget current skipped
       (activeProtectedSuffix (first :: rest) 0 current.tape haltState
         suffix)).tape =
-    (Section53StackSkip.sourceConfig
+    (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
       (exhaustedBaseLeftRev current skipped)
       first rest 0 (contextTail current.tape haltState suffix)).tape := by
   rfl
@@ -825,10 +825,10 @@ theorem stackSkip_zero_target_tape_eq_leftBoundary_source
     (rest : List TransitionDescription)
     (haltState : Nat)
     (suffix : Word MachineCodeSymbol) :
-    (Section53StackSkip.targetConfig
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
       (exhaustedBaseLeftRev current skipped)
       first rest 0 (contextTail current.tape haltState suffix)).tape =
-    (Section53DirectContextUpdate.Boundary.sourceConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
       (zeroStackBaseLeftRev current skipped)
       current.tape.left current.tape.right.length
       (MachineDescription.encodeCellsAppend current.tape.right
@@ -841,12 +841,12 @@ theorem leftBoundary_target_tape_eq_rightBoundary_source
     (skipped : List TransitionDescription)
     (haltState : Nat)
     (suffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (zeroStackBaseLeftRev current skipped)
       current.tape.left current.tape.right.length
       (MachineDescription.encodeCellsAppend current.tape.right
         (persistent haltState suffix))).tape =
-    (Section53DirectContextUpdate.Boundary.sourceConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
       (leftBoundaryBaseLeftRev current skipped current.tape.left)
       current.tape.right haltState suffix).tape := by
   rfl
@@ -861,7 +861,7 @@ theorem rightBoundary_target_tape_eq_marker_source
     (contextFront : Word MachineCodeSymbol)
     (hcontext : contextPrefix current.tape.left current.tape.right =
       List.append contextFront [firstBefore, secondBefore]) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (leftBoundaryBaseLeftRev current skipped current.tape.left)
       current.tape.right haltState suffix).tape =
     (DoubleTransitionMarker.sourceConfig
@@ -907,7 +907,7 @@ def remainingLeftBoundaryBaseLeftRev
     (skipped transitions : List TransitionDescription)
     (copies : Nat)
     (left : List (Option Bool)) : Word MachineCodeSymbol :=
-  Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
     (remainingStackBaseLeftRev current skipped transitions copies) left
 
 def remainingHaltBaseLeftRev
@@ -915,7 +915,7 @@ def remainingHaltBaseLeftRev
     (skipped transitions : List TransitionDescription)
     (copies : Nat)
     (left right : List (Option Bool)) : Word MachineCodeSymbol :=
-  Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
     (remainingLeftBoundaryBaseLeftRev current skipped transitions copies left)
     right
 
@@ -939,9 +939,9 @@ theorem remainingHaltBaseLeftRev_reverse
         (List.append (tableStack transitions copies)
           (contextPrefix left right)) := by
   rw [remainingHaltBaseLeftRev,
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   rw [remainingLeftBoundaryBaseLeftRev,
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   simp [remainingStackBaseLeftRev, contextPrefix,
     List.reverse_append, List.append_assoc]
   change
@@ -1068,7 +1068,7 @@ theorem canonicalExhausted_tape_eq_stackSkip_source
     (canonicalExhaustedRowsTarget current skipped
       (activeProtectedSuffix (first :: rest) copies current.tape haltState
         suffix)).tape =
-    (Section53StackSkip.sourceConfig
+    (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
       (exhaustedBaseLeftRev current skipped)
       first rest copies (contextTail current.tape haltState suffix)).tape := by
   rfl
@@ -1082,10 +1082,10 @@ theorem remainingStack_target_tape_eq_leftBoundary_source
     (copies : Nat)
     (haltState : Nat)
     (suffix : Word MachineCodeSymbol) :
-    (Section53StackSkip.targetConfig
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
       (exhaustedBaseLeftRev current skipped)
       first rest copies (contextTail current.tape haltState suffix)).tape =
-    (Section53DirectContextUpdate.Boundary.sourceConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
       (remainingStackBaseLeftRev current skipped (first :: rest) copies)
       current.tape.left current.tape.right.length
       (MachineDescription.encodeCellsAppend current.tape.right
@@ -1099,12 +1099,12 @@ theorem remainingLeftBoundary_target_tape_eq_rightBoundary_source
     (copies : Nat)
     (haltState : Nat)
     (suffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (remainingStackBaseLeftRev current skipped transitions copies)
       current.tape.left current.tape.right.length
       (MachineDescription.encodeCellsAppend current.tape.right
         (persistent haltState suffix))).tape =
-    (Section53DirectContextUpdate.Boundary.sourceConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
       (remainingLeftBoundaryBaseLeftRev current skipped transitions copies
         current.tape.left)
       current.tape.right haltState suffix).tape := by
@@ -1121,7 +1121,7 @@ theorem remainingRightBoundary_target_tape_eq_marker_source
     (contextFront : Word MachineCodeSymbol)
     (hcontext : contextPrefix current.tape.left current.tape.right =
       List.append contextFront [firstBefore, secondBefore]) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (remainingLeftBoundaryBaseLeftRev current skipped transitions copies
         current.tape.left)
       current.tape.right haltState suffix).tape =
@@ -1164,7 +1164,7 @@ theorem remainingMarker_target_tape_eq_rewind_scan
 
 end LastMiss
 
-end Section53NoMatchFinalGate
+end FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 end Computability
 end FoC

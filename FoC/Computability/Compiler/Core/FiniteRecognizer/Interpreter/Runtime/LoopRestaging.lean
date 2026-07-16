@@ -5,12 +5,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53LoopRestagingAudit
+namespace FiniteRecognizer.Interpreter.LoopRestagingAudit
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
 
 /-!
 **Bounded-interpreter loop currency.** The invariant stores one raw
@@ -809,7 +809,7 @@ throughout execution.
 -/
 
 
-end Section53LoopRestagingAudit
+end FiniteRecognizer.Interpreter.LoopRestagingAudit
 
 end Computability
 end FoC

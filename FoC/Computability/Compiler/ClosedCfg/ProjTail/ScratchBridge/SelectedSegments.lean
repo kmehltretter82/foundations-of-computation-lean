@@ -326,8 +326,8 @@ def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderFootprintCompactorCon
       compactor
 
 /-- Historical unmarked contract retained only for implication-style wrappers
-whose caller already assumes an arbitrary footprint compactor.  The live #15
-construction uses the marker-bearing contract above. -/
+whose caller already assumes an arbitrary footprint compactor. The completed
+selected-footprint construction uses the marker-bearing contract above. -/
 def CountWindowPostFieldDecodedPrefixSelectedSegmentDecoderUnmarkedFootprintCompactorSpec
     (compactor : MachineDescription) : Prop :=
   compactor.SubroutineReady ∧

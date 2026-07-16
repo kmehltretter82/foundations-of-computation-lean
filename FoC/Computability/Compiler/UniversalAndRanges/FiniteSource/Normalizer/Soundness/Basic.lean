@@ -1458,11 +1458,11 @@ private theorem codePrefixParserNormalizerMachine_haltsFromIn_needHeader_fields
                         transitionListParserTape, Tape.read] at haction
 
 /-!
-**Normalizer code-spec frontier.**  The concrete
+# Normalizer Code Specification
+
 {name}`codePrefixParserNormalizerMachine` is the finite-state witness used by
-the first universal-prefix scaffold.  Its remaining correctness proof is split
-into soundness and completeness directions; the packaged spec below keeps
-downstream construction code independent of that split.
+the universal-prefix parser. Its soundness and completeness theorems are
+packaged below so downstream constructions do not depend on their organization.
 -/
 
 private theorem codePrefixParserNormalizerMachine_haltsWithOutputIn_needHeader_fields

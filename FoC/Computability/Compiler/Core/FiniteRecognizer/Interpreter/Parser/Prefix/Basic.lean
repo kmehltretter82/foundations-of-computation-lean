@@ -8,10 +8,10 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserPrefixPhaseSum
+namespace FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 
-open Section53ParserAssembly
-open Section53OuterParserInversion
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.OuterParserInversion
 
 /-!
 # Finite parser-prefix phase sum
@@ -33,7 +33,7 @@ inductive Control where
   | countValidate (fuelZero : Bool)
   | countRewind (fuelZero : Bool)
   | table (fuelZero : Bool)
-      (state : Section53SavedCellTransitionParser.Control)
+      (state : FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control)
 deriving DecidableEq
 
 namespace Control
@@ -53,9 +53,9 @@ def elems : List Control :=
     (Control.shift true)) ++
   [Control.countValidate false, Control.countValidate true,
     Control.countRewind false, Control.countRewind true] ++
-  (Section53SavedCellTransitionParser.machine.statesFinite.elems.map
+  (FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.statesFinite.elems.map
     (Control.table false)) ++
-  (Section53SavedCellTransitionParser.machine.statesFinite.elems.map
+  (FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.statesFinite.elems.map
     (Control.table true))
 
 def finite : Foundation.FiniteType Control where
@@ -81,7 +81,7 @@ def finite : Foundation.FiniteType Control where
         cases fuelZero <;> simp [elems]
     | table fuelZero innerState =>
         have h :=
-          Section53SavedCellTransitionParser.machine.statesFinite.complete
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.statesFinite.complete
             innerState
         cases fuelZero <;> simp [elems, h]
 
@@ -134,12 +134,12 @@ def transition :
         .countRewind fuelZero)
   | .countRewind fuelZero, none =>
       some (none, Direction.right,
-        .table fuelZero Section53SavedCellTransitionParser.machine.start)
+        .table fuelZero FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start)
   | .countValidate _, _ => none
   | .countRewind _, _ => none
   | .table fuelZero state, read =>
       Option.map (mapAction (Control.table fuelZero))
-        (Section53SavedCellTransitionParser.machine.transition state read)
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.transition state read)
 
 def machine : TuringMachine MachineCodeSymbol Control where
   start := .fuel true .outer
@@ -167,7 +167,7 @@ def shiftConfig (fuelZero : Bool)
 
 def tableConfig (fuelZero : Bool)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control) :
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   TuringMachine.PhaseEmbedding.liftConfig
     (Control.table fuelZero) config
@@ -186,12 +186,12 @@ def SuccessfulTerminal
   exists fuelZero : Bool,
     config.state =
         Control.table fuelZero
-          (Section53SavedCellTransitionParser.Control.parser
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
             TransitionListParserState.halt) ∨
       exists saved : Option MachineCodeSymbol,
       config.state =
         Control.table fuelZero
-          (Section53SavedCellTransitionParser.Control.ready saved)
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready saved)
 
 theorem successfulTerminal_no_step
     {config : TuringMachine.Configuration MachineCodeSymbol Control}
@@ -1061,6 +1061,6 @@ theorem shift_run_exact_lift
       (shiftTarget fuelZero)
       (fun _ _ hstep => shift_step_lift_active fuelZero hstep) hrun
 
-end Section53ParserPrefixPhaseSum
+end FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 end Computability
 end FoC

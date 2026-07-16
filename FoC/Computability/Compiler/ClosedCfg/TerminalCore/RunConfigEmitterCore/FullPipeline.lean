@@ -9,8 +9,8 @@ set_option doc.verso true
 /-!
 # Full fixed-description run-config emitter pipeline
 
-This module composes the checked #18 phases in their dependency order.  The
-configuration/hit boundary and guarded egress remain explicit components so
+This module composes the checked run-config emitter phases in dependency order.
+The configuration/hit boundary and guarded egress are explicit components so
 their finite leaves can be proved independently.  Every same-head handoff uses
 the canonical right/left bounce and transports the intermediate endpoint in
 {name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv` currency.
@@ -119,7 +119,7 @@ theorem prefixDescription_haltsFromTapeEquiv
   exact h01234
 
 /-!
-## Remaining canonical components
+## Canonical pipeline components
 -/
 
 /-- The repaired configuration/hit component ends at the exact canonical

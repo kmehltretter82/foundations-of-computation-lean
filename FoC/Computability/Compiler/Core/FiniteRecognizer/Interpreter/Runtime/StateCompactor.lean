@@ -8,7 +8,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeStateCompactor
+namespace FiniteRecognizer.Interpreter.RuntimeStateCompactor
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
@@ -27,7 +27,7 @@ one-symbol deletion core, and returns to the start of
 `encodeNat target ++ protectedSuffix`.
 -/
 
-abbrev Action := Section53RuntimeAction.Action
+abbrev Action := FiniteRecognizer.Interpreter.RuntimeAction.Action
 
 namespace Action
 
@@ -1003,7 +1003,7 @@ theorem computes_to_target_equiv
     Tape.Equiv.symm htape⟩
   done
 
-end Section53RuntimeStateCompactor
+end FiniteRecognizer.Interpreter.RuntimeStateCompactor
 
 end Computability
 end FoC

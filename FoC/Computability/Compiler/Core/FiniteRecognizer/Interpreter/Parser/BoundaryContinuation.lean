@@ -7,10 +7,10 @@ namespace Computability
 
 open Languages
 
-namespace Section53ExactBoundaryContinuation
+namespace FiniteRecognizer.Interpreter.ExactBoundaryContinuation
 
-open Section53TransitionParserHandoff
-open Section53ParserAssembly
+open FiniteRecognizer.Interpreter.TransitionParserHandoff
+open FiniteRecognizer.Interpreter.ParserAssembly
 
 /-!
 # Exact parser continuation across a retained boundary
@@ -491,16 +491,16 @@ theorem boundaryRowsToReadyExact
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (canonicalBoundaryMarkConfig blanks pre t rest suffix))
-      (Section53SavedCellTransitionParser.finalReadyConfig
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.finalReadyConfig
         (blanks + rest.length)
         (canonicalParsedSymbols pre t rest) suffix) := by
   induction rest generalizing blanks pre t with
   | nil =>
       have hfinal :=
-        Section53SavedCellTransitionParser.computes_final_mark_ready_exact
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.computes_final_mark_ready_exact
           blanks (canonicalParsedSymbols pre t []) suffix
       simpa [canonicalBoundaryMarkConfig,
         canonicalParsedSymbols, finalTransitionMarkConfig,
@@ -529,7 +529,7 @@ theorem boundaryRowsToReadyExact
         simpa [canonicalBoundaryMarkConfig, List.append_assoc]
           using hstep
       have hstepLift :=
-        Section53SavedCellTransitionParser.computes_lift_of_target_ne_halt
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.computes_lift_of_target_ne_halt
           hstep' (by simp [canonicalBoundaryMarkConfig])
       have hpre' :
           transitionListParserNoHeader
@@ -569,11 +569,11 @@ theorem paddedNonemptyComputesToReadyExact
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (TransitionParserContextTransport.paddedCanonicalSource
           (t :: rest) suffix))
-      (Section53SavedCellTransitionParser.finalReadyConfig
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.finalReadyConfig
         (t :: rest).length
         (MachineDescription.encodeTransitions (t :: rest)) suffix) := by
   have hfirst :=
@@ -591,7 +591,7 @@ theorem paddedNonemptyComputesToReadyExact
       List.append_assoc]
       using hfirst
   have hfirstLift :=
-    Section53SavedCellTransitionParser.computes_lift_of_target_ne_halt
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.computes_lift_of_target_ne_halt
       hfirst' (by simp [canonicalBoundaryMarkConfig])
   have hnoHeader :
       transitionListParserNoHeader ([] : Word MachineCodeSymbol) := by
@@ -622,33 +622,33 @@ theorem contextualNonemptyComputesToReadyExact
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (TransitionParserContextTransport.contextualCanonicalSource
           baseLeftRev (t :: rest) suffix))
-      (Section53SavedCellTransitionParser.appendLeftContextConfig
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.appendLeftContextConfig
         baseLeftRev
-        (Section53SavedCellTransitionParser.finalReadyConfig
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.finalReadyConfig
           (t :: rest).length
           (MachineDescription.encodeTransitions (t :: rest)) suffix)) := by
   have hclean := paddedNonemptyComputesToReadyExact t rest suffix
   have hbarrier :
       TransitionParserContextTransport.configHasBlankBarrier
-        (Section53SavedCellTransitionParser.projectConfig
-          (Section53SavedCellTransitionParser.parserConfig
+        (FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectConfig
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
             (TransitionParserContextTransport.paddedCanonicalSource
               (t :: rest) suffix))) := by
-    simpa [Section53SavedCellTransitionParser.projectConfig,
-      Section53SavedCellTransitionParser.parserConfig,
-      Section53SavedCellTransitionParser.projectState,
+    simpa [FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectConfig,
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig,
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectState,
       TuringMachine.PhaseEmbedding.liftConfig] using
       TransitionParserContextTransport.paddedCanonicalSource_has_barrier
         (t :: rest) suffix
   have hcontext :=
-    Section53SavedCellTransitionParser.computes_append_left_context
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.computes_append_left_context
       baseLeftRev hbarrier hclean
-  simpa [Section53SavedCellTransitionParser.appendLeftContextConfig,
-    Section53SavedCellTransitionParser.parserConfig,
+  simpa [FiniteRecognizer.Interpreter.SavedCellTransitionParser.appendLeftContextConfig,
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig,
     TransitionParserContextTransport.contextualCanonicalSource,
     TransitionParserContextTransport.appendLeftContextConfig,
     TuringMachine.PhaseEmbedding.liftConfig]
@@ -661,18 +661,18 @@ theorem contextualNonemptyComputesToMarkedReady
     (t : TransitionDescription)
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol) :
-    TuringMachine.Computes Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+    TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (TransitionParserContextTransport.contextualCanonicalSource
           baseLeftRev (t :: rest) suffix))
-      (Section53InitializerFrontier.savedParserMaterializerSourceConfig
+      (FiniteRecognizer.Interpreter.InitializerFrontier.savedParserMaterializerSourceConfig
         baseLeftRev t rest suffix) := by
-  simpa [Section53SavedCellTransitionParser.appendLeftContextConfig,
-    Section53SavedCellTransitionParser.finalReadyConfig,
-    Section53SavedCellTransitionParser.readyConfig,
-    Section53InitializerFrontier.savedParserMaterializerSourceConfig,
-    Section53InitializerFrontier.markedParserMaterializerSourceTape,
-    Section53InitializerFrontier.appendParsedLeftContext,
+  simpa [FiniteRecognizer.Interpreter.SavedCellTransitionParser.appendLeftContextConfig,
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.finalReadyConfig,
+    FiniteRecognizer.Interpreter.SavedCellTransitionParser.readyConfig,
+    FiniteRecognizer.Interpreter.InitializerFrontier.savedParserMaterializerSourceConfig,
+    FiniteRecognizer.Interpreter.InitializerFrontier.markedParserMaterializerSourceTape,
+    FiniteRecognizer.Interpreter.InitializerFrontier.appendParsedLeftContext,
     TransitionParserContextTransport.appendLeftContext]
     using contextualNonemptyComputesToReadyExact
       baseLeftRev t rest suffix
@@ -709,57 +709,57 @@ theorem contextualNonemptyReadyTapeEquivMarked
     (rest : List TransitionDescription)
     (suffix : Word MachineCodeSymbol)
     (target : TuringMachine.Configuration MachineCodeSymbol
-      Section53SavedCellTransitionParser.Control)
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control)
     (hrun : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (TransitionParserContextTransport.contextualCanonicalSource
           baseLeftRev (t :: rest) suffix))
       target)
     (hstate : target.state =
-      Section53SavedCellTransitionParser.Control.ready
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
         (transitionListParserSavedHead suffix)) :
     Tape.Equiv
-      (Section53InitializerFrontier.markedParserMaterializerSourceTape
+      (FiniteRecognizer.Interpreter.InitializerFrontier.markedParserMaterializerSourceTape
         baseLeftRev t rest suffix)
       target.tape := by
   let exactTarget :=
-    Section53InitializerFrontier.savedParserMaterializerSourceConfig
+    FiniteRecognizer.Interpreter.InitializerFrontier.savedParserMaterializerSourceConfig
       baseLeftRev t rest suffix
   have hexact : TuringMachine.Computes
-      Section53SavedCellTransitionParser.machine
-      (Section53SavedCellTransitionParser.parserConfig
+      FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+      (FiniteRecognizer.Interpreter.SavedCellTransitionParser.parserConfig
         (TransitionParserContextTransport.contextualCanonicalSource
           baseLeftRev (t :: rest) suffix))
       exactTarget :=
     contextualNonemptyComputesToMarkedReady
       baseLeftRev t rest suffix
   have hexactStuck : forall next,
-      ¬ TuringMachine.Step Section53SavedCellTransitionParser.machine
+      ¬ TuringMachine.Step FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
         exactTarget next := by
     intro next hstep
     cases hstep with
     | mk haction =>
         simp [exactTarget,
-          Section53InitializerFrontier.savedParserMaterializerSourceConfig,
-          Section53SavedCellTransitionParser.machine,
-          Section53SavedCellTransitionParser.transition] at haction
+          FiniteRecognizer.Interpreter.InitializerFrontier.savedParserMaterializerSourceConfig,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition] at haction
   have htargetStuck : forall next,
-      ¬ TuringMachine.Step Section53SavedCellTransitionParser.machine
+      ¬ TuringMachine.Step FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
         target next := by
     intro next hstep
     cases hstep with
     | mk haction =>
         rw [hstate] at haction
-        simp [Section53SavedCellTransitionParser.machine,
-          Section53SavedCellTransitionParser.transition] at haction
+        simp [FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.transition] at haction
   have heq : exactTarget = target :=
     computesToStuckUnique hexact hexactStuck hrun htargetStuck
   subst target
   exact Tape.Equiv.refl _
 
 
-end Section53ExactBoundaryContinuation
+end FiniteRecognizer.Interpreter.ExactBoundaryContinuation
 
 end Computability
 end FoC

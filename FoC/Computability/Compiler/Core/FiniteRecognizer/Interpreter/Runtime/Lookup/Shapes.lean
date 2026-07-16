@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-- The untouched action fields and canonical remaining table after a row key. -/
 def runtimeKeyCanonicalActionSuffix
@@ -258,6 +258,6 @@ def rewindTape
 
 end RuntimeKeySelectedExtractor
 
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 end Computability
 end FoC

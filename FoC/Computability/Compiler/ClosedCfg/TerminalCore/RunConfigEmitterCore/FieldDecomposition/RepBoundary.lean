@@ -13,7 +13,7 @@ so it is only logically tape-equivalent to the canonical classified tape.
 Guarded structured encoding observes that represented window.  In particular,
 the represented guarded endpoint cannot be transported to the canonical
 selector source with ordinary physical
-{name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`.  Downstream #18
+{name (full := FoC.Computability.Tape.Equiv)}`Tape.Equiv`.  Run-config emitter
 integration must either run from the carried representative and serialize its
 semantic boundary, or provide a concrete boundary-aware repair.
 -/

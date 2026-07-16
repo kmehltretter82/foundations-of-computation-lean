@@ -8,8 +8,8 @@ set_option doc.verso true
 /-!
 # Guarded egress semantics
 
-The concrete #18 serializer will run outside the inner structured loop.  It
-must read four independent currencies from the guarded physical endpoint:
+The guarded serializer runs outside the inner structured loop and reads four
+independent currencies from the physical endpoint:
 
 * preserved input and original stage from compact tape-2 metadata;
 * the final state, either emitted from known finite control or recovered from

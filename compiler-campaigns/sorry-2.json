@@ -3,7 +3,6 @@
   "base_commit": "1d81000797b694b176b7f33348ad2b41f83581fe",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
-    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Contracts.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean"
   ],
   "frontier": "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFinStateFiniteLeaf",

@@ -780,8 +780,8 @@ theorem unified_run_to_removed_left_layout {stateCount : Nat} (selected : Select
       simpa [DeleteRestagedMachine.rewindConfig] using Tape.Equiv.symm hgateInput
     exact Tape.Equiv.trans hinputGate (by simpa [countOutput, countLeftRev, countSuffix] using hcountTape)
 /-- The canonical layout checkpoint is stable under all padding accumulated by
-the dispatch prefix.  This is the form needed by the eventual update-kernel
-consumer, whose selected-entry tape is only equivalent to a clean input. -/
+the dispatch prefix.  This is the form consumed by the update kernel, whose
+selected-entry tape is only equivalent to a clean input. -/
 theorem unified_run_to_removed_left_layout_of_source_equiv
     {stateCount : Nat} (selected : Selected stateCount) (fuel : Nat) (L : Layout stateCount)
     (callerData : Word MachineCodeSymbol) (nextHead : Option MachineCodeSymbol)

@@ -8,9 +8,9 @@ set_option doc.verso true
 /-!
 # Generated tuple-search program boundaries
 
-Finite-state construction leaves for generated tuple search.  This module owns
-the concrete searcher obligations; downstream Universal/Ranges files should
-only adapt these core contracts to their public names.
+Finite-state constructions for generated tuple search. This module owns the
+concrete searcher implementations and contracts; downstream Universal/Ranges
+files only adapt those contracts to their public names.
 -/
 
 namespace FoC

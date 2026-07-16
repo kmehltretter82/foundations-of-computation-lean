@@ -6,7 +6,9 @@ set_option doc.verso true
 # Selected-head structured route contracts
 
 Compatibility import barrel for the conditional selected-head route shapes.
-The false, unconsumed #16 raw-head ingress and normalizer stack is retired.
-The live #17 projector frontier is the direct marker-preserving endpoint
-module, not the lossy cleanup route.
+The false, unconsumed raw-head ingress and normalizer stack is retired; its
+guardrail records the source collision. The supported projector is the direct
+marker-preserving
+{name (full := FoC.Computability.CommonGround.FiniteTransducers.Structured.MultiTapeLowering.StructuredTape2ProjectorConstruction)}`StructuredTape2ProjectorConstruction`,
+not the lossy cleanup route.
 -/

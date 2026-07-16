@@ -5,12 +5,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53ZeroEmptyMetadataFinal
+namespace FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ParserAssembly
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 def olderMetadataLeftRev
     (fuel stateCount : Nat) : Word MachineCodeSymbol :=
@@ -548,7 +548,7 @@ theorem contextual_parser_endpoint_tape
     (first : MachineCodeSymbol)
     (rest : Word MachineCodeSymbol)
     (hpayload : parserPayloadWord symbols suffix = first :: rest) :
-    Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
+    FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
         base (parsedTransitionHaltConfig rowCount symbols suffix).tape =
       (contextSourceConfig
         (parsedTableLeftRev rowCount ++ base.map some)
@@ -560,7 +560,7 @@ theorem contextual_parser_endpoint_tape
         some first :: rest.map some := by
     simpa [parserPayloadWord, List.map_append] using hmap
   change
-    Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
+    FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
         base
         (transitionListParserOptionTape
           (parsedTableLeftRev rowCount)
@@ -663,6 +663,6 @@ theorem extractor_computes
         (by simpa [htarget, Nat.succ_eq_add_one] using htargetStep)
       simpa [htarget, Nat.succ_eq_add_one, Nat.add_assoc] using hbounce
 
-end Section53ZeroEmptyMetadataFinal
+end FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 end Computability
 end FoC

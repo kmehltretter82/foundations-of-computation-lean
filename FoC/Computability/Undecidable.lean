@@ -24,7 +24,7 @@ namespace Computability
 open Languages
 
 /-!
-# Negative computability predicates
+## Negative computability predicates
 
 The chapter-facing undecidability statements use explicit negations of
 computability, acceptability, and decidability.
@@ -46,7 +46,7 @@ def AcceptableReduction (L : Language input) (K : Language output) : Prop :=
   TuringAcceptable K -> TuringAcceptable L
 
 /-!
-# Diagonal languages
+## Diagonal languages
 
 Diagonal languages are parameterized by an abstract decoding relation so the
 formal statements can separate the logical argument from any concrete machine
@@ -76,7 +76,7 @@ def DecoderUniversalForAllLanguages
     exists machine : Word code, DecoderRecognizes decodeAccepts machine L
 
 /-!
-# Halting-problem vocabularies
+## Halting-problem vocabularies
 
 The halting-problem predicates are stated both with concatenated encodings and
 with an explicit pair encoder.
@@ -173,7 +173,7 @@ theorem faithfulComputableMapDecidablePreimagePrinciple_of_computableMapPrincipl
       (faithfulTuringComputable_to_turingComputable hcomputable)
 
 /-!
-# Undecidability transport
+## Undecidability transport
 
 Undecidability is stable under language equality, complement, and decidable
 reductions.
@@ -247,7 +247,7 @@ theorem undecidable_of_decidableReduction
   exact hL (hred hK)
 
 /-!
-# Nonacceptability and acceptable reductions
+## Nonacceptability and acceptable reductions
 
 The corresponding facts for acceptability support diagonal non-recognizability
 arguments.
@@ -305,7 +305,7 @@ theorem nonComputableFunction_of_pointwise_equal
   exact h (turingComputable_of_pointwise_equal hg (fun w => Eq.symm (hfg w)))
 
 /-!
-# Diagonal contradiction
+## Diagonal contradiction
 
 The central diagonal argument says no decoder row can recognize its own
 self-diagonal language, which yields nonacceptability under a universal decoder
@@ -438,7 +438,7 @@ theorem selfHalting_re_not_recursive_and_compl_not_re_if_decoder_universal
   · exact compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal huniv
 
 /-!
-# Halting problem reductions
+## Halting problem reductions
 
 The remaining lemmas relate self-halting, pair-halting, and concatenated
 halting encodings by membership equivalences and preimage reductions.
@@ -729,7 +729,7 @@ theorem universalMachineSpec_pair_decode
   (hspec machine input).mp hhalts
 
 /-!
-# Universal and diagonal statement classification
+## Universal and diagonal statement classification
 
 The universal and diagonal development spans three evidence tiers, and each
 theorem's tier is visible in its hypotheses.
@@ -742,25 +742,24 @@ relation.  Everything in this module is semantic: the diagonal contradictions
 halting-problem languages, and the {name}`UniversalMachineSpec` unfolding
 lemmas.  The decoded-description acceptance languages in
 {module -checked}`FoC.Computability.DescriptionLanguages` are also purely
-semantic; no theorem in either module asserts that a finite universal machine
-exists.
+semantic. These modules state what a decoder means; the finite implementations
+live in the compiler layer.
 
 Conditional theorems consume named construction hypotheses such as
 {name}`DecoderUniversalForAcceptableLanguages`,
 {name}`DecidablePreimagePrinciple`, or a supplied
-{name}`UniversalMachineSpec` witness.  The compiler-facing universal-runner
-interfaces in
-{module -checked}`FoC.Computability.Compiler.UniversalAndRanges.Basic` name
-the exact runner and compiler obligations that upgrade these semantic
-arguments to machine-level statements.
-
-Concrete finite machines exist for the faithful diagonal pair map, namely
-{lit}`FaithfulConcreteDiagonalPairMapMachine` in
-{module -checked}`FoC.Computability.DiagonalPairMachine`, and for the
-description-prefix parser and normalizer route under
+{name}`UniversalMachineSpec` witness. The decoded-description interpreter is
+constructed in
+{module -checked}`FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter`,
+and the finite prefix recognizer and universal-prefix runner are constructed in
 {module -checked}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`.
-No concrete finite universal interpreter has been constructed; that route
-remains an explicit named construction obligation in the compiler layer.
+Universal row coverage remains conditional on the encoded-input description
+compiler principle, which selects a description for every acceptable language.
+
+Concrete finite machines also exist for the faithful diagonal pair map in
+{module -checked}`FoC.Computability.DiagonalPairMachine`. The completed compiler
+constructions provide the corresponding finite interpreter and prefix runner;
+this semantic module does not duplicate their transition-level proofs.
 -/
 
 end Computability

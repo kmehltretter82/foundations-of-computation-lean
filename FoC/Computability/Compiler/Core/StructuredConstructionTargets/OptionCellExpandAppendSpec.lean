@@ -157,9 +157,8 @@ def optionCellExpandAppendSuffixCells : List (Option Bool) :=
 /--
 Exact physical target for the option-cell expansion primitive.
 
-The eventual finite table should write these cells and rewind to the first
-separator.  This is the reusable missing primitive called out by the
-FuelSimulator materializer pilot plan.
+The expansion primitive writes these cells and rewinds to the first separator.
+This target is shared by the FuelSimulator materializer's embedding emitter.
 -/
 def optionCellExpandAppendTargetCells
     (bits : Word Bool) : List (Option Bool) :=

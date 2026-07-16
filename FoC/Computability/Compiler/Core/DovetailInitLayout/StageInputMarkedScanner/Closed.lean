@@ -488,8 +488,7 @@ private theorem stageInputMarkedScannerDescription_closed
 /-!
 The exported construction theorem packages the subroutine readiness, forward
 run, and closed-run inversion required by {name}`StageInputMarkedScannerSpec`.
-At this point the theorem itself is only glue; every remaining proof obligation
-has a phase-specific name.
+The theorem is glue over the phase-specific lemmas for those three properties.
 -/
 
 theorem stageInputMarkedScannerDescription_spec :

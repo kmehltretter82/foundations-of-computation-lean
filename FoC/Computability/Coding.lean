@@ -23,7 +23,7 @@ open Foundation
 open Languages
 
 /-!
-# Pair codes
+## Pair codes
 
 A pair is encoded by tagging the symbols from the left and right components.
 The separator is included to mirror the textbook notation, but injectivity is

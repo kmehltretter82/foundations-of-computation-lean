@@ -10,10 +10,10 @@ namespace Computability
 
 open Languages
 
-namespace Section53OuterPhaseSumGeneric
+namespace FiniteRecognizer.Interpreter.OuterPhaseSumGeneric
 
-abbrev ParserControl := Section53ParserBranchPhaseSum.Control
-abbrev RuntimeControl := Section53RuntimePhaseSum.Control
+abbrev ParserControl := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control
+abbrev RuntimeControl := FiniteRecognizer.Interpreter.RuntimePhaseSum.Control
 
 /-!
 # Interpreter phase composition
@@ -37,9 +37,9 @@ namespace Control
 def elems
     (initializerFinite : Foundation.FiniteType initializerState) :
     List (Control initializerState) :=
-  Section53ParserBranchPhaseSum.Control.finite.elems.map Control.parser ++
+  FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.finite.elems.map Control.parser ++
     initializerFinite.elems.map Control.initializer ++
-    Section53RuntimePhaseSum.Control.finite.elems.map Control.runtime ++
+    FiniteRecognizer.Interpreter.RuntimePhaseSum.Control.finite.elems.map Control.runtime ++
     [Control.accept, Control.reject]
 
 def finite
@@ -51,11 +51,11 @@ def finite
     cases state with
     | parser inner =>
         simp [elems,
-          Section53ParserBranchPhaseSum.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.finite.complete inner]
     | initializer inner =>
         simp [elems, initializerFinite.complete inner]
     | runtime inner =>
-        simp [elems, Section53RuntimePhaseSum.Control.finite.complete inner]
+        simp [elems, FiniteRecognizer.Interpreter.RuntimePhaseSum.Control.finite.complete inner]
     | accept => simp [elems]
     | reject => simp [elems]
 
@@ -112,8 +112,8 @@ def parserEmbed
 /-- The initializer enters the runtime at the already-materialized query
 scan, not at the runtime machine's clean-input parser start. -/
 def runtimeLoopEntry : RuntimeControl :=
-  Section53RuntimePhaseSum.scanEmbed
-    (.inner Section53UniformInterpreterOneStep.RuntimeKeyComparatorState.scanQuery)
+  FiniteRecognizer.Interpreter.RuntimePhaseSum.scanEmbed
+    (.inner FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeyComparatorState.scanQuery)
 
 def initializerEmbed [DecidableEq initializerState]
     (initializerReady : initializerState) :
@@ -138,13 +138,13 @@ def transition [DecidableEq initializerState]
         (Option MachineCodeSymbol × Direction × Control initializerState)
   | .parser state, read =>
       Option.map (mapAction (parserEmbed initializerEntry))
-        (Section53ParserBranchPhaseSum.machine.transition state read)
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.transition state read)
   | .initializer state, read =>
       Option.map (mapAction (initializerEmbed initializerReady))
         (initializer.transition state read)
   | .runtime state, read =>
       Option.map (mapAction runtimeEmbed)
-        (Section53RuntimePhaseSum.machine.transition state read)
+        (FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.transition state read)
   | .accept, _ => none
   | .reject, _ => none
 
@@ -153,7 +153,7 @@ def machine [DecidableEq initializerState]
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState) :
     TuringMachine MachineCodeSymbol (Control initializerState) where
-  start := .parser Section53ParserBranchPhaseSum.machine.start
+  start := .parser FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.start
   halt := .accept
   transition := transition initializer initializerEntry initializerReady
   statesFinite := Control.finite initializer.statesFinite
@@ -182,19 +182,19 @@ def sourceConfig
     (tokens : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol (Control initializerState) :=
   parserConfig initializerEntry
-    (Section53ParserBranchPhaseSum.sourceConfig tokens)
+    (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.sourceConfig tokens)
 
 def prefixEmbed
     (initializerEntry : Option MachineCodeSymbol -> initializerState) :
-    Section53ParserPrefixPhaseSum.Control -> Control initializerState :=
+    FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control -> Control initializerState :=
   fun state =>
     parserEmbed initializerEntry
-      (Section53ParserBranchPhaseSum.parserTarget state)
+      (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget state)
 
 def prefixConfig
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control) :
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control) :
     TuringMachine.Configuration MachineCodeSymbol (Control initializerState) :=
   TuringMachine.PhaseEmbedding.liftConfig
     (prefixEmbed initializerEntry) config
@@ -204,7 +204,7 @@ theorem sourceConfig_eq_prefixConfig
     (tokens : Word MachineCodeSymbol) :
     sourceConfig initializerEntry tokens =
       prefixConfig initializerEntry
-        (Section53ParserPrefixPhaseSum.sourceConfig tokens) := by
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.sourceConfig tokens) := by
   rfl
 
 theorem sourceConfig_eq_initial [DecidableEq initializerState]
@@ -327,7 +327,7 @@ theorem parser_transition_of_eq_some
     (source target : ParserControl)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53ParserBranchPhaseSum.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.transition
       source read = some (write, direction, target)) :
     transition initializer initializerEntry initializerReady
         (parserEmbed initializerEntry source) read =
@@ -375,7 +375,7 @@ theorem runtime_transition_of_eq_some
     (source target : RuntimeControl)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53RuntimePhaseSum.machine.transition source read =
+    (htransition : FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.transition source read =
       some (write, direction, target)) :
     transition initializer initializerEntry initializerReady
         (runtimeEmbed source) read =
@@ -398,14 +398,14 @@ theorem parser_computes
     (initializerReady : initializerState)
     {source target :
       TuringMachine.Configuration MachineCodeSymbol ParserControl}
-    (hrun : TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       source target) :
     TuringMachine.Computes
       (machine initializer initializerEntry initializerReady)
       (parserConfig initializerEntry source)
       (parserConfig initializerEntry target) :=
   computes_of_transition_embedding initializer initializerEntry
-    initializerReady Section53ParserBranchPhaseSum.machine
+    initializerReady FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       (parserEmbed initializerEntry)
       (parser_transition_of_eq_some initializer initializerEntry
         initializerReady) hrun
@@ -436,14 +436,14 @@ theorem runtime_computes
     (initializerReady : initializerState)
     {source target :
       TuringMachine.Configuration MachineCodeSymbol RuntimeControl}
-    (hrun : TuringMachine.Computes Section53RuntimePhaseSum.machine
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimePhaseSum.machine
       source target) :
     TuringMachine.Computes
       (machine initializer initializerEntry initializerReady)
       (runtimeConfig source)
       (runtimeConfig target) :=
   computes_of_transition_embedding initializer initializerEntry
-    initializerReady Section53RuntimePhaseSum.machine runtimeEmbed
+    initializerReady FiniteRecognizer.Interpreter.RuntimePhaseSum.machine runtimeEmbed
       (runtime_transition_of_eq_some initializer initializerEntry
         initializerReady) hrun
 
@@ -459,11 +459,11 @@ theorem parserConfig_directDecisionConfig
     (start halt : Nat)
     (tape : Tape MachineCodeSymbol) :
     parserConfig initializerEntry
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           start halt tape) =
       directDecisionConfig start halt tape := by
   by_cases heq : start = halt <;>
-    simp [parserConfig, Section53ParserBranchPhaseSum.directDecisionConfig,
+    simp [parserConfig, FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig,
       directDecisionConfig, parserEmbed,
       TuringMachine.PhaseEmbedding.liftConfig, heq]
 
@@ -477,9 +477,9 @@ theorem haltsFrom_iff_of_parser_computes_to_directDecision
     {source : TuringMachine.Configuration MachineCodeSymbol ParserControl}
     (start halt : Nat)
     (finalTape : Tape MachineCodeSymbol)
-    (hrun : TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       source
-      (Section53ParserBranchPhaseSum.directDecisionConfig
+      (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
         start halt finalTape)) :
     TuringMachine.HaltsFrom
         (machine initializer initializerEntry initializerReady)
@@ -536,13 +536,13 @@ private theorem runtime_stepConfig_eq_map_of_embed_eq_runtime
     (machine initializer initializerEntry initializerReady).stepConfig
         (runtimeConfig { state := state, tape := tape }) =
       Option.map runtimeConfig
-        (Section53RuntimePhaseSum.machine.stepConfig
+        (FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.stepConfig
           { state := state, tape := tape }) := by
   unfold TuringMachine.stepConfig
   simp only [runtimeConfig, TuringMachine.PhaseEmbedding.liftConfig]
   rw [hstate]
   simp only [machine, transition]
-  cases htransition : Section53RuntimePhaseSum.machine.transition state
+  cases htransition : FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.transition state
       (Tape.read tape) with
   | none => simp
   | some action =>
@@ -560,7 +560,7 @@ theorem active_runtime_stepConfig_eq_map
     (machine initializer initializerEntry initializerReady).stepConfig
         (runtimeConfig source) =
       Option.map runtimeConfig
-        (Section53RuntimePhaseSum.machine.stepConfig source) := by
+        (FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.stepConfig source) := by
   rcases source with ⟨state, tape⟩
   exact runtime_stepConfig_eq_map_of_embed_eq_runtime
     initializer initializerEntry initializerReady state tape
@@ -581,13 +581,13 @@ theorem active_runtime_step_inversion
       (runtimeConfig source) target) :
     exists innerTarget : TuringMachine.Configuration MachineCodeSymbol
         RuntimeControl,
-      TuringMachine.Step Section53RuntimePhaseSum.machine
+      TuringMachine.Step FiniteRecognizer.Interpreter.RuntimePhaseSum.machine
           source innerTarget ∧
         target = runtimeConfig innerTarget := by
   have houter := TuringMachine.stepConfig_eq_some_iff_step.mpr hstep
   rw [active_runtime_stepConfig_eq_map initializer initializerEntry
     initializerReady source hactive] at houter
-  cases hinner : Section53RuntimePhaseSum.machine.stepConfig source with
+  cases hinner : FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.stepConfig source with
   | none => simp [hinner] at houter
   | some innerTarget =>
       simp [hinner] at houter
@@ -628,7 +628,7 @@ theorem exists_runtimeTerminal_of_haltsFromIn
     exists target : TuringMachine.Configuration MachineCodeSymbol
         RuntimeControl,
       innerSteps ≤ steps ∧
-      TuringMachine.ComputesIn Section53RuntimePhaseSum.machine
+      TuringMachine.ComputesIn FiniteRecognizer.Interpreter.RuntimePhaseSum.machine
           innerSteps source target ∧
         RuntimeTerminal target := by
   exact
@@ -653,7 +653,7 @@ theorem runtime_haltsFrom_iff
     TuringMachine.HaltsFrom
         (machine initializer initializerEntry initializerReady)
         (runtimeConfig source) ↔
-      TuringMachine.HaltsFrom Section53RuntimePhaseSum.machine source := by
+      TuringMachine.HaltsFrom FiniteRecognizer.Interpreter.RuntimePhaseSum.machine source := by
   constructor
   · intro houterHalts
     rcases TuringMachine.halts_from_to_halts_from_in houterHalts with
@@ -693,7 +693,7 @@ theorem runtime_haltsFrom_iff
         ?_⟩
     change runtimeEmbed final.state =
       (Control.accept : Control initializerState)
-    change final.state = Section53RuntimePhaseSum.machine.halt at hhalted
+    change final.state = FiniteRecognizer.Interpreter.RuntimePhaseSum.machine.halt at hhalted
     rw [hhalted]
     rfl
 
@@ -704,7 +704,7 @@ def outerCanonicalSourceConfig
     (input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol (Control initializerState) :=
   parserConfig initializerEntry
-    (Section53ParserCanonicalBranches.canonicalSourceConfig D fuel input)
+    (FiniteRecognizer.Interpreter.ParserCanonicalBranches.canonicalSourceConfig D fuel input)
 
 /-- Concrete forward obligations needed from the parser and positive
 initializer.  Runtime semantics and all outer phase plumbing are already
@@ -723,10 +723,10 @@ structure CanonicalPhaseContract
       (input : Word MachineCodeSymbol),
       (fuel = 0 ∨ D.transitions = []) ->
       exists finalTape : Tape MachineCodeSymbol,
-        TuringMachine.Computes Section53ParserBranchPhaseSum.machine
-          (Section53ParserCanonicalBranches.canonicalSourceConfig
+        TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
+          (FiniteRecognizer.Interpreter.ParserCanonicalBranches.canonicalSourceConfig
             D fuel input)
-          (Section53ParserBranchPhaseSum.directDecisionConfig
+          (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
             D.start D.halt finalTape)
   positive :
     forall (D : MachineDescription)
@@ -737,10 +737,10 @@ structure CanonicalPhaseContract
       D.transitions = first :: rest ->
       exists parserTape : Tape MachineCodeSymbol,
       exists initializerTape : Tape MachineCodeSymbol,
-        TuringMachine.Computes Section53ParserBranchPhaseSum.machine
-          (Section53ParserCanonicalBranches.canonicalSourceConfig
+        TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
+          (FiniteRecognizer.Interpreter.ParserCanonicalBranches.canonicalSourceConfig
             D (remainingFuel + 1) input)
-          { state := Section53ParserBranchPhaseSum.Control.positiveReady
+          { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.positiveReady
               (transitionListParserSavedHead input)
             tape := parserTape } ∧
         TuringMachine.Computes initializer
@@ -749,8 +749,8 @@ structure CanonicalPhaseContract
           { state := initializerReady
             tape := initializerTape } ∧
         Tape.Equiv
-          (Section53BoundedLoopInduction.loopSourceConfig
-            (Section53InitializerFrontier.initialConfiguration D input)
+          (FiniteRecognizer.Interpreter.BoundedLoopInduction.loopSourceConfig
+            (FiniteRecognizer.Interpreter.InitializerFrontier.initialConfiguration D input)
             (first :: rest) remainingFuel D.halt []).tape
           initializerTape
 
@@ -764,9 +764,9 @@ theorem directCanonical_haltsFrom_iff_haltsIn
     (input : Word MachineCodeSymbol)
     (hbranch : fuel = 0 ∨ D.transitions = [])
     (finalTape : Tape MachineCodeSymbol)
-    (hrun : TuringMachine.Computes Section53ParserBranchPhaseSum.machine
-      (Section53ParserCanonicalBranches.canonicalSourceConfig D fuel input)
-      (Section53ParserBranchPhaseSum.directDecisionConfig
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
+      (FiniteRecognizer.Interpreter.ParserCanonicalBranches.canonicalSourceConfig D fuel input)
+      (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
         D.start D.halt finalTape)) :
     TuringMachine.HaltsFrom
         (machine initializer initializerEntry initializerReady)
@@ -776,7 +776,7 @@ theorem directCanonical_haltsFrom_iff_haltsIn
   exact Iff.trans
     (haltsFrom_iff_of_parser_computes_to_directDecision initializer
       initializerEntry initializerReady D.start D.halt finalTape hrun)
-    (Section53SemanticAcceptance.direct_state_eq_iff_haltsIn
+    (FiniteRecognizer.Interpreter.SemanticAcceptance.direct_state_eq_iff_haltsIn
       D fuel input hbranch)
 
 theorem positiveCanonical_haltsFrom_iff_haltsIn
@@ -826,16 +826,16 @@ theorem positiveCanonical_haltsFrom_iff_haltsIn
               (transitionListParserSavedHead input)
             tape := parserTape })
         (runtimeConfig
-          (Section53BoundedLoopInduction.outerLoopConfig
-            Section53RuntimePhaseSum.scanEmbed
-            (Section53InitializerFrontier.initialConfiguration D input)
+          (FiniteRecognizer.Interpreter.BoundedLoopInduction.outerLoopConfig
+            FiniteRecognizer.Interpreter.RuntimePhaseSum.scanEmbed
+            (FiniteRecognizer.Interpreter.InitializerFrontier.initialConfiguration D input)
             (first :: rest) remainingFuel D.halt [] initializerTape)) := by
     simpa [initializerConfig, initializerEmbed, runtimeConfig,
-      runtimeEmbed, runtimeLoopEntry, Section53RuntimePhaseSum.scanEmbed,
-      Section53BoundedLoopInduction.outerLoopConfig,
-      Section53BoundedLoopInduction.loopSourceConfig,
-      Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair.canonicalScanRowsConfig,
-      Section53RuntimePhaseSum.machine,
+      runtimeEmbed, runtimeLoopEntry, FiniteRecognizer.Interpreter.RuntimePhaseSum.scanEmbed,
+      FiniteRecognizer.Interpreter.BoundedLoopInduction.outerLoopConfig,
+      FiniteRecognizer.Interpreter.BoundedLoopInduction.loopSourceConfig,
+      FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair.canonicalScanRowsConfig,
+      FiniteRecognizer.Interpreter.RuntimePhaseSum.machine,
       TuringMachine.PhaseEmbedding.liftConfig] using hinitializerOuter
   have hprefix := TuringMachine.computes_trans hparserToInitializer
     hinitializerToRuntime
@@ -845,7 +845,7 @@ theorem positiveCanonical_haltsFrom_iff_haltsIn
         initializerReady) hprefix)
     (Iff.trans
       (runtime_haltsFrom_iff initializer initializerEntry initializerReady _)
-      (Section53SemanticAcceptance.positive_runtime_haltsFrom_iff_haltsIn
+      (FiniteRecognizer.Interpreter.SemanticAcceptance.positive_runtime_haltsFrom_iff_haltsIn
         D first rest htransitions remainingFuel input initializerTape htape))
 
 theorem canonical_haltsFrom_iff_haltsIn
@@ -937,14 +937,14 @@ private theorem parser_stepConfig_eq_map_of_embed_eq_parser
     (machine initializer initializerEntry initializerReady).stepConfig
         (parserConfig initializerEntry { state := state, tape := tape }) =
       Option.map (parserConfig initializerEntry)
-        (Section53ParserBranchPhaseSum.machine.stepConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.stepConfig
           { state := state, tape := tape }) := by
   unfold TuringMachine.stepConfig
   simp only [parserConfig, TuringMachine.PhaseEmbedding.liftConfig]
   rw [hstate]
   simp only [machine, transition]
   cases htransition :
-      Section53ParserBranchPhaseSum.machine.transition state
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.transition state
         (Tape.read tape) with
   | none => simp
   | some action =>
@@ -958,39 +958,39 @@ private theorem active_prefix_stepConfig_eq_map_of_embed_eq_parser
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState)
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source)
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source)
     (hstate : prefixEmbed initializerEntry source.state =
-      .parser (Section53ParserBranchPhaseSum.parserTarget source.state)) :
+      .parser (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget source.state)) :
     (machine initializer initializerEntry initializerReady).stepConfig
         (prefixConfig initializerEntry source) =
       Option.map (prefixConfig initializerEntry)
-        (Section53ParserPrefixPhaseSum.machine.stepConfig source) := by
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig source) := by
   rcases source with ⟨state, tape⟩
   have houter := parser_stepConfig_eq_map_of_embed_eq_parser
     initializer initializerEntry initializerReady
-    (Section53ParserBranchPhaseSum.parserTarget state) tape hstate
+    (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget state) tape hstate
   have hbranch :=
-    Section53ParserBranchProjection.active_stepConfig_eq_map
+    FiniteRecognizer.Interpreter.ParserBranchProjection.active_stepConfig_eq_map
       { state := state, tape := tape } hactive
   change
-    Section53ParserBranchPhaseSum.machine.stepConfig
-        { state := Section53ParserBranchPhaseSum.parserTarget state,
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine.stepConfig
+        { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget state,
           tape := tape } =
-      Option.map Section53ParserBranchPhaseSum.parserConfig
-        (Section53ParserPrefixPhaseSum.machine.stepConfig
+      Option.map FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig
           { state := state, tape := tape }) at hbranch
   rw [hbranch] at houter
   rw [Option.map_map] at houter
   have hsourceConfig :
       parserConfig initializerEntry
-          { state := Section53ParserBranchPhaseSum.parserTarget state,
+          { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget state,
             tape := tape } =
         prefixConfig initializerEntry { state := state, tape := tape } := by
     rfl
   have hconfigFunction :
       (parserConfig initializerEntry ∘
-          Section53ParserBranchPhaseSum.parserConfig) =
+          FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig) =
         prefixConfig initializerEntry := by
     funext config
     rcases config with ⟨innerState, innerTape⟩
@@ -1007,12 +1007,12 @@ theorem active_prefix_stepConfig_eq_map
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState)
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source) :
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source) :
     (machine initializer initializerEntry initializerReady).stepConfig
         (prefixConfig initializerEntry source) =
       Option.map (prefixConfig initializerEntry)
-        (Section53ParserPrefixPhaseSum.machine.stepConfig source) := by
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig source) := by
   rcases source with ⟨state, tape⟩
   cases state with
   | fuel fuelZero state =>
@@ -1046,22 +1046,22 @@ theorem active_prefix_step_inversion
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState)
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
     (target : TuringMachine.Configuration MachineCodeSymbol
       (Control initializerState))
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source)
     (hstep : TuringMachine.Step
       (machine initializer initializerEntry initializerReady)
       (prefixConfig initializerEntry source) target) :
     exists innerTarget : TuringMachine.Configuration MachineCodeSymbol
-        Section53ParserPrefixPhaseSum.Control,
-      TuringMachine.Step Section53ParserPrefixPhaseSum.machine
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control,
+      TuringMachine.Step FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
           source innerTarget ∧
         target = prefixConfig initializerEntry innerTarget := by
   have houter := TuringMachine.stepConfig_eq_some_iff_step.mpr hstep
   rw [active_prefix_stepConfig_eq_map initializer initializerEntry
     initializerReady source hactive] at houter
-  cases hinner : Section53ParserPrefixPhaseSum.machine.stepConfig source with
+  cases hinner : FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.stepConfig source with
   | none => simp [hinner] at houter
   | some innerTarget =>
       simp [hinner] at houter
@@ -1075,8 +1075,8 @@ theorem active_prefixConfig_not_halted
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState)
     (source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control)
-    (hactive : ¬ Section53ParserPrefixPhaseSum.SuccessfulTerminal source) :
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control)
+    (hactive : ¬ FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal source) :
     ¬ TuringMachine.Halted
       (machine initializer initializerEntry initializerReady)
       (prefixConfig initializerEntry source) := by
@@ -1084,36 +1084,36 @@ theorem active_prefixConfig_not_halted
   cases state with
   | fuel fuelZero state =>
       simp [TuringMachine.Halted, prefixConfig, prefixEmbed, parserEmbed,
-        Section53ParserBranchPhaseSum.parserTarget,
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig, machine]
   | header fuelZero state =>
       simp [TuringMachine.Halted, prefixConfig, prefixEmbed, parserEmbed,
-        Section53ParserBranchPhaseSum.parserTarget,
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig, machine]
   | shift fuelZero state =>
       simp [TuringMachine.Halted, prefixConfig, prefixEmbed, parserEmbed,
-        Section53ParserBranchPhaseSum.parserTarget,
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig, machine]
   | countValidate fuelZero =>
       simp [TuringMachine.Halted, prefixConfig, prefixEmbed, parserEmbed,
-        Section53ParserBranchPhaseSum.parserTarget,
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig, machine]
   | countRewind fuelZero =>
       simp [TuringMachine.Halted, prefixConfig, prefixEmbed, parserEmbed,
-        Section53ParserBranchPhaseSum.parserTarget,
+        FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
         TuringMachine.PhaseEmbedding.liftConfig, machine]
   | table fuelZero state =>
       cases state with
       | parser parserState =>
           cases parserState <;>
             simp [TuringMachine.Halted, prefixConfig, prefixEmbed,
-              parserEmbed, Section53ParserBranchPhaseSum.parserTarget,
+              parserEmbed, FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
               TuringMachine.PhaseEmbedding.liftConfig, machine]
       | ready saved =>
           exact False.elim (hactive ⟨fuelZero, Or.inr ⟨saved, rfl⟩⟩)
       | halt =>
           simp [TuringMachine.Halted, prefixConfig, prefixEmbed,
-            parserEmbed, Section53ParserBranchPhaseSum.parserTarget,
+            parserEmbed, FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
             TuringMachine.PhaseEmbedding.liftConfig, machine]
 
 /-- Every halting run of the final phase sum crosses an honest successful
@@ -1125,21 +1125,21 @@ theorem exists_successfulPrefixTerminal_of_haltsFromIn
     (initializerReady : initializerState)
     {steps : Nat}
     {source : TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserPrefixPhaseSum.Control}
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control}
     (hhalts : TuringMachine.HaltsFromIn
       (machine initializer initializerEntry initializerReady) steps
       (prefixConfig initializerEntry source)) :
     exists innerSteps : Nat,
     exists target : TuringMachine.Configuration MachineCodeSymbol
-        Section53ParserPrefixPhaseSum.Control,
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control,
       innerSteps ≤ steps ∧
-      TuringMachine.ComputesIn Section53ParserPrefixPhaseSum.machine
+      TuringMachine.ComputesIn FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
           innerSteps source target ∧
-        Section53ParserPrefixPhaseSum.SuccessfulTerminal target := by
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal target := by
   exact
     TuringMachine.PhaseExitProjection.exists_bounded_inner_exit_of_haltsFromIn_lift
       (prefixEmbed initializerEntry)
-      Section53ParserPrefixPhaseSum.SuccessfulTerminal
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal
       (active_prefix_step_inversion initializer initializerEntry
         initializerReady)
       (active_prefixConfig_not_halted initializer initializerEntry
@@ -1154,12 +1154,12 @@ structure SuccessfulPrefixEvidenceContract : Prop where
     forall (tokens : Word MachineCodeSymbol)
       (steps : Nat)
       (target : TuringMachine.Configuration MachineCodeSymbol
-        Section53ParserPrefixPhaseSum.Control),
-      TuringMachine.ComputesIn Section53ParserPrefixPhaseSum.machine steps
-          (Section53ParserPrefixPhaseSum.sourceConfig tokens) target ->
-      Section53ParserPrefixPhaseSum.SuccessfulTerminal target ->
+        FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control),
+      TuringMachine.ComputesIn FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine steps
+          (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.sourceConfig tokens) target ->
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.SuccessfulTerminal target ->
         Nonempty
-          (Section53OuterParserInversion.OuterParserPhaseEvidence tokens)
+          (FiniteRecognizer.Interpreter.OuterParserInversion.OuterParserPhaseEvidence tokens)
 
 /-- The generic initial-phase projection turns the concrete successful-prefix
 evidence interface into the exact contract consumed by total input inversion.
@@ -1170,7 +1170,7 @@ noncomputable def outerParserPhaseEvidenceContract
     (initializerEntry : Option MachineCodeSymbol -> initializerState)
     (initializerReady : initializerState)
     (evidence : SuccessfulPrefixEvidenceContract) :
-    Section53OuterParserInversion.OuterParserPhaseEvidenceContract
+    FiniteRecognizer.Interpreter.OuterParserInversion.OuterParserPhaseEvidenceContract
       (machine initializer initializerEntry initializerReady) where
   projectEvidence := by
     intro tokens hhalts
@@ -1178,7 +1178,7 @@ noncomputable def outerParserPhaseEvidenceContract
     have hhalts' : TuringMachine.HaltsFrom
           (machine initializer initializerEntry initializerReady)
           (prefixConfig initializerEntry
-            (Section53ParserPrefixPhaseSum.sourceConfig tokens)) := by
+            (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.sourceConfig tokens)) := by
         rw [← sourceConfig_eq_prefixConfig]
         rw [sourceConfig_eq_initial initializer initializerEntry
           initializerReady]
@@ -1202,7 +1202,7 @@ theorem totalShapeSpec
     FiniteRecognizer.DecodedDescriptionTotalShapeSpec
       (machine initializer initializerEntry initializerReady) := by
   intro tokens hhalts
-  exact Section53TotalInversion.outerInterpreter_halts_only_decoded
+  exact FiniteRecognizer.Interpreter.TotalInversion.outerInterpreter_halts_only_decoded
     (machine initializer initializerEntry initializerReady)
     ((outerParserPhaseEvidenceContract initializer initializerEntry
       initializerReady evidence).toPhaseEmbeddingContract)
@@ -1245,6 +1245,6 @@ theorem finStateConstruction
       evidence)
 
 
-end Section53OuterPhaseSumGeneric
+end FiniteRecognizer.Interpreter.OuterPhaseSumGeneric
 end Computability
 end FoC

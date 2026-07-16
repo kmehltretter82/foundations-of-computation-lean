@@ -634,7 +634,7 @@ theorem physicalPrimitiveSequenceGuardedContractEquiv_append_logicalEquiv
 /--
 Refresh contract for exact guard-slack endpoints produced by primitive rows.
 
-This is the implementable Milestone 1 shape: the physical input is not an
+This is the endpoint-aware static-lowering shape: the physical input is not an
 arbitrary member of {name}`StructuredLogicalEquivEncodedTapes`, but an exact
 endpoint obtained by running a primitive sequence on the guarded representative
 of some source logical tapes.  The endpoint predicate records the exact target
@@ -778,8 +778,8 @@ structure LogicalEquivGuardRefreshContract
 /--
 Bundled concrete guard-refresh normalizer for the refreshed endpoint route.
 
-This is the Milestone 1 gate for any claim of a fully concrete static lowerer:
-downstream code may stay parametric over this bundle, but a real lowered
+This is the explicit boundary for a concrete static lowerer: downstream code
+may stay parametric over this bundle, but a lowered
 {name}`MachineDescription` must provide an actual machine and this contract.
 -/
 structure GuardRefreshNormalizer where

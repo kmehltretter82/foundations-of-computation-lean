@@ -5,10 +5,9 @@ set_option doc.verso true
 /-!
 # Output contracts for the guarded two-tape structured-prefix eraser
 
-The exact structured-prefix eraser leaf still needs endpoint-positioning and
-blank-prefix compaction work.  This module records the reusable
-normalized-output surface that downstream selected-segment code can use while
-those exact cursor commitments remain local.
+The completed structured-prefix eraser keeps its exact endpoint-positioning
+and blank-prefix compaction details local. This module records the reusable
+normalized-output surface consumed by downstream selected-segment code.
 
 The contracts here are generic over the guarded two-tape source shape from
 {lit}`StructuredPrefixEraserShape`.  The selected-specific handoff module adapts

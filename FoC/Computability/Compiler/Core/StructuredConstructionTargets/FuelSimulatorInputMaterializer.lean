@@ -7,13 +7,12 @@ import FoC.Computability.Compiler.Core.DovetailInitLayout.StageInputMarkedScanne
 set_option doc.verso true
 
 /-!
-# Fuel-simulator structured input materializer pilot
+# Fuel-simulator structured input materializer
 
-This module is the Phase 3 pilot route for the public FuelSimulator input
-materializer.  The route is intentionally decomposed into a FuelSimulator input
-recognizer and a structured three-logical-tape embedding emitter, so remaining
-holes identify concrete finite-machine phases instead of assuming the endpoint
-materializer wholesale.
+This module implements the public FuelSimulator input materializer through a
+FuelSimulator input recognizer and a structured three-logical-tape embedding
+emitter.  The decomposition exposes the concrete finite-machine phases behind
+the endpoint materializer.
 -/
 
 namespace FoC
@@ -203,9 +202,8 @@ def FuelSimulatorStructuredIndexedMaterializerConstruction : Prop :=
 /--
 Equivalence-facing fuel-simulator input parser/materializer construction.
 
-This is the Phase 3 prototype contract for the public-input materializer: it
-keeps indexed closedness, but allows the initialized guarded tape to be reached
-up to tape equivalence.
+The contract keeps indexed closedness while allowing the initialized guarded
+tape to be reached up to tape equivalence.
 -/
 def FuelSimulatorStructuredEquivIndexedMaterializerConstruction :
     Prop :=
@@ -324,10 +322,10 @@ theorem fuelSimulatorInputRecognizerSpec_of_equivRunSpec
 /--
 Concrete finite parser for generated FuelSimulator public-input codes.
 
-This is the first real machine leaf left by the pilot: parse
-{lit}`stageInputCodeAppend w limit suffix`, require
+It parses
+{lit}`stageInputCodeAppend w limit suffix`, requires
 {lit}`suffix = encodeNatAppend fuel []`,
-and preserve the source tape as the handoff tape for the embedding emitter.
+and preserves the source tape as the handoff tape for the embedding emitter.
 -/
 def NatClosedScannerDescription : MachineDescription where
   stateCount := FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner.StageInputMarkedScannerDescription.stateCount

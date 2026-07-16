@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53TransitionParserHandoff
+namespace FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 def parsedMarkerRestoreSourceConfig
     (rowCount : Nat)
@@ -577,7 +577,7 @@ theorem oneTransition_parser_handoff_and_runtime_step
     done
 
 
-end Section53TransitionParserHandoff
+end FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 end Computability
 end FoC

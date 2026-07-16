@@ -6,11 +6,11 @@ namespace Computability
 
 open Languages
 
-namespace Section53InitializerRepeatedCopy
+namespace FiniteRecognizer.Interpreter.InitializerRepeatedCopy
 
-open Section53LoopRestagingAudit
-open Section53InitializerPersistentCopy
-open Section53InitializerPersistentCopy.PersistentMasterCopier
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy.PersistentMasterCopier
 
 /-!
 # Repeated table-copy phase
@@ -173,7 +173,7 @@ theorem copyPassTarget_move_left_eq_nextSource_tape
           (MachineDescription.encodeTransitions (first :: rest)).tail := by
     rfl
   have hmove :=
-    Section53InitializerPersistentCopy.PersistentMasterCopier.move_left_readyConfig_tape_eq_sourceConfig_tape
+    FiniteRecognizer.Interpreter.InitializerPersistentCopy.PersistentMasterCopier.move_left_readyConfig_tape_eq_sourceConfig_tape
       baseLeftRev
       (MachineCodeSymbol.header ::
         stackSuffix (first :: rest) copies context)
@@ -221,7 +221,7 @@ theorem input_start_split
   | cons first rest => exact Or.inr ⟨first, rest, rfl⟩
 
 
-end Section53InitializerRepeatedCopy
+end FiniteRecognizer.Interpreter.InitializerRepeatedCopy
 
 end Computability
 end FoC

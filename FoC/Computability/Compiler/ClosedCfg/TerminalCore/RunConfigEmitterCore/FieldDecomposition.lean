@@ -9,18 +9,16 @@ set_option doc.verso true
 /-!
 # Simulator-layout field-decomposition boundary
 
-After the #18 input materializer, logical tape 0 contains the complete encoded
-simulator layout and logical tapes 1 and 2 are blank.  The execution loops need
-a different representation: the live configuration tape on tape 0, a raw
+The structured input materializer leaves the complete encoded simulator layout
+on logical tape 0 and blank logical tapes 1 and 2.  The execution loops use the
+live configuration tape on tape 0, a raw
 unary stage counter on tape 1, and self-delimiting preserved metadata with the
 hit bit at the head of tape 2.
 
-This module names that exact boundary and records the clean reusable prefix of
-the physical route.  The existing structured Boolean-word decoder can expose
-the input field, but it does not materialize the stage counter or decode the
-configuration.  Its padded source and output-buffer initialization also differ
-exactly from the post-embedding boundary.  Consequently the construction
-contract below remains the honest integrated parser/decomposer obligation.
+This module names that exact boundary and the reusable physical decomposition
+route.  Dedicated phases expose the input field, materialize the stage counter,
+decode the configuration, and initialize the output buffer for the exact
+post-embedding layout.
 -/
 
 namespace FoC
@@ -153,7 +151,7 @@ def stageCounterTape (stage : Nat) : Tape Bool :=
 def loopTapes (L : SimulatorLayout) : List (Tape Bool) :=
   [L.config.tape, stageCounterTape L.stage, metadataHitTape L]
 
-/-- Physical post-embedding source produced by the checked #18 input
+/-- Physical post-embedding source produced by the structured input
 materializer. -/
 def embeddedSourceTape (L : SimulatorLayout) : Tape Bool :=
   StructuredConstructionTargets.structured3InputEmbeddingEmitterTargetTape

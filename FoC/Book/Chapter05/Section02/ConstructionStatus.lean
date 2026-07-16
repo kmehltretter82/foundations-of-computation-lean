@@ -1,22 +1,19 @@
-import FoC.Computability.Compiler.Core.BoundedTrace
-import FoC.Computability.Compiler.Core.ConstructionTargets
-import FoC.Computability.Compiler.Core.ControllerCloseout
 import FoC.Computability.Compiler.UniversalAndRanges.Ranges
 import FoC.Computability.FiniteProgram
 
 set_option doc.verso true
 
 /-!
-# Section 5.2 construction status
+# Section 5.2: Compiler Interfaces
 
-This page isolates the explicit compiler hypotheses used by the concrete
-Section 5.2 developments.  The semantic vocabulary page remains independent of
-these implementation boundaries.
+This page collects the compiler principles and concrete finite-presentation
+predicates used by the Section 5.2 developments. The semantic vocabulary page
+remains independent of these representation boundaries.
 
 Names containing {lit}`Semantic` are assumptions over Lean-level programs or
-partial functions.  The grouped records below package genuinely distinct
-construction handoffs; their fields use the reusable compiler contracts
-directly rather than chapter-local forwarding aliases.
+partial functions. Concrete predicates instead require an explicitly supplied,
+well-formed finite description and state its language or range contract
+directly.
 -/
 
 namespace FoC
@@ -57,59 +54,6 @@ structure SemanticLanguagePrincipleSurface (alpha : Type u) where
     ProgramAcceptorCompilationPrinciple alpha
   stagedBoolDeciderCompilation :
     ProgramBoolDeciderCompilationPrinciple alpha
-
-/-!
-## Finite Compiler Handoffs
-
-The following records package the independent description-backed construction
-surfaces consumed by dovetailing, bounded simulation, grammar recognition, and
-range compilation.
--/
-
-/-- Finite-description handoffs for the paired-recognizer dovetail route. -/
-structure PairedRecognizerDovetailSurface where
-  finiteSourceCompiler :
-    PairedRecognizerDovetailDescriptionCompilerPrinciple
-  boundedTableCompiler :
-    PairedRecognizerBoundedDovetailTableCompilerConstruction
-  layoutOutputRealizer :
-    PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction
-  totalStageAttemptSubroutine :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
-  controllerCompilerCloseout :
-    PairedRecognizerDovetailControllerCompilerCloseout
-  finiteControllerCompilerCloseout :
-    PairedRecognizerDovetailFiniteControllerCompilerCloseout
-
-/-- Fixed-simulator and layout-runner handoffs used by bounded attempts. -/
-structure BoundedLayoutConfigRunnerSurface where
-  fixedSimulatorOutput :
-    FixedDescriptionBoundedSimulatorCodeOutputRealizerConstruction
-  fixedStepConfiguration :
-    FixedDescriptionStepCodeConfigurationRealizerConstruction
-  boundedLayoutRunner :
-    PairedRecognizerDovetailLayoutCodeOutputSubroutineRealizerConstruction
-  totalStageAttempt :
-    PairedRecognizerDovetailTotalStageAttemptCodeOutputCompiledSubroutineConstruction
-  finiteStageLoopController :
-    PairedRecognizerDovetailFiniteStageLoopControllerConstruction
-
-/-- Finite trace, grammar, dovetail, and range construction handoffs. -/
-structure FiniteGrammarRangeSurface where
-  machineTraceSearch :
-    MachineBoundedTraceSearchConstruction
-  encodedTraceSearch :
-    EncodedConfigurationTraceSearchConstruction
-  boundedTraceSearch :
-    Computability.BoundedTraceSearchConstruction
-  finiteDovetailProgram :
-    FiniteDovetailProgram.CompilerConstruction
-  semanticPartialUnaryRange :
-    SemanticPartialUnaryRangeCompilerAssumption
-  finitePartialUnaryRangeProgram :
-    FinitePartialUnaryRangeProgram.CompilerConstruction
-  finitePartialUnaryRangeCloseout :
-    FinitePartialUnaryRangeProgram.RangeCloseoutConstruction
 
 /-!
 ## Concrete Finite Presentations

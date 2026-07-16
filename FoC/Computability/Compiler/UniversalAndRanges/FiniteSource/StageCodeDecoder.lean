@@ -297,7 +297,7 @@ private theorem stageCodeDecoderMachine_spec
       TuringMachine.halts_on_input_in_to_halts_on_input
         (n := stage + 1) hin
 
-theorem stageCodeDecoderConstruction_scaffold :
+theorem stageCodeDecoderConstruction :
     StageCodeDecoderConstruction :=
   ⟨StageCodeDecoderState,
     stageCodeDecoderMachine,

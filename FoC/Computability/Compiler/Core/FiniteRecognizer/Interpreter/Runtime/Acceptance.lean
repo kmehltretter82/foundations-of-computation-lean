@@ -5,10 +5,10 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeAcceptance
+namespace FiniteRecognizer.Interpreter.RuntimeAcceptance
 
-open Section53BoundedLoopInduction
-open Section53RuntimePhaseSum
+open FiniteRecognizer.Interpreter.BoundedLoopInduction
+open FiniteRecognizer.Interpreter.RuntimePhaseSum
 
 /-- The concrete bounded runtime halts exactly when the simulated bounded run
 ends in the requested halt state.  The physical loop-entry tape may differ
@@ -58,7 +58,7 @@ theorem haltsFrom_iff_runConfig_state_eq
       machine, heq]
 
 
-end Section53RuntimeAcceptance
+end FiniteRecognizer.Interpreter.RuntimeAcceptance
 
 end Computability
 end FoC

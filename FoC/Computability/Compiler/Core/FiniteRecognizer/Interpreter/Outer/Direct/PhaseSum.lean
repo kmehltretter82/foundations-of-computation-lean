@@ -6,12 +6,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53ZeroFinalPhaseSum
+namespace FiniteRecognizer.Interpreter.ZeroFinalPhaseSum
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ZeroEmptyMetadataFinal
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 # Finite zero-branch comparator materializer
@@ -369,7 +369,7 @@ theorem haltingTransitionsDisabled :
 namespace Decision
 
 inductive Control where
-  | materialize (state : Section53ZeroFinalPhaseSum.Control)
+  | materialize (state : FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control)
   | compare (state : RuntimeKeyComparatorState)
   | accept
   | reject
@@ -378,7 +378,7 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53ZeroFinalPhaseSum.Control.finite.elems.map Control.materialize ++
+  FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control.finite.elems.map Control.materialize ++
     RuntimeKeyComparatorState.finite.elems.map Control.compare ++
     [Control.accept, Control.reject]
 
@@ -389,7 +389,7 @@ def finite : Foundation.FiniteType Control where
     cases state with
     | materialize inner =>
         simp [elems,
-          Section53ZeroFinalPhaseSum.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control.finite.complete inner]
     | compare inner =>
         simp [elems, RuntimeKeyComparatorState.finite.complete inner]
     | accept => simp [elems]
@@ -403,7 +403,7 @@ def mapAction {innerState : Type}
       (Option MachineCodeSymbol × Direction × Control)
   | (write, direction, next) => (write, direction, target next)
 
-def materializeTarget : Section53ZeroFinalPhaseSum.Control -> Control
+def materializeTarget : FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control -> Control
   | .ready => .compare .needHeader
   | state => .materialize state
 
@@ -417,7 +417,7 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .materialize state, read =>
       Option.map (mapAction materializeTarget)
-        (Section53ZeroFinalPhaseSum.machine.transition state read)
+        (FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine.transition state read)
   | .compare state, read =>
       Option.map (mapAction compareTarget)
         (runtimeKeyComparatorMachine.transition state read)
@@ -425,14 +425,14 @@ def transition :
   | .reject, _ => none
 
 def machine : TuringMachine MachineCodeSymbol Control where
-  start := .materialize Section53ZeroFinalPhaseSum.machine.start
+  start := .materialize FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine.start
   halt := .accept
   transition := transition
   statesFinite := Control.finite
 
 def materializeConfig
     (config : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroFinalPhaseSum.Control) :
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   TuringMachine.PhaseEmbedding.liftConfig materializeTarget config
 
@@ -505,10 +505,10 @@ theorem computes_of_transition_embedding
   · exact TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr hrunIn
 
 theorem materialize_transition_of_eq_some
-    (source target : Section53ZeroFinalPhaseSum.Control)
+    (source target : FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53ZeroFinalPhaseSum.machine.transition source read =
+    (htransition : FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine.transition source read =
       some (write, direction, target)) :
     transition (materializeTarget source) read =
       some (write, direction, materializeTarget target) := by
@@ -542,12 +542,12 @@ theorem compare_transition_of_eq_some
 
 theorem materialize_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53ZeroFinalPhaseSum.Control}
-    (hrun : TuringMachine.Computes Section53ZeroFinalPhaseSum.machine
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Control}
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine
       source target) :
     TuringMachine.Computes machine
       (materializeConfig source) (materializeConfig target) :=
-  computes_of_transition_embedding Section53ZeroFinalPhaseSum.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine
     materializeTarget materialize_transition_of_eq_some hrun
 
 theorem compare_computes
@@ -564,7 +564,7 @@ def sourceConfig
     (leftPadding start halt rightPadding : Nat) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   materializeConfig
-    (Section53ZeroFinalPhaseSum.sourceConfig
+    (FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.sourceConfig
       leftPadding start halt rightPadding)
 
 def decisionConfig
@@ -579,7 +579,7 @@ theorem computes_to_decision
       TuringMachine.Computes machine
         (sourceConfig leftPadding start halt rightPadding)
         (decisionConfig start halt finalTape) := by
-  rcases Section53ZeroFinalPhaseSum.computes_to_ready
+  rcases FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.computes_to_ready
       leftPadding start halt rightPadding with
     ⟨comparatorTape, hmaterialize, hcomparatorTape⟩
   have hmaterialize' := materialize_computes hmaterialize
@@ -597,12 +597,12 @@ theorem computes_to_decision
   refine ⟨actualTape, TuringMachine.computes_trans hmaterialize' ?_⟩
   by_cases heq : start = halt
   · simpa [materializeConfig, materializeTarget, compareConfig,
-      compareTarget, Section53ZeroFinalPhaseSum.targetConfig,
+      compareTarget, FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.targetConfig,
       finalComparatorSourceConfig, finalComparatorTargetConfig,
       decisionConfig, heq,
       TuringMachine.PhaseEmbedding.liftConfig] using hcompare
   · simpa [materializeConfig, materializeTarget, compareConfig,
-      compareTarget, Section53ZeroFinalPhaseSum.targetConfig,
+      compareTarget, FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.targetConfig,
       finalComparatorSourceConfig, finalComparatorTargetConfig,
       decisionConfig, heq,
       TuringMachine.PhaseEmbedding.liftConfig] using hcompare
@@ -648,6 +648,6 @@ theorem haltsFrom_iff
 
 end Decision
 
-end Section53ZeroFinalPhaseSum
+end FiniteRecognizer.Interpreter.ZeroFinalPhaseSum
 end Computability
 end FoC

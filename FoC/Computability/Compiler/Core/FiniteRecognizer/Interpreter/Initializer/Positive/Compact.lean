@@ -5,17 +5,17 @@ namespace Computability
 
 open Languages
 
-namespace Section53PositiveInitializerPhase
+namespace FiniteRecognizer.Interpreter.PositiveInitializerPhase
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53InitializerFrontier
-open Section53InitializerPersistentCopy
-open Section53InitializerPersistentCopy.PersistentMasterCopier
-open Section53InitializerRepeatedCopy
-open Section53LoopRestagingAudit
-open Section53BoundedLoopInduction
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy
+open FiniteRecognizer.Interpreter.InitializerPersistentCopy.PersistentMasterCopier
+open FiniteRecognizer.Interpreter.InitializerRepeatedCopy
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.BoundedLoopInduction
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
 
 namespace GapCompactor
 
@@ -811,7 +811,7 @@ theorem finalCompactTape_equiv_source
 
 end GapCompactor
 
-end Section53PositiveInitializerPhase
+end FiniteRecognizer.Interpreter.PositiveInitializerPhase
 
 end Computability
 end FoC

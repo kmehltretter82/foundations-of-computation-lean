@@ -12,8 +12,8 @@ This module packages the finite-machine construction leaves for the
 scratch-count window materializer/restorer.  The tape shapes, specs, and
 shared composition lemmas live in
 {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchExtCountWindow`;
-the remaining executable construction leaves are kept here to keep that core
-module below the large-file threshold.
+the executable constructions live here to keep that core module below the
+large-file threshold.
 -/
 
 namespace FoC
@@ -1109,7 +1109,7 @@ def postFieldDecodedPrefixScanPadding
 
 /--
 Common scan-source tape after post-field restoration.  Both accept and reject
-branches should eventually reach this shape, then reuse
+branches use this shape before reusing
 {name}`rightEdgeScanThenRightMoveDescription`.
 -/
 def postFieldDecodedPrefixScanSourceTape
@@ -1281,10 +1281,9 @@ def AcceptPostFieldDecodedPrefixScanSourceMaterializerConstruction :
       true materializer
 
 /-
-The one-tape materializer contract is kept as a composition boundary up to tape
-equivalence, but this module no longer exports an unproved concrete
-construction for it.  The proved replacement for the decoded-prefix extractor
-is the lowered structured three-tape construction in
+The one-tape materializer contract is a composition boundary up to tape
+equivalence.  Its decoded-prefix extractor is supplied by the lowered
+structured three-tape construction in
 {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge`.
 -/
 

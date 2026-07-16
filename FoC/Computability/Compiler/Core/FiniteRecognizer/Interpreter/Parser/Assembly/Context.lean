@@ -6,7 +6,7 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserAssembly
+namespace FiniteRecognizer.Interpreter.ParserAssembly
 
 namespace TransitionParserContextTransport
 
@@ -863,6 +863,6 @@ theorem contextualNonemptyParserRestorer_forward
 
 end MarkerRestoreContextTransport
 
-end Section53ParserAssembly
+end FiniteRecognizer.Interpreter.ParserAssembly
 end Computability
 end FoC

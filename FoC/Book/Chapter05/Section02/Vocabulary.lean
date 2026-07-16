@@ -8,44 +8,42 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Chapter 5, Section 5.2: Computability
+# Section 5.2: Language Classes
 
 This section connects recursive, recursively enumerable, acceptable, and
-listable languages. It also records the statement shape for the theorem that
-finite general grammars generate exactly the recursively enumerable languages.
+listable languages and fixes the semantic vocabulary used by the finite grammar
+characterizations.
 The reusable semantic modules are {module}`FoC.Computability.Recognizable`,
 {module}`FoC.Computability.Program`, and
-{module}`FoC.Computability.Compiler.Core.Language`.  Finite compiler and grammar
-status is presented separately on the construction-status and grammar pages.
+{module}`FoC.Computability.Compiler.Core.Language`. Concrete compiler interfaces
+are documented in
+{module -checked}`FoC.Book.Chapter05.Section02.ConstructionStatus`, while the
+grammar and closeout pages assemble the finite consequences.
 
 The guiding distinction is total decision versus semi-decision. Recursive
 languages have deciders. Recursively enumerable languages have recognizers or
 listings: members eventually appear, but nonmembers may never be ruled out.
 
-The formal page separates three levels of argument.
+The formal development separates four representation levels.
 
 * At the semantic level, traces, listings, ranges, partial functions, and staged
   programs are related directly.
 * At the bounded-trace level, finite machine runs, encoded configurations,
   finite derivation searches, and recognizer-to-grammar trace simulations are
   checked without requiring a generic transition-table compiler.
-* At the compiler-principle level, staged programs and bounded trace checkers
-  are connected to Turing machines by named construction hypotheses.
+* At the compiler-principle level, semantic staged programs are connected to
+  Turing machines by named interfaces.
 * At the finite-description level, concrete supplied descriptions and finite
-  program records expose the construction interfaces used for executable
-  machine descriptions.
+  program records expose executable machine descriptions directly.
 
-The finite compiler boundaries are now first-order where possible. Boolean
-finite grammar presentations use explicit {lit}`Fin n` nonterminals and a
-production list, with the remaining recognizer compiler factored through a
-bounded checked-indexed-certificate recognizer. Paired-recognizer dovetailing
-is split into a halt-free bounded layout runner and a subroutine-ready
-runner-search driver that performs the unbounded stage search.
+Boolean finite grammar presentations use {name}`Fin`-indexed nonterminals and
+a production list. Their recognizer interface is factored through a bounded
+checked-indexed-certificate recognizer. Paired-recognizer dovetailing uses a
+halt-free bounded layout runner and a subroutine-ready runner-search driver for
+the unbounded stage search.
 
-This makes the theorem statements honest about implementation work. When a
-textbook proof says to dovetail two recognizers or check a finite derivation,
-this page proves the bounded trace core and names the finite compiler
-interfaces instead of treating them as implicit.
+Thus a theorem can use the weakest appropriate currency: a semantic language
+principle, finite trace evidence, or a supplied finite machine description.
 -/
 
 open Languages
@@ -60,13 +58,12 @@ The definitions name the main language classes and the construction principles
 used by the book's proofs: decidable-to-acceptable conversion and dovetailing
 paired recognizers for a language and its complement.
 
-The construction principles are kept as explicit hypotheses where the reusable
-library avoids assuming a concrete universal machine. This lets the page state
-the textbook theorem shapes without smuggling in unproved implementation
-details.
+Semantic construction principles remain explicit when a theorem quantifies
+over arbitrary Lean-level programs. Concrete finite-program theorems instead
+consume the description-backed interfaces supplied by the compiler pages.
 
-The page uses the reusable semantic predicates directly.  Explicit compiler
-hypotheses and grouped construction handoffs are isolated in
+The page uses the reusable semantic predicates directly. Compiler interfaces
+and concrete finite-presentation predicates are isolated in
 {module -checked}`FoC.Book.Chapter05.Section02.ConstructionStatus`.
 -/
 
@@ -74,8 +71,7 @@ hypotheses and grouped construction handoffs are isolated in
 The next group changes representation level. The preceding staged-program
 predicates are semantic; the description predicates say that a supplied finite
 machine description realizes the same staged computation. Later theorems use
-these bridges to state exactly which compiler facts are supplied by closeout
-records.
+these bridges to compose language-level and finite-description results.
 -/
 
 theorem concrete_machine_description_acceptance_trace

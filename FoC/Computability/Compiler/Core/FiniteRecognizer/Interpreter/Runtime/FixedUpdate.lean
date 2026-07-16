@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53FixedPlaceholderUpdate
+namespace FiniteRecognizer.Interpreter.FixedPlaceholderUpdate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
@@ -259,7 +259,7 @@ theorem selected_transition_update_run
       fuel tape selected.write selected.move
 
 
-end Section53FixedPlaceholderUpdate
+end FiniteRecognizer.Interpreter.FixedPlaceholderUpdate
 
 end Computability
 end FoC

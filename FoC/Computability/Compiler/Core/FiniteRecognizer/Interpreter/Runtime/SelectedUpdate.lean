@@ -7,12 +7,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53SelectedUpdateIntegration
+namespace FiniteRecognizer.Interpreter.SelectedUpdateIntegration
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
 
 /-!
 **Selected-update integration.** The comparator and arbitrary-rest extractor
@@ -130,7 +130,7 @@ theorem comparator_first_match_then_extracts
 theorem comparatorTape_eq_actionPrefixTape
     (leftRev rest : Word MachineCodeSymbol) :
     runtimeKeyComparatorTape leftRev rest =
-      Section53RuntimeActionPrefix.tapeAtWords leftRev rest := by
+      FiniteRecognizer.Interpreter.RuntimeActionPrefix.tapeAtWords leftRev rest := by
   cases rest <;> rfl
   done
 
@@ -140,10 +140,10 @@ theorem compactedSelectedTape_eq_actionPrefixSource
     (selected : TransitionDescription)
     (protectedSuffix : Word MachineCodeSymbol) :
     compactedSelectedTape current skipped selected protectedSuffix =
-      (Section53RuntimeActionPrefix.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeActionPrefix.sourceConfig
         (actionBase current skipped) selected
         (MachineCodeSymbol.header :: protectedSuffix)).tape := by
-  unfold compactedSelectedTape Section53RuntimeActionPrefix.sourceConfig
+  unfold compactedSelectedTape FiniteRecognizer.Interpreter.RuntimeActionPrefix.sourceConfig
   rw [comparatorTape_eq_actionPrefixTape]
   done
 
@@ -154,25 +154,25 @@ theorem actionPrefix_computes_of_tape_equiv
     (sourceTape : Tape MachineCodeSymbol)
     (hsource :
       Tape.Equiv
-        (Section53RuntimeActionPrefix.sourceConfig
+        (FiniteRecognizer.Interpreter.RuntimeActionPrefix.sourceConfig
           baseLeftRev selected suffix).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeActionPrefix.machine
-        { state := Section53RuntimeActionPrefix.Control.needTransition
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.needTransition
           tape := sourceTape }
-        { state := Section53RuntimeActionPrefix.Control.ready
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.ready
             selected.write selected.move
           tape := targetTape } ∧
       Tape.Equiv
-        (Section53RuntimeActionPrefix.targetConfig
+        (FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig
           baseLeftRev selected suffix).tape targetTape := by
-  have hrun := Section53RuntimeActionPrefix.run_exact
+  have hrun := FiniteRecognizer.Interpreter.RuntimeActionPrefix.run_exact
     baseLeftRev selected suffix
   rcases TuringMachine.TapeEquivTransport.runConfigExact?_some_of_tape_equiv
       hrun hsource with
     ⟨target, htargetRun, htargetState, htargetTape⟩
   rcases target with ⟨state, tape⟩
-  simp only [Section53RuntimeActionPrefix.targetConfig] at htargetState
+  simp only [FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig] at htargetState
   subst state
   exact ⟨tape,
     TuringMachine.computesIn_to_computes
@@ -191,14 +191,14 @@ theorem extracted_tape_enters_action_prefix
         (compactedSelectedTape current skipped selected protectedSuffix)
         sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeActionPrefix.machine
-        { state := Section53RuntimeActionPrefix.Control.needTransition
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.needTransition
           tape := sourceTape }
-        { state := Section53RuntimeActionPrefix.Control.ready
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.ready
             selected.write selected.move
           tape := targetTape } ∧
       Tape.Equiv
-        (Section53RuntimeActionPrefix.targetConfig
+        (FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig
           (actionBase current skipped) selected
           (MachineCodeSymbol.header :: protectedSuffix)).tape
         targetTape := by
@@ -216,20 +216,20 @@ theorem leftCleanup_computes_of_action_target_equiv
     (sourceTape : Tape MachineCodeSymbol)
     (hsource :
       Tape.Equiv
-        (Section53RuntimeActionPrefix.targetConfig
+        (FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig
           baseLeftRev selected suffix).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeLeftCleanup.machine
-        { state := Section53RuntimeLeftCleanup.Control.enter
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.enter
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := sourceTape }
-        { state := Section53RuntimeLeftCleanup.Control.ready
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.ready
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := targetTape } ∧
       Tape.Equiv targetTape
         (Tape.input
           (MachineDescription.encodeNatAppend selected.target suffix)) := by
-  rcases Section53RuntimeLeftCleanup.computes_from_action_target
+  rcases FiniteRecognizer.Interpreter.RuntimeLeftCleanup.computes_from_action_target
       baseLeftRev selected suffix with
     ⟨canonicalTargetTape, hrun, hcanonical⟩
   rcases TuringMachine.computes_to_computesIn hrun with
@@ -255,18 +255,18 @@ theorem extracted_action_then_cleanup
         (compactedSelectedTape current skipped selected protectedSuffix)
         extractedTape) :
     exists actionTape cleanedTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeActionPrefix.machine
-        { state := Section53RuntimeActionPrefix.Control.needTransition
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.needTransition
           tape := extractedTape }
-        { state := Section53RuntimeActionPrefix.Control.ready
+        { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.ready
             selected.write selected.move
           tape := actionTape } ∧
-      TuringMachine.Computes Section53RuntimeLeftCleanup.machine
-        { state := Section53RuntimeLeftCleanup.Control.enter
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.enter
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := actionTape }
-        { state := Section53RuntimeLeftCleanup.Control.ready
-            (Section53RuntimeLeftCleanup.selectedAction selected)
+        { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.ready
+            (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
           tape := cleanedTape } ∧
       Tape.Equiv cleanedTape
         (Tape.input
@@ -315,12 +315,12 @@ def SelectedEntryMaterializerContract
           tape := targetTape } ∧
       Tape.Equiv
         (Update.LeftKernel.selectedPrefixTape
-          (Section53FixedPlaceholderUpdate.callerData selected.target
+          (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.callerData selected.target
             haltState transitions suffix)
-          fuel (Section53FixedPlaceholderUpdate.frame (fuel + 1)
+          fuel (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.frame (fuel + 1)
             current.tape)
-          (Section53FixedPlaceholderUpdate.encodeCell selected.write)
-          selected.move Section53FixedPlaceholderUpdate.placeholder)
+          (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.encodeCell selected.write)
+          selected.move FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.placeholder)
         targetTape
 
 theorem fixedUpdate_computes_of_tape_equiv
@@ -333,15 +333,15 @@ theorem fixedUpdate_computes_of_tape_equiv
     (hsource :
       Tape.Equiv
         (Update.LeftKernel.selectedPrefixTape
-          (Section53FixedPlaceholderUpdate.callerData selected.target
+          (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.callerData selected.target
             haltState transitions suffix)
-          fuel (Section53FixedPlaceholderUpdate.frame (fuel + 1) tape)
-          (Section53FixedPlaceholderUpdate.encodeCell selected.write)
-          selected.move Section53FixedPlaceholderUpdate.placeholder)
+          fuel (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.frame (fuel + 1) tape)
+          (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.encodeCell selected.write)
+          selected.move FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.placeholder)
         sourceTape) :
     let action := Update.LeftKernel.selectedPayload
-      (Section53FixedPlaceholderUpdate.encodeCell selected.write)
-      selected.move Section53FixedPlaceholderUpdate.placeholder
+      (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.encodeCell selected.write)
+      selected.move FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.placeholder
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes (Update.Kernel.machine action)
         { state := (Update.Kernel.machine action).start
@@ -351,13 +351,13 @@ theorem fixedUpdate_computes_of_tape_equiv
       Tape.Equiv
         (CyclicDriverIntegration.roundTripTape targetTape)
         (Tape.input
-          (Section53FixedPlaceholderUpdate.workWord fuel selected.target
+          (FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.workWord fuel selected.target
             haltState
             (Tape.move selected.move
               (Tape.write selected.write tape))
             transitions suffix)) := by
   dsimp only
-  rcases Section53FixedPlaceholderUpdate.selected_transition_update_run
+  rcases FiniteRecognizer.Interpreter.FixedPlaceholderUpdate.selected_transition_update_run
       fuel tape selected haltState transitions suffix with
     ⟨steps, canonicalTargetTape, hrun, hcanonical⟩
   rcases TuringMachine.TapeEquivTransport.runConfigExact?_some_of_tape_equiv
@@ -378,7 +378,7 @@ theorem fixedUpdate_computes_of_tape_equiv
   done
 
 
-end Section53SelectedUpdateIntegration
+end FiniteRecognizer.Interpreter.SelectedUpdateIntegration
 
 end Computability
 end FoC

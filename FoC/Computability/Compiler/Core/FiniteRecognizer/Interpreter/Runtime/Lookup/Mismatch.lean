@@ -5,7 +5,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 theorem runtimeKeyComparatorMachine_computes_equal_state
     (state : Nat)
@@ -754,6 +754,6 @@ theorem runtimeKeyComparatorMachine_computes_one_row_from_header
         queryState queryRead rowState rowRead actionSuffix)
   done
 
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 end Computability
 end FoC

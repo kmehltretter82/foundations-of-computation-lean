@@ -6,8 +6,8 @@ set_option doc.verso true
 /-!
 # Normalized decoded bounded simulator runner
 
-This module isolates the uniform finite-machine obligation for the normalized
-decoded bounded simulator.  The public wrapper in
+This module specifies the uniform finite-machine construction for the
+normalized decoded bounded simulator. The public wrapper in
 the decoded bounded simulator module
 adapts this construction to the local spec definitions.
 -/
@@ -394,8 +394,8 @@ theorem codePrefixRecognizerProgram_run_eq_some_nil_iff
     rfl
 
 /--
-Boolean form of the staged evaluator.  The remaining finite runner only needs
-to compute the executable bounded-trace predicate
+Boolean form of the staged evaluator. The normalized runner computes the
+executable bounded-trace predicate
 {name}`MachineDescription.haltsInBool` after the source has been normalized.
 -/
 theorem codePrefixRecognizerProgram_run_eq_some_nil_iff_haltsInBool
@@ -423,9 +423,9 @@ theorem codePrefixRecognizerProgram_run_eq_some_nil_iff_haltsInBool
           (MachineDescription.encodeCodeWordAsInput input)).mp hhalts⟩
 
 /--
-Normalized boolean runner spec for the decoded bounded simulator.  This is the
-next construction boundary: parse the outer stage, parse a canonical encoded
-description payload, then evaluate the executable bounded-trace boolean.
+Normalized Boolean runner specification for the decoded bounded simulator: it
+parses the outer stage and a canonical encoded description payload, then
+evaluates the executable bounded-trace Boolean.
 -/
 def DecodedBoundedSimulatorBooleanRunnerSpec
     (runner : TuringMachine MachineCodeSymbol state) : Prop :=
@@ -477,9 +477,9 @@ def DecodedBoundedSimulatorRunConfigRunnerConstruction : Prop :=
 
 /--
 The semantic configuration reached by the uniform decoded transition loop from
-an arbitrary current configuration.  This is the invariant carried by the
-remaining finite table: repeatedly scan the decoded transition table, apply the
-selected write/move action, and decrement the parsed stage counter.
+an arbitrary current configuration. This invariant describes repeated scans of
+the decoded transition table, application of the selected write/move action,
+and decrement of the parsed stage counter.
 -/
 def decodedBoundedSimulatorTransitionLoopFromConfig
     (stage : Nat) (D : MachineDescription)

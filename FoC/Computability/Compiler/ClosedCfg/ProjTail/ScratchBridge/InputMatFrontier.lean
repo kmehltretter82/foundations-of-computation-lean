@@ -3,9 +3,9 @@ import FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge.InputMat.Inde
 set_option doc.verso true
 
 /-!
-# Count-window input materializer frontier
+# Count-window input materializer constructions
 
-Concrete count-window materializer leaves kept near the top for proof work.
+Public wrappers for the completed indexed count-window materializer.
 -/
 
 namespace FoC

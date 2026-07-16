@@ -120,6 +120,21 @@ The narrow #2 campaign paths measure +52/-19, net +33 Compiler lines, against
 the +2,000 allowance. Its manifest remains pinned for the post-closure deletion
 and permanent-growth review.
 
+### Chapter 5 post-closure API cleanup — completed
+
+The zero-sorry cleanup pass replaces campaign coordinates and completion-state
+suffixes in the retained Chapter 5 API with semantic names. Universal-prefix
+row coverage now distinguishes program-compiler and description-compiler
+closeouts directly, and completed parser, decoder, branch, and runner
+constructions no longer expose `_scaffold` names.
+
+The reference audit also found that the one-field universal-runner closeout was
+only a record-shaped forwarding wrapper around the completed prefix recognizer.
+It and its sole conversion theorem were removed; the universal-runner theorem
+now calls the recognizer bridge directly. Public module titles, section nesting,
+and construction documentation describe the finished APIs rather than the
+historical proof campaign.
+
 ### #18 exact terminal facade and duplicate construction — completed
 
 The public migration in `206a31b2` left the equivalence-valued padded-emitter

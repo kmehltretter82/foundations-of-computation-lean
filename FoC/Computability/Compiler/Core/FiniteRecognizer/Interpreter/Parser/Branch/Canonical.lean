@@ -7,12 +7,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53ParserCanonicalBranches
+namespace FiniteRecognizer.Interpreter.ParserCanonicalBranches
 
-open Section53ParserAssembly
-open Section53ParserPrefixPhaseSum
-open Section53ParserBranchPhaseSum
-open Section53InitializerFrontier
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
+open FiniteRecognizer.Interpreter.ParserBranchPhaseSum
+open FiniteRecognizer.Interpreter.InitializerFrontier
 
 /-- Canonical branch-machine entry for a bounded description run. -/
 def canonicalSourceConfig
@@ -20,16 +20,16 @@ def canonicalSourceConfig
     (fuel : Nat)
     (input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol
-      Section53ParserBranchPhaseSum.Control :=
-  Section53ParserBranchPhaseSum.parserConfig
-    (Section53ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control :=
+  FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig
+    (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
 
 theorem canonicalSourceConfig_eq_sourceConfig
     (D : MachineDescription)
     (fuel : Nat)
     (input : Word MachineCodeSymbol) :
     canonicalSourceConfig D fuel input =
-      Section53ParserBranchPhaseSum.sourceConfig
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.sourceConfig
         (MachineDescription.encodeNatAppend fuel
           (MachineDescription.encodeDescriptionAppend D input)) := by
   rfl
@@ -39,11 +39,11 @@ theorem canonicalSourceConfig_eq_initial
     (fuel : Nat)
     (input : Word MachineCodeSymbol) :
     canonicalSourceConfig D fuel input =
-      TuringMachine.initial Section53ParserBranchPhaseSum.machine
+      TuringMachine.initial FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (MachineDescription.encodeNatAppend fuel
           (MachineDescription.encodeDescriptionAppend D input)) := by
   rw [canonicalSourceConfig_eq_sourceConfig]
-  exact Section53ParserBranchPhaseSum.sourceConfig_eq_initial _
+  exact FiniteRecognizer.Interpreter.ParserBranchPhaseSum.sourceConfig_eq_initial _
 
 private theorem empty_terminal_to_directDecision
     (D : MachineDescription)
@@ -51,44 +51,44 @@ private theorem empty_terminal_to_directDecision
     (input : Word MachineCodeSymbol)
     (terminalTape : Tape MachineCodeSymbol)
     (hprefix : TuringMachine.Computes
-      Section53ParserPrefixPhaseSum.machine
-        (Section53ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
         { state :=
-            Section53ParserPrefixPhaseSum.Control.table
-              (Section53ParserPrefixPhaseSum.fuelZeroFlag fuel)
-              (Section53SavedCellTransitionParser.Control.parser
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.table
+              (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.fuelZeroFlag fuel)
+              (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
                 TransitionListParserState.halt)
           tape := terminalTape })
     (htape : Tape.Equiv
-      (Section53ParserPrefixPhaseSum.zeroSavedTableTargetConfig
-        (Section53ParserAssembly.headerAfterHaltLeftRev D fuel) input).tape
+      (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.zeroSavedTableTargetConfig
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel) input).tape
       terminalTape) :
     exists finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D fuel input)
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           D.start D.halt finalTape) := by
-  have hbranchPrefix := Section53ParserBranchPhaseSum.parser_computes hprefix
+  have hbranchPrefix := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parser_computes hprefix
   have htoProbe : TuringMachine.Computes
-      Section53ParserBranchPhaseSum.machine
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       (canonicalSourceConfig D fuel input)
-      { state := Section53ParserBranchPhaseSum.Control.zeroProbe
+      { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.zeroProbe
         tape := terminalTape } := by
     simpa [canonicalSourceConfig,
-      Section53ParserBranchPhaseSum.parserConfig,
-      Section53ParserBranchPhaseSum.parserTarget,
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig,
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
       TuringMachine.PhaseEmbedding.liftConfig] using hbranchPrefix
   have hprobeTape : Tape.Equiv
-      (Section53ParserBranchPhaseSum.zeroProbeConfig
+      (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.zeroProbeConfig
         (none ::
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel D.stateCount D.start D.halt).map some)
         input).tape terminalTape := by
-    simpa [Section53ParserPrefixPhaseSum.zeroSavedTableTargetConfig,
-      Section53ParserBranchPhaseSum.zeroProbeConfig,
-      Section53ZeroEmptyMetadataFinal.metadataLeftRev_eq_headerAfterHaltLeftRev]
+    simpa [FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.zeroSavedTableTargetConfig,
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.zeroProbeConfig,
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev_eq_headerAfterHaltLeftRev]
       using htape
-  rcases Section53ParserBranchPhaseSum.zero_probe_then_decide_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.ParserBranchPhaseSum.zero_probe_then_decide_of_tape_equiv
       fuel D.stateCount D.start D.halt input terminalTape hprobeTape with
     ⟨finalTape, hfinish⟩
   exact ⟨finalTape, TuringMachine.computes_trans htoProbe hfinish⟩
@@ -100,100 +100,100 @@ private theorem zero_nonempty_terminal_to_directDecision
     (input : Word MachineCodeSymbol)
     (terminalTape : Tape MachineCodeSymbol)
     (hprefix : TuringMachine.Computes
-      Section53ParserPrefixPhaseSum.machine
-        (Section53ParserPrefixPhaseSum.canonicalSourceConfig D 0 input)
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSourceConfig D 0 input)
         { state :=
-            Section53ParserPrefixPhaseSum.Control.table true
-              (Section53SavedCellTransitionParser.Control.ready
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.table true
+              (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
                 (transitionListParserSavedHead input))
           tape := terminalTape })
     (htape : Tape.Equiv
       (markedParserMaterializerSourceTape
-        (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
         first rest input)
       terminalTape) :
     exists finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D 0 input)
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           D.start D.halt finalTape) := by
-  have hbranchPrefix := Section53ParserBranchPhaseSum.parser_computes hprefix
+  have hbranchPrefix := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parser_computes hprefix
   have htoExtract : TuringMachine.Computes
-      Section53ParserBranchPhaseSum.machine
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
       (canonicalSourceConfig D 0 input)
-      { state := Section53ParserBranchPhaseSum.Control.extract
-          Section53ZeroEmptyMetadataFinal.Control.preserveContextBlank
+      { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.extract
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveContextBlank
         tape := terminalTape } := by
     simpa [canonicalSourceConfig,
-      Section53ParserBranchPhaseSum.parserConfig,
-      Section53ParserBranchPhaseSum.parserTarget,
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig,
+      FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
       TuringMachine.PhaseEmbedding.liftConfig] using hbranchPrefix
   let symbols := MachineDescription.encodeTransitions (first :: rest)
-  cases hpayload : Section53ZeroEmptyMetadataFinal.parserPayloadWord
+  cases hpayload : FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord
       symbols input with
   | nil =>
       exact False.elim
-        (Section53ZeroEmptyMetadataFinal.parserPayloadWord_ne_nil
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.parserPayloadWord_ne_nil
           symbols input hpayload)
   | cons payloadFirst payloadRest =>
       have hcanonicalTape :
           markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
               first rest input =
-            (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
               (parsedTableLeftRev (first :: rest).length ++
-                (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+                (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                   0 D.stateCount D.start D.halt).map some)
               payloadFirst payloadRest).tape := by
         calc
           markedParserMaterializerSourceTape
-              (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+              (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
               first rest input =
-            Section53ParserAssembly.TransitionParserContextTransport.appendLeftContext
-                (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+            FiniteRecognizer.Interpreter.ParserAssembly.TransitionParserContextTransport.appendLeftContext
+                (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
                 (parsedTransitionHaltConfig (first :: rest).length
                   (MachineDescription.encodeTransitions (first :: rest))
                   input).tape := by
                     rfl
           _ =
-            (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
               (parsedTableLeftRev (first :: rest).length ++
-                (Section53ParserAssembly.headerAfterHaltLeftRev D 0).map
+                (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0).map
                   some)
               payloadFirst payloadRest).tape := by
                 simpa [symbols] using
-                  (Section53ZeroEmptyMetadataFinal.contextual_parser_endpoint_tape
-                      (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+                  (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_parser_endpoint_tape
+                      (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
                       symbols input (first :: rest).length payloadFirst
                       payloadRest hpayload)
           _ =
-            (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+            (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
               (parsedTableLeftRev (first :: rest).length ++
-                (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+                (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                   0 D.stateCount D.start D.halt).map some)
               payloadFirst payloadRest).tape := by
                 rfl
       have hsource : Tape.Equiv
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev (first :: rest).length ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 0 D.stateCount D.start D.halt).map some)
             payloadFirst payloadRest).tape terminalTape := by
         rw [← hcanonicalTape]
         exact htape
       have hextract :=
-        Section53ZeroEmptyMetadataFinal.contextual_extractor_computes
+        FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_extractor_computes
           0 D.stateCount D.start D.halt (first :: rest).length
           payloadFirst payloadRest
-      rcases Section53ParserBranchPhaseSum.extract_then_decide_of_tape_equiv
-          Section53ZeroEmptyMetadataFinal.Control.preserveContextBlank
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+      rcases FiniteRecognizer.Interpreter.ParserBranchPhaseSum.extract_then_decide_of_tape_equiv
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.preserveContextBlank
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev (first :: rest).length ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 0 D.stateCount D.start D.halt).map some)
             payloadFirst payloadRest).tape
           terminalTape
-          ((Section53ZeroEmptyMetadataFinal.olderMetadataLeftRev
+          ((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.olderMetadataLeftRev
             0 D.stateCount).length + 2)
           D.start D.halt
           ((MachineCodeSymbol.done ::
@@ -212,36 +212,36 @@ private theorem positive_terminal_to_ready
     (input : Word MachineCodeSymbol)
     (terminalTape : Tape MachineCodeSymbol)
     (hprefix : TuringMachine.Computes
-      Section53ParserPrefixPhaseSum.machine
-        (Section53ParserPrefixPhaseSum.canonicalSourceConfig D
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSourceConfig D
           (remainingFuel + 1) input)
         { state :=
-            Section53ParserPrefixPhaseSum.Control.table false
-              (Section53SavedCellTransitionParser.Control.ready
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.table false
+              (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
                 (transitionListParserSavedHead input))
           tape := terminalTape })
     (htape : Tape.Equiv
       (markedParserMaterializerSourceTape
-        (Section53ParserAssembly.headerAfterHaltLeftRev D
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
           (remainingFuel + 1))
         first rest input)
       terminalTape) :
-    TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+    TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D (remainingFuel + 1) input)
-        { state := Section53ParserBranchPhaseSum.Control.positiveReady
+        { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.positiveReady
             (transitionListParserSavedHead input)
           tape := terminalTape } ∧
       Tape.Equiv
         (markedParserMaterializerSourceTape
-          (Section53ParserAssembly.headerAfterHaltLeftRev D
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
             (remainingFuel + 1))
           first rest input)
         terminalTape := by
   refine ⟨?_, htape⟩
-  have hbranchPrefix := Section53ParserBranchPhaseSum.parser_computes hprefix
+  have hbranchPrefix := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parser_computes hprefix
   simpa [canonicalSourceConfig,
-    Section53ParserBranchPhaseSum.parserConfig,
-    Section53ParserBranchPhaseSum.parserTarget,
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserConfig,
+    FiniteRecognizer.Interpreter.ParserBranchPhaseSum.parserTarget,
     TuringMachine.PhaseEmbedding.liftConfig] using hbranchPrefix
 
 private theorem nonempty_terminal_data_of_marked_projection
@@ -253,35 +253,35 @@ private theorem nonempty_terminal_data_of_marked_projection
     (input : Word MachineCodeSymbol)
     (hmarked : forall canonicalTarget :
         TuringMachine.Configuration MachineCodeSymbol
-          Section53SavedCellTransitionParser.Control,
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
-          (Section53ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+          (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
             D fuel input)
           canonicalTarget ->
       canonicalTarget.state =
-          Section53SavedCellTransitionParser.Control.ready
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input) ->
       Tape.Equiv
         (markedParserMaterializerSourceTape
-          (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
           first rest input)
         canonicalTarget.tape) :
     exists terminalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserPrefixPhaseSum.machine
-        (Section53ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSourceConfig D fuel input)
         { state :=
-            Section53ParserPrefixPhaseSum.Control.table
-              (Section53ParserPrefixPhaseSum.fuelZeroFlag fuel)
-              (Section53SavedCellTransitionParser.Control.ready
+            FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.table
+              (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.fuelZeroFlag fuel)
+              (FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
                 (transitionListParserSavedHead input))
           tape := terminalTape } ∧
       Tape.Equiv
         (markedParserMaterializerSourceTape
-          (Section53ParserAssembly.headerAfterHaltLeftRev D fuel)
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D fuel)
           first rest input)
         terminalTape := by
   rcases
-      Section53ParserPrefixPhaseSum.canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonical_nonemptyTable_computes_to_terminal_with_tape_equiv
         D first rest htransitions fuel input with
     ⟨⟨terminalState, terminalTape⟩, canonicalTarget,
       hprefix, hcanonical, hterminalState, hcanonicalState, htape⟩
@@ -301,31 +301,31 @@ theorem zeroNonemptyTable_computes_to_directDecision
     (input : Word MachineCodeSymbol)
     (htransitions : D.transitions = first :: rest) :
     exists finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D 0 input)
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           D.start D.halt finalTape) := by
   have hmarked : forall canonicalTarget :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control,
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
-          (Section53ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+          (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
             D 0 input)
           canonicalTarget ->
       canonicalTarget.state =
-          Section53SavedCellTransitionParser.Control.ready
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input) ->
       Tape.Equiv
         (markedParserMaterializerSourceTape
-          (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
           first rest input)
         canonicalTarget.tape := by
     intro canonicalTarget hrun hstate
     apply
-      Section53ExactBoundaryContinuation.contextualNonemptyReadyTapeEquivMarked
-        (Section53ParserAssembly.headerAfterHaltLeftRev D 0)
+      FiniteRecognizer.Interpreter.ExactBoundaryContinuation.contextualNonemptyReadyTapeEquivMarked
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D 0)
         first rest input canonicalTarget
-    · simpa [Section53ParserPrefixPhaseSum.canonicalSavedTableSourceConfig,
+    · simpa [FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSavedTableSourceConfig,
         htransitions] using hrun
     · exact hstate
   rcases nonempty_terminal_data_of_marked_projection
@@ -345,40 +345,40 @@ theorem positiveNonemptyTable_computes_to_ready
     (input : Word MachineCodeSymbol)
     (htransitions : D.transitions = first :: rest) :
     exists parserTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
           (canonicalSourceConfig D (remainingFuel + 1) input)
-          { state := Section53ParserBranchPhaseSum.Control.positiveReady
+          { state := FiniteRecognizer.Interpreter.ParserBranchPhaseSum.Control.positiveReady
               (transitionListParserSavedHead input)
             tape := parserTape } ∧
         Tape.Equiv
           (markedParserMaterializerSourceTape
-            (Section53ParserAssembly.headerAfterHaltLeftRev D
+            (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
               (remainingFuel + 1))
             first rest input)
           parserTape := by
   have hmarked : forall canonicalTarget :
       TuringMachine.Configuration MachineCodeSymbol
-        Section53SavedCellTransitionParser.Control,
-      TuringMachine.Computes Section53SavedCellTransitionParser.machine
-          (Section53ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control,
+      TuringMachine.Computes FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine
+          (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSavedTableSourceConfig
             D (remainingFuel + 1) input)
           canonicalTarget ->
       canonicalTarget.state =
-          Section53SavedCellTransitionParser.Control.ready
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready
             (transitionListParserSavedHead input) ->
       Tape.Equiv
         (markedParserMaterializerSourceTape
-          (Section53ParserAssembly.headerAfterHaltLeftRev D
+          (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
             (remainingFuel + 1))
           first rest input)
         canonicalTarget.tape := by
     intro canonicalTarget hrun hstate
     apply
-      Section53ExactBoundaryContinuation.contextualNonemptyReadyTapeEquivMarked
-        (Section53ParserAssembly.headerAfterHaltLeftRev D
+      FiniteRecognizer.Interpreter.ExactBoundaryContinuation.contextualNonemptyReadyTapeEquivMarked
+        (FiniteRecognizer.Interpreter.ParserAssembly.headerAfterHaltLeftRev D
           (remainingFuel + 1))
         first rest input canonicalTarget
-    · simpa [Section53ParserPrefixPhaseSum.canonicalSavedTableSourceConfig,
+    · simpa [FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonicalSavedTableSourceConfig,
         htransitions] using hrun
     · exact hstate
   rcases nonempty_terminal_data_of_marked_projection
@@ -388,7 +388,7 @@ theorem positiveNonemptyTable_computes_to_ready
   exact positive_terminal_to_ready
     D first rest remainingFuel input parserTape
     (by
-      simpa [Section53ParserPrefixPhaseSum.fuelZeroFlag] using hprefix)
+      simpa [FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.fuelZeroFlag] using hprefix)
     htape
 
 /-- A canonical empty transition table takes the direct final-decision branch
@@ -399,12 +399,12 @@ theorem emptyTable_computes_to_directDecision
     (input : Word MachineCodeSymbol)
     (htransitions : D.transitions = []) :
     exists finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D fuel input)
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           D.start D.halt finalTape) := by
   rcases
-      Section53ParserPrefixPhaseSum.canonical_zeroTable_computes_to_terminal_with_tape_equiv
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.canonical_zeroTable_computes_to_terminal_with_tape_equiv
           D htransitions fuel input with
     ⟨⟨terminalState, terminalTape⟩, hprefix, hstate, htape⟩
   simp only at hstate
@@ -420,9 +420,9 @@ theorem directBranch_computes_to_directDecision
     (input : Word MachineCodeSymbol)
     (hbranch : fuel = 0 ∨ D.transitions = []) :
     exists finalTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53ParserBranchPhaseSum.machine
+      TuringMachine.Computes FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D fuel input)
-        (Section53ParserBranchPhaseSum.directDecisionConfig
+        (FiniteRecognizer.Interpreter.ParserBranchPhaseSum.directDecisionConfig
           D.start D.halt finalTape) := by
   rcases hbranch with hfuel | hempty
   · subst fuel
@@ -443,19 +443,19 @@ theorem emptyTable_haltsFrom_iff_haltsIn
     (fuel : Nat)
     (input : Word MachineCodeSymbol)
     (htransitions : D.transitions = []) :
-    TuringMachine.HaltsFrom Section53ParserBranchPhaseSum.machine
+    TuringMachine.HaltsFrom FiniteRecognizer.Interpreter.ParserBranchPhaseSum.machine
         (canonicalSourceConfig D fuel input) ↔
       D.HaltsIn fuel
         (MachineDescription.encodeCodeWordAsInput input) := by
   rcases emptyTable_computes_to_directDecision
       D fuel input htransitions with
     ⟨finalTape, hrun⟩
-  exact Section53SemanticAcceptance.parser_direct_haltsFrom_iff_haltsIn
+  exact FiniteRecognizer.Interpreter.SemanticAcceptance.parser_direct_haltsFrom_iff_haltsIn
     D fuel input (Or.inr htransitions)
     (canonicalSourceConfig D fuel input) finalTape hrun
 
 
-end Section53ParserCanonicalBranches
+end FiniteRecognizer.Interpreter.ParserCanonicalBranches
 
 end Computability
 end FoC

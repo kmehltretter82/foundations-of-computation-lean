@@ -5,7 +5,7 @@ set_option doc.verso true
 /-!
 # Compact metadata-prefix materializer
 
-This phase owns the metadata half of the remaining #18 decomposition.  It
+This phase materializes the metadata half of the field decomposition.  It
 starts with tape 0 at the encoded configuration left-list length, tape 1 at the
 exact stage counter, and tape 2 at the blank immediately right of the
 selector-bearing scratch block.
@@ -20,7 +20,8 @@ one forward scan through the prefix and configuration.
 
 The selector and remaining scratch cells are read but never changed.  The
 temporary false head is deliberately left for the final configuration/hit
-phase, which decodes the source hit and overwrites it with the actual value.
+configuration/hit phase, which decodes the source hit and overwrites it with
+the actual value.
 -/
 
 namespace FoC
@@ -230,7 +231,7 @@ theorem sourceTape_eq_stateSelectorTarget
     sourceTape D L = StateSelector.targetTape D L := by
   rfl
 
-/-- Exact remaining run proof for the concrete table above. -/
+/-- Exact run contract for the concrete table above. -/
 def RunObligation : Prop :=
   forall (D : MachineDescription) (L : SimulatorLayout),
     description.HaltsWithTapes

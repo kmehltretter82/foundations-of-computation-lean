@@ -5,7 +5,7 @@ set_option doc.verso true
 /-!
 # Raw-state parser and scratch-resident selector
 
-This is the third executable phase of the #18 field decomposer.  It starts at
+This is the third executable phase of the run-config field decomposer.  It starts at
 the raw configuration-state token exposed by {lit}`StageCounter`, preserves the
 already materialized stage counter, and parses the unary state field against
 the finite values of a fixed description {lit}`D`.
@@ -14,8 +14,8 @@ The classification is made physical without allocating tape cells.  The phase
 temporarily marks the blank immediately right of the scratch reservoir, writes
 the selector into the nearest reserved markers, returns to the temporary mark,
 and restores that cell to blank.  Its exact endpoint therefore has the same
-window as the original scratch tape and is ready for the remaining exact
-configuration and metadata phases.
+window as the original scratch tape and is ready for the configuration/hit and
+metadata phases.
 -/
 
 namespace FoC

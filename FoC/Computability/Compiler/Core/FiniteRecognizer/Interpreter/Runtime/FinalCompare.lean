@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 def finalComparatorSourceConfig
     (haltState currentState : Nat)
@@ -99,7 +99,7 @@ theorem finalComparator_haltsFrom_iff
       runtimeKeyComparatorOutcomeState]
 
 
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 end Computability
 end FoC

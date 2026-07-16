@@ -5,8 +5,8 @@ set_option doc.verso true
 /-!
 # Structured run lowering
 
-This module starts Milestone 9: composing already-proved row lowerings across
-structured-machine executions.
+This module composes proved row lowerings across structured-machine
+executions.
 
 The first bridge is deliberately trace-shaped.  Given a source configuration
 and a step bound, it follows the structured machine's executable transition
@@ -78,9 +78,9 @@ theorem loweredTraceDescriptionWithRefresh_subroutineReady
 /--
 Bounded run simulation for the refresh-backed row lowerer.
 
-This theorem is the first run-level Milestone 9 bridge.  It does not yet lower
-a whole structured table into one static dispatcher; instead it proves that the
-row lowerings compose correctly along any concrete structured execution trace.
+This run-level theorem composes row lowerings along any concrete structured
+execution trace; static dispatcher construction is kept in a separate
+contract.
 -/
 theorem loweredTraceDescriptionWithRefresh_simulates_computesIn
     {D : Description} {refresh : MachineDescription}
@@ -478,7 +478,7 @@ theorem loweredTraceDescriptionWithGuardSlackRefresh_simulates_haltsFromConfig
 /--
 Trace-shaped one-tape lowering over the structured-singleton refresh contract.
 
-This is the Milestone 1 route that keeps the exact structured target while
+This route keeps the exact structured target while
 requiring only row-produced singleton endpoint shapes from the refresh
 normalizer.
 -/
@@ -702,15 +702,13 @@ theorem description_initial_tapes_length
 /-!
 ## Static-step run contracts
 
-The trace lowerer above still chooses one row from Lean's structured
-execution trace.  A future physical dispatcher will instead keep the
-structured control state in the one-tape finite control and repeatedly run the
+The trace lowerer chooses one row from Lean's structured execution trace.  A
+static physical dispatcher instead keeps the structured control state in
+one-tape finite control and repeatedly runs the
 same ordinary {name}`MachineDescription`.
 
-The definitions below isolate the run-composition theorem needed for that
-route.  They do not build the dispatcher yet; they state the exact contract a
-static dispatcher must satisfy and prove that such a dispatcher composes across
-{name}`Description.runConfig`.
+The definitions below isolate the static dispatcher's exact one-step contract
+and its composition across {name}`Description.runConfig`.
 -/
 
 /--
@@ -846,8 +844,8 @@ Abstract contract for a single static physical dispatcher.
 
 The dispatcher is an ordinary one-tape description.  Its physical control
 state is related to the structured state by {lit}`stateMap`; its tape boundary
-uses the canonical guarded layout.  Proving this contract for a real dispatcher
-is the remaining static table-lowering work.
+uses the canonical guarded layout.  The contract isolates physical dispatcher
+construction from run-level composition.
 -/
 structure StaticStepLoweringWithRefresh
     (D : Description) (M : MachineDescription)
@@ -864,7 +862,7 @@ structure StaticStepLoweringWithRefresh
             (encodedGuardedStructuredTapes (oneStepOrSelf D c).tapes)
 
 /--
-Bundled target for the eventual static lowered one-tape machine.
+Bundled target for a static lowered one-tape machine.
 
 The step contract is separated from the start/halt hooks so intermediate
 dispatcher states remain free to use a larger physical state space.
@@ -881,10 +879,8 @@ structure StaticLoweredDescriptionWithRefresh
 /--
 Prerequisites for the refreshed static-lowering route.
 
-This bundle records the Milestone 1 endpoint-normalization decision: the
-static dispatcher route may be developed over a supplied
-{name}`GuardRefreshNormalizer`, but downstream users should not treat that as a
-closed concrete lowerer until this field is filled by an actual normalizer.
+This bundle records the endpoint-normalization boundary for a static
+dispatcher and supplies its {name}`GuardRefreshNormalizer` explicitly.
 -/
 structure StaticLoweringWithRefreshPrerequisites
     (D : Description) : Type where
@@ -916,8 +912,8 @@ end StaticLoweringWithRefreshPrerequisites
 Successor prerequisites for the refreshed static-lowering route using the
 endpoint-aware guard-slack refresh contract.
 
-This is the concrete Milestone 1 gate to use after row composition is migrated
-away from the broad logical-equivalence refresh boundary.
+This bundle supports row composition at the endpoint-aware guard-slack refresh
+boundary.
 -/
 structure StaticLoweringWithGuardSlackRefreshPrerequisites
     (D : Description) : Type where
@@ -960,12 +956,11 @@ theorem refreshRealizesEndpointEquiv
 end StaticLoweringWithGuardSlackRefreshPrerequisites
 
 /--
-Milestone 1 narrowed prerequisite bundle for the structured-singleton refresh
-route.
+Narrowed prerequisite bundle for the structured-singleton refresh route.
 
-This keeps the reusable trace/static APIs away from the broader arbitrary
-guard-slack endpoint contract when the only remaining concrete refresh
-obligation is the row-produced, segment-wise singleton shape.
+This keeps the reusable trace/static APIs on the row-produced, segment-wise
+singleton shape instead of the broader arbitrary guard-slack endpoint
+contract.
 -/
 structure StaticLoweringWithStructuredSingletonRefreshPrerequisites
     (D : Description) : Type where
@@ -1001,9 +996,9 @@ theorem StaticLoweredDescriptionWithRefresh.wellFormed
   L.stepLowering.wellFormed
 
 /--
-Run-level composition theorem for a future static dispatcher.
+Run-level composition theorem for a static dispatcher.
 
-Once a concrete one-tape dispatcher satisfies
+Given a concrete one-tape dispatcher satisfying
 {name}`StaticStepLoweringWithRefresh`, this theorem lifts its one-step contract
 to the executable structured bounded runner.
 -/
@@ -1332,9 +1327,8 @@ theorem loweredTraceDescriptionWithStructuredSingletonRefresh_simulates_initial_
 /-!
 ## Bundled refreshed route
 
-These wrappers use the Milestone 1 prerequisite bundle, so downstream callers
-cannot accidentally describe the refreshed route as concrete without supplying
-a guard-refresh normalizer.
+These wrappers require the refreshed-route prerequisite bundle, including a
+guard-refresh normalizer.
 -/
 
 def loweredTraceDescription

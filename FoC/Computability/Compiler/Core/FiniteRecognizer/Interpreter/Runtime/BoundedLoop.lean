@@ -7,18 +7,18 @@ namespace Computability
 
 open Languages
 
-namespace Section53BoundedLoopInduction
+namespace FiniteRecognizer.Interpreter.BoundedLoopInduction
 
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53SelectedUpdateIntegration
-open Section53SelectedToStack
-open Section53FinalGateMaterializer
-open Section53NoMatchFinalGate
-open Section53NoMatchFinalGate.LastMiss
-open Section53SemanticIteration
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.SelectedUpdateIntegration
+open FiniteRecognizer.Interpreter.SelectedToStack
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
+open FiniteRecognizer.Interpreter.NoMatchFinalGate
+open FiniteRecognizer.Interpreter.NoMatchFinalGate.LastMiss
+open FiniteRecognizer.Interpreter.SemanticIteration
 
 /-- Canonical physical entry to one positive-fuel loop iteration.  `copies`
 counts the table copies reserved for later semantic iterations; the active
@@ -311,18 +311,18 @@ def FirstMatchPhysicalTrace
         tape := selectedTape }
       { state := RuntimeKeySelectedExtractorArbitrary.Control.halt
         tape := extractedTape } /\
-    TuringMachine.Computes Section53RuntimeActionPrefix.machine
-      { state := Section53RuntimeActionPrefix.Control.needTransition
+    TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine
+      { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.needTransition
         tape := extractedTape }
-      { state := Section53RuntimeActionPrefix.Control.ready
+      { state := FiniteRecognizer.Interpreter.RuntimeActionPrefix.Control.ready
           selected.write selected.move
         tape := actionTape } /\
-    TuringMachine.Computes Section53RuntimeLeftCleanup.machine
-      { state := Section53RuntimeLeftCleanup.Control.enter
-          (Section53RuntimeLeftCleanup.selectedAction selected)
+    TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine
+      { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.enter
+          (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
         tape := actionTape }
-      { state := Section53RuntimeLeftCleanup.Control.ready
-          (Section53RuntimeLeftCleanup.selectedAction selected)
+      { state := FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control.ready
+          (FiniteRecognizer.Interpreter.RuntimeLeftCleanup.selectedAction selected)
         tape := cleanedTape } /\
     Tape.Equiv cleanedTape
       (Tape.input
@@ -404,7 +404,7 @@ theorem firstMatchPhysicalTrace_of_tape_equiv
 
 
 
-end Section53BoundedLoopInduction
+end FiniteRecognizer.Interpreter.BoundedLoopInduction
 
 end Computability
 end FoC

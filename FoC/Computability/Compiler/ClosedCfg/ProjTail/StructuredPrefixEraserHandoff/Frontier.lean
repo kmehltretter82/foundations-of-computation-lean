@@ -4,11 +4,10 @@ import FoC.Computability.Compiler.ClosedCfg.ProjTail.StructuredPrefixEraserHando
 set_option doc.verso true
 
 /-!
-# Structured prefix eraser handoff frontier
+# Structured prefix eraser handoff constructions
 
-This module contains the remaining concrete finite-machine construction leaf
-for the two-tape structured-prefix eraser handoff, plus the thin public core
-wrappers that depend on it.
+This module exposes the completed finite-machine construction for the two-tape
+structured-prefix eraser handoff and its thin public core wrappers.
 -/
 
 namespace FoC

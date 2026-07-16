@@ -7,16 +7,16 @@ namespace Computability
 
 open Languages
 
-namespace Section53StackIteration
+namespace FiniteRecognizer.Interpreter.StackIteration
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53DirectContextUpdate
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.DirectContextUpdate
 
-abbrev Action := Section53DirectContextUpdate.Action
+abbrev Action := FiniteRecognizer.Interpreter.DirectContextUpdate.Action
 
 def persistent
     (haltState : Nat)
@@ -32,7 +32,7 @@ def stackBaseLeftRev
     (copies : Nat) : Word MachineCodeSymbol :=
   List.append
     (tableStack (first :: rest) copies).reverse
-    (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
 
 def stackRightBaseLeftRev
     (target : Nat)
@@ -40,7 +40,7 @@ def stackRightBaseLeftRev
     (rest : List TransitionDescription)
     (copies : Nat)
     (left : List (Option Bool)) : Word MachineCodeSymbol :=
-  Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+  FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
     (stackBaseLeftRev target first rest copies) left
 
 theorem stackBaseLeftRev_reverse
@@ -52,7 +52,7 @@ theorem stackBaseLeftRev_reverse
       MachineDescription.encodeNatAppend target
         (MachineCodeSymbol.header :: tableStack (first :: rest) copies) := by
   simp only [stackBaseLeftRev, List.reverse_append, List.reverse_reverse]
-  simp [Section53DirectContextUpdate.Prefix.targetBaseLeftRev,
+  simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev,
     MachineDescription.encodeNatAppend, List.append_assoc]
   done
 
@@ -68,7 +68,7 @@ theorem stackRightBaseLeftRev_reverse
           List.append (tableStack (first :: rest) copies)
             (MachineDescription.encodeCellListAppend left [])) := by
   unfold stackRightBaseLeftRev
-  rw [Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+  rw [FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   rw [stackBaseLeftRev_reverse]
   simp [MachineDescription.encodeNatAppend, List.append_assoc]
   done
@@ -82,13 +82,13 @@ theorem prefix_source_tape_eq_postSelected
     (tape : Tape Bool)
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Prefix.sourceConfig action target
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.sourceConfig action target
       (activeProtectedSuffix (first :: rest) copies tape haltState
         callerSuffix)).tape =
       Tape.input
         (postSelectedWord target (first :: rest) copies tape haltState
           callerSuffix) := by
-  rw [Section53DirectContextUpdate.Prefix.source_tape_eq_input]
+  rw [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.source_tape_eq_input]
   rfl
   done
 
@@ -101,11 +101,11 @@ theorem prefix_target_tape_eq_stackSkip_source
     (tape : Tape Bool)
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Prefix.targetConfig action target
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetConfig action target
       (activeProtectedSuffix (first :: rest) copies tape haltState
         callerSuffix)).tape =
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest copies (contextTail tape haltState callerSuffix)).tape := by
   rfl
   done
@@ -119,12 +119,12 @@ theorem stackSkip_target_tape_eq_boundary_source
     (head : Option Bool)
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53StackSkip.targetConfig
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest copies
       (contextTail { left := left, head := head, right := right }
         haltState callerSuffix)).tape =
-      (Section53DirectContextUpdate.Boundary.sourceConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
         (stackBaseLeftRev target first rest copies)
         left right.length
         (MachineDescription.encodeCellsAppend right
@@ -141,12 +141,12 @@ theorem stackSkip_target_tape_eq_prepend_left_source
     (head : Option Bool)
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53StackSkip.targetConfig
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest copies
       (contextTail { left := left, head := head, right := right }
         haltState callerSuffix)).tape =
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (stackBaseLeftRev target first rest copies)
         left.length
         (MachineDescription.encodeCellsAppend left
@@ -163,12 +163,12 @@ theorem boundary_target_tape_eq_prepend_right_source
     (left right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (stackBaseLeftRev target first rest copies)
       left right.length
       (MachineDescription.encodeCellsAppend right
         (persistent haltState callerSuffix))).tape =
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (stackRightBaseLeftRev target first rest copies left)
         right.length
         (MachineDescription.encodeCellsAppend right
@@ -186,13 +186,13 @@ theorem stackSkip_target_tape_eq_pop_left_source
     (oldHead : Option Bool)
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53StackSkip.targetConfig
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest copies
       (contextTail
         { left := nextHead :: remainingLeft, head := oldHead, right := right }
         haltState callerSuffix)).tape =
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (stackBaseLeftRev target first rest copies)
         remainingLeft.length nextHead
         (MachineDescription.encodeCellsAppend remainingLeft
@@ -212,13 +212,13 @@ theorem boundary_target_tape_eq_pop_right_source
     (left remainingRight : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (stackBaseLeftRev target first rest copies)
       left (remainingRight.length + 1)
       (MachineDescription.encodeCellAppend nextHead
         (MachineDescription.encodeCellsAppend remainingRight
           (persistent haltState callerSuffix)))).tape =
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (stackRightBaseLeftRev target first rest copies left)
         remainingRight.length nextHead
         (MachineDescription.encodeCellsAppend remainingRight
@@ -237,7 +237,7 @@ theorem prepend_left_targetWord_eq_postSelected
     (left right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Prepend.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord
         (stackBaseLeftRev target first rest copies)
         left.length write
         (MachineDescription.encodeCellsAppend left
@@ -246,7 +246,7 @@ theorem prepend_left_targetWord_eq_postSelected
       postSelectedWord target (first :: rest) copies
         { left := write :: left, head := head, right := right }
         haltState callerSuffix := by
-  unfold Section53RuntimeEncodedList.Prepend.targetWord postSelectedWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord postSelectedWord
     activeProtectedSuffix contextTail
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [stackBaseLeftRev_reverse]
@@ -275,7 +275,7 @@ theorem prepend_right_targetWord_eq_postSelected
     (left right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Prepend.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord
         (stackRightBaseLeftRev target first rest copies left)
         right.length write
         (MachineDescription.encodeCellsAppend right
@@ -283,7 +283,7 @@ theorem prepend_right_targetWord_eq_postSelected
       postSelectedWord target (first :: rest) copies
         { left := left, head := head, right := write :: right }
         haltState callerSuffix := by
-  unfold Section53RuntimeEncodedList.Prepend.targetWord postSelectedWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.targetWord postSelectedWord
     activeProtectedSuffix contextTail
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [stackRightBaseLeftRev_reverse]
@@ -327,7 +327,7 @@ theorem pop_left_targetWord_eq_postSelected
     (remainingLeft right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Pop.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord
         (stackBaseLeftRev target first rest copies)
         remainingLeft.length
         (MachineDescription.encodeCellsAppend remainingLeft
@@ -336,7 +336,7 @@ theorem pop_left_targetWord_eq_postSelected
       postSelectedWord target (first :: rest) copies
         { left := remainingLeft, head := head, right := right }
         haltState callerSuffix := by
-  unfold Section53RuntimeEncodedList.Pop.targetWord postSelectedWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord postSelectedWord
     activeProtectedSuffix contextTail
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [stackBaseLeftRev_reverse]
@@ -353,7 +353,7 @@ theorem pop_right_targetWord_eq_postSelected
     (left remainingRight : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    Section53RuntimeEncodedList.Pop.targetWord
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord
         (stackRightBaseLeftRev target first rest copies left)
         remainingRight.length
         (MachineDescription.encodeCellsAppend remainingRight
@@ -361,7 +361,7 @@ theorem pop_right_targetWord_eq_postSelected
       postSelectedWord target (first :: rest) copies
         { left := left, head := head, right := remainingRight }
         haltState callerSuffix := by
-  unfold Section53RuntimeEncodedList.Pop.targetWord postSelectedWord
+  unfold FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.targetWord postSelectedWord
     activeProtectedSuffix contextTail
     RuntimeKeySingleKeyRepair.protectedTapeContextsAppend
   rw [stackRightBaseLeftRev_reverse]
@@ -407,25 +407,25 @@ theorem stackSkip_computes_of_tape_equiv
     (context : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53StackSkip.sourceConfig baseLeftRev first rest copies
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig baseLeftRev first rest copies
         context).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := sourceTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := targetTape } ∧
       Tape.Equiv
-        (Section53StackSkip.targetConfig baseLeftRev first rest copies
+        (FiniteRecognizer.Interpreter.StackSkip.targetConfig baseLeftRev first rest copies
           context).tape targetTape := by
-  have hrun := Section53StackSkip.run_exact
+  have hrun := FiniteRecognizer.Interpreter.StackSkip.run_exact
     baseLeftRev first rest copies context
   rcases TuringMachine.TapeEquivTransport.runConfigExact?_some_of_tape_equiv
       hrun hsource with
     ⟨targetConfig', htargetRun, htargetState, htargetTape⟩
   rcases targetConfig' with ⟨state, tape⟩
-  simp only [Section53StackSkip.targetConfig,
-    Section53StackSkip.cursorConfig] at htargetState
+  simp only [FiniteRecognizer.Interpreter.StackSkip.targetConfig,
+    FiniteRecognizer.Interpreter.StackSkip.cursorConfig] at htargetState
   subst state
   exact ⟨tape,
     TuringMachine.computesIn_to_computes
@@ -448,42 +448,42 @@ theorem position_after_stack
         (postSelectedWord target (first :: rest) copies tape haltState
           callerSuffix)) sourceTape) :
     exists prefixTape contextTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := contextTape } ∧
       Tape.Equiv
-        (Section53StackSkip.targetConfig
-          (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+        (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+          (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
           first rest copies (contextTail tape haltState callerSuffix)).tape
         contextTape := by
   have hprefixSource : Tape.Equiv
-      (Section53DirectContextUpdate.Prefix.sourceConfig action target
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.sourceConfig action target
         (activeProtectedSuffix (first :: rest) copies tape haltState
           callerSuffix)).tape sourceTape := by
     rw [prefix_source_tape_eq_postSelected]
     exact hsource
-  rcases Section53DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.prefix_computes_of_tape_equiv
       action target
       (activeProtectedSuffix (first :: rest) copies tape haltState
         callerSuffix)
       sourceTape hprefixSource with
     ⟨prefixTape, hprefix, hprefixTape⟩
   have hskipSource : Tape.Equiv
-      (Section53StackSkip.sourceConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest copies (contextTail tape haltState callerSuffix)).tape
       prefixTape := by
     rw [← prefix_target_tape_eq_stackSkip_source action]
     exact hprefixTape
   rcases stackSkip_computes_of_tape_equiv
-      (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
       first rest copies (contextTail tape haltState callerSuffix)
       prefixTape hskipSource with
     ⟨contextTape, hskip, hcontextTape⟩
@@ -639,24 +639,24 @@ theorem boundary_from_stack
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest copies
         (contextTail { left := left, head := head, right := right }
           haltState callerSuffix)).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := targetTape } ∧
       Tape.Equiv
-        (Section53DirectContextUpdate.Boundary.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
           (stackBaseLeftRev target first rest copies)
           left right.length
           (MachineDescription.encodeCellsAppend right
             (persistent haltState callerSuffix))).tape targetTape := by
-  apply Section53DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
+  apply FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
   rw [← stackSkip_target_tape_eq_boundary_source target first rest copies
     left right head haltState callerSuffix]
   exact hsource
@@ -673,17 +673,17 @@ theorem prepend_left_from_stack
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest copies
         (contextTail { left := left, head := head, right := right }
           haltState callerSuffix)).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := targetTape } ∧
       Tape.Equiv
@@ -692,7 +692,7 @@ theorem prepend_left_from_stack
             { left := write :: left, head := head, right := right }
             haltState callerSuffix)) targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (stackBaseLeftRev target first rest copies)
         left.length
         (MachineDescription.encodeCellsAppend left
@@ -701,7 +701,7 @@ theorem prepend_left_from_stack
     rw [← stackSkip_target_tape_eq_prepend_left_source target first rest
       copies left right head haltState callerSuffix]
     exact hsource
-  rcases Section53DirectContextUpdate.DirectPhases.prepend_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.prepend_computes_of_tape_equiv
       (stackBaseLeftRev target first rest copies)
       left.length write
       (MachineDescription.encodeCellsAppend left
@@ -725,17 +725,17 @@ theorem prepend_right_from_boundary
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53DirectContextUpdate.Boundary.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
         (stackBaseLeftRev target first rest copies)
         left right.length
         (MachineDescription.encodeCellsAppend right
           (persistent haltState callerSuffix))).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := targetTape } ∧
       Tape.Equiv
@@ -744,7 +744,7 @@ theorem prepend_right_from_boundary
             { left := left, head := head, right := write :: right }
             haltState callerSuffix)) targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Prepend.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.sourceConfig
         (stackRightBaseLeftRev target first rest copies left)
         right.length
         (MachineDescription.encodeCellsAppend right
@@ -752,7 +752,7 @@ theorem prepend_right_from_boundary
     rw [← boundary_target_tape_eq_prepend_right_source target first rest
       copies left right haltState callerSuffix]
     exact hsource
-  rcases Section53DirectContextUpdate.DirectPhases.prepend_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.prepend_computes_of_tape_equiv
       (stackRightBaseLeftRev target first rest copies left)
       right.length write
       (MachineDescription.encodeCellsAppend right
@@ -775,18 +775,18 @@ theorem pop_left_from_stack
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53StackSkip.targetConfig
-        (Section53DirectContextUpdate.Prefix.targetBaseLeftRev target)
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev target)
         first rest copies
         (contextTail
           { left := nextHead :: remainingLeft, head := oldHead,
             right := right }
           haltState callerSuffix)).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
@@ -794,7 +794,7 @@ theorem pop_left_from_stack
             { left := remainingLeft, head := nextHead, right := right }
             haltState callerSuffix)) targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (stackBaseLeftRev target first rest copies)
         remainingLeft.length nextHead
         (MachineDescription.encodeCellsAppend remainingLeft
@@ -803,7 +803,7 @@ theorem pop_left_from_stack
     rw [← stackSkip_target_tape_eq_pop_left_source target first rest copies
       nextHead remainingLeft right oldHead haltState callerSuffix]
     exact hsource
-  rcases Section53DirectContextUpdate.DirectPhases.pop_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.pop_computes_of_tape_equiv
       (stackBaseLeftRev target first rest copies)
       remainingLeft.length nextHead
       (MachineDescription.encodeCellsAppend remainingLeft
@@ -827,17 +827,17 @@ theorem pop_right_from_boundary
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53DirectContextUpdate.Boundary.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
         (stackBaseLeftRev target first rest copies)
         left (remainingRight.length + 1)
         (MachineDescription.encodeCellAppend nextHead
           (MachineDescription.encodeCellsAppend remainingRight
             (persistent haltState callerSuffix)))).tape sourceTape) :
     exists targetTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := sourceTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := targetTape } ∧
       Tape.Equiv
         (Tape.input
@@ -845,7 +845,7 @@ theorem pop_right_from_boundary
             { left := left, head := nextHead, right := remainingRight }
             haltState callerSuffix)) targetTape := by
   have hsource' : Tape.Equiv
-      (Section53RuntimeEncodedList.Pop.sourceConfig
+      (FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.sourceConfig
         (stackRightBaseLeftRev target first rest copies left)
         remainingRight.length nextHead
         (MachineDescription.encodeCellsAppend remainingRight
@@ -853,7 +853,7 @@ theorem pop_right_from_boundary
     rw [← boundary_target_tape_eq_pop_right_source target first rest copies
       nextHead left remainingRight haltState callerSuffix]
     exact hsource
-  rcases Section53DirectContextUpdate.DirectPhases.pop_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.pop_computes_of_tape_equiv
       (stackRightBaseLeftRev target first rest copies left)
       remainingRight.length nextHead
       (MachineDescription.encodeCellsAppend remainingRight
@@ -934,26 +934,26 @@ theorem iterate_left_empty
       { left := [], head := none, right := write :: right }
     exists prefixTape stackTape boundaryTape updatedPhysical scanTape :
         Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := stackTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := stackTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := boundaryTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := boundaryTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := updatedPhysical } ∧
       TuringMachine.Computes NextCopyRestager.machine
@@ -1018,21 +1018,21 @@ theorem iterate_right_empty
       { left := write :: left, head := none, right := [] }
     exists prefixTape stackTape updatedPhysical scanTape :
         Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := stackTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := stackTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := updatedPhysical } ∧
       TuringMachine.Computes NextCopyRestager.machine
@@ -1094,42 +1094,42 @@ theorem iterate_left_nonempty
       { left := remainingLeft, head := nextHead, right := write :: right }
     exists prefixTape stackTape boundaryTape writtenTape reprefixTape
         restackTape updatedPhysical scanTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := stackTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := stackTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := boundaryTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := boundaryTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := writtenTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := writtenTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := reprefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := reprefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := restackTape } ∧
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := restackTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := updatedPhysical } ∧
       TuringMachine.Computes NextCopyRestager.machine
         { state := NextCopyRestager.Control.target (Tape.read updated)
@@ -1209,42 +1209,42 @@ theorem iterate_right_nonempty
       { left := write :: left, head := nextHead, right := remainingRight }
     exists prefixTape stackTape writtenTape reprefixTape restackTape
         boundaryTape updatedPhysical scanTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := sourceTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := stackTape } ∧
       TuringMachine.Computes
-        (Section53RuntimeEncodedList.Prepend.machine write)
-        { state := Section53RuntimeEncodedList.Prepend.Control.locate .count
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.machine write)
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.locate .count
           tape := stackTape }
-        { state := Section53RuntimeEncodedList.Prepend.Control.insert
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control.insert
             (.rewind .gate)
           tape := writtenTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := writtenTape }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := reprefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := reprefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := restackTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := restackTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := boundaryTape } ∧
-      TuringMachine.Computes Section53RuntimeEncodedList.Pop.machine
-        { state := Section53RuntimeEncodedList.Pop.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.machine
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.locate .count
           tape := boundaryTape }
-        { state := Section53RuntimeEncodedList.Pop.Control.ready nextHead
+        { state := FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.Control.ready nextHead
           tape := updatedPhysical } ∧
       TuringMachine.Computes NextCopyRestager.machine
         { state := NextCopyRestager.Control.target (Tape.read updated)
@@ -1304,7 +1304,7 @@ theorem iterate_right_nonempty
   done
 
 
-end Section53StackIteration
+end FiniteRecognizer.Interpreter.StackIteration
 
 end Computability
 end FoC

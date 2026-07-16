@@ -5,7 +5,7 @@ import FoC.Computability.Compiler.Structured.HeadRoutes.Tape2Projector.DecoderRu
 set_option doc.verso true
 
 /-!
-# Guarded #18 raw-pair decoder seam
+# Guarded run-config raw-pair decoder seam
 
 This module connects the checked raw-pair chunk expander to the shared
 marker-preserving logical-cell decoder.  The first guaranteed {lit}`01` cell

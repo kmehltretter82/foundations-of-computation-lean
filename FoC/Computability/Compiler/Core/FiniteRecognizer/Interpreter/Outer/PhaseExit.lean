@@ -1,5 +1,7 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Common.PhaseEmbedding
 
+set_option doc.verso true
+
 namespace FoC
 namespace Computability
 namespace TuringMachine

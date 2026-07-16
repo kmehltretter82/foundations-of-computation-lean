@@ -6,15 +6,15 @@ namespace Computability
 
 open Languages
 
-namespace Section53ParserBranchPhaseSum
+namespace FiniteRecognizer.Interpreter.ParserBranchPhaseSum
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ZeroEmptyMetadataFinal
+open FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 
-abbrev ParserControl := Section53ParserPrefixPhaseSum.Control
-abbrev ExtractControl := Section53ZeroEmptyMetadataFinal.Control
-abbrev DecisionControl := Section53ZeroFinalPhaseSum.Decision.Control
+abbrev ParserControl := FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control
+abbrev ExtractControl := FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control
+abbrev DecisionControl := FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.Control
 
 /-!
 # Parser and direct-final branch phase sum
@@ -54,11 +54,11 @@ theorem savedOptions_complete
       simp [savedOptions, MachineCodeSymbol.finite.complete symbol]
 
 def elems : List Control :=
-  Section53ParserPrefixPhaseSum.Control.finite.elems.map Control.parser ++
+  FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.finite.elems.map Control.parser ++
     [Control.zeroProbe, Control.zeroBounce] ++
-    Section53ZeroEmptyMetadataFinal.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.finite.elems.map
       Control.extract ++
-    Section53ZeroFinalPhaseSum.Decision.Control.finite.elems.map
+    FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.Control.finite.elems.map
       Control.decision ++
     savedOptions.map Control.positiveReady ++
     [Control.accept, Control.reject]
@@ -70,15 +70,15 @@ def finite : Foundation.FiniteType Control where
     cases state with
     | parser inner =>
         simp [elems,
-          Section53ParserPrefixPhaseSum.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.Control.finite.complete inner]
     | zeroProbe => simp [elems]
     | zeroBounce => simp [elems]
     | extract inner =>
         simp [elems,
-          Section53ZeroEmptyMetadataFinal.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.Control.finite.complete inner]
     | decision inner =>
         simp [elems,
-          Section53ZeroFinalPhaseSum.Decision.Control.finite.complete inner]
+          FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.Control.finite.complete inner]
     | positiveReady saved =>
         simp [elems, savedOptions_complete saved]
     | accept => simp [elems]
@@ -103,7 +103,7 @@ def parserTarget : ParserControl -> Control
 
 def extractTarget : ExtractControl -> Control
   | .ready =>
-      .decision Section53ZeroFinalPhaseSum.Decision.machine.start
+      .decision FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine.start
   | .halt => .reject
   | state => .extract state
 
@@ -117,7 +117,7 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .parser state, read =>
       Option.map (mapAction parserTarget)
-        (Section53ParserPrefixPhaseSum.machine.transition state read)
+        (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.transition state read)
   | .zeroProbe, none =>
       some (some MachineCodeSymbol.blank, Direction.left, .zeroBounce)
   | .zeroProbe, some symbol =>
@@ -126,16 +126,16 @@ def transition :
       some (read, Direction.right, .extract .preserveContextBlank)
   | .extract state, read =>
       Option.map (mapAction extractTarget)
-        (Section53ZeroEmptyMetadataFinal.machine.transition state read)
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine.transition state read)
   | .decision state, read =>
       Option.map (mapAction decisionTarget)
-        (Section53ZeroFinalPhaseSum.Decision.machine.transition state read)
+        (FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine.transition state read)
   | .positiveReady _, _ => none
   | .accept, _ => none
   | .reject, _ => none
 
 def machine : TuringMachine MachineCodeSymbol Control where
-  start := .parser Section53ParserPrefixPhaseSum.machine.start
+  start := .parser FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.start
   halt := .accept
   transition := transition
   statesFinite := Control.finite
@@ -158,7 +158,7 @@ def decisionConfig
 
 def sourceConfig (tokens : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
-  parserConfig (Section53ParserPrefixPhaseSum.sourceConfig tokens)
+  parserConfig (FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.sourceConfig tokens)
 
 theorem sourceConfig_eq_initial (tokens : Word MachineCodeSymbol) :
     sourceConfig tokens = TuringMachine.initial machine tokens := by
@@ -230,7 +230,7 @@ theorem parser_transition_of_eq_some
     (source target : ParserControl)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53ParserPrefixPhaseSum.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine.transition
       source read = some (write, direction, target)) :
     transition (parserTarget source) read =
       some (write, direction, parserTarget target) := by
@@ -262,7 +262,7 @@ theorem extract_transition_of_eq_some
     (source target : ExtractControl)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53ZeroEmptyMetadataFinal.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine.transition
       source read = some (write, direction, target)) :
     transition (extractTarget source) read =
       some (write, direction, extractTarget target) := by
@@ -280,7 +280,7 @@ theorem decision_transition_of_eq_some
     (source target : DecisionControl)
     (read write : Option MachineCodeSymbol)
     (direction : Direction)
-    (htransition : Section53ZeroFinalPhaseSum.Decision.machine.transition
+    (htransition : FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine.transition
       source read = some (write, direction, target)) :
     transition (decisionTarget source) read =
       some (write, direction, decisionTarget target) := by
@@ -297,32 +297,32 @@ theorem decision_transition_of_eq_some
 theorem parser_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
       ParserControl}
-    (hrun : TuringMachine.Computes Section53ParserPrefixPhaseSum.machine
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
       source target) :
     TuringMachine.Computes machine
       (parserConfig source) (parserConfig target) :=
-  computes_of_transition_embedding Section53ParserPrefixPhaseSum.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.machine
     parserTarget parser_transition_of_eq_some hrun
 
 theorem extract_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
       ExtractControl}
-    (hrun : TuringMachine.Computes Section53ZeroEmptyMetadataFinal.machine
+    (hrun : TuringMachine.Computes FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine
       source target) :
     TuringMachine.Computes machine
       (extractConfig source) (extractConfig target) :=
-  computes_of_transition_embedding Section53ZeroEmptyMetadataFinal.machine
+  computes_of_transition_embedding FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine
     extractTarget extract_transition_of_eq_some hrun
 
 theorem decision_computes
     {source target : TuringMachine.Configuration MachineCodeSymbol
       DecisionControl}
     (hrun : TuringMachine.Computes
-      Section53ZeroFinalPhaseSum.Decision.machine source target) :
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine source target) :
     TuringMachine.Computes machine
       (decisionConfig source) (decisionConfig target) :=
   computes_of_transition_embedding
-    Section53ZeroFinalPhaseSum.Decision.machine decisionTarget
+    FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine decisionTarget
       decision_transition_of_eq_some hrun
 
 def directDecisionConfig
@@ -351,7 +351,7 @@ def zeroExtractConfig
     (input : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   { state := .extract .preserveContextBlank
-    tape := Section53ZeroEmptyMetadataFinal.contextCursorTape
+    tape := FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextCursorTape
       (some MachineCodeSymbol.done :: leftTail) (zeroPayload input) }
 
 /-- The sacrificial count-zero probe is a two-step left/right bounce.  It
@@ -381,11 +381,11 @@ theorem extract_then_decide_of_tape_equiv
     (canonicalSourceTape actualSourceTape : Tape MachineCodeSymbol)
     (leftPadding start halt rightPadding : Nat)
     (hextract : TuringMachine.Computes
-      Section53ZeroEmptyMetadataFinal.machine
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.machine
         { state := sourceState, tape := canonicalSourceTape }
-        (Section53ZeroEmptyMetadataFinal.readyConfig
+        (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig
           leftPadding
-          (Section53ZeroEmptyMetadataFinal.extractedWord start halt)
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.extractedWord start halt)
           rightPadding))
     (hsource : Tape.Equiv canonicalSourceTape actualSourceTape) :
     exists finalTape : Tape MachineCodeSymbol,
@@ -403,19 +403,19 @@ theorem extract_then_decide_of_tape_equiv
   subst actualReadyState
   have hactualExtract := extract_computes
     (TuringMachine.computesIn_to_computes hactualExtractIn)
-  rcases Section53ZeroFinalPhaseSum.Decision.computes_to_decision
+  rcases FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.computes_to_decision
       leftPadding start halt rightPadding with
     ⟨canonicalFinalTape, hdecision⟩
   rcases TuringMachine.computes_to_computesIn hdecision with
     ⟨decisionSteps, hdecisionIn⟩
   have hdecisionSource : Tape.Equiv
-      (Section53ZeroFinalPhaseSum.Decision.sourceConfig
+      (FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.sourceConfig
         leftPadding start halt rightPadding).tape
       actualReadyTape := by
-    simpa [Section53ZeroFinalPhaseSum.Decision.sourceConfig,
-      Section53ZeroFinalPhaseSum.Decision.materializeConfig,
-      Section53ZeroFinalPhaseSum.sourceConfig,
-      Section53ZeroFinalPhaseSum.headerConfig,
+    simpa [FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.materializeConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.headerConfig,
       TuringMachine.PhaseEmbedding.liftConfig,
       headerInsertSourceConfig] using hactualReadyTape
   rcases TuringMachine.TapeEquivTransport.computesIn_of_tape_equiv
@@ -432,34 +432,34 @@ theorem extract_then_decide_of_tape_equiv
   by_cases heq : start = halt
   · simpa [extractConfig, extractTarget, decisionConfig,
       decisionTarget,
-      Section53ZeroFinalPhaseSum.Decision.sourceConfig,
-      Section53ZeroFinalPhaseSum.Decision.decisionConfig,
-      Section53ZeroFinalPhaseSum.Decision.materializeConfig,
-      Section53ZeroFinalPhaseSum.Decision.materializeTarget,
-      Section53ZeroFinalPhaseSum.Decision.machine,
-      Section53ZeroFinalPhaseSum.sourceConfig,
-      Section53ZeroFinalPhaseSum.headerConfig,
-      Section53ZeroFinalPhaseSum.headerTarget,
-      Section53ZeroFinalPhaseSum.machine,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.decisionConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.materializeConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.materializeTarget,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.headerConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.headerTarget,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine,
       InsertRestagedMachine.machine,
       headerInsertSourceConfig,
-      Section53ZeroEmptyMetadataFinal.readyConfig,
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig,
       directDecisionConfig, heq,
       TuringMachine.PhaseEmbedding.liftConfig] using hactualDecision
   · simpa [extractConfig, extractTarget, decisionConfig,
       decisionTarget,
-      Section53ZeroFinalPhaseSum.Decision.sourceConfig,
-      Section53ZeroFinalPhaseSum.Decision.decisionConfig,
-      Section53ZeroFinalPhaseSum.Decision.materializeConfig,
-      Section53ZeroFinalPhaseSum.Decision.materializeTarget,
-      Section53ZeroFinalPhaseSum.Decision.machine,
-      Section53ZeroFinalPhaseSum.sourceConfig,
-      Section53ZeroFinalPhaseSum.headerConfig,
-      Section53ZeroFinalPhaseSum.headerTarget,
-      Section53ZeroFinalPhaseSum.machine,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.decisionConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.materializeConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.materializeTarget,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.Decision.machine,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.sourceConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.headerConfig,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.headerTarget,
+      FiniteRecognizer.Interpreter.ZeroFinalPhaseSum.machine,
       InsertRestagedMachine.machine,
       headerInsertSourceConfig,
-      Section53ZeroEmptyMetadataFinal.readyConfig,
+      FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.readyConfig,
       directDecisionConfig, heq,
       TuringMachine.PhaseEmbedding.liftConfig] using hactualDecision
 
@@ -474,7 +474,7 @@ theorem zero_probe_then_decide_of_tape_equiv
     (hsource : Tape.Equiv
       (zeroProbeConfig
         (none ::
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel stateCount start halt).map some)
         input).tape
       actualSourceTape) :
@@ -485,18 +485,18 @@ theorem zero_probe_then_decide_of_tape_equiv
   have hcanonicalProbeIn : TuringMachine.ComputesIn machine 2
       (zeroProbeConfig
         (none ::
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel stateCount start halt).map some)
         input)
       (zeroExtractConfig
         (none ::
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel stateCount start halt).map some)
         input) :=
     TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp
       (zero_probe_run_exact
         (none ::
-          (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
             fuel stateCount start halt).map some)
         input)
   rcases TuringMachine.TapeEquivTransport.computesIn_of_tape_equiv
@@ -514,27 +514,27 @@ theorem zero_probe_then_decide_of_tape_equiv
   cases input with
   | nil =>
       have hcanonicalExtract :=
-        Section53ZeroEmptyMetadataFinal.contextual_extractor_computes
+        FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_extractor_computes
           fuel stateCount start halt 0 MachineCodeSymbol.blank []
       have hactualSource : Tape.Equiv
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev 0 ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 fuel stateCount start halt).map some)
             MachineCodeSymbol.blank []).tape
           actualExtractTape := by
         simpa [zeroExtractConfig, zeroPayload, parsedTableLeftRev,
-          Section53ZeroEmptyMetadataFinal.contextSourceConfig] using
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig] using
           hactualExtractTape
       rcases extract_then_decide_of_tape_equiv
           .preserveContextBlank
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev 0 ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 fuel stateCount start halt).map some)
             MachineCodeSymbol.blank []).tape
           actualExtractTape
-          ((Section53ZeroEmptyMetadataFinal.olderMetadataLeftRev
+          ((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.olderMetadataLeftRev
             fuel stateCount).length + 2)
           start halt
           ((MachineCodeSymbol.done ::
@@ -545,27 +545,27 @@ theorem zero_probe_then_decide_of_tape_equiv
         TuringMachine.computes_trans hactualProbe hfinish⟩
   | cons first rest =>
       have hcanonicalExtract :=
-        Section53ZeroEmptyMetadataFinal.contextual_extractor_computes
+        FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextual_extractor_computes
           fuel stateCount start halt 0 first rest
       have hactualSource : Tape.Equiv
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev 0 ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 fuel stateCount start halt).map some)
             first rest).tape
           actualExtractTape := by
         simpa [zeroExtractConfig, zeroPayload, parsedTableLeftRev,
-          Section53ZeroEmptyMetadataFinal.contextSourceConfig] using
+          FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig] using
           hactualExtractTape
       rcases extract_then_decide_of_tape_equiv
           .preserveContextBlank
-          (Section53ZeroEmptyMetadataFinal.contextSourceConfig
+          (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.contextSourceConfig
             (parsedTableLeftRev 0 ++
-              (Section53ZeroEmptyMetadataFinal.metadataLeftRev
+              (FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.metadataLeftRev
                 fuel stateCount start halt).map some)
             first rest).tape
           actualExtractTape
-          ((Section53ZeroEmptyMetadataFinal.olderMetadataLeftRev
+          ((FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal.olderMetadataLeftRev
             fuel stateCount).length + 2)
           start halt
           ((MachineCodeSymbol.done ::
@@ -616,6 +616,6 @@ theorem haltingTransitionsDisabled :
   rfl
 
 
-end Section53ParserBranchPhaseSum
+end FiniteRecognizer.Interpreter.ParserBranchPhaseSum
 end Computability
 end FoC

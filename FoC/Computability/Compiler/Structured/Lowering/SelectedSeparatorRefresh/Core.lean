@@ -1716,7 +1716,7 @@ private theorem encodedStructuredTapeCells_cons_eq_of_singleton_eq
 /--
 Case-split contract for a selected-separator local refresher.
 
-This is the proof boundary for the eventual selected-separator classifier:
+This is the proof boundary for the selected-separator classifier:
 canonical selected segments may no-op, while the two boundary shapes use the
 gap creator followed by the corresponding boundary repair.
 -/

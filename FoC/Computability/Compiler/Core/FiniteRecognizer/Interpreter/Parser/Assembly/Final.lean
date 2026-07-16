@@ -6,7 +6,7 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserAssembly
+namespace FiniteRecognizer.Interpreter.ParserAssembly
 
 theorem shiftedTarget_equiv_contextualParserSource
     (baseLeftRev : Word MachineCodeSymbol)
@@ -425,6 +425,6 @@ theorem canonicalNonemptyTransitionTable_parser_restorer_forward
           (MachineDescription.encodeTransitions (t :: rest)) suffix) := by
   exact nonemptyTransitionTable_parser_and_restorer_to_equiv t rest suffix
 
-end Section53ParserAssembly
+end FiniteRecognizer.Interpreter.ParserAssembly
 end Computability
 end FoC

@@ -1,14 +1,16 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Interpreter.Parser.Transition.Basic
 
+set_option doc.verso true
+
 namespace FoC
 namespace Computability
 
 open Languages
 
-namespace Section53TransitionParserHandoff
+namespace FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 /-!
-## Exact continuation contracts
+# Transition Parser Continuation Contracts
 
 The first contract is the exact computation already proved privately in
 {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.Runs`.
@@ -661,7 +663,7 @@ theorem transitionListParserMachine_computes_twoTransitions_exact_of_step
             using hcontinue)
         hfinal)
 
-end Section53TransitionParserHandoff
+end FiniteRecognizer.Interpreter.TransitionParserHandoff
 
 end Computability
 end FoC

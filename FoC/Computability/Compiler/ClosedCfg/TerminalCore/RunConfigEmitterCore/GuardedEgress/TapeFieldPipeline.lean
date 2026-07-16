@@ -11,8 +11,8 @@ open CommonGround.FiniteTransducers.Structured.MultiTapeLowering.Tape2Projector
 open RawPairQuoter RawPairDecoder
 
 /-!
-The production guarded-egress tape-field route, composed bottom-up from the
-checked raw-pair phases.  Every handoff uses the canonical right/left bounce;
+The guarded-egress tape-field route composes the checked raw-pair phases
+bottom-up.  Every handoff uses the canonical right/left bounce;
 the viable contract therefore records intermediate and final tapes up to
 `Tape.Equiv`.
 -/

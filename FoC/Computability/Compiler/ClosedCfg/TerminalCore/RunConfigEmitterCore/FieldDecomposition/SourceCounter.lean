@@ -6,7 +6,7 @@ set_option doc.verso true
 /-!
 # Original-source scratch-width counter
 
-This is the first executable phase of the #18 field decomposer.  It skips the
+This is the first executable phase of the run-config field decomposer.  It skips the
 first bit of the encoded simulator layout, emits one raw marker on logical tape
 2 for every remaining source bit, then rewinds logical tape 0 to the padded
 word start needed by later parser phases.  Logical tape 1 remains exactly
@@ -517,7 +517,7 @@ theorem haltsWithTapes
 ## Simulator-layout specialization
 -/
 
-/-- Physical scratch-width block carried into all later #18 phases. -/
+/-- Physical scratch-width block carried through the emitter phases. -/
 def layoutMarkerTape (L : SimulatorLayout) : Tape Bool :=
   tapeAtCells (RunConfigEmitterTheory.scratchWidthMarkers L) []
 

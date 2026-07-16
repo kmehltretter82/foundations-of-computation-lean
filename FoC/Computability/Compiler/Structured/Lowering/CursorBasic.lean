@@ -22,12 +22,7 @@ namespace MultiTapeLowering
 ## Cursor-level physical routines
 -/
 
-/--
-Cursor position immediately after the separator that opens a logical tape
-segment.  This is the first executable cursor boundary after
-{name}`AtTapeSeparator`: a one-tape machine can move right from a separator
-into the segment, then later scan for the head marker or next separator.
--/
+/-- Cursor immediately after the separator opening an existing logical tape segment. -/
 def AtTapeSegmentEntry
     (logical : List (Tape Bool)) (tapeIndex : Nat)
     (physical : Tape Bool) : Prop :=
@@ -42,11 +37,8 @@ def AtTapeSegmentEntry
             (encodedStructuredTapeCells rest))
 
 /--
-Cursor position on the separator immediately after a logical tape segment.
-
-This is intentionally stated with the same {lit}`drop tapeIndex = T :: rest`
-witness as {name}`AtTapeSegmentEntry`; a later bridge can identify this with
-{lit}`AtTapeSeparator logical (tapeIndex + 1)`.
+Cursor on the separator after a logical segment, sharing the
+{lit}`drop tapeIndex = T :: rest` witness with {name}`AtTapeSegmentEntry`.
 -/
 def AtTapeSegmentExit
     (logical : List (Tape Bool)) (tapeIndex : Nat)
@@ -254,13 +246,7 @@ theorem atTapeSegmentExit_to_atTapeSeparator_succ
       encodedPrefixBeforeTape, encodedSuffixFromTape, htake, hdropSucc,
       List.append_assoc]
 
-/--
-Contract for a concrete cursor routine.
-
-Unlike {name}`PhysicalPrimitiveContract`, this does not force the routine to
-start and end at the canonical block boundary.  It is the lower-level shape
-needed by real physical seek/scan routines.
--/
+/-- Physical cursor routine with source and target predicates beyond block boundaries. -/
 structure CursorRoutineContract
     (source target : List (Tape Bool) -> Tape Bool -> Prop)
     (machine : MachineDescription) : Prop where
@@ -272,12 +258,7 @@ structure CursorRoutineContract
         exists Tout : Tape Bool,
           machine.HaltsFromTape Tin Tout ∧ target logical Tout
 
-/--
-Concrete zero-step cursor machine.
-
-This is useful for already-at-boundary routines, notably the fixed
-{lit}`seekTape 0` case from the canonical encoded block start.
--/
+/-- Zero-step cursor machine for a physical tape already at the required boundary. -/
 def cursorNoopDescription : MachineDescription where
   stateCount := 1
   start := 0
@@ -433,9 +414,8 @@ theorem cursorNoopDescription_refreshes_actionPrimitivesAt_zero_right_guardSlack
       write? left head cell right)
 
 /--
-Repair the singleton right-boundary slack shape by appending one encoded blank
-logical cell at the right edge of the only segment, then rewinding to the
-canonical block-start separator.
+Repair singleton right-boundary slack by appending an encoded blank and
+rewinding to block start.
 -/
 def rightBoundaryGuardSlackRefreshDescription : MachineDescription where
   stateCount := 7
@@ -807,10 +787,9 @@ private def leftBoundaryGuardSlackShiftPairState
   | true, true => 7
 
 /--
-Shift a singleton left-boundary slack segment two physical Boolean cells to the
-right, writing the encoded blank logical cell at the segment start.  The
-routine halts at the new right-edge blank; callers compose it with the standard
-right-edge rewind to return to block start.
+Repair singleton left-boundary slack by shifting the segment two physical
+cells right and writing an encoded blank at its start. The routine halts at
+the new right edge for composition with the standard rewind.
 -/
 def leftBoundaryGuardSlackShiftDescription : MachineDescription where
   stateCount := 11
@@ -1240,13 +1219,8 @@ theorem leftBoundaryGuardSlackRefreshDescription_refreshes_actionPrimitivesAt_ze
       slack.head slack.right
 
 /--
-The three one-segment guard-slack endpoint shapes that can be produced by a
-singleton local action row.
-
-The final fixed physical refresh dispatcher should implement this predicate
-directly from the raw tape: canonical inputs can be rewound/no-oped, left
-boundary inputs need the left-shift repair, and right boundary inputs need the
-right-edge append repair.
+Canonical, left-boundary, and right-boundary one-segment slack endpoints
+produced by singleton local action rows.
 -/
 inductive SingletonGuardSlackEndpointShape :
     List (Tape Bool) -> Tape Bool -> Prop where
@@ -1562,12 +1536,8 @@ theorem singletonGuardSlackEndpointShape_of_actionPrimitivesAt_zero_guardSlackEn
                   exact SingletonGuardSlackEndpointShape.canonical rfl
 
 /--
-Segment-wise singleton guard-slack endpoint shapes.
-
-The first list is the canonical logical target.  The second list is the actual
-logical tape list encoded in the row-produced physical endpoint.  Each paired
-segment must be one of the singleton shapes handled by the fixed one-segment
-refresh dispatcher.
+Pointwise singleton guard-slack shapes for canonical target segments and the
+segments encoded by the physical endpoint.
 -/
 def SingletonGuardSlackEndpointShapeList :
     List (Tape Bool) -> List (Tape Bool) -> Prop
@@ -1579,13 +1549,9 @@ def SingletonGuardSlackEndpointShapeList :
   | _, _ => False
 
 /--
-Whole structured-tape endpoint whose encoded segments are pointwise singleton
-guard-slack shapes.
-
-This is the list-level bridge between row-produced three-tape endpoints and
-the one-segment refresh dispatcher.  A future concrete normalizer can consume
-this predicate by refreshing one segment at a time while preserving the other
-encoded segments.
+Structured endpoint whose encoded segments satisfy
+{name}`SingletonGuardSlackEndpointShapeList`; a normalizer refreshes them one
+at a time.
 -/
 def StructuredSingletonGuardSlackEndpointShape
     (target : List (Tape Bool)) (physical : Tape Bool) : Prop :=
@@ -2043,8 +2009,8 @@ end StructuredSingletonGuardSlackRefreshContract
 /--
 Three-tape specialization of the structured-singleton refresh contract.
 
-The concrete lowerer currently targets supported three-tape read/write rows.
-This contract keeps that immediate machine obligation explicit while the
+The concrete lowerer targets supported three-tape read/write rows.  This
+contract specializes that machine boundary while the
 fully list-polymorphic {name}`StructuredSingletonGuardSlackRefreshContract`
 remains available as the broader compatibility boundary.
 -/
@@ -2138,10 +2104,9 @@ end StructuredSingletonGuardSlackRefresh3Contract
 /--
 Selector for the concrete singleton action-refresh routine.
 
-This is still source-shape indexed, so it is not the final static refresh
-normalizer.  It gives the one-segment Milestone 1 proof one entry point over
-the five local shapes that a singleton {lit}`actionPrimitivesAt 0` row can
-produce.
+This source-shape-indexed selector gives the one-segment refresh proof one
+entry point over the five local shapes that a singleton
+{lit}`actionPrimitivesAt 0` row can produce.
 -/
 def singletonActionGuardSlackRefreshDescription
     (action : TapeAction) (T : Tape Bool) : MachineDescription :=
@@ -2245,9 +2210,8 @@ structure SingletonShapeGuardSlackRefreshContract
         (encodedGuardedStructuredTapes target)
 
 /--
-Constructor-side proof obligations for a fixed singleton-shape refresh
-machine.  Future concrete dispatcher proofs can fill these three fields
-directly, then convert the result to
+Constructor-side contract for a fixed singleton-shape refresh machine.  Its
+three cases convert directly to
 {name}`SingletonShapeGuardSlackRefreshContract`.
 -/
 structure SingletonShapeGuardSlackRefreshCaseContract

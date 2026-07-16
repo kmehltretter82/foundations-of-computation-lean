@@ -1,6 +1,6 @@
 import FoC.Computability.Compiler.ClosedCfg.TerminalCore.RunConfigEmitterCore.GuardedEgress.RawPairDecoder
 set_option doc.verso true
-/-! # Guarded #18 head-marker split
+/-! # Guarded run-config head-marker split
 The rewritten pair stream has four-bit cell tokens followed by the unique
 {lit}`0111` head token. This scanner halts on the exact head-cell token. -/
 namespace FoC

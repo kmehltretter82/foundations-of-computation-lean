@@ -8,12 +8,13 @@ namespace Computability
 open Languages
 
 /-!
-**Section 5.3 finite-source scaffold.**  The universal-machine construction
-target is the prefix version.  The finite-source scaffold below is the active
-deferred fixed-alphabet prefix recognizer machine target.  Row coverage over all
-recursively enumerable code-symbol languages still requires an explicit
+# Universal-Prefix Header Parser
+
+The header parser is a completed finite-source component of the fixed-alphabet
+universal-prefix recognizer. Row coverage over all recursively enumerable
+code-symbol languages additionally requires an explicit
 encoded-input description compiler, as in
-{name}`codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout`.
+{name}`codeUniversalPrefixRowsCoverConstruction_of_descriptionCompilerCloseout`.
 -/
 
 def HeaderFieldsParserConstruction : Prop :=

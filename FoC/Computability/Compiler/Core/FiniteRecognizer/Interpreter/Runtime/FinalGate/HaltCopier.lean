@@ -5,14 +5,14 @@ namespace Computability
 
 open Languages
 
-namespace Section53FinalGateMaterializer
+namespace FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
 
 namespace HaltCopier
 
@@ -1021,7 +1021,7 @@ theorem copy_computes
 
 end HaltCopier
 
-end Section53FinalGateMaterializer
+end FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 end Computability
 end FoC

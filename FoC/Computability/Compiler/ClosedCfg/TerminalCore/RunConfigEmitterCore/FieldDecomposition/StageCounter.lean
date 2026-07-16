@@ -6,7 +6,7 @@ set_option doc.verso true
 /-!
 # Stage-field parser and exact unary counter
 
-This is the second executable phase of the #18 field decomposer.  Starting at
+This is the second executable phase of the run-config field decomposer.  Starting at
 the parser-ready endpoint of the source-counter phase, it walks the header, input
 length, input cells, and stage field on logical tape 0.  The source is preserved
 exactly.  While reading the stage field it materializes the raw unary counter

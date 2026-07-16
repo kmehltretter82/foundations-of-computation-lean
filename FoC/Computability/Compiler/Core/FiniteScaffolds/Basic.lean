@@ -70,11 +70,10 @@ theorem encodedTapeCodePrimitiveOutputCompiledSubroutineConstruction_of_forward_
         hready hforward hclosed⟩
 
 /-!
-**Controller encoded leaves.**  These are the finite transition-table
-obligations that are specific to the controller loop rather than to the
-dovetail layout subroutines.  The projection and result-emitter machines are
-already available from their concrete descriptions; the initializer and
-continue-result code-word subroutine remain as concrete leaves.
+**Controller encoded constructions.**  These finite transition-table
+constructions are specific to the controller loop rather than to the dovetail
+layout subroutines.  They package the initializer, projection, result emitter,
+and continue-result code-word subroutine in the shared rewriter contracts.
 -/
 
 section EncodedControllerLeaves
@@ -111,7 +110,7 @@ end EncodedControllerLeaves
 canonical code-word input and output.  The paired-recognizer construction
 targets use the same machines packaged as output-compiled subroutines or as
 controller component realizers.  These lemmas keep that repackaging explicit,
-so the final scaffold section can name only construction dependencies.
+so the export section records only construction dependencies.
 -/
 
 section ContractBridges
@@ -178,9 +177,9 @@ theorem pairedRecognizerDovetailControllerContinueConstruction_of_encodedRewrite
 end ContractBridges
 
 /-!
-**Finite-source scaffold exports.**  These declarations are the remaining concrete
-machine-construction leaves for the paired-recognizer dovetail controller
-route. They are intentionally narrow: the source programs and controller layout
+**Finite-source construction exports.**  These declarations package the
+concrete machines for the paired-recognizer dovetail controller route.  Their
+contracts are intentionally narrow: the source programs and controller layout
 are the fixed finite targets above, not arbitrary staged programs or arbitrary
 tape-code primitives.
 -/

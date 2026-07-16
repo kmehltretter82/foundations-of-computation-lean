@@ -9,12 +9,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53ZeroEmptyMetadataFinal
+namespace FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ParserAssembly
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 # Verified final gate from retained header metadata
@@ -1061,6 +1061,6 @@ theorem cleanupRight_boundary_step
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
       List.map_append, List.map_reverse, List.append_assoc]
 
-end Section53ZeroEmptyMetadataFinal
+end FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 end Computability
 end FoC

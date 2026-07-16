@@ -71,8 +71,8 @@ theorem tail_mem_closeoutSuffixes_of_cons_mem {α : Type}
 ## Extended typed state space
 -/
 
-/-- Dispatcher states retain their old numeric identifiers.  The remaining
-constructors live in a fresh block above the old dispatcher state count. -/
+/-- Dispatcher states retain their numeric identifiers.  The closeout
+constructors occupy a fresh block above the dispatcher state count. -/
 inductive LoopDispatcherCloseoutState (D : MachineDescription) where
   | base (state : LoopDispatcherState D)
   | skip (witness : LoopDispatcherDoneWitness)
@@ -1364,8 +1364,8 @@ theorem loopDispatcherCloseoutDescription_spec
       loopDispatcherCloseoutDescription_haltsWithTapes D⟩
   done
 
-/-- The formerly isolated done-witness leaf is closed by the combined typed
-dispatcher/closeout table. -/
+/-- The combined typed dispatcher/closeout table supplies the done-witness
+closeout obligation. -/
 theorem loopDispatcherDoneWitnessCloseoutObligation :
     LoopDispatcherDoneWitnessCloseoutObligation := by
   intro D
@@ -1374,7 +1374,7 @@ theorem loopDispatcherDoneWitnessCloseoutObligation :
       loopDispatcherCloseoutDescription_spec D⟩
   done
 
-/-- Safe composition seam for the forthcoming entry selector.  The source is
+/-- Safe composition seam for the entry selector.  The source is
 the L-dependent classified configuration; no claim is made that it is the
 fixed description start. -/
 theorem loopDispatcherCloseoutDescription_safe_splice

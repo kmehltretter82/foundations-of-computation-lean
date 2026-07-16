@@ -669,10 +669,9 @@ theorem selectedProjectionInputQuoterRawCellQuoteConstruction :
         (hfinish.right L)
 
 /--
-The remaining post-boundary finite-table obligation for the exact input
-quoter.  The prefix phase has already restored the source-rest boundary; this
-phase must quote the defaulted parsed-layout bits and leave the exact source
-field under the head.
+Post-boundary finite-table construction for the exact input quoter.  The prefix
+phase restores the source-rest boundary; this phase quotes the defaulted
+parsed-layout bits and leaves the exact source field under the head.
 -/
 theorem selectedProjectionInputQuoterPostBoundaryConstruction :
     SelectedProjectionInputQuoterPostBoundaryConstruction := by

@@ -13,7 +13,7 @@ namespace Chapter05
 namespace Section03
 
 /-!
-# Chapter 5, Section 5.3: The Limits of Computation
+# Undecidability Vocabulary and Diagonalization
 
 This section formalizes the diagonal and halting-problem statements that mark
 the limits of computation. The definitions are book-facing wrappers over
@@ -26,17 +26,20 @@ as predicates on encoded words.
 
 The page supplies a concrete pair-code alphabet for halting-problem reductions.
 It also exposes finite transition-table execution, concrete
-machine-description syntax, and the decoded-code acceptance languages.
-Universal-machine execution is still relative to a later proof that the
-bounded interpreter can itself be implemented by a concrete machine.
+machine-description syntax, and the decoded-code acceptance languages. The
+decoded-description interpreter, finite prefix recognizer, and
+universal-prefix runner are concrete constructions in
+{module}`FoC.Computability.Compiler.Core.FiniteRecognizer.DecodedDescriptionInterpreter`,
+{module}`FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Program`,
+and {module}`FoC.Computability.Compiler.UniversalAndRanges.FiniteSource`.
 
 The structure mirrors the standard textbook argument but keeps the implementation
 boundary visible. Abstract decoder and diagonalization theorems are proved in
 full generality. Concrete code words, machine descriptions, pair encodings,
-parser inversions, and executable description semantics are present. The final
-step, a single finite universal machine implementing the decoded bounded-run
-relation, remains an explicit construction target rather than an implicit
-assumption.
+parser inversions, executable description semantics, and a finite universal
+runner are present. The stronger row-coverage theorem retains an explicit
+encoded-input description compiler principle because it chooses a concrete
+description for every acceptable language.
 -/
 
 open Languages
@@ -56,7 +59,8 @@ diagonal languages are the standard tools for proving such statements.
 The concrete definitions in this group are intentionally low-level: they expose
 machine code symbols, description encoders and decoders, well-formed transition
 tables, interpreter configurations, and description-backed self-halting and
-pair-halting languages. This gives later construction work a precise target.
+pair-halting languages. This gives the later reduction theorems a precise
+vocabulary.
 -/
 
 def NonComputableStringFunction (f : Word input -> Word output) : Prop :=
@@ -163,7 +167,9 @@ def TuringDiagonalPairMap
   DiagonalPairMap encodePair
 
 /-!
-The concrete alphabet below is the file's current machine-code model. It
+## Concrete Codes and Machine Semantics
+
+The concrete alphabet below is the machine-code model used here. It
 provides pair encodings, finite code symbols, machine descriptions, decoders,
 interpreter configurations, and the encoded self-halting languages used by the
 later reduction theorems.
@@ -294,10 +300,12 @@ def ConcreteMachineCodePrefixAcceptedLanguage :
   MachineDescription.CodePrefixAcceptedLanguage
 
 /-!
+## Prefix Recognition and Compiler Principles
+
 The prefix decoder relation is semidecidable by a direct staged search: parse
 one description prefix, then run the decoded description for the current stage
-bound on the encoded suffix. This is the executable semantic target for the
-remaining finite universal-runner construction.
+bound on the encoded suffix. The completed finite prefix recognizer implements
+this executable semantic target.
 -/
 
 noncomputable def ConcreteCodePrefixRecognizerProgram :
@@ -402,45 +410,38 @@ def SemanticEncodedInputDescriptionCompilerPrinciple : Prop :=
 def SemanticBooleanDescriptionAcceptorCompilationPrinciple : Prop :=
   DescriptionProgramAcceptorCompilationPrinciple
 
-/-!
-Compatibility aliases for semantic compiler principles. These names predate
-the current finite-source closeout route and should not be read as finite
-transition-table constructions. Prefer the {lit}`Semantic...Principle` names
-above in new theorem statements.
--/
-
-def ConcreteEncodedInputProgramAcceptorCompilationConstruction : Prop :=
-  SemanticEncodedInputProgramAcceptorCompilationPrinciple
-
-def ConcreteEncodedInputDescriptionCompilerConstruction : Prop :=
-  SemanticEncodedInputDescriptionCompilerPrinciple
-
-def ConcreteBooleanDescriptionAcceptorCompilationConstruction : Prop :=
-  SemanticBooleanDescriptionAcceptorCompilationPrinciple
-
 theorem concrete_encoded_input_program_compiler_of_boolean_description_compiler
-    (hcompile : ConcreteBooleanDescriptionAcceptorCompilationConstruction) :
-    ConcreteEncodedInputProgramAcceptorCompilationConstruction :=
+    (hcompile : SemanticBooleanDescriptionAcceptorCompilationPrinciple) :
+    SemanticEncodedInputProgramAcceptorCompilationPrinciple :=
   Computability.encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
     hcompile
 
 theorem concrete_encoded_input_description_compiler_of_boolean_description_compiler
-    (hcompile : ConcreteBooleanDescriptionAcceptorCompilationConstruction) :
-    ConcreteEncodedInputDescriptionCompilerConstruction :=
+    (hcompile : SemanticBooleanDescriptionAcceptorCompilationPrinciple) :
+    SemanticEncodedInputDescriptionCompilerPrinciple :=
   Computability.encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
     hcompile
 
 theorem concrete_code_prefix_accepted_language_compiled_by_description_of_program_compiler
-    (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
+    (hcompile : SemanticEncodedInputProgramAcceptorCompilationPrinciple) :
     exists D : ConcreteMachineDescription,
       ConcreteMachineDescriptionAcceptsEncodedInputLanguage D
         ConcreteMachineCodePrefixAcceptedLanguage := by
   simpa [ConcreteMachineDescriptionAcceptsEncodedInputLanguage,
     ConcreteMachineCodePrefixAcceptedLanguage,
-    ConcreteEncodedInputProgramAcceptorCompilationConstruction]
+    SemanticEncodedInputProgramAcceptorCompilationPrinciple]
     using!
       Computability.codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
         hcompile
+
+/-!
+## Universal-Machine Interfaces
+
+The following definitions separate the unconditional finite runner from the
+row-coverage property. A runner recognizes the decoded prefix relation; row
+coverage additionally needs a compiler that selects a description for each
+acceptable language.
+-/
 
 def ConcreteMachineToTuringMachine (D : ConcreteMachineDescription) :
     TuringMachine Bool (Fin (D.stateCount + 1)) :=
@@ -480,28 +481,25 @@ def ConcreteCodePrefixRecognizerMachineConstruction : Prop :=
 def ConcreteUniversalPrefixRowsCoverConstruction : Prop :=
   CodeUniversalPrefixRowsCoverConstruction
 
-abbrev ConcreteSection53UniversalPrefixCloseout :=
-  CodeUniversalPrefixSection53Closeout
+abbrev ConcreteUniversalPrefixProgramCompilerCloseout :=
+  CodeUniversalPrefixProgramCompilerCloseout
 
-abbrev ConcreteSection53UniversalPrefixFiniteSourceCloseout :=
-  CodeUniversalPrefixFiniteSourceCloseout
+abbrev ConcreteUniversalPrefixDescriptionCompilerCloseout :=
+  CodeUniversalPrefixDescriptionCompilerCloseout
 
-abbrev ConcreteSection53UniversalPrefixRunnerFiniteSourceCloseout :=
-  CodeUniversalPrefixRunnerFiniteSourceCloseout
-
-theorem concrete_section53_universal_prefix_finite_source_closeout_of_boolean_description_compiler
-    (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
+theorem concrete_universal_prefix_description_compiler_closeout_of_boolean_description_compiler
+    (hcompiler : SemanticBooleanDescriptionAcceptorCompilationPrinciple)
     (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
-    ConcreteSection53UniversalPrefixFiniteSourceCloseout where
+    ConcreteUniversalPrefixDescriptionCompilerCloseout where
   encodedInputDescriptionCompiler :=
     concrete_encoded_input_description_compiler_of_boolean_description_compiler
       hcompiler
   prefixRecognizerMachine := hrunner
 
-theorem concrete_section53_universal_prefix_closeout_of_constructions
-    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
+theorem concrete_universal_prefix_program_compiler_closeout_of_program_compiler_and_runner
+    (hcompiler : SemanticEncodedInputProgramAcceptorCompilationPrinciple)
     (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
-    ConcreteSection53UniversalPrefixCloseout where
+    ConcreteUniversalPrefixProgramCompilerCloseout where
   encodedInputProgramCompiler := hcompiler
   universalRunner := hrunner
 
@@ -527,7 +525,7 @@ def ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages
   CodeUniversalPrefixRowsCoverAcceptableLanguages universal
 
 /-!
-**Reductions and Closure.**
+## Reductions and Closure
 
 Undecidability and non-acceptability are transported by equality and by the
 appropriate reduction notions. Complement theorems record that decidability
@@ -632,7 +630,7 @@ theorem decoder_recognizes_of_equal
   Computability.decoderRecognizes_of_equal h hEq
 
 /-!
-**Diagonalization.**
+## Diagonalization
 
 The diagonal language differs from every listed row. If a decoder were
 universal for all languages, the self-diagonal language would be one of its
@@ -692,7 +690,7 @@ theorem exists_nonacceptable_language_if_decoder_universal
   Computability.exists_nonacceptable_language_if_decoder_universal huniv
 
 /-!
-**Self-Halting and the Halting Problem.**
+## Self-Halting and the Halting Problem
 
 The self-diagonal language is the complement of self-halting. Under a universal
 decoder, this yields the standard undecidability and non-RE complement results,
@@ -703,9 +701,9 @@ two-input halting problem is at least as hard because self-halting is the
 preimage obtained by feeding the same code into both slots.
 
 The concrete pair-code alphabet makes that preimage statement exact for encoded
-machine descriptions. The remaining computability/preimage construction
-theorems name the compiler and universal-runner facts required to turn the
-abstract reduction into the final concrete halting-problem theorem.
+machine descriptions. The computability and preimage principles in theorem
+signatures identify which semantic closure fact is needed to transport a
+decider along the concrete diagonal map.
 -/
 
 theorem self_diagonal_equal_complement_self_halting
@@ -760,6 +758,8 @@ theorem self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal
     haccept huniv hself
 
 /-!
+## Encoded Pair Membership
+
 These membership lemmas unfold the halting-problem encodings. They make the
 two-input problem explicit either as concatenation or as a supplied pair encoder,
 then identify self-halting as the diagonal preimage of pair halting.
@@ -877,6 +877,8 @@ theorem diagonal_pair_preimage_pair_halting_equal_self_halting
     hinj
 
 /-!
+## Concrete Decoder Semantics
+
 The next facts specialize the abstract decoder story to concrete machine
 descriptions. Encoding then decoding a description is exact, and a universal
 machine specification is phrased as an iff between universal-machine halting and
@@ -950,13 +952,13 @@ theorem concrete_machine_encoded_description_recognizes_input_language
   exact concrete_machine_code_accepts_encode_description_iff D input
 
 theorem concrete_encoded_input_description_compiler_of_program_compiler
-    (hcompile : ConcreteEncodedInputProgramAcceptorCompilationConstruction) :
-    ConcreteEncodedInputDescriptionCompilerConstruction :=
+    (hcompile : SemanticEncodedInputProgramAcceptorCompilationPrinciple) :
+    SemanticEncodedInputDescriptionCompilerPrinciple :=
   Computability.semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler
     hcompile
 
 theorem concrete_encoded_input_description_compiler_decoder_universal
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    (hcompile : SemanticEncodedInputDescriptionCompilerPrinciple) :
     ConcreteMachineDecoderUniversalForAcceptableLanguages := by
   intro L hL
   cases hcompile L hL with
@@ -991,8 +993,10 @@ theorem concrete_machine_turing_step_of_interpreter_step
     hsource hstep
 
 /-!
+## Concrete Diagonal Preimages
+
 Concrete pair codes discharge the injectivity part of diagonal preimages. The
-remaining preimage principles say when a decider for pair halting would induce a
+preimage principles say when a decider for pair halting would induce a
 decider for self-halting by composing with the diagonal map.
 -/
 

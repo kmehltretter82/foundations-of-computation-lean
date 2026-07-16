@@ -5,11 +5,11 @@ namespace Computability
 
 open Languages
 
-namespace Section53DirectContextUpdate
+namespace FiniteRecognizer.Interpreter.DirectContextUpdate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 ### Next-key materializer
@@ -33,8 +33,8 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53RuntimeEncodedList.Pop.optionBools.map target ++
-    Section53RuntimeEncodedList.Pop.optionBools.map guard ++
+  FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.optionBools.map target ++
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.optionBools.map guard ++
     [rewind, ready, halt]
 
 def finite : Foundation.FiniteType Control where
@@ -43,9 +43,9 @@ def finite : Foundation.FiniteType Control where
     intro control
     cases control with
     | target head =>
-        simp [elems, Section53RuntimeEncodedList.Pop.optionBools_complete head]
+        simp [elems, FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.optionBools_complete head]
     | guard head =>
-        simp [elems, Section53RuntimeEncodedList.Pop.optionBools_complete head]
+        simp [elems, FiniteRecognizer.Interpreter.RuntimeEncodedList.Pop.optionBools_complete head]
     | rewind => simp [elems]
     | ready => simp [elems]
     | halt => simp [elems]
@@ -61,7 +61,7 @@ def transition :
       some (some MachineCodeSymbol.done, Direction.right, .guard head)
   | .guard head, some MachineCodeSymbol.header =>
       some
-        (some (Section53RuntimeEncodedList.Prepend.cellSymbol head),
+        (some (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head),
           Direction.left, .rewind)
   | .rewind, some symbol =>
       some (some symbol, Direction.left, .rewind)
@@ -205,7 +205,7 @@ theorem guard_rewrite_from_nonempty_exact
             (MachineCodeSymbol.header :: rest) } =
       some
         (rewindConfig (current :: remainingRev)
-          (Section53RuntimeEncodedList.Prepend.cellSymbol head :: rest)) := by
+          (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head :: rest)) := by
   cases head with
   | none => rfl
   | some bit => cases bit <;> rfl
@@ -221,7 +221,7 @@ theorem guard_rewrite_exact
     machine.runConfigExact? 1 (afterTargetConfig target head rest) =
       some
         (rewindConfig (MachineDescription.encodeNat target).reverse
-          (Section53RuntimeEncodedList.Prepend.cellSymbol head :: rest)) := by
+          (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head :: rest)) := by
   have hnonempty := encodeNat_reverse_ne_nil target
   cases hrev : (MachineDescription.encodeNat target).reverse with
   | nil => contradiction
@@ -272,18 +272,18 @@ theorem rewoundWord_eq_targetWord
     (rest : Word MachineCodeSymbol) :
     List.append
         (MachineDescription.encodeNat target).reverse.reverse
-        (Section53RuntimeEncodedList.Prepend.cellSymbol head :: rest) =
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head :: rest) =
       targetWord target head rest := by
   rw [List.reverse_reverse]
   unfold targetWord runtimeKeyBuilderKeyCode
   cases head with
   | none =>
-      simp [Section53RuntimeEncodedList.Prepend.cellSymbol,
+      simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol,
         MachineDescription.encodeCell,
         MachineDescription.encodeNatAppend, List.append_assoc]
   | some bit =>
       cases bit <;>
-        simp [Section53RuntimeEncodedList.Prepend.cellSymbol,
+        simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol,
           MachineDescription.encodeCell,
           MachineDescription.encodeNatAppend, List.append_assoc]
 
@@ -319,7 +319,7 @@ theorem run_exact
   have hpref := runConfigExact_trans htarget hguard
   have hrewind := run_rewind
     (MachineDescription.encodeNat target).reverse
-    (Section53RuntimeEncodedList.Prepend.cellSymbol head :: rest)
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head :: rest)
   have hrun := runConfigExact_trans hpref hrewind
   have hword := rewoundWord_eq_targetWord target head rest
   simp only [List.reverse_reverse] at hword
@@ -336,7 +336,7 @@ theorem run_exact_target_tape_equiv_input
 
 end KeyHead
 
-end Section53DirectContextUpdate
+end FiniteRecognizer.Interpreter.DirectContextUpdate
 
 end Computability
 end FoC

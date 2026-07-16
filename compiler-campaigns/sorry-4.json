@@ -8,8 +8,7 @@
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/EquivRuns.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/MarkerRestore/Basic.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/MarkerRestore/Runs.lean",
-    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean",
-    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreterContracts.lean"
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean"
   ],
   "frontier": "FoC.Computability.FiniteRecognizer.decodedDescriptionInterpreterFinStateFiniteLeaf",
   "name": "sorry-4-decoded-description-interpreter",

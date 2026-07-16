@@ -4,7 +4,7 @@ import FoC.Computability.Compiler.FST.CountWindow.RawBoundary
 set_option doc.verso true
 
 /-!
-# Raw pair quoter for guarded #18 egress
+# Raw pair quoter for guarded run-config egress
 
 The first guarded logical tape is already a blank-delimited Boolean word at
 the physical level.  This module reuses the checked CountWindow raw-boundary

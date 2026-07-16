@@ -329,7 +329,7 @@ theorem generatedProductExactFuelRunnerConstruction_of_finStateConstructionDecid
         (TuringMachine.indexedDecidable right))
 
 /--
-Remaining finite-state generated product runner. Its contract observes only
+Finite-state generated product runner. Its contract observes only
 ordinary halting on the nested generated call, not erasure of the physical
 input tape.
 -/

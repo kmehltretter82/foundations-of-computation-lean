@@ -77,15 +77,15 @@ theorem codePrefixParserBranchTaggedMachineConstruction_finite :
   refine ⟨CodePrefixParserBranchState, codePrefixParserBranchMachine, ?_⟩
   exact codePrefixParserBranchMachine_haltsWithOutput_iff
 
-theorem codePrefixParserBranchCodeMachineConstruction_scaffold :
+theorem codePrefixParserBranchCodeMachineConstruction :
     CodePrefixParserBranchCodeMachineConstruction :=
   codePrefixParserBranchCodeMachineConstruction_of_taggedMachine
     codePrefixParserBranchTaggedMachineConstruction_finite
 
-theorem codePrefixParserBranchMachineConstruction_scaffold :
+theorem codePrefixParserBranchMachineConstruction :
     CodePrefixParserBranchMachineConstruction :=
   codePrefixParserBranchMachineConstruction_of_codeMachine
-    codePrefixParserBranchCodeMachineConstruction_scaffold
+    codePrefixParserBranchCodeMachineConstruction
 
 end Computability
 end FoC

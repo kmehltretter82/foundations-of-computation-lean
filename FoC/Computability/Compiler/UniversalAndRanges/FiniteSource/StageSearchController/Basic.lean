@@ -283,8 +283,8 @@ def CodePrefixStageSearchControllerBudgetCheckerDecidableConstruction
       simulator checker
 
 /--
-Sequencing obligation that turns a bounded checker into an unbounded searcher
-over budgets for one encoded input.
+Sequencing construction that turns a bounded checker into an unbounded
+searcher over budgets for one encoded input.
 -/
 def CodePrefixStageSearchControllerBudgetSearchDecidableSequencingConstruction :
     Prop :=
@@ -395,9 +395,9 @@ def CodePrefixStageSearchControllerBudgetCheckerFiniteMachineObligation
 
 /--
 Finite sequencing target for the bounded checker once the reusable stage-code
-and description-prefix decoders have been supplied.  The remaining concrete
-machine obligation is to combine those decoders with a bounded enumeration of
-{lit}`(checkedStage, fuel)` pairs and a fixed-simulator bounded run.
+and description-prefix decoders have been supplied. The construction combines
+those decoders with a bounded enumeration of {lit}`(checkedStage, fuel)` pairs
+and a fixed-simulator bounded run.
 -/
 def CodePrefixStageSearchControllerBudgetCheckerSequencingConstruction :
     Prop :=

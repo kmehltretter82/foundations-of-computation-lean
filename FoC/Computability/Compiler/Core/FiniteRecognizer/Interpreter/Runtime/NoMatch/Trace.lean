@@ -5,15 +5,15 @@ namespace Computability
 
 open Languages
 
-namespace Section53NoMatchFinalGate
+namespace FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53FinalGateMaterializer
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 namespace LastMiss
 
@@ -28,23 +28,23 @@ theorem lastMiss_trace
     exists stackTape leftBoundaryTape rightBoundaryTape markerTape rewindTape :
         Tape MachineCodeSymbol,
     exists builderTape finalTape comparatorTape : Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape :=
             (canonicalExhaustedRowsTarget current skipped
               (activeProtectedSuffix (first :: rest) copies current.tape
                 haltState suffix)).tape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := stackTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := stackTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := leftBoundaryTape } ∧
-      TuringMachine.Computes Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := leftBoundaryTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := rightBoundaryTape } ∧
       TuringMachine.Computes DoubleTransitionMarker.machine
         { state := DoubleTransitionMarker.Control.enter
@@ -76,39 +76,39 @@ theorem lastMiss_trace
       contextFront hcontextNoTransition with
     ⟨firstJunk, secondJunk, gap, hmiddle, hnoDouble⟩
   let stackTape : Tape MachineCodeSymbol :=
-    (Section53StackSkip.targetConfig
+    (FiniteRecognizer.Interpreter.StackSkip.targetConfig
       (exhaustedBaseLeftRev current skipped)
       first rest copies (contextTail current.tape haltState suffix)).tape
-  have hskipRaw := Section53StackSkip.run_context_exact
+  have hskipRaw := FiniteRecognizer.Interpreter.StackSkip.run_context_exact
     (exhaustedBaseLeftRev current skipped) first rest copies
     current.tape haltState suffix
-  have hskipCanonical : TuringMachine.Computes Section53StackSkip.machine
-      (Section53StackSkip.sourceConfig
+  have hskipCanonical : TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+      (FiniteRecognizer.Interpreter.StackSkip.sourceConfig
         (exhaustedBaseLeftRev current skipped)
         first rest copies (contextTail current.tape haltState suffix))
-      (Section53StackSkip.targetConfig
+      (FiniteRecognizer.Interpreter.StackSkip.targetConfig
         (exhaustedBaseLeftRev current skipped)
         first rest copies (contextTail current.tape haltState suffix)) :=
     TuringMachine.computesIn_to_computes
       (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hskipRaw)
-  have hskip : TuringMachine.Computes Section53StackSkip.machine
-      { state := Section53StackSkip.Control.afterHeader
+  have hskip : TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+      { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
         tape :=
           (canonicalExhaustedRowsTarget current skipped
             (activeProtectedSuffix (first :: rest) copies current.tape
               haltState suffix)).tape }
-      { state := Section53StackSkip.Control.ready, tape := stackTape } := by
+      { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready, tape := stackTape } := by
     simpa [stackTape,
       canonicalExhausted_tape_eq_stackSkip_source,
-      Section53StackSkip.sourceConfig, Section53StackSkip.targetConfig,
-      Section53StackSkip.cursorConfig] using hskipCanonical
+      FiniteRecognizer.Interpreter.StackSkip.sourceConfig, FiniteRecognizer.Interpreter.StackSkip.targetConfig,
+      FiniteRecognizer.Interpreter.StackSkip.cursorConfig] using hskipCanonical
   let leftBoundaryTape : Tape MachineCodeSymbol :=
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (remainingStackBaseLeftRev current skipped (first :: rest) copies)
       current.tape.left current.tape.right.length
       (MachineDescription.encodeCellsAppend current.tape.right
         (persistent haltState suffix))).tape
-  have hleftRaw := Section53DirectContextUpdate.Boundary.run_exact
+  have hleftRaw := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.run_exact
     (remainingStackBaseLeftRev current skipped (first :: rest) copies)
     current.tape.left current.tape.right.length
     (MachineDescription.encodeCellsAppend current.tape.right
@@ -116,41 +116,41 @@ theorem lastMiss_trace
   have hleftCanonical := TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hleftRaw)
   have hleft : TuringMachine.Computes
-      Section53DirectContextUpdate.Boundary.machine
-      { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+      { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
         tape := stackTape }
-      { state := Section53DirectContextUpdate.Boundary.Control.ready
+      { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
         tape := leftBoundaryTape } := by
     simpa [stackTape, leftBoundaryTape,
       remainingStack_target_tape_eq_leftBoundary_source,
-      Section53DirectContextUpdate.Boundary.sourceConfig,
-      Section53DirectContextUpdate.Boundary.targetConfig,
-      Section53DirectContextUpdate.Boundary.locateConfig,
-      Section53RuntimeEncodedList.PayloadLocator.sourceConfig] using
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig,
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig,
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.locateConfig,
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.sourceConfig] using
       hleftCanonical
   let rightBoundaryTape : Tape MachineCodeSymbol :=
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (remainingLeftBoundaryBaseLeftRev current skipped (first :: rest)
         copies current.tape.left)
       current.tape.right haltState suffix).tape
-  have hrightRaw := Section53DirectContextUpdate.Boundary.run_exact
+  have hrightRaw := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.run_exact
     (remainingLeftBoundaryBaseLeftRev current skipped (first :: rest)
       copies current.tape.left)
     current.tape.right haltState suffix
   have hrightCanonical := TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hrightRaw)
   have hright : TuringMachine.Computes
-      Section53DirectContextUpdate.Boundary.machine
-      { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+      { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
         tape := leftBoundaryTape }
-      { state := Section53DirectContextUpdate.Boundary.Control.ready
+      { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
         tape := rightBoundaryTape } := by
     simpa [leftBoundaryTape, rightBoundaryTape,
       remainingLeftBoundary_target_tape_eq_rightBoundary_source,
-      Section53DirectContextUpdate.Boundary.sourceConfig,
-      Section53DirectContextUpdate.Boundary.targetConfig,
-      Section53DirectContextUpdate.Boundary.locateConfig,
-      Section53RuntimeEncodedList.PayloadLocator.sourceConfig] using
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig,
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig,
+      FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.locateConfig,
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.sourceConfig] using
       hrightCanonical
   let markerTape : Tape MachineCodeSymbol :=
     (DoubleTransitionMarker.targetConfig
@@ -242,7 +242,7 @@ theorem lastMiss_trace
 
 end LastMiss
 
-end Section53NoMatchFinalGate
+end FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 end Computability
 end FoC

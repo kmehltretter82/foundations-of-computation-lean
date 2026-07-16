@@ -821,15 +821,12 @@ theorem codePrefixAcceptedLanguage_compiledByDescription_of_programCompiler
     exact Iff.trans (hD.right w)
       (codePrefixRecognizerProgram_acceptsLanguage w)
 
-structure CodeUniversalPrefixSection53Closeout where
+structure CodeUniversalPrefixProgramCompilerCloseout where
   encodedInputProgramCompiler : EncodedInputProgramAcceptorCompilationPrinciple
   universalRunner : CodeUniversalPrefixRunnerConstruction
 
-structure CodeUniversalPrefixFiniteSourceCloseout where
+structure CodeUniversalPrefixDescriptionCompilerCloseout where
   encodedInputDescriptionCompiler : EncodedInputDescriptionCompilerPrinciple
-  prefixRecognizerMachine : CodePrefixRecognizerMachineConstruction
-
-structure CodeUniversalPrefixRunnerFiniteSourceCloseout where
   prefixRecognizerMachine : CodePrefixRecognizerMachineConstruction
 
 theorem codeUniversalPrefixMachine_halts_on_encoded_description_iff
@@ -880,19 +877,13 @@ theorem codeUniversalPrefixRowsCoverConstruction_of_constructions
       codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
         hspec hcompile⟩
 
-theorem codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
-    (hclose : CodeUniversalPrefixFiniteSourceCloseout) :
+theorem codeUniversalPrefixRowsCoverConstruction_of_descriptionCompilerCloseout
+    (hclose : CodeUniversalPrefixDescriptionCompilerCloseout) :
     CodeUniversalPrefixRowsCoverConstruction :=
   codeUniversalPrefixRowsCoverConstruction_of_constructions
     hclose.encodedInputDescriptionCompiler
     (codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
       hclose.prefixRecognizerMachine)
-
-theorem codeUniversalPrefixRunnerConstruction_of_runnerFiniteSourceCloseout
-    (hclose : CodeUniversalPrefixRunnerFiniteSourceCloseout) :
-    CodeUniversalPrefixRunnerConstruction :=
-  codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
-    hclose.prefixRecognizerMachine
 
 
 end Computability

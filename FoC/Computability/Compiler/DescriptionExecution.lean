@@ -15,10 +15,9 @@ from {module}`FoC.Computability.Encoding` with the staged-program layer from
 The compiler predicates here are deliberately explicit.  A staged program is
 compiled only when a finite {lit}`MachineDescription` is supplied and proved
 to realize the same halting or output behavior.  This avoids treating arbitrary
-Lean functions as finitely encodable programs.  Names with
-{lit}`Semantic...Assumption` mark theorem-shape assumptions over arbitrary
-Lean objects; names with {lit}`FiniteSource...Construction` mark compiler
-targets whose inputs are concrete finite data.
+Lean functions as finitely encodable programs. Semantic compiler principles
+range over arbitrary Lean objects, while finite-source construction contracts
+take concrete finite data as input.
 
 The executable description runner is fuel-bounded and stutters after a missing
 transition.  Its halting predicates nevertheless require the final state to be
@@ -1234,7 +1233,7 @@ theorem boolOutputDescription_haltsWithOutput_iff
 /-!
 ## Code-word chunk recognizer
 
-The shared parser base for the remaining finite transducers is a table that
+The shared parser base for finite transducers is a table that
 checks the fixed-width Boolean expansion of {name}`MachineCodeSymbol` words.
 At a chunk boundary it accepts blank input, scans all chunks whose first bit is
 {lit}`0`, and permits the only {lit}`1`-headed code word, namely {lit}`1000`.

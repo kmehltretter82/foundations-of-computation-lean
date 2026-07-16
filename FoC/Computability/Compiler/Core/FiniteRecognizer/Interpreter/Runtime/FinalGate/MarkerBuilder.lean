@@ -8,14 +8,14 @@ namespace Computability
 
 open Languages
 
-namespace Section53FinalGateMaterializer
+namespace FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
 
 /-! `false` carries a unary `tick`; `true` carries unary `done`. -/
 def tokenSymbol : Bool -> MachineCodeSymbol
@@ -441,7 +441,7 @@ theorem run_exact
 
 end PrefixBuilder
 
-end Section53FinalGateMaterializer
+end FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 end Computability
 end FoC

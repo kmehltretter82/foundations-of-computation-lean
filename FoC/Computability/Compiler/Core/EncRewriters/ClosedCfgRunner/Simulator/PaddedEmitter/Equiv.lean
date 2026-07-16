@@ -6,9 +6,10 @@ set_option doc.verso true
 /-!
 # Equivalence-valued padded simulator emitter
 
-This is the live adapter route for the #18 terminal core.  It preserves the
-exact normalized simulator-layout word and the required head position while
-allowing harmless far-edge blank padding in the physical output tape.
+This adapter connects the fixed-description bounded simulator terminal core to
+the padded emitter contract.  It preserves the exact normalized
+simulator-layout word and required head position while allowing harmless
+far-edge blank padding in the physical output tape.
 -/
 
 namespace FoC

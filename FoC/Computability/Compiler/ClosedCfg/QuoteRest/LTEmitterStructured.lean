@@ -1046,8 +1046,8 @@ theorem structuredMixedOptionCellQuoteLiveTailLengthHeaderEmitterDescription_run
 The source segment whose length is emitted by the assembly live-tail
 length-header phase.
 
-This is the semantic source word from the shared source-rest views, not yet the
-exact head position of the final combined three-tape machine.
+This semantic source word comes from the shared source-rest views independently
+of the final combined three-tape machine's exact head position.
 -/
 def structuredMixedOptionCellQuoteLiveTailAssemblyLengthCountBits
     (p : AssemblySourceRestLiveTailEmitterParam) : Word Bool :=
@@ -1076,9 +1076,9 @@ assembly source segment on tape 0, then emit the length header from tape 1 onto
 tape 2.
 
 The table uses the generic phase-packaging helpers so the count phase's local
-halt jumps directly to the offset length-header phase.  The final semantic run
-theorem still needs the phase-isolation/run-packaging lemmas that will compose
-the already-proved phase runs inside this larger table.
+halt jumps directly to the offset length-header phase.  The semantic run
+theorems below use phase isolation and run packaging to compose the individual
+phase runs inside this larger table.
 -/
 def structuredMixedOptionCellQuoteLiveTailCountLengthHeaderDescription :
     Structured.Description :=

@@ -17,14 +17,11 @@ open Languages
 open MachineDescription
 
 /-!
-**Milestone 2 parser/rewriter leaves.**  The remaining finite-source work is
-not a generic compiler for arbitrary {name}`TapeCodePrimitive`
-values.  It is a fixed family of code-word parsers and rewriters for the
-canonical encodings used by the dovetail controller.  The declarations below
-name those finite transition-table obligations explicitly.  Each one is a
-single concrete machine family over the existing encodings, and the older
-scaffold names are derived from them rather than carrying anonymous broad
-holes.
+**Canonical parser and rewriter families.**  The finite-source layer uses a
+fixed family of code-word parsers and rewriters for the canonical encodings of
+the dovetail controller, rather than a generic compiler for arbitrary
+{name}`TapeCodePrimitive` values.  The declarations below state the concrete
+finite transition-table contracts for those machine families.
 -/
 
 def EncodedCodeWordCanonicalRecognizerConstruction : Prop :=
@@ -92,8 +89,8 @@ def EncodedDovetailLayoutBoundedRunnerRewriterConstruction :
 code-word transducers: they consume a canonical encoded
 {name}`MachineCodeSymbol` word and produce another one.  For those components,
 an output-compiled subroutine already gives the exact encoded rewriter
-interface, so the remaining leaves can target subroutine construction instead
-of restating the encoded input/output behavior.
+interface.  The construction bridges reuse that interface instead of restating
+the encoded input/output behavior.
 -/
 
 def EncodedTapeCodePrimitiveRewriterConstruction

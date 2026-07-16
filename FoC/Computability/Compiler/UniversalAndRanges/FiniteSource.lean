@@ -4,6 +4,16 @@ import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.BranchSequenci
 
 set_option doc.verso true
 
+/-!
+# Finite Universal-Prefix Runner
+
+This module assembles the finite description-prefix parser, decoded bounded
+simulator, and fair stage-search controller. The resulting prefix recognizer
+accepts exactly the encoded description/input pairs whose decoded machine
+halts, and therefore supplies the concrete universal-prefix runner used by
+Chapter 5.3.
+-/
+
 namespace FoC
 namespace Computability
 
@@ -128,18 +138,19 @@ theorem codePrefixStageDescriptionPrefixDecoderConstruction_of_normalizerIdentit
           ⟨rfl, D, input, hdecode⟩⟩
 
 /-!
-**Prefix-runner proof frontier.**  The remaining universal-prefix placeholders
-now separate finite parser machines from controller sequencing.  The
-description-prefix decoder is no longer an independent leaf: it is derived from
-the same {name}`CodePrefixParserNormalizerIdentityMachineConstruction` used by
-the normalizer path.  The first sequencing scaffold is now backed by the
-concrete {name}`codePrefixParserNormalizerMachine_code_spec`; the bounded
-simulator leaf is the finite sequencing that connects the stage decoder, the
-shared description decoder, and the pure
-{name}`CodePrefixDecodedBoundedSimulatorCode` primitive.
+## Finite Universal-Prefix Assembly
+
+The prefix runner separates finite parser machines from controller sequencing.
+Its description-prefix decoder is derived from the same
+{name}`CodePrefixParserNormalizerIdentityMachineConstruction` used by the
+normalizer path. The parser normalizer is characterized by
+{name}`codePrefixParserNormalizerMachine_code_spec`; the bounded simulator then
+sequences the stage decoder, shared description decoder, and pure
+{name}`CodePrefixDecodedBoundedSimulatorCode` primitive before the search
+controller supplies the complete prefix recognizer.
 -/
 
-theorem codePrefixParserNormalizerSequencingConstruction_scaffold :
+theorem codePrefixParserNormalizerSequencingConstruction :
     CodePrefixParserNormalizerSequencingConstruction := by
   intro headerState transitionState header transitionParser
     hheader htransitions
@@ -174,7 +185,7 @@ theorem codePrefixParserNormalizerSequencingConstruction_scaffold :
                 hdecode
             rw [hout, htokens]⟩
 
-theorem headerFieldsParserConstruction_scaffold :
+theorem headerFieldsParserConstruction :
     HeaderFieldsParserConstruction := by
   refine
     ⟨HeaderFieldsParserState,
@@ -516,7 +527,7 @@ theorem transitionListParserMachine_spec
         (transitions := transitions) (suffix := suffix)
         hdecode
 
-theorem transitionListParserConstruction_scaffold :
+theorem transitionListParserConstruction :
     TransitionListParserConstruction := by
   refine
     ⟨TransitionListParserState,
@@ -531,31 +542,31 @@ theorem codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponent
   rcases htransitions with
     ⟨transitionState, transitionParser, htransitions⟩
   exact
-    codePrefixParserNormalizerSequencingConstruction_scaffold
+    codePrefixParserNormalizerSequencingConstruction
       header transitionParser hheader htransitions
 
-theorem codePrefixParserNormalizerCodeMachineConstruction_scaffold :
+theorem codePrefixParserNormalizerCodeMachineConstruction :
     CodePrefixParserNormalizerCodeMachineConstruction :=
   codePrefixParserNormalizerCodeMachineConstruction_of_identityMachine
     (codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponents
-      headerFieldsParserConstruction_scaffold
-      transitionListParserConstruction_scaffold)
+      headerFieldsParserConstruction
+      transitionListParserConstruction)
 
-theorem codePrefixParserNormalizerMachineConstruction_scaffold :
+theorem codePrefixParserNormalizerMachineConstruction :
     CodePrefixParserNormalizerMachineConstruction :=
   codePrefixParserNormalizerMachineConstruction_of_codeMachine
-    codePrefixParserNormalizerCodeMachineConstruction_scaffold
+    codePrefixParserNormalizerCodeMachineConstruction
 
 
 
-theorem codePrefixStageDescriptionPrefixDecoderConstruction_scaffold :
+theorem codePrefixStageDescriptionPrefixDecoderConstruction :
     CodePrefixStageDescriptionPrefixDecoderConstruction :=
   codePrefixStageDescriptionPrefixDecoderConstruction_of_normalizerIdentityMachine
     (codePrefixParserNormalizerIdentityMachineConstruction_of_parserComponents
-      headerFieldsParserConstruction_scaffold
-      transitionListParserConstruction_scaffold)
+      headerFieldsParserConstruction
+      transitionListParserConstruction)
 
-theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_scaffold :
+theorem codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction :
     CodePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction := by
   intro stageState descriptionState stageDecoder descriptionDecoder
     hstage hdescription
@@ -585,7 +596,7 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders
     codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
       stageDecoder descriptionDecoder hstage hdescription
 
-theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold :
+theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction :
     CodePrefixDecodedBoundedSimulatorCodeMachineConstruction := by
   rcases
       (show
@@ -596,20 +607,20 @@ theorem codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold :
               exists stage : Nat,
               exists encoded : Word MachineCodeSymbol,
                 tokens = CodePrefixRecognizerStageCode encoded stage
-        from stageCodeDecoderConstruction_scaffold) with
+        from stageCodeDecoderConstruction) with
     ⟨stageState, stageDecoder, hstage⟩
-  rcases codePrefixStageDescriptionPrefixDecoderConstruction_scaffold with
+  rcases codePrefixStageDescriptionPrefixDecoderConstruction with
     ⟨descriptionState, descriptionDecoder, hdescription⟩
   exact
-    codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction_scaffold
+    codePrefixDecodedBoundedSimulatorCodeMachineSequencingConstruction
       stageDecoder descriptionDecoder hstage hdescription
 
-theorem codePrefixDecodedBoundedSimulatorConstruction_scaffold :
+theorem codePrefixDecodedBoundedSimulatorConstruction :
     CodePrefixDecodedBoundedSimulatorConstruction :=
   codePrefixDecodedBoundedSimulatorConstruction_of_codeMachine
-    codePrefixDecodedBoundedSimulatorCodeMachineConstruction_scaffold
+    codePrefixDecodedBoundedSimulatorCodeMachineConstruction
 
-theorem codePrefixStageSearchControllerConstruction_scaffold :
+theorem codePrefixStageSearchControllerConstruction :
     CodePrefixStageSearchControllerConstruction := by
   intro normalizerState branchState simulatorState
     normalizer branch simulator hnormalizer hbranch hsimulator
@@ -636,23 +647,22 @@ theorem codePrefixStageSearchControllerConstruction_of_core
     normalizer branch simulator hnormalizer hbranch hsimulator
   exact hcore simulator hsimulator
 
-theorem codePrefixRecognizerMachineConstruction_scaffold :
+/-- Concrete finite prefix recognizer assembled from the parser, bounded
+simulator, and fair stage-search components. -/
+theorem codePrefixRecognizerMachineConstruction :
     CodePrefixRecognizerMachineConstruction :=
   codePrefixRecognizerMachineConstruction_of_finiteSourceComponents
-    codePrefixParserNormalizerMachineConstruction_scaffold
-    codePrefixParserBranchMachineConstruction_scaffold
-    codePrefixDecodedBoundedSimulatorConstruction_scaffold
-    codePrefixStageSearchControllerConstruction_scaffold
+    codePrefixParserNormalizerMachineConstruction
+    codePrefixParserBranchMachineConstruction
+    codePrefixDecodedBoundedSimulatorConstruction
+    codePrefixStageSearchControllerConstruction
 
-def codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold :
-    CodeUniversalPrefixRunnerFiniteSourceCloseout where
-  prefixRecognizerMachine :=
-    codePrefixRecognizerMachineConstruction_scaffold
-
-theorem codeUniversalPrefixRunnerConstruction_scaffold :
+/-- Concrete finite universal-prefix runner obtained from the assembled prefix
+recognizer. -/
+theorem codeUniversalPrefixRunnerConstruction :
     CodeUniversalPrefixRunnerConstruction :=
-  codeUniversalPrefixRunnerConstruction_of_runnerFiniteSourceCloseout
-    codeUniversalPrefixRunnerFiniteSourceCloseout_scaffold
+  codeUniversalPrefixRunnerConstruction_of_codePrefixRecognizerMachine
+    codePrefixRecognizerMachineConstruction
 
 theorem encodedInputProgramCompiledByDescription_acceptsLanguage
     {P : StagedProgram MachineCodeSymbol Unit}
@@ -710,8 +720,8 @@ theorem encodedInputDescriptionCompilerPrinciple_of_descriptionProgramCompiler
     (encodedInputProgramAcceptorCompilationPrinciple_of_descriptionProgramCompiler
       hcompile)
 
-theorem codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
-    (hclose : CodeUniversalPrefixSection53Closeout) :
+theorem codeUniversalPrefixRowsCoverConstruction_of_programCompilerCloseout
+    (hclose : CodeUniversalPrefixProgramCompilerCloseout) :
     CodeUniversalPrefixRowsCoverConstruction :=
   codeUniversalPrefixRowsCoverConstruction_of_constructions
     (semanticEncodedInputDescriptionCompilerPrinciple_of_programCompiler

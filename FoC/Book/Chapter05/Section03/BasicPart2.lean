@@ -3,7 +3,7 @@ import FoC.Book.Chapter05.Section03.BasicPart1
 set_option doc.verso true
 
 /-!
-# Section 5.3: Basic Definitions (Part 2)
+# Pair Halting and the Universal Prefix Machine
 
 This module provides the second part of the supporting declarations and
 helper lemmas for Section 5.3. It connects the abstract universal machine
@@ -15,6 +15,14 @@ namespace Chapter05
 namespace Section03
 open Languages
 open Computability
+
+/-!
+## Diagonal Preimages
+
+The diagonal pair map turns self-halting into the preimage of pair halting.
+The following results package that equality and the closure principles used to
+transport decidability along the map.
+-/
 
 theorem concrete_machine_diagonal_pair_preimage_pair_halting_equal_self_halting :
     Language.Equal
@@ -348,7 +356,9 @@ theorem pair_halting_problem_of_pointwise_iff
 set_option doc.verso true
 
 /-!
-The pair-halting transfer theorems now apply the diagonal preimage argument.
+## Pair-Halting Transfers
+
+The pair-halting transfer theorems apply the diagonal preimage argument.
 An undecidable self-halting language forces the corresponding pair-halting
 language to be undecidable; universal decoders supply the self-halting
 undecidability needed for the standard theorem.
@@ -494,6 +504,8 @@ theorem concrete_pair_halting_undecidable_if_decoder_universal_of_faithful_compu
     haccept hpreimage hcomputable huniv
 
 /-!
+## Concrete Halting Consequences
+
 The concrete machine statements instantiate the abstract results with the
 machine-code alphabet and description decoder. They remain conditional on the
 acceptability principle, universal decoder, and diagonal-map preimage or
@@ -646,13 +658,15 @@ theorem concrete_machine_pair_halting_undecidable_if_encoded_input_compiler_of_f
       FaithfulComputableMapDecidablePreimageConstruction
         ConcreteMachineCodeSymbol
         (ConcretePairCodeSymbol ConcreteMachineCodeSymbol))
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    (hcompile : SemanticEncodedInputDescriptionCompilerPrinciple) :
     UndecidableTuringLanguage ConcreteMachinePairHaltingProblem :=
   concrete_machine_pair_halting_undecidable_if_decoder_universal_of_faithful_preimage
     haccept hpreimage
     (concrete_encoded_input_description_compiler_decoder_universal hcompile)
 
 /-!
+## Universal-Machine Rows
+
 The abstract row-coverage lemmas below are parameterized by an arbitrary
 decoder relation.  The concrete construction that follows instantiates the
 universal-machine target with the prefix specification, where the runner
@@ -751,13 +765,13 @@ theorem concrete_universal_prefix_machine_row_language_equal_encoded_input_langu
 theorem concrete_universal_prefix_machine_rows_cover_of_encoded_input_description_compiler
     {universal : TuringMachine ConcreteMachineCodeSymbol state}
     (hspec : ConcreteUniversalPrefixMachineSpec universal)
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction) :
+    (hcompile : SemanticEncodedInputDescriptionCompilerPrinciple) :
     ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
   Computability.codeUniversalPrefixRowsCoverAcceptableLanguages_of_encodedInputDescriptionCompiler
     hspec hcompile
 
 theorem exists_concrete_universal_prefix_machine_rows_cover_of_constructions
-    (hcompile : ConcreteEncodedInputDescriptionCompilerConstruction)
+    (hcompile : SemanticEncodedInputDescriptionCompilerPrinciple)
     (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
@@ -766,32 +780,40 @@ theorem exists_concrete_universal_prefix_machine_rows_cover_of_constructions
   Computability.codeUniversalPrefixRowsCoverConstruction_of_constructions
     hcompile hrunner
 
-theorem exists_concrete_universal_prefix_machine_rows_cover_of_section53_closeout
-    (hclose : ConcreteSection53UniversalPrefixCloseout) :
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_closeout
+    (hclose : ConcreteUniversalPrefixProgramCompilerCloseout) :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
         ConcreteUniversalPrefixMachineSpec universal ∧
           ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
-  Computability.codeUniversalPrefixRowsCoverConstruction_of_section53Closeout
+  Computability.codeUniversalPrefixRowsCoverConstruction_of_programCompilerCloseout
     hclose
 
-theorem exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
-    (hclose : ConcreteSection53UniversalPrefixFiniteSourceCloseout) :
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_description_compiler_closeout
+    (hclose : ConcreteUniversalPrefixDescriptionCompilerCloseout) :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
         ConcreteUniversalPrefixMachineSpec universal ∧
           ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
-  Computability.codeUniversalPrefixRowsCoverConstruction_of_finiteSourceCloseout
+  Computability.codeUniversalPrefixRowsCoverConstruction_of_descriptionCompilerCloseout
     hclose
 
 /-!
-**Section 5.3 finite-source handoffs.**  The universal-machine target is the
-prefix runner route.  The runner and finite-source closeout remain explicit
-hypotheses at the book-facing layer, so deferred transition-table work is not
-exported as a completed universal machine theorem.  Row coverage is available
-through the closeout theorem above when an explicit encoded-input description
-compiler is supplied.
+## Finite Universal-Prefix Runner
+
+The finite-source construction supplies both a code-prefix recognizer and the
+equivalent universal-prefix runner unconditionally. The existence theorem
+below exposes the resulting finite universal machine without a construction
+hypothesis.
 -/
+
+theorem concrete_code_prefix_recognizer_machine_construction :
+    ConcreteCodePrefixRecognizerMachineConstruction :=
+  Computability.codePrefixRecognizerMachineConstruction
+
+theorem concrete_universal_prefix_runner_construction :
+    ConcreteUniversalPrefixRunnerConstruction :=
+  Computability.codeUniversalPrefixRunnerConstruction
 
 theorem exists_concrete_universal_prefix_machine_of_runner
     (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
@@ -800,72 +822,46 @@ theorem exists_concrete_universal_prefix_machine_of_runner
         ConcreteUniversalPrefixMachineSpec universal :=
   hrunner
 
-theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
-    (hcompiler : ConcreteBooleanDescriptionAcceptorCompilationConstruction)
-    (hrunner : ConcreteCodePrefixRecognizerMachineConstruction) :
+theorem exists_concrete_universal_prefix_machine :
     exists state : Type,
       exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalPrefixMachineSpec universal ∧
-          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
-  exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout
-    (concrete_section53_universal_prefix_finite_source_closeout_of_boolean_description_compiler
-      hcompiler hrunner)
-
-theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_and_runner
-    (hcompiler : ConcreteEncodedInputProgramAcceptorCompilationConstruction)
-    (hrunner : ConcreteUniversalPrefixRunnerConstruction) :
-    exists state : Type,
-      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
-        ConcreteUniversalPrefixMachineSpec universal ∧
-          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
-  exists_concrete_universal_prefix_machine_rows_cover_of_section53_closeout
-    (concrete_section53_universal_prefix_closeout_of_constructions
-      hcompiler hrunner)
+        ConcreteUniversalPrefixMachineSpec universal :=
+  exists_concrete_universal_prefix_machine_of_runner
+    concrete_universal_prefix_runner_construction
 
 /-!
-The section's universal-machine and diagonalization theorems require a concrete
-encoding of machines as strings.  This module records the formal statement
-vocabulary without adding an unproved universal-machine assumption.
+## Universal Row Coverage
 
-Once a concrete universal machine and encoding are supplied, these statements
-can be instantiated to recover the usual textbook halting-problem theorems.
+The runner itself is finite and unconditional. Covering every acceptable
+language row additionally requires an encoded-input description compiler,
+which chooses a machine description for an arbitrary acceptable language.
+-/
 
-This is the current status boundary for Section 5.3. The encoding, interpreter,
-compiled-machine simulation, decoder-row wrappers, and pair-code reductions are
-formalized. Machine output is now read through normalized tape contents, so
-singleton outputs from empty input and Boolean deciders are no longer blocked by
-finite tape-window artifacts. The concrete diagonal pair map now has a faithful
-finite-machine witness, and the concrete theorem wrappers reuse that witness
-without asking callers to pass it again.
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_boolean_description_compiler
+    (hcompiler : SemanticBooleanDescriptionAcceptorCompilationPrinciple) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalPrefixMachineSpec universal ∧
+          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_prefix_machine_rows_cover_of_description_compiler_closeout
+    (concrete_universal_prefix_description_compiler_closeout_of_boolean_description_compiler
+      hcompiler concrete_code_prefix_recognizer_machine_construction)
 
-The viable universal-machine target is the prefix version. The semantic staged
-recognizer {name}`ConcreteCodePrefixRecognizerProgram` accepts exactly
-{name}`ConcreteMachineCodePrefixAcceptedLanguage`. The encoded-input compiler
-handoff now factors through
-{name}`ConcreteBooleanDescriptionAcceptorCompilationConstruction`: Boolean
-inputs are decoded by {name}`MachineDescription.decodeCodeWordAsInput`, and
-canonical inputs produced by {name}`MachineDescription.encodeCodeWordAsInput`
-recover the original code-symbol recognizer. Thus row-coverage closeouts can
-reuse an explicit Boolean description compiler instead of carrying a separate
-encoded-input program compiler. The remaining fixed-alphabet runner work is
-now isolated as
-{name}`ConcreteCodePrefixRecognizerMachineConstruction`; this target is
-equivalent to {name}`ConcreteUniversalPrefixRunnerConstruction`, because the
-prefix recognizer's language is exactly the decoder relation needed by the
-universal machine. The prefix parser layer is now formalized as
-{name}`ConcreteCodePrefixParserCodeConstruction`: a normalizing code primitive
-succeeds exactly on one-description prefixes, and a total branch primitive
-emits the success or failure code used by the later recognizer controller. For
-row coverage, the explicit
-{name}`ConcreteSection53UniversalPrefixFiniteSourceCloseout` pairs that runner
-target with an encoded-input description compiler and routes directly to
-{name}`exists_concrete_universal_prefix_machine_rows_cover_of_finite_source_closeout`.
-This is the same finite-source layer used by Section 5.2: canonical
-{name}`MachineCodeSymbol` parsers, normalized-output emitters,
-subroutine-ready sequencing, and cell or parse branch controllers. Together
-with the explicit compiler assumption, the closeout fields imply row coverage
-by the finite-source closeout theorem, while the older program-compiler route
-remains as a compatibility wrapper.
+theorem exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler
+    (hcompiler : SemanticEncodedInputProgramAcceptorCompilationPrinciple) :
+    exists state : Type,
+      exists universal : TuringMachine ConcreteMachineCodeSymbol state,
+        ConcreteUniversalPrefixMachineSpec universal ∧
+          ConcreteUniversalPrefixMachineRowsCoverAcceptableLanguages universal :=
+  exists_concrete_universal_prefix_machine_rows_cover_of_program_compiler_closeout
+    (concrete_universal_prefix_program_compiler_closeout_of_program_compiler_and_runner
+      hcompiler concrete_universal_prefix_runner_construction)
+
+/-!
+The Boolean-description theorem factors through the canonical code-word input
+encoding. The program-compiler theorem expresses the same row-coverage result
+in the older staged-program compiler currency. Neither theorem asks callers to
+resupply the completed finite runner.
 -/
 
 end Section03

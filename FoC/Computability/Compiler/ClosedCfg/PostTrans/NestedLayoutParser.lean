@@ -428,8 +428,8 @@ def selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleParam
             selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexampleLayout) }
 
 /--
-The old exact materializer source has 450 context cells, while its requested
-target has only 75.  This is the permanent size regression witness for #24.
+The exact materializer source has 450 context cells, while its requested target
+has only 75.  This context-length regression rules out uniform exact conversion.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexample_contextLengths :
     Tape.contextLength
@@ -443,7 +443,7 @@ theorem selectedMergePaddedEmitterNestedLayoutMaterializerContextCounterexample_
   set_option maxRecDepth 4096 in
     decide
 
-/-- The old exact nested-layout materializer family is unreachable. -/
+/-- The exact nested-layout materializer family is unreachable. -/
 theorem not_selectedMergePaddedEmitterNestedLayoutWindowExactMaterializerConstruction :
     ¬ exists materializer : MachineDescription,
       SelectedMergePaddedEmitterNestedLayoutWindowExactMaterializerSpec
@@ -457,7 +457,7 @@ theorem not_selectedMergePaddedEmitterNestedLayoutWindowExactMaterializerConstru
   set_option maxRecDepth 4096 in
     decide
 
--- The current restorer contract is inconsistent: two payloads share the same
+-- The exact restorer contract is inconsistent: two payloads share the same
 -- inner layout source but require different outer-stage target tapes.
 theorem selectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction_impossible :
     ¬ SelectedMergePaddedEmitterNestedLayoutWindowIsolatedRestorerConstruction := by
@@ -613,7 +613,7 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerAndRestorerConst
       hscannerSpec, hrestorerSpec⟩
 
 /--
-Finite-machine obligation that exposes the nested raw layout field from the
+Finite-machine construction that exposes the nested raw layout field from the
 restored outer source fields.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction_of_canonical
@@ -645,7 +645,7 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowMaterializerConstruction :
       CommonGround.FiniteTransducers.Structured.MultiTapeLowering.NestedLayoutMaterializerInternal.CanonicalBoolWordSuffixMaterializer.description_haltsFromTapeEquiv⟩
 
 /--
-Finite-machine obligation that scans the contextual nested layout window while
+Finite-machine construction that scans the contextual nested layout window while
 preserving the outer simulator suffix.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction :
@@ -661,7 +661,7 @@ theorem selectedMergePaddedEmitterNestedLayoutWindowScannerConstruction :
       (selectedMergePaddedEmitterNestedLayoutContextScannerFieldTail p)
 
 /--
-Finite-machine obligation that restores the checked scanner result to the
+Finite-machine construction that restores the checked scanner result to the
 parsed source-fields shape.
 -/
 theorem selectedMergePaddedEmitterNestedLayoutWindowRestorerConstruction :

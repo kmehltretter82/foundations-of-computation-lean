@@ -576,8 +576,8 @@ theorem evidence_iff_exists_successOnlySchedule_hit
         source w b i.limit i.candidateFuel i.sourceFuel).mp hsuccess
     exact ⟨i.limit, i.candidateFuel, i.sourceFuel, hsource⟩
 
-/-- Public #18 supplies the concrete bounded wrapper for the success-only
-recognizer at every four-coordinate schedule point. -/
+/-- The fixed-description bounded simulator supplies the concrete wrapper for
+the success-only recognizer at every four-coordinate schedule point. -/
 def SuccessOnlyFairBoundedWrapperSpec
     (recognizer simulator : MachineDescription) : Prop :=
   simulator.SubroutineReady ∧

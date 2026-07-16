@@ -9,7 +9,7 @@ set_option doc.verso true
 # Decoded Bounded Simulator
 
 This module separates the finite-source decoded simulator into a stage-code
-decoder, a description-prefix decoder, and a sequencing obligation that runs
+decoder, a description-prefix decoder, and a sequencing construction that runs
 the decoded machine for the requested bound.
 -/
 
@@ -533,18 +533,18 @@ bound, and halt exactly on hits.
 
 theorem codePrefixDecodedBoundedSimulatorStageDecoderConstruction_core :
     CodePrefixDecodedBoundedSimulatorStageDecoderConstruction := by
-  exact stageCodeDecoderConstruction_scaffold
+  exact stageCodeDecoderConstruction
 
 /-- Description-prefix decoder supplied by the finite-source normalizer. -/
 theorem codePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction_core :
     CodePrefixDecodedBoundedSimulatorDescriptionDecoderConstruction := by
-  exact codePrefixDescriptionPrefixDecoderConstruction_scaffold
+  exact codePrefixDescriptionPrefixDecoderConstruction
 
 /--
 Normalized finite-machine leaf for the decoded bounded simulator primitive.
-This is the operational transition-table obligation: parse the unary stage
-prefix, parse a canonical encoded description prefix from the payload, and
-accept exactly when the decoded table halts at that exact stage.
+The construction parses the unary stage prefix and a canonical encoded
+description prefix from the payload, then accepts exactly when the decoded
+table halts at that exact stage.
 -/
 theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf :
     CodePrefixDecodedBoundedSimulatorNormalizedCodeMachineConstruction := by
@@ -552,8 +552,7 @@ theorem codePrefixDecodedBoundedSimulatorNormalizedCodeMachineFiniteLeaf :
 
 /--
 Parsed finite-machine leaf for the decoded bounded simulator primitive.  The
-decoder-prefix contract is now an adapter around the normalized encoded-shape
-obligation.
+decoder-prefix contract adapts the normalized encoded-shape construction.
 -/
 theorem codePrefixDecodedBoundedSimulatorParsedCodeMachineFiniteLeaf :
     CodePrefixDecodedBoundedSimulatorParsedCodeMachineConstruction := by
@@ -573,7 +572,7 @@ theorem codePrefixDecodedBoundedSimulatorCodeMachineFiniteLeaf :
 
 /--
 Semantic finite-machine leaf for the decoded bounded simulator primitive.  The
-semantic contract is now only an adapter around the raw code-machine leaf above.
+semantic contract adapts the raw code-machine leaf above.
 -/
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf :
     CodePrefixDecodedBoundedSimulatorSemanticMachineConstruction := by
@@ -583,8 +582,8 @@ theorem codePrefixDecodedBoundedSimulatorSemanticMachineFiniteLeaf :
 
 /--
 Finite decoded-simulator construction after the stage-code and description
-decoders have exposed their parser contracts.  The remaining transition-table
-obligation is the semantic bounded simulator leaf above.
+decoders have exposed their parser contracts. It composes those decoders with
+the semantic bounded-simulator leaf above.
 -/
 theorem codePrefixDecodedBoundedSimulatorSemanticMachineConstruction_of_decoders_finite
     {stageState descriptionState : Type}

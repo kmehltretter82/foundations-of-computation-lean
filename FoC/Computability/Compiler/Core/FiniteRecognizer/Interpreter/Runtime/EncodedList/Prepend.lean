@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeEncodedList
+namespace FiniteRecognizer.Interpreter.RuntimeEncodedList
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
@@ -323,7 +323,7 @@ theorem run_exact
 
 end Prepend
 
-end Section53RuntimeEncodedList
+end FiniteRecognizer.Interpreter.RuntimeEncodedList
 
 end Computability
 end FoC

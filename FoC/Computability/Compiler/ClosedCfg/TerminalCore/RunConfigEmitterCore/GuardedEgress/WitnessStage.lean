@@ -7,7 +7,7 @@ import FoC.Computability.Compiler.Structured.Lowering.FiniteMachineTactics
 set_option doc.verso true
 
 /-!
-# Metadata/witness staging for guarded #18 egress
+# Metadata/witness staging for guarded run-config egress
 
 This module realizes the finite handoff from the located guarded logical-tape
 payload to the source layout consumed by the metadata-token copier.  The

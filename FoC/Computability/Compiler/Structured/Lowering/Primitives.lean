@@ -454,9 +454,8 @@ structure PhysicalPrimitiveContractWithStay
 /--
 Compile a stay-machine primitive contract to an ordinary equivalence contract.
 
-The general stay compiler currently proves behavior preservation, while the
-compiled ordinary table's {lit}`SubroutineReady` proof is supplied by the concrete
-machine or by a future generic compiler-ready theorem.
+The stay compiler supplies behavior preservation; the concrete compiled table
+supplies its {lit}`SubroutineReady` proof.
 -/
 def PhysicalPrimitiveContractWithStay.toCompiledEquiv
     {primitive : PhysicalPrimitive} {machine : MachineDescriptionWithStay}
@@ -1544,8 +1543,8 @@ private theorem list_eq_three_of_length_eq_three
 /--
 Contract for the physical machine that lowers one structured transition row.
 
-This is the first milestone-8 bridge.  It does not yet build the physical
-transition table; instead it states exactly what such a table must do from the
+This row contract separates physical transition-table construction from its
+required behavior at the
 canonical encoded boundary when the row's source state and read tuple match.
 -/
 structure LowersTransition
@@ -1596,7 +1595,7 @@ def LowersTransition.toEquiv
 /--
 Stay-machine contract for one structured row.
 
-This is the preferred proof target when the row implementation naturally uses
+Use this contract when the row implementation naturally uses
 logical stay moves.  The compiled ordinary machine is exported with
 {lit}`LowersTransitionWithStay.toCompiledEquiv`.
 -/
@@ -1617,8 +1616,8 @@ structure LowersTransitionWithStay
 /--
 Compile a stay-machine row contract to an ordinary equivalence row contract.
 
-The compiled machine's {lit}`SubroutineReady` proof is explicit for now; concrete
-row machines can usually prove it directly.
+The compiled machine's {lit}`SubroutineReady` proof is an explicit argument;
+concrete row machines can prove it directly.
 -/
 def LowersTransitionWithStay.toCompiledEquiv
     {D : Description} {t : Transition}
@@ -1705,7 +1704,7 @@ structure LowersGuardedTransitionLogicalEquiv
 /--
 Guarded row-lowering contract with an exact row-produced guard-slack endpoint.
 
-This is the endpoint-aware replacement for
+This is the endpoint-aware refinement of
 {name}`LowersGuardedTransitionLogicalEquiv` when the row implementation is
 known to produce the slack layout obtained by running
 {name}`transitionPrimitiveSequenceOfRow3` on the guarded representative of the

@@ -168,8 +168,8 @@ theorem codePrefixNestedPairEnumeratorConstruction_of_finStateConstructionDecida
         (TuringMachine.indexedDecidable selected))
 
 /--
-Remaining concrete finite-table leaf for unbounded generated-pair
-enumeration over indexed selected recognizers.
+Concrete finite-table leaf for unbounded generated-pair enumeration over
+indexed selected recognizers.
 -/
 theorem codePrefixNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixNestedPairEnumeratorFinStateConstruction := by
@@ -382,8 +382,8 @@ theorem codePrefixBoundedNestedPairEnumeratorConstruction_of_finStateConstructio
         (TuringMachine.indexedDecidable selected))
 
 /--
-Remaining concrete finite-table leaf for bounded generated-pair enumeration
-over indexed selected recognizers.
+Concrete finite-table leaf for bounded generated-pair enumeration over indexed
+selected recognizers.
 -/
 theorem codePrefixBoundedNestedPairEnumeratorFinStateFiniteLeaf :
     CodePrefixBoundedNestedPairEnumeratorFinStateConstruction := by

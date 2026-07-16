@@ -8,7 +8,7 @@ namespace Chapter05
 namespace Section01
 
 /-!
-# Chapter 5, Section 5.1: Turing Machines
+# Section 5.1: Machine Semantics and Language Classes
 
 This section introduces deterministic one-tape Turing machines, finite
 computations, halting, accepted languages, computable string functions, and
@@ -436,8 +436,8 @@ theorem decider_rejects_in_some_steps_of_not_mem
 
 /-!
 Stopped deciders add the final-state discipline needed to turn normalized
-yes/no outputs back into language facts. The separation condition
-{lit}`zero ≠ one` prevents a single halted output from serving as both an
+yes/no outputs back into language facts. Requiring the zero and one output
+symbols to differ prevents a single halted output from serving as both an
 accepting and rejecting witness.
 -/
 

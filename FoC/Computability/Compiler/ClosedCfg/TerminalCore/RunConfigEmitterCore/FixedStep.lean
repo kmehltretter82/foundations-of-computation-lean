@@ -12,10 +12,9 @@ module isolates the executable one-step transition kernel. Its state and tape
 functions perform exactly the write, move, and target update selected by the
 fixed description's transition lookup, or stutter when lookup fails.
 
-The integrated known-state loop consumes these functions directly. The former
-standalone dispatch/done machine and its lowering proof had no second consumer
-after the combined dispatcher became the live route, so they are no longer
-maintained here.
+The integrated known-state loop consumes these functions directly and carries
+the dispatch result through its typed {lit}`done` state into the combined
+dispatcher.
 -/
 
 namespace FoC

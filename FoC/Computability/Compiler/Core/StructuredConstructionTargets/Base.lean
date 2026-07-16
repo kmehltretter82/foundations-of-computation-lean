@@ -1115,9 +1115,9 @@ def Structured3EndpointEquivInputMaterializerConstruction {ι : Type}
 /-!
 # Closed-recognizer input materializers
 
-The following adapter is the shared version of the FuelSimulator materializer
-pilot route.  Target files provide a public code-family recognizer; the common
-emitter and sequencing route live here.
+The following adapter is the shared closed-recognizer materializer route.
+Target files provide a public code-family recognizer; the common emitter and
+sequencing route live here.
 -/
 
 /--
@@ -1128,8 +1128,8 @@ This is intentionally indexed by {lean}`Word Bool`, not by arbitrary
 {lean}`Tape Bool`.
 The current endpoint materializer route only hands the emitter canonical
 {lit}`Tape.input bits` sources after the recognizer phase.  Keeping that
-narrower contract leaves the remaining finite-machine obligation as a stream
-transducer over the scanned input word.
+narrower contract presents the emitter as a stream transducer over the scanned
+input word.
 -/
 def Structured3InputEmbeddingEmitterConstruction : Prop :=
   Structured3InputMaterializerConstruction
@@ -1885,9 +1885,9 @@ end Structured3EndpointEquivIndexedFamilySpec
 Target-specific parser/core components for an equivalence-facing canonical
 endpoint, before installing the shared tape-2 projector.
 
-This is the prototype component shape for Phase 3: materializer and lowered
-core obligations may be proved up to {name}`Tape.Equiv`, while arbitrary
-initializer halts still carry an indexed inversion fact.
+Materializer and lowered-core contracts may be proved up to
+{name}`Tape.Equiv`, while arbitrary initializer halts carry an indexed
+inversion fact.
 -/
 structure Structured3CanonicalEquivEndpointCoreComponents
     {ι : Type}

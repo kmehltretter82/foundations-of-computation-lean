@@ -5,9 +5,9 @@ namespace Computability
 
 open Languages
 
-namespace Section53TotalInversion
+namespace FiniteRecognizer.Interpreter.TotalInversion
 
-open Section53ParserAssembly
+open FiniteRecognizer.Interpreter.ParserAssembly
 
 /-!
 # Total input inversion boundary
@@ -26,7 +26,7 @@ The malformed-input seams are covered as follows.
 * A missing header, a non-header first token, or any truncated/malformed one
   of the four unary header fields is inverted by
   `headerFieldsParserMachine_haltsFromIn_only_header`; the public
-  contrapositive is `Section53ParserAssembly.headerFieldsParserMachine_nonhalts_of_malformed`.
+  contrapositive is `FiniteRecognizer.Interpreter.ParserAssembly.headerFieldsParserMachine_nonhalts_of_malformed`.
 * A missing transition marker at positive count is rejected directly by
   `transitionListParserMachine_not_haltsFrom_needTransition_empty`,
   `transitionListParserMachine_not_haltsFrom_needTransition_none`, or
@@ -404,6 +404,6 @@ theorem malformedOuterDescription_nonhalts
   cases hdescription
 
 
-end Section53TotalInversion
+end FiniteRecognizer.Interpreter.TotalInversion
 end Computability
 end FoC

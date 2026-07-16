@@ -5,14 +5,14 @@ namespace Computability
 
 open Languages
 
-namespace Section53FinalGateMaterializer
+namespace FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
 
 theorem leftBoundary_target_tape_eq_rightBoundary_source
     (target : Nat)
@@ -21,12 +21,12 @@ theorem leftBoundary_target_tape_eq_rightBoundary_source
     (left right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (stackBaseLeftRev target first rest 0)
       left right.length
       (MachineDescription.encodeCellsAppend right
         (persistent haltState callerSuffix))).tape =
-    (Section53DirectContextUpdate.Boundary.sourceConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
       (stackRightBaseLeftRev target first rest 0 left)
       right haltState callerSuffix).tape := by
   rfl
@@ -39,11 +39,11 @@ theorem rightBoundary_target_tape_eq_haltMarker_source
     (left right : List (Option Bool))
     (haltState : Nat)
     (callerSuffix : Word MachineCodeSymbol) :
-    (Section53DirectContextUpdate.Boundary.targetConfig
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
       (stackRightBaseLeftRev target first rest 0 left)
       right haltState callerSuffix).tape =
     (HaltMarker.sourceConfig
-      (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
         (stackRightBaseLeftRev target first rest 0 left) right)
       haltState callerSuffix).tape := by
   rfl
@@ -208,12 +208,12 @@ theorem finalBaseLeftRev_reverse
     (first : TransitionDescription)
     (rest : List TransitionDescription)
     (left right : List (Option Bool)) :
-    (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+    (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
       (stackRightBaseLeftRev target first rest 0 left) right).reverse =
       MachineDescription.encodeNatAppend target
         (MachineCodeSymbol.header :: MachineCodeSymbol.header ::
           contextPrefix left right) := by
-  rw [Section53DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
+  rw [FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_reverse]
   rw [stackRightBaseLeftRev_reverse]
   simp [tableStack, contextPrefix,
     MachineDescription.encodeNatAppend, List.append_assoc]
@@ -312,7 +312,7 @@ theorem finalMarkedWord_eq_prefixBuilder_source
     (hcontext : contextPrefix left right =
       firstContext :: secondContext :: gap) :
     (List.append
-        (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
           (stackRightBaseLeftRev currentState first rest 0 left)
           right).reverse
         (MachineCodeSymbol.moveRight ::
@@ -338,7 +338,7 @@ theorem finalGate_materializes_comparator
       TuringMachine.Computes HaltMarker.machine
         { state := HaltMarker.Control.enter
           tape :=
-            (Section53DirectContextUpdate.Boundary.targetConfig
+            (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
               (stackRightBaseLeftRev currentState first rest 0 left)
               right haltState suffix).tape }
         { state := HaltMarker.Control.ready (firstToken haltState)
@@ -362,7 +362,7 @@ theorem finalGate_materializes_comparator
       Tape.Equiv finalTape
         (finalComparatorSourceConfig currentState haltState []).tape := by
   let baseLeftRev : Word MachineCodeSymbol :=
-    Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+    FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
       (stackRightBaseLeftRev currentState first rest 0 left) right
   rcases contextPrefix_decompose left right with
     ⟨firstContext, secondContext, gap, hcontext,
@@ -384,7 +384,7 @@ theorem finalGate_materializes_comparator
   have hmarker : TuringMachine.Computes HaltMarker.machine
       { state := HaltMarker.Control.enter
         tape :=
-          (Section53DirectContextUpdate.Boundary.targetConfig
+          (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
             (stackRightBaseLeftRev currentState first rest 0 left)
             right haltState suffix).tape }
       { state := HaltMarker.Control.ready (firstToken haltState)
@@ -394,7 +394,7 @@ theorem finalGate_materializes_comparator
       rightBoundary_target_tape_eq_haltMarker_source] using
       hmarkerCanonical
   have hbase : baseLeftRev ≠ [] := by
-    exact Section53DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
+    exact FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev_ne_nil
       (stackRightBaseLeftRev currentState first rest 0 left) right
   have hmarkerScan : markerTape =
       (Dispatch.NeighborProbe.PrefixRewind.scanConfig
@@ -427,7 +427,7 @@ theorem finalGate_materializes_comparator
     dsimp [fullMarkedWord, baseLeftRev, markedTail]
     change
       (List.append
-        (Section53DirectContextUpdate.Boundary.targetBaseLeftRev
+        (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetBaseLeftRev
           (stackRightBaseLeftRev currentState first rest 0 left)
           right).reverse
         (MachineCodeSymbol.moveRight ::
@@ -500,7 +500,7 @@ theorem finalGate_materializes_comparator_of_tape_equiv
     (suffix : Word MachineCodeSymbol)
     (sourceTape : Tape MachineCodeSymbol)
     (hsource : Tape.Equiv
-      (Section53DirectContextUpdate.Boundary.targetConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.targetConfig
         (stackRightBaseLeftRev currentState first rest 0 left)
         right haltState suffix).tape sourceTape) :
     exists markerTape rewindTape prefixTape finalTape :
@@ -569,30 +569,30 @@ theorem lastSuccess_zeroCopy_trace
         Tape MachineCodeSymbol,
     exists markerTape rewindTape gatePrefixTape finalTape comparatorTape :
         Tape MachineCodeSymbol,
-      TuringMachine.Computes Section53DirectContextUpdate.Prefix.machine
-        { state := Section53DirectContextUpdate.Prefix.Control.target action
+      TuringMachine.Computes FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.target action
           tape := Tape.input
             (postSelectedWord currentState (first :: rest) 0
               { left := left, head := head, right := right }
               haltState suffix) }
-        { state := Section53DirectContextUpdate.Prefix.Control.ready action
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.Control.ready action
           tape := prefixTape } ∧
-      TuringMachine.Computes Section53StackSkip.machine
-        { state := Section53StackSkip.Control.afterHeader
+      TuringMachine.Computes FiniteRecognizer.Interpreter.StackSkip.machine
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.afterHeader
           tape := prefixTape }
-        { state := Section53StackSkip.Control.ready
+        { state := FiniteRecognizer.Interpreter.StackSkip.Control.ready
           tape := contextTape } ∧
       TuringMachine.Computes
-        Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+        FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := contextTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := leftBoundaryTape } ∧
       TuringMachine.Computes
-        Section53DirectContextUpdate.Boundary.machine
-        { state := Section53DirectContextUpdate.Boundary.Control.locate .count
+        FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.machine
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.locate .count
           tape := leftBoundaryTape }
-        { state := Section53DirectContextUpdate.Boundary.Control.ready
+        { state := FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.Control.ready
           tape := rightBoundaryTape } ∧
       TuringMachine.Computes HaltMarker.machine
         { state := HaltMarker.Control.enter, tape := rightBoundaryTape }
@@ -631,12 +631,12 @@ theorem lastSuccess_zeroCopy_trace
       left right head haltState suffix contextTape hcontext with
     ⟨leftBoundaryTape, hleftBoundary, hleftTape⟩
   have hrightSource : Tape.Equiv
-      (Section53DirectContextUpdate.Boundary.sourceConfig
+      (FiniteRecognizer.Interpreter.DirectContextUpdate.Boundary.sourceConfig
         (stackRightBaseLeftRev currentState first rest 0 left)
         right haltState suffix).tape leftBoundaryTape := by
     rw [← leftBoundary_target_tape_eq_rightBoundary_source]
     exact hleftTape
-  rcases Section53DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
+  rcases FiniteRecognizer.Interpreter.DirectContextUpdate.DirectPhases.boundary_computes_of_tape_equiv
       (stackRightBaseLeftRev currentState first rest 0 left)
       right haltState suffix leftBoundaryTape hrightSource with
     ⟨rightBoundaryTape, hrightBoundary, hrightTape⟩
@@ -664,7 +664,7 @@ theorem lastSuccess_zeroCopy_trace
   done
 
 
-end Section53FinalGateMaterializer
+end FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 end Computability
 end FoC

@@ -14,9 +14,9 @@ kept in typed finite control and is therefore restricted to
 {lit}`fixedStepValues`.
 
 The explicit {lit}`done q` control state is the important composition seam.
-The integrated dispatcher consumes this transition kernel directly and retains
-the final simulated state without decoding it again; the former separately
-halting loop machine and replay lattice had no current consumer.
+The integrated dispatcher consumes this transition kernel directly, retains
+the final simulated state without decoding it again, and continues from
+{lit}`done q` without a separate halting boundary.
 -/
 
 namespace FoC

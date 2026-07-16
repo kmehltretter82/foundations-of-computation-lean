@@ -12,7 +12,7 @@ namespace Chapter05
 namespace Section02
 
 /-!
-# Section 5.2 grammar recognizers
+# Section 5.2: Grammar Recognizers
 -/
 
 open Languages
@@ -24,47 +24,32 @@ universe u v
 /-!
 ## Grammar Recognizers and Finite Presentations
 
-The final definitions relate unrestricted grammar generation to recursive
-enumerability, then state the recursive-language equivalence for a language
-and its complement under those construction principles.
+The definitions relate unrestricted grammar generation to recursive
+enumerability and state the recursive-language characterization using grammars
+for a language and its complement.
 
-Finite derivations are also finite-stage evidence: the reusable grammar bridge
-turns derivation length into an acceptance trace, a bounded derivation search,
-and a staged recognizer program. In the reverse direction, a recognizer trace
-is represented as a trace-simulation grammar: each finite accepting
-configuration trace becomes a one-step semantic derivation. For concrete finite
-evidence, finite trace tables now produce an explicit finite list of
-start-to-word productions, and {name}`FiniteTraceTableRecognizable`
-is proved to imply finite-production generation. For arbitrary machine
-descriptions, {name}`MachineDescriptionHistoryGrammar.grammar` supplies the finite
-semi-Thue presentation: it generates halting configurations, runs the finite
-transition table backward, and cleans initial configurations to input words.
-The finite-data closeout keeps the concrete recognizer route
-description-backed: finite grammars are compiled to recognizer descriptions,
-paired recognizers are dovetailed directly, and description-backed recognizers
-use a dedicated finite-grammar construction interface.
+Finite derivations provide finite-stage evidence. The reusable grammar bridge
+turns derivation length into an acceptance trace, bounded derivation search,
+and staged recognizer program. Conversely, a recognizer trace becomes a
+trace-simulation grammar in which each finite accepting configuration trace is
+a semantic derivation. Finite trace tables yield explicit start-to-word
+production lists, while
+{name}`MachineDescriptionHistoryGrammar.grammar` supplies a finite semi-Thue
+presentation for any machine description by reversing its transition table and
+cleaning initial configurations back to input words.
 
-For finite-production general grammars, the page already contains the
-program-acceptability bridge and the supplied-description consequences. For
-semantic unrestricted grammars, the reverse direction is now closed by the
-one-nonterminal trace-simulation construction in
-{module}`FoC.Computability.Grammar.SemanticAndTraceTables`. The effective
-textbook target used here is
-the well-formed description-backed construction named
-{name}`DescriptionRecognizerToFiniteGeneralGrammarConstruction`. The
-concrete finite-description compiler for finite grammar recognizers is a
-separate named field of the finite-data closeout, and also follows from the
-general description acceptor compiler by compiling the staged grammar
-recognizer. The same description compiler now also supplies the certificate,
-indexed-certificate, and checked-indexed-certificate recognizer targets used
-to factor the finite presentation compiler. The paired-recognizer dovetail
-field is supplied either by a
-dedicated dovetail compiler or by the Boolean description decider compiler.
+Semantic unrestricted grammars use the one-nonterminal construction in
+{module}`FoC.Computability.Grammar.SemanticAndTraceTables`. Concrete
+finite-description results use
+{name}`DescriptionRecognizerToFiniteGeneralGrammarConstruction`: finite
+grammars compile to recognizer descriptions, paired recognizers are dovetailed,
+and description-backed recognizers are converted to finite grammars. The finite
+presentation compiler is factored through bounded derivation search and its
+certificate, indexed-certificate, and checked-indexed-certificate recognizers.
 
-Finite general grammars on this page now use proof-relevant
-{name}`GeneralGrammar.Presentation` as their canonical interface. The older
-finite-production names are retained only where they expose compatibility
-results for existing callers.
+Proof-relevant {name}`GeneralGrammar.Presentation` is the canonical finite
+grammar interface. Finite-production names remain as compatibility surfaces for
+existing callers.
 -/
 
 def GeneralGrammarGeneratedLanguage (G : GeneralGrammar terminal nonterminal) :
@@ -317,7 +302,7 @@ theorem concrete_machine_description_to_finite_general_grammar_construction :
   Computability.machineDescriptionToFiniteGeneralGrammarConstruction
 
 /-!
-## Compiler Construction Surfaces
+## Compiler Interfaces
 
 Semantic, finite-source, production-list, and checked-certificate compiler
 targets make the effective assumptions of each grammar route explicit.
@@ -603,13 +588,6 @@ theorem of_descriptionCompiler
     (hcompile : SemanticDescriptionAcceptorCompilationAssumption) :
     ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
   Computability.FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction.of_descriptionCompiler
-    hcompile
-
-theorem scaffold
-    (hcompile :
-      ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction) :
-    ConcreteFiniteBoolGeneralGrammarPresentationCheckedIndexedCertificateRecognizerCompilerConstruction :=
-  Computability.FiniteBoolGeneralGrammarPresentation.CheckedIndexedCertificateRecognizerCompilerConstruction.scaffold
     hcompile
 
 end CheckedIndexedCertificateRecognizerCompiler

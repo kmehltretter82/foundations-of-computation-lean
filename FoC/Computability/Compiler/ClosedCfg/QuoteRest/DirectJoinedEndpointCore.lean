@@ -19,9 +19,10 @@ namespace SelectedProjectionInputQuoterFiniteLeaf
 open CommonGround.FiniteTransducers
 
 /-!
-Prototype for the direct joined-output replacement of the separated #20/#19
-route.  The first component removes the precomputed quote-rest suffix from the
-mixed source and rewinds to the first bit of the contiguous full source word.
+# Direct joined quote-rest endpoint
+
+The joined-output route removes the precomputed quote-rest suffix from the mixed
+source and rewinds to the first bit of the contiguous full source word.
 -/
 
 def mixedSourceCanonicalizerDescription : MachineDescription where

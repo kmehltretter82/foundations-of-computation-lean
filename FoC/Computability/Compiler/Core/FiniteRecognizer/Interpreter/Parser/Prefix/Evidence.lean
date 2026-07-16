@@ -6,10 +6,10 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53ParserPrefixPhaseSum
+namespace FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 
-open Section53ParserAssembly
-open Section53OuterParserInversion
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.OuterParserInversion
 
 /-! ## Successful-prefix evidence projection -/
 
@@ -178,8 +178,8 @@ theorem successfulTerminal_recovers_parser_fields
         computes_suffix_of_computesIn_of_successful
           hvalidatorPrefix hcountRun hrawSuccess
       let savedSource : TuringMachine.Configuration MachineCodeSymbol
-          Section53SavedCellTransitionParser.Control :=
-        { state := Section53SavedCellTransitionParser.machine.start
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control :=
+        { state := FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine.start
           tape := countValidatorSourceTape (baseLeftRev.map some)
             count rowTokens }
       have htableOuter' : TuringMachine.Computes machine
@@ -190,11 +190,11 @@ theorem successfulTerminal_recovers_parser_fields
         ⟨savedFinal, hsavedRun, hrawFinal⟩
       have hsavedTerminal :
           savedFinal.state =
-              Section53SavedCellTransitionParser.Control.parser
+              FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
                 TransitionListParserState.halt ∨
             exists saved : Option MachineCodeSymbol,
               savedFinal.state =
-                Section53SavedCellTransitionParser.Control.ready saved := by
+                FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready saved := by
         rcases hrawSuccess with
           ⟨terminalFuel, hparser | ⟨saved, hready⟩⟩
         · left
@@ -202,7 +202,7 @@ theorem successfulTerminal_recovers_parser_fields
           have hpair :
               fuelZeroFlag fuel = terminalFuel ∧
                 savedFinal.state =
-                  Section53SavedCellTransitionParser.Control.parser
+                  FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.parser
                     TransitionListParserState.halt := by
             simpa [tableConfig,
               TuringMachine.PhaseEmbedding.liftConfig] using hparser
@@ -213,23 +213,23 @@ theorem successfulTerminal_recovers_parser_fields
           have hpair :
               fuelZeroFlag fuel = terminalFuel ∧
                 savedFinal.state =
-                  Section53SavedCellTransitionParser.Control.ready saved := by
+                  FiniteRecognizer.Interpreter.SavedCellTransitionParser.Control.ready saved := by
             simpa [tableConfig,
               TuringMachine.PhaseEmbedding.liftConfig] using hready
           exact hpair.2
       have hparserRun :=
-        Section53SavedCellTransitionParser.computes_project hsavedRun
+        FiniteRecognizer.Interpreter.SavedCellTransitionParser.computes_project hsavedRun
       have hparserHalted : TuringMachine.Halted transitionListParserMachine
-          (Section53SavedCellTransitionParser.projectConfig savedFinal) := by
+          (FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectConfig savedFinal) := by
         rcases hsavedTerminal with hparser | ⟨saved, hready⟩
         · change
-            Section53SavedCellTransitionParser.projectState
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectState
                 savedFinal.state =
               transitionListParserMachine.halt
           rw [hparser]
           rfl
         · change
-            Section53SavedCellTransitionParser.projectState
+            FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectState
                 savedFinal.state =
               transitionListParserMachine.halt
           rw [hready]
@@ -242,12 +242,12 @@ theorem successfulTerminal_recovers_parser_fields
             tape := countValidatorSourceTape (baseLeftRev.map some)
               count rowTokens } := by
         refine
-          ⟨Section53SavedCellTransitionParser.projectConfig savedFinal,
+          ⟨FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectConfig savedFinal,
             ?_, hparserHalted⟩
         simpa [savedSource,
-          Section53SavedCellTransitionParser.projectConfig,
-          Section53SavedCellTransitionParser.projectState,
-          Section53SavedCellTransitionParser.machine,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectConfig,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.projectState,
+          FiniteRecognizer.Interpreter.SavedCellTransitionParser.machine,
           transitionListParserMachine,
           TuringMachine.PhaseEmbedding.liftConfig] using hparserRun
       rcases hcontextualHalts with
@@ -260,15 +260,15 @@ theorem successfulTerminal_recovers_parser_fields
               count rowTokens } =
             TransitionParserContextTransport.appendLeftContextConfig
               baseLeftRev
-              (Section53ParserAssembly.paddedRawTransitionParserSource
+              (FiniteRecognizer.Interpreter.ParserAssembly.paddedRawTransitionParserSource
                 count rowTokens) := by
         simpa [countValidatorSourceTape] using
-          Section53ParserAssembly.contextualRawTransitionParserSource_eq_append
+          FiniteRecognizer.Interpreter.ParserAssembly.contextualRawTransitionParserSource_eq_append
             baseLeftRev count rowTokens
       rcases
           TransitionParserContextTransport.computes_remove_left_context_of_eq
             baseLeftRev hcontextualSource
-            (Section53ParserAssembly.paddedRawTransitionParserSource_has_barrier
+            (FiniteRecognizer.Interpreter.ParserAssembly.paddedRawTransitionParserSource_has_barrier
               count rowTokens)
             hcontextualRun with
         ⟨cleanFinal, hcleanRun, hcleanFinalEq, _hcleanBarrier⟩
@@ -282,7 +282,7 @@ theorem successfulTerminal_recovers_parser_fields
         htokens, ?_, ?_⟩
       · rw [hheaderShape, htail, hcountShape]
       · change TuringMachine.HaltsFrom transitionListParserMachine
-          (Section53ParserAssembly.paddedRawTransitionParserSource
+          (FiniteRecognizer.Interpreter.ParserAssembly.paddedRawTransitionParserSource
             count rowTokens)
         exact ⟨cleanFinal, hcleanRun, hcleanHalted⟩
 
@@ -374,6 +374,6 @@ theorem successfulTerminal_outerParserPhaseEvidence_of_computesIn
   successfulTerminal_outerParserPhaseEvidence
     (TuringMachine.computesIn_to_computes hrun) hsuccess
 
-end Section53ParserPrefixPhaseSum
+end FiniteRecognizer.Interpreter.ParserPrefixPhaseSum
 end Computability
 end FoC

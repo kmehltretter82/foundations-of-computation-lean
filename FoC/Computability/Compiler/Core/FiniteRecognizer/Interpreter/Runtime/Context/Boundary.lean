@@ -5,11 +5,11 @@ namespace Computability
 
 open Languages
 
-namespace Section53DirectContextUpdate
+namespace FiniteRecognizer.Interpreter.DirectContextUpdate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 /-!
 ### Encoded-list boundary positioner
@@ -24,7 +24,7 @@ following unary count starts with `tick` or `done`.
 namespace Boundary
 
 inductive Control where
-  | locate (inner : Section53RuntimeEncodedList.PayloadLocator.Control)
+  | locate (inner : FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control)
   | enter
   | payload
   | bounce
@@ -35,7 +35,7 @@ deriving DecidableEq
 namespace Control
 
 def elems : List Control :=
-  Section53RuntimeEncodedList.PayloadLocator.Control.finite.elems.map locate ++
+  FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control.finite.elems.map locate ++
     [enter, payload, bounce, ready, halt]
 
 def finite : Foundation.FiniteType Control where
@@ -45,7 +45,7 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | locate inner =>
         simp [elems,
-          Section53RuntimeEncodedList.PayloadLocator.Control.finite.complete
+          FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control.finite.complete
             inner]
     | enter => simp [elems]
     | payload => simp [elems]
@@ -66,7 +66,7 @@ def transition :
       Option (Option MachineCodeSymbol × Direction × Control)
   | .locate .gate, read => some (read, Direction.left, .enter)
   | .locate inner, read =>
-      match Section53RuntimeEncodedList.PayloadLocator.transition inner read with
+      match FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.transition inner read with
       | none => none
       | some (write, direction, target) =>
           some (write, direction, .locate target)
@@ -90,25 +90,25 @@ def machine : TuringMachine MachineCodeSymbol Control where
 
 def locateConfig
     (c : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeEncodedList.PayloadLocator.Control) :
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control where
   state := .locate c.state
   tape := c.tape
 
 theorem locate_step_of_some
     (source target : TuringMachine.Configuration MachineCodeSymbol
-      Section53RuntimeEncodedList.PayloadLocator.Control)
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control)
     (hstep :
-      Section53RuntimeEncodedList.PayloadLocator.machine.stepConfig source =
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.machine.stepConfig source =
         some target) :
     machine.stepConfig (locateConfig source) =
       some (locateConfig target) := by
   cases source with
   | mk inner tape =>
       unfold TuringMachine.stepConfig at hstep ⊢
-      dsimp [Section53RuntimeEncodedList.PayloadLocator.machine] at hstep
+      dsimp [FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.machine] at hstep
       cases htransition :
-          Section53RuntimeEncodedList.PayloadLocator.transition inner
+          FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.transition inner
             (Tape.read tape) with
       | none => simp [htransition] at hstep
       | some action =>
@@ -116,17 +116,17 @@ theorem locate_step_of_some
           simp only [htransition] at hstep
           cases hstep
           have hnot :
-              inner ≠ Section53RuntimeEncodedList.PayloadLocator.Control.gate := by
+              inner ≠ FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control.gate := by
             intro hgate
             subst inner
-            simp [Section53RuntimeEncodedList.PayloadLocator.transition] at htransition
+            simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.transition] at htransition
           simp [machine, transition, locateConfig, htransition]
 
 theorem locate_run_of_some :
     forall (steps : Nat)
       (source target : TuringMachine.Configuration MachineCodeSymbol
-        Section53RuntimeEncodedList.PayloadLocator.Control),
-      Section53RuntimeEncodedList.PayloadLocator.machine.runConfigExact?
+        FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.Control),
+      FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.machine.runConfigExact?
           steps source = some target ->
         machine.runConfigExact? steps (locateConfig source) =
           some (locateConfig target) := by
@@ -140,7 +140,7 @@ theorem locate_run_of_some :
       intro source target hrun
       rw [TuringMachine.runConfigExact?] at hrun ⊢
       cases hstep :
-          Section53RuntimeEncodedList.PayloadLocator.machine.stepConfig source with
+          FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.machine.stepConfig source with
       | none => simp [hstep] at hrun
       | some next =>
           simp only [hstep] at hrun
@@ -169,11 +169,11 @@ theorem step_payload_cell
     machine.stepConfig
         { state := Control.payload
           tape := SerializedShift.cursorTape leftRev
-            (Section53RuntimeEncodedList.Prepend.cellSymbol cell :: suffix) } =
+            (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell :: suffix) } =
       some
         { state := Control.payload
           tape := SerializedShift.cursorTape
-            (Section53RuntimeEncodedList.Prepend.cellSymbol cell :: leftRev)
+            (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell :: leftRev)
             suffix } := by
   cases cell with
   | none => cases suffix <;> rfl
@@ -185,7 +185,7 @@ def payloadLeftRev
   | [] => baseLeftRev
   | cell :: cells =>
       payloadLeftRev
-        (Section53RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
         cells
 
 theorem run_payload_cells
@@ -211,7 +211,7 @@ theorem run_payload_cells
       have hcell :
           MachineDescription.encodeCellAppend cell
               (MachineDescription.encodeCellsAppend cells suffix) =
-            Section53RuntimeEncodedList.Prepend.cellSymbol cell ::
+            FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell ::
               MachineDescription.encodeCellsAppend cells suffix := by
         cases cell with
         | none => rfl
@@ -221,7 +221,7 @@ theorem run_payload_cells
       rw [step_payload_cell]
       simp only
       simpa [payloadLeftRev] using
-        ih (Section53RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
+        ih (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
 
 theorem payload_ready_handoff_tick_exact
     (leftHead : MachineCodeSymbol)
@@ -256,7 +256,7 @@ def sourceConfig
     (suffix : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   locateConfig
-    (Section53RuntimeEncodedList.PayloadLocator.sourceConfig
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.sourceConfig
       baseLeftRev cells.length
       (MachineDescription.encodeCellsAppend cells
         (MachineDescription.encodeNatAppend nextCount suffix)))
@@ -265,7 +265,7 @@ def targetBaseLeftRev
     (baseLeftRev : Word MachineCodeSymbol)
     (cells : List (Option Bool)) : Word MachineCodeSymbol :=
   payloadLeftRev
-    (Section53RuntimeEncodedList.PayloadLocator.targetLeftRev
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev
       baseLeftRev cells.length)
     cells
 
@@ -287,14 +287,14 @@ theorem locate_payload_handoff_cells_exact
     (suffix : Word MachineCodeSymbol) :
     machine.runConfigExact? 2
         (locateConfig
-          (Section53RuntimeEncodedList.PayloadLocator.targetConfig
+          (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetConfig
             baseLeftRev cells.length
             (MachineDescription.encodeCellsAppend cells
               (MachineDescription.encodeNatAppend nextCount suffix)))) =
       some
         { state := Control.payload
           tape := SerializedShift.cursorTape
-            (Section53RuntimeEncodedList.PayloadLocator.targetLeftRev
+            (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev
               baseLeftRev cells.length)
             (MachineDescription.encodeCellsAppend cells
               (MachineDescription.encodeNatAppend nextCount suffix)) } := by
@@ -314,7 +314,7 @@ theorem payloadLeftRev_ne_nil
   | nil => exact hbase
   | cons cell cells ih =>
       exact ih
-        (Section53RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
+        (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell :: baseLeftRev)
         (by simp)
 
 theorem targetBaseLeftRev_ne_nil
@@ -322,7 +322,7 @@ theorem targetBaseLeftRev_ne_nil
     (cells : List (Option Bool)) :
     targetBaseLeftRev baseLeftRev cells ≠ [] := by
   apply payloadLeftRev_ne_nil
-  simp [Section53RuntimeEncodedList.PayloadLocator.targetLeftRev]
+  simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev]
 
 theorem payloadLeftRev_reverse
     (baseLeftRev : Word MachineCodeSymbol)
@@ -333,7 +333,7 @@ theorem payloadLeftRev_reverse
   have encodeCells_cons : forall
       (cell : Option Bool) (rest : List (Option Bool)),
       MachineDescription.encodeCells (cell :: rest) =
-        Section53RuntimeEncodedList.Prepend.cellSymbol cell ::
+        FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell ::
           MachineDescription.encodeCells rest := by
     intro cell rest
     cases cell with
@@ -347,12 +347,12 @@ theorem payloadLeftRev_reverse
       calc
         (payloadLeftRev baseLeftRev (cell :: cells)).reverse =
             List.append
-              (Section53RuntimeEncodedList.Prepend.cellSymbol cell ::
+              (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell ::
                 baseLeftRev).reverse
               (MachineDescription.encodeCells cells) := by
                 rw [payloadLeftRev, ih]
         _ = List.append baseLeftRev.reverse
-              (Section53RuntimeEncodedList.Prepend.cellSymbol cell ::
+              (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol cell ::
                 MachineDescription.encodeCells cells) := by
                 simp [List.append_assoc]
         _ = List.append baseLeftRev.reverse
@@ -362,13 +362,13 @@ theorem payloadLeftRev_reverse
 theorem locatorTargetLeftRev_reverse
     (baseLeftRev : Word MachineCodeSymbol)
     (count : Nat) :
-    (Section53RuntimeEncodedList.PayloadLocator.targetLeftRev
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev
       baseLeftRev count).reverse =
       List.append baseLeftRev.reverse
         (MachineDescription.encodeNat count) := by
   rw [runtimeKey_encodeNat_eq_replicate_tick_done]
-  simp [Section53RuntimeEncodedList.PayloadLocator.targetLeftRev,
-    Section53RuntimeEncodedList.PayloadLocator.ticks,
+  simp [FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev,
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.ticks,
     List.reverse_replicate, List.append_assoc]
 
 theorem targetBaseLeftRev_reverse
@@ -437,7 +437,7 @@ theorem run_exact
         (sourceConfig baseLeftRev cells nextCount suffix) =
       some (targetConfig baseLeftRev cells nextCount suffix) := by
   have hlocateInner :=
-    Section53RuntimeEncodedList.PayloadLocator.run_exact
+    FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.run_exact
       baseLeftRev cells.length
       (MachineDescription.encodeCellsAppend cells
         (MachineDescription.encodeNatAppend nextCount suffix))
@@ -446,7 +446,7 @@ theorem run_exact
     baseLeftRev cells nextCount suffix
   have hpref := runConfigExact_trans hlocate henter
   have hcells := run_payload_cells
-    (Section53RuntimeEncodedList.PayloadLocator.targetLeftRev
+    (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev
       baseLeftRev cells.length)
     cells (MachineDescription.encodeNatAppend nextCount suffix)
   have hthroughCells := runConfigExact_trans hpref hcells
@@ -457,7 +457,7 @@ theorem run_exact
 
 end Boundary
 
-end Section53DirectContextUpdate
+end FiniteRecognizer.Interpreter.DirectContextUpdate
 
 end Computability
 end FoC

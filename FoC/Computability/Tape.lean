@@ -11,9 +11,9 @@ The book's tape is infinite in both directions and blank except for finitely
 many cells.  We represent the finite visible window by a left context, current
 cell, and right context.  Cells outside the stored lists are blank, represented
 by {lit}`none`.  The representation is intentionally not canonical: moving
-past a stored edge may retain explicit blank cells.  {lit}`Tape.Equiv`
-forgets only this far-edge blank padding, while {lit}`Tape.normalizedOutput`
-forgets every blank cell and the head position.
+past a stored edge may retain explicit blank cells. Tape equivalence forgets
+only this far-edge blank padding, while normalized output forgets every blank
+cell and the head position.
 
 ## Book coordinates
 

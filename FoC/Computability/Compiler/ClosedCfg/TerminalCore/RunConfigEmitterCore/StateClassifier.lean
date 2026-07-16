@@ -201,7 +201,7 @@ theorem runConfig_eq_self_of_classifyState_other
   apply runConfig_eq_self_of_not_mem_fixedStepValues
   exact (classifyState_eq_other_iff D state).mp hclass
 
-/-- Total semantic case split exposed to the future field parser.  The known
+/-- Total semantic case split exposed to the field parser.  The known
 branch recovers the exact parsed state; the unmatched branch has the complete
 stuttering behavior needed to skip the remaining counter. -/
 theorem classifyState_semantics

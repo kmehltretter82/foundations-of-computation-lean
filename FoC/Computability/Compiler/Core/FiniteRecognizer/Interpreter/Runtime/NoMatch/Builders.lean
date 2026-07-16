@@ -5,15 +5,15 @@ namespace Computability
 
 open Languages
 
-namespace Section53NoMatchFinalGate
+namespace FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
-open Section53LoopRestagingAudit
-open Section53StackIteration
-open Section53FinalGateMaterializer
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.LoopRestagingAudit
+open FiniteRecognizer.Interpreter.StackIteration
+open FiniteRecognizer.Interpreter.FinalGateMaterializer
 
 /-!
 **All-miss final-gate builders.** The machine locates the halt field through
@@ -224,9 +224,9 @@ def targetConfig
     (haltState : Nat)
     (suffix : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control where
-  state := .ready (Section53FinalGateMaterializer.firstToken haltState)
-  tape := Section53FinalGateMaterializer.HaltCopier.sourceConfig
-    (Section53FinalGateMaterializer.PrefixBuilder.comparatorPrefix
+  state := .ready (FiniteRecognizer.Interpreter.FinalGateMaterializer.firstToken haltState)
+  tape := FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.sourceConfig
+    (FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix
       currentState)
     (cleanedGap gap) haltState suffix |>.tape
 
@@ -245,7 +245,7 @@ theorem runConfigExact_trans
 
 def builtLeftRev (currentState : Nat) : Word MachineCodeSymbol :=
   MachineCodeSymbol.header ::
-    (Section53FinalGateMaterializer.PrefixBuilder.comparatorPrefix
+    (FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix
       currentState).reverse
 
 def prefixTargetConfig
@@ -389,7 +389,7 @@ theorem prefix_run_exact
     queryRead firstJunk secondJunk rest
   have hall := runConfigExact_trans (runConfigExact_trans hstart hnat) hfinish
   simpa [prefixTargetConfig, builtLeftRev,
-    Section53FinalGateMaterializer.PrefixBuilder.comparatorPrefix,
+    FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix,
     MachineDescription.encodeNatAppend, List.reverse_append,
     List.reverse_cons, List.append_assoc,
     Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hall
@@ -412,12 +412,12 @@ def eraseTargetConfig
     (suffix : Word MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol Control where
   state := .rewindGap
-    (Section53FinalGateMaterializer.firstToken haltState)
+    (FiniteRecognizer.Interpreter.FinalGateMaterializer.firstToken haltState)
   tape := SerializedShift.cursorTape
     (MachineCodeSymbol.transition ::
       List.append cleanedRev baseLeftRev)
     (MachineCodeSymbol.blank :: MachineCodeSymbol.moveRight ::
-      List.append (Section53FinalGateMaterializer.tokenTail haltState)
+      List.append (FiniteRecognizer.Interpreter.FinalGateMaterializer.tokenTail haltState)
         suffix)
 
 theorem step_erase_symbol
@@ -609,7 +609,7 @@ def rewindConfig
   state := .rewindGap token
   tape := rewindTape built remainingRev crossed
     (MachineCodeSymbol.moveRight ::
-      List.append (Section53FinalGateMaterializer.tokenTail haltState) suffix)
+      List.append (FiniteRecognizer.Interpreter.FinalGateMaterializer.tokenTail haltState) suffix)
 
 theorem step_rewind_symbol
     (token : Bool)
@@ -645,7 +645,7 @@ theorem step_rewind_header
             (List.append crossed
               (MachineCodeSymbol.moveRight ::
                 List.append
-                  (Section53FinalGateMaterializer.tokenTail haltState)
+                  (FiniteRecognizer.Interpreter.FinalGateMaterializer.tokenTail haltState)
                   suffix)) } := by
   cases token <;> cases built <;> cases crossed <;> cases haltState <;>
     cases suffix <;> rfl
@@ -668,7 +668,7 @@ theorem rewind_run_exact
               (List.append crossed
                 (MachineCodeSymbol.moveRight ::
                   List.append
-                    (Section53FinalGateMaterializer.tokenTail haltState)
+                    (FiniteRecognizer.Interpreter.FinalGateMaterializer.tokenTail haltState)
                     suffix))) } := by
   induction remainingRev generalizing crossed with
   | nil =>
@@ -774,8 +774,8 @@ theorem run_exact
   let blankRev : Word MachineCodeSymbol :=
     List.replicate gap.length MachineCodeSymbol.blank
   have hrewind := rewind_run_exact
-    (Section53FinalGateMaterializer.firstToken haltState)
-    (Section53FinalGateMaterializer.PrefixBuilder.comparatorPrefix currentState)
+    (FiniteRecognizer.Interpreter.FinalGateMaterializer.firstToken haltState)
+    (FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix currentState)
     (MachineCodeSymbol.blank :: MachineCodeSymbol.transition :: blankRev)
     [] haltState suffix
     (by
@@ -802,7 +802,7 @@ theorem run_exact
     some (targetConfig currentState gap haltState suffix) := by
     simpa [eraseTargetConfig, rewindConfig, targetConfig,
       rewindTape,
-      Section53FinalGateMaterializer.HaltCopier.sourceConfig,
+      FiniteRecognizer.Interpreter.FinalGateMaterializer.HaltCopier.sourceConfig,
       builtLeftRev, blankRev, cleanedGap_eq_replicate_append_transition,
       List.reverse_cons, List.append_assoc] using hrewind
   refine ⟨(currentState + 5) + eraseSteps +
@@ -929,7 +929,7 @@ theorem currentBuilder_materializes_finalComparator_of_tape_equiv
   done
 
 
-end Section53NoMatchFinalGate
+end FiniteRecognizer.Interpreter.NoMatchFinalGate
 
 end Computability
 end FoC

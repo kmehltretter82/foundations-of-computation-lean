@@ -8,8 +8,8 @@ set_option doc.verso true
 
 This module carries the structured count-window bridge through the output
 projector, scan-source materializer, scratch-count materializer, and
-post-padding scratch-extension construction wrappers.  The lower-level endpoint
-facts and remaining finite-machine leaves stay in
+post-padding scratch-extension construction wrappers. The lower-level endpoint
+facts and completed finite-machine constructions are provided by
 {module}`FoC.Computability.Compiler.ClosedCfg.ProjTail.ScratchBridge`.
 -/
 

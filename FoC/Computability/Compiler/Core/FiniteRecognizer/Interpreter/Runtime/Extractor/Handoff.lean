@@ -9,7 +9,7 @@ namespace RuntimeKeySelectedExtractorArbitrary
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 def singleKeySelectedLeft
     (baseLeftRev : Word MachineCodeSymbol)

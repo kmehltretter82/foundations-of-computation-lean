@@ -9,9 +9,9 @@ set_option doc.verso true
 
 The metadata copier leaves the exact field body to the left of the four-bit
 hit field and reserves four blank cells for the fixed header token.  This
-module checks the remaining generic route: prepend that header, rewind to the
+module implements the generic route: prepend that header, rewind to the
 first output bit, and park one cell to its right.  Blank reservoirs are
-retained only up to tape equivalence, matching the viable #18 contract.
+retained only up to tape equivalence, matching the run-config emitter contract.
 -/
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
@@ -60,7 +60,7 @@ theorem assembledBits_eq_exactFieldsBits (j : PostCopyIndex) :
     CanonicalLayouts.DovetailLayoutScanner.cellListFieldBits,
     List.append_assoc]
 
-/-- The assembled word is the exact normalized output demanded by #18. -/
+/-- The assembled word is the emitter's exact normalized output. -/
 theorem assembledBits_eq_outputBits (j : PostCopyIndex) :
     assembledBits j = j.index.fields.outputBits := by
   rw [assembledBits_eq_exactFieldsBits]
@@ -129,7 +129,7 @@ theorem rightBlankTail_eq_replicate (j : PostCopyIndex) :
           List.replicate j.layout.rightPadding none := by
       simp
 
-/-- Exact copier endpoint, independent of the still-open copier run theorem. -/
+/-- Exact copier endpoint used by the copier run theorem. -/
 def sourceTape (j : PostCopyIndex) : Tape Bool :=
   MetadataTokenCopy.targetTape
     (List.append
@@ -275,7 +275,7 @@ theorem rewindAndParkDescription_subroutineReady :
       rightEdgeRewindDescription_subroutineReady
       CommonGround.Identity.exactIdentityDescription_subroutineReady
 
-/-- Checked closeout from the header endpoint to the repaired #18 target
+/-- Checked closeout from the header endpoint to the run-config emitter target
 currency. -/
 theorem rewindAndPark_haltsFrom_headerTarget (j : PostCopyIndex) :
     rewindAndParkDescription.HaltsFromTapeEquiv
@@ -324,7 +324,7 @@ theorem description_haltsFrom_source (j : PostCopyIndex) :
       (rewindAndPark_haltsFrom_headerTarget j)
 
 /-- The closeout accepts any blank-padding-equivalent copier endpoint and
-preserves the repaired #18 target currency. -/
+preserves the run-config emitter target currency. -/
 theorem spec :
     PipelineContracts.EquivInputEquivOutputSpec
       sourceTape (fun j => j.index.target) description := by

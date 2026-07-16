@@ -6,13 +6,13 @@ namespace Computability
 
 open Languages
 
-namespace Section53EmptyTableFinalBypass
+namespace FiniteRecognizer.Interpreter.EmptyTableFinalBypass
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53ParserAssembly
-open Section53UniformInterpreterOneStep
-open Section53UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep
+open FiniteRecognizer.Interpreter.UniformInterpreterOneStep.RuntimeKeySingleKeyRepair
 
 /-!
 # Empty-table and zero-fuel final-gate bypass
@@ -71,7 +71,7 @@ theorem finalComparator_haltsFrom_iff
         (finalComparatorSource D input) <->
       D.start = D.halt := by
   simpa [finalComparatorSource, eq_comm] using
-    (Section53UniformInterpreterOneStep.finalComparator_haltsFrom_iff
+    (FiniteRecognizer.Interpreter.UniformInterpreterOneStep.finalComparator_haltsFrom_iff
       D.halt D.start (finalSuffix input))
 
 theorem runConfig_zero
@@ -253,6 +253,6 @@ theorem contextualParser_to_finalComparator_of_contract
   exact hcontract D fuel input cleanEndpoint hstate htape hbarrier
 
 
-end Section53EmptyTableFinalBypass
+end FiniteRecognizer.Interpreter.EmptyTableFinalBypass
 end Computability
 end FoC

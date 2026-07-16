@@ -8,7 +8,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53UniformInterpreterOneStep
+namespace FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 
 theorem findTransition_none_of_everyRowMisses
     (source : Nat) (read : Option Bool)
@@ -1081,6 +1081,6 @@ theorem runtimeKeyComparatorMachine_computes_restore_outcome_exact
                       using hrowRead)
                   (TuringMachine.Computes.refl _)))))))
 
-end Section53UniformInterpreterOneStep
+end FiniteRecognizer.Interpreter.UniformInterpreterOneStep
 end Computability
 end FoC

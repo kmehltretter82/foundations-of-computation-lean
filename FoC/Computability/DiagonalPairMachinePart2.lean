@@ -3,7 +3,7 @@ import FoC.Computability.DiagonalPairMachinePart1
 set_option doc.verso true
 
 /-!
-# DiagonalPairMachinePart2
+# Faithful Diagonal-Pair Machine Execution
 
 Execution proof for the faithful concrete diagonal-pair map machine.
 -/

@@ -1,5 +1,19 @@
 import FoC.Computability.TransformPart1
 
+set_option doc.verso true
+
+/-!
+# Machine Transformations: Output Correctness
+
+This page proves the output-sensitive correctness theorems for the two
+decider-to-acceptor machines introduced by the construction page.
+
+## Scanner-Termination Helpers
+
+The private lemmas below show that each normalized-output scanner phase reaches
+the accepting state once its unique accepting symbol has been isolated.
+-/
+
 namespace FoC
 namespace Computability
 namespace TuringMachine
@@ -89,20 +103,13 @@ private theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
           M hzeroOne markedRight blanksRight blanksLeft tail)
         (ih (markedRight + 2) blanksRight.pred)
 
-set_option doc.verso true
-
 /-!
-# Machine Transformations: Output Correctness
-
-This page proves the output-sensitive correctness theorems for the two
-decider-to-acceptor machines introduced by the construction page.
-
 ## Normalized Output to Scanner Starts
 
 A halted tape with normalized output
 {lit}`[one]` has exactly one nonblank contribution to the output list. The
 following list lemmas split such a tape into the head, right-side, and left-side
-scanner-start cases used by {lit}`normalizedOutputScannerComplete`.
+scanner-start cases used by the scanner-completeness theorem below.
 -/
 
 private theorem filterMap_singleton_decompose

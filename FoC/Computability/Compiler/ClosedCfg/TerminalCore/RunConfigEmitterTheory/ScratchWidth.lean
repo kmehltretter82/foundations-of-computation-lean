@@ -6,8 +6,8 @@ set_option doc.verso true
 /-!
 # Original simulator-input scratch width
 
-The exact #18 target retains a blank reservoir whose width is measured from
-the original encoded simulator-layout input, not from the final encoded
+The exact run-config emitter target retains a blank reservoir measured from
+the original encoded simulator-layout input rather than the final encoded
 configuration.  This module records the simple but essential length identity
 that the physical field parser and serializer must share.
 -/
@@ -48,7 +48,7 @@ theorem input_contextLength_eq_length_sub_one
   | cons bit rest =>
       simp [Tape.input, Tape.contextLength]
 
-/-- Required #18 scratch width in purely syntactic input-length currency. -/
+/-- Required emitter scratch width in purely syntactic input-length currency. -/
 theorem fixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_eq_length_sub_one
     (L : SimulatorLayout) :
     FixedDescriptionBoundedSimulatorPaddedEmitterScratchWidth_configRunner L =

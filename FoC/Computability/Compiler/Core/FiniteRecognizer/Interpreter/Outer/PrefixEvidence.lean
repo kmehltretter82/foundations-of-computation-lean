@@ -6,7 +6,7 @@ namespace Computability
 
 open Languages
 
-namespace Section53SuccessfulPrefixEvidence
+namespace FiniteRecognizer.Interpreter.SuccessfulPrefixEvidence
 
 /-!
 # Successful parser-prefix evidence
@@ -16,14 +16,14 @@ parser-evidence interface with the concrete parser-prefix inversion theorem.
 -/
 
 def contract :
-    Section53OuterPhaseSumGeneric.SuccessfulPrefixEvidenceContract where
+    FiniteRecognizer.Interpreter.OuterPhaseSumGeneric.SuccessfulPrefixEvidenceContract where
   project := by
     intro tokens steps target hrun hterminal
     exact
-      Section53ParserPrefixPhaseSum.successfulTerminal_outerParserPhaseEvidence_of_computesIn
+      FiniteRecognizer.Interpreter.ParserPrefixPhaseSum.successfulTerminal_outerParserPhaseEvidence_of_computesIn
         hrun hterminal
 
 
-end Section53SuccessfulPrefixEvidence
+end FiniteRecognizer.Interpreter.SuccessfulPrefixEvidence
 end Computability
 end FoC

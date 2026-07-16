@@ -5,12 +5,12 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextRawTail
+namespace FiniteRecognizer.Interpreter.BooleanContextRawTail
 
 open FiniteRecognizer ExactFuel StrictProbe
 open ExactFuel.StrictProbe.SerializedFieldComposer
-open Section53RuntimeEncodedList
-open Section53BooleanContextMaterializer
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
+open FiniteRecognizer.Interpreter.BooleanContextMaterializer
 
 /-!
 # Boolean-context raw-tail round
@@ -288,7 +288,7 @@ theorem locatorTargetLeftRev_reverse
     (PayloadLocator.targetLeftRev baseLeftRev count).reverse =
       List.append baseLeftRev.reverse
         (MachineDescription.encodeNat count) := by
-  rw [Section53UniformInterpreterOneStep.runtimeKey_encodeNat_eq_replicate_tick_done]
+  rw [FiniteRecognizer.Interpreter.UniformInterpreterOneStep.runtimeKey_encodeNat_eq_replicate_tick_done]
   simp [PayloadLocator.targetLeftRev, PayloadLocator.ticks,
     List.reverse_replicate, List.append_assoc]
 
@@ -612,7 +612,7 @@ theorem nonempty_target_equiv_input
 
 end RawTailPop
 
-end Section53BooleanContextRawTail
+end FiniteRecognizer.Interpreter.BooleanContextRawTail
 
 end Computability
 end FoC

@@ -6,11 +6,11 @@ namespace Computability
 
 open Languages
 
-namespace Section53BooleanContextMaterializer
+namespace FiniteRecognizer.Interpreter.BooleanContextMaterializer
 
 open FiniteRecognizer ExactFuel StrictProbe
-open Section53InitializerFrontier
-open Section53RuntimeEncodedList
+open FiniteRecognizer.Interpreter.InitializerFrontier
+open FiniteRecognizer.Interpreter.RuntimeEncodedList
 
 /-!
 # Boolean-context materializer
@@ -146,7 +146,7 @@ def SavedRawTailPrependDriverContract
   SavedPositiveBooleanContextMaterializerContract driver entry halt
 
 
-end Section53BooleanContextMaterializer
+end FiniteRecognizer.Interpreter.BooleanContextMaterializer
 
 end Computability
 end FoC

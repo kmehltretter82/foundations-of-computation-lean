@@ -9,7 +9,7 @@ set_option doc.verso true
 This module composes the checked tape-field serializer, the witness-sensitive
 metadata bridge, the token copier, and the final header/parking closeout.  The
 generic component theorem retains the explicit bridge and copier contracts,
-while the production theorem instantiates both checked finite machines.
+while the concrete theorem instantiates both checked finite machines.
 -/
 
 namespace FoC.Computability.EncRewriters.BoundedLayoutRunner.RunConfigEmitterCore
@@ -18,7 +18,7 @@ namespace GuardedEgress.Assembly
 open Languages MachineDescription
 open CommonGround.FiniteTransducers
 
-/-- Contract required from the metadata token copier at the semantic #18
+/-- Contract required from the metadata token copier at the semantic emitter
 index.  Its generic finite-machine run discharges this specialization. -/
 def CopierSpec (copier : MachineDescription) : Prop :=
   copier.SubroutineReady ∧

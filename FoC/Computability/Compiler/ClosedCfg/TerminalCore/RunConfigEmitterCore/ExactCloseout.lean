@@ -7,14 +7,10 @@ set_option doc.verso true
 
 The fixed-description loop computes four semantic fields: the preserved input
 word, the preserved stage, the final configuration, and the accumulated hit
-bit.  This module packages those fields independently of their eventual
-physical representation and identifies their exact scratch-padded target.
-
-Only the semantic fields and the two target presentations used by the live
-guarded serializer remain here. The former exact serializer, parking, and
-construction lattice had no current consumer after #18 moved to the honest
-tape-equivalence boundary; that standalone route is recorded in the Compiler
-deletion ledger rather than retained as a second closeout API.
+bit.  This module packages those fields independently of physical
+representation and exposes the two scratch-padded target presentations used by
+the guarded serializer.  The serializer boundary uses tape-equivalence while
+fixing the exact normalized output word.
 -/
 
 namespace FoC
@@ -28,8 +24,8 @@ namespace BoundedLayoutRunner
 namespace RunConfigEmitterCore
 namespace ExactCloseout
 
-/-- Semantic fields that must survive the execution loop and be serialized at
-the #18 endpoint.  The scratch width is kept separate because it describes the
+/-- Semantic fields that survive the execution loop and are serialized at the
+run-config emitter endpoint.  The scratch width is separate because it describes the
 physical blank reservoir, not a simulator-layout field. -/
 structure Fields where
   input : Word Bool

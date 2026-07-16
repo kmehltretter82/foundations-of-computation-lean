@@ -6,16 +6,16 @@ set_option doc.verso true
 # Boundary phases for the guarded two-tape structured-prefix eraser
 
 The structured-prefix eraser endpoint view exposes the right-edge source and
-the two field-local boundary eraser sources.  This module factors the next
-bottom-up proof obligations into explicit phase contracts:
+the two field-local boundary eraser sources. This module factors the completed
+bottom-up construction into explicit phase contracts:
 
 * the existing left-boundary eraser deletes the second guarded field;
 * the same finite machine deletes the first guarded field;
-* the remaining gaps are positioning and compaction bridges between endpoints.
+* positioning and compaction bridges connect the exact endpoints.
 
 No new machine assumption is introduced here.  The exact boundary eraser
 phases are proved from the existing left-boundary eraser description; the
-positioning contracts are named so later composition work has a precise target.
+positioning contracts give the composition a precise interface.
 -/
 
 namespace FoC

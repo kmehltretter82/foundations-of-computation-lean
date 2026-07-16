@@ -7,10 +7,10 @@ set_option doc.verso true
 
 The canonical invocation specifications and constructions live in
 {module}`FoC.Computability.Compiler.Core.FiniteScaffolds.ControllerInvocation`.
-This thin module remains as the acceptance/import boundary for the open
-controller materializer and semantic-runner leaves.
+This thin module is the acceptance/import boundary for the controller
+materializer and semantic-runner constructions.
 
-The former route structures and finite-leaf aliases had no external consumers
-and only restated the canonical construction currencies.  Add a route wrapper
-here again only when a checked consumer needs a genuinely different contract.
+Additional route structures and finite-leaf aliases are omitted because they
+would only restate the canonical construction currencies.  A route wrapper
+belongs here only when a checked consumer needs a genuinely different contract.
 -/

@@ -5,19 +5,20 @@ import FoC.Computability.Compiler.UniversalAndRanges.Ranges
 set_option doc.verso true
 
 /-!
-# Finite executable program descriptions
+# Finite Program Descriptions
 
-This module packages the description-backed staged programs used to close the
-concrete Chapter 5 Section 5.2 bridges.  The finite syntax is intentionally
-small: a program description contains concrete {lit}`MachineDescription` data,
+This module packages description-backed staged programs and their compiler
+bridges. The finite syntax is intentionally small: a program contains concrete
+{name (full := FoC.Computability.MachineDescription)}`MachineDescription` data,
 and its staged semantics reads the corresponding finite-step interpreter.
 
 The module does not assert that every semantic Lean staged program has finite
-syntax.  Instead, it proves compiler bridges for the finite programs whose
-machine descriptions are explicitly supplied.  The local construction
-predicates provide finite-source targets for the Chapter 5.2 closeout refactor.
+syntax. Instead, it proves compiler bridges for finite programs whose machine
+descriptions are explicitly supplied. The local construction predicates state
+the finite-source interfaces used by trace recognition, dovetailing, and range
+presentation.
 
-## Book coordinates
+## Book Coordinates
 
 Used by:
 - Chapter 5, Section 5.2: finite trace recognizers, finite dovetailing
@@ -32,7 +33,7 @@ open Languages
 namespace Tape
 
 /-!
-## Output tape decoding
+## Output Tape Decoding
 
 The exact tape layer still exposes {name}`Tape.output`.  Most Chapter 5 output
 statements now use {name}`Tape.normalizedOutput`, but these exact decoding
@@ -142,7 +143,7 @@ private theorem haltsWithOutputIn_output_unique {D : MachineDescription}
 end MachineDescription
 
 /-!
-## Finite acceptor programs
+## Finite Acceptor Programs
 -/
 
 structure FiniteAcceptorProgram where
@@ -269,7 +270,7 @@ theorem traceRecognizer_turingAcceptable
 end FiniteAcceptorProgram
 
 /-!
-## Finite Boolean programs
+## Finite Boolean Programs
 -/
 
 structure FiniteBoolProgram where
@@ -432,7 +433,7 @@ theorem turingDecidable
 end FiniteBoolProgram
 
 /-!
-## Finite dovetailing programs
+## Finite Dovetailing Programs
 
 A finite dovetail program records the two finite trace recognizers and the
 finite Boolean machine description that realizes the dovetailing staged
@@ -551,7 +552,7 @@ theorem turingDecidable_of_compilerConstruction
 end FiniteDovetailProgram
 
 /-!
-## Finite partial unary range programs
+## Finite Partial Unary Range Programs
 -/
 
 structure FinitePartialUnaryRangeProgram where

@@ -6,10 +6,10 @@ namespace Computability
 open Languages
 open FiniteRecognizer ExactFuel StrictProbe
 
-namespace Section53OuterParserInversion
+namespace FiniteRecognizer.Interpreter.OuterParserInversion
 
-open Section53ParserAssembly
-open Section53TotalInversion
+open FiniteRecognizer.Interpreter.ParserAssembly
+open FiniteRecognizer.Interpreter.TotalInversion
 
 /-!
 # Outer parser inversion
@@ -323,6 +323,6 @@ noncomputable def OuterParserPhaseEvidenceContract.toPhaseEmbeddingContract
     (contract.projectEvidence tokens hhalts).toParserPhaseWitness
 
 
-end Section53OuterParserInversion
+end FiniteRecognizer.Interpreter.OuterParserInversion
 end Computability
 end FoC

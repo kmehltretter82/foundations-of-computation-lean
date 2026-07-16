@@ -8,8 +8,8 @@ set_option doc.verso true
 /-!
 # Right-end-left structured input materializer
 
-The #18 terminal leaf starts on the final bit of a known nonempty simulator
-layout.  This module gives a dependency-light route from that boundary to the
+The terminal run-config emitter starts on the final bit of a known nonempty
+simulator layout.  This module gives a dependency-light route from that boundary to the
 canonical guarded three-logical-tape embedding.  It uses the shared right-edge
 rewinder and exact option-cell expander directly; no closed-layout recognizer
 or structured output projector is needed on this forward-only boundary.

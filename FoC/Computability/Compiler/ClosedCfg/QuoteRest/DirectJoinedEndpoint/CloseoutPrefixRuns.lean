@@ -21,8 +21,8 @@ namespace DirectJoinedCloseout
 
 open Structured.MultiTapeLowering.ThreeTape
 
-/-! The remaining exact copy, rewind, and assembly-level closeout proofs are
-kept separate from the initializer and parser implementation. -/
+/-! Exact copy, rewind, and assembly-level closeout proofs are kept separate
+from the initializer and parser implementation. -/
 
 /- Static readiness is checked separately after the execution stack closes.
 theorem description_supported :

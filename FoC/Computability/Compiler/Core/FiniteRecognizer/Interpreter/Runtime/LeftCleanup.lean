@@ -7,9 +7,9 @@ namespace Computability
 
 open Languages
 
-namespace Section53RuntimeLeftCleanup
+namespace FiniteRecognizer.Interpreter.RuntimeLeftCleanup
 
-abbrev Action := Section53RuntimeAction.Action
+abbrev Action := FiniteRecognizer.Interpreter.RuntimeAction.Action
 
 inductive Control where
   | enter (action : Action)
@@ -24,16 +24,16 @@ namespace Control
 
 def elems : List Control :=
   List.append
-    (Section53RuntimeAction.Action.finite.elems.map Control.enter)
+    (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map Control.enter)
     (List.append
-      (Section53RuntimeAction.Action.finite.elems.map Control.erase)
+      (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map Control.erase)
       (List.append
-        (Section53RuntimeAction.Action.finite.elems.map Control.seek)
+        (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map Control.seek)
         (List.append
-          (Section53RuntimeAction.Action.finite.elems.map
+          (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map
             Control.bounce)
           (List.append
-            (Section53RuntimeAction.Action.finite.elems.map
+            (FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.elems.map
               Control.ready)
             [.halt]))))
 
@@ -44,19 +44,19 @@ def finite : Foundation.FiniteType Control where
     cases control with
     | enter action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | erase action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | seek action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | bounce action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | ready action =>
         simp [elems,
-          Section53RuntimeAction.Action.finite.complete action]
+          FiniteRecognizer.Interpreter.RuntimeAction.Action.finite.complete action]
     | halt => simp [elems]
 
 end Control
@@ -352,7 +352,7 @@ def actionLeftRev
     (baseLeftRev : Word MachineCodeSymbol)
     (selected : TransitionDescription) : Word MachineCodeSymbol :=
   List.append
-    (Section53RuntimeActionPrefix.consumedPrefix selected).reverse
+    (FiniteRecognizer.Interpreter.RuntimeActionPrefix.consumedPrefix selected).reverse
     baseLeftRev
 
 theorem source_tape_eq_action_target
@@ -362,7 +362,7 @@ theorem source_tape_eq_action_target
     (sourceConfig (selectedAction selected)
       (actionLeftRev baseLeftRev selected)
       (MachineDescription.encodeNatAppend selected.target suffix)).tape =
-    (Section53RuntimeActionPrefix.targetConfig
+    (FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig
       baseLeftRev selected suffix).tape := by
   cases selected with
   | mk source read write move target =>
@@ -376,7 +376,7 @@ def fromActionConfig
     TuringMachine.Configuration MachineCodeSymbol Control where
   state := .enter (selectedAction selected)
   tape :=
-    (Section53RuntimeActionPrefix.targetConfig
+    (FiniteRecognizer.Interpreter.RuntimeActionPrefix.targetConfig
       baseLeftRev selected suffix).tape
 
 theorem computes_from_action_target
@@ -443,7 +443,7 @@ theorem computes_from_action_target
   done
 
 
-end Section53RuntimeLeftCleanup
+end FiniteRecognizer.Interpreter.RuntimeLeftCleanup
 
 end Computability
 end FoC
