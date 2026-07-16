@@ -17,6 +17,35 @@ comparison.
 
 ## Retired surfaces
 
+### Zero-consumer FiniteRecognizer route lattices
+
+- Deleting commit: `99f12bd2` (`Refresh Chapter 5 formal APIs`).
+- Net reduction: exactly 1,656 Compiler lines and 93 top-level declarations:
+  `DecodedDescriptionInterpreterContracts.lean` contributed 482 lines and 24
+  declarations, `ProductContracts.lean` 445 and 28, and
+  `TupleSearch/Contracts.lean` 729 and 41.
+- Old surface: parallel route bundles and projection adapters around the
+  decoded-interpreter, generated-product, hidden-fuel-pair, pair-enumerator,
+  exact-fuel-search, halting-search, and tuple finite constructions.  They
+  added no machine implementation.
+- Replacement: production code uses the direct interpreter run theorems and
+  `decodedDescriptionInterpreterFiniteLeaf`, the direct generated-product
+  finite leaves, and the tuple-search leaves in `Program.lean` and
+  `ExactFuel.lean`.  Their real consumers are `NormRun/Build.lean`,
+  `GenCall/Product.lean`, `GenCall/Pairs.lean`, and `GenCall/Algebra.lean`.
+- Zero-reference evidence: at the deleting commit's parent, the three modules
+  were imported only by the declaration-free `Core/FiniteRecognizer.lean`
+  barrel.  After removing those imports, exact whole-word search found no
+  surviving reference to any deleted declaration and exact module-import
+  search found no remaining import of the deleted modules.
+- Potentially reusable idea: a small named bundle of semantic inversions and
+  construction projections may be useful at a future API boundary, but every
+  deleted field is derivable from the surviving specs and finite leaves.
+- Recovery condition: recover only the smallest required bundle or projection
+  from `99f12bd2^` if a checked production consumer needs one coherent route
+  object that cannot be expressed cleanly from the surviving contract
+  currency.  Do not restore any of the three route lattices wholesale.
+
 ### Exact-fuel finite-component and layout-pipeline lattice
 
 - Deleting commit: `2dc17e37` (`Close strict exact-fuel runner`).
