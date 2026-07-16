@@ -76,41 +76,6 @@ def prefixShiftSourceTape
     head := some MachineCodeSymbol.header
     right := opaqueRight }
 
-theorem empty_shiftSourceTape_eq_prefixShiftSourceTape
-    {rightCount : Nat}
-    (right : TuringMachine MachineCodeSymbol (Fin rightCount))
-    (leftFuel rightFuel : Nat) :
-    ProductCleanupBridge.emptyShiftSourceTape right leftFuel rightFuel =
-      prefixShiftSourceTape
-        (ProductPrefix.retainedOuterRev
-          ([] : Word MachineCodeSymbol) leftFuel rightFuel)
-        (emptyOpaqueRightCells right rightFuel) := by
-  rfl
-
-theorem nonempty_shiftSourceTape_eq_prefixShiftSourceTape
-    {rightCount : Nat}
-    (right : TuringMachine MachineCodeSymbol (Fin rightCount))
-    (headSymbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol)
-    (leftFuel rightFuel : Nat) :
-    ProductCleanupBridge.nonemptyShiftSourceTape
-        right headSymbol rest leftFuel rightFuel =
-      prefixShiftSourceTape
-        (ProductPrefix.retainedOuterRev
-          (headSymbol :: rest) leftFuel rightFuel)
-        (nonemptyOpaqueRightCells right headSymbol rest rightFuel) := by
-  rfl
-
-theorem shiftSourceTape_eq_prefixShiftSourceTape
-    {rightCount : Nat}
-    (right : TuringMachine MachineCodeSymbol (Fin rightCount))
-    (input : Word MachineCodeSymbol) (leftFuel rightFuel : Nat) :
-    ProductCleanupBridge.shiftSourceTape
-        right input leftFuel rightFuel =
-      prefixShiftSourceTape
-        (ProductPrefix.retainedOuterRev input leftFuel rightFuel)
-        (opaqueRightCells right input rightFuel) := by
-  cases input <;> rfl
-
 theorem prefix_run_to_opaque_prefix_shift_source
     {rightCount : Nat}
     (right : TuringMachine MachineCodeSymbol (Fin rightCount))
@@ -132,7 +97,14 @@ theorem prefix_run_to_opaque_prefix_shift_source
       right input leftFuel rightFuel with
     ⟨steps, endpoint, hrun, hstate, htape⟩
   refine ⟨steps, endpoint, hrun, hstate, ?_⟩
-  rw [← shiftSourceTape_eq_prefixShiftSourceTape]
+  have hsource :
+      ProductCleanupBridge.shiftSourceTape
+          right input leftFuel rightFuel =
+        prefixShiftSourceTape
+          (ProductPrefix.retainedOuterRev input leftFuel rightFuel)
+          (opaqueRightCells right input rightFuel) := by
+    cases input <;> rfl
+  rw [← hsource]
   exact htape
 
 end ProductCleanupShapes

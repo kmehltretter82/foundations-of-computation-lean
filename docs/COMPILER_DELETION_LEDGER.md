@@ -1038,6 +1038,32 @@ increase does not change this cleanup accounting.
   output rather than ordinary halting. Repair that caller's contract or add a
   necessary normalizer; do not restore the decoded adapter lattice wholesale.
 
+### Superseded product cleanup wrappers
+
+- Deleting commit: this change (product cleanup wrapper pruning).
+- Net reduction: 225 Compiler lines (`+15/-240`): 115 from the unused
+  canonical right-endpoint facade, 82 net from branch-specific cleanup bridge
+  lemmas, and 28 net from branch-specific cleanup-shape equalities.
+- Old surface: a normalized-output theorem for the canonical right-prefix
+  endpoint, an extra right-prefix run facade, and separate empty/nonempty
+  movement and shape wrappers around the generic cleanup handoff.
+- Potentially reusable idea: exposing normalized output directly from the
+  canonical materializer endpoint and specializing a generic prefix cleanup
+  contract by the empty/nonempty input branch.
+- Why retired: repository-wide declaration-reference searches found no
+  consumer of any removed declaration. The retained generic prefix run and
+  cleanup bridge already cover both branches, and their focused downstream
+  checks compile after the small defining equalities are kept local to the
+  generic proofs.
+- Current route: `ProductPrefix.prefix_run`,
+  `ProductCleanupBridge.prefix_run_to_shift_source`, and
+  `ProductCleanupShapes.prefix_run_to_opaque_prefix_shift_source` form the
+  live handoff into the checked product cleanup stack.
+- Reconsider only if: a current consumer needs the normalized canonical
+  endpoint as its actual contract currency or two construction families need
+  the same branch-specific facade. Restore only the smallest theorem, not the
+  wrapper group.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:
