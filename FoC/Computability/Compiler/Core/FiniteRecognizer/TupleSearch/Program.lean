@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.CandidateRecovery
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Scheduler.Unbounded
 
 set_option doc.verso true
 
@@ -505,19 +506,14 @@ theorem generatedBoundedNestedPairEnumeratorConstruction_of_finStateConstruction
         (TuringMachine.indexedDecidable selected))
 
 /--
-Remaining concrete finite-table obligation for generated unbounded pair search.
-It must enumerate {lit}`(inner, outer, selectedFuel)`, rebuild the nested
-generated call, and run the selected recognizer for exactly
-{lit}`selectedFuel`.
+Concrete finite-table construction for generated unbounded pair search. It
+enumerates {lit}`(inner, outer, selectedFuel)`, rebuilds the nested generated
+call, and runs the selected recognizer for exactly {lit}`selectedFuel`.
 -/
 theorem generatedUnboundedHiddenFuelPairFinStateFiniteLeaf :
     GeneratedUnboundedHiddenFuelPairFinStateConstruction := by
-  intro n selected
-  cases n with
-  | zero =>
-      exact False.elim (Fin.elim0 selected.start)
-  | succ _ =>
-      sorry
+  exact
+    Scheduler.Unbounded.generatedUnboundedHiddenFuelPairFinStateConstructionExplicit
 
 /--
 Remaining concrete finite-table obligation for generated bounded pair search.

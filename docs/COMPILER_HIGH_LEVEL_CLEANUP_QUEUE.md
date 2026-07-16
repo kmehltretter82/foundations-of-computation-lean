@@ -85,9 +85,27 @@ compile. The public interpreter leaves and normalized-runner consumers depend
 only on `propext`, `Classical.choice`, and `Quot.sound`. The declaration export
 introduces no exact-duplicate theorem-type regression, and the campaign records
 +54,483 net Compiler lines against its reviewed +60,000 allowance. The exact
-remaining direct Chapter 5.3 sorries are #1 and #2 in
-`TupleSearch/Program.lean`. The campaign manifest stays pinned until the
+remaining direct Chapter 5.3 sorry is #2 in `TupleSearch/Program.lean`. The
+campaign manifest stays pinned until the
 post-closure deletion and permanent-growth review.
+
+### Chapter 5.3 #1 unbounded tuple search — completed
+
+The shared tuple scheduler is production-organized under
+`Core/FiniteRecognizer/TupleSearch/Scheduler`, with stable namespaces for its
+layout, candidate materializer, finite cycle, reachability proof, initializers,
+and rollover phases. `Scheduler/PublicCore.lean` exposes the common relational
+cycle contracts, while `Scheduler/Unbounded.lean` provides the acyclic public
+construction consumed by `TupleSearch/Program.lean`.
+
+The unbounded module, Program facade, route contracts, and real
+`StageSearchController/GenCall/Pairs` consumer compile. The public unbounded
+leaf and the code-prefix consumer depend only on `propext`,
+`Classical.choice`, and `Quot.sound`. Growth is +20,076 net Compiler lines
+against the reviewed +22,000 allowance. The exact remaining direct Chapter
+5.3 sorry is the bounded #2 leaf; its thin wrapper is deliberately excluded
+from this closure commit. The #1 campaign remains pinned for the post-closure
+deletion and permanent-growth review.
 
 ### #18 exact terminal facade and duplicate construction — completed
 
