@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.CandidateRecovery
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Scheduler.Bounded
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Scheduler.Unbounded
 
 set_option doc.verso true
@@ -516,18 +517,14 @@ theorem generatedUnboundedHiddenFuelPairFinStateFiniteLeaf :
     Scheduler.Unbounded.generatedUnboundedHiddenFuelPairFinStateConstructionExplicit
 
 /--
-Remaining concrete finite-table obligation for generated bounded pair search.
-It must parse the public budget, enumerate bounded {lit}`(inner, outer)` pairs,
-and dovetail the selected recognizer over hidden exact fuel.
+Concrete finite-table construction for generated bounded pair search. It
+parses the public budget, enumerates bounded {lit}`(inner, outer)` pairs, and
+dovetails the selected recognizer over hidden exact fuel.
 -/
 theorem generatedBoundedHiddenFuelPairFinStateFiniteLeaf :
     GeneratedBoundedHiddenFuelPairFinStateConstruction := by
-  intro n selected
-  cases n with
-  | zero =>
-      exact False.elim (Fin.elim0 selected.start)
-  | succ _ =>
-      sorry
+  exact
+    Scheduler.Bounded.generatedBoundedHiddenFuelPairFinStateConstructionExplicit
 
 theorem generatedUnboundedHiddenFuelPairFiniteLeaf
     {selectedState : Type uSelected}

@@ -85,8 +85,8 @@ compile. The public interpreter leaves and normalized-runner consumers depend
 only on `propext`, `Classical.choice`, and `Quot.sound`. The declaration export
 introduces no exact-duplicate theorem-type regression, and the campaign records
 +54,483 net Compiler lines against its reviewed +60,000 allowance. The exact
-remaining direct Chapter 5.3 sorry is #2 in `TupleSearch/Program.lean`. The
-campaign manifest stays pinned until the
+production Compiler direct-sorry census is now zero after the subsequent #1
+and #2 tuple-search closures. The campaign manifest stays pinned until the
 post-closure deletion and permanent-growth review.
 
 ### Chapter 5.3 #1 unbounded tuple search — completed
@@ -101,11 +101,24 @@ construction consumed by `TupleSearch/Program.lean`.
 The unbounded module, Program facade, route contracts, and real
 `StageSearchController/GenCall/Pairs` consumer compile. The public unbounded
 leaf and the code-prefix consumer depend only on `propext`,
-`Classical.choice`, and `Quot.sound`. Growth is +20,076 net Compiler lines
-against the reviewed +22,000 allowance. The exact remaining direct Chapter
-5.3 sorry is the bounded #2 leaf; its thin wrapper is deliberately excluded
-from this closure commit. The #1 campaign remains pinned for the post-closure
-deletion and permanent-growth review.
+`Classical.choice`, and `Quot.sound`. Current cumulative growth is +20,113 net
+Compiler lines against the reviewed +22,000 allowance. The bounded #2 leaf is
+now closed by the thin wrapper recorded below. The #1 campaign remains pinned
+for the post-closure deletion and permanent-growth review.
+
+### Chapter 5.3 #2 bounded tuple search — completed
+
+`Scheduler/Bounded.lean` reuses the shared scheduler and bounded initializer
+owned by #1 and exposes the acyclic finite-state construction consumed by
+`TupleSearch/Program.lean`. The bounded module, Program facade, route
+contracts, and real `StageSearchController/GenCall/Pairs` consumer compile.
+The public bounded leaf and code-prefix consumer depend only on `propext`,
+`Classical.choice`, and `Quot.sound`, and the production Compiler direct-sorry
+census is zero.
+
+The narrow #2 campaign paths measure +52/-19, net +33 Compiler lines, against
+the +2,000 allowance. Its manifest remains pinned for the post-closure deletion
+and permanent-growth review.
 
 ### #18 exact terminal facade and duplicate construction — completed
 

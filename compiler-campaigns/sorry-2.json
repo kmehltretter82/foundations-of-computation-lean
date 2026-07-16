@@ -9,7 +9,8 @@
   "frontier": "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFinStateFiniteLeaf",
   "name": "sorry-2-generated-bounded-hidden-fuel-pair-search",
   "paths": [
-    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean"
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Scheduler/Bounded.lean"
   ],
   "required_axiom_clean": [
     "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFinStateFiniteLeaf",
