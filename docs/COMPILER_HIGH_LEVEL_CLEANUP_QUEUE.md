@@ -55,7 +55,7 @@ allowance; it neither removes source lines from the independent global
 measurement nor resets any pinned base.
 
 The aggregate outstanding-loan cap is 50,000 lines, the independent global
-raw-growth cap is 63,000 lines, and the ordinary per-campaign ceiling remains
+raw-growth cap is 70,000 lines, and the ordinary per-campaign ceiling remains
 10,000. Any reopened work on a retired frontier requires a new campaign and a
 new pinned base.
 

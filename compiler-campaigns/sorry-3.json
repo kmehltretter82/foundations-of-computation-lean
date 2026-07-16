@@ -1,5 +1,5 @@
 {
-  "allow_net_growth": 10000,
+  "allow_net_growth": 15000,
   "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean",
@@ -15,6 +15,10 @@
     "FoC/Computability/Compiler/Core/FiniteRecognizer/ProductContracts.lean",
     "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Product.lean"
   ],
+  "reviewed_growth_exception": {
+    "reason": "The user explicitly approved this reviewed exception on 2026-07-16 after the pinned sorry #3 campaign measured +8783 net Compiler lines with only 1217 ordinary lines remaining. Checked scratch constructions for the fixed dynamic retained-fuel cleanup, fixed-count gap expansion, caller-aware left-frame finish, and equivalence-aware final assembly show that closing the physical product materializer cannot fit honestly under the ordinary ceiling. The +15000 ceiling preserves the original campaign base and keeps the aggregate and independent global caps in force.",
+    "recorded_against": "acc693889afeba5ea9dcafd8c288fe474f5597c1"
+  },
   "required_axiom_clean": [
     "FoC.Computability.FiniteRecognizer.generatedProductExactFuelRunnerFinStateFiniteLeaf",
     "FoC.Computability.FiniteRecognizer.generatedProductExactFuelRunnerFiniteLeaf",
