@@ -11,8 +11,7 @@ the intermediate tapes, proves the branch padding closed forms, and decomposes
 the guarded three-tape target into per-segment cell words so later machine
 phases can state exact write obligations.
 
-All numeric closed forms in this module were probe-checked in
-{lit}`scratch_u22_impl_probe.lean` before being proved.
+The numeric closed forms used by the later machine phases are proved below.
 -/
 
 namespace FoC
