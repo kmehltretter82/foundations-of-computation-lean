@@ -1,9 +1,9 @@
 {
   "limits": {
     "default_campaign_net_growth": 10000,
-    "default_net_growth": 70000,
+    "default_net_growth": 150000,
     "max_new_file_lines": 1500,
-    "max_outstanding_growth_loans": 50000
+    "max_outstanding_growth_loans": 120000
   },
   "metrics": {
     "direct_sorries": 18,
@@ -104,7 +104,7 @@
     ]
   },
   "review": {
-    "reason": "Keep the ordinary per-sorry campaign allowance at 10000 and aggregate ordinary-loan cap at 50000 while raising only the independent global raw Compiler growth allowance from 63000 to 70000 per explicit user approval on 2026-07-16. Current raw growth is 61355 lines and the checked remaining sorry #3 materializer phases cannot fit inside the previous 1645-line global headroom; source metrics remain pinned at 347066 lines and this policy review does not reset the baseline.",
-    "recorded_against": "acc693889afeba5ea9dcafd8c288fe474f5597c1"
+    "reason": "Raise the aggregate outstanding-loan cap from 50000 to 120000 and the independent global raw Compiler growth ceiling from 70000 to 150000 per explicit user approval on 2026-07-16. The checked Chapter 5.3 closures measure about 52335 lines for the decoded-description interpreter and 19120 lines for the shared hidden-fuel scheduler while current raw growth is 69536 lines. Source metrics remain pinned at 347066 lines; this policy review does not reset the baseline or authorize unrelated growth.",
+    "recorded_against": "1d81000797b694b176b7f33348ad2b41f83581fe"
   }
 }

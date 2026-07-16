@@ -1,5 +1,5 @@
 {
-  "allow_net_growth": 996,
+  "allow_net_growth": 22000,
   "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Schedule.lean",
@@ -17,11 +17,16 @@
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Algebra.lean",
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateKernel.lean",
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateRecovery.lean",
-    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean"
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Scheduler"
   ],
   "required_axiom_clean": [
     "FoC.Computability.FiniteRecognizer.TupleSearch.generatedUnboundedHiddenFuelPairFinStateFiniteLeaf",
     "FoC.Computability.FiniteRecognizer.TupleSearch.generatedUnboundedHiddenFuelPairFiniteLeaf",
     "FoC.Computability.codePrefixNestedHiddenFuelPairEnumeratorFiniteLeaf"
-  ]
+  ],
+  "reviewed_growth_exception": {
+    "reason": "The user explicitly approved this reviewed exception on 2026-07-16 after the complete axiom-clean scheduler closure measured 19120 scratch lines on top of the campaign's existing 996-line net growth. The 22000 ceiling preserves the original campaign base, pays for the shared scheduler and unbounded construction, and leaves the thin bounded wrapper to sorry #2.",
+    "recorded_against": "1d81000797b694b176b7f33348ad2b41f83581fe"
+  }
 }
