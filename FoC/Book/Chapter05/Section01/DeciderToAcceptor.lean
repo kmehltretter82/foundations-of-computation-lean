@@ -12,6 +12,10 @@ open Languages
 open Computability
 
 /-!
+# Section 5.1: Decider-to-Acceptor Constructions
+
+## Normalized-Output Deciders
+
 The next theorems are the concrete transition-level construction behind the
 standard statement that a yes/no decider recognizes its yes-language. The
 transformed machine simulates the stopped decider. If the simulated halted
@@ -61,6 +65,13 @@ theorem stopped_normalized_decidable_language_is_turing_acceptable
     (h : StoppedTuringDecidable L) :
     TuringAcceptableLanguage L :=
   TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
+
+/-!
+## Head-Cell Deciders
+
+When the halted head cell itself carries the answer, the smaller construction
+can branch directly to its accepting state or permanent rejection loop.
+-/
 
 def DeciderToAcceptorMachineState (state : Type u) :=
   DeciderToAcceptorState state

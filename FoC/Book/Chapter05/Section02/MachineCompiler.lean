@@ -20,12 +20,16 @@ open Computability
 universe u v
 
 /-!
-**Code-output boundary.**  Exact tape output is intentionally separated from
+## Code-Output Boundary
+
+Exact tape output is intentionally separated from
 normalized code output here.  The identity primitive satisfies both contracts,
 while erasure is impossible for the exact tape-window contract but is realized
 by a concrete finite normalized-output machine.
 
-**Finite-source finish criteria.**  The remaining compiler work is deliberately
+## Finite-Source Finish Criteria
+
+The remaining compiler work is deliberately
 tracked through named finite construction targets.  The goal is not to prove a
 compiler theorem for arbitrary staged programs or arbitrary
 {name}`MachineDescription.TapeCodePrimitive`s in one step; it is to close the
@@ -106,6 +110,13 @@ nonempty input. The viable boundary is therefore a normalized-output tape-code
 compiler: if that one generic compiler principle is supplied, the fixed
 stepper, bounded simulator, and dovetail-layout machine-description obligations
 all follow.
+-/
+
+/-!
+## Primitive Compiler Foundations
+
+These bridges expose the bounded simulator, compiled subroutine, and basic
+Boolean-output facts supplied by the reusable compiler core.
 -/
 
 theorem concrete_fixed_description_bounded_simulator_table_compiler_of_code_compiler
@@ -219,6 +230,13 @@ theorem concrete_fixed_description_bounded_simulator_table_compiler_of_tape_code
   Computability.fixedDescriptionBoundedSimulatorTableCompiler_of_tapeCodeOutputCompiler
     hcompile
 
+/-!
+## Dovetail Layout Realizers
+
+Layout, initial-layout, result, and stage-attempt primitives share the same
+normalized-output compiler boundary.
+-/
+
 theorem concrete_paired_recognizer_dovetail_layout_code_output_realizer_of_tape_code_output_compiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :
     PairedRecognizerDovetailLayoutCodeOutputRealizerConstruction :=
@@ -315,6 +333,13 @@ theorem of_totalStageAttemptOutput
 end StageAttemptCodeOutputRealizer
 
 end ConcretePairedRecognizerDovetail
+
+/-!
+## Controller Result Branches
+
+The controller decodes a total stage result, distinguishes no-hit from
+singleton Boolean hits, and routes each case through a finite code primitive.
+-/
 
 theorem concrete_paired_recognizer_dovetail_total_stage_attempt_code_controller_result_realizes
     (accept reject : MachineDescription) :
@@ -544,6 +569,13 @@ theorem concrete_cell_branch_description_run_config_one_output_of_raw_output_eq_
   MachineDescription.DovetailControllerLayout.cellBranchDescription_runConfig_one_output_of_rawOutput_eq_some
     stateCount source halt blankTarget falseTarget trueTarget move hraw
 
+/-!
+## Fixed-Step Realizers
+
+Canonical configuration realizers and normalized-output realizers are
+equivalent interfaces for one fixed description step.
+-/
+
 theorem concrete_fixed_description_step_code_output_realizer_of_configuration_realizer
     {D stepper : MachineDescription}
     (hstepper :
@@ -583,6 +615,13 @@ theorem iff_outputRealizerConstruction :
 end ConfigurationRealizerConstruction
 
 end ConcreteFixedDescriptionStepCode
+
+/-!
+## Concrete Primitive Closeouts
+
+The final results instantiate the identity, erasure, append, comparison, and
+transition-action primitives with checked finite descriptions.
+-/
 
 theorem concrete_fixed_description_step_code_configuration_realizes_transitionless
     {D : MachineDescription}

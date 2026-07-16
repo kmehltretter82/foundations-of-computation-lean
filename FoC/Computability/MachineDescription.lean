@@ -28,6 +28,14 @@ namespace Computability
 open Foundation
 open Languages
 
+/-!
+## Transition Tables and Well-Formedness
+
+A description separates raw finite data from its validity conditions.  Rows
+carry lookup keys and actions; well-formedness later adds state bounds and
+determinism without changing the executable representation.
+-/
+
 /-- A first-order transition row for a Boolean-tape machine. -/
 structure TransitionDescription where
   source : Nat
@@ -100,6 +108,14 @@ def lookupTransition (D : MachineDescription)
     Option TransitionDescription :=
   D.transitions.find? (Matches source read)
 
+/-!
+## Executable Configurations and Runs
+
+The operational semantics starts from the canonical input tape, performs one
+table lookup per step, and iterates for a finite fuel bound.  Acceptance means
+that some such run reaches the designated halt state.
+-/
+
 /-- Runtime state and tape for a finite description. -/
 structure Configuration where
   state : Nat
@@ -146,6 +162,14 @@ instance (D : MachineDescription) (n : Nat) (w : Word Bool) :
 /-- Some finite-fuel run reaches the designated halt state. -/
 def HaltsOnInput (D : MachineDescription) (w : Word Bool) : Prop :=
   exists n : Nat, D.HaltsIn n w
+
+/-!
+## Compilation to Turing Machines
+
+Natural-numbered description states embed into a finite state type.  Successful
+description steps then become steps of the ordinary {name}`TuringMachine`
+semantics.
+-/
 
 /-- Embed an unbounded natural-numbered state into the compiled state type. -/
 def stateOfNat (D : MachineDescription) (n : Nat) :

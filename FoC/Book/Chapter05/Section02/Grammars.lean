@@ -22,7 +22,7 @@ open Grammars
 universe u v
 
 /-!
-**General Grammars and RE Languages.**
+## Grammar Recognizers and Finite Presentations
 
 The final definitions relate unrestricted grammar generation to recursive
 enumerability, then state the recursive-language equivalence for a language
@@ -316,6 +316,13 @@ theorem concrete_machine_description_to_finite_general_grammar_construction :
     ConcreteMachineDescriptionToFiniteGeneralGrammarConstruction :=
   Computability.machineDescriptionToFiniteGeneralGrammarConstruction
 
+/-!
+## Compiler Construction Surfaces
+
+Semantic, finite-source, production-list, and checked-certificate compiler
+targets make the effective assumptions of each grammar route explicit.
+-/
+
 def SemanticBooleanGeneralGrammarRecognizerCompilerAssumption : Prop :=
   Computability.SemanticBooleanGeneralGrammarRecognizerCompilerAssumption
 
@@ -386,6 +393,8 @@ def RecursivelyEnumerableToFinitePresentationGeneralGrammarConstruction
   RecursivelyEnumerableToFinitePresentationGeneralGrammarPrinciple terminal
 
 /-!
+## Section 5.2 Grammar Closeouts
+
 These aliases preserve the chapter's older {lit}`Concrete...Closeout` names.
 The underlying records are layered: the semantic closeout contains semantic
 compiler principles, the finite-grammar closeout mixes semantic bridges with a
@@ -737,7 +746,9 @@ def ConcreteFiniteGeneralGrammarRecognizerLanguage
       ConcreteFiniteGeneralGrammarRecognizerPresentsLanguage G L
 
 /-!
-**Finite grammar recognizer presentations.**  A finite unrestricted grammar
+## Finite Grammar Recognizer Presentations
+
+A finite unrestricted grammar
 together with a supplied description for its derivation-search recognizer is
 already enough to obtain recursive enumerability of the generated language.
 The harder compiler theorem is the uniform construction of that description
@@ -745,6 +756,8 @@ from the finite production list.
 -/
 
 /-!
+## Derivation Traces and Staged Recognizers
+
 For unrestricted grammars, a finite derivation is a finite acceptance trace.
 The first theorems in this block build that trace-level recognizer before any
 machine compiler is assumed.
@@ -1076,7 +1089,9 @@ theorem concrete_machine_history_grammar_generated
   Computability.MachineDescriptionHistoryGrammar.generated_language hD
 
 /-!
-**Finite trace tables.**  A finite table of accepting traces gives a genuine
+## Finite Acceptance Trace Tables
+
+A finite table of accepting traces gives a genuine
 finite-production grammar: the production list contains one rule from the start
 nonterminal to each table word. This is the finite-data bridge used to state the
 description-backed recognizer-to-finite-grammar interface precisely.
@@ -1166,6 +1181,14 @@ theorem concrete_machine_description_accepts_to_finite_general_grammar :
     ConcreteMachineDescriptionAcceptsToFiniteGeneralGrammarConstruction :=
   Computability.machineDescriptionAcceptsToFiniteGeneralGrammarConstruction_of_machineConstruction
     concrete_machine_description_to_finite_general_grammar_construction
+
+/-!
+## From Grammars to Recognizable Languages
+
+Finite presentations produce staged recognizers directly. Supplying the
+appropriate description compiler then upgrades those program-level results to
+recursive enumerability.
+-/
 
 theorem finite_general_grammar_has_finite_list_staged_recognizer
     {G : GeneralGrammar terminal nonterminal}
@@ -1428,6 +1451,14 @@ theorem finite_general_grammar_to_recursively_enumerable_construction_of_staged_
   exact
     finite_general_grammar_generated_language_is_recursively_enumerable_of_staged_program_compiler
       hcompile hgenerated
+
+/-!
+## Semantic Reverse Construction and Equivalences
+
+The semantic reverse construction turns every recursively enumerable language
+into an unrestricted grammar. Combining it with the forward constructions
+yields the final grammar/RE equivalence surfaces.
+-/
 
 theorem recursively_enumerable_to_general_grammar_construction_semantic :
     RecursivelyEnumerableToGeneralGrammarConstruction terminal :=

@@ -20,6 +20,14 @@ namespace Computability
 
 open Languages
 
+/-!
+## Stay-Capable Tables
+
+The intermediate syntax mirrors finite machine descriptions while extending
+head movement with a logical stay action. Its well-formedness and lookup
+predicates remain first-order and executable.
+-/
+
 /-- Head movement for the stay-capable description layer. -/
 inductive StayDirection where
   | left : StayDirection
@@ -142,6 +150,14 @@ theorem lookupTransition_match {D : MachineDescriptionWithStay}
     exact List.find?_some h
   simpa [Matches] using hpred
 
+/-!
+## Executable Stay Semantics
+
+Configurations and fuel-bounded runs interpret a stay row directly, before any
+lowering to the left/right-only backend. The halting contracts retain both the
+final state and exact output tape.
+-/
+
 structure Configuration where
   state : Nat
   tape : Tape Bool
@@ -221,6 +237,15 @@ def HaltsFromTape (D : MachineDescriptionWithStay)
     (Tin Tout : Tape Bool) : Prop :=
   exists n : Nat, D.HaltsFromTapeIn n Tin Tout
 
+/-!
+## Lowering Stay Rows
+
+A logical stay is implemented by moving right into a fresh auxiliary state and
+then moving left while preserving the encountered physical cell. Auxiliary
+states are indexed by the source state and the three possible Boolean-tape
+reads.
+-/
+
 /-- Preserve the current physical cell while moving to a target state. -/
 def preserveTransitions
     (source target : Nat) (move : Direction) :
@@ -249,7 +274,7 @@ theorem readAuxOffset_lt_three (read : Option Bool) :
 Fresh auxiliary state for the stay compilation of one source/read key.
 
 The state lies in the block immediately after the source state interval:
-`[baseState, baseState + baseState * 3)`.
+{lit}`[baseState, baseState + baseState * 3)`.
 -/
 def auxState (baseState source : Nat) (read : Option Bool) : Nat :=
   baseState + (source * 3 + readAuxOffset read)
@@ -572,6 +597,14 @@ theorem compileTransitions_find?_aux_some
           (hrows t (by simp)) hmatch hmove]
         rfl
 
+/-!
+## Compiled Descriptions
+
+The complete lowering allocates the auxiliary-state block, compiles every row,
+and preserves the original start and halt states. Lookup and structural lemmas
+connect the generated table back to each logical source row.
+-/
+
 /-- Compile a stay-capable description to the ordinary left/right-only model. -/
 def compile (D : MachineDescriptionWithStay) : MachineDescription where
   stateCount := D.stateCount + D.stateCount * 3
@@ -781,6 +814,14 @@ private theorem tape_write_read_self (T : Tape Bool) :
     Tape.write (Tape.read T) T = T := by
   cases T
   rfl
+
+/-!
+## Simulation and Halting Preservation
+
+Source steps expand to one or two backend steps. Iterating that simulation
+yields the public halting bridge, which observes the lowered endpoint up to
+finite-tape equivalence.
+-/
 
 theorem compile_stepConfig_simulates
     {D : MachineDescriptionWithStay} {c c' : Configuration}

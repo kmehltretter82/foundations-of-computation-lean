@@ -8,7 +8,13 @@ namespace Computability
 open Languages
 
 /-!
-**Compiled partial-function ranges.**
+# Compiled Partial-Unary Ranges
+
+## Description-Backed Partial Functions
+
+A well-formed finite description computes an option-valued function when it
+halts with the specified output exactly on inputs where that function is
+defined.
 -/
 
 def PartialFunctionCompiledByDescription
@@ -71,6 +77,8 @@ def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
   PartialUnaryRangeDescriptionCompilerPrinciple
 
 /-!
+## Semantic Range Compiler Consequences
+
 The partial-unary compiler principle is intentionally strong: its source is an
 arbitrary semantic Lean partial function, not a finite program syntax.  The
 following consequences make that strength explicit.  Concrete closeouts should
@@ -101,6 +109,13 @@ theorem partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
   exact ⟨f, D, hD,
     FoC.Foundation.FSet.equal_refl
       (ProgramRangeLanguage (PartialFunctionProgram f))⟩
+
+/-!
+## Properties of Compiled Range Languages
+
+Compiled partial-unary ranges remain partial ranges, are Turing-computable
+ranges, and agree with their staged-program presentation.
+-/
 
 theorem compiledPartialUnaryRange_partialRangeOfUnaryFunction
     {L : Language Bool}
@@ -156,6 +171,13 @@ theorem compiledPartialUnaryFunctionProgramRange_partialRange
     PartialRangeOfUnaryFunction L :=
   compiledPartialUnaryRange_partialRangeOfUnaryFunction
     (compiledPartialUnaryFunctionProgramRange_compiledRange h)
+
+/-!
+## Constructing Compiled Range Witnesses
+
+The closing theorems apply the compiler principle to semantic partial ranges,
+partial listings, and staged unary program ranges.
+-/
 
 theorem compiledPartialUnaryRange_of_partialRangeOfUnaryFunction
     (hcompile : PartialUnaryRangeDescriptionCompilerPrinciple)

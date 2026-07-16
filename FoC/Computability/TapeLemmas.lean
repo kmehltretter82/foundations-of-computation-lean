@@ -6,6 +6,11 @@ set_option doc.verso true
 # Tape lemmas
 
 Small dependency-light tape lemmas used by concrete machine proofs.
+
+## Trailing-Blank Normalization
+
+Appending one or many blank cells does not change the normalized finite tape
+window obtained by dropping its trailing blanks.
 -/
 
 namespace FoC

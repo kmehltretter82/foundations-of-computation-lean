@@ -23,6 +23,8 @@ open Grammars
 universe u v
 
 /-!
+## Grammar-Pair Characterizations
+
 The last equivalence is stated in terms of a grammar for the language and a
 grammar for its complement. Once grammar generation and recursive enumerability
 are known equivalent, this is exactly the RE/co-RE characterization of recursive
@@ -145,6 +147,13 @@ theorem recursive_language_iff_finite_general_grammar_pair_of_grammar_constructi
       hto hfrom)
     L
 
+/-!
+## Consequences of Section Closeouts
+
+The semantic closeout fields instantiate the dovetailing, range, and grammar
+principles used by the chapter-level equivalence theorems.
+-/
+
 theorem dovetailing_decidable_construction_of_section52_closeout
     (hclose : ConcreteBooleanSection52CompilerCloseout) :
     ReCoReToDecidablePrinciple Bool :=
@@ -217,6 +226,13 @@ theorem boolean_recursive_language_iff_general_grammar_pair_of_section52_closeou
       hclose)
     recursively_enumerable_to_general_grammar_construction_semantic
     L
+
+/-!
+## Finite-Data Grammar Consequences
+
+Finite-presentation compiler fields and description-backed recognizers supply
+the effective grammar direction without widening the closeout assumptions.
+-/
 
 theorem finite_general_grammar_to_recursively_enumerable_construction_of_finite_section52_closeout
     (hclose : ConcreteBooleanFiniteGrammarSection52Closeout) :
@@ -327,7 +343,9 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     hpair
 
 /-!
-**Section 5.2 finite-data handoffs.**  This is the explicit dependency graph
+## Section 5.2 Finite-Data Handoffs
+
+This is the explicit dependency graph
 for the remaining finite/effective route. The closeout records still carry the
 semantic acceptor bridge when a final recursive-language theorem needs it, but
 the handoff lemmas below do not manufacture a broad semantic closeout from
@@ -421,6 +439,8 @@ theorem boolean_recursive_language_iff_finite_general_grammar_pair_of_semantic_s
     L
 
 /-!
+## Semantic and Finite Grammar Boundaries
+
 The theorem equating general grammars with recursively enumerable languages is
 now split into two statements. For semantic unrestricted grammars, the reverse
 direction is proved by {name}`SemanticLanguageGrammar`: arbitrary production

@@ -18,6 +18,15 @@ namespace Computability
 open Languages
 open MachineDescription
 
+/-!
+## Generic Tape-Code Compiler Boundaries
+
+The exact compiler target is impossible for erasing primitives, while the
+normalized-output target is the viable generic interface. Composition records
+how exact subroutine realizers can still be chained when their contracts allow
+it.
+-/
+
 def MachineDescriptionTapeCodeExactCompilerConstruction : Prop :=
   forall P : TapeCodePrimitive,
     exists D : MachineDescription,
@@ -93,6 +102,14 @@ theorem tapeCodePrimitiveCompiledByDescription_compose
           · exact (hP.right code mid).mpr hPcode
           · exact (hQ.right mid out).mpr hQout
 
+/-!
+## Fixed-Step and Bounded-Simulator Targets
+
+These construction predicates isolate the canonical fixed-description stepper
+and fuel-bounded simulator in exact, normalized-output, configuration, and
+right-shifted currencies.
+-/
+
 def FixedDescriptionBoundedSimulatorCodeCompilerConstruction : Prop :=
   forall D : MachineDescription,
     exists simulator : MachineDescription,
@@ -137,6 +154,14 @@ def FixedDescriptionStepCodeConfigurationRealizerConstruction : Prop :=
   forall D : MachineDescription,
     exists stepper : MachineDescription,
       FixedDescriptionStepCodeConfigurationRealizes D stepper
+
+/-!
+## Dovetail Stage Primitives
+
+The initializer, bounded layout runner, stage attempt, total result, and
+controller branches are kept as separate finite construction targets so their
+handoffs can be checked independently.
+-/
 
 def PairedRecognizerDovetailInitialLayoutCodeOutputRealizerConstruction :
     Prop :=
@@ -307,6 +332,13 @@ def PairedRecognizerDovetailTotalStageAttemptHandoffSubroutineRealizerSequencing
         (PairedRecognizerDovetailTotalStageAttemptSourceCode accept reject)
         attempt tapeCodePrimitiveCodeWordHandoffMove
 
+/-!
+## Layout Runners and Search Drivers
+
+Layout realizers feed several search-driver contracts, ranging from a direct
+bounded-result table to subroutine-ready and total-stage controller drivers.
+-/
+
 def PairedRecognizerDovetailLayoutCodeCompilerConstruction : Prop :=
   forall accept reject : MachineDescription,
     exists runner : MachineDescription,
@@ -436,6 +468,14 @@ def PairedRecognizerDovetailTotalStageAttemptControllerFuelSearchDriverRealizes
               (encodeBoolWord result)) ∧
           PairedRecognizerDovetailControllerRawOutput result = some [b]
 
+/-!
+## Exact-Fuel Controller Runners
+
+Exact-fuel contracts expose one candidate attempt at a fixed stage and fuel,
+with separate forward and closed specifications before they are combined into
+the bidirectional realization theorem.
+-/
+
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes
     (attempt runner : MachineDescription) : Prop :=
   runner.SubroutineReady ∧
@@ -505,6 +545,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerRealizes_of
     constructor
     · exact hclosed w limit fuel result
     · exact hforward w limit fuel result
+
+/-!
+## Fuel-Simulator Handoffs
+
+The fuel simulator is exposed both as a closed code-word handoff and as a
+right-shifted subroutine specification, with explicit endpoint tapes for the
+controller path.
+-/
 
 def PairedRecognizerDovetailControllerStageAttemptUnconditionalExactFuelRunnerConstruction :
     Prop :=
@@ -713,6 +761,14 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodeClosedHan
             pairedRecognizerDovetailControllerStageAttemptFuelSimulatorCodePrimitive_transform_eq_some_cons
               htransform)⟩
 
+/-!
+## Fuel-Output Projection
+
+After bounded simulation reaches the attempted machine's halt state, the
+projection target extracts the normalized Boolean result from the simulator
+layout.
+-/
+
 def PairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineConstruction :
     Prop :=
   forall attempt : MachineDescription,
@@ -828,6 +884,13 @@ theorem pairedRecognizerDovetailControllerStageAttemptFuelOutputCodeSubroutineCo
               ⟨i.1.1, hcode, i.2.left, by
                 rw [hout]
                 exact i.2.right⟩)
+
+/-!
+## Compiled Exact-Fuel Subroutines
+
+Parser, bounded simulator, and output projector components compose into the
+exact-fuel runner used by both ordinary and protected controller invocations.
+-/
 
 def PairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCodeSubroutineConstruction :
     Prop :=
@@ -1007,6 +1070,13 @@ theorem pairedRecognizerDovetailProtectedStageAttemptExactFuelRunnerConstruction
         (pairedRecognizerDovetailControllerStageAttemptExactFuelRunnerCode_transform_boolWord_iff
           attempt w result limit fuel)
 
+/-!
+## Controller Stage Assembly
+
+These targets initialize the controller layout, encode each stage attempt, and
+package the unbounded finite stage loop around a subroutine-ready attempt.
+-/
+
 def PairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompilerConstruction :
     Prop :=
   forall _accept _reject attempt : MachineDescription,
@@ -1081,6 +1151,13 @@ theorem pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_close
   pairedRecognizerDovetailControllerStageInputEncoderConstruction_of_handoff
     (pairedRecognizerDovetailControllerStageInputEncoderHandoffConstruction_of_closedHandoff
       h)
+
+/-!
+## Stage Invocation and Result Branches
+
+Invocation, result emission, and continuation contracts describe the final
+finite components that are sequenced into one controller loop.
+-/
 
 def PairedRecognizerDovetailStageAttemptInvocationRealizes
     (attempt encoder invoker : MachineDescription) : Prop :=

@@ -132,6 +132,19 @@ description = "Reader-oriented Verso companion for the standalone Lean formaliza
   "FoC.Book.Chapter05.Section02",
   "FoC.Book.Chapter05.Section03"
 ]
+"FoC.Book.Chapter05.Section01" = [
+  "FoC.Book.Chapter05.Section01.Basic",
+  "FoC.Book.Chapter05.Section01.DeciderToAcceptor"
+]
+"FoC.Book.Chapter05.Section02" = [
+  "FoC.Book.Chapter05.Section02.Vocabulary",
+  "FoC.Book.Chapter05.Section02.ConstructionStatus",
+  "FoC.Book.Chapter05.Section02.Dovetailing",
+  "FoC.Book.Chapter05.Section02.MachineCompiler",
+  "FoC.Book.Chapter05.Section02.Ranges",
+  "FoC.Book.Chapter05.Section02.Grammars",
+  "FoC.Book.Chapter05.Section02.Closeouts"
+]
 "FoC.Grammars.CFG" = [
   "FoC.Grammars.CFG.Basic",
   "FoC.Grammars.CFG.Derivations",
@@ -408,7 +421,7 @@ title = "Compiler Bridges"
 title = "Enumerable Languages"
 
 [modules."FoC.Computability.Encoding"]
-title = "Machine Descriptions"
+title = "Machine-Description Encoding"
 
 [modules."FoC.Computability.FiniteProgram"]
 title = "Finite Program Descriptions"
@@ -652,6 +665,21 @@ title = "Section 5.3: Limits of Computation"
 # labels, Verso reuses a parent title in the navigation tree, which makes long
 # implementation subtrees appear as repeated generic entries.
 
+[modules."FoC.Computability.DescriptionLanguages"]
+title = "Encoded Machine-Description Languages"
+
+[modules."FoC.Computability.ListLemmas"]
+title = "List Lemmas"
+
+[modules."FoC.Computability.MachineDescription"]
+title = "Finite Machine Descriptions"
+
+[modules."FoC.Computability.MachineDescriptionWithStay"]
+title = "Machine Descriptions with Stay Moves"
+
+[modules."FoC.Computability.TapeLemmas"]
+title = "Tape Lemmas"
+
 [modules."FoC.Foundation.QuadraticSurd"]
 title = "Quadratic Surds"
 
@@ -738,6 +766,15 @@ title = "Section 4.6: Strict Inequalities"
 
 [modules."FoC.Book.Chapter05.Section02.Closeouts"]
 title = "Section 5.2: Closeout Theorems"
+
+[modules."FoC.Book.Chapter05.Section01.Basic"]
+title = "Section 5.1: Machine Semantics"
+
+[modules."FoC.Book.Chapter05.Section01.DeciderToAcceptor"]
+title = "Section 5.1: Decider-to-Acceptor Constructions"
+
+[modules."FoC.Book.Chapter05.Section02.ConstructionStatus"]
+title = "Section 5.2: Construction Status"
 
 [modules."FoC.Book.Chapter05.Section02.Dovetailing"]
 title = "Section 5.2: Dovetailing"
@@ -1145,4 +1182,4 @@ title = "Transition Parser Soundness"
 title = "Header Parser"
 
 [modules."FoC.Computability.Compiler.UniversalAndRanges.Ranges"]
-title = "Compiled Range Theorems"
+title = "Compiled Partial-Unary Ranges"

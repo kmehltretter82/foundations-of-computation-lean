@@ -13,6 +13,8 @@ open Languages
 open MachineDescription
 
 /-!
+## Paired-Recognizer Dovetail Compilers
+
 The broad dovetail compiler above talks about arbitrary Lean traces.  The
 paired-recognizer version below is the concrete Section 5.2 transition-level
 handoff: both traces come from finite {lit}`MachineDescription` interpreters.
@@ -116,6 +118,13 @@ theorem pairedRecognizerBoundedDovetailTableCompiler_iff_pairedRecognizerDovetai
   ⟨pairedRecognizerDovetailDescriptionCompiler_of_boundedDovetailTableCompiler,
     pairedRecognizerBoundedDovetailTableCompiler_of_pairedRecognizerDovetailDescriptionCompiler⟩
 
+/-!
+## Fixed-Description Bounded Simulation
+
+The bounded simulator contracts expose the exact configuration input and
+Boolean result expected from a finite table.
+-/
+
 def FixedDescriptionBoundedSimulatorInput
     (L : SimulatorLayout) : Word Bool :=
   SimulatorLayout.asBoolInput L
@@ -138,6 +147,13 @@ def FixedDescriptionBoundedSimulatorTableCompilerConstruction : Prop :=
   forall D : MachineDescription,
     exists simulator : MachineDescription,
       FixedDescriptionBoundedSimulatorTableRealizes D simulator
+
+/-!
+## Checked Trace-Search Bundles
+
+These structures package executable bounded checks for machine runs, encoded
+configuration traces, and their combined Section 5.2 search surface.
+-/
 
 structure MachineBoundedTraceSearchConstruction : Prop where
   haltsInBool_correct :
@@ -211,6 +227,13 @@ theorem fixedDescriptionBoundedSimulatorOutput_run_hit
           (D.runConfig n L.config).state = D.halt :=
   SimulatorLayout.run_hit_eq_true_iff D L.stage L
 
+/-!
+## Canonical Bounded-Simulator Code
+
+The code primitive maps canonical encoded simulator inputs to their encoded
+Boolean bounded-run result.
+-/
+
 def FixedDescriptionBoundedSimulatorCode
     (D : MachineDescription) : TapeCodePrimitive :=
   SimulatorLayout.runCodePrimitive D
@@ -248,6 +271,13 @@ theorem fixedDescriptionBoundedSimulatorCode_boolOutput
   simp [fixedDescriptionBoundedSimulatorCode_encode,
     FixedDescriptionBoundedSimulatorOutput,
     SimulatorLayout.asBoolInput]
+
+/-!
+## Canonical Fixed-Step Code
+
+The fixed-step primitive exposes one decoded table step in the same code-word
+currency used by the bounded simulator.
+-/
 
 def FixedDescriptionStepCode
     (D : MachineDescription) : TapeCodePrimitive :=

@@ -22,6 +22,14 @@ open Languages
 
 namespace MachineDescription
 
+/-!
+## Complete and Prefix-Coded Acceptance
+
+The predicates in this group distinguish a separately supplied complete
+description from a word whose leading description is decoded in place.  Both
+routes execute the same finite-description semantics after decoding.
+-/
+
 /-- A complete description code halts on a separately encoded input. -/
 def CodeAccepts
     (machine input : Word MachineCodeSymbol) : Prop :=
@@ -48,6 +56,14 @@ def CodePrefixAcceptedLanguage : Language MachineCodeSymbol :=
 def EncodedInputLanguage
     (D : MachineDescription) : Language MachineCodeSymbol :=
   fun input => D.HaltsOnInput (encodeCodeWordAsInput input)
+
+/-!
+## Canonical Encoding Laws
+
+Canonical description encodings decode back to their source description.  The
+following equivalences remove the existential decoder witness and expose the
+underlying halting statement directly.
+-/
 
 theorem codeAccepts_encodeDescription_iff
     (D : MachineDescription) (input : Word MachineCodeSymbol) :

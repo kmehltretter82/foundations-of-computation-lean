@@ -9,6 +9,13 @@ Small dependency-light list lemmas used by concrete machine proofs.
 namespace FoC
 namespace Computability
 
+/-!
+## Replication and Append Normalization
+
+These identities reassociate repeated prefixes without expanding them one cell
+at a time in downstream machine proofs.
+-/
+
 theorem list_replicate_append_cons_eq_cons_append
     (a : α) (n : Nat) (rest : List α) :
     List.replicate n a ++ a :: rest =
@@ -48,6 +55,13 @@ theorem list_replicate_add_append
       rw [← list_replicate_append_self a (n + m) rest]
       rw [ih (a :: rest)]
       rw [list_replicate_append_self a m rest]
+
+/-!
+## Fixed-Length and Suffix Decompositions
+
+Exact length facts expose short lists explicitly, while lower bounds split a
+fixed-size suffix from an otherwise arbitrary prefix.
+-/
 
 theorem list_exists_append_singleton_of_ne_nil
     (xs : List α) (h : xs ≠ []) :
@@ -166,6 +180,13 @@ theorem list_exists_append_three_of_three_le_length
                   exact
                     ⟨head :: init, thirdLast, beforeLast, last,
                       by simp [htailSplit]⟩
+
+/-!
+## Arithmetic Witnesses
+
+The final helper turns a natural-number inequality into the additive witness
+shape used by list-length calculations.
+-/
 
 theorem nat_exists_eq_add_of_le {m n : Nat} (h : m <= n) :
     exists k : Nat, n = k + m :=

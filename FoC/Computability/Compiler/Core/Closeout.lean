@@ -11,6 +11,13 @@ namespace Computability
 
 open Languages
 
+/-!
+## Aggregated Compiler Contracts
+
+The closeout keeps each fixed-step, bounded-simulator, layout, stage-attempt,
+and controller branch construction available as a separately named field.
+-/
+
 structure MachineDescriptionCompilerCloseout where
   stepCodeOutput :
     FixedDescriptionStepCodeOutputRealizerConstruction
@@ -34,6 +41,13 @@ structure MachineDescriptionCompilerCloseout where
     PairedRecognizerDovetailControllerContinueCodeOutputRealizerConstruction
   dovetailControllerEmitCodeOutput :
     PairedRecognizerDovetailControllerEmitCodeOutputRealizerConstruction
+
+/-!
+## Building a Closeout from a Tape-Code Compiler
+
+A single normalized-output compiler principle instantiates every field whose
+source is one of the canonical tape-code primitives.
+-/
 
 def machineDescriptionCompilerCloseout_of_tapeCodeOutputCompiler
     (hcompile : MachineDescriptionTapeCodeOutputCompilerConstruction) :

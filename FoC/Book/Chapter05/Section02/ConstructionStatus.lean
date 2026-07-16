@@ -29,6 +29,13 @@ open Languages
 
 universe u
 
+/-!
+## Semantic Principles
+
+These names collect the language-level assumptions used by the chapter without
+asserting that a particular finite transition table realizes them.
+-/
+
 def SemanticDescriptionAcceptorCompilationAssumption : Prop :=
   DescriptionProgramAcceptorCompilationPrinciple
 
@@ -50,6 +57,14 @@ structure SemanticLanguagePrincipleSurface (alpha : Type u) where
     ProgramAcceptorCompilationPrinciple alpha
   stagedBoolDeciderCompilation :
     ProgramBoolDeciderCompilationPrinciple alpha
+
+/-!
+## Finite Compiler Handoffs
+
+The following records package the independent description-backed construction
+surfaces consumed by dovetailing, bounded simulation, grammar recognition, and
+range compilation.
+-/
 
 /-- Finite-description handoffs for the paired-recognizer dovetail route. -/
 structure PairedRecognizerDovetailSurface where
@@ -95,6 +110,13 @@ structure FiniteGrammarRangeSurface where
     FinitePartialUnaryRangeProgram.CompilerConstruction
   finitePartialUnaryRangeCloseout :
     FinitePartialUnaryRangeProgram.RangeCloseoutConstruction
+
+/-!
+## Concrete Finite Presentations
+
+These predicates state that supplied finite programs recognize a language,
+recognize its complement, or present it as a partial unary range.
+-/
 
 /-- A supplied finite acceptor recognizes the stated language. -/
 def ConcreteFiniteAcceptorRecognizesLanguage

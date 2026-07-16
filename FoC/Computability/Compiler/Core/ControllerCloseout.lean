@@ -18,6 +18,8 @@ theorem pairedRecognizerDovetailTotalStageAttemptControllerSearchDriverCompiler_
   fun _accept _reject attempt => hloop attempt
 
 /-!
+## Controller Closeout Records
+
 The finite controller route for paired-recognizer dovetailing has two
 machine-construction pieces: a total stage-attempt subroutine and a controller
 that loops over stage bounds, inspecting the subroutine's normalized output.
@@ -59,6 +61,13 @@ namespace PairedRecognizerDovetail
 
 namespace TotalStageAttemptCodeOutputCompiledSubroutineConstruction
 
+/-!
+## Assembling the Total Stage Attempt
+
+The initializer, bounded layout runner, output emitter, and sequencer compose
+into the subroutine consumed by the controller loop.
+-/
+
 theorem of_outputFiniteSourceComponents
     (hinitializer :
       PairedRecognizerDovetailStageInputInitializerClosedHandoffCompiledSubroutineConstruction)
@@ -91,6 +100,13 @@ theorem of_outputFiniteSourceComponents
 end TotalStageAttemptCodeOutputCompiledSubroutineConstruction
 
 end PairedRecognizerDovetail
+
+/-!
+## Assembling the Finite Controller
+
+Closed input initialization, stage encoding, invocation, result emission, and
+continuation components supply the complete finite stage-loop target.
+-/
 
 theorem pairedRecognizerDovetailStageInputInitializerCompiledSubroutineConstruction_of_closedHandoff
     (h :

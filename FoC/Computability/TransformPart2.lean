@@ -92,7 +92,14 @@ private theorem normalizedDeciderToAcceptor_sweepLeft_target_halts
 set_option doc.verso true
 
 /-!
-**Normalized output to scanner starts.**  A halted tape with normalized output
+# Machine Transformations: Output Correctness
+
+This page proves the output-sensitive correctness theorems for the two
+decider-to-acceptor machines introduced by the construction page.
+
+## Normalized Output to Scanner Starts
+
+A halted tape with normalized output
 {lit}`[one]` has exactly one nonblank contribution to the output list. The
 following list lemmas split such a tape into the head, right-side, and left-side
 scanner-start cases used by {lit}`normalizedOutputScannerComplete`.
@@ -161,6 +168,13 @@ private theorem filterMap_of_reverse_singleton
       (cells.filterMap (fun cell => cell)).reverse = [one] := by
     simpa [List.filterMap_reverse] using h
   simpa using congrArg List.reverse hrev
+
+/-!
+## Normalized-Output Scanner Completeness
+
+Every halted normalized output equal to the accepting singleton can be routed
+to one of the scanner starts and then to the accept state.
+-/
 
 def NormalizedOutputScannerComplete
     (M : TuringMachine symbol state) (zero one : symbol) : Prop :=
@@ -446,6 +460,13 @@ theorem normalizedOutputScannerComplete
             simp at haMem
             exact False.elim (ha haMem)
 
+/-!
+## Normalized Deciders Become Acceptors
+
+Scanner completeness turns the transition simulation into language
+acceptance, and hence into the book-facing acceptable-language witnesses.
+-/
+
 private theorem normalizedDeciderToAcceptor_halts_of_mem
     {M : TuringMachine symbol state}
     {encodeInput : input -> symbol} {zero one : symbol}
@@ -499,6 +520,13 @@ theorem stoppedTuringDecidable_to_turingAcceptable
   exists normalizedDeciderToAcceptor M zero one
   exists encodeInput
   exact normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider hdec
+
+/-!
+## Head-Cell Decider Transformation
+
+For deciders whose answer is read at the halted head cell, the smaller
+transformation branches directly to an accepting halt or a nonhalting loop.
+-/
 
 def runConfig (c : Configuration symbol state) :
     Configuration symbol (DeciderToAcceptorState state) where
@@ -572,6 +600,14 @@ private theorem deciderToAcceptor_simulates_computes
       exact Computes.refl (runConfig c)
   | step hstep _ ih =>
       exact Computes.step (deciderToAcceptor_step_run_of_stopped hstop hstep) ih
+
+/-!
+## Head-Cell Simulation Invariant
+
+The invariant records the simulated source run until the transformed machine
+commits to acceptance or looping. Its preservation supplies soundness and the
+final language-class consequences.
+-/
 
 def DeciderToAcceptorInvariant
     (M : TuringMachine symbol state) (one : symbol) (input : Word symbol)

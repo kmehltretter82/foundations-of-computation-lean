@@ -18,7 +18,9 @@ open Computability
 universe u v
 
 /-!
-**Finite source presentations.**  These predicates name the concrete case where
+## Finite Source Presentations
+
+These predicates name the concrete case where
 the source object is already a finite supplied description.  A finite acceptor
 recognizes a language by its halting trace, paired finite acceptors provide the
 finite-source version of RE/co-RE dovetailing, and a finite partial-unary range
@@ -40,7 +42,7 @@ def AcceptanceTraceStagedRecognizer
   TraceRecognizerProgram trace
 
 /-!
-**Complements and Extensionality.**
+## Complements and Extensionality
 
 Recursive languages are closed under complement, stopped deciders can be
 swapped to decide complements, and both recursive and recursively enumerable
@@ -91,7 +93,7 @@ theorem recursively_enumerable_language_of_equal {L K : Language alpha}
   Computability.turing_acceptable_of_equal h hEq
 
 /-!
-**Traces and Dovetailing.**
+## Traces and Dovetailing
 
 Acceptance traces represent finite-stage evidence for RE languages. With
 complementary traces, bounded dovetailing eventually classifies each input and
@@ -165,6 +167,8 @@ theorem recursively_enumerable_language_is_program_acceptable
     (Computability.turing_acceptable_has_decidableAcceptanceTrace h)
 
 /-!
+## Complementary Traces and Bounded Search
+
 Complementary traces are the finite evidence supplied by recognizers for a
 language and for its complement. Soundness says a hit on one side decides the
 input's status; eventuality says at least one side eventually hits for every
@@ -313,6 +317,8 @@ theorem re_and_co_re_have_program_bool_decider
   Computability.reCoRe_programBoolDecidable h
 
 /-!
+## From Bounded Traces to Finite Compilers
+
 This is the compiler handoff. The trace-level dovetailer already decides the
 language as a staged program.  The named bounded-trace construction below is
 the main Section 5.2 proof boundary for concrete finite traces: machine
@@ -845,6 +851,8 @@ theorem recursive_language_iff_re_and_co_re_of_concrete_dovetail_description_com
     L
 
 /-!
+## Description-Backed Acceptors
+
 The concrete-description consequences are bookkeeping rather than new
 diagonalization. They say that once a program or Boolean program is compiled by
 a well-formed description, the usual Turing-acceptable or Turing-decidable
@@ -990,6 +998,8 @@ theorem concrete_finite_complementary_recognizers_have_re_and_co_re
                 reject hreject.right.left hreject.right.right.right
 
 /-!
+## Description-Backed Boolean Deciders
+
 The next cluster is the deciding analogue of the acceptor cluster above. Boolean
 programs compile to descriptions that decide a language, while dovetail programs
 combine two finite acceptor traces into one Boolean decision procedure.
@@ -1160,6 +1170,8 @@ theorem concrete_finite_complementary_recognizers_have_compiled_dovetail_program
               · exact hP.right.right
 
 /-!
+## Stopped Deciders and Complementary Traces
+
 Stopped deciders supply a concrete source of complementary traces: one trace
 looks for a halted accepting output, while the other looks for a halted
 rejecting output. This connects the Section 5.1 machine-level decider facts to

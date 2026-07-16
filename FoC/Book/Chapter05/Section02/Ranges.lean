@@ -20,7 +20,7 @@ open Computability
 universe u v
 
 /-!
-**Listings and Ranges.**
+## Listings and Bounded Enumeration
 
 Listable languages are represented by streams of words. The range theorems
 connect listability with unary string functions, matching the book's
@@ -164,6 +164,8 @@ theorem unary_input_string_length (n : Nat) :
   Computability.unaryInputWord_length n
 
 /-!
+## Unary Range Functions
+
 Unary inputs turn an index into a word. This small coding step is what makes a
 list stream look like the range of a string function, and it also explains why
 partial listings become partial unary functions rather than total ones.
@@ -224,6 +226,8 @@ theorem partially_listable_language_has_partial_unary_range_function
   Computability.partiallyListable_has_partial_unary_range_function h
 
 /-!
+## String-Function Range Equivalences
+
 The range direction goes back from a stream to a function. Unary inputs encode
 the stream index, so a total stream becomes a total unary function and a partial
 stream becomes a partial unary function. The following equivalences package that
@@ -315,6 +319,8 @@ theorem partially_listable_language_iff_partial_range_of_unary_string_function
   Computability.partiallyListable_iff_partialRangeOfUnaryFunction L
 
 /-!
+## Compiled Partial-Function Range Contracts
+
 An option-valued function embeds into the staged-program semantics at stage
 zero.  The following aliases retain the book page's compiled-range notation;
 listability and partial unary ranges themselves use the canonical predicates
@@ -361,6 +367,8 @@ theorem staged_unary_program_range_is_partial_unary_range
   Computability.programRange_partialRangeOfUnaryFunction P
 
 /-!
+## Description-Backed Range Compilers
+
 The compiled-range theorems state what a concrete description must provide to
 serve as an enumerator. The semantic range is already a partial unary range; the
 compiler hypothesis upgrades it to a machine-description-backed range over the
@@ -544,6 +552,8 @@ theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_
   · exact concrete_compiled_partial_unary_function_program_range_is_partially_listable
 
 /-!
+## Finite Partial-Unary Programs
+
 Finite partial-unary programs make the range story executable. Output
 completeness supplies a compiled partial function, while functionality ensures
 that the output relation really determines one partial function and therefore
@@ -710,6 +720,13 @@ theorem concrete_finite_partial_unary_range_language_partially_listable
     PartiallyListable L :=
   concrete_compiled_partial_unary_range_is_partially_listable
     (concrete_finite_partial_unary_range_language_compiled_range h)
+
+/-!
+## Range Extensionality
+
+The closing lemmas transport range languages across pointwise function
+equalities and language equivalence.
+-/
 
 theorem function_value_in_range (f : Word input -> Word output) (x : Word input) :
     f x ∈ RangeLanguage f :=
