@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Algebra
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.CandidateRecovery
 
 set_option doc.verso true
 

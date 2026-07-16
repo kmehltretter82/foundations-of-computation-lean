@@ -272,22 +272,27 @@ theorem scanTape_nil_eq_input
   | nil => contradiction
   | cons current rest => rfl
 
+/--
+Erase a represented protected frame at any remaining fuel and expose its
+caller payload modulo tape-window equivalence.
+-/
 theorem run_from_representation
     {stateCount : Nat}
     (callerData : Word MachineCodeSymbol)
+    (fuel : Nat)
     (F : SerializedFieldComposer.CarriedStateFrame.LoopFrame stateCount)
     (T : Tape MachineCodeSymbol)
     (hrep :
-      RelationalDriverInduction.Represents callerData 0 F T) :
+      RelationalDriverInduction.Represents callerData fuel F T) :
     let L :=
-      (SerializedFieldComposer.CarriedStateFrame.withFuel 0 F).physicalFrame
+      (SerializedFieldComposer.CarriedStateFrame.withFuel fuel F).physicalFrame
     exists endpoint : TuringMachine.Configuration MachineCodeSymbol Control,
       machine.runConfigExact? ((Layout.encode L).length + 1)
           { state := .scan, tape := T } = some endpoint ∧
         endpoint.state = .gate ∧
         Tape.Equiv endpoint.tape (Tape.input callerData) := by
   let L :=
-    (SerializedFieldComposer.CarriedStateFrame.withFuel 0 F).physicalFrame
+    (SerializedFieldComposer.CarriedStateFrame.withFuel fuel F).physicalFrame
   have hcanonical :=
     run_exact (Layout.encode L) callerData []
       (noCallerTag_layoutEncode L)
@@ -318,4 +323,3 @@ end FiniteRecognizer
 
 end Computability
 end FoC
-

@@ -547,7 +547,7 @@ theorem haltsFrom_of_pair
       hleftEndpointRep, hleftRun⟩
   have hleftOuter := left_computes_lift materializer left right leftKernel
     rightKernel hleftRun
-  rcases ProductHandoff.run_from_representation rightData
+  rcases ProductHandoff.run_from_representation rightData 0
       leftEndpointFrame leftEndpointTape hleftEndpointRep with
     ⟨handoffEndpoint, hhandoffExact, hhandoffState,
       hrightTapeEquiv⟩
@@ -646,4 +646,3 @@ end FiniteRecognizer
 
 end Computability
 end FoC
-

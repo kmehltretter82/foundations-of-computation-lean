@@ -239,7 +239,7 @@ theorem pair_of_haltsFrom
   have hafterLeft :=
     (TuringMachine.PrefixHalting.haltsFrom_iff_of_computes
       hstop hleftOuterRun).mp hleftOuterHalts
-  rcases ProductHandoff.run_from_representation rightData
+  rcases ProductHandoff.run_from_representation rightData 0
       leftEndpointFrame leftEndpointTape hleftEndpointRep with
     ⟨handoffEndpoint, hhandoffExact, hhandoffState,
       hrightTapeEquiv⟩
@@ -364,4 +364,3 @@ end FiniteRecognizer
 
 end Computability
 end FoC
-

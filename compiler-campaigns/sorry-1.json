@@ -1,9 +1,11 @@
 {
-  "allow_net_growth": 101,
+  "allow_net_growth": 996,
   "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Schedule.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Algebra.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateKernel.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateRecovery.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Contracts.lean",
     "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean"
@@ -13,6 +15,8 @@
   "paths": [
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Schedule.lean",
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Algebra.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateKernel.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/CandidateRecovery.lean",
     "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean"
   ],
   "required_axiom_clean": [
