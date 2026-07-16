@@ -828,9 +828,8 @@ theorem decodedBoundedSimulatorStageProgramRunnerConstruction_of_booleanRunner
 Stage-coded evaluator construction for the fixed staged program
 {name}`CodePrefixRecognizerProgram`.
 
-This is a sharper form of the remaining uniform-runner obligation: parse the
-outer unary stage field and evaluate the fixed staged program at that exact
-stage.
+The construction parses the outer unary stage field and evaluates the fixed
+staged program at that exact stage.
 -/
 theorem decodedBoundedSimulatorStageProgramRunnerConstruction :
     exists state : Type,
@@ -872,7 +871,7 @@ theorem decodedBoundedSimulatorUniformCodeMachineConstruction_of_stageProgramRun
 Conversely, a machine realizing the code primitive is a stage-program runner.
 Together with
 {name}`decodedBoundedSimulatorUniformCodeMachineConstruction_of_stageProgramRunner`,
-this pins down the exact remaining construction boundary.
+this identifies the two construction surfaces exactly.
 -/
 theorem decodedBoundedSimulatorStageProgramRunnerConstruction_of_codeMachine
     (hcode : CodePrefixDecodedBoundedSimulatorCodeMachineConstruction) :
@@ -894,8 +893,7 @@ theorem decodedBoundedSimulatorStageProgramRunnerConstruction_of_codeMachine
 /--
 Uniform code-machine leaf for the decoded bounded simulator primitive.
 
-This is the remaining transition-table obligation: one fixed machine must
-realize the transform of
+One fixed machine realizes the transform of
 {name}`CodePrefixDecodedBoundedSimulatorCode`, interpreting the decoded
 description as tape data rather than selecting a generated
 description-specific simulator.

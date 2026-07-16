@@ -75,6 +75,20 @@ and `PairMaterializer/Runs` modules replace the final two #3 scratch artifacts,
 which are removed in the same change. The reviewed campaign manifest remains
 active until a separate permanent-growth review; its pinned base is not reset.
 
+### Chapter 5.3 #4 decoded-description interpreter — completed
+
+The #4 source frontier is production-closed through
+`Core/FiniteRecognizer/Interpreter/{Parser,Initializer,Runtime,Outer}` and the
+`DecodedDescriptionInterpreter.lean` facade. The facade, route contracts,
+normalized-runner consumer, broad finite-recognizer barrel, and Compiler facade
+compile. The public interpreter leaves and normalized-runner consumers depend
+only on `propext`, `Classical.choice`, and `Quot.sound`. The declaration export
+introduces no exact-duplicate theorem-type regression, and the campaign records
++54,483 net Compiler lines against its reviewed +60,000 allowance. The exact
+remaining direct Chapter 5.3 sorries are #1 and #2 in
+`TupleSearch/Program.lean`. The campaign manifest stays pinned until the
+post-closure deletion and permanent-growth review.
+
 ### #18 exact terminal facade and duplicate construction — completed
 
 The public migration in `206a31b2` left the equivalence-valued padded-emitter
