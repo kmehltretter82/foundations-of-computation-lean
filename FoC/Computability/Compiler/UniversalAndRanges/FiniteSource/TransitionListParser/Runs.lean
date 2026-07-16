@@ -329,7 +329,7 @@ private theorem transitionListParserMachine_halts_oneTransition
     transitionListParserMachine,
     transitionListParserOptionTape_nil_eq_input] using hfrom
 
-private theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
+theorem transitionListParserMachine_computes_markPosition_canonicalContext_step
     (blanks : Nat)
     (pre : Word MachineCodeSymbol)
     (hpre : transitionListParserNoHeader pre)

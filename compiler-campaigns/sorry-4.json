@@ -1,0 +1,25 @@
+{
+  "allow_net_growth": 1369,
+  "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/Basic.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/Runs.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/ExactEndpoints.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/EquivRuns.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/MarkerRestore/Basic.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser/MarkerRestore/Runs.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreterContracts.lean"
+  ],
+  "frontier": "FoC.Computability.FiniteRecognizer.decodedDescriptionInterpreterFinStateFiniteLeaf",
+  "name": "sorry-4-decoded-description-interpreter",
+  "paths": [
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/TransitionListParser"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.nonemptyTransitionTable_parser_and_restorer_to_equiv",
+    "FoC.Computability.FiniteRecognizer.decodedDescriptionInterpreterFinStateFiniteLeaf",
+    "FoC.Computability.FiniteRecognizer.decodedDescriptionInterpreterFiniteLeaf"
+  ]
+}

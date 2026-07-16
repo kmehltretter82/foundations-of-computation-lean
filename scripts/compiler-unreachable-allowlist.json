@@ -73,6 +73,30 @@
       "reason": "Thin compatibility barrel retained while live consumers use explicit target imports."
     },
     {
+      "category": "active",
+      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
+      "module": "FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.EquivRuns",
+      "reason": "Tape-equivalence parser schedules are the active arbitrary-table handoff for sorry #4."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
+      "module": "FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.ExactEndpoints",
+      "reason": "Exact zero-table and final-mark endpoints are active parser foundations for sorry #4."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
+      "module": "FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.MarkerRestore.Basic",
+      "reason": "The finite marker restorer is the active table-rescan foundation for sorry #4."
+    },
+    {
+      "category": "active",
+      "intended_consumer": "DecodedDescriptionInterpreter direct frontier",
+      "module": "FoC.Computability.Compiler.UniversalAndRanges.FiniteSource.TransitionListParser.MarkerRestore.Runs",
+      "reason": "Parser-to-restorer schedules are the active nonempty-table handoff for sorry #4."
+    },
+    {
       "category": "guardrail",
       "intended_consumer": "Sorry #12 repaired bounded-fuel-pair contract",
       "module": "FoC.Computability.Compiler.Core.StructuredConstructionTargets.BoundedFuelPairEnumerator.ContractGuardrails",

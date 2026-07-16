@@ -588,7 +588,7 @@ theorem transitionListParser_encodeTransition_noHeader
         intro symbol hmem
         simp at hmem)
 
-private theorem transitionListParser_encodeTransitionsAppend_noHeader
+theorem transitionListParser_encodeTransitionsAppend_noHeader
     (transitions : List TransitionDescription)
     {suffix : List MachineCodeSymbol}
     (hsuffix : transitionListParserNoHeader suffix) :
