@@ -1,5 +1,9 @@
 {
   "allow_net_growth": 15000,
+  "architecture_review": {
+    "reason": "Close the generated product exact-fuel runner with one fixed pair-prefix materializer, explicit empty and nonempty schedules, equivalence-aware physical endpoints, and the shared cyclic probe composition. The completed route compiles through the public Runner and its immediate GenCall consumer, preserves the exact-empty context-length impossibility guardrail, is axiom-clean, and has no zero-consumer production module after the causal deletion pass.",
+    "recorded_against": "1aa2bf47efb765e4da76ba41666396d1cb9d80bb"
+  },
   "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
   "focused_checks": [
     "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean",

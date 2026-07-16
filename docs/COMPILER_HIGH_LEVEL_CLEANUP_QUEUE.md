@@ -59,6 +59,22 @@ raw-growth cap is 70,000 lines, and the ordinary per-campaign ceiling remains
 10,000. Any reopened work on a retired frontier requires a new campaign and a
 new pinned base.
 
+### Chapter 5.3 #3 product runner — completed
+
+The closing change replaces the positive-state product-runner hole with the
+fixed `ProductPairMaterializer` machine, exact empty/nonempty schedules, and
+the existing cyclic-probe product composition. The cumulative campaign change
+from its pinned base is +15,325/-765, net +14,560 Compiler lines. The frontier,
+its arbitrary-state wrapper, and the immediate `GenCall/Product` consumer
+compile and depend only on `propext`, `Classical.choice`, and `Quot.sound`.
+
+The causal audit retains the concise context-length counterexample for the
+impossible exact-empty physical contract and finds no zero-consumer production
+module in the completed Product route. The promoted `PairMaterializer/Machine`
+and `PairMaterializer/Runs` modules replace the final two #3 scratch artifacts,
+which are removed in the same change. The reviewed campaign manifest remains
+active until a separate permanent-growth review; its pinned base is not reset.
+
 ### #18 exact terminal facade and duplicate construction — completed
 
 The public migration in `206a31b2` left the equivalence-valued padded-emitter

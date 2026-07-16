@@ -1,15 +1,5 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupBridge
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupDelete
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupGap
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupPack
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupShapes
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CallerAwareTail
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Construction
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CallerTail
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Contextual.Full
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Duplicator
-import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Prefix
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.PairMaterializer
 
 set_option doc.verso true
 
@@ -354,8 +344,17 @@ theorem generatedProductExactFuelRunnerFinStateFiniteLeaf :
       | zero =>
           exact False.elim (Fin.elim0 right.start)
       | succ _ =>
-          -- Obligation: construct the positive-state finite product runner.
-          sorry
+          let materializer :=
+            ExactFuel.StrictProbe.ProductPairMaterializer.machine left right
+          refine ⟨_, ExactFuel.StrictProbe.ProductAssembly.machine
+            materializer left right
+            (ExactFuel.StrictProbe.ProductConstruction.leftKernel _)
+            (ExactFuel.StrictProbe.ProductConstruction.rightKernel _), ?_⟩
+          exact
+            ExactFuel.StrictProbe.ProductConstruction.productExactFuelRunnerSpec_of_prefixWitnesses
+              materializer left right
+              (ExactFuel.StrictProbe.ProductPairMaterializer.pairPrefixWitnesses
+                left right)
 
 /--
 Finite-machine leaf for generated exact-fuel product runners over arbitrary
