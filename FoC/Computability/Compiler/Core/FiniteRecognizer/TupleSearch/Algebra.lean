@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Basic
+import FoC.Computability.Compiler.Core.FiniteRecognizer.TupleSearch.Schedule
 import FoC.Computability.Compiler.Core.CommonGround.SearchAlgebra
 
 set_option doc.verso true
