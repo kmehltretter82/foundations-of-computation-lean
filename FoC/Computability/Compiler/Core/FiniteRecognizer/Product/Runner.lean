@@ -1,7 +1,10 @@
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StageProgram.Composition
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupBridge
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupDelete
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupGap
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupPack
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CleanupShapes
+import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CallerAwareTail
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Construction
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.CallerTail
 import FoC.Computability.Compiler.Core.FiniteRecognizer.Product.Contextual.Full
