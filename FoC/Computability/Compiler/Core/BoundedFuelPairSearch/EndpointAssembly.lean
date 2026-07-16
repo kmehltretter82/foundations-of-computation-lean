@@ -283,12 +283,6 @@ theorem endpointConstruction
     source sourceSimulator recognizer checkerSimulator b
     hsourceSimulator hcheckerSimulator hrecognizer
 
-theorem searchFamilyConstruction :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchFamilyConstruction := by
-  apply boundedFuelPairSearchFamilyConstruction_of_structuredEndpoints
-  intro runner _hrunner b
-  exact endpointConstruction runner b
-
 end U12EndpointAssembly
 end BoundedFuelPairSearch
 end Computability

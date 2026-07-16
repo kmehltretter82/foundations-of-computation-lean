@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DiagonalSchedule
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.PersistentRestaging
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RolloverTape
 import FoC.Computability.Compiler.Structured.Lowering.TypedStateRuns
 
 namespace FoC
@@ -204,47 +205,12 @@ def leftScanTape (bits : List Bool)
       tapeAtCells (List.append (rest.map some) [none])
         (some bit :: right)
 
-theorem candidateCode_eq_fields
-    (w : Word Bool) (limit candidateFuel : Nat) :
-    CandidateCode w limit candidateFuel =
-      List.append (encodeNat w.length)
-        (List.append (encodeCellsAppend (w.map some) [])
-          (List.append (encodeNat limit) (encodeNat candidateFuel))) := by
-  unfold CandidateCode
-  unfold PairedRecognizerDovetailControllerStageAttemptFuelInputCode
-  unfold DovetailLayout.stageInputCodeAppend
-  unfold encodeBoolWordAppend
-  unfold encodeCellListAppend
-  unfold encodeNatAppend
-  simp only [List.length_map]
-  have hcand :
-      List.append (encodeNat candidateFuel) [] =
-        encodeNat candidateFuel :=
-    List.append_nil _
-  rw [hcand]
-  apply congrArg (List.append (encodeNat w.length))
-  exact encodeCellsAppend_append (w.map some) []
-    (List.append (encodeNat limit) (encodeNat candidateFuel))
-
-theorem candidateInputBits_eq_fields
-    (w : Word Bool) (limit candidateFuel : Nat) :
-    CandidateInputBits w limit candidateFuel =
-      List.append (stageNatBits w.length)
-        (List.append (cellsBits w)
-          (List.append (stageNatBits limit)
-            (stageNatBits candidateFuel))) := by
-  unfold CandidateInputBits
-  rw [candidateCode_eq_fields]
-  rw [encodeCodeWordAsInput_append]
-  rw [encodeCodeWordAsInput_append]
-  rw [encodeCodeWordAsInput_append]
-  rfl
-
 theorem candidateInputBits_rollover_length
     (w : Word Bool) (candidateFuel : Nat) :
     (CandidateInputBits w 0 (candidateFuel + 1)).length =
       (CandidateInputBits w candidateFuel 0).length + 4 := by
-  rw [candidateInputBits_eq_fields, candidateInputBits_eq_fields]
+  rw [RolloverTape.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields]
   simp [stageNatBits_length]
   lia
 
@@ -838,8 +804,8 @@ theorem leads_candidateRollover
   rw [cleanedFuelTape_rollover_source]
   simpa [PersistentRestaging.cleanedFuelTape,
     PersistentRestaging.restagedRawTape, paddedRawTape,
-    candidateInputBits_eq_fields, List.map_append,
-    List.append_assoc] using
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
+    List.map_append, List.append_assoc] using
       leads_rolloverFields
         (List.append (stageNatBits w.length) (cellsBits w))
         candidateFuel sourceFuel

@@ -1064,6 +1064,33 @@ increase does not change this cleanup accounting.
   the same branch-specific facade. Restore only the smallest theorem, not the
   wrapper group.
 
+### Exact duplicate aliases in completed materializer and bounded-search routes
+
+- Deleting commit: this change (`Remove duplicate compiler proof aliases`).
+- Net reduction: 122 Compiler lines (`+113/-235`): 49 net from the CountWindow
+  indexed materializer, 9 from `RawLayoutPreparation`, and 64 from bounded
+  fuel-pair search and its structured acceptance consumer.
+- Old surface: namespace-local copies of reject-boundary, erase,
+  marker-readiness, blank-replication, tape-input, candidate-field,
+  run-to-`Leads`, and construction-passthrough facts.
+- Potentially reusable idea: none beyond the retained canonical declarations;
+  the removed theorems and wrappers had exactly duplicate kernel types.
+- Why retired: repository-wide declaration-reference searches found no
+  remaining consumer of any removed name. The focused CountWindow,
+  `RawLayoutPreparation`, bounded-search, and structured assembly modules all
+  compile after migrating real consumers to the shared declarations.
+- Current route: consumers use `RejectLive`, `AcceptInternalMarker`,
+  `AcceptReconstructPrefix.MarkerScanLowered`,
+  `CommonGround.FiniteTransducers.replicate_none_append_none_cons`,
+  `FuelSimulatorCore.tapeAtCells_map_some_eq_input`, `RolloverTape`,
+  `U12PhaseFusion`, `PersistentRestaging`, the indexed materializer
+  construction, and `U12EndpointAssembly.endpointConstruction` directly. The
+  public Bool-word/input-initializer and bounded-search family frontiers remain
+  intact.
+- Reconsider only if: a concrete external consumer requires one of the old
+  namespace names. Recover a thin compatibility alias from the parent of this
+  change; do not restore duplicate proofs or a construction-wrapper lattice.
+
 ## Required entry for future deletions
 
 Every deletion tranche should add:

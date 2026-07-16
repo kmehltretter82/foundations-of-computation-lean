@@ -742,7 +742,7 @@ theorem leads_sourceEmission_of_equiv
         (Sum.inl RawLayoutPreparation.State.seekRawEnd) T0 T1 T2)
       ((fusedTable source.start).config
         (fusedTable source.start).halt A0 A1 A2) :=
-    U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig
+    U12PhaseFusion.leads_of_runConfig
       (fusedTable source.start) hrun
   refine ⟨A0, A1, A2, ?_, Tape.Equiv.trans hA0 hV0,
     Tape.Equiv.trans hA1 hV1, Tape.Equiv.trans hA2 hV2⟩
@@ -774,7 +774,7 @@ theorem leads_sourceSimulation
           sourceSimulator.start T0 T1 Tin)
         ((Tape2SubroutineLift.table sourceSimulator hsourceSimulator).config
           sourceSimulator.halt T0 T1 Tout) :=
-    U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig
+    U12PhaseFusion.leads_of_runConfig
       (Tape2SubroutineLift.table sourceSimulator hsourceSimulator) hrun
   apply leads_via_first_halt_and_bridge
     (Tape2SubroutineLift.table sourceSimulator hsourceSimulator)
@@ -837,7 +837,7 @@ theorem leads_checkerEmission_of_equiv
         (Sum.inl RawLayoutPreparation.State.seekRawEnd) T0 T1 T2)
       ((swappedFusedTable recognizer.start).config
         (swappedFusedTable recognizer.start).halt A0 A1 A2) :=
-    U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig
+    U12PhaseFusion.leads_of_runConfig
       (swappedFusedTable recognizer.start) hactual
   refine ⟨A0, A1, A2, ?_, Tape.Equiv.trans hA0 hV0,
     Tape.Equiv.trans hA1 hV1, Tape.Equiv.trans hA2 hV2⟩
@@ -869,7 +869,7 @@ theorem leads_checkerSimulation
           hcheckerSimulator).config checkerSimulator.start T0 T1 Tin)
         ((Tape2SubroutineLift.table checkerSimulator
           hcheckerSimulator).config checkerSimulator.halt T0 T1 Tout) :=
-    U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig
+    U12PhaseFusion.leads_of_runConfig
       (Tape2SubroutineLift.table checkerSimulator hcheckerSimulator) hrun
   apply leads_via_first_halt_and_bridge
     (Tape2SubroutineLift.table checkerSimulator hcheckerSimulator)
@@ -901,7 +901,7 @@ theorem leads_hitExtraction
   have hlocal : H.Leads
       (H.config SimulatorHitExtractorDescription.start T0 T1 Tin)
       (H.config SimulatorHitExtractorDescription.halt T0 T1 Tout) :=
-    U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig H hrun
+    U12PhaseFusion.leads_of_runConfig H hrun
   apply leads_via_first_halt_and_bridge H M State.hitExtract
     (embeds_hitExtract source sourceSimulator recognizer checkerSimulator b
       hsourceSimulator hcheckerSimulator)
@@ -1053,7 +1053,7 @@ theorem leads_hitEraseSuccess
           show keepS.apply T1 = T1 by rfl, herase] at hstep
         exact hstep
       · simp only [List.length_cons]
-        rw [U12HitBranch.replicate_succ_eq_append]
+        rw [PersistentRestaging.replicate_succ_eq_append]
         simpa [List.append_assoc] using ih (none :: right)
 
 theorem leads_hitEraseFailure
@@ -1099,7 +1099,7 @@ theorem leads_hitEraseFailure
           show keepS.apply T1 = T1 by rfl, herase] at hstep
         exact hstep
       · simp only [List.length_cons]
-        rw [U12HitBranch.replicate_succ_eq_append]
+        rw [PersistentRestaging.replicate_succ_eq_append]
         simpa [List.append_assoc] using ih (none :: right)
 
 theorem leads_hitFinishSuccess

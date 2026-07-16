@@ -742,22 +742,6 @@ theorem length_dispatch_false_run
           eraseAction3, lengthDispatchRows, rowsForMarkerRead,
           dispatch, componentHalt, markCurrent, eraseRight]
 
-theorem length_dispatch_true_run
-    (T0 T2 : Tape Bool) :
-    lengthDescription.runConfig 1
-        (config dispatch T0 Tape.blank (markCurrent true T2)) =
-      config componentHalt T0 Tape.blank (eraseRight 1 T2) := by
-  cases h0 : T0.head with
-  | none =>
-      token_driver_simp [h0, lengthDescription, lengthRoute,
-        eraseAction3, lengthDispatchRows, rowsForMarkerRead,
-        dispatch, componentHalt, markCurrent, eraseRight]
-  | some bit =>
-      cases bit <;>
-        token_driver_simp [h0, lengthDescription, lengthRoute,
-          eraseAction3, lengthDispatchRows, rowsForMarkerRead,
-          dispatch, componentHalt, markCurrent, eraseRight]
-
 def wrappedNatTokens : Nat -> List Bool
   | 0 => wrappedKind .done
   | n + 1 => List.append (wrappedKind .tick) (wrappedNatTokens n)
@@ -831,7 +815,16 @@ theorem length_after_first_done_run
     lengthDescription.runConfig 1
         (config dispatch T0 Tape.blank (markCurrent true T2)) =
       config componentHalt T0 Tape.blank (eraseRight 1 T2) := by
-  exact length_dispatch_true_run T0 T2
+  cases h0 : T0.head with
+  | none =>
+      token_driver_simp [h0, lengthDescription, lengthRoute,
+        eraseAction3, lengthDispatchRows, rowsForMarkerRead,
+        dispatch, componentHalt, markCurrent, eraseRight]
+  | some bit =>
+      cases bit <;>
+        token_driver_simp [h0, lengthDescription, lengthRoute,
+          eraseAction3, lengthDispatchRows, rowsForMarkerRead,
+          dispatch, componentHalt, markCurrent, eraseRight]
 def cellsRoute : Kind -> Nat
   | .zero => 0
   | .one => 0

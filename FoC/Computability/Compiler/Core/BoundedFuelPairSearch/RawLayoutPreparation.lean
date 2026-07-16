@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.StructuredConstructionTargets.FuelSimulatorCore.Runs.Emission
+import FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.OneGapCompactor
 import FoC.Computability.Compiler.Structured.Lowering.EncodedInjectivity
 
 namespace FoC
@@ -411,15 +412,6 @@ theorem leads_seekFuelEnd_finish
       rfl rfl
       (keepL_apply_tapeAtCells left2 previous none right2)
 
-theorem replicate_none_append_none
-    (n : Nat) (right : List (Option Bool)) :
-    List.append (List.replicate n none) (none :: right) =
-      none :: List.append (List.replicate n none) right := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-      simpa [List.replicate_succ] using congrArg (fun xs => none :: xs) ih
-
 theorem leads_eraseRawBack_bits
     (bits : Word Bool) (current : Bool)
     (right : List (Option Bool)) (T0 T1 : Tape Bool) :
@@ -480,7 +472,8 @@ theorem leads_eraseRawBack_bits
             rfl rfl h2
       refine hstep.trans ?_
       have hih := ih previous (none :: right)
-      rw [replicate_none_append_none (rest.length + 1) right] at hih
+      rw [FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
+        (rest.length + 1) right] at hih
       simpa [List.length_cons, List.replicate_succ,
         List.append_assoc] using hih
 
@@ -505,7 +498,8 @@ theorem erased_cells_shape
     none :: List.append
         (List.replicate (bits.length + 1) (none : Option Bool)) [none] =
       List.replicate ((false :: bits).length + 2) none := by
-  rw [replicate_none_append_none (bits.length + 1) []]
+  rw [FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
+    (bits.length + 1) []]
   simp [List.replicate_succ]
 
 theorem leads_seekFuelEnd_through_erase_of_reverse_cons
@@ -552,10 +546,6 @@ theorem leads_seekFuelEnd_through_erase
           last leftBits fuelLeft T0
       simpa [hrev, erasedRawTape, hlen] using hrun
 
-theorem tapeAtCells_map_some_eq_input (bits : Word Bool) :
-    tapeAtCells [] (bits.map some) = Tape.input bits := by
-  cases bits <;> rfl
-
 theorem leads_prepare_raw_emission
     (raw : Word Bool) (hraw : raw ≠ [])
     (fuel : Nat) (T0 : Tape Bool) :
@@ -577,7 +567,8 @@ theorem leads_prepare_raw_emission
           (cfg .seekRawEnd T0 (cursorFuelSourceTape fuel) (Tape.input raw))
           (cfg .seekRawEnd T0 (cursorFuelSourceTape fuel)
             (tapeAtCells (some last :: leftBits.map some) [])) := by
-        simpa [hrev, tapeAtCells_map_some_eq_input] using
+        simpa [hrev,
+          FuelSimulatorCore.tapeAtCells_map_some_eq_input] using
           (leads_seekRawEnd_word raw [] T0 (cursorFuelSourceTape fuel))
       refine hseek.trans ?_
       have hfinishSeek : table.Leads

@@ -2,6 +2,7 @@ import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.SourceRollover
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.CheckerRollover
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DiagonalAdvance
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.CandidateRollover
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.PhaseFusion
 
 set_option doc.verso true
 
@@ -841,7 +842,8 @@ theorem leads_dispatchPositive
           (CandidateInputBits w (limit + 1) candidateFuel) padding)) := by
   apply TypedStateTable.Leads.trans
     (by
-      simpa [U12DiagonalAdvance.candidateInputBits_eq_fields,
+      simpa [RolloverTape.candidateInputBits_eq_fields,
+        RolloverTape.prefixBits,
         stageNatBits_succ, List.append_assoc] using
         leads_prefixToLimit w
           (true :: false :: List.append (stageNatBits limit)
@@ -852,7 +854,7 @@ theorem leads_dispatchPositive
       (List.append (stageNatBits limit) (stageNatBits candidateFuel))
       padding T0 T1)
   simpa [branchStart, prefixLeftRev,
-    U12DiagonalAdvance.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
     stageNatBits_succ, List.reverse_append, List.append_assoc] using
     leads_rewind .positive
       (true :: false :: false :: prefixLeftRev w)
@@ -871,7 +873,8 @@ theorem leads_dispatchCandidate
           (CandidateInputBits w 0 (candidateFuel + 1)) padding)) := by
   apply TypedStateTable.Leads.trans
     (by
-      simpa [U12DiagonalAdvance.candidateInputBits_eq_fields,
+      simpa [RolloverTape.candidateInputBits_eq_fields,
+        RolloverTape.prefixBits,
         stageNatBits_succ, List.append_assoc] using
         leads_prefixToLimit w
           (true :: true :: List.append
@@ -888,7 +891,7 @@ theorem leads_dispatchCandidate
           (true :: true :: false :: false :: prefixLeftRev w)
           (stageNatBits candidateFuel) padding T0 T1)
   simpa [branchStart, prefixLeftRev,
-    U12DiagonalAdvance.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
     stageNatBits_succ, List.reverse_append, List.append_assoc] using
     leads_rewind .candidate
       (true :: false :: false :: true :: true :: false :: false ::
@@ -920,7 +923,8 @@ theorem leads_dispatchSource
         (cursorTape [] (CandidateInputBits w 0 0) padding))
   apply TypedStateTable.Leads.trans
     (by
-      simpa [U12DiagonalAdvance.candidateInputBits_eq_fields,
+      simpa [RolloverTape.candidateInputBits_eq_fields,
+        RolloverTape.prefixBits,
         List.append_assoc] using
         leads_prefixToLimit w
           (true :: true :: List.append (stageNatBits 0) [])
@@ -963,7 +967,7 @@ theorem leads_dispatchSource
       rw [← hmove, ← hT1] at hprobe
       simpa only [sourceBranch, keepR, TapeAction.preserveMove] using hprobe)
   simpa [branchStart, prefixLeftRev,
-    U12DiagonalAdvance.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
     List.reverse_append, List.append_assoc] using
     leads_rewind .source
       (true :: false :: false :: true :: true :: false :: false ::
@@ -995,7 +999,8 @@ theorem leads_dispatchChecker
         (cursorTape [] (CandidateInputBits w 0 0) padding))
   apply TypedStateTable.Leads.trans
     (by
-      simpa [U12DiagonalAdvance.candidateInputBits_eq_fields,
+      simpa [RolloverTape.candidateInputBits_eq_fields,
+        RolloverTape.prefixBits,
         List.append_assoc] using
         leads_prefixToLimit w
           (true :: true :: List.append (stageNatBits 0) [])
@@ -1038,7 +1043,7 @@ theorem leads_dispatchChecker
       rw [← hmove, ← hT1] at hprobe
       simpa only [sourceBranch, keepR, TapeAction.preserveMove] using hprobe)
   simpa [branchStart, prefixLeftRev,
-    U12DiagonalAdvance.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
     List.reverse_append, List.append_assoc] using
     leads_rewind .checker
       (true :: false :: false :: true :: true :: false :: false ::
@@ -1230,14 +1235,6 @@ theorem lift_runConfig
   rw [run_map small big f hembeds n c, htyped] at hbig
   simpa [c, d, Runtime.map, Runtime.toConfig] using hbig
 
-theorem leads_of_runConfig
-    {sigma : Type} (M : TypedStateTable sigma)
-    {n : Nat}
-    {c d : CommonGround.FiniteTransducers.Structured.Configuration}
-    (hrun : M.description.runConfig n c = d) : M.Leads c d := by
-  refine ⟨n, fun k => ?_⟩
-  rw [Nat.add_comm, Description.runConfig_add, hrun]
-
 theorem lift_leads
     {sigma tau : Type} [DecidableEq sigma] [DecidableEq tau]
     (small : TypedStateTable sigma) (big : TypedStateTable tau)
@@ -1256,7 +1253,7 @@ theorem lift_leads
       (big.config (f source) T0 T1 T2)
       (big.config (f target) U0 U1 U2) := by
   rcases TypedStateTable.Leads.to_runConfig hleads with ⟨n, hrun⟩
-  apply leads_of_runConfig big
+  apply U12PhaseFusion.leads_of_runConfig big
   exact lift_runConfig small big f hembeds hmem n
     source target T0 T1 T2 U0 U1 U2 hsource htarget hrun
 

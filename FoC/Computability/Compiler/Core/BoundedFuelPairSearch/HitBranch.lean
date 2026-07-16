@@ -78,16 +78,6 @@ def eraseLeftTape (bits : List Bool)
         (List.append (rest.map some) (none :: padding))
         (some bit :: right)
 
-theorem replicate_succ_eq_append (n : Nat) (a : Option Bool) :
-    List.replicate (n + 1) a = List.append (List.replicate n a) [a] := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-      change
-        a :: List.replicate (n + 1) a =
-          a :: (List.replicate n a ++ [a])
-      exact congrArg (List.cons a) ih
-
 def hitOutputTape (hit : Bool) (padding : Nat) : Tape Bool :=
   tapeAtCells
     (List.append

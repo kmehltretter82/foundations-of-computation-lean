@@ -7,8 +7,10 @@ namespace StructuredConstructionTargets
 /-- Concrete output-indexed bounded fuel-pair search family assembled from
 the structured three-tape endpoint. -/
 theorem boundedFuelPairSearchFamilyConstruction_core :
-    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchFamilyConstruction :=
-  BoundedFuelPairSearch.U12EndpointAssembly.searchFamilyConstruction
+    PairedRecognizerDovetailControllerStageAttemptFuelPairSearchFamilyConstruction := by
+  apply boundedFuelPairSearchFamilyConstruction_of_structuredEndpoints
+  intro runner _hrunner b
+  exact BoundedFuelPairSearch.U12EndpointAssembly.endpointConstruction runner b
 
 end StructuredConstructionTargets
 end Computability

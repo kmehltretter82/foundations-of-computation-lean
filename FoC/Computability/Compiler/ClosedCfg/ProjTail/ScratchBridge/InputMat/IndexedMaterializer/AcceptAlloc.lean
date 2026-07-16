@@ -892,7 +892,9 @@ theorem run_with_right
                   (List.replicate (n + 1) (none : Option Bool))
                   (none :: right))) := h
       apply Eq.trans h'
-      have hshift := MarkerScanLeft.replicate_none_append_cons n right
+      have hshift :=
+        FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
+          n right
       simp only [List.append_eq] at hshift
       simp only [List.replicate_succ, List.append_eq, List.cons_append]
       rw [hshift]

@@ -22,15 +22,11 @@ namespace SelectedProjectionPaddedTailCleanup
 
 open CanonicalLayouts.DovetailLayoutScanner
 
-theorem countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core :
-    CountWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction := by
-  exact InputMat.Route.IndexedConstruction.indexedBoolWordMaterializerConstruction
-
 theorem countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction := by
   exact
     countWindowPostFieldDecodedPrefixStructuredBoolWordMaterializerConstruction_of_indexed
-      countWindowPostFieldDecodedPrefixStructuredIndexedBoolWordMaterializerConstruction_core
+      InputMat.Route.IndexedConstruction.indexedBoolWordMaterializerConstruction
 
 theorem countWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction_core :
     CountWindowPostFieldDecodedPrefixStructuredInputMaterializerConstruction := by

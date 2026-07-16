@@ -388,13 +388,6 @@ theorem marker_step
         | some bit1 => cases bit1 <;>
             marker_scan_simp [tapeAtCells, h0, h1]
 
-theorem replicate_none_append_cons
-    (n : Nat) (right : List (Option Bool)) :
-    List.append (List.replicate n (none : Option Bool)) (none :: right) =
-      none :: List.append (List.replicate n (none : Option Bool)) right := by
-  exact
-    FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
-      n right
 theorem scan_blanks_to_marker
     (n : Nat) (T0 T1 : Tape Bool)
     (left right : List (Option Bool)) :
@@ -424,7 +417,9 @@ theorem scan_blanks_to_marker
       have hih := ih (none :: right)
       simp only [List.append_eq] at hih
       rw [hih]
-      have hshift := replicate_none_append_cons n right
+      have hshift :=
+        FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
+          n right
       simp only [List.append_eq] at hshift
       simp only [List.replicate_succ, List.cons_append]
       rw [hshift]

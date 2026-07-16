@@ -88,24 +88,13 @@ theorem continuation_rejectRewoundTape2_eq (L : DovetailLayout) :
         (copiedRejectBits L) [] := by
   rfl
 
-theorem rawBoundaryRest_reject_eq_false_false_drop (L : DovetailLayout) :
-    MarkerAwareCommon.rawBoundaryRest false L =
-      false :: false ::
-        (MarkerAwareCommon.rawBoundaryRest false L).drop 2 := by
-  rcases
-      DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_false_false_tail
-        L.stage with
-    ⟨tail, htail⟩
-  rw [MarkerAwareCommon.rawBoundaryRest,
-    false_cons_structuredSuffixTail]
-  simp [htail]
 theorem rawBoundaryRest_reject_map_eq (L : DovetailLayout) :
     (MarkerAwareCommon.rawBoundaryRest false L).map some =
       some false :: some false ::
         ((MarkerAwareCommon.rawBoundaryRest false L).drop 2).map
           some := by
   have h := congrArg (List.map some)
-    (rawBoundaryRest_reject_eq_false_false_drop L)
+    (RejectLive.rawBoundaryRest_reject_eq_false_false_drop L)
   simpa using h
 
 def afterMarkedEraseTape0 (L : DovetailLayout) : Tape Bool :=
@@ -207,7 +196,7 @@ theorem eraseRight_tapeAtCells
                     (none :: left)) [none] := by
             simpa using h
           rw [h']
-          rw [MarkerScanLeft.replicate_none_append_cons]
+          rw [FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons]
           rfl
       | cons cell cells =>
           rw [Components.eraseRight]
@@ -221,18 +210,9 @@ theorem eraseRight_tapeAtCells
                   (cell :: List.append cells [none]))) = _
           rw [eraseRight_step]
           rw [ih]
-          rw [MarkerScanLeft.replicate_none_append_cons]
+          rw [FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons]
           rfl
 
-theorem eraseBits_eq_eraseRight
-    (bits : List Bool) (T : Tape Bool) :
-    MarkedErase.eraseBits bits T = Components.eraseRight bits.length T := by
-  induction bits generalizing T with
-  | nil => rfl
-  | cons bit bits ih =>
-      simp only [MarkedErase.eraseBits, List.length_cons]
-      rw [Components.eraseRight]
-      exact ih (eraseR.apply T)
 theorem drop_map_some (n : Nat) (bits : List Bool) :
     (bits.map some).drop n = (bits.drop n).map some := by
   induction n generalizing bits with
@@ -250,7 +230,7 @@ theorem eraseBefore_rejectRewound_shape
         (List.append
           (List.replicate (markerOffset L) (none : Option Bool))
           (none :: base2)) [none] := by
-  rw [eraseBits_eq_eraseRight]
+  rw [AcceptInternalMarker.eraseBits_eq_eraseRight]
   unfold Tape2Rewinder.targetTapeWithContext
   rw [dataBits_take_marker_length]
   rw [eraseRight_tapeAtCells]
@@ -283,7 +263,7 @@ theorem markedEraseOutput_eq_markerScanSource
       MarkerScanLeft.sourceTape (gapMarkerBase L base2) after.length := by
   rw [eraseBefore_rejectRewound_shape]
   rw [writeBitR_true_blank]
-  rw [eraseBits_eq_eraseRight]
+  rw [AcceptInternalMarker.eraseBits_eq_eraseRight]
   simpa [MarkerScanLeft.sourceTape, gapMarkerBase] using
     (eraseRight_tapeAtCells after.length []
       (some true ::
@@ -341,18 +321,12 @@ theorem markedEraseDescription_realizes_reject
 def markerScanDescription : MachineDescription :=
   lowerStructured3Description MarkerScanLeft.description
 
-theorem markerScan_ready : MarkerScanLeft.description.SubroutineReady :=
-  structuredDescription_subroutineReady_of_bool MarkerScanLeft.description
-    (by decide)
-theorem markerScan_supports :
-    SupportsReadWriteRows3 MarkerScanLeft.description :=
-  supportedReadWriteRows3_of_supports_eq_true (by decide)
-
 theorem markerScanDescription_ready :
     markerScanDescription.SubroutineReady := by
   simpa [markerScanDescription] using
     lowerStructured3Description_subroutineReady
-      markerScan_ready.left markerScan_supports
+      AcceptReconstructPrefix.MarkerScanLowered.ready.left
+      AcceptReconstructPrefix.MarkerScanLowered.supports
 
 theorem markerScanDescription_realizes_reject
     (L : DovetailLayout) (after : List Bool) :
@@ -369,7 +343,9 @@ theorem markerScanDescription_realizes_reject
     Tape.blank (gapMarkerBase L (commonCounterBaseTail L))
   simpa [markerScanDescription, encodedGuardedStructured3Tapes] using
     lowerStructured3Description_haltsFromConfigWithTapes
-      markerScan_ready.left markerScan_ready.right markerScan_supports
+      AcceptReconstructPrefix.MarkerScanLowered.ready.left
+      AcceptReconstructPrefix.MarkerScanLowered.ready.right
+      AcceptReconstructPrefix.MarkerScanLowered.supports
       (c := config MarkerScanLeft.enter (afterMarkedEraseTape0 L)
         Tape.blank
         (MarkerScanLeft.sourceTape

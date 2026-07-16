@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.ZeroBootstrap
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DispatchBootstrap
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.FusedLayoutEmission
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.PhaseFusion
 
 set_option doc.verso true
 
@@ -63,7 +64,8 @@ theorem leads_dispatchChecker_generic
           (CandidateInputBits w 0 0) padding))
   apply TypedStateTable.Leads.trans
     (by
-      simpa [U12DiagonalAdvance.candidateInputBits_eq_fields,
+      simpa [RolloverTape.candidateInputBits_eq_fields,
+        RolloverTape.prefixBits,
         List.append_assoc] using
         U12DispatchBootstrap.leads_prefixToLimit w
           (true :: true :: List.append (stageNatBits 0) [])
@@ -104,7 +106,7 @@ theorem leads_dispatchChecker_generic
         TapeAction.preserveMove] using hprobe)
   simpa [U12DispatchBootstrap.branchStart,
     U12DispatchBootstrap.prefixLeftRev,
-    U12DiagonalAdvance.candidateInputBits_eq_fields,
+    RolloverTape.candidateInputBits_eq_fields, RolloverTape.prefixBits,
     List.reverse_append, List.append_assoc] using
     U12DispatchBootstrap.leads_rewind .checker
       (true :: false :: false :: true :: true :: false :: false ::
@@ -408,8 +410,8 @@ theorem leads_initialized_to_length0 (raw : List Bool) :
     (U12ZeroBootstrap.bootstrapCandidateTape raw)
     hrun hbefore
   exact TypedStateTable.Leads.trans
-    (U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig table hlift)
-    (U12DispatchBootstrap.TypedEmbedding.leads_of_runConfig table
+    (U12PhaseFusion.leads_of_runConfig table hlift)
+    (U12PhaseFusion.leads_of_runConfig table
       (bridge_step
         (U12ZeroBootstrap.bootstrapFuelTape (raw.length + 2))
         (U12ZeroBootstrap.bootstrapFuelTape 1)

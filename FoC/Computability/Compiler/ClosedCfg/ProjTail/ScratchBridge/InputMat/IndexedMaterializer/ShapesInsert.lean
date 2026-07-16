@@ -445,14 +445,6 @@ theorem count_done_run
         (scanTape outputLeft (outputBit :: outputRest)) := by
   cases sourceRest <;> cases outputRest <;> cases outputBit <;>
     position_step [scanTape, tapeAtCells, List.append_assoc]
-theorem replicate_none_append_cons_none
-    (n : Nat) (tail : List (Option Bool)) :
-    List.append (List.replicate n (none : Option Bool)) (none :: tail) =
-      none :: List.append (List.replicate n (none : Option Bool)) tail := by
-  exact
-    FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons
-      n tail
-
 theorem count_run
     (processed sourceRest outputTail : List Bool)
     (bits : Word Bool) (sourceBase outputBase : List (Option Bool))
@@ -518,7 +510,8 @@ theorem count_run
       have hih :=
         ih (List.append processed [false, false, true, false])
           (none :: outputBase)
-      rw [replicate_none_append_cons_none] at hih
+      rw [FoC.Computability.CommonGround.FiniteTransducers.replicate_none_append_none_cons]
+        at hih
       simpa [List.reverse_cons, List.map_append,
         List.replicate_succ, List.append_assoc] using hih
 

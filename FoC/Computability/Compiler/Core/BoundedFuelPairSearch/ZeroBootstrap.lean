@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.DiagonalAdvance
+import FoC.Computability.Compiler.Core.BoundedFuelPairSearch.RolloverTape
 
 namespace FoC
 namespace Computability
@@ -936,17 +937,38 @@ theorem bootstrapBits_eq_candidateInputBits (raw : List Bool) :
     List.append (show List Bool from lengthTicks raw.length)
         [false, false, true, true] =
       (show List Bool from stageNatBits raw.length) at hlength
-  have hfields := U12DiagonalAdvance.candidateInputBits_eq_fields
+  have hfieldsWord := RolloverTape.candidateInputBits_eq_fields
     (show Word Bool from raw) 0 0
-  change
-    (show List Bool from
-      CandidateInputBits (show Word Bool from raw) 0 0) =
-      List.append (show List Bool from stageNatBits raw.length)
-        (List.append
-          (show List Bool from
-            cellsBits (show Word Bool from raw))
-          (List.append (show List Bool from stageNatBits 0)
-            (show List Bool from stageNatBits 0))) at hfields
+  have hfieldsList :=
+    congrArg
+      (fun bits : Word Bool => (show List Bool from bits))
+      hfieldsWord
+  have hfields :
+      (show List Bool from
+        CandidateInputBits (show Word Bool from raw) 0 0) =
+        List.append (show List Bool from stageNatBits raw.length)
+          (List.append
+            (show List Bool from
+              cellsBits (show Word Bool from raw))
+            (List.append (show List Bool from stageNatBits 0)
+              (show List Bool from stageNatBits 0))) := by
+    calc
+      (show List Bool from
+          CandidateInputBits (show Word Bool from raw) 0 0) =
+          List.append
+            (List.append (show List Bool from stageNatBits raw.length)
+              (show List Bool from
+                cellsBits (show Word Bool from raw)))
+            (List.append (show List Bool from stageNatBits 0)
+              (show List Bool from stageNatBits 0)) := by
+        simpa only [RolloverTape.prefixBits] using hfieldsList
+      _ = List.append (show List Bool from stageNatBits raw.length)
+            (List.append
+              (show List Bool from
+                cellsBits (show Word Bool from raw))
+              (List.append (show List Bool from stageNatBits 0)
+                (show List Bool from stageNatBits 0))) :=
+        List.append_assoc _ _ _
   calc
     bootstrapBits raw =
         List.append
