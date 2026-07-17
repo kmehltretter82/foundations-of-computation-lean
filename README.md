@@ -152,7 +152,6 @@ Most user-facing explanation for the HTML site lives in Lean module doc blocks
 with `set_option doc.verso true`. Update those source comments rather than the
 generated files under `.lake/build/literate-html/`.
 
-For API reference policy, see [`docs/API_WORKFLOW.md`](docs/API_WORKFLOW.md).
 Broad API inventories should be generated from Lean declarations and docstrings
 rather than maintained by hand.
 
