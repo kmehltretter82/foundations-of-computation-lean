@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 33,
+  "base_commit": "1d81000797b694b176b7f33348ad2b41f83581fe",
+  "closed_at": "50e8fdd10f8c0b79fdec049d3632a046b546a9d8",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean"
+  ],
+  "frontier": "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFinStateFiniteLeaf",
+  "historical_debt": true,
+  "historical_debt_reason": "Permanent-growth review 2026-07-17: campaign closed with a sorry-free tree and axiom-clean frontier and consumers (verified in the 2026-07-17 governance-restoration audit). Growth accepted as permanent Compiler content per the Section 5.3 improvement-plan budget decision (LEAN_CHAPTER5_SECTION3_IMPROVEMENT_PLAN.md, Section 6a), approved by the project owner. The ratcheted allowance remains as a regression guard on this closed route.",
+  "name": "sorry-2-generated-bounded-hidden-fuel-pair-search",
+  "paths": [
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Program.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/Scheduler/Bounded.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFinStateFiniteLeaf",
+    "FoC.Computability.FiniteRecognizer.TupleSearch.generatedBoundedHiddenFuelPairFiniteLeaf",
+    "FoC.Computability.codePrefixBoundedNestedHiddenFuelPairEnumeratorFiniteLeaf"
+  ],
+  "status": "retired-permanent-growth-2026-07-17"
+}

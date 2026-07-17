@@ -1,0 +1,42 @@
+{
+  "allow_net_growth": 18391,
+  "architecture_review": {
+    "reason": "Replace the self-only exact-materializer/layout-loop component lattice with one strict continuation-friendly exact-n probe and retain the externally consumed StageProgram exact-fuel runner. The completed route covers the protected frame, finite transition program, success/failure runs, inversion, the public stage runner, and two clean consumers; its causal cleanup removes 6320 Compiler lines.",
+    "recorded_against": "7c97cc0f50d6aba265b46a42867a9304939f80e9"
+  },
+  "base_commit": "7c97cc0f50d6aba265b46a42867a9304939f80e9",
+  "closed_at": "50e8fdd10f8c0b79fdec049d3632a046b546a9d8",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/StageProgram/Composition.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/LayoutCode.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel/Program.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/ExactFuel.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/Product.lean",
+    "lake env lean FoC/Computability/Compiler/Core/FiniteRecognizer/DecodedDescriptionInterpreter.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Code.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/ExactFuel.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Algebra.lean",
+    "lake env lean FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/BudgetFuelSearch.lean"
+  ],
+  "frontier": "FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf",
+  "historical_debt": true,
+  "historical_debt_reason": "Permanent-growth review 2026-07-17: campaign closed with a sorry-free tree and axiom-clean frontier and consumers (verified in the 2026-07-17 governance-restoration audit). Growth accepted as permanent Compiler content per the Section 5.3 improvement-plan budget decision (LEAN_CHAPTER5_SECTION3_IMPROVEMENT_PLAN.md, Section 6a), approved by the project owner. The ratcheted allowance remains as a regression guard on this closed route.",
+  "name": "sorry-5-strict-exact-fuel-runner",
+  "paths": [
+    "FoC/Computability/Compiler/Core/FiniteRecognizer.lean",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/ExactFuel",
+    "FoC/Computability/Compiler/Core/FiniteRecognizer/TupleSearch/ExactFuel.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Code.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/ExactFuel.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Pairs.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/GenCall/Algebra.lean",
+    "FoC/Computability/Compiler/UniversalAndRanges/FiniteSource/StageSearchController/BudgetFuelSearch.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.FiniteRecognizer.ExactFuel.StageProgram.finStateRunnerConstructionFiniteLeaf",
+    "FoC.Computability.FiniteRecognizer.TupleSearch.generatedStageProgramRunnerConstructionFiniteLeaf",
+    "FoC.Computability.codePrefixExactFuelRunnerFinStateFiniteLeaf"
+  ],
+  "status": "retired-permanent-growth-2026-07-17"
+}

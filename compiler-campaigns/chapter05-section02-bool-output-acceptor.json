@@ -1,0 +1,23 @@
+{
+  "allow_net_growth": 446,
+  "base_commit": "50e8fdd10f8c0b79fdec049d3632a046b546a9d8",
+  "focused_checks": [
+    "lake env lean FoC/Computability/Compiler/Core/Language/BoolOutputAcceptor.lean",
+    "lake env lean FoC/Computability/Compiler/Core.lean",
+    "lake env lean FoC/Book/Chapter05/Section02/Dovetailing.lean"
+  ],
+  "frontier": "FoC.Computability.BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction",
+  "historical_debt": true,
+  "historical_debt_reason": "Permanent-growth review 2026-07-17: campaign closed with a sorry-free tree and axiom-clean frontier and consumers (verified in the 2026-07-17 governance-restoration audit). Growth accepted as permanent Compiler content per the Section 5.3 improvement-plan budget decision (LEAN_CHAPTER5_SECTION3_IMPROVEMENT_PLAN.md, Section 6a), approved by the project owner. The ratcheted allowance remains as a regression guard on this closed route.",
+  "name": "chapter05-section02-bool-output-acceptor",
+  "paths": [
+    "FoC/Computability/Compiler/Core.lean",
+    "FoC/Computability/Compiler/Core/Language/BoolOutputAcceptor.lean"
+  ],
+  "required_axiom_clean": [
+    "FoC.Computability.BoolOutputAcceptor.fixedBoolPresenceScanner_halts_of_normalizedOutput",
+    "FoC.Computability.BoolOutputAcceptor.boolOutputAcceptorDescription_haltsOnInput_iff",
+    "FoC.Computability.BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction"
+  ],
+  "status": "retired-permanent-growth-2026-07-17"
+}
