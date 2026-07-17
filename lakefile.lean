@@ -12,7 +12,7 @@ package «foc» where
   version := v!"0.1.0"
 
 require verso from git "https://github.com/kmehltretter82/verso.git" @
-  "f01d5f85b423ee705d219994b5358ca1131e9429"
+  "16e104ef8e650690c587c569c8c925ced92ca818"
 
 @[default_target]
 lean_lib FoC where

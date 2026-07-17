@@ -12,8 +12,8 @@ Turing-machine mechanics, raises those mechanics to computable functions and
 language classes, and then uses diagonalization and reductions to mark the
 limits of computation.
 
-The reusable computability vocabulary lives in the {module}`FoC.Computability`
-module family.
+The reusable computability vocabulary lives in the
+{module -checked}`FoC.Computability` module family.
 
 ## Story of the Chapter
 
