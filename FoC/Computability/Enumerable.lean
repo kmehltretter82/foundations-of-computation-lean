@@ -622,6 +622,72 @@ theorem partiallyListable_iff_partialRangeOfUnaryFunction
   · exact partialRangeOfUnaryFunction_partiallyListable
 
 /-!
+# Set-theoretic empty-language correction
+
+The following results concern arbitrary Lean streams and functions. They
+isolate nonemptiness as the exact obstruction to replacing a partial listing
+or unary range by a total one; they do not themselves provide computability
+witnesses.
+-/
+
+theorem rangeLanguage_nonempty (f : Word input -> Word output) :
+    exists w : Word output, w ∈ RangeLanguage f := by
+  exact ⟨f [], range_mem []⟩
+
+theorem empty_not_rangeOfUnaryFunction :
+    ¬ RangeOfUnaryFunction (Language.Empty : Language output) := by
+  intro h
+  rcases h with ⟨f, hf⟩
+  rcases rangeLanguage_nonempty f with ⟨w, hw⟩
+  exact (hf w).mp hw
+
+theorem listable_iff_partiallyListable_and_nonempty
+    (L : Language alpha) :
+    Listable L <->
+      PartiallyListable L ∧ exists w : Word alpha, w ∈ L := by
+  apply Iff.intro
+  case mpr =>
+    intro h
+    rcases h with ⟨⟨stream, hstream⟩, ⟨fallback, hfallback⟩⟩
+    refine ⟨fun n =>
+      match stream n with
+      | none => fallback
+      | some w => w, ?_⟩
+    intro w
+    constructor
+    · rintro ⟨n, hn⟩
+      cases hsn : stream n with
+      | none =>
+          simp [hsn] at hn
+          rw [← hn]
+          exact hfallback
+      | some listed =>
+          simp [hsn] at hn
+          rw [← hn]
+          exact partially_listed_word_mem hstream hsn
+    · intro hw
+      rcases (hstream w).mpr hw with ⟨n, hn⟩
+      exists n
+      simp [hn]
+  case mp =>
+    intro h
+    rcases h with ⟨stream, hstream⟩
+    constructor
+    · refine ⟨fun n => some (stream n), ?_⟩
+      intro w
+      simpa only [Option.some.injEq] using hstream w
+    · exact ⟨stream 0, listed_word_mem hstream 0⟩
+
+theorem rangeOfUnaryFunction_iff_partialRangeOfUnaryFunction_and_nonempty
+    (L : Language output) :
+    RangeOfUnaryFunction L <->
+      PartialRangeOfUnaryFunction L ∧
+        exists w : Word output, w ∈ L := by
+  rw [← listable_iff_rangeOfUnaryFunction,
+    ← partiallyListable_iff_partialRangeOfUnaryFunction]
+  exact listable_iff_partiallyListable_and_nonempty L
+
+/-!
 # Extensional range laws
 
 Range predicates are invariant under pointwise equal functions and language

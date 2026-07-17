@@ -594,6 +594,29 @@ def OutputFunctional (P : FinitePartialUnaryRangeProgram) : Prop :=
       P.description.HaltsWithOutput (encodeInput w) out₂ ->
         out₁ = out₂
 
+theorem outputComplete (P : FinitePartialUnaryRangeProgram) :
+    P.OutputComplete := by
+  intro w hhalt
+  rcases hhalt with ⟨n, hn⟩
+  refine ⟨Tape.normalizedOutput
+    (P.description.runConfig n
+      (P.description.initial (encodeInput w))).tape, n, ?_⟩
+  exact ⟨hn, rfl⟩
+
+theorem outputFunctional_of_haltTransitionFree
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.HaltTransitionFree) :
+    P.OutputFunctional := by
+  intro w out₁ out₂ h₁ h₂
+  exact MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+    hD h₁ h₂
+
+theorem outputFunctional_of_subroutineReady
+    (P : FinitePartialUnaryRangeProgram)
+    (hD : P.description.SubroutineReady) :
+    P.OutputFunctional := by
+  exact P.outputFunctional_of_haltTransitionFree hD.right
+
 noncomputable def outputFunction (P : FinitePartialUnaryRangeProgram) :
     Word Unit -> Option (Word Bool) :=
   fun w => by

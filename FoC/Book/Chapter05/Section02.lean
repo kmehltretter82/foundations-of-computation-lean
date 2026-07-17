@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section02.Vocabulary
+import FoC.Book.Chapter05.Section02.ContractGuardrails
 import FoC.Book.Chapter05.Section02.ConstructionStatus
 import FoC.Book.Chapter05.Section02.Dovetailing
 import FoC.Book.Chapter05.Section02.MachineCompiler

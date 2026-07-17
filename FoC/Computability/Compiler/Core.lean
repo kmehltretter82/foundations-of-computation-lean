@@ -1,4 +1,5 @@
 import FoC.Computability.Compiler.Core.Language
+import FoC.Computability.Compiler.Core.Language.BoolOutputAcceptor
 import FoC.Computability.Compiler.Core.BoundedTrace
 import FoC.Computability.Compiler.Core.DovetailCode
 import FoC.Computability.Compiler.Core.TransitionTableChecks

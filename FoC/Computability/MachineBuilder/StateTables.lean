@@ -209,6 +209,22 @@ theorem lookupTransition_halt_none
   · exact False.elim (hD t ht hs)
   · simp [Matches, hs]
 
+/-!
+A well-formed halt-transition-free table compiles to a machine whose
+designated halt state has no outgoing transition.
+-/
+
+theorem toTuringMachine_haltingTransitionsDisabled
+    {D : MachineDescription}
+    (hWellFormed : D.WellFormed)
+    (hHaltFree : D.HaltTransitionFree) :
+    TuringMachine.HaltingTransitionsDisabled D.toTuringMachine := by
+  intro cell
+  simp [toTuringMachine,
+    stateOfNat_val_of_lt (Nat.lt_trans hWellFormed.right.right.left
+      (Nat.lt_succ_self D.stateCount)),
+    lookupTransition_halt_none hHaltFree]
+
 theorem stepConfig_halt_none
     {D : MachineDescription}
     (hD : D.HaltTransitionFree) (T : Tape Bool) :

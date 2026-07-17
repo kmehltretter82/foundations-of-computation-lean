@@ -27,6 +27,40 @@ def MachineDescriptionDecidesLanguage
       (w ∈ L -> D.HaltsWithOutput w [true]) ∧
         (¬ w ∈ L -> D.HaltsWithOutput w [false])
 
+/-!
+The stopped contract additionally requires the designated halt state to have
+no outgoing description transition. Since the two result symbols are the
+distinct Boolean values, it compiles to an honest stopped Turing decider.
+-/
+
+def StoppedMachineDescriptionDecidesLanguage
+    (D : MachineDescription) (L : Language Bool) : Prop :=
+  D.HaltTransitionFree ∧ MachineDescriptionDecidesLanguage D L
+
+theorem stoppedMachineDescriptionDecidesLanguage_decides
+    {D : MachineDescription} {L : Language Bool}
+    (h : StoppedMachineDescriptionDecidesLanguage D L) :
+    MachineDescriptionDecidesLanguage D L :=
+  h.right
+
+namespace StoppedMachineDescriptionDecidesLanguage
+
+theorem output_eq_of_haltsWithOutput
+    {D : MachineDescription} {L : Language Bool}
+    (h : StoppedMachineDescriptionDecidesLanguage D L)
+    {w out : Word Bool}
+    (hout : D.HaltsWithOutput w out) :
+    (w ∈ L -> out = [true]) ∧ (¬ w ∈ L -> out = [false]) := by
+  constructor
+  · intro hw
+    exact haltsWithOutput_functional_of_haltTransitionFree
+      h.left hout ((h.right.right w).left hw)
+  · intro hw
+    exact haltsWithOutput_functional_of_haltTransitionFree
+      h.left hout ((h.right.right w).right hw)
+
+end StoppedMachineDescriptionDecidesLanguage
+
 theorem machineDescriptionAcceptsLanguage_turingAcceptable
     {D : MachineDescription} {L : Language Bool}
     (h : MachineDescriptionAcceptsLanguage D L) :
@@ -60,6 +94,31 @@ theorem machineDescriptionDecidesLanguage_turingDecidable
     rw [encodeWord_id]
     exact (toTuringMachine_haltsWithOutput_iff
       h.left w [false]).mpr ((h.right w).right hw)
+
+theorem stoppedMachineDescriptionDecidesLanguage_stoppedTuringDecidable
+    {D : MachineDescription} {L : Language Bool}
+    (h : StoppedMachineDescriptionDecidesLanguage D L) :
+    StoppedTuringDecidable L := by
+  exists Bool
+  exists Fin (D.stateCount + 1)
+  exists D.toTuringMachine
+  exists fun b : Bool => b
+  exists false
+  exists true
+  constructor
+  · exact toTuringMachine_haltingTransitionsDisabled h.right.left h.left
+  · constructor
+    · decide
+    · intro w
+      constructor
+      · intro hw
+        rw [encodeWord_id]
+        exact (toTuringMachine_haltsWithOutput_iff
+          h.right.left w [true]).mpr ((h.right.right w).left hw)
+      · intro hw
+        rw [encodeWord_id]
+        exact (toTuringMachine_haltsWithOutput_iff
+          h.right.left w [false]).mpr ((h.right.right w).right hw)
 
 /-!
 ## Staged-program compiler predicates

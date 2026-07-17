@@ -695,6 +695,30 @@ def FiniteGeneralGrammarREEquivalenceConstruction
 def FiniteGeneralGrammarGenerated (L : Language terminal) : Prop :=
   GeneralGrammar.FinitePresentationGenerated L
 
+/-- Canonical first-order finite Boolean grammar currency. A witness contains
+the nonterminal bound, start symbol, and finite production list as data. -/
+def FiniteBoolGrammarGenerated (L : Language Bool) : Prop :=
+  exists P : FiniteBoolGeneralGrammarPresentation,
+    Language.Equal (GeneralGrammar.GeneratedLanguage P.toGrammar) L
+
+theorem finite_bool_grammar_generated_iff_finite_general_grammar_generated
+    (L : Language Bool) :
+    FiniteBoolGrammarGenerated L <-> FiniteGeneralGrammarGenerated L := by
+  constructor
+  · intro h
+    rcases h with ⟨P, hP⟩
+    exact ⟨Fin P.nonterminalCount, P.toGrammar,
+      P.toGrammar_hasFinitePresentation, hP⟩
+  · intro h
+    rcases h with ⟨nonterminal, G, hfinite, hG⟩
+    rcases hfinite with ⟨presentation⟩
+    classical
+    refine ⟨FiniteBoolGeneralGrammarPresentation.ofPresentation presentation, ?_⟩
+    exact FoC.Foundation.FSet.equal_trans
+      (FiniteBoolGeneralGrammarPresentation.generatedLanguage_equal_ofPresentation
+        presentation)
+      hG
+
 def FiniteGeneralGrammarToRecursivelyEnumerableConstruction
     (terminal : Type u) : Prop :=
   forall L : Language terminal,
@@ -1065,6 +1089,74 @@ theorem concrete_machine_history_grammar_generated
         (MachineDescriptionHistoryGrammar.grammar D))
       (fun w : Word Bool => D.HaltsOnInput w) :=
   Computability.MachineDescriptionHistoryGrammar.generated_language hD
+
+/-- A supplied well-formed finite recognizer description yields canonical
+first-order finite Boolean grammar data via its machine-history grammar. -/
+theorem finite_bool_grammar_generated_of_machine_description_accepts
+    {D : MachineDescription} {L : Language Bool}
+    (h : MachineDescriptionAcceptsLanguage D L) :
+    FiniteBoolGrammarGenerated L := by
+  classical
+  refine ⟨FiniteBoolGeneralGrammarPresentation.ofPresentation
+    (MachineDescriptionHistoryGrammar.presentation D), ?_⟩
+  exact FoC.Foundation.FSet.equal_trans
+    (FiniteBoolGeneralGrammarPresentation.generatedLanguage_equal_ofPresentation
+      (MachineDescriptionHistoryGrammar.presentation D))
+    (FoC.Foundation.FSet.equal_trans
+      (MachineDescriptionHistoryGrammar.generated_language h.left)
+      h.right)
+
+/-- Every language recognized by a supplied finite description has a
+canonical first-order finite Boolean history grammar. -/
+theorem concrete_finite_recognizable_language_finite_bool_grammar_generated
+    {L : Language Bool}
+    (h : ConcreteFiniteRecognizableLanguage L) :
+    FiniteBoolGrammarGenerated L := by
+  rcases h with ⟨P, hP⟩
+  exact finite_bool_grammar_generated_of_machine_description_accepts
+    (D := P.description) hP
+
+/-- Compiling the canonical recognizer of first-order finite Boolean grammar
+data supplies the converse finite recognizability direction. -/
+theorem concrete_finite_recognizable_language_of_finite_bool_grammar_generated
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction)
+    {L : Language Bool}
+    (h : FiniteBoolGrammarGenerated L) :
+    ConcreteFiniteRecognizableLanguage L := by
+  rcases h with ⟨P, hP⟩
+  rcases hcompile P with ⟨D, hD⟩
+  refine ⟨{ description := D }, ?_⟩
+  exact programCompiledByDescription_acceptsLanguage
+    (fun w => Iff.trans (P.recognizerProgram_acceptsLanguage w) (hP w))
+    hD
+
+/-- The effective finite grammar characterization, conditional only on the
+first-order finite-presentation recognizer compiler. -/
+theorem concrete_finite_recognizable_language_iff_finite_bool_grammar_generated
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction)
+    (L : Language Bool) :
+    ConcreteFiniteRecognizableLanguage L <-> FiniteBoolGrammarGenerated L := by
+  constructor
+  case mpr =>
+    exact concrete_finite_recognizable_language_of_finite_bool_grammar_generated
+      hcompile
+  case mp =>
+    exact concrete_finite_recognizable_language_finite_bool_grammar_generated
+
+/-- Boolean-terminal corollary in the proof-relevant finite-presentation
+currency used by the general grammar API. -/
+theorem concrete_finite_recognizable_language_iff_finite_general_grammar_generated
+    (hcompile :
+      ConcreteFiniteBoolGeneralGrammarPresentationRecognizerCompilerConstruction)
+    (L : Language Bool) :
+    ConcreteFiniteRecognizableLanguage L <->
+      FiniteGeneralGrammarGenerated L := by
+  exact Iff.trans
+    (concrete_finite_recognizable_language_iff_finite_bool_grammar_generated
+      hcompile L)
+    (finite_bool_grammar_generated_iff_finite_general_grammar_generated L)
 
 /-!
 ## Finite Acceptance Trace Tables

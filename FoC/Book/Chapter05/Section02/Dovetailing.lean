@@ -1,5 +1,7 @@
 import FoC.Book.Chapter05.Section02.ConstructionStatus
+import FoC.Computability.Compiler.Core.Language.BoolOutputAcceptor
 import FoC.Computability.Compiler.Skeletons
+import FoC.Computability.TransformPart2
 
 set_option doc.verso true
 
@@ -1170,6 +1172,213 @@ theorem concrete_finite_complementary_recognizers_have_compiled_dovetail_program
               · exact hP.right.right
 
 /-!
+## Honest Finite Recursive-Language Contract
+
+The finite Boolean-output acceptors are now constructed below. The repaired
+equivalence therefore exposes only the still-open compiler that combines two
+finite complementary acceptors into one stopped Boolean description.
+-/
+
+def BoolOutputAcceptorRealizes
+    (source acceptor : MachineDescription) (b : Bool) : Prop :=
+  acceptor.SubroutineReady ∧
+    forall w : Word Bool,
+      acceptor.HaltsOnInput w <-> source.HaltsWithOutput w [b]
+
+def StoppedBoolOutputAcceptorCompilerConstruction : Prop :=
+  forall (D : MachineDescription) (L : Language Bool),
+    StoppedMachineDescriptionDecidesLanguage D L ->
+      forall b : Bool, exists acceptor : MachineDescription,
+        BoolOutputAcceptorRealizes D acceptor b
+
+theorem stoppedBoolOutputAcceptorCompilerConstruction :
+    StoppedBoolOutputAcceptorCompilerConstruction := by
+  intro D L hD b
+  exact BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction D L hD b
+
+def StoppedPairedRecognizerBoundedDovetailTableRealizes
+    (accept reject decider : MachineDescription) : Prop :=
+  decider.HaltTransitionFree ∧
+    PairedRecognizerBoundedDovetailTableRealizes accept reject decider
+
+/-!
+### Unrestricted Scalar-Compiler Guardrail
+
+The unrestricted stopped scalar target is false.  On the empty input,
+{name (full := FoC.Computability.MachineDescription.ExactIdentityDescription)}`ExactIdentityDescription`
+halts at limit zero, while
+{name (full := FoC.Computability.MachineDescription.BoolOutputDescription)}`BoolOutputDescription`
+first halts at limit one.  With the latter on the accept side and the former
+on the reject side, bounded dovetailing therefore exposes {lit}`[false]` and
+then {lit}`[true]`.  A halt-transition-free description cannot expose both
+outputs from one input.
+-/
+
+/-- The rejected compiler target, retained so its impossibility remains a
+checked contract guardrail. -/
+def UnrestrictedStoppedPairedRecognizerDovetailDescriptionCompilerPrinciple :
+    Prop :=
+  forall accept reject : MachineDescription,
+    accept.WellFormed -> reject.WellFormed ->
+      exists decider : MachineDescription,
+        StoppedPairedRecognizerBoundedDovetailTableRealizes
+          accept reject decider
+
+namespace StoppedPairedRecognizerCompilerGuardrail
+
+theorem boundedOutput_false_at_zero :
+    MachineDescription.boundedDovetailOutput
+        (MachineDescription.BoolOutputDescription true)
+        MachineDescription.ExactIdentityDescription [] 0 =
+      some [false] := by
+  rfl
+
+theorem boundedOutput_true_at_one :
+    MachineDescription.boundedDovetailOutput
+        (MachineDescription.BoolOutputDescription true)
+        MachineDescription.ExactIdentityDescription [] 1 =
+      some [true] := by
+  rfl
+
+end StoppedPairedRecognizerCompilerGuardrail
+
+theorem unrestricted_stopped_paired_recognizer_dovetail_compiler_impossible :
+    ¬ UnrestrictedStoppedPairedRecognizerDovetailDescriptionCompilerPrinciple := by
+  intro hcompile
+  rcases hcompile
+      (MachineDescription.BoolOutputDescription true)
+      MachineDescription.ExactIdentityDescription
+      (MachineDescription.boolOutputDescription_wellFormed true)
+      MachineDescription.exactIdentityDescription_wellFormed with
+    ⟨decider, hdecider⟩
+  have hfalse : decider.HaltsWithOutput [] [false] :=
+    (hdecider.right.right [] false).mpr
+      ⟨0,
+        StoppedPairedRecognizerCompilerGuardrail.boundedOutput_false_at_zero⟩
+  have htrue : decider.HaltsWithOutput [] [true] :=
+    (hdecider.right.right [] true).mpr
+      ⟨1, StoppedPairedRecognizerCompilerGuardrail.boundedOutput_true_at_one⟩
+  have hbad : ([false] : Word Bool) = [true] :=
+    MachineDescription.haltsWithOutput_functional_of_haltTransitionFree
+      hdecider.left hfalse htrue
+  exact Bool.noConfusion (List.cons.inj hbad).left
+
+/-!
+The live compiler target is indexed by the complementary-recognizer evidence
+used by the headline theorem.  That evidence rules out the conflicting-output
+fiber above without asking the construction to realize behavior unused by any
+consumer.
+-/
+
+def StoppedPairedRecognizerDovetailDescriptionCompilerPrinciple : Prop :=
+  forall (L : Language Bool) (accept reject : MachineDescription),
+    accept.WellFormed -> reject.WellFormed ->
+    ComplementaryAcceptanceTraces
+      (fun w n => accept.HaltsIn n w)
+      (fun w n => reject.HaltsIn n w) L ->
+      exists decider : MachineDescription,
+        StoppedPairedRecognizerBoundedDovetailTableRealizes
+          accept reject decider
+
+namespace StoppedPairedRecognizerBoundedDovetailTableRealizes
+
+theorem decidesLanguage
+    {accept reject decider : MachineDescription}
+    {L : Language Bool}
+    (hrealizes :
+      StoppedPairedRecognizerBoundedDovetailTableRealizes
+        accept reject decider)
+    (htraces :
+      ComplementaryAcceptanceTraces
+        (fun w n => accept.HaltsIn n w)
+        (fun w n => reject.HaltsIn n w) L) :
+    StoppedMachineDescriptionDecidesLanguage decider L := by
+  constructor
+  · exact hrealizes.left
+  · constructor
+    · exact hrealizes.right.left
+    · intro w
+      constructor
+      · intro hw
+        apply (hrealizes.right.right w true).mpr
+        exact
+          (MachineDescription.boundedDovetailOutput_true_iff_of_complementaryTraces
+            htraces w).mpr hw
+      · intro hw
+        apply (hrealizes.right.right w false).mpr
+        exact
+          (MachineDescription.boundedDovetailOutput_false_iff_of_complementaryTraces
+            htraces w).mpr hw
+
+end StoppedPairedRecognizerBoundedDovetailTableRealizes
+
+theorem concrete_finite_complementary_recognizers_decidable_of_stopped_compiler
+    (hcompile :
+      StoppedPairedRecognizerDovetailDescriptionCompilerPrinciple)
+    {L : Language Bool}
+    (h : ConcreteFiniteComplementaryRecognizers L) :
+    ConcreteFiniteDecidableLanguage L := by
+  rcases h with ⟨accept, reject, haccept, hreject, htraces⟩
+  change ComplementaryAcceptanceTraces
+    (fun w n => accept.description.HaltsIn n w)
+    (fun w n => reject.description.HaltsIn n w) L at htraces
+  rcases hcompile L accept.description reject.description haccept hreject
+      htraces with
+    ⟨decider, hdecider⟩
+  refine ⟨({ description := decider } : FiniteBoolProgram), ?_⟩
+  exact hdecider.decidesLanguage htraces
+
+theorem concrete_finite_decidable_has_complementary_recognizers
+    {L : Language Bool}
+    (h : ConcreteFiniteDecidableLanguage L) :
+    ConcreteFiniteComplementaryRecognizers L := by
+  classical
+  rcases h with ⟨P, hP⟩
+  have hD :
+      StoppedMachineDescriptionDecidesLanguage P.description L := hP
+  rcases BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction
+      P.description L hD true with ⟨accept, haccept⟩
+  rcases BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction
+      P.description L hD false with ⟨reject, hreject⟩
+  refine ⟨({ description := accept } : FiniteAcceptorProgram),
+    ({ description := reject } : FiniteAcceptorProgram),
+    haccept.left.left, hreject.left.left, ?_⟩
+  constructor
+  · intro w
+    change accept.HaltsOnInput w <-> w ∈ L
+    rw [haccept.right w]
+    constructor
+    · intro hout
+      apply Classical.byContradiction
+      intro hw
+      have heq :=
+        (StoppedMachineDescriptionDecidesLanguage.output_eq_of_haltsWithOutput
+          hD hout).right hw
+      exact Bool.noConfusion (List.cons.inj heq).left
+    · exact (hD.right.right w).left
+  · intro w
+    change reject.HaltsOnInput w <-> w ∈ Language.Compl L
+    rw [hreject.right w]
+    change P.description.HaltsWithOutput w [false] <-> ¬ w ∈ L
+    constructor
+    · intro hout hw
+      have heq :=
+        (StoppedMachineDescriptionDecidesLanguage.output_eq_of_haltsWithOutput
+          hD hout).left hw
+      exact Bool.noConfusion (List.cons.inj heq).left
+    · exact (hD.right.right w).right
+
+theorem concrete_finite_decidable_iff_complementary_recognizers_of_stopped_compiler
+    (hdovetail :
+      StoppedPairedRecognizerDovetailDescriptionCompilerPrinciple)
+    (L : Language Bool) :
+    ConcreteFiniteDecidableLanguage L <->
+      ConcreteFiniteComplementaryRecognizers L :=
+  ⟨concrete_finite_decidable_has_complementary_recognizers,
+    concrete_finite_complementary_recognizers_decidable_of_stopped_compiler
+      hdovetail⟩
+
+/-!
 ## Stopped Deciders and Complementary Traces
 
 Stopped deciders supply a concrete source of complementary traces: one trace
@@ -1278,6 +1487,15 @@ theorem stopped_turing_decidable_language_bounded_search_eventually_classifies
           (TraceHitsBy accept w limit ∧ w ∈ L) ∨
             (TraceHitsBy reject w limit ∧ ¬ w ∈ L) :=
   Computability.stoppedTuringDecidable_bounded_search_eventually_classifies h w
+
+theorem stopped_turing_decidable_language_has_re_and_co_re
+    {L : Language Bool}
+    (h : StoppedTuringDecidable L) :
+    RecursivelyEnumerableWithComplement L := by
+  constructor
+  · exact TuringMachine.stoppedTuringDecidable_to_turingAcceptable h
+  · exact TuringMachine.stoppedTuringDecidable_to_turingAcceptable
+      (Computability.stoppedTuringDecidable_complement h)
 
 theorem recursive_language_re_and_co_re_of_decidable_to_acceptable
     (haccept : DecidableToAcceptablePrinciple alpha)

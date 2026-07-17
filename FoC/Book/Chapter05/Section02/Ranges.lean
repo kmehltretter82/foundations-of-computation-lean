@@ -1,5 +1,4 @@
 import FoC.Book.Chapter05.Section02.ConstructionStatus
-import FoC.Book.Chapter05.Section02.Dovetailing
 import FoC.Computability.Compiler.UniversalAndRanges.Ranges
 import FoC.Computability.FiniteProgram
 
@@ -33,9 +32,9 @@ stream.
 The formalization includes total listings, partial listings that can represent
 the empty language, unary-input range functions, and partial-function programs.
 These versions are extensionally equivalent at the semantic layer. The concrete
-compiled-range theorems then identify the finite output-completeness and
-functionality conditions needed to recover the same range from a supplied
-machine description.
+compiled-range theorems instead require a subroutine-ready finite description;
+output completeness and functionality then follow from its execution
+semantics and halt stability.
 -/
 
 theorem listed_language_of_equal {stream : Nat -> Word alpha}
@@ -122,7 +121,7 @@ theorem recursively_enumerable_language_partially_listable_by_code_bounded_searc
     (h : TuringAcceptable L) :
     PartiallyListable L := by
   classical
-  rcases recursively_enumerable_language_has_acceptance_trace h with
+  rcases Computability.turing_acceptable_has_acceptanceTrace h with
     ⟨trace, htrace⟩
   exact acceptance_trace_partially_listable_by_code_bounded_search
     hcode htrace
@@ -157,7 +156,7 @@ theorem partially_listable_language_program_acceptable_by_bounded_search
   let trace : Word alpha -> Nat -> Prop := fun w n => stream n = some w
   have htrace : AcceptanceTrace trace L :=
     partially_listed_language_has_acceptance_trace hstream
-  exact acceptance_trace_has_program_acceptable_language htrace
+  exact Computability.acceptanceTrace_programAcceptable htrace
 
 theorem unary_input_string_length (n : Nat) :
     Word.Length (UnaryInputWord n) = n :=
@@ -231,7 +230,10 @@ theorem partially_listable_language_has_partial_unary_range_function
 The range direction goes back from a stream to a function. Unary inputs encode
 the stream index, so a total stream becomes a total unary function and a partial
 stream becomes a partial unary function. The following equivalences package that
-translation as language-class facts.
+translation as set-theoretic language-class facts. A total range is necessarily
+nonempty, so the book's unrestricted total-range claim fails for the empty
+language. Partial ranges give the unrestricted statement; the total form is
+equivalent to partial range together with nonemptiness.
 -/
 
 theorem listable_language_range_of_unary_string_function
@@ -273,7 +275,7 @@ theorem recursively_enumerable_language_partial_range_by_code_bounded_search
     (h : TuringAcceptable L) :
     PartialRangeOfUnaryFunction L := by
   classical
-  rcases recursively_enumerable_language_has_acceptance_trace h with
+  rcases Computability.turing_acceptable_has_acceptanceTrace h with
     ⟨trace, htrace⟩
   exact acceptance_trace_partial_range_by_code_bounded_search hcode htrace
 
@@ -306,7 +308,7 @@ theorem partial_unary_string_function_range_program_acceptable_by_bounded_search
   let trace : Word output -> Nat -> Prop := fun w n => stream n = some w
   have htrace : AcceptanceTrace trace L :=
     partiallyListedBy_acceptanceTrace hstream
-  exact acceptance_trace_has_program_acceptable_language htrace
+  exact Computability.acceptanceTrace_programAcceptable htrace
 
 theorem listable_language_iff_range_of_unary_string_function
     (L : Language output) :
@@ -317,6 +319,24 @@ theorem partially_listable_language_iff_partial_range_of_unary_string_function
     (L : Language output) :
     PartiallyListable L <-> PartialRangeOfUnaryFunction L :=
   Computability.partiallyListable_iff_partialRangeOfUnaryFunction L
+
+theorem unary_string_function_range_is_nonempty
+    {L : Language output}
+    (h : RangeOfUnaryFunction L) :
+    exists w : Word output, w ∈ L :=
+  (Computability.rangeOfUnaryFunction_iff_partialRangeOfUnaryFunction_and_nonempty
+    L).mp h |>.right
+
+theorem empty_language_is_not_range_of_unary_string_function :
+    ¬ RangeOfUnaryFunction (Language.Empty : Language output) :=
+  Computability.empty_not_rangeOfUnaryFunction
+
+theorem range_of_unary_string_function_iff_partial_range_and_nonempty
+    (L : Language output) :
+    RangeOfUnaryFunction L <->
+      PartialRangeOfUnaryFunction L ∧ exists w : Word output, w ∈ L :=
+  Computability.rangeOfUnaryFunction_iff_partialRangeOfUnaryFunction_and_nonempty
+    L
 
 /-!
 ## Compiled Partial-Function Range Contracts
@@ -555,9 +575,11 @@ theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_
 ## Finite Partial-Unary Programs
 
 Finite partial-unary programs make the range story executable. Output
-completeness supplies a compiled partial function, while functionality ensures
-that the output relation really determines one partial function and therefore
-one range language.
+completeness is automatic: any halting configuration has a normalized output.
+For a subroutine-ready description, halt stability also makes that output
+functional, so the output relation determines one partial function and one
+range language. The total finite predicate additionally requires halting on
+every unary input.
 -/
 
 theorem concrete_finite_partial_unary_output_range_is_program_range
@@ -681,8 +703,9 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_range
     ConcreteCompiledPartialUnaryRange L :=
   concrete_compiled_partial_unary_range_of_equal
     (concrete_finite_partial_unary_description_output_range_compiled
-      P h.left h.right.left h.right.right.left)
-    h.right.right.right
+      P h.left.left P.outputComplete
+        (P.outputFunctional_of_subroutineReady h.left))
+    h.right
 
 theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
     (P : FinitePartialUnaryRangeProgram)
@@ -691,8 +714,9 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
     ConcreteCompiledPartialUnaryFunctionProgramRange L :=
   concrete_compiled_partial_unary_function_program_range_of_equal
     (concrete_finite_partial_unary_description_output_range_compiled_program_range
-      P h.left h.right.left h.right.right.left)
-    h.right.right.right
+      P h.left.left P.outputComplete
+        (P.outputFunctional_of_subroutineReady h.left))
+    h.right
 
 theorem concrete_finite_partial_unary_range_language_compiled_range
     {L : Language Bool}
@@ -720,6 +744,164 @@ theorem concrete_finite_partial_unary_range_language_partially_listable
     PartiallyListable L :=
   concrete_compiled_partial_unary_range_is_partially_listable
     (concrete_finite_partial_unary_range_language_compiled_range h)
+
+/-!
+## Finite Range Construction Frontiers
+
+The corrected finite range headline has three independent construction
+frontiers.  Each premise starts from supplied finite syntax and preserves the
+source program's exact language.  In particular, none of these premises
+quantifies over an arbitrary Lean function.
+-/
+
+/--
+Compile a well-formed finite acceptor to a subroutine-ready partial-unary range
+program whose output range is exactly the acceptor's halting language.
+-/
+def ConcreteFiniteAcceptorToPartialUnaryRangeConstruction : Prop :=
+  forall P : FiniteAcceptorProgram,
+    P.description.WellFormed ->
+      exists R : FinitePartialUnaryRangeProgram,
+        ConcreteFinitePartialUnaryRangePresentsLanguage R
+          (fun w : Word Bool => exists n : Nat, P.trace w n)
+
+/--
+Compile a subroutine-ready partial-unary range program to a well-formed finite
+acceptor recognizing exactly its description output range.
+-/
+def ConcreteFinitePartialUnaryRangeToAcceptorConstruction : Prop :=
+  forall P : FinitePartialUnaryRangeProgram,
+    P.description.SubroutineReady ->
+      exists A : FiniteAcceptorProgram,
+        ConcreteFiniteAcceptorRecognizesLanguage A
+          P.descriptionOutputRange
+
+/--
+Totalize a subroutine-ready partial-unary range program using a supplied member
+of its range as the fallback, without changing the range language.
+-/
+def ConcreteFinitePartialUnaryRangeTotalizerConstruction : Prop :=
+  forall P : FinitePartialUnaryRangeProgram,
+    P.description.SubroutineReady ->
+      forall fallback : Word Bool,
+        fallback ∈ P.descriptionOutputRange ->
+          exists T : FinitePartialUnaryRangeProgram,
+            ConcreteFiniteTotalUnaryRangePresentsLanguage T
+              P.descriptionOutputRange
+
+theorem concrete_finite_total_unary_range_presentation_is_partial
+    (P : FinitePartialUnaryRangeProgram)
+    {L : Language Bool}
+    (h : ConcreteFiniteTotalUnaryRangePresentsLanguage P L) :
+    ConcreteFinitePartialUnaryRangePresentsLanguage P L :=
+  ⟨h.left, h.right.right⟩
+
+theorem concrete_finite_total_unary_range_language_is_partial
+    {L : Language Bool}
+    (h : ConcreteFiniteTotalUnaryRangeLanguage L) :
+    ConcreteFinitePartialUnaryRangeLanguage L := by
+  rcases h with ⟨P, hP⟩
+  exact ⟨P, concrete_finite_total_unary_range_presentation_is_partial P hP⟩
+
+theorem concrete_finite_total_unary_range_presentation_nonempty
+    (P : FinitePartialUnaryRangeProgram)
+    {L : Language Bool}
+    (h : ConcreteFiniteTotalUnaryRangePresentsLanguage P L) :
+    exists out : Word Bool, out ∈ L := by
+  have hhalts := h.right.left ([] : Word Unit)
+  rcases P.outputComplete [] hhalts with ⟨out, n, hout⟩
+  refine ⟨out, (h.right.right out).mp ?_⟩
+  exact ⟨[], n, hout⟩
+
+theorem concrete_finite_total_unary_range_language_nonempty
+    {L : Language Bool}
+    (h : ConcreteFiniteTotalUnaryRangeLanguage L) :
+    exists out : Word Bool, out ∈ L := by
+  rcases h with ⟨P, hP⟩
+  exact concrete_finite_total_unary_range_presentation_nonempty P hP
+
+theorem concrete_finite_recognizable_language_has_partial_unary_range_of_construction
+    (hconstruct : ConcreteFiniteAcceptorToPartialUnaryRangeConstruction)
+    {L : Language Bool}
+    (h : ConcreteFiniteRecognizableLanguage L) :
+    ConcreteFinitePartialUnaryRangeLanguage L := by
+  rcases h with ⟨P, hP⟩
+  rcases hconstruct P hP.left with ⟨R, hR⟩
+  refine ⟨R, hR.left, ?_⟩
+  exact FoC.Foundation.FSet.equal_trans hR.right hP.right
+
+theorem concrete_finite_partial_unary_range_language_is_recognizable_of_construction
+    (hconstruct : ConcreteFinitePartialUnaryRangeToAcceptorConstruction)
+    {L : Language Bool}
+    (h : ConcreteFinitePartialUnaryRangeLanguage L) :
+    ConcreteFiniteRecognizableLanguage L := by
+  rcases h with ⟨P, hP⟩
+  rcases hconstruct P hP.left with ⟨A, hA⟩
+  refine ⟨A, hA.left, ?_⟩
+  exact FoC.Foundation.FSet.equal_trans hA.right hP.right
+
+theorem concrete_finite_recognizable_language_iff_partial_unary_range_of_constructions
+    (htoRange : ConcreteFiniteAcceptorToPartialUnaryRangeConstruction)
+    (htoAcceptor : ConcreteFinitePartialUnaryRangeToAcceptorConstruction)
+    (L : Language Bool) :
+    ConcreteFiniteRecognizableLanguage L <->
+      ConcreteFinitePartialUnaryRangeLanguage L :=
+  ⟨concrete_finite_recognizable_language_has_partial_unary_range_of_construction
+      htoRange,
+    concrete_finite_partial_unary_range_language_is_recognizable_of_construction
+      htoAcceptor⟩
+
+theorem concrete_finite_partial_unary_range_and_nonempty_has_total_range_of_construction
+    (htotalize : ConcreteFinitePartialUnaryRangeTotalizerConstruction)
+    {L : Language Bool}
+    (hRange : ConcreteFinitePartialUnaryRangeLanguage L)
+    (hNonempty : exists out : Word Bool, out ∈ L) :
+    ConcreteFiniteTotalUnaryRangeLanguage L := by
+  rcases hRange with ⟨P, hP⟩
+  rcases hNonempty with ⟨fallback, hFallback⟩
+  have hFallbackSource : fallback ∈ P.descriptionOutputRange :=
+    (hP.right fallback).mpr hFallback
+  rcases htotalize P hP.left fallback hFallbackSource with ⟨T, hT⟩
+  refine ⟨T, hT.left, hT.right.left, ?_⟩
+  exact FoC.Foundation.FSet.equal_trans hT.right.right hP.right
+
+theorem concrete_finite_recognizable_nonempty_language_has_total_unary_range_of_constructions
+    (htoRange : ConcreteFiniteAcceptorToPartialUnaryRangeConstruction)
+    (htotalize : ConcreteFinitePartialUnaryRangeTotalizerConstruction)
+    {L : Language Bool}
+    (hRecognizable : ConcreteFiniteRecognizableLanguage L)
+    (hNonempty : exists out : Word Bool, out ∈ L) :
+    ConcreteFiniteTotalUnaryRangeLanguage L :=
+  concrete_finite_partial_unary_range_and_nonempty_has_total_range_of_construction
+    htotalize
+    (concrete_finite_recognizable_language_has_partial_unary_range_of_construction
+      htoRange hRecognizable)
+    hNonempty
+
+theorem concrete_finite_total_unary_range_language_is_recognizable_and_nonempty_of_construction
+    (htoAcceptor : ConcreteFinitePartialUnaryRangeToAcceptorConstruction)
+    {L : Language Bool}
+    (hTotal : ConcreteFiniteTotalUnaryRangeLanguage L) :
+    ConcreteFiniteRecognizableLanguage L ∧
+      exists out : Word Bool, out ∈ L :=
+  ⟨concrete_finite_partial_unary_range_language_is_recognizable_of_construction
+      htoAcceptor
+      (concrete_finite_total_unary_range_language_is_partial hTotal),
+    concrete_finite_total_unary_range_language_nonempty hTotal⟩
+
+theorem concrete_finite_recognizable_nonempty_iff_total_unary_range_of_constructions
+    (htoRange : ConcreteFiniteAcceptorToPartialUnaryRangeConstruction)
+    (htoAcceptor : ConcreteFinitePartialUnaryRangeToAcceptorConstruction)
+    (htotalize : ConcreteFinitePartialUnaryRangeTotalizerConstruction)
+    (L : Language Bool) :
+    (ConcreteFiniteRecognizableLanguage L ∧
+      exists out : Word Bool, out ∈ L) <->
+        ConcreteFiniteTotalUnaryRangeLanguage L :=
+  ⟨fun h =>
+      concrete_finite_recognizable_nonempty_language_has_total_unary_range_of_constructions
+        htoRange htotalize h.left h.right,
+    concrete_finite_total_unary_range_language_is_recognizable_and_nonempty_of_construction
+      htoAcceptor⟩
 
 /-!
 ## Range Extensionality
