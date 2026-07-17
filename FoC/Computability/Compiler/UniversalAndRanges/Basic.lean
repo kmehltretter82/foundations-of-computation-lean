@@ -1,5 +1,5 @@
 import FoC.Computability.Compiler.Skeletons
-import FoC.Computability.DescriptionLanguages
+import FoC.Computability.DescriptionCodeLanguages
 import FoC.Computability.MachineBuilder.PrefixParser
 
 set_option doc.verso true
@@ -22,10 +22,14 @@ on Boolean tapes. The next predicates isolate the exact compiler and runner
 obligations needed for a concrete universal machine.
 -/
 
-def MachineDescriptionAcceptsEncodedInputLanguage
+/--
+Compatibility name for the canonical finite code-language recognizer contract
+in {module}`FoC.Computability.DescriptionCodeLanguages`.
+-/
+abbrev MachineDescriptionAcceptsEncodedInputLanguage
     (D : MachineDescription)
     (L : Language MachineCodeSymbol) : Prop :=
-  D.WellFormed ∧ Language.Equal (MachineDescription.EncodedInputLanguage D) L
+  DescriptionRecognizesCodeLanguage D L
 
 def EncodedInputProgramCompiledByDescription
     (P : StagedProgram MachineCodeSymbol Unit)

@@ -2,7 +2,7 @@ import FoC.Computability.Coding
 import FoC.Computability.Compiler
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
-import FoC.Computability.DescriptionLanguages
+import FoC.Computability.DescriptionCodeLanguages
 import FoC.Computability.DiagonalPairMachine
 
 set_option doc.verso true
@@ -318,6 +318,42 @@ def ConcreteMachineCodePrefixAcceptedLanguage :
   MachineDescription.CodePrefixAcceptedLanguage
 
 /-!
+## Canonical Finite Code-Language Vocabulary
+
+These are the book-facing Section 5.3 notions. Unlike the legacy
+{name}`RecursiveTuringLanguage`, they quantify only over concrete finite
+descriptions, require well-formedness, and use halt-stable distinct Boolean
+answers for decision.
+-/
+
+/-- One concrete well-formed description recognizes a code language. -/
+def ConcreteDescriptionRecognizesCodeLanguage
+    (D : ConcreteMachineDescription)
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  DescriptionRecognizesCodeLanguage D L
+
+/-- A code language is recognizable by a well-formed finite description. -/
+def RecognizableCodeLanguage
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  DescriptionRecognizableCodeLanguage L
+
+/-- One halt-stable finite description decides a code language. -/
+def ConcreteStoppedDescriptionDecidesCodeLanguage
+    (D : ConcreteMachineDescription) (reject accept : Bool)
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  StoppedDescriptionDecidesCodeLanguage D reject accept L
+
+/-- A code language is recursive in the canonical finite-description currency. -/
+def RecursiveCodeLanguage
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  DescriptionDecidableCodeLanguage L
+
+/-- A code language has no halt-stable finite-description decider. -/
+def UndecidableCodeLanguage
+    (L : Language ConcreteMachineCodeSymbol) : Prop :=
+  ¬ RecursiveCodeLanguage L
+
+/-!
 ## Prefix Recognition and Compiler Principles
 
 The prefix decoder relation is semidecidable by a direct staged search: parse
@@ -417,7 +453,7 @@ def ConcreteMachineDecoderUniversalForAcceptableLanguages : Prop :=
 def ConcreteMachineDescriptionAcceptsEncodedInputLanguage
     (D : ConcreteMachineDescription)
     (L : Language ConcreteMachineCodeSymbol) : Prop :=
-  Computability.MachineDescriptionAcceptsEncodedInputLanguage D L
+  ConcreteDescriptionRecognizesCodeLanguage D L
 
 def SemanticEncodedInputProgramAcceptorCompilationPrinciple : Prop :=
   EncodedInputProgramAcceptorCompilationPrinciple

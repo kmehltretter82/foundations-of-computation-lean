@@ -16,6 +16,7 @@ import FoC.Computability.DescriptionLanguages
 import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.MachineBuilder
 import FoC.Computability.Compiler
+import FoC.Computability.DescriptionCodeLanguages
 import FoC.Computability.FiniteProgram
 
 set_option doc.verso true
@@ -36,7 +37,7 @@ finite machine description has been constructed.
 | machine semantics | {module}`FoC.Computability.Tape`, {module}`FoC.Computability.TuringMachine`, {module}`FoC.Computability.MachineDescription` | finite tape windows, transitions, computation, halting, output, and finite-table execution |
 | functions and language classes | {module}`FoC.Computability.Computable`, {module}`FoC.Computability.Recognizable`, {module}`FoC.Computability.Enumerable` | partial/total computability, decidability, recognizability, and listability |
 | staged semantic programs | {module}`FoC.Computability.Program`, {module}`FoC.Computability.Grammar` | finite-stage search and semantic program/grammar bridges |
-| finite syntax and encodings | {module}`FoC.Computability.Coding`, {module}`FoC.Computability.Encoding`, {module}`FoC.Computability.DescriptionLanguages`, {module}`FoC.Computability.FiniteProgram` | concrete codes, parsers, decoded-code languages, and finite description witnesses |
+| finite syntax and encodings | {module}`FoC.Computability.Coding`, {module}`FoC.Computability.Encoding`, {module}`FoC.Computability.DescriptionLanguages`, {module}`FoC.Computability.DescriptionCodeLanguages`, {module}`FoC.Computability.FiniteProgram` | concrete codes, parsers, decoded-code languages, and finite description witnesses |
 | machine construction | {module}`FoC.Computability.MachineBuilder`, {module}`FoC.Computability.Compiler` | executable descriptions, simulation, lowering, and compiler contracts |
 | semantic limitations | {module}`FoC.Computability.Undecidable` | reductions, diagonalization, and noncomputability |
 
