@@ -342,48 +342,20 @@ theorem range_of_unary_string_function_iff_partial_range_and_nonempty
 ## Compiled Partial-Function Range Contracts
 
 An option-valued function embeds into the staged-program semantics at stage
-zero.  The following aliases retain the book page's compiled-range notation;
-listability and partial unary ranges themselves use the canonical predicates
-from {module}`FoC.Computability.Enumerable` directly.
+zero. This page uses the canonical staged-program and compiled-range
+predicates from {module}`FoC.Computability.Enumerable` directly.
 -/
-
-def LanguagePartialFunctionProgram
-    (f : Word input -> Option (Word output)) :
-    StagedProgram input output :=
-  PartialFunctionProgram f
-
-def ConcretePartialFunctionCompiledByDescription
-    (f : Word input -> Option (Word Bool))
-    (encodeInput : input -> Bool)
-    (D : MachineDescription) : Prop :=
-  PartialFunctionCompiledByDescription f encodeInput D
-
-def LanguageProgramRange (P : StagedProgram input output) :
-    Language output :=
-  ProgramRangeLanguage P
-
-def ConcretePartialUnaryTuringComputableRange
-    (L : Language Bool) : Prop :=
-  PartialUnaryTuringComputableRange L
-
-def ConcreteCompiledPartialUnaryRange
-    (L : Language Bool) : Prop :=
-  CompiledPartialUnaryRange L
-
-def ConcreteCompiledPartialUnaryFunctionProgramRange
-    (L : Language Bool) : Prop :=
-  CompiledPartialUnaryFunctionProgramRange L
 
 theorem partial_function_program_range_language
     (f : Word input -> Option (Word output)) :
     Language.Equal
-      (LanguageProgramRange (LanguagePartialFunctionProgram f))
+      (ProgramRangeLanguage (PartialFunctionProgram f))
       (PartialRangeLanguage f) :=
   Computability.partialFunctionProgram_range f
 
 theorem staged_unary_program_range_is_partial_unary_range
     (P : StagedProgram Unit output) :
-    PartialRangeOfUnaryFunction (LanguageProgramRange P) :=
+    PartialRangeOfUnaryFunction (ProgramRangeLanguage P) :=
   Computability.programRange_partialRangeOfUnaryFunction P
 
 /-!
@@ -393,68 +365,69 @@ The compiled-range theorems state what a concrete description must provide to
 serve as an enumerator. The semantic range is already a partial unary range; the
 compiler hypothesis upgrades it to a machine-description-backed range over the
 Boolean alphabet. Because the source of
-{name}`SemanticPartialUnaryRangeCompilerAssumption` is an arbitrary Lean partial
-function, not a finite source syntax, the construction remains a named
-semantic boundary. The wrappers below record the consequences of supplying it.
+{name}`Computability.SemanticPartialUnaryRangeCompilerAssumption` is an
+arbitrary Lean partial function, not a finite source syntax, the construction
+remains a named semantic boundary. The wrappers below record the consequences
+of supplying it.
 -/
 
 theorem concrete_partial_function_compiled_turing_computable_partial
     {f : Word input -> Option (Word Bool)}
     {encodeInput : input -> Bool}
     {D : MachineDescription}
-    (h : ConcretePartialFunctionCompiledByDescription f encodeInput D) :
+    (h : PartialFunctionCompiledByDescription f encodeInput D) :
     TuringComputablePartial f :=
   Computability.partialFunctionCompiledByDescription_turingComputablePartial h
 
 theorem concrete_partial_unary_range_description_compiler_computes_partial_function
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (f : Word Unit -> Option (Word Bool)) :
     TuringComputablePartial f :=
   Computability.partialUnaryRangeDescriptionCompilerPrinciple_turingComputablePartial
     hcompile f
 
 theorem concrete_partial_unary_range_description_compiler_compiles_range
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (f : Word Unit -> Option (Word Bool)) :
-    ConcreteCompiledPartialUnaryRange (PartialRangeLanguage f) :=
+    CompiledPartialUnaryRange (PartialRangeLanguage f) :=
   Computability.partialUnaryRangeDescriptionCompilerPrinciple_compiledRange
     hcompile f
 
 theorem concrete_partial_unary_range_description_compiler_compiles_program_range
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (f : Word Unit -> Option (Word Bool)) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange
-      (LanguageProgramRange (LanguagePartialFunctionProgram f)) :=
+    CompiledPartialUnaryFunctionProgramRange
+      (ProgramRangeLanguage (PartialFunctionProgram f)) :=
   Computability.partialUnaryRangeDescriptionCompilerPrinciple_compiledProgramRange
     hcompile f
 
 theorem concrete_compiled_partial_unary_range_is_partial_range
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryRange L) :
+    (h : CompiledPartialUnaryRange L) :
     PartialRangeOfUnaryFunction L :=
   Computability.compiledPartialUnaryRange_partialRangeOfUnaryFunction h
 
 theorem concrete_compiled_partial_unary_range_has_turing_computable_range
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryRange L) :
-    ConcretePartialUnaryTuringComputableRange L :=
+    (h : CompiledPartialUnaryRange L) :
+    PartialUnaryTuringComputableRange L :=
   Computability.compiledPartialUnaryRange_turingComputableRange h
 
 theorem concrete_compiled_partial_unary_function_program_range_is_partial_range
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
+    (h : CompiledPartialUnaryFunctionProgramRange L) :
     PartialRangeOfUnaryFunction L :=
   Computability.compiledPartialUnaryFunctionProgramRange_partialRange h
 
 theorem concrete_compiled_partial_unary_function_program_range_has_turing_computable_range
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
-    ConcretePartialUnaryTuringComputableRange L :=
+    (h : CompiledPartialUnaryFunctionProgramRange L) :
+    PartialUnaryTuringComputableRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_turingComputableRange h
 
 theorem concrete_partial_unary_turing_computable_range_is_partially_listable
     {L : Language Bool}
-    (h : ConcretePartialUnaryTuringComputableRange L) :
+    (h : PartialUnaryTuringComputableRange L) :
     PartiallyListable L := by
   cases h with
   | intro f hf =>
@@ -463,14 +436,14 @@ theorem concrete_partial_unary_turing_computable_range_is_partially_listable
 
 theorem concrete_compiled_partial_unary_range_is_partially_listable
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryRange L) :
+    (h : CompiledPartialUnaryRange L) :
     PartiallyListable L :=
   concrete_partial_unary_turing_computable_range_is_partially_listable
     (concrete_compiled_partial_unary_range_has_turing_computable_range h)
 
 theorem concrete_compiled_partial_unary_function_program_range_is_partially_listable
     {L : Language Bool}
-    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L) :
+    (h : CompiledPartialUnaryFunctionProgramRange L) :
     PartiallyListable L :=
   concrete_partial_unary_turing_computable_range_is_partially_listable
     (concrete_compiled_partial_unary_function_program_range_has_turing_computable_range
@@ -478,9 +451,9 @@ theorem concrete_compiled_partial_unary_function_program_range_is_partially_list
 
 theorem concrete_compiled_partial_unary_range_of_equal
     {L K : Language Bool}
-    (h : ConcreteCompiledPartialUnaryRange L)
+    (h : CompiledPartialUnaryRange L)
     (hEq : Language.Equal L K) :
-    ConcreteCompiledPartialUnaryRange K := by
+    CompiledPartialUnaryRange K := by
   cases h with
   | intro f hf =>
       cases hf with
@@ -492,9 +465,9 @@ theorem concrete_compiled_partial_unary_range_of_equal
 
 theorem concrete_compiled_partial_unary_function_program_range_of_equal
     {L K : Language Bool}
-    (h : ConcreteCompiledPartialUnaryFunctionProgramRange L)
+    (h : CompiledPartialUnaryFunctionProgramRange L)
     (hEq : Language.Equal L K) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange K := by
+    CompiledPartialUnaryFunctionProgramRange K := by
   cases h with
   | intro f hf =>
       cases hf with
@@ -505,53 +478,53 @@ theorem concrete_compiled_partial_unary_function_program_range_of_equal
             (FoC.Foundation.FSet.equal_trans hD.right hEq)
 
 theorem partial_unary_string_function_range_has_concrete_compiled_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     {L : Language Bool}
     (h : PartialRangeOfUnaryFunction L) :
-    ConcreteCompiledPartialUnaryRange L :=
+    CompiledPartialUnaryRange L :=
   Computability.compiledPartialUnaryRange_of_partialRangeOfUnaryFunction
     hcompile h
 
 theorem partially_listable_language_has_concrete_compiled_partial_unary_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     {L : Language Bool}
     (h : PartiallyListable L) :
-    ConcreteCompiledPartialUnaryRange L :=
+    CompiledPartialUnaryRange L :=
   Computability.compiledPartialUnaryRange_of_partiallyListable hcompile h
 
 theorem partial_unary_string_function_range_has_concrete_compiled_program_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     {L : Language Bool}
     (h : PartialRangeOfUnaryFunction L) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange L :=
+    CompiledPartialUnaryFunctionProgramRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_of_partialRangeOfUnaryFunction
     hcompile h
 
 theorem staged_unary_program_range_has_concrete_compiled_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (P : StagedProgram Unit Bool) :
-    ConcreteCompiledPartialUnaryRange (LanguageProgramRange P) :=
+    CompiledPartialUnaryRange (ProgramRangeLanguage P) :=
   Computability.compiledPartialUnaryRange_of_unaryProgramRange hcompile P
 
 theorem staged_unary_program_range_has_concrete_compiled_program_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (P : StagedProgram Unit Bool) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange (LanguageProgramRange P) :=
+    CompiledPartialUnaryFunctionProgramRange (ProgramRangeLanguage P) :=
   Computability.compiledPartialUnaryFunctionProgramRange_of_unaryProgramRange
     hcompile P
 
 theorem partially_listable_language_has_concrete_compiled_partial_unary_program_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     {L : Language Bool}
     (h : PartiallyListable L) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange L :=
+    CompiledPartialUnaryFunctionProgramRange L :=
   Computability.compiledPartialUnaryFunctionProgramRange_of_partiallyListable
     hcompile h
 
 theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (L : Language Bool) :
-    PartiallyListable L <-> ConcreteCompiledPartialUnaryRange L := by
+    PartiallyListable L <-> CompiledPartialUnaryRange L := by
   constructor
   · intro h
     exact
@@ -560,10 +533,10 @@ theorem partially_listable_language_iff_concrete_compiled_partial_unary_range_of
   · exact concrete_compiled_partial_unary_range_is_partially_listable
 
 theorem partially_listable_language_iff_concrete_compiled_partial_unary_program_range_of_concrete_compiler
-    (hcompile : SemanticPartialUnaryRangeCompilerAssumption)
+    (hcompile : Computability.SemanticPartialUnaryRangeCompilerAssumption)
     (L : Language Bool) :
     PartiallyListable L <->
-      ConcreteCompiledPartialUnaryFunctionProgramRange L := by
+      CompiledPartialUnaryFunctionProgramRange L := by
   constructor
   · intro h
     exact
@@ -586,7 +559,7 @@ theorem concrete_finite_partial_unary_output_range_is_program_range
     (P : FinitePartialUnaryRangeProgram) :
     Language.Equal
       (FinitePartialUnaryRangeProgram.outputRange P)
-      (LanguageProgramRange
+      (ProgramRangeLanguage
         (FinitePartialUnaryRangeProgram.toStagedProgram P)) := by
   intro out
   rfl
@@ -606,7 +579,7 @@ theorem concrete_finite_partial_unary_output_function_compiled_by_description
     (P : FinitePartialUnaryRangeProgram)
     (hD : P.description.WellFormed)
     (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P) :
-    ConcretePartialFunctionCompiledByDescription
+    PartialFunctionCompiledByDescription
       (FinitePartialUnaryRangeProgram.outputFunction P)
       (fun _ : Unit => true)
       P.description := by
@@ -649,9 +622,9 @@ theorem concrete_finite_partial_unary_description_output_range_compiled
     (hD : P.description.WellFormed)
     (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
     (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
-    ConcreteCompiledPartialUnaryRange
+    CompiledPartialUnaryRange
       (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
-  simpa [ConcreteCompiledPartialUnaryRange,
+  simpa [CompiledPartialUnaryRange,
     FinitePartialUnaryRangeProgram.descriptionOutputRange,
     FinitePartialUnaryRangeProgram.OutputComplete,
     FinitePartialUnaryRangeProgram.OutputFunctional]
@@ -664,7 +637,7 @@ theorem concrete_finite_partial_unary_description_output_range_turing_computable
     (hD : P.description.WellFormed)
     (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
     (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
-    ConcretePartialUnaryTuringComputableRange
+    PartialUnaryTuringComputableRange
       (FinitePartialUnaryRangeProgram.descriptionOutputRange P) :=
   concrete_compiled_partial_unary_range_has_turing_computable_range
     (concrete_finite_partial_unary_description_output_range_compiled
@@ -686,9 +659,9 @@ theorem concrete_finite_partial_unary_description_output_range_compiled_program_
     (hD : P.description.WellFormed)
     (hcomplete : FinitePartialUnaryRangeProgram.OutputComplete P)
     (hfunctional : FinitePartialUnaryRangeProgram.OutputFunctional P) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange
+    CompiledPartialUnaryFunctionProgramRange
       (FinitePartialUnaryRangeProgram.descriptionOutputRange P) := by
-  simpa [ConcreteCompiledPartialUnaryFunctionProgramRange,
+  simpa [CompiledPartialUnaryFunctionProgramRange,
     FinitePartialUnaryRangeProgram.descriptionOutputRange,
     FinitePartialUnaryRangeProgram.OutputComplete,
     FinitePartialUnaryRangeProgram.OutputFunctional]
@@ -700,7 +673,7 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_range
     (P : FinitePartialUnaryRangeProgram)
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
-    ConcreteCompiledPartialUnaryRange L :=
+    CompiledPartialUnaryRange L :=
   concrete_compiled_partial_unary_range_of_equal
     (concrete_finite_partial_unary_description_output_range_compiled
       P h.left.left P.outputComplete
@@ -711,7 +684,7 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
     (P : FinitePartialUnaryRangeProgram)
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangePresentsLanguage P L) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange L :=
+    CompiledPartialUnaryFunctionProgramRange L :=
   concrete_compiled_partial_unary_function_program_range_of_equal
     (concrete_finite_partial_unary_description_output_range_compiled_program_range
       P h.left.left P.outputComplete
@@ -721,7 +694,7 @@ theorem concrete_finite_partial_unary_range_presentation_compiled_program_range
 theorem concrete_finite_partial_unary_range_language_compiled_range
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangeLanguage L) :
-    ConcreteCompiledPartialUnaryRange L := by
+    CompiledPartialUnaryRange L := by
   cases h with
   | intro P hP =>
       exact
@@ -731,7 +704,7 @@ theorem concrete_finite_partial_unary_range_language_compiled_range
 theorem concrete_finite_partial_unary_range_language_compiled_program_range
     {L : Language Bool}
     (h : ConcreteFinitePartialUnaryRangeLanguage L) :
-    ConcreteCompiledPartialUnaryFunctionProgramRange L := by
+    CompiledPartialUnaryFunctionProgramRange L := by
   cases h with
   | intro P hP =>
       exact

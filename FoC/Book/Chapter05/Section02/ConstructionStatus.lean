@@ -27,7 +27,7 @@ a semantic Lean function is not counted as finite source syntax.
 | Finite-description deciders | {lit}`ConcreteFiniteDecidableLanguage`, {lit}`StoppedMachineDescriptionDecidesLanguage` | The canonical finite predicate combines the legacy output clauses with halt-transition-freedom. Consequently every halt output is stable and is exactly the Boolean answer selected by membership. The weaker {lit}`MachineDescriptionDecidesLanguage` remains compatibility-only. |
 | Listings and ranges | {lit}`ConcreteFinitePartialUnaryRangeLanguage`, {lit}`ConcreteFiniteTotalUnaryRangeLanguage` | The concrete predicates use halt-stable finite descriptions. The total form explicitly requires halting on every unary input. The older {lit}`Listable` and function-range equivalences quantify over arbitrary Lean functions and remain set-theoretic rather than effective computability theorems. Partial ranges cover the empty language; total ranges are necessarily nonempty. |
 | Finite range compilers | {lit}`ConcreteFiniteAcceptorToPartialUnaryRangeConstruction`, {lit}`ConcreteFinitePartialUnaryRangeToAcceptorConstruction`, {lit}`ConcreteFinitePartialUnaryRangeTotalizerConstruction` | The partial and nonempty-total headline equivalences are stated with these three exact finite-source premises. Their implementations remain open; no semantic listing/range bridge manufactures the descriptions. |
-| Semantic compiler assumptions | {lit}`SemanticDescriptionAcceptorCompilationAssumption`, {lit}`SemanticDescriptionBoolDeciderCompilationAssumption`, {lit}`SemanticPartialUnaryRangeCompilerAssumption` | These quantify over arbitrary staged programs or partial Lean functions. They are compatibility assumptions, not finite compiler implementations. |
+| Semantic compiler assumptions | {lit}`SemanticDescriptionAcceptorCompilationAssumption`, {lit}`SemanticDescriptionBoolDeciderCompilationAssumption`, {lit}`Computability.SemanticPartialUnaryRangeCompilerAssumption` | These quantify over arbitrary staged programs or partial Lean functions. They are compatibility assumptions, not finite compiler implementations. |
 | Semantic grammars | {lit}`GeneralGrammar.produces`, {lit}`SemanticLanguageGrammar` | The production relation is an arbitrary proposition and can directly encode membership. This is a semantic fact, not the effective finite-grammar theorem. |
 | Finite grammar language | {lit}`concrete_finite_recognizable_language_iff_finite_general_grammar_generated` | The recognizer-to-grammar direction is unconditional through the finite machine-history construction. The reverse direction exposes exactly the finite presentation compiler below. |
 | Finite decider output acceptors | {lit}`BoolOutputAcceptor.stoppedBoolOutputAcceptorConstruction`, {lit}`stoppedBoolOutputAcceptorCompilerConstruction` | Proved. A four-state arbitrary-head Boolean-presence scanner is sequenced after the stopped source. Its closed inversion recognizes exactly the selected normalized Boolean output, without promising an unnecessary exact final tape. |
@@ -58,14 +58,11 @@ These names collect the language-level assumptions used by the chapter without
 asserting that a particular finite transition table realizes them.
 -/
 
-def SemanticDescriptionAcceptorCompilationAssumption : Prop :=
+abbrev SemanticDescriptionAcceptorCompilationAssumption : Prop :=
   DescriptionProgramAcceptorCompilationPrinciple
 
-def SemanticDescriptionBoolDeciderCompilationAssumption : Prop :=
+abbrev SemanticDescriptionBoolDeciderCompilationAssumption : Prop :=
   DescriptionProgramBoolDeciderCompilationPrinciple
-
-def SemanticPartialUnaryRangeCompilerAssumption : Prop :=
-  Computability.SemanticPartialUnaryRangeCompilerAssumption
 
 /-- Semantic language-class principles used by the RE/co-RE development. -/
 structure SemanticLanguagePrincipleSurface (alpha : Type u) where
@@ -98,7 +95,7 @@ def ConcreteFiniteRecognizableLanguage (L : Language Bool) : Prop :=
     ConcreteFiniteAcceptorRecognizesLanguage P L
 
 /-- A supplied finite Boolean program is a halt-stable decider for the language. -/
-def ConcreteFiniteBoolDeciderDecidesLanguage
+abbrev ConcreteFiniteBoolDeciderDecidesLanguage
     (P : FiniteBoolProgram) (L : Language Bool) : Prop :=
   StoppedMachineDescriptionDecidesLanguage P.description L
 
