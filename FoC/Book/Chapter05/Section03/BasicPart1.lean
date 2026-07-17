@@ -40,6 +40,12 @@ parser inversions, executable description semantics, and a finite universal
 runner are present. The stronger row-coverage theorem retains an explicit
 encoded-input description compiler principle because it chooses a concrete
 description for every acceptable language.
+
+The {lit}`¬ TuringDecidable` conclusions on this page are compatibility
+surfaces only: Section 5.2 proves that every language satisfies the legacy
+predicate, so those negations are unsatisfiable as textbook endpoints. The
+recorded incompatibility and the honest repair currency live in the
+Section 5.3 {lit}`ContractGuardrails` and {lit}`ConstructionStatus` pages.
 -/
 
 open Languages
@@ -69,9 +75,21 @@ def NonComputableStringFunction (f : Word input -> Word output) : Prop :=
 def NonTuringAcceptableLanguage (L : Language alpha) : Prop :=
   NonAcceptableLanguage L
 
+/--
+Legacy compatibility only. Section 5.2 proves every language satisfies the
+underlying {lit}`TuringDecidable` predicate, so this negation is unsatisfiable
+and cannot serve as a textbook undecidability endpoint; see the Section 5.3
+{lit}`ContractGuardrails` page.
+-/
 def UndecidableTuringLanguage (L : Language alpha) : Prop :=
   UndecidableLanguage L
 
+/--
+Legacy compatibility only. The underlying {lit}`TuringDecidable` predicate
+permits its two answer symbols to coincide and is satisfied by every language,
+so this notion of recursive carries no information; see the Section 5.3
+{lit}`ContractGuardrails` page.
+-/
 def RecursiveTuringLanguage (L : Language alpha) : Prop :=
   TuringDecidable L
 
@@ -727,6 +745,11 @@ theorem complement_self_halting_not_recursively_enumerable_if_decoder_universal
   Computability.compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
     huniv
 
+/--
+Compatibility only: over the concrete machine-code alphabet the two premises
+are jointly refutable ({lit}`concrete_decidable_to_acceptable_and_decoder_universal_incompatible`),
+and the conclusion uses the collapsed legacy predicate.
+-/
 theorem self_halting_not_recursive_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptableConstruction code)
@@ -735,6 +758,10 @@ theorem self_halting_not_recursive_if_decoder_universal
   Computability.selfHalting_not_recursive_if_decoder_universal
     haccept huniv
 
+/--
+Compatibility only: the conclusion is the unsatisfiable legacy endpoint and
+the premises are jointly refutable over the concrete machine-code alphabet.
+-/
 theorem self_halting_undecidable_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptableConstruction code)
@@ -743,6 +770,13 @@ theorem self_halting_undecidable_if_decoder_universal
   Computability.selfHalting_undecidable_if_decoder_universal
     haccept huniv
 
+/--
+Compatibility only. This K-shaped statement is not the closed central theorem:
+its premises are jointly refutable over the concrete machine-code alphabet,
+its middle conjunct uses the collapsed legacy predicate, and self-halting
+recognizability enters as the unproved {lit}`hself` premise rather than as a
+finite construction.
+-/
 theorem self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}
     (haccept : DecidableToAcceptableConstruction code)

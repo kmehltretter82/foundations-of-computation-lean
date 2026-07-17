@@ -1,4 +1,6 @@
 import FoC.Book.Chapter05.Section03.Basic
+import FoC.Book.Chapter05.Section03.ContractGuardrails
+import FoC.Book.Chapter05.Section03.ConstructionStatus
 
 set_option doc.verso true
 
@@ -14,7 +16,11 @@ pair-halting, encodings, and the universal machine vocabulary.
 The book-facing development is split between the diagonal and encoding
 vocabulary in {module}`FoC.Book.Chapter05.Section03.BasicPart1` and the
 pair-halting and universal-prefix results in
-{module}`FoC.Book.Chapter05.Section03.BasicPart2`.
+{module}`FoC.Book.Chapter05.Section03.BasicPart2`. The currency collapse of
+the legacy decidability predicate and the resulting proof obligations are
+recorded in {module}`FoC.Book.Chapter05.Section03.ContractGuardrails`, and
+the honest theorem-status table is
+{module}`FoC.Book.Chapter05.Section03.ConstructionStatus`.
 
 ## Reusable Foundations
 

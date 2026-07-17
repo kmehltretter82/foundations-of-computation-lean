@@ -510,6 +510,13 @@ The concrete machine statements instantiate the abstract results with the
 machine-code alphabet and description decoder. They remain conditional on the
 acceptability principle, universal decoder, and diagonal-map preimage or
 computability hypotheses named in their signatures.
+
+This block is compatibility-only. The acceptability-principle premise is
+jointly refutable with decoder universality
+({lit}`concrete_decidable_to_acceptable_and_decoder_universal_incompatible`),
+and the {lit}`¬ TuringDecidable` conclusions use the collapsed legacy
+predicate; see the Section 5.3 {lit}`ContractGuardrails` and
+{lit}`ConstructionStatus` pages.
 -/
 
 theorem concrete_machine_self_halting_undecidable_if_decoder_universal
