@@ -336,7 +336,7 @@ theorem replicate_tick_succ_append_header
   induction remaining with
   | zero => rfl
   | succ remaining ih =>
-      simp only [List.replicate_succ, List.cons_append]
+      simp only [List.replicate_succ]
       exact congrArg (List.cons MachineCodeSymbol.tick) ih
   done
 

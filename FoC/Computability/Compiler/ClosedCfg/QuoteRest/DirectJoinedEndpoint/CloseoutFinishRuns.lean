@@ -35,8 +35,8 @@ theorem lookup40_false
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup40_true
     (source scratch work : Tape Bool)
@@ -51,8 +51,8 @@ theorem lookup40_true
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup40_none
     (source scratch work : Tape Bool)
@@ -67,8 +67,8 @@ theorem lookup40_none
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup41_true
     (source scratch work : Tape Bool)
@@ -83,8 +83,8 @@ theorem lookup41_true
   cases hsource : Tape.read source <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hscratch]
 
 theorem lookup42_true
     (source scratch work : Tape Bool)
@@ -99,8 +99,8 @@ theorem lookup42_true
   cases hsource : Tape.read source <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hscratch]
 
 theorem lookup42_none
     (source scratch work : Tape Bool)
@@ -115,8 +115,8 @@ theorem lookup42_none
   cases hsource : Tape.read source <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hscratch]
 
 theorem run40_bit
     (bit : Bool) (leftRev : List (Option Bool)) (tail : Word Bool)
@@ -193,7 +193,7 @@ theorem writeBitR_apply_outputFromBits
       outputFromBits (List.append bits [bit]) := by
   simp [writeBitR, writeR, Structured.TapeAction.apply,
     Structured.HeadMove.apply, Tape.write, Tape.move, Tape.moveRight,
-    outputFromBits, List.reverse_append, List.map_append]
+    outputFromBits, List.reverse_append]
 
 theorem run_copy_bits
     (leftRev scratchLeft scratchCells : List (Option Bool))
@@ -222,7 +222,7 @@ theorem run_copy_bits
       rw [writeBitR_apply_outputFromBits]
       rw [ih]
       simp [List.reverse_cons, List.map_append, List.append_assoc,
-        List.replicate_succ, List.drop_drop, Nat.add_comm,
+        List.replicate_succ, Nat.add_comm,
         list_replicate_append_cons_eq_cons_append]
 
 def moveLeftN : Nat → Tape Bool → Tape Bool
@@ -428,8 +428,7 @@ theorem paddedWordTape_equiv_input
         Tape.Equiv, Tape.dropTrailingNone]
   | cons bit rest =>
       simp [paddedWordTape, tapeAtCells, Tape.input,
-        Tape.Equiv, Tape.dropTrailingNone, List.map_append,
-        FoC.Computability.dropTrailingNone_append_none]
+        Tape.Equiv, Tape.dropTrailingNone, FoC.Computability.dropTrailingNone_append_none]
 
 theorem run_copy_finish
     (markers : Nat) (baseLeft leftRev scratchCells : List (Option Bool))

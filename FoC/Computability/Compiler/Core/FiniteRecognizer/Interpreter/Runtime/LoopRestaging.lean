@@ -365,7 +365,7 @@ theorem target_tape_equiv_next_product_source
         (nextBaseLeftRev baseLeftRev (first :: rest))
         (first :: rest)).tape := by
   simp [targetConfig, ProductDuplicator.sourceConfig,
-    ProductDuplicator.sourceTape, ProductDuplicator.scanConfig,
+    ProductDuplicator.scanConfig,
     ProductDuplicator.scanTape, ProductDuplicator.tapeAtCells,
     Tape.Equiv, FoC.Computability.dropTrailingNone_append_none]
   done

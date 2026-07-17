@@ -161,7 +161,7 @@ theorem tick_step
       MachineDescription.encodeNat,
       MachineDescription.encodeNatAppend,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem scan_run_exact
     (remaining processed halt : Nat) :
@@ -188,9 +188,8 @@ theorem done_step (start halt : Nat) :
       MachineDescription.encodeNatAppend,
       encodeNat_reverse_eq_done_ticks,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.map_reverse, List.map_append,
-      List.replicate_succ, List.append_assoc,
-      replicate_append_self_cons]
+      List.map_append,
+      List.replicate_succ, replicate_append_self_cons]
 
 theorem computes (start halt : Nat) :
     TuringMachine.Computes machine

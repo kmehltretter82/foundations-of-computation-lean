@@ -78,8 +78,7 @@ theorem run_count_source
                 (some bit :: List.append (rest.map some) [none])) =
             sourceScanTape (bit :: processedRev) rest := by
         cases rest <;>
-          simp [sourceScanTape, tapeAtCells, Tape.move, Tape.moveRight,
-            List.append_assoc]
+          simp [sourceScanTape, tapeAtCells, Tape.move, Tape.moveRight]
       rw [htape]
       rw [ih]
       have hsource :
@@ -271,7 +270,7 @@ theorem run_skip_fixed_source_prefix
         (cursorTape
           (List.append (fixedSourcePrefix.reverse.map some) leftRev)
           tail) tape1 tape2 := by
-  simp only [fixedSourcePrefix, List.append, List.reverse, List.map]
+  simp only [fixedSourcePrefix, List.append, List.reverse]
   rw [show 6 = 1 + 5 by rfl, Structured.Description.runConfig_add]
   rw [run_keepR_of_lookup 21 22 lookup21]
   rw [show 5 = 1 + 4 by rfl, Structured.Description.runConfig_add]
@@ -298,8 +297,8 @@ theorem lookup27_true
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup28_true
     (source scratch work : Tape Bool)
@@ -314,8 +313,8 @@ theorem lookup28_true
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup28_false
     (source scratch work : Tape Bool)
@@ -330,8 +329,8 @@ theorem lookup28_false
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem run27_true
     (leftRev : List (Option Bool)) (tail : Word Bool)
@@ -418,8 +417,8 @@ theorem lookup29_false
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup30_false
     (source scratch work : Tape Bool)
@@ -434,8 +433,8 @@ theorem lookup30_false
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup31_true
     (source scratch work : Tape Bool)
@@ -450,8 +449,8 @@ theorem lookup31_true
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup32_false
     (source scratch work : Tape Bool)
@@ -466,8 +465,8 @@ theorem lookup32_false
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem lookup32_true
     (source scratch work : Tape Bool)
@@ -482,8 +481,8 @@ theorem lookup32_true
   cases hscratch : Tape.read scratch <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hsource]
 
 theorem run_read_keepR_of_lookup
     (state target : Nat) (bit : Bool)
@@ -628,7 +627,7 @@ theorem run_stageNatBits
                 (stage + 1)).reverse.map some)
               leftRev := by
         simp [DovetailInitialLayoutInitializer.StageInputMarkedScanner.stageNatBits_succ,
-          List.reverse_append, List.map_append, List.append_assoc]
+          List.map_append, List.append_assoc]
       have hmarkers :
           (markers + 1) + stage + 1 = markers + (stage + 1) + 1 := by
         lia
@@ -660,8 +659,8 @@ theorem lookup34_false
   cases hsource : Tape.read source <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hscratch]
 
 theorem lookup34_none
     (source scratch work : Tape Bool)
@@ -676,8 +675,8 @@ theorem lookup34_none
   cases hsource : Tape.read source <;> (try cases ‹Bool›) <;>
     cases hwork : Tape.read work <;> (try cases ‹Bool›) <;>
       simp [rows, rowsForTape0Read, rowsForTape1Read, allReads2,
-        allReadRows3_find?_same, allReadRows3_find?_other,
-        row, Structured.Description.Matches, hsource, hscratch, hwork]
+        allReadRows3_find?_other,
+        row, Structured.Description.Matches, hscratch]
 
 theorem lookup35
     (source scratch work : Tape Bool) :
@@ -835,7 +834,7 @@ theorem run_skip_cellsBits
         simp [DovetailInitialLayoutInitializer.StageInputMarkedScanner.cellsBits_cons,
           List.append_assoc]
       rw [hinput]
-      simp only [List.length_cons, Nat.succ_eq_add_one]
+      simp only [List.length_cons]
       rw [run_skip_cellBits]
       rw [ih]
       have hleft :
@@ -864,7 +863,7 @@ theorem run_skip_cellsBits
           induction n with
           | zero => rfl
           | succ n ih =>
-              simp only [List.replicate_succ, List.cons_append]
+              simp only [List.replicate_succ]
               exact congrArg (List.cons none) ih
         exact blank_shift rest.length
       rw [hleft, hpadding]

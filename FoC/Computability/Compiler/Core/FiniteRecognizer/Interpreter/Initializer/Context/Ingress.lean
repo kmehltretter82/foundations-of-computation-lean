@@ -243,7 +243,7 @@ theorem insert_step_of_some
             simp [InsertRestagedMachine.transition,
               RewindWord.transition] at htransition
           simp [machine, transition, insertConfig, htransition,
-            hnot, mapInsertAction]
+            mapInsertAction]
 
 theorem insert_run_of_some
     (saved : Option MachineCodeSymbol) :
@@ -297,7 +297,7 @@ theorem locator_step_of_some
             subst inner
             simp [FiniteRecognizer.Interpreter.BooleanContextLocator.transition] at htransition
           simp [machine, transition, locatorConfig, htransition,
-            hnot, mapLocatorAction]
+            mapLocatorAction]
 
 theorem locator_computes_lift
     (saved : Option MachineCodeSymbol)
@@ -370,7 +370,7 @@ theorem parser_prelude_run_exact
       simp [parserSourceConfig, rowsLeftConfig, entry, machine, transition,
         TuringMachine.runConfigExact?, TuringMachine.stepConfig,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        List.replicate_succ, List.map_append, List.append_assoc]
+        List.replicate_succ, List.map_append]
 
 theorem rowsLeft_zero_run_exact
     (saved : Option MachineCodeSymbol)
@@ -731,14 +731,14 @@ theorem marked_source_eq_parserSourceConfig
         parsedTableLeftRev, transitionListParserOptionTape,
         transitionListParserMarkedTail, transitionListParserSavedHead,
         parserSourceConfig, htable, List.replicate_succ,
-        List.map_append, List.append_assoc]
+        List.append_assoc]
   | cons inputHead inputTail =>
       simp [markedParserMaterializerSourceTape,
         appendParsedLeftContext, parsedTransitionHaltConfig,
         parsedTableLeftRev, transitionListParserOptionTape,
         transitionListParserMarkedTail, transitionListParserSavedHead,
         parserSourceConfig, htable, List.replicate_succ,
-        List.map_append, List.append_assoc]
+        List.append_assoc]
 
 def locatorBounceTape (tape : Tape MachineCodeSymbol) :
     Tape MachineCodeSymbol :=

@@ -638,7 +638,7 @@ theorem finish_from_readNext
             List.append (first :: rest) [carried] := by
         have hreverse := congrArg List.reverse hrev
         simp at hreverse
-        simpa [hreverse, List.append_assoc]
+        simp [hreverse, List.append_assoc]
       rw [hword] at hrewind
       exact TuringMachine.Computes.step hterminal
         (TuringMachine.computes_trans hseek'
@@ -789,7 +789,7 @@ theorem finalCompactTape_equiv_source
     rw [← hprefix]
     simp only [List.append_assoc]
     rw [hpadding]
-    simp [List.reverse_append, List.map_append, List.append_assoc]
+    simp [List.reverse_append]
   change Tape.Equiv
     { left := List.replicate (gap + 1) none ++
         (List.append (MachineDescription.encodeNat D.start)

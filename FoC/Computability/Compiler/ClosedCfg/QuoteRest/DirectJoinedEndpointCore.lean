@@ -329,8 +329,7 @@ private theorem mixedSourceCanonicalizer_run_erase_done
       (none : Option Bool) blanks left
   rw [hleft]
   cases left <;>
-    simp [List.replicate_succ,
-      mixedSourceCanonicalizerDescription,
+    simp [mixedSourceCanonicalizerDescription,
       runConfig, stepConfig, lookupTransition, Matches, transition,
       tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
 
@@ -456,7 +455,7 @@ private theorem mixedSourceCanonicalizer_run_layout
             (List.reverse (List.append sourceInit [last]))) [none] =
         some last ::
           List.append (List.map some (List.reverse sourceInit)) [none] := by
-    simp [List.reverse_append, List.map_append, List.append_assoc]
+    simp [List.reverse_append]
   rw [hleft]
   rw [mixedSourceCanonicalizer_run_enter_source]
   rw [show List.length sourceInit = List.length (List.reverse sourceInit) by simp]
@@ -494,8 +493,7 @@ theorem mixedSourceCanonicalizerDescription_haltsFrom_layout
                   (List.replicate (quoteRest.length + 2) none) =
                 Tape.dropTrailingNone []
         exact
-          ⟨by simpa [Tape.dropTrailingNone] using
-              (dropTrailingNone_replicate_none (symbol := Bool) 1),
+          ⟨by simp [Tape.dropTrailingNone],
             rfl,
             by simpa [Tape.dropTrailingNone] using
               (dropTrailingNone_replicate_none
@@ -504,8 +502,7 @@ theorem mixedSourceCanonicalizerDescription_haltsFrom_layout
         simp only [List.cons_append, List.map_cons, tapeAtCells,
           Tape.input, Tape.Equiv]
         refine
-          ⟨by simpa [Tape.dropTrailingNone] using
-              (dropTrailingNone_replicate_none (symbol := Bool) 1),
+          ⟨by simp [Tape.dropTrailingNone],
             trivial, ?_⟩
         exact dropTrailingNone_append_replicate_none
           ((List.append rest [last]).map some) (quoteRest.length + 2)
@@ -649,7 +646,7 @@ theorem moveLeft_scanRightTape_reverse_cons
       rewindLeftTape (first :: rest).reverse [] := by
   cases hrest : rest.reverse <;>
     simp [scanRightTape, rewindLeftTape, tapeAtCells, Tape.move,
-      Tape.moveLeft, List.map_reverse, hrest]
+      Tape.moveLeft, hrest]
 
 theorem wordListAppend_nil (bits : Word Bool) :
     List.append bits [] = bits :=
@@ -1006,7 +1003,7 @@ theorem run_rewind0_to_count
         tape1 tape2) = _
   rw [Structured.Description.runConfig_add]
   rw [run_rewind_loop 1 (Or.inl rfl)]
-  simp only [List.reverse_reverse, List.append_nil]
+  simp only [List.reverse_reverse]
   exact run_rewind_exit1 (List.append sourceInit [last]) tape1 tape2
 
 theorem run_rewind20_to_prefix
@@ -1022,7 +1019,7 @@ theorem run_rewind20_to_prefix
       (sourceInit.reverse.length + 1) + 1 by simp]
   rw [Structured.Description.runConfig_add]
   rw [run_rewind_loop 20 (Or.inr rfl)]
-  simp only [List.reverse_reverse, List.append_nil]
+  simp only [List.reverse_reverse]
   exact run_rewind_exit20 (List.append sourceInit [last]) tape1 tape2
 
 def markerBuildTape

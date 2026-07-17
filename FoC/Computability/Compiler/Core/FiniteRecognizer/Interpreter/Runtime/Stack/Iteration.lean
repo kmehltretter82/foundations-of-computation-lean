@@ -51,7 +51,7 @@ theorem stackBaseLeftRev_reverse
     (stackBaseLeftRev target first rest copies).reverse =
       MachineDescription.encodeNatAppend target
         (MachineCodeSymbol.header :: tableStack (first :: rest) copies) := by
-  simp only [stackBaseLeftRev, List.reverse_append, List.reverse_reverse]
+  simp only [stackBaseLeftRev]
   simp [FiniteRecognizer.Interpreter.DirectContextUpdate.Prefix.targetBaseLeftRev,
     MachineDescription.encodeNatAppend, List.append_assoc]
   done
@@ -611,7 +611,7 @@ theorem nextCopyRestager_target_tape_eq_next_scan
           haltState callerSuffix)).tape := by
   unfold NextCopyRestager.targetConfig canonicalScanRowsConfig
     nextCopyRest activeProtectedSuffix
-  simp only [processedRows, List.nil_append]
+  simp only [processedRows]
   let work : Word MachineCodeSymbol :=
     List.append
       (runtimeKeyBuilderKeyCode target (Tape.read updatedTape))

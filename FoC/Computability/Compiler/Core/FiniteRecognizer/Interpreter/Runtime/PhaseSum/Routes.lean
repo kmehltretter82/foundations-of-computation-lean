@@ -709,7 +709,7 @@ theorem right_empty_tail
                 simp [activePrefix, emptyRight, postSelectedWord,
                   activeProtectedSuffix, contextTail, updated,
                   RuntimeKeySingleKeyRepair.protectedTapeContextsAppend,
-                  persistent, Word.Concat, List.append_assoc]
+                  persistent, Word.Concat]
   have hrestageSource : Tape.Equiv
       (Tape.input
         (postSelectedWord target (first :: rest) (copies + 1)

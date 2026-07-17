@@ -297,7 +297,7 @@ def FirstMatchPhysicalTrace
     (callerSuffix : Word MachineCodeSymbol)
     (sourceTape cleanedTape : Tape MachineCodeSymbol) : Prop :=
   let transitions := List.append before (selected :: after)
-  let protectedSuffix :=
+  let _protectedSuffix :=
     activeProtectedSuffix transitions copies current.tape haltState
       callerSuffix
   exists selectedTape extractedTape actionTape : Tape MachineCodeSymbol,

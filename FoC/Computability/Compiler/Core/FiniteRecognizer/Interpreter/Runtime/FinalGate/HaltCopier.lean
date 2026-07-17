@@ -404,7 +404,7 @@ theorem advance_to_readNext_computes
           simp [machine, transition, TuringMachine.stepConfig,
             readNextConfig, nextGap, SerializedShift.cursorTape,
             Tape.read, Tape.write, Tape.move, Tape.moveRight,
-            List.reverse_append, List.append_assoc]
+            List.reverse_append]
       exact TuringMachine.Computes.step hstep
         (TuringMachine.Computes.refl _)
   | cons first rest =>
@@ -480,7 +480,7 @@ theorem step_readNext
     simp [readNextConfig, machine, transition, tokenSymbol,
       TuringMachine.stepConfig, Tape.read, SerializedShift.cursorTape,
       Tape.write, Tape.move, Tape.moveLeft, nextGap,
-      List.map_append, List.reverse_append, List.append_assoc]
+      List.map_append, List.reverse_append]
   done
 
 theorem nextGap_no_header
@@ -548,8 +548,7 @@ theorem step_erase_symbol
   cases first <;> cases erased <;> cases baseLeftRev <;> cases rest <;>
     simp [eraseConfig, machine, transition, TuringMachine.stepConfig,
       SerializedShift.cursorTape, Tape.read, Tape.write, Tape.move,
-      Tape.moveRight, List.map_append, List.replicate_succ,
-      List.append_assoc]
+      Tape.moveRight, List.map_append, List.replicate_succ]
   done
 
 theorem erase_run_exact
@@ -644,7 +643,7 @@ theorem step_erase_blank
     simp [eraseConfig, cleanupConfig, machine, transition,
       TuringMachine.stepConfig, SerializedShift.cursorTape,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.map_append, List.replicate_succ, List.append_assoc]
+      List.map_append, List.replicate_succ]
   done
 
 theorem step_cleanup_marker
@@ -658,8 +657,7 @@ theorem step_cleanup_marker
     cases baseLeftRev <;>
       simp [cleanupConfig, machine, transition,
         TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-        Tape.moveLeft, List.map_append, List.replicate_succ,
-        List.append_assoc]
+        Tape.moveLeft, List.map_append, List.replicate_succ]
   done
 
 theorem step_cleanup_last
@@ -851,16 +849,14 @@ theorem ready_tape_equiv_output_zero
       simp [readyConfig, cleanupReadyCells, outputWord,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, Tape.Equiv, Tape.input,
-        Tape.move, Tape.moveRight, Tape.dropTrailingNone,
-        FoC.Computability.dropTrailingNone_append_replicate_none]
+        Tape.move, Tape.moveRight, Tape.dropTrailingNone]
       exact FoC.Computability.dropTrailingNone_replicate_none rightPadding
   | cons first rest =>
       simp [readyConfig, cleanupReadyCells, outputWord,
         MachineDescription.encodeNatAppend,
         MachineDescription.encodeNat, Tape.Equiv, Tape.input,
         Tape.move, Tape.moveRight, List.reverse_cons,
-        List.map_append, List.append_assoc,
-        FoC.Computability.dropTrailingNone_append_replicate_none]
+        List.map_append, List.append_assoc]
       exact ⟨rfl,
         (by
           simpa [List.append_assoc] using

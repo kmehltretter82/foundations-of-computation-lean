@@ -78,7 +78,7 @@ theorem word_outer_decomp
   simp [candidateSuffix, Scheduler.Rollover.Locator.natPrefixRev,
     Scheduler.Advance.ExhaustedSplitReset.ticks,
     MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
-    List.reverse_append, List.append_assoc]
+    List.append_assoc]
 
 def fuelConfig (geometry : Scheduler.Layout.Geometry)
     (round fuelUsed fuelRemaining outerUsed outerRemaining

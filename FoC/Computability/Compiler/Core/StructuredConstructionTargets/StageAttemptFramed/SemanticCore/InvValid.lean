@@ -706,7 +706,7 @@ theorem eventuallyHalts_cell1_stream_shape
                             (false_of_leads_spin_of_eventuallyHalts
                               hspin hhalt2)
                       | true =>
-                          exact ⟨false, tail, by simpa using hstream⟩
+                          exact ⟨false, tail, by simp⟩
               | true =>
                   rcases leads_result_from_stream
                       (attempt := attempt) (hattempt := hattempt)
@@ -745,7 +745,7 @@ theorem eventuallyHalts_cell1_stream_shape
                   | cons third tail =>
                       cases third with
                       | false =>
-                          exact ⟨true, tail, by simpa using hstream⟩
+                          exact ⟨true, tail, by simp⟩
                       | true =>
                           rcases leads_result_bad_bit_from_stream
                               (attempt := attempt) (hattempt := hattempt)
@@ -776,7 +776,7 @@ theorem eventuallyHalts_seekCell_stream_shape
       generalize hstream : work.filterMap id = stream
       cases stream with
       | nil =>
-          exact ⟨[], rfl, by simpa [cellsBits_nil] using hstream⟩
+          exact ⟨[], rfl, by simp [cellsBits_nil]⟩
       | cons first rest =>
           cases first with
           | false =>
@@ -1029,7 +1029,7 @@ theorem eventuallyHalts_length0_stream_shape
                                 (false_of_leads_spin_of_eventuallyHalts
                                   hspin hhalt2)
                           | cons terminal tail =>
-                              exact ⟨terminal, tail, by simpa using hstream⟩
+                              exact ⟨terminal, tail, by simp⟩
 
 theorem eventuallyHalts_length0_valid_aux
     {attempt : MachineDescription} {hattempt : attempt.SubroutineReady}
@@ -1251,7 +1251,7 @@ theorem eventuallyHalts_length1_stream_shape
                       exact False.elim
                         (false_of_leads_spin_of_eventuallyHalts hspin hhalt2)
                   | cons terminal tail =>
-                      exact ⟨terminal, tail, by simpa using hstream⟩
+                      exact ⟨terminal, tail, by simp⟩
 
 theorem eventuallyHalts_resultFirst_valid
     {attempt : MachineDescription} {hattempt : attempt.SubroutineReady}

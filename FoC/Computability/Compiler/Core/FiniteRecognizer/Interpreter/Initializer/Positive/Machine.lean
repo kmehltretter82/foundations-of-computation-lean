@@ -419,12 +419,10 @@ theorem restagerTarget_tape_eq_loopSource
   rw [hcompactor]
   rw [hword]
   simp [NextCopyRestager.targetConfig, loopSourceConfig,
-    canonicalScanRowsConfig, initialConfiguration,
-    activeProtectedSuffix, FiniteRecognizer.Interpreter.LoopRestagingAudit.contextTail,
-    compactorRest, stackSuffix, positiveInitialContextTail,
+    canonicalScanRowsConfig, activeProtectedSuffix, FiniteRecognizer.Interpreter.LoopRestagingAudit.contextTail,
     SerializedShift.cursorTape, runtimeKeyComparatorTape,
     MachineDescription.encodeTransitionsAppend, processedRows,
-    tail, List.append_assoc]
+    tail]
   rfl
 
 theorem copy_remaining
@@ -684,10 +682,10 @@ theorem driver_step_of_some
             all_goals
               cases hread : Tape.read tape with
               | none =>
-                  simp [CopyDriver.transition, hread] at htransition
+                  simp [CopyDriver.transition] at htransition
               | some symbol =>
                   cases symbol <;>
-                    simp [CopyDriver.transition, hread] at htransition
+                    simp [CopyDriver.transition] at htransition
           cases hstep
           simp [machine, transition, driverConfig, hsourceLift,
             htransition, mapAction]

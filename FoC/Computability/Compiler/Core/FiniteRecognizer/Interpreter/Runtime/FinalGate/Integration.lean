@@ -167,10 +167,9 @@ theorem contextPrefix_decompose
         simp only [MachineDescription.encodeCellListAppend,
           MachineDescription.encodeNatAppend, List.length_nil,
           MachineDescription.encodeNat,
-          MachineDescription.encodeCellsAppend, List.nil_append,
-          List.cons_append]
+          MachineDescription.encodeCellsAppend]
         rw [encodeNat_eq_firstToken_cons_tail]
-        simp [List.append_assoc]
+        simp
     | cons cell rest =>
         refine ⟨MachineCodeSymbol.tick,
           tokenSymbol (firstToken rest.length),
@@ -180,9 +179,9 @@ theorem contextPrefix_decompose
         unfold contextPrefix
         simp only [MachineDescription.encodeCellListAppend,
           MachineDescription.encodeNatAppend, List.length_cons,
-          MachineDescription.encodeNat, List.cons_append]
+          MachineDescription.encodeNat]
         rw [encodeNat_eq_firstToken_cons_tail]
-        simp [List.append_assoc]
+        simp
   rcases hshape with ⟨firstContext, secondContext, gap, hshape⟩
   refine ⟨firstContext, secondContext, gap, hshape, ?_, ?_⟩
   · intro symbol hmem

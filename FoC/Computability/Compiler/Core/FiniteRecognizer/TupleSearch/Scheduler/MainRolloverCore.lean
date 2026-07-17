@@ -694,8 +694,7 @@ theorem round_insert_output
         Scheduler.Rollover.afterRoundWord,
         Scheduler.Rollover.word,
         MachineDescription.encodeNatAppend,
-        MachineDescription.encodeNat, List.reverse_append,
-        List.append_assoc]
+        MachineDescription.encodeNat]
   | bounded budget =>
       simp [PhysicalBranch.insertOutput, growBuffer,
         Scheduler.Advance.GrowResetInsertion.buffer,
@@ -930,8 +929,7 @@ theorem enter_round_bounded_exact (budget round : Nat)
             (rolloverTail round budget input))) } = _
   rw [budget_run_exact]
   congr 4
-  simp [roundInsertSource,
-    Scheduler.Rollover.Locator.geometryPrefixRev,
+  simp [Scheduler.Rollover.Locator.geometryPrefixRev,
     Scheduler.Rollover.Locator.natPrefixRev,
     Scheduler.Layout.encodeGeometryAppend,
     Scheduler.Advance.ExhaustedSplitReset.encodeNat_eq_ticks_done,

@@ -201,8 +201,7 @@ theorem insert_output_eq_growOutput (leftRev : Word MachineCodeSymbol)
   simp [PhysicalBranch.insertOutput, growBuffer,
     Scheduler.Advance.GrowResetInsertion.buffer,
     InsertBlock.singletonBuffer, growOutput,
-    MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
-    List.append_assoc]
+    MachineDescription.encodeNatAppend, MachineDescription.encodeNat]
 
 theorem grow_exact (leftRev : Word MachineCodeSymbol) (count : Nat)
     (suffix : Word MachineCodeSymbol) :
@@ -346,7 +345,7 @@ theorem grow_candidateFuel
         candidateOuter candidateInner input := by
     cases geometry <;>
       simp [schedulerWord, growOutput, baseRev, suffix,
-        candidatePrefixRev, candidateTail, nestedStageCode_eq_tail,
+        candidatePrefixRev, nestedStageCode_eq_tail,
         Scheduler.Rollover.word,
         Scheduler.Rollover.Locator.candidatePrefixRev,
         Scheduler.Rollover.Locator.splitPrefixRev,

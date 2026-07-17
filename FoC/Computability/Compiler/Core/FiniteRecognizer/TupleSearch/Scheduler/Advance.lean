@@ -186,7 +186,7 @@ theorem seek_to_done_exact (used : Nat)
     simp [sourceConfig, seekConfig, seekTape, encodeSplitAppend,
       encodeNat_eq_ticks_done, MachineDescription.encodeNatAppend,
       config, SerializedShift.cursorTape, ticks, splitMarker,
-      List.map_append, List.append_assoc]
+      List.append_assoc]
   rw [hsource]
   simpa [ticks] using
     (seek_ticks_run_exact (ticks used) [] baseRev suffix (by
@@ -202,7 +202,7 @@ theorem seek_done_step (used : Nat)
       seekConfig, seekTape, markerConfig, markerTape, config,
       ticks, splitMarker, SerializedShift.cursorTape,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.map_append, List.append_assoc]
+      List.replicate_succ, List.map_append]
 
 theorem seek_marker_step (used : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -212,8 +212,7 @@ theorem seek_marker_step (used : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       markerConfig, markerTape, doneConfig, doneTape, config,
       ticks, splitMarker, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.replicate_succ, List.map_append,
-      List.append_assoc]
+      Tape.moveLeft, List.replicate_succ]
 
 theorem enter_marker_exact (used : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -279,8 +278,7 @@ theorem inspect_done_tick_step (remaining moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       doneConfig, doneTape, predTickConfig, predTickTape, config,
       ticks, splitMarker, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.replicate_succ, List.map_append,
-      List.append_assoc]
+      Tape.moveLeft, List.replicate_succ]
 
 theorem pred_tick_step (remaining moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -290,8 +288,7 @@ theorem pred_tick_step (remaining moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       predTickConfig, predTickTape, writeMarkerConfig,
       writeMarkerTape, config, ticks, splitMarker, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ,
-      List.map_append, List.append_assoc]
+      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
 theorem write_marker_step (remaining moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -301,8 +298,7 @@ theorem write_marker_step (remaining moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       writeMarkerConfig, writeMarkerTape, writeTickConfig,
       writeTickTape, config, ticks, splitMarker, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ,
-      List.map_append, List.append_assoc]
+      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
 theorem write_tick_step (remaining moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -313,8 +309,7 @@ theorem write_tick_step (remaining moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       writeTickConfig, writeTickTape, markerConfig, markerTape,
       config, ticks, splitMarker, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.replicate_succ, List.map_append,
-      List.append_assoc]
+      Tape.moveLeft, List.replicate_succ]
 
 theorem at_marker_step (remaining moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -326,8 +321,7 @@ theorem at_marker_step (remaining moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       markerConfig, markerTape, doneConfig, doneTape, config,
       ticks, splitMarker, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.replicate_succ, List.map_append,
-      List.append_assoc]
+      Tape.moveLeft, List.replicate_succ]
 
 theorem rotation_step (remaining moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -392,8 +386,7 @@ theorem inspect_done_boundary_step (moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       doneConfig, doneTape, boundaryConfig, boundaryTape, config,
       ticks, splitMarker, Tape.read, Tape.write, Tape.move,
-      Tape.moveLeft, List.replicate_succ, List.map_append,
-      List.append_assoc]
+      Tape.moveLeft, List.replicate_succ]
 
 theorem boundary_return_step (moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -403,8 +396,7 @@ theorem boundary_return_step (moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       boundaryConfig, boundaryTape, returnDoneConfig,
       returnDoneTape, config, ticks, splitMarker, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ,
-      List.map_append, List.append_assoc]
+      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
 theorem return_done_step (moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :
@@ -414,8 +406,7 @@ theorem return_done_step (moved : Nat)
     simp [TuringMachine.stepConfig, machine, transition,
       returnDoneConfig, returnDoneTape, returnMarkerConfig,
       returnMarkerTape, config, ticks, splitMarker, Tape.read,
-      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ,
-      List.map_append, List.append_assoc]
+      Tape.write, Tape.move, Tape.moveRight, List.replicate_succ]
 
 theorem return_marker_step (moved : Nat)
     (baseRev suffix : Word MachineCodeSymbol) :

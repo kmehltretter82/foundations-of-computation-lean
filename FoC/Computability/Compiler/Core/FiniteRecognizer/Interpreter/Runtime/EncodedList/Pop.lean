@@ -213,7 +213,7 @@ theorem locate_delete_handoff_exact
           PayloadLocator.ticks, List.replicate_succ,
           Prepend.cellSymbol, SerializedShift.cursorTape,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-          Tape.moveRight, List.append_assoc]
+          Tape.moveRight]
   | some bit =>
       cases bit <;> cases suffix <;>
         simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
@@ -225,7 +225,7 @@ theorem locate_delete_handoff_exact
           PayloadLocator.ticks, List.replicate_succ,
           Prepend.cellSymbol, SerializedShift.cursorTape,
           Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-          Tape.moveRight, List.append_assoc]
+          Tape.moveRight]
 
 theorem delete_step_of_some
     (cell : Option Bool)

@@ -15,7 +15,7 @@ copy machine's alphabet and layout. The machine proves
 pair-code alphabet through injective encodings; the compatibility-level
 {name}`FoC.Computability.TuringComputable` statement follows as a corollary in
 Part 2. The legacy non-faithful marker machine that previously lived here was
-deleted after a zero-consumer audit; see `docs/COMPILER_DELETION_LEDGER.md`.
+deleted after a zero-consumer audit; see {lit}`docs/COMPILER_DELETION_LEDGER.md`.
 -/
 
 namespace FoC

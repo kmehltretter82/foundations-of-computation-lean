@@ -41,8 +41,7 @@ theorem encodeNat_eq_ticks_done (value : Nat) :
   induction value with
   | zero => rfl
   | succ value ih =>
-      simp [MachineDescription.encodeNat, List.replicate_succ, ih,
-        List.append_assoc]
+      simp [MachineDescription.encodeNat, List.replicate_succ, ih]
 
 theorem encodeNat_reverse_eq_done_ticks (value : Nat) :
     (MachineDescription.encodeNat value).reverse =
@@ -279,7 +278,7 @@ theorem eraseRight_step
     simp [eraseRightConfig, machine, transition,
       TuringMachine.stepConfig, headerFieldsParserTape,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem eraseRight_run_exact
     (baseLeftRev remaining : Word MachineCodeSymbol)
@@ -340,8 +339,7 @@ theorem eraseRight_finish_step
         simp [eraseRightConfig, cleanupRightConfig, cleanupRightTape,
           machine, transition, TuringMachine.stepConfig,
           headerFieldsParserTape, Tape.read, Tape.write,
-          Tape.move, Tape.moveLeft, List.replicate_succ,
-          List.append_assoc]
+          Tape.move, Tape.moveLeft, List.replicate_succ]
 
 theorem cleanupRight_marker_step
     (metadata : Word MachineCodeSymbol)
@@ -353,8 +351,7 @@ theorem cleanupRight_marker_step
   cases remaining <;> cases rightPadding <;> cases metadata <;>
     simp [cleanupRightConfig, cleanupRightTape, machine, transition,
       TuringMachine.stepConfig, Tape.read, Tape.write,
-      Tape.move, Tape.moveLeft, List.replicate_succ,
-      List.append_assoc]
+      Tape.move, Tape.moveLeft, List.replicate_succ]
 
 theorem cleanupRight_run_exact
     (metadata : Word MachineCodeSymbol)
@@ -424,7 +421,7 @@ theorem context_eraseRight_step
     simp [contextEraseRightConfig, contextCursorTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem context_eraseRight_run_exact
     (baseLeft : List (Option MachineCodeSymbol))
@@ -482,7 +479,7 @@ theorem context_eraseRight_finish_step
       cleanupContextRightConfig, cleanupContextRightTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem cleanupContextRight_marker_step
     (baseLeft : List (Option MachineCodeSymbol))
@@ -496,7 +493,7 @@ theorem cleanupContextRight_marker_step
     simp [cleanupContextRightConfig, cleanupContextRightTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem cleanupContextRight_run_exact
     (baseLeft : List (Option MachineCodeSymbol))
@@ -569,7 +566,7 @@ theorem noBarrier_eraseRight_step
     simp [noBarrierEraseRightConfig, contextCursorTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem noBarrier_eraseRight_run_exact
     (metadata remaining : Word MachineCodeSymbol)
@@ -612,7 +609,7 @@ theorem noBarrier_eraseRight_finish_step
       contextCursorTape, cleanupContextRightTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem noBarrier_cleanupRight_marker_step
     (metadata : Word MachineCodeSymbol)
@@ -626,7 +623,7 @@ theorem noBarrier_cleanupRight_marker_step
     simp [noBarrierCleanupRightConfig, cleanupContextRightTape,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem noBarrier_cleanupRight_run_exact
     (metadata : Word MachineCodeSymbol)
@@ -792,7 +789,7 @@ theorem cleanupContextRight_boundary_step
       parsedTableLeftRev, bubbleCellConfig,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.map_append, List.replicate_succ, List.append_assoc]
+      List.replicate_succ, List.append_assoc]
 
 theorem bubbleCell_step
     (current : MachineCodeSymbol)
@@ -806,7 +803,7 @@ theorem bubbleCell_step
       simp [bubbleCellConfig, bubbleEraseCellConfig,
         machine, transition, TuringMachine.stepConfig,
         Tape.read, Tape.write, Tape.move, Tape.moveRight,
-        List.replicate_succ, List.append_assoc]
+        List.replicate_succ]
 
 theorem bubbleEraseCell_step
     (more metadata : Word MachineCodeSymbol)
@@ -818,7 +815,7 @@ theorem bubbleEraseCell_step
     simp [bubbleEraseCellConfig, bubbleMoveCellConfig,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem bubbleMoveCell_step
     (more metadata : Word MachineCodeSymbol)
@@ -830,7 +827,7 @@ theorem bubbleMoveCell_step
     simp [bubbleMoveCellConfig, bubbleCellConfig,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem bubbleBarrier_step
     (metadata : Word MachineCodeSymbol)
@@ -842,7 +839,7 @@ theorem bubbleBarrier_step
     simp [bubbleCellConfig, bubbleEraseBarrierConfig,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 theorem bubbleEraseBarrier_step
     (metadata : Word MachineCodeSymbol)
@@ -854,7 +851,7 @@ theorem bubbleEraseBarrier_step
     simp [bubbleEraseBarrierConfig, bubbleMoveBarrierConfig,
       machine, transition, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.replicate_succ, List.append_assoc]
+      List.replicate_succ]
 
 def crossHaltDoneConfig
     (fuel stateCount start halt rightPadding : Nat) :
@@ -889,9 +886,7 @@ theorem bubbleSingleMove_step
         TuringMachine.stepConfig, MachineDescription.encodeNat,
         encodeNat_reverse_eq_done_ticks,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        List.map_append, List.map_reverse,
-        List.replicate_succ, List.append_assoc,
-        replicate_append_self_cons]
+        List.map_append, List.replicate_succ, replicate_append_self_cons]
 
 theorem noBarrier_cleanup_computes_to_crossHaltDone
     (fuel stateCount start halt : Nat)
@@ -950,9 +945,7 @@ theorem bubbleMoveBarrier_step
         TuringMachine.stepConfig, MachineDescription.encodeNat,
         encodeNat_reverse_eq_done_ticks,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        List.map_append, List.map_reverse,
-        List.replicate_succ, List.append_assoc,
-        replicate_append_self_cons]
+        List.map_append, List.replicate_succ, replicate_append_self_cons]
 
 theorem bubbleCells_computes
     (remaining metadata : Word MachineCodeSymbol)
@@ -1059,7 +1052,7 @@ theorem cleanupRight_boundary_step
       metadataLeftRev, machine, transition,
       TuringMachine.stepConfig, encodeNat_reverse_eq_done_ticks,
       Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      List.map_append, List.map_reverse, List.append_assoc]
+      List.map_append]
 
 end FiniteRecognizer.Interpreter.ZeroEmptyMetadataFinal
 end Computability

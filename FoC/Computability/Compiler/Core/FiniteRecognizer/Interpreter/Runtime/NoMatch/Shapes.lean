@@ -422,12 +422,12 @@ theorem tableStack_decompose
       cases hraw : rawTable transitions with
       | nil =>
           exact ⟨MachineCodeSymbol.header,
-            tableStack transitions copies, by simp [hraw]⟩
+            tableStack transitions copies, by simp⟩
       | cons first rest =>
           exact ⟨first,
             List.append rest
               (MachineCodeSymbol.header :: tableStack transitions copies),
-            by simp [hraw]⟩
+            by simp⟩
   done
 
 theorem middleWordCopies_decompose

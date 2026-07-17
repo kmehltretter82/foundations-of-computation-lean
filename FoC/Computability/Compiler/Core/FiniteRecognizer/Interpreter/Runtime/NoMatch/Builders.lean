@@ -686,7 +686,7 @@ theorem cleanedGap_eq_replicate_append_transition
   induction gap with
   | nil => rfl
   | cons symbol rest ih =>
-      simp [cleanedGap, ih, List.replicate_succ, List.append_assoc]
+      simp [cleanedGap, ih, List.replicate_succ]
   done
 
 theorem cleanedGap_no_header

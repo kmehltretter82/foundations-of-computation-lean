@@ -123,8 +123,7 @@ theorem write_step_of_split
       some
         (writeConfig fixedWord (List.append written [current]) rest input
           (hprefix.trans (by
-            simpa using
-              (List.append_assoc written [current] rest).symm))) := by
+            simp))) := by
   unfold TuringMachine.stepConfig
   dsimp [machine, writeConfig, transition, stateAt]
   have hlt : written.length < fixedWord.length := by
@@ -150,7 +149,7 @@ theorem write_run_of_split
         have happend : List.append written [] = written := by
           induction written with
           | nil => rfl
-          | cons current rest ih => simp [List.append, ih]
+          | cons current rest ih => simp [List.append]
         rw [happend] at hprefix
         exact hprefix.symm
       subst written
@@ -163,8 +162,7 @@ theorem write_run_of_split
       simp only
       exact ih (List.append written [current])
         (hprefix.trans (by
-          simpa using
-            (List.append_assoc written [current] rest).symm))
+          simp))
 
 theorem finish_step (fixedWord : List MachineCodeSymbol)
     (input : Word MachineCodeSymbol) :

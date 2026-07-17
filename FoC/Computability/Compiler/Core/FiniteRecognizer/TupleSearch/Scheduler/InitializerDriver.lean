@@ -135,7 +135,7 @@ theorem initializer_step_of_some
       rw [htransition] at hstep
       simp only at hstep
       cases hstep
-      simp [mapAction, htransition]
+      simp [mapAction]
 
 theorem driver_step_of_some
     [DecidableEq initializerState]
@@ -159,7 +159,7 @@ theorem driver_step_of_some
       rw [htransition] at hstep
       simp only at hstep
       cases hstep
-      simp [mapAction, htransition]
+      simp [mapAction]
 
 theorem initializer_run_lift
     [DecidableEq initializerState]

@@ -417,7 +417,7 @@ theorem pendingWord_outer_decomp
     Scheduler.Rollover.Locator.natPrefixRev,
     Scheduler.Advance.ExhaustedSplitReset.ticks,
     MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
-    List.reverse_append, List.append_assoc]
+    List.append_assoc]
 
 theorem pendingWord_inner_decomp
     (geometry : Scheduler.Layout.Geometry)
@@ -435,7 +435,7 @@ theorem pendingWord_inner_decomp
   simp [Scheduler.Rollover.Locator.natPrefixRev,
     Scheduler.Advance.ExhaustedSplitReset.ticks,
     MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
-    List.reverse_append, List.append_assoc]
+    List.append_assoc]
 
 def withTape
     (c : TuringMachine.Configuration MachineCodeSymbol Control)
@@ -947,9 +947,7 @@ theorem normalizedOutput_cursorTape
       List.append leftRev.reverse rest := by
   cases rest <;>
     simp [ExactFuel.StrictProbe.SerializedShift.cursorTape,
-      Tape.normalizedOutput, Tape.cells, filterMap_map_some,
-      filterMap_some_comp, Tape.filterMap_append_lemma,
-      List.map_reverse, List.append_assoc]
+      Tape.normalizedOutput, Tape.cells, filterMap_some_comp]
 
 theorem finalConfig_normalizedOutput
     (geometry : Scheduler.Layout.Geometry)
@@ -965,7 +963,7 @@ theorem finalConfig_normalizedOutput
     Scheduler.Rollover.Locator.natPrefixRev,
     Scheduler.Advance.ExhaustedSplitReset.ticks,
     MachineDescription.encodeNatAppend, MachineDescription.encodeNat,
-    List.reverse_append, List.append_assoc]
+    List.append_assoc]
 
 theorem reset_candidates
     (geometry : Scheduler.Layout.Geometry)

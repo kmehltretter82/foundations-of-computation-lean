@@ -84,9 +84,7 @@ theorem crossHaltDone_step
         TuringMachine.stepConfig, MachineDescription.encodeNat,
         encodeNat_reverse_eq_done_ticks,
         Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-        List.map_append, List.map_reverse,
-        List.replicate_succ, replicate_append_self_cons,
-        List.append_assoc]
+        List.map_append, List.replicate_succ, replicate_append_self_cons]
 
 theorem haltScan_tick_step
     (fuel stateCount start remaining processed rightPadding : Nat) :

@@ -348,7 +348,7 @@ theorem seedShift_blank_step
     simp [machine, transition, seedShiftConfig, shiftTape,
       seedAtEndConfig, tapeAtCells, representedCells,
       TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-      Tape.moveRight, List.map_append, List.append_assoc]
+      Tape.moveRight, List.append_assoc]
 
 theorem seedAtEnd_step
     (baseCells : List (Option MachineCodeSymbol))
@@ -395,8 +395,7 @@ theorem seedRewind_blank_step
       simp [machine, transition, seedRewindConfig, rewindTape,
         selectConfig, selectTape, representedCells,
         TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-        Tape.moveLeft, hrev, List.map_reverse,
-        List.map_append, List.append_assoc]
+        Tape.moveLeft]
 
 theorem select_symbol_step
     (baseLeftRev moreRev processed suffix : Word MachineCodeSymbol)
@@ -461,7 +460,7 @@ theorem shift_blank_step
     simp [machine, transition, shiftConfig, shiftTape, atEndConfig,
       tapeAtCells, representedCells, TuringMachine.stepConfig,
       Tape.read, Tape.write, Tape.move, Tape.moveRight,
-      List.map_append, List.append_assoc]
+      List.append_assoc]
 
 theorem atEnd_step
     (original : MachineCodeSymbol)
@@ -508,12 +507,12 @@ theorem rewind_blank_step
       simp [machine, transition, rewindConfig, rewindTape,
         locateSourceConfig, locateSourceTape, representedCells,
         TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-        Tape.moveLeft, hrev, List.map_append, List.append_assoc]
+        Tape.moveLeft]
   | cons current remaining =>
       simp [machine, transition, rewindConfig, rewindTape,
         locateSourceConfig, locateSourceTape, representedCells,
         TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-        Tape.moveLeft, hrev, List.map_append, List.append_assoc]
+        Tape.moveLeft, List.append_assoc]
 
 theorem locateSource_symbol_step
     (original current : MachineCodeSymbol)
@@ -529,7 +528,7 @@ theorem locateSource_symbol_step
   cases current <;> simp_all [machine, transition,
     locateSourceConfig, locateSourceTape, representedCells,
     TuringMachine.stepConfig, Tape.read, Tape.write, Tape.move,
-    Tape.moveLeft, List.map_append, List.append_assoc] <;>
+    Tape.moveLeft, List.append_assoc] <;>
     cases remainingRev <;> cases crossed <;> cases output <;>
       cases moreRev <;> cases baseLeftRev <;> rfl
 

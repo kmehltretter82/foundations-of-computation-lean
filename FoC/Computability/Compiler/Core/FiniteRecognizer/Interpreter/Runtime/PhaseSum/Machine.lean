@@ -328,7 +328,7 @@ def stackEmbed
   | .ready =>
       match purpose with
       | .miss => .boundary .missLeft (.locate .count)
-      | .initial action true =>
+      | .initial _action true =>
           .boundary .finalLeft (.locate .count)
       | .initial action false =>
           match action.move with
@@ -358,7 +358,7 @@ def prependEmbed
     FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.Control -> Control
   | .insert (.rewind .gate) =>
       match mode with
-      | .left action true => .restage (.target none)
+      | .left _action true => .restage (.target none)
       | .left action false => .prefixPhase .leftPop (.target action)
       | .right action => .prefixPhase .rightCheck (.target action)
   | inner => .prepend mode inner
@@ -595,7 +595,7 @@ theorem scan_transition_of_eq_some
   cases source <;>
     simp [scanEmbed, comparatorMachine, transition, mapTransition]
       at htransition ⊢
-  all_goals simp [htransition, mapTransition]
+  all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem extract_transition_of_eq_some
@@ -611,7 +611,7 @@ theorem extract_transition_of_eq_some
     simp [extractEmbed, RuntimeKeySelectedExtractorArbitrary.machine,
       RuntimeKeySelectedExtractorArbitrary.transition, transition,
       mapTransition] at htransition ⊢
-  all_goals simp [htransition, mapTransition]
+  all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem action_transition_of_eq_some
@@ -626,7 +626,7 @@ theorem action_transition_of_eq_some
     simp [actionEmbed, FiniteRecognizer.Interpreter.RuntimeActionPrefix.machine,
       FiniteRecognizer.Interpreter.RuntimeActionPrefix.transition, transition, mapTransition]
       at htransition ⊢
-  all_goals simp [htransition, mapTransition]
+  all_goals simp [htransition]
 
 theorem cleanup_transition_of_eq_some
     (source target : FiniteRecognizer.Interpreter.RuntimeLeftCleanup.Control)
@@ -640,7 +640,7 @@ theorem cleanup_transition_of_eq_some
     simp [cleanupEmbed, FiniteRecognizer.Interpreter.RuntimeLeftCleanup.machine,
       FiniteRecognizer.Interpreter.RuntimeLeftCleanup.transition, transition, mapTransition]
       at htransition ⊢
-  all_goals simp [htransition, mapTransition]
+  all_goals simp [htransition]
   all_goals rcases htransition with ⟨rfl, rfl, rfl⟩ <;> rfl
 
 theorem scan_computes
