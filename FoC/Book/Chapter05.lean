@@ -30,10 +30,10 @@ deciders, characteristic functions, complement closure, and a stopped-decider
 to acceptor transformation.
 
 Section 5.2 compares recursive, recursively enumerable, listable, range, and
-general-grammar views. Its semantic equivalences and the finite-machine routes
-used by their concrete witnesses are formalized. Broad compiler principles
-remain named explicitly when a statement quantifies over every staged program
-or every acceptable language.
+general-grammar views. Its set-theoretic equivalences and completed
+finite-machine directions are formalized. Effective finite converses retain
+the exact compiler principles they still require; the section's compiler
+status page distinguishes those premises from completed constructions.
 
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
 machine-encoding, and universal-machine vocabulary. Finite-table execution,
@@ -45,12 +45,13 @@ encoded-input description compiler principle.
 
 ## Architecture and Scope
 
-The pages cover the textbook's main theorem shapes: Turing-machine semantics,
-decidability and recognizability, RE/listing/range equivalences,
+The pages state the textbook's main theorem shapes: Turing-machine semantics,
+decidability and recognizability, corrected RE/listing/range equivalences,
 grammar-recognizer traces, diagonalization, self-halting and pair-halting
 reductions, concrete machine descriptions, and universal-machine rows.
-Concrete finite constructions live in the reusable computability layer;
-book-facing results are thin semantic corollaries of those constructions.
+Completed concrete finite constructions live in the reusable computability
+layer; open finite routes remain explicit hypotheses of their book-facing
+results.
 
 Some textbook presentations are deliberately recast. The book's two-tape
 listing-machine and enumerated {lit}`T_n`/{lit}`G`/{lit}`U` storyline is
@@ -86,12 +87,14 @@ languages, encodings, compiler bridges, and undecidability, inspect
 
 ## Semantic Boundaries
 
-Machine execution, computability and language classes, listing/range
-equivalences, grammar traces, reductions, and the abstract diagonal arguments
-are unconditional. Concrete finite descriptions implement the scanners,
-encoders, transducers, decoded interpreter, and universal-prefix runner used by
-the chapter. General compiler principles stay visible in theorem hypotheses
-when the theorem genuinely needs them.
+Machine execution, computability and language classes, set-theoretic
+listing/range equivalences, grammar traces, reductions, and the abstract
+diagonal arguments are unconditional. The effective finite listing/range and
+grammar converses are conditional on named finite compiler interfaces.
+Concrete finite descriptions implement the scanners, encoders, transducers,
+decoded interpreter, and universal-prefix runner used by the chapter. General
+compiler principles stay visible in theorem hypotheses when the theorem
+genuinely needs them.
 
 Section 5.1 uses a partial transition function, so a missing row stops an
 execution without being the same event as entering the designated halt state.

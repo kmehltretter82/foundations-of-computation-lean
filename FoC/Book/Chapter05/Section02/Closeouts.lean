@@ -272,13 +272,12 @@ theorem program_acceptable_by_description_finite_general_grammar_of_finite_data_
   (program_acceptable_by_description_to_finite_general_grammar_presentation_construction_of_finite_data_closeout
     hclose) L hL
 
-theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
-    (hpaired : PairedRecognizerDovetailDescriptionCompilerPrinciple)
+theorem concrete_finite_complementary_recognizers_of_finite_general_grammar_pair
     (hfinite :
       FiniteBoolGeneralGrammarPresentation.CompilerConstruction)
     {L : Language Bool}
     (hpair : FiniteGeneralGrammarPairGenerated L) :
-    TuringDecidable L := by
+    ConcreteFiniteComplementaryRecognizers L := by
   rcases hpair.left with ⟨acceptNonterminal, acceptG,
     acceptFinite, acceptEq⟩
   rcases hpair.right with ⟨rejectNonterminal, rejectG,
@@ -335,10 +334,72 @@ theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
     · simpa [rejectProgram, FiniteAcceptorProgram.trace,
         Computability.FiniteAcceptorProgram.trace] using!
         concrete_machine_description_acceptance_trace rejectLanguage
+  exact ⟨acceptProgram, rejectProgram, acceptLanguage.left,
+    rejectLanguage.left, htraces⟩
+
+/-- A finite stopped decider unconditionally yields finite-presentation
+grammars for its accepted and rejected languages. -/
+theorem concrete_finite_decidable_language_has_finite_general_grammar_pair
+    {L : Language Bool}
+    (h : ConcreteFiniteDecidableLanguage L) :
+    FiniteGeneralGrammarPairGenerated L := by
+  rcases concrete_finite_decidable_has_complementary_recognizers h with
+    ⟨accept, reject, haccept, hreject, htraces⟩
+  constructor
+  · apply
+      (finite_bool_grammar_generated_iff_finite_general_grammar_generated L).mp
+    exact concrete_finite_recognizable_language_finite_bool_grammar_generated
+      ⟨accept, haccept, htraces.left⟩
+  · apply
+      (finite_bool_grammar_generated_iff_finite_general_grammar_generated
+        (Language.Compl L)).mp
+    exact concrete_finite_recognizable_language_finite_bool_grammar_generated
+      ⟨reject, hreject, htraces.right⟩
+
+/-- Finite-presentation grammar pairs yield finite stopped deciders once the
+two honest finite compiler interfaces are supplied. -/
+theorem concrete_finite_general_grammar_pair_is_decidable_of_constructions
+    (hdovetail :
+      StoppedPairedRecognizerDovetailDescriptionCompilerPrinciple)
+    (hgrammar :
+      FiniteBoolGeneralGrammarPresentation.CompilerConstruction)
+    {L : Language Bool}
+    (hpair : FiniteGeneralGrammarPairGenerated L) :
+    ConcreteFiniteDecidableLanguage L :=
+  concrete_finite_complementary_recognizers_decidable_of_stopped_compiler
+    hdovetail
+    (concrete_finite_complementary_recognizers_of_finite_general_grammar_pair
+      hgrammar hpair)
+
+/-- The effective finite-machine form of the finite grammar-pair
+characterization. The forward direction is unconditional; the reverse
+direction states exactly the two compiler constructions still required. -/
+theorem concrete_finite_decidable_iff_finite_general_grammar_pair_of_constructions
+    (hdovetail :
+      StoppedPairedRecognizerDovetailDescriptionCompilerPrinciple)
+    (hgrammar :
+      FiniteBoolGeneralGrammarPresentation.CompilerConstruction)
+    (L : Language Bool) :
+    ConcreteFiniteDecidableLanguage L <->
+      FiniteGeneralGrammarPairGenerated L :=
+  ⟨concrete_finite_decidable_language_has_finite_general_grammar_pair,
+    concrete_finite_general_grammar_pair_is_decidable_of_constructions
+      hdovetail hgrammar⟩
+
+theorem finite_general_grammar_pair_recursive_of_finite_data_constructions
+    (hpaired : PairedRecognizerDovetailDescriptionCompilerPrinciple)
+    (hfinite :
+      FiniteBoolGeneralGrammarPresentation.CompilerConstruction)
+    {L : Language Bool}
+    (hpair : FiniteGeneralGrammarPairGenerated L) :
+    TuringDecidable L := by
+  rcases
+      concrete_finite_complementary_recognizers_of_finite_general_grammar_pair
+        hfinite hpair with
+    ⟨accept, reject, _haccept, _hreject, htraces⟩
   exact
     concrete_finite_dovetail_program_turing_decidable_of_paired_recognizer_compiler
-      hpaired
-      (accept := acceptProgram) (reject := rejectProgram) htraces
+      hpaired (accept := accept) (reject := reject) htraces
 
 theorem finite_general_grammar_pair_recursive_of_finite_data_closeout
     (hclose : BooleanFiniteDataSection52CompilerCloseout)
