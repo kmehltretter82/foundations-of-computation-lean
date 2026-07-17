@@ -188,11 +188,6 @@ private theorem count_run_of_some (head nextHead : Option MachineCodeSymbol)
   ·
     intro state read write direction target htransition
     simp_all [DeleteRestagedMachine.machine, machine, transition, countEmbed]
-private theorem runConfigExact_trans {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control} (hab : machine.runConfigExact? first a = some b) (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab) (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 def runSteps {stateCount : Nat} (L : Layout stateCount) (nextHead : Option MachineCodeSymbol) (remainingRight : List (Option MachineCodeSymbol)) (callerData : Word MachineCodeSymbol) : Nat :=
   (Dispatch.RightFirstCell.CombinedMachine.runSteps
       L nextHead remainingRight callerData + Edits.MarkedPrefixRestorer.runSteps L) +
@@ -245,7 +240,7 @@ theorem run_exact {stateCount : Nat} (L : Layout stateCount) (nextHead : Option 
       L remainingRight callerData restoreEndpoint.tape hcountTape with
     ⟨countEndpoint, hcountInner, hcountState, hcountTapeFinal⟩
   have hcount := count_run_of_some L.head nextHead hcountInner
-  have hrun := runConfigExact_trans (runConfigExact_trans hcore hrestore) hcount
+  have hrun := TuringMachine.runConfigExact?_trans (TuringMachine.runConfigExact?_trans hcore hrestore) hcount
   refine ⟨countConfig L.head nextHead countEndpoint, ?_, ?_, hcountTapeFinal⟩
   · simpa [runSteps, Nat.add_assoc] using hrun
   · simpa [countConfig, countEmbed,

@@ -144,26 +144,6 @@ def gateConfig {stateCount : Nat}
     (MachineDescription.encodeNatAppend L.right.length
       (MoveRightNonempty.afterFirstRightCell remainingRight callerData))
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem header_step
     (suffix : Word MachineCodeSymbol) :
     machine.stepConfig
@@ -328,7 +308,7 @@ theorem restoreMarkedCells_run_exact
               (HeadLocator.markedCellsWord cells).length :=
         List.length_append
       rw [hlength]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       have hassoc :
           List.append
               (List.append (HeadLocator.markedCellWord cell)
@@ -412,7 +392,7 @@ theorem run_exact {stateCount : Nat}
       some (gateConfig L remainingRight callerData) := by
   unfold runSteps sourceConfig gateConfig
   rw [markedDeletedWord_eq_fields]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hheader :
       machine.runConfigExact? 1
           (config .header []
@@ -444,16 +424,16 @@ theorem run_exact {stateCount : Nat}
     rfl
   rw [hheader]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [fuel_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [state_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [restoreCount_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [restoreMarkedCells_run_exact]
   simp only
   rw [restoreHead_run_exact]
@@ -573,7 +553,7 @@ theorem run_exact {stateCount : Nat}
         (sourceConfig L remainingRight callerData) =
       some (targetConfig L remainingRight callerData) := by
   unfold runSteps sourceConfig targetConfig
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [DeleteRestagedMachine.edit_run_of_eq_some none _ _ _
     (DeleteBlock.run_one_exact MachineCodeSymbol.tick
       (RightPrepend.rightCountPrefix L).reverse

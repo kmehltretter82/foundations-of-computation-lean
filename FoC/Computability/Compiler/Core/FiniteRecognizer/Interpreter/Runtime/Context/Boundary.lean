@@ -413,18 +413,6 @@ theorem payload_ready_handoff_nat_exact
             payload_ready_handoff_tick_exact leftHead leftRev
               (MachineDescription.encodeNatAppend nextCount suffix)
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-
 def runSteps (cells : List (Option Bool)) : Nat :=
   (((cells.length + 1) + 2) + cells.length) + 2
 
@@ -444,15 +432,15 @@ theorem run_exact
   have hlocate := locate_run_of_some _ _ _ hlocateInner
   have henter := locate_payload_handoff_cells_exact
     baseLeftRev cells nextCount suffix
-  have hpref := runConfigExact_trans hlocate henter
+  have hpref := TuringMachine.runConfigExact?_trans hlocate henter
   have hcells := run_payload_cells
     (FiniteRecognizer.Interpreter.RuntimeEncodedList.PayloadLocator.targetLeftRev
       baseLeftRev cells.length)
     cells (MachineDescription.encodeNatAppend nextCount suffix)
-  have hthroughCells := runConfigExact_trans hpref hcells
+  have hthroughCells := TuringMachine.runConfigExact?_trans hpref hcells
   have hready := payload_ready_handoff_nat_exact
     baseLeftRev cells nextCount suffix
-  have hrun := runConfigExact_trans hthroughCells hready
+  have hrun := TuringMachine.runConfigExact?_trans hthroughCells hready
   simpa [runSteps, sourceConfig, targetBaseLeftRev, Nat.add_assoc] using hrun
 
 end Boundary

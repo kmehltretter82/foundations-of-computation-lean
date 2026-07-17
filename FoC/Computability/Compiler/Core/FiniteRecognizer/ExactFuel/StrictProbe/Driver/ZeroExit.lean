@@ -80,12 +80,6 @@ def machine {stateCount : Nat}
   statesFinite := Control.finite stateCount
 
 
-private theorem write_read_eq_self
-    (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 def checkTapeConfig {stateCount : Nat}
     (carriedState : Fin stateCount) (tape : Tape MachineCodeSymbol) :
     TuringMachine.Configuration MachineCodeSymbol (Control stateCount) where
@@ -106,7 +100,7 @@ theorem success_run_exact_on_tape {stateCount : Nat}
       some (continuationTapeConfig .successContinuation tape) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, checkTapeConfig, continuationTapeConfig, hhalt,
-    write_read_eq_self] <;> done
+    Tape.write_read_eq_self] <;> done
 
 theorem failure_run_exact_on_tape {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -116,7 +110,7 @@ theorem failure_run_exact_on_tape {stateCount : Nat}
       some (continuationTapeConfig .failureContinuation tape) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, checkTapeConfig, continuationTapeConfig, hnotHalt,
-    write_read_eq_self] <;> done
+    Tape.write_read_eq_self] <;> done
 
 end ZeroExitRoundTrip
 end StrictProbe

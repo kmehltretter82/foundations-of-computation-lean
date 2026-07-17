@@ -227,19 +227,6 @@ theorem insert_run_of_some
           simp only
           exact ih next target hrun
 
-theorem runConfigExact_trans
-    (cell : Option Bool)
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : (machine cell).runConfigExact? first source = some middle)
-    (hsecond : (machine cell).runConfigExact? second middle = some target) :
-    (machine cell).runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-
 def sourceConfig
     (baseLeftRev : Word MachineCodeSymbol)
     (count : Nat) (suffix : Word MachineCodeSymbol) :
@@ -303,8 +290,8 @@ theorem run_exact
     (buffer cell) (insertLeftRev baseLeftRev count) suffix
     (buffer_nonempty cell)
   have hinsert := insert_run_of_some cell _ _ _ hinsertInner
-  have hpref := runConfigExact_trans cell hlocate hhandoff
-  have hrun := runConfigExact_trans cell hpref hinsert
+  have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff
+  have hrun := TuringMachine.runConfigExact?_trans hpref hinsert
   refine ⟨insertConfig
       (InsertRestagedMachine.rewindConfig
         (RewindWord.gateConfig

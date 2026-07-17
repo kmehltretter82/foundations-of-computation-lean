@@ -1110,7 +1110,6 @@ theorem computes_append_halt
     TuringMachine.computes_trans hcopy hfinish, htargetTape⟩
 
 
-
 end Machine
 
 end FiniteRecognizer.Interpreter.BooleanContextHaltAppender

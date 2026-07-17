@@ -466,13 +466,13 @@ private theorem left_nonempty_run {stateCount : Nat}
     Update.KernelLifts.left_nonempty_finish_handoff_run_exact
       selected branchTape
   have hthroughProbe :=
-    Update.KernelLifts.runConfigExact_trans selected
+    TuringMachine.runConfigExact?_trans
       hprobeRun' hprobeHandoff
   have hthroughBranch :=
-    Update.KernelLifts.runConfigExact_trans selected
+    TuringMachine.runConfigExact?_trans
       hthroughProbe hbranchLift
   have htotal :=
-    Update.KernelLifts.runConfigExact_trans selected
+    TuringMachine.runConfigExact?_trans
       hthroughBranch hfinish
   exact ⟨_, CyclicDriverIntegration.roundTripTape branchTape,
     htotal, represents_double_roundTrip branchTape hbranchRep⟩
@@ -564,15 +564,15 @@ private theorem left_empty_run {stateCount : Nat}
   have hfinish :=
     Update.KernelLifts.left_empty_finish_handoff_run_exact
       selected branchTape
-  have h01 := Update.KernelLifts.runConfigExact_trans selected
+  have h01 := TuringMachine.runConfigExact?_trans
     hprobeRun' hprobeHandoff
-  have h02 := Update.KernelLifts.runConfigExact_trans selected
+  have h02 := TuringMachine.runConfigExact?_trans
     h01 hfuelLift
-  have h03 := Update.KernelLifts.runConfigExact_trans selected
+  have h03 := TuringMachine.runConfigExact?_trans
     h02 hfuelHandoff
-  have h04 := Update.KernelLifts.runConfigExact_trans selected
+  have h04 := TuringMachine.runConfigExact?_trans
     h03 hbranchLift
-  have htotal := Update.KernelLifts.runConfigExact_trans selected
+  have htotal := TuringMachine.runConfigExact?_trans
     h04 hfinish
   exact ⟨_, CyclicDriverIntegration.roundTripTape branchTape,
     htotal, represents_double_roundTrip branchTape hbranchRep⟩
@@ -664,15 +664,15 @@ private theorem right_empty_run {stateCount : Nat}
   have hfinish :=
     Update.KernelLifts.right_empty_finish_handoff_run_exact
       selected branchTape
-  have h01 := Update.KernelLifts.runConfigExact_trans selected
+  have h01 := TuringMachine.runConfigExact?_trans
     hprobeRun' hprobeHandoff
-  have h02 := Update.KernelLifts.runConfigExact_trans selected
+  have h02 := TuringMachine.runConfigExact?_trans
     h01 hfuelLift
-  have h03 := Update.KernelLifts.runConfigExact_trans selected
+  have h03 := TuringMachine.runConfigExact?_trans
     h02 hfuelHandoff
-  have h04 := Update.KernelLifts.runConfigExact_trans selected
+  have h04 := TuringMachine.runConfigExact?_trans
     h03 hbranchLift
-  have htotal := Update.KernelLifts.runConfigExact_trans selected
+  have htotal := TuringMachine.runConfigExact?_trans
     h04 hfinish
   exact ⟨_, CyclicDriverIntegration.roundTripTape branchTape,
     htotal, represents_double_roundTrip branchTape hbranchRep⟩
@@ -769,15 +769,15 @@ private theorem right_nonempty_run {stateCount : Nat}
   have hfinish :=
     Update.KernelLifts.right_nonempty_finish_handoff_run_exact
       selected branchTape
-  have h01 := Update.KernelLifts.runConfigExact_trans selected
+  have h01 := TuringMachine.runConfigExact?_trans
     hprobeRun' hprobeHandoff
-  have h02 := Update.KernelLifts.runConfigExact_trans selected
+  have h02 := TuringMachine.runConfigExact?_trans
     h01 hfuelLift
-  have h03 := Update.KernelLifts.runConfigExact_trans selected
+  have h03 := TuringMachine.runConfigExact?_trans
     h02 hfuelHandoff
-  have h04 := Update.KernelLifts.runConfigExact_trans selected
+  have h04 := TuringMachine.runConfigExact?_trans
     h03 hbranchLift
-  have htotal := Update.KernelLifts.runConfigExact_trans selected
+  have htotal := TuringMachine.runConfigExact?_trans
     h04 hfinish
   exact ⟨_, CyclicDriverIntegration.roundTripTape branchTape,
     htotal, represents_double_roundTrip branchTape hbranchRep⟩

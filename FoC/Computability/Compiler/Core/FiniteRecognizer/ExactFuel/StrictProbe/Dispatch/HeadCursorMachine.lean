@@ -118,24 +118,6 @@ def leftScanConfig (control : Control)
             head := some current
             right := rightWord.map some } }
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero => simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?,
-        TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem restoreCells_tick_step
     (head : Option MachineCodeSymbol)
     (next : MachineCodeSymbol)
@@ -265,7 +247,7 @@ theorem restoreCells_markedCell_run_exact
               (next :: remaining)) rightWord) = _
   rw [show optionalCodeSymbolTag cell + 1 =
       1 + optionalCodeSymbolTag cell by lia]
-  rw [runConfigExact?_add, TuringMachine.runConfigExact?]
+  rw [TuringMachine.runConfigExact?_add, TuringMachine.runConfigExact?]
   simp only [TuringMachine.runConfigExact?]
   have hrest :
       List.append (HeadLocator.ticks (optionalCodeSymbolTag cell))
@@ -317,7 +299,7 @@ theorem restoreCells_markedCells_run_exact
               (HeadLocator.markedCellWord cell).length := by
         simp
         lia
-      rw [hlength, runConfigExact?_add]
+      rw [hlength, TuringMachine.runConfigExact?_add]
       have hreverseAppend :
           (List.append (HeadLocator.markedCellWord cell)
               (HeadLocator.markedCellsWord cells) : Word MachineCodeSymbol).reverse =
@@ -388,7 +370,7 @@ theorem restoreHeadAndCells_marker_run_exact
               (HeadLocator.markedCellsWord cells).length + 1 =
             optionalCodeSymbolTag head +
               ((HeadLocator.markedCellsWord cells).length + 1) by lia]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [restoreCells_ticks_run_exact_nonempty
         (optionalCodeSymbolTag head) head
         (List.append (HeadLocator.markedCellsWord cells).reverse
@@ -398,7 +380,7 @@ theorem restoreHeadAndCells_marker_run_exact
           have := congrArg List.length h
           simp at this)]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [restoreCells_markedCells_run_exact cells head
         MachineCodeSymbol.blank (next :: remaining)]
       simp only
@@ -498,7 +480,7 @@ theorem restoreCount_run_exact
         (leftScanConfig (.seekTopHeader head) remaining
           (MachineCodeSymbol.done ::
             List.append (HeadLocator.ticks count) rightWord)) := by
-  rw [runConfigExact?_add, restoreCount_markers_run_exact]
+  rw [TuringMachine.runConfigExact?_add, restoreCount_markers_run_exact]
   simp only
   change
     machine.runConfigExact? 1
@@ -735,9 +717,9 @@ theorem seekTopHeader_fields_to_scan_general
               List.append (HeadLocator.ticks state) rightWord))) := by
   rw [show state + 1 + fuel + 1 =
       state + (1 + (fuel + 1)) by lia]
-  rw [runConfigExact?_add, seekTopHeader_ticks_run_exact]
+  rw [TuringMachine.runConfigExact?_add, seekTopHeader_ticks_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hdone :
       machine.runConfigExact? 1
           (leftScanConfig (.seekTopHeader head)
@@ -767,7 +749,7 @@ theorem seekTopHeader_fields_to_scan_general
         rfl
   rw [hdone]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekTopHeader_ticks_run_exact fuel head
     MachineCodeSymbol.header []]
   simp only
@@ -1042,10 +1024,10 @@ theorem run_exact {stateCount : Nat}
     machine.runConfigExact? (runSteps L) (sourceConfig L first rest) =
       some (positionedConfig L first rest) := by
   unfold runSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [source_marker_handoff]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   unfold markerConfig markedTail
   unfold Dispatch.RightFieldLocator.HeadDecoder.markedCountBaseLeftRev
   rw [restoreHeadAndCells_marker_run_exact L.head L.left
@@ -1056,22 +1038,19 @@ theorem run_exact {stateCount : Nat}
       have := congrArg List.length h
       simp [HeadLocator.countBaseLeftRev] at this)]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   unfold HeadLocator.countBaseLeftRev
   rw [restoreCount_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekTopHeader_fields_to_scan_exact]
   simp only
-  rw [runConfigExact?_add]
-  change
-    (match machine.runConfigExact? ((beforeHeadMarker L).length + 1)
-        (scanConfig L.head [MachineCodeSymbol.header]
-          (beforeHeadMarker L) (first :: rest)) with
-      | none => none
-      | some middle =>
-          machine.runConfigExact? (optionalCodeSymbolTag L.head + 1) middle) =
-      some (positionedConfig L first rest)
+  rw [TuringMachine.runConfigExact?_add]
+  rw [show cursorConfig (.scanMarker L.head) [MachineCodeSymbol.header]
+        (List.append (beforeHeadMarker L)
+          (MachineCodeSymbol.zero :: first :: rest)) =
+      scanConfig L.head [MachineCodeSymbol.header]
+        (beforeHeadMarker L) (first :: rest) from rfl]
   rw [scan_run_exact L.head [MachineCodeSymbol.header]
     (beforeHeadMarker L) (first :: rest) (beforeHeadMarker_safe L)]
   simp only

@@ -542,26 +542,6 @@ theorem rewind_finish
       some (targetConfigWord baseLeftRev crossed callerCells) := by
   cases crossed <;> rfl
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem carry_run_exact
     (baseLeftRev processedRev remaining : Word MachineCodeSymbol)
     (carried : MachineCodeSymbol)
@@ -669,13 +649,13 @@ theorem run_exact
       1 + (word.length + (1 + (word.length + 1))) by
     simp [word]
     lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [htake]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hcarry]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hturn]
   simp only
   exact hrewind

@@ -244,18 +244,6 @@ theorem run_target
         List.append_assoc] using
         ih (MachineCodeSymbol.tick :: leftRev)
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-
 theorem run_exact
     (action : Action) (target : Nat)
     (rest : Word MachineCodeSymbol) :
@@ -290,7 +278,7 @@ theorem run_exact
     rw [step_guard]
     rfl
   simpa [sourceConfig, targetConfig, targetBaseLeftRev] using
-    runConfigExact_trans htarget hguard
+    TuringMachine.runConfigExact?_trans htarget hguard
 
 end Prefix
 

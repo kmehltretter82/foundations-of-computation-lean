@@ -175,9 +175,6 @@ def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right T)
 theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) : Tape.Equiv (roundTripTape T) T :=
   Machine.moveLeft_moveRight_equiv_self T
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) : Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
 def locateConfig (c : TuringMachine.Configuration MachineCodeSymbol Dispatch.HeadCursor.Full.Control) :
     TuringMachine.Configuration MachineCodeSymbol Control :=
   TuringMachine.PhaseEmbedding.liftConfig Control.locate c
@@ -273,7 +270,7 @@ theorem locate_replace_handoff (write oldHead : Option MachineCodeSymbol) (T : T
               (Edits.OptionalField.Replace.machine oldHead newHead).start
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, replaceConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self,
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self,
     Dispatch.HeadCursor.Full.transition, Dispatch.HeadCursor.Post.transition]
 theorem replace_locatePayload_handoff (write oldHead : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) :
     (machine newHead write).runConfigExact? 2
@@ -282,7 +279,7 @@ theorem replace_locatePayload_handoff (write oldHead : Option MachineCodeSymbol)
           { state := Dispatch.HeadCursor.Full.machine.start
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, locatePayloadConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self,
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self,
     Edits.OptionalField.Replace.transition, InsertRestagedMachine.transition, RewindWord.transition]
 theorem locatePayload_payload_handoff (write head : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) :
     (machine newHead write).runConfigExact? 2
@@ -292,7 +289,7 @@ theorem locatePayload_payload_handoff (write head : Option MachineCodeSymbol) (T
               (Edits.PositionedRight.machine .rightPayload (InsertBlock.optionalBuffer write)).start
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, payloadConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self,
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self,
     Dispatch.HeadCursor.Full.transition, Dispatch.HeadCursor.Post.transition]
 theorem payload_locateCount_handoff (write : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) :
     (machine newHead write).runConfigExact? 2
@@ -300,7 +297,7 @@ theorem payload_locateCount_handoff (write : Option MachineCodeSymbol) (T : Tape
           { state := Dispatch.HeadCursor.Full.machine.start
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, locateCountConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self,
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self,
     Edits.PositionedRight.transition, InsertRestagedMachine.transition, RewindWord.transition]
 theorem locateCount_count_handoff (write head : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) :
     (machine newHead write).runConfigExact? 2
@@ -310,16 +307,8 @@ theorem locateCount_count_handoff (write head : Option MachineCodeSymbol) (T : T
                 (InsertBlock.singletonBuffer MachineCodeSymbol.tick)).start
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, countConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self,
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self,
     Dispatch.HeadCursor.Full.transition, Dispatch.HeadCursor.Post.transition]
-theorem runConfigExact_trans (write : Option MachineCodeSymbol)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : (machine newHead write).runConfigExact? first a = some b) (hbc : (machine newHead write).runConfigExact? second b = some c) :
-    (machine newHead write).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 def rightCountFirst : Nat -> MachineCodeSymbol
   | 0 => MachineCodeSymbol.done
   | _ + 1 => MachineCodeSymbol.tick
@@ -484,16 +473,16 @@ theorem run_from_equiv {stateCount : Nat} (L : Layout stateCount) (write : Optio
                             (roundTripTape countLocatorTape) (by simpa [countSuffix] using hcountSource) with
                         ⟨countEndpoint, hcount, hcountState, hcountTape⟩
                       have hcountOuter := count_run_of_some newHead write hcount
-                      have hrun1 := runConfigExact_trans newHead write hlocateOuter' hlocateHandoff
-                      have hrun2 := runConfigExact_trans newHead write hrun1 hreplaceOuter
-                      have hrun3 := runConfigExact_trans newHead write hrun2 hreplaceHandoff
-                      have hrun4 := runConfigExact_trans newHead write hrun3 hpayloadLocateOuter
-                      have hrun5 := runConfigExact_trans newHead write hrun4 hpayloadLocateHandoff
-                      have hrun6 := runConfigExact_trans newHead write hrun5 hpayloadOuter
-                      have hrun7 := runConfigExact_trans newHead write hrun6 hpayloadHandoff
-                      have hrun8 := runConfigExact_trans newHead write hrun7 hcountLocateOuter
-                      have hrun9 := runConfigExact_trans newHead write hrun8 hcountLocateHandoff
-                      have hrun10 := runConfigExact_trans newHead write hrun9 hcountOuter
+                      have hrun1 := TuringMachine.runConfigExact?_trans hlocateOuter' hlocateHandoff
+                      have hrun2 := TuringMachine.runConfigExact?_trans hrun1 hreplaceOuter
+                      have hrun3 := TuringMachine.runConfigExact?_trans hrun2 hreplaceHandoff
+                      have hrun4 := TuringMachine.runConfigExact?_trans hrun3 hpayloadLocateOuter
+                      have hrun5 := TuringMachine.runConfigExact?_trans hrun4 hpayloadLocateHandoff
+                      have hrun6 := TuringMachine.runConfigExact?_trans hrun5 hpayloadOuter
+                      have hrun7 := TuringMachine.runConfigExact?_trans hrun6 hpayloadHandoff
+                      have hrun8 := TuringMachine.runConfigExact?_trans hrun7 hcountLocateOuter
+                      have hrun9 := TuringMachine.runConfigExact?_trans hrun8 hcountLocateHandoff
+                      have hrun10 := TuringMachine.runConfigExact?_trans hrun9 hcountOuter
                       refine ⟨countConfig countEndpoint, ?_, ?_, ?_⟩
                       · simpa [runSteps, throughPayloadSteps, throughReplaceSteps, replaced,
                           Nat.add_assoc] using hrun10

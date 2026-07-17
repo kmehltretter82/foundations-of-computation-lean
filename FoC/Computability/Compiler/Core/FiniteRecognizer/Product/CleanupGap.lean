@@ -226,25 +226,6 @@ def targetConfig (word : Word MachineCodeSymbol)
 def runSteps (word : Word MachineCodeSymbol) : Nat :=
   3 * word.length + 5
 
-private theorem runConfigExact?_add (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 private theorem erase_step (last : MachineCodeSymbol)
     (remainingRev : Word MachineCodeSymbol)
     (callerCells : List (Option MachineCodeSymbol)) :
@@ -438,16 +419,16 @@ private theorem reverse_run_exact (last : MachineCodeSymbol)
         (prefixRev.length + (2 + (prefixRev.length + 1)))) by
     rw [hlength]
     lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [erase_take_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hcarry]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hseek]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [restore_cross_run_exact]
   simp only
   exact hrewind
@@ -628,25 +609,6 @@ def targetConfig (word : Word MachineCodeSymbol)
 def runSteps (word : Word MachineCodeSymbol) : Nat :=
   2 * word.length + 3
 
-private theorem runConfigExact?_add (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 private theorem take_step (first : MachineCodeSymbol)
     (rest : Word MachineCodeSymbol)
     (callerCells : List (Option MachineCodeSymbol)) :
@@ -781,13 +743,13 @@ theorem run_exact (first : MachineCodeSymbol)
       1 + (word.length + (1 + (word.length + 1))) by
     simp [word]
     lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [htake]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hcarry]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hturn]
   simp only
   exact hrewind

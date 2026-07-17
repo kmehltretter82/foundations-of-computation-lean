@@ -104,11 +104,6 @@ def positiveConfig {stateCount : Nat} (carriedState : Fin stateCount)
   state := .positiveEntry carriedState
   tape := roundTripTape T
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem zero_run_exact_on_tape {stateCount : Nat}
     (initialCarriedState carriedState : Fin stateCount)
     (T : Tape MachineCodeSymbol)
@@ -122,13 +117,13 @@ theorem zero_run_exact_on_tape {stateCount : Nat}
   have hwriteHeader :
       Tape.write (some MachineCodeSymbol.header) T = T := by
     rw [← hheader]
-    exact write_read_eq_self T
+    exact Tape.write_read_eq_self T
   have hwriteZero :
       Tape.write (some MachineCodeSymbol.done)
           (Tape.move Direction.right T) =
         Tape.move Direction.right T := by
     rw [← hzero]
-    exact write_read_eq_self (Tape.move Direction.right T)
+    exact Tape.write_read_eq_self (Tape.move Direction.right T)
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, hheader, hwriteHeader, hzero, hwriteZero,
     zeroConfig, roundTripTape]
@@ -146,13 +141,13 @@ theorem positive_run_exact_on_tape {stateCount : Nat}
   have hwriteHeader :
       Tape.write (some MachineCodeSymbol.header) T = T := by
     rw [← hheader]
-    exact write_read_eq_self T
+    exact Tape.write_read_eq_self T
   have hwritePositive :
       Tape.write (some MachineCodeSymbol.tick)
           (Tape.move Direction.right T) =
         Tape.move Direction.right T := by
     rw [← hpositive]
-    exact write_read_eq_self (Tape.move Direction.right T)
+    exact Tape.write_read_eq_self (Tape.move Direction.right T)
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, hheader, hwriteHeader, hpositive, hwritePositive,
     positiveConfig, roundTripTape]

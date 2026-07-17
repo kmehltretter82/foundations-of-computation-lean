@@ -230,19 +230,6 @@ def targetConfig
       currentState)
     (cleanedGap gap) haltState suffix |>.tape
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-  done
-
 def builtLeftRev (currentState : Nat) : Word MachineCodeSymbol :=
   MachineCodeSymbol.header ::
     (FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix
@@ -387,7 +374,7 @@ theorem prefix_run_exact
     (List.append (MachineDescription.encodeNat currentState).reverse
       [MachineCodeSymbol.header])
     queryRead firstJunk secondJunk rest
-  have hall := runConfigExact_trans (runConfigExact_trans hstart hnat) hfinish
+  have hall := TuringMachine.runConfigExact?_trans (TuringMachine.runConfigExact?_trans hstart hnat) hfinish
   simpa [prefixTargetConfig, builtLeftRev,
     FiniteRecognizer.Interpreter.FinalGateMaterializer.PrefixBuilder.comparatorPrefix,
     MachineDescription.encodeNatAppend, List.reverse_append,
@@ -563,7 +550,7 @@ theorem erase_run_exact
                 (MachineCodeSymbol.blank :: baseLeftRev)
                 htail0 with ⟨steps, hrun⟩
             refine ⟨5 + steps, ?_⟩
-            have hall := runConfigExact_trans hpair hrun
+            have hall := TuringMachine.runConfigExact?_trans hpair hrun
             rw [eraseTarget_cons_blank baseLeftRev
               (next :: tail).length haltState suffix] at hall
             simpa using hall
@@ -574,7 +561,7 @@ theorem erase_run_exact
           rcases ih (MachineCodeSymbol.blank :: baseLeftRev) htail with
             ⟨steps, hrun⟩
           refine ⟨1 + steps, ?_⟩
-          have hall := runConfigExact_trans
+          have hall := TuringMachine.runConfigExact?_trans
             (show machine.runConfigExact? 1
                 (eraseConfig baseLeftRev (symbol :: rest) haltState suffix) =
               some (eraseConfig (MachineCodeSymbol.blank :: baseLeftRev)
@@ -813,10 +800,10 @@ theorem run_exact
         haltState suffix) =
     some (eraseTargetConfig (builtLeftRev currentState) blankRev
       haltState suffix) := by
-    apply runConfigExact_trans
+    apply TuringMachine.runConfigExact?_trans
       (by simpa [sourceConfig, sourceWord, tail] using hprefix)
       herase'
-  exact runConfigExact_trans hfront hrewind'
+  exact TuringMachine.runConfigExact?_trans hfront hrewind'
   done
 
 

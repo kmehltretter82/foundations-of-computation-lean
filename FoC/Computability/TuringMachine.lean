@@ -1172,6 +1172,43 @@ theorem computesIn_trans {M : TuringMachine symbol state}
   rw [Nat.add_comm]
   exact computesIn_trans_right hab hbc
 
+/--
+Exact runs compose: two sequential {name}`runConfigExact?` successes
+concatenate into one success over the summed step count.
+-/
+theorem runConfigExact?_trans {M : TuringMachine symbol state}
+    {firstSteps secondSteps : Nat}
+    {source middle target : Configuration symbol state}
+    (hfirst : M.runConfigExact? firstSteps source = some middle)
+    (hsecond : M.runConfigExact? secondSteps middle = some target) :
+    M.runConfigExact? (firstSteps + secondSteps) source = some target :=
+  runConfigExact?_eq_some_iff_computesIn.mpr
+    (computesIn_trans
+      (runConfigExact?_eq_some_iff_computesIn.mp hfirst)
+      (runConfigExact?_eq_some_iff_computesIn.mp hsecond))
+
+/--
+Splitting an exact run: {lit}`first + second` steps reach a configuration
+exactly when {lit}`first` steps succeed and the reached configuration
+completes the remaining {lit}`second` steps.
+-/
+theorem runConfigExact?_add {M : TuringMachine symbol state}
+    (first second : Nat) (c : Configuration symbol state) :
+    M.runConfigExact? (first + second) c =
+      match M.runConfigExact? first c with
+      | none => none
+      | some middle => M.runConfigExact? second middle := by
+  induction first generalizing c with
+  | zero =>
+      simp only [Nat.zero_add, runConfigExact?]
+  | succ first ih =>
+      rw [Nat.succ_add, runConfigExact?, runConfigExact?]
+      cases hstep : M.stepConfig c with
+      | none => rfl
+      | some next =>
+          simp only
+          exact ih next
+
 theorem computesIn_deterministic {M : TuringMachine symbol state}
     {n : Nat} {c d e : Configuration symbol state}
     (hcd : ComputesIn M n c d) (hce : ComputesIn M n c e) :

@@ -237,26 +237,6 @@ def rightPayloadSteps (head : Option MachineCodeSymbol)
     (rightCount : Nat) : Nat :=
   headSteps head + (rightCount + 1)
 
-theorem runConfigExact?_add (boundary : Boundary)
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine boundary).runConfigExact? (first + second) c =
-      match (machine boundary).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine boundary).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero => simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : (machine boundary).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 def rightCountTicksSteps (head : Option MachineCodeSymbol)
     (rightCount : Nat) : Nat :=
   headSteps head + (rightCount + 2)
@@ -272,7 +252,7 @@ theorem run_rightCountTicks_exact
         (rightCountTicksGateConfig rightCount
           (afterHeadLeftRev leftRev head) suffix) := by
   unfold rightCountTicksSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [head_run_rightCountTicks_prefix_exact]
   simp only
   exact rightCountTicks_run_exact rightCount
@@ -287,7 +267,7 @@ theorem run_rightPayload_exact
         (sourceConfig leftRev head rightCount suffix) =
       some (rightPayloadGateConfig leftRev head rightCount suffix) := by
   unfold rightPayloadSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [head_run_rightPayload_prefix_exact]
   simp only
   exact rightCount_run_exact rightCount

@@ -116,19 +116,6 @@ theorem step_terminal_header
   cases rest <;> cases baseLeftRev <;> rfl
   done
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-  done
-
 theorem run_scan_noheaders
     (baseLeftRev symbols suffix : Word MachineCodeSymbol)
     (hnoHeader : transitionListParserNoHeader symbols) :
@@ -232,8 +219,8 @@ theorem run_one_copy
     rw [TuringMachine.runConfigExact?]
     rw [step_scan_header]
     rfl
-  have hfirstTail := runConfigExact_trans hfirst htail
-  have hall := runConfigExact_trans hfirstTail hseparator
+  have hfirstTail := TuringMachine.runConfigExact?_trans hfirst htail
+  have hall := TuringMachine.runConfigExact?_trans hfirstTail hseparator
   simpa [tail, List.reverse_cons, List.append_assoc,
     Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hall
   done
@@ -298,7 +285,7 @@ theorem run_exact
       have hrest := ih
         (MachineCodeSymbol.header ::
           List.append table.reverse baseLeftRev)
-      have hall := runConfigExact_trans hone hrest
+      have hall := TuringMachine.runConfigExact?_trans hone hrest
       simpa [sourceConfig, targetConfig, table,
         FiniteRecognizer.Interpreter.LoopRestagingAudit.tableStack_succ,
         List.reverse_append, List.append_assoc,

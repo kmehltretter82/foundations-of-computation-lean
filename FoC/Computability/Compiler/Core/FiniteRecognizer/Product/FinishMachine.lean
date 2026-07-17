@@ -300,11 +300,6 @@ theorem compactor_run_lift {leftCount rightCount : Nat}
   · exact compactor_stepConfig_of_some left right
   · exact hrun
 
-theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem materializer_handoff_run_exact {leftCount rightCount : Nat}
     (left : TuringMachine MachineCodeSymbol (Fin leftCount))
     (right : TuringMachine MachineCodeSymbol (Fin rightCount))
@@ -320,7 +315,7 @@ theorem materializer_handoff_run_exact {leftCount rightCount : Nat}
     compactorConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
     StageInput.TwoBlankCompactor.config, StageRunner.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem empty_materializer_handoff_run_exact {leftCount rightCount : Nat}
     (left : TuringMachine MachineCodeSymbol (Fin leftCount))
@@ -334,7 +329,7 @@ theorem empty_materializer_handoff_run_exact {leftCount rightCount : Nat}
           tape := Tape.move Direction.left tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, emptyMaterializerEndpoint,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem compactor_handoff_run_exact {leftCount rightCount : Nat}
     (left : TuringMachine MachineCodeSymbol (Fin leftCount))
@@ -349,7 +344,7 @@ theorem compactor_handoff_run_exact {leftCount rightCount : Nat}
           tape := StageRunner.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, StageRunner.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem haltingTransitionsDisabled {leftCount rightCount : Nat}
     (left : TuringMachine MachineCodeSymbol (Fin leftCount))

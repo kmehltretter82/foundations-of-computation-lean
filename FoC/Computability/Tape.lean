@@ -73,6 +73,12 @@ def read (T : Tape symbol) : Option symbol :=
 def write (cell : Option symbol) (T : Tape symbol) : Tape symbol :=
   { T with head := cell }
 
+/-- Writing back the currently read head cell leaves the tape unchanged. -/
+theorem write_read_eq_self (T : Tape symbol) :
+    write (read T) T = T := by
+  cases T
+  rfl
+
 def moveLeft (T : Tape symbol) : Tape symbol :=
   match T.left with
   | [] => { left := [], head := none, right := T.head :: T.right }

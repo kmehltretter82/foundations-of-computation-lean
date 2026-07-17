@@ -735,18 +735,6 @@ theorem right_done_handoff
             (MachineCodeSymbol.done :: rest))) := by
   cases leftRev <;> cases rest <;> rfl
 
-theorem runConfigExact_trans
-    (direction : Direction)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : (machine direction).runConfigExact? first a = some b)
-    (hbc : (machine direction).runConfigExact? second b = some c) :
-    (machine direction).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
 def leftSteps {stateCount : Nat} (L : Layout stateCount) : Nat :=
   FieldLocator.leftCountSteps L +
     (1 + ((LeftPrepend.leftCountPrefix L).reverse.length + 1))
@@ -783,8 +771,8 @@ theorem left_run_exact {stateCount : Nat}
         (LeftPrepend.leftCountPrefix L).reverse
         (MachineCodeSymbol.done :: headSuffix L callerData)
       have hscan := leftRewind_run_of_some .left true hscanInner
-      have hpref := runConfigExact_trans .left hlocate hhandoff
-      have hrun := runConfigExact_trans .left hpref hscan
+      have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff
+      have hrun := TuringMachine.runConfigExact?_trans hpref hscan
       have hword :
           List.append
               (LeftPrepend.leftCountPrefix L).reverse.reverse
@@ -827,8 +815,8 @@ theorem left_run_exact {stateCount : Nat}
         (LeftPrepend.leftCountPrefix L).reverse
         (MachineCodeSymbol.tick :: rest)
       have hscan := leftRewind_run_of_some .left false hscanInner
-      have hpref := runConfigExact_trans .left hlocate hhandoff
-      have hrun := runConfigExact_trans .left hpref hscan
+      have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff
+      have hrun := TuringMachine.runConfigExact?_trans hpref hscan
       have hword :
           List.append
               (LeftPrepend.leftCountPrefix L).reverse.reverse
@@ -933,8 +921,8 @@ theorem right_run_of_shape {stateCount : Nat}
     (first :: rest)
   have hmarkedScan :=
     rightMarkedRewind_run_of_some .right result hmarkedScanInner
-  have hprefOne := runConfigExact_trans .right hlocate hhandoff
-  have hprefTwo := runConfigExact_trans .right hprefOne hmarkedScan
+  have hprefOne := TuringMachine.runConfigExact?_trans hlocate hhandoff
+  have hprefTwo := TuringMachine.runConfigExact?_trans hprefOne hmarkedScan
   have hmarkedWord := marked_right_word_eq L callerData
   rw [hshape] at hmarkedWord
   have hmarkedGateEquiv :
@@ -1052,8 +1040,8 @@ theorem right_run_of_shape {stateCount : Nat}
         subst actualState
         rfl
   rw [hrestoreTarget] at hrestore
-  have hprefThree := runConfigExact_trans .right hprefTwo hrestore
-  have hrun := runConfigExact_trans .right hprefThree hclean
+  have hprefThree := TuringMachine.runConfigExact?_trans hprefTwo hrestore
+  have hrun := TuringMachine.runConfigExact?_trans hprefThree hclean
   have hfinalWord :
       List.append
           (RightPrepend.rightCountPrefix L).reverse.reverse

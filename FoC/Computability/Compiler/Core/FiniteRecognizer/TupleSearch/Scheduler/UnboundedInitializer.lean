@@ -166,18 +166,13 @@ theorem write_run_of_split
           simpa using
             (List.append_assoc written [current] rest).symm))
 
-theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem finish_step (fixedWord : List MachineCodeSymbol)
     (input : Word MachineCodeSymbol) :
     (machine fixedWord).stepConfig
         (writeConfig fixedWord fixedWord [] input (by simp)) =
       some (endpointConfig fixedWord input) := by
   simp [TuringMachine.stepConfig, machine, transition, writeConfig,
-    stateAt, endpointConfig, endpointTape, write_read_eq_self,
+    stateAt, endpointConfig, endpointTape, Tape.write_read_eq_self,
     Tape.move]
 
 theorem run_exact (fixedWord : List MachineCodeSymbol)

@@ -297,19 +297,6 @@ theorem run_finish
   cases haltToken <;> cases rest <;> rfl
   done
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-  done
-
 theorem run_shift
     (haltToken targetToken : Bool)
     (remaining : Nat)
@@ -397,8 +384,8 @@ theorem run_exact
       have hfinish := run_finish haltToken
         [MachineCodeSymbol.done, MachineCodeSymbol.header]
         firstContext secondContext tail
-      have hall := runConfigExact_trans
-        (runConfigExact_trans hstart hheader) hfinish
+      have hall := TuringMachine.runConfigExact?_trans
+        (TuringMachine.runConfigExact?_trans hstart hheader) hfinish
       simpa [sourceConfig, targetConfig, comparatorPrefix, tail,
         MachineDescription.encodeNat, MachineDescription.encodeNatAppend,
         List.append_assoc] using hall
@@ -431,8 +418,8 @@ theorem run_exact
         (List.append (MachineDescription.encodeNat remaining).reverse
           [MachineCodeSymbol.tick, MachineCodeSymbol.header])
         firstContext secondContext tail
-      have hall := runConfigExact_trans
-        (runConfigExact_trans hstart hshift) hfinish
+      have hall := TuringMachine.runConfigExact?_trans
+        (TuringMachine.runConfigExact?_trans hstart hshift) hfinish
       simpa [sourceConfig, targetConfig, comparatorPrefix, tail,
         MachineDescription.encodeNat, MachineDescription.encodeNatAppend,
         List.reverse_cons, List.append_assoc, Nat.add_assoc,

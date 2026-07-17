@@ -322,22 +322,6 @@ private theorem update_runConfigExact_of_some {stateCount : Nat}
       using hrun
 def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move .left (Tape.move .right T)
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by cases T; rfl
-theorem runConfigExact_trans {stateCount : Nat}
-    {updateState : Type} [DecidableEq updateState]
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
-    (K : UpdateKernel stateCount updateState)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol
-      (Control stateCount updateState)}
-    (hab : (machine M K).runConfigExact? first a = some b)
-    (hbc : (machine M K).runConfigExact? second b = some c) :
-    (machine M K).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 private theorem handoff_run_exact {stateCount : Nat}
     {updateState : Type} [DecidableEq updateState]
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -352,7 +336,7 @@ private theorem handoff_run_exact {stateCount : Nat}
     (machine M K).runConfigExact? 2 { state := source, tape := T } =
       some { state := target, tape := roundTripTape T } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, hsource, hmiddle, roundTripTape, write_read_eq_self]
+    machine, hsource, hmiddle, roundTripTape, Tape.write_read_eq_self]
 theorem update_stage_run_exact {stateCount : Nat}
     {updateState : Type} [DecidableEq updateState]
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -369,7 +353,7 @@ theorem update_stage_run_exact {stateCount : Nat}
       some
         { state := Control.gate (.header selected.nextState)
           tape := roundTripTape targetTape } := by
-  exact runConfigExact_trans M K
+  exact TuringMachine.runConfigExact?_trans
     (update_runConfigExact_of_some M K selected hrun)
     (handoff_run_exact M K
       (Control.update selected (K.halt selected))
@@ -426,7 +410,7 @@ theorem zero_gate_stage_run_exact {stateCount : Nat}
     rw [hround, hround]
   simpa [loopSourceConfig, gateConfig, CarriedFuelGate.sourceConfig,
       T, hdouble] using
-    runConfigExact_trans M K
+    TuringMachine.runConfigExact?_trans
       (gate_runConfigExact_of_some M K
         (CarriedFuelGate.zero_run_exact_on_tape
           M.start F.carriedState T (by rfl) (by rfl)))
@@ -468,7 +452,7 @@ theorem positive_gate_stage_run_exact {stateCount : Nat}
     rw [hround, hround]
   simpa [loopSourceConfig, gateConfig, CarriedFuelGate.sourceConfig,
       T, hdouble] using
-    runConfigExact_trans M K
+    TuringMachine.runConfigExact?_trans
       (gate_runConfigExact_of_some M K
         (CarriedFuelGate.positive_run_exact_on_tape
           M.start F.carriedState T (by rfl) (by rfl)))
@@ -515,9 +499,9 @@ theorem zero_accept_run_exact {stateCount : Nat}
     change roundTripTape (roundTripTape T) = T
     rw [hround, hround]
   simpa [T, hdouble] using
-    runConfigExact_trans M K
+    TuringMachine.runConfigExact?_trans
       (zero_gate_stage_run_exact M K F callerData)
-      (runConfigExact_trans M K
+      (TuringMachine.runConfigExact?_trans
         (zero_runConfigExact_of_some M K
           (ZeroExitRoundTrip.success_run_exact_on_tape
             M F.carriedState T hphysical))
@@ -566,9 +550,9 @@ theorem zero_reject_run_exact {stateCount : Nat}
     change roundTripTape (roundTripTape T) = T
     rw [hround, hround]
   simpa [T, hdouble] using
-    runConfigExact_trans M K
+    TuringMachine.runConfigExact?_trans
       (zero_gate_stage_run_exact M K F callerData)
-      (runConfigExact_trans M K
+      (TuringMachine.runConfigExact?_trans
         (zero_runConfigExact_of_some M K
           (ZeroExitRoundTrip.failure_run_exact_on_tape
             M F.carriedState T hphysical))
@@ -631,8 +615,8 @@ theorem succ_missing_run_exact {stateCount : Nat}
   have hgate := positive_gate_stage_run_exact M K fuel F callerData
   rw [← dispatchConfig_sourceConfig_eq
     (updateState := updateState) F.carriedState L callerData] at hgate
-  exact runConfigExact_trans M K hgate
-    (runConfigExact_trans M K
+  exact TuringMachine.runConfigExact?_trans hgate
+    (TuringMachine.runConfigExact?_trans
       (dispatch_runConfigExact_of_some M K
         (SerializedHeadDispatch.succMissing_run_exact
           M F.carriedState L callerData hphysical))
@@ -690,8 +674,8 @@ theorem succ_present_prefix_run_exact {stateCount : Nat}
   have hgate := positive_gate_stage_run_exact M K fuel F callerData
   rw [← dispatchConfig_sourceConfig_eq
     (updateState := updateState) F.carriedState L callerData] at hgate
-  exact runConfigExact_trans M K hgate
-    (runConfigExact_trans M K
+  exact TuringMachine.runConfigExact?_trans hgate
+    (TuringMachine.runConfigExact?_trans
       (dispatch_runConfigExact_of_some M K
         (SerializedHeadDispatch.succPresent_run_exact
           M F.carriedState L callerData write direction nextState hphysical))

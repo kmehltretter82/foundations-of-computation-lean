@@ -153,11 +153,6 @@ theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape T) T :=
   Machine.moveLeft_moveRight_equiv_self T
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem parser_handoff_run_exact {rightCount : Nat}
     (right : TuringMachine MachineCodeSymbol (Fin rightCount))
     (T : Tape MachineCodeSymbol) :
@@ -167,7 +162,7 @@ theorem parser_handoff_run_exact {rightCount : Nat}
         { state := .duplicator .scan,
           tape := roundTripTape T } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, transition, roundTripTape, write_read_eq_self]
+    machine, transition, roundTripTape, Tape.write_read_eq_self]
 
 theorem duplicator_handoff_run_exact {rightCount : Nat}
     (right : TuringMachine MachineCodeSymbol (Fin rightCount))
@@ -179,7 +174,7 @@ theorem duplicator_handoff_run_exact {rightCount : Nat}
             (InitialMaterializer.FullMaterializerMachine.machine right).start,
           tape := roundTripTape T } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, transition, roundTripTape, write_read_eq_self]
+    machine, transition, roundTripTape, Tape.write_read_eq_self]
 
 theorem parser_outer_tick_step {rightCount : Nat}
     (right : TuringMachine MachineCodeSymbol (Fin rightCount))

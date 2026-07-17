@@ -493,32 +493,12 @@ theorem delete_tail_exact
         (DeleteEndpointRewind.gateConfig
           (PhysicalBranch.deleteOutput leftRev suffix) none)) := by
   unfold deleteTailSteps
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [DeleteRestagedMachine.edit_run_of_eq_some none _ _ _
     (DeleteBlock.pull_run_exact none leftRev suffix)]
   simp only
   rw [DeleteRestagedMachine.rewind_run_exact]
   simp [PhysicalBranch.deleteOutput, List.reverse_append]
-  done
-
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?,
-        TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
   done
 
 theorem atMarker_step
@@ -624,8 +604,8 @@ theorem marker_delete_exact
       some (gateSeekOldConfig action
         (PhysicalBranch.deleteOutput leftRev suffix)) := by
   unfold deletePhaseSteps
-  rw [runConfigExact?_add]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [TuringMachine.runConfigExact?, atMarker_step]
   simp only [TuringMachine.runConfigExact?]
   rw [deleteMarker_run_of_eq_some action
@@ -644,8 +624,8 @@ theorem old_tick_delete_exact
       some (gateSeekOldConfig action
         (PhysicalBranch.deleteOutput leftRev suffix)) := by
   unfold deletePhaseSteps
-  rw [runConfigExact?_add]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [TuringMachine.runConfigExact?, atOld_tick_step]
   simp only [TuringMachine.runConfigExact?]
   rw [deleteOld_run_of_eq_some action .continue
@@ -664,8 +644,8 @@ theorem old_done_delete_exact
       some (gateReadyConfig action
         (PhysicalBranch.deleteOutput leftRev suffix)) := by
   unfold deletePhaseSteps
-  rw [runConfigExact?_add]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [TuringMachine.runConfigExact?, atOld_done_step]
   simp only [TuringMachine.runConfigExact?]
   rw [deleteOld_run_of_eq_some action .finish
@@ -699,7 +679,7 @@ theorem old_tick_phase_exact
       some (gateSeekOldConfig action
         (MachineDescription.encodeNatAppend target suffix)) := by
   unfold oldSymbolPhaseSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekOld_run_exact]
   have hleft :
       List.append (MachineDescription.encodeNat target).reverse
@@ -724,7 +704,7 @@ theorem old_done_phase_exact
       some (gateReadyConfig action
         (MachineDescription.encodeNatAppend target suffix)) := by
   unfold oldSymbolPhaseSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekOld_run_exact]
   have hleft :
       List.append (MachineDescription.encodeNat target).reverse
@@ -880,7 +860,7 @@ theorem old_loop_of_tape_equiv
         ⟨targetTape, hrest, htarget⟩
       refine ⟨targetTape, ?_, htarget⟩
       unfold oldLoopSteps
-      rw [runConfigExact?_add, hfirst]
+      rw [TuringMachine.runConfigExact?_add, hfirst]
       simp only
       exact hrest
   done
@@ -911,7 +891,7 @@ theorem marker_phase_exact
     cases target <;> rfl
   unfold markerPhaseSteps
   rw [hsource]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekMarker_run_exact]
   have hleft :
       List.append (MachineDescription.encodeNat target).reverse
@@ -964,7 +944,7 @@ theorem run_exact
     ⟨targetTape, hloop, htape⟩
   refine ⟨targetTape, ?_, ?_⟩
   · unfold runSteps
-    rw [runConfigExact?_add]
+    rw [TuringMachine.runConfigExact?_add]
     rw [marker_phase_exact]
     simp only
     exact hloop

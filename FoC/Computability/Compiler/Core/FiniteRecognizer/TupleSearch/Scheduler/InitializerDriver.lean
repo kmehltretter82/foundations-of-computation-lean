@@ -106,11 +106,6 @@ theorem roundTripTape_equiv (tape : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape tape) tape := by
   exact Machine.moveLeft_moveRight_equiv_self tape
 
-theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem initializer_step_of_some
     [DecidableEq initializerState]
     (initializer : TuringMachine MachineCodeSymbol initializerState)
@@ -223,7 +218,7 @@ theorem handoff_run_exact
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, driverConfig,
     TuringMachine.PhaseEmbedding.liftConfig, roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem initialization_run_exact
     [DecidableEq initializerState]

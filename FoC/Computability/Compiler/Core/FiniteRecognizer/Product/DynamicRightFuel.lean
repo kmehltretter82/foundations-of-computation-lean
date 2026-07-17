@@ -470,25 +470,6 @@ private theorem of_run {source target : Config Control} {steps : Nat}
     RunsToEquiv source target :=
   ⟨steps, target, hrun, rfl, Tape.Equiv.refl _⟩
 
-private theorem runConfigExact?_add (first second : Nat)
-    (c : Config Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 private theorem trans {source middle target : Config Control}
     (first : RunsToEquiv source middle)
     (second : RunsToEquiv middle target) :
@@ -517,7 +498,7 @@ private theorem trans {source middle target : Config Control}
     ⟨firstSteps + secondSteps, actualEndpoint, ?_,
       hactualState.trans hsecondState,
       Tape.Equiv.trans hsecondTape hactualTape⟩
-  rw [runConfigExact?_add, hfirst]
+  rw [TuringMachine.runConfigExact?_add, hfirst]
   exact hsecondActual'
 
 end RunsToEquiv

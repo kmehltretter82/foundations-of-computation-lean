@@ -301,11 +301,6 @@ theorem roundTripTape_equiv (tape : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape tape) tape :=
   Machine.moveLeft_moveRight_equiv_self tape
 
-private theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem delete_ready_handoff_exact
     (cell : Option Bool) (tape : Tape MachineCodeSymbol) :
     machine.runConfigExact? 2
@@ -314,19 +309,7 @@ theorem delete_ready_handoff_exact
         { state := Control.ready cell,
           tape := roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, transition, roundTripTape, write_read_eq_self]
-
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
+    machine, transition, roundTripTape, Tape.write_read_eq_self]
 
 def sourceConfig
     (baseLeftRev : Word MachineCodeSymbol)
@@ -382,14 +365,14 @@ theorem run_exact
     (shortenedLeftRev baseLeftRev remaining)
     MachineCodeSymbol.done (cellSymbol cell) suffix
   have hdelete := delete_run_of_some cell _ _ _ hdeleteInner rfl
-  have hpref := runConfigExact_trans hlocate hhandoff
-  have hthroughDelete := runConfigExact_trans hpref hdelete
+  have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff
+  have hthroughDelete := TuringMachine.runConfigExact?_trans hpref hdelete
   have hready := delete_ready_handoff_exact cell
     (DeleteRestagedMachine.rewindConfig
       (DeleteEndpointRewind.gateConfig
         (DeleteTwo.output (shortenedLeftRev baseLeftRev remaining) suffix)
         DeleteTwo.gapCell)).tape
-  have hrun := runConfigExact_trans hthroughDelete hready
+  have hrun := TuringMachine.runConfigExact?_trans hthroughDelete hready
   refine ⟨
     { state := Control.ready cell
       tape := roundTripTape

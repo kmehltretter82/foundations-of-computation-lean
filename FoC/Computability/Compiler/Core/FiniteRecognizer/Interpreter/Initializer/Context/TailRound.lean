@@ -445,18 +445,6 @@ theorem rewind_scan_run_exact
       rw [ih (current :: crossed)]
       simp [List.reverse_cons, List.append_assoc]
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-
 def emptyConfig
     (baseLeftRev : Word MachineCodeSymbol)
     (cells : List (Option Bool)) :
@@ -563,17 +551,17 @@ theorem nonempty_run_exact
         cases cell with
         | none => rfl
         | some bit => cases bit <;> rfl
-  have hpref := runConfigExact_trans hlocate hhandoff'
+  have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff'
   have hpayload := run_payload_cells
     (PayloadLocator.targetLeftRev baseLeftRev cells.length) cells
     (MachineCodeSymbol.header :: List.append rawPrefix [last])
-  have hpref := runConfigExact_trans hpref hpayload
+  have hpref := TuringMachine.runConfigExact?_trans hpref hpayload
   have hheader := payload_header_step baseLeftRev cells
     (List.append rawPrefix [last])
-  have hpref := runConfigExact_trans hpref hheader
+  have hpref := TuringMachine.runConfigExact?_trans hpref hheader
   have hraw := inspect_nonempty_run_exact
     (rawBaseLeftRev baseLeftRev cells) rawPrefix last
-  have hpref := runConfigExact_trans hpref hraw
+  have hpref := TuringMachine.runConfigExact?_trans hpref hraw
   let wordBeforeLast :=
     List.append (wordBeforeRaw baseLeftRev cells) rawPrefix
   have hleft :
@@ -585,7 +573,7 @@ theorem nonempty_run_exact
     simp
   have hdelete := delete_last_handoff_exact wordBeforeLast last
   rw [← hleft] at hdelete
-  have hpref := runConfigExact_trans hpref hdelete
+  have hpref := TuringMachine.runConfigExact?_trans hpref hdelete
   have hrewind := rewind_scan_run_exact last wordBeforeLast.reverse []
   have hrewind' : machine.runConfigExact?
       (wordBeforeLast.length + 1)
@@ -593,7 +581,7 @@ theorem nonempty_run_exact
     some (readyConfig last wordBeforeLast) := by
     simpa [wordBeforeLast, Nat.add_comm, Nat.add_left_comm,
       Nat.add_assoc] using hrewind
-  have hrun := runConfigExact_trans hpref hrewind'
+  have hrun := TuringMachine.runConfigExact?_trans hpref hrewind'
   simpa [runSteps, sourceConfig, payloadBaseLeftRev,
     wordBeforeLast, List.length_append, Nat.add_assoc] using hrun
 

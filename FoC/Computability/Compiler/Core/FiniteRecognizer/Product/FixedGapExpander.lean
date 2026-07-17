@@ -302,27 +302,6 @@ def fuelStartConfig {gapExtra : Nat} (word : Word MachineCodeSymbol)
     TuringMachine.Configuration MachineCodeSymbol (Control gapExtra) :=
   config .seekFuel (passTape false word gap callerData)
 
-theorem runConfigExact?_add {gapExtra : Nat} (hpositive : 0 < gapExtra)
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol (Control gapExtra)) :
-    (machine hpositive).runConfigExact? (first + second) c =
-      match (machine hpositive).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine hpositive).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : (machine hpositive).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem enter_step {gapExtra : Nat} (hpositive : 0 < gapExtra)
     (word callerRest : Word MachineCodeSymbol) :
     (machine hpositive).stepConfig
@@ -444,13 +423,13 @@ theorem initial_run_exact {gapExtra : Nat} (hpositive : 0 < gapExtra)
       unfold initialSteps
       rw [show (first :: rest).length + 3 =
           1 + (1 + ((first :: rest).length + 1)) by lia]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [henter]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hcross]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hscan]
       simp only
       exact hfinish
@@ -654,16 +633,16 @@ theorem pass_run_exact {gapExtra : Nat} (hpositive : 0 < gapExtra)
       rw [show 2 * (first :: rest).length + 3 =
           (first :: rest).length +
             (1 + (1 + ((first :: rest).length + 1))) by lia]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hseek]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hfinish]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [htake]
       simp only
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hcarry]
       simp only
       exact hreturn
@@ -712,7 +691,7 @@ theorem passes_run_exact {gapExtra : Nat} (hpositive : 0 < gapExtra)
     unfold remainingPassSteps
     rw [hsub, Nat.add_mul, Nat.one_mul]
     rw [Nat.add_comm]
-    rw [runConfigExact?_add]
+    rw [TuringMachine.runConfigExact?_add]
     rw [hpass]
     simp only
     rw [hafter]
@@ -751,7 +730,7 @@ theorem shift_run_exact {gapExtra : Nat} (hpositive : 0 < gapExtra)
     (⟨0, hpositive⟩ : Fin gapExtra) true first rest
     (MachineCodeSymbol.header :: callerRest)
   unfold shiftSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hinitial]
   simp only
   simpa [remainingPassSteps] using hpasses
@@ -865,7 +844,7 @@ theorem run_generic_exact {gapExtra : Nat} (hpositive : 0 < gapExtra)
       have hscan := fuel_run_exact hpositive leftFuel [] gapExtra
         (MachineCodeSymbol.header :: callerRest)
       unfold runSteps
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [hword]
       rw [hshift]
       simp only
@@ -1161,7 +1140,7 @@ theorem run_generic_exact (leftFuel : Nat)
         leftFuel [] headSymbol rest
         (MachineCodeSymbol.header :: callerRest)
       unfold runSteps
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [show MachineDescription.encodeNatAppend leftFuel
           (headSymbol :: rest) = word from rfl]
       rw [hword]

@@ -80,7 +80,7 @@ theorem field_run_exact {stateCount : Nat}
           (afterState L suffix)) := by
   unfold FieldLocator.leftCountSteps fieldSource
   rw [sourceWord_decomp]
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hheader :
       (FieldLocator.machine .leftCount).runConfigExact? 1
           (FieldLocator.config .header []
@@ -98,7 +98,7 @@ theorem field_run_exact {stateCount : Nat}
     rfl
   rw [hheader]
   simp only
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [FieldLocator.fuel_run_later .leftCount (by decide)]
   simp only
   rw [FieldLocator.state_run_leftCount]
@@ -132,10 +132,10 @@ theorem counter_run_exact {stateCount : Nat}
   rw [afterState_eq_count_payload]
   rw [show HeadLocator.countBaseLeftRev L =
       MachineCodeSymbol.done :: HeadLocator.topFieldsRev L by rfl]
-  rw [Counter.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [Counter.markCountBoundary_roundTrip_exact]
   simp only
-  rw [Counter.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [Counter.processAllCells_run_exact]
   simp only
   change
@@ -216,10 +216,10 @@ theorem run_exact {stateCount : Nat}
       (List.append (HeadLocator.markedCellsWord L.left)
         (List.append (optionalCellWord L.head) suffix))
   have hdecode := OuterLocator.decode_run_of_some (decoder_run_exact L suffix)
-  have hfirst := OuterLocator.runConfigExact_trans hlocate hhandoffOne'
-  have hsecond := OuterLocator.runConfigExact_trans hfirst hcounter
-  have hthird := OuterLocator.runConfigExact_trans hsecond hhandoffTwo
-  have hfourth := OuterLocator.runConfigExact_trans hthird hdecode
+  have hfirst := TuringMachine.runConfigExact?_trans hlocate hhandoffOne'
+  have hsecond := TuringMachine.runConfigExact?_trans hfirst hcounter
+  have hthird := TuringMachine.runConfigExact?_trans hsecond hhandoffTwo
+  have hfourth := TuringMachine.runConfigExact?_trans hthird hdecode
   simpa [runSteps, sourceConfig, gateConfig, counterSource, counterGate,
     decoderSource, HeadDecoder.markedCountBaseLeftRev,
     HeadLocator.countBaseLeftRev, Nat.add_assoc] using hfourth
@@ -421,17 +421,6 @@ theorem post_run_of_some
   · exact post_step_of_some
   · exact hrun
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
 def sourceConfig {stateCount : Nat}
     (L : Layout stateCount)
     (first : MachineCodeSymbol) (rest : Word MachineCodeSymbol) :
@@ -467,7 +456,7 @@ theorem run_exact {stateCount : Nat}
     simpa [positionedConfig, postConfig, postEmbedConfig, postEmbed,
       Post.positionedConfig, Post.cursorConfig,
       TuringMachine.PhaseEmbedding.liftConfig] using hpost
-  have htotal := runConfigExact_trans hprefix hpost'
+  have htotal := TuringMachine.runConfigExact?_trans hprefix hpost'
   simpa [runSteps, sourceConfig] using htotal
 
 theorem sourceConfig_eq_initial {stateCount : Nat}

@@ -221,7 +221,7 @@ theorem delete_tick_exact (leftRev suffix : Word MachineCodeSymbol) :
         (DeleteEndpointRewind.gateConfig
           (PhysicalBranch.deleteOutput leftRev suffix) none)) := by
   unfold deleteTickSteps
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [DeleteRestagedMachine.edit_run_of_eq_some none _ _ _
     (DeleteBlock.run_one_exact MachineCodeSymbol.tick leftRev suffix)]
   simp only
@@ -261,7 +261,7 @@ theorem delete_tick_tail_exact (leftRev suffix : Word MachineCodeSymbol) :
         (DeleteEndpointRewind.gateConfig
           (PhysicalBranch.deleteOutput leftRev suffix) none)) := by
   unfold deleteTickTailSteps
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [DeleteRestagedMachine.edit_run_of_eq_some none _ _ _
     (DeleteBlock.pull_run_exact none leftRev suffix)]
   simp only

@@ -128,20 +128,6 @@ theorem pull_finish_exact (cell : Option MachineCodeSymbol) (leftRev : Word Mach
   cases cell with
   | none => rfl
   | some symbol => cases symbol <;> rfl
-theorem runConfigExact?_add (gap : Fin 11) (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine gap).runConfigExact? (first + second) c = match (machine gap).runConfigExact? first c with
-      | none => none
-      | some middle => (machine gap).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : (machine gap).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 theorem pull_run_exact (cell : Option MachineCodeSymbol) (leftRev suffix : Word MachineCodeSymbol) :
     (machine (optionalGap cell)).runConfigExact? ((2 * (optionalGap cell).val + 1) * suffix.length + 1) (pullConfig (optionalGap cell) leftRev suffix) =
       some (exitConfig cell (List.append suffix.reverse leftRev)) := by
@@ -152,7 +138,7 @@ theorem pull_run_exact (cell : Option MachineCodeSymbol) (leftRev suffix : Word 
       rw [show (2 * (optionalGap cell).val + 1) * (current :: suffix).length + 1 = (2 * (optionalGap cell).val + 1) + ((2 * (optionalGap cell).val + 1) * suffix.length + 1) by
         simp
         lia]
-      rw [runConfigExact?_add, pull_symbol_run_exact]
+      rw [TuringMachine.runConfigExact?_add, pull_symbol_run_exact]
       simp only
       rw [ih]
       simp [List.reverse_cons, List.append_assoc]
@@ -160,7 +146,7 @@ def runSteps (cell : Option MachineCodeSymbol) (suffix : Word MachineCodeSymbol)
 theorem run_exact (cell : Option MachineCodeSymbol) (leftRev suffix : Word MachineCodeSymbol) :
     (machine (optionalGap cell)).runConfigExact? (runSteps cell suffix) (sourceConfig cell leftRev suffix) = some (exitConfig cell (List.append suffix.reverse leftRev)) := by
   unfold runSteps
-  rw [runConfigExact?_add, erase_optional_run_exact]
+  rw [TuringMachine.runConfigExact?_add, erase_optional_run_exact]
   simp only
   exact pull_run_exact cell leftRev suffix
 def oneSourceConfig (deleted : MachineCodeSymbol) (leftRev suffix : Word MachineCodeSymbol) : TuringMachine.Configuration MachineCodeSymbol Control where
@@ -175,7 +161,7 @@ theorem run_one_exact (deleted : MachineCodeSymbol) (leftRev suffix : Word Machi
   unfold runOneSteps
   rw [show 3 * suffix.length + 1 = (2 * (optionalGap none).val + 1) * suffix.length + 1 by
     rfl]
-  rw [runConfigExact?_add, erase_one_run_exact]
+  rw [TuringMachine.runConfigExact?_add, erase_one_run_exact]
   simp only
   exact pull_run_exact none leftRev suffix
 end DeleteBlock
@@ -345,26 +331,11 @@ theorem flush_run_exact (initial : Buffer) (head : MachineCodeSymbol) (tail left
         exact Nat.le_trans hle hlength
       rw [ih next (head :: leftRev) htail]
       simp [List.reverse_cons, List.append_assoc]
-theorem runConfigExact?_add (initial : Buffer) (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine initial).runConfigExact? (first + second) c = match (machine initial).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine initial).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : (machine initial).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 def finalLeftRev (buffer : Buffer) (leftRev suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
   List.append (cross buffer leftRev suffix).1.word.reverse (cross buffer leftRev suffix).2
 theorem run_exact (initial buffer : Buffer) (leftRev suffix : Word MachineCodeSymbol) (hnonempty : buffer.word ≠ []) :
     (machine initial).runConfigExact? (suffix.length + buffer.word.length) (config buffer leftRev suffix) = some (haltConfig (finalLeftRev buffer leftRev suffix)) := by
-  rw [runConfigExact?_add, cross_run_exact initial buffer leftRev suffix hnonempty]
+  rw [TuringMachine.runConfigExact?_add, cross_run_exact initial buffer leftRev suffix hnonempty]
   simp only
   have hspec := cross_spec buffer leftRev suffix hnonempty
   cases hcross : cross buffer leftRev suffix with

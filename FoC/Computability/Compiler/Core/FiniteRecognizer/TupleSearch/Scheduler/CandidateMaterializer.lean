@@ -196,11 +196,6 @@ theorem compactor_run_lift {stateCount : Nat}
   · exact compactor_stepConfig_of_some selected
   · exact hrun
 
-theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem materializer_handoff_run_exact {stateCount : Nat}
     (selected : TuringMachine MachineCodeSymbol (Fin stateCount))
     (tape : Tape MachineCodeSymbol) :
@@ -214,7 +209,7 @@ theorem materializer_handoff_run_exact {stateCount : Nat}
     machine, transition, materializerEndpoint, compactorConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
     StageInput.TwoBlankCompactor.config, StageRunner.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem compactor_handoff_run_exact {stateCount : Nat}
     (selected : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -228,7 +223,7 @@ theorem compactor_handoff_run_exact {stateCount : Nat}
           tape := StageRunner.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, StageRunner.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 private theorem exactRun_trans
     {state : Type}

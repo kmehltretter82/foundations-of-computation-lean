@@ -140,7 +140,7 @@ theorem pull_run_exact (leftRev suffix : Word MachineCodeSymbol)
   | cons current suffix ih =>
       rw [show 3 * (current :: suffix).length + 1 =
           3 + (3 * suffix.length + 1) by simp; lia]
-      rw [DeleteOneRestagedMachine.runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [pull_three_steps]
       simp only
       rw [ih (current :: leftRev)]
@@ -228,7 +228,7 @@ theorem run_exact (leftRev : Word MachineCodeSymbol)
         (startConfig leftRev deleted suffix padding) =
       some (gateConfig (output leftRev suffix) padding) := by
   unfold runSteps
-  rw [DeleteOneRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [edit_run_exact]
   simp only
   rw [rewind_run_exact]

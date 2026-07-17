@@ -61,7 +61,7 @@ theorem raw_run_exact
           ((2 * (DeleteBlock.optionalGap gapCell).val + 1) *
             suffix.length + 1))
         (rawSourceConfig leftRev first second suffix) = _
-  rw [DeleteBlock.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [erase_exact]
   simp only
   exact DeleteBlock.pull_run_exact gapCell leftRev suffix
@@ -101,7 +101,7 @@ theorem run_exact
   have hrewind := DeleteRestagedMachine.rewind_run_exact gapCell
     (List.append suffix.reverse leftRev)
   unfold runSteps sourceConfig
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hedit]
   simp only
   rw [hrewind]

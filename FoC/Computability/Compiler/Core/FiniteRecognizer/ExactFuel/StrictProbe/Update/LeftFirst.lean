@@ -219,9 +219,6 @@ def countDeleteConfig {stateCount : Nat} (selected : Selected stateCount) (cell 
     (c : TuringMachine.Configuration MachineCodeSymbol DeleteRestagedMachine.Control) :
     TuringMachine.Configuration MachineCodeSymbol (Control stateCount) :=
   TuringMachine.PhaseEmbedding.liftConfig (fun inner => Control.count selected cell (.delete inner)) c
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) : Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
 def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right T)
 theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) : Tape.Equiv (roundTripTape T) T := by
@@ -269,7 +266,7 @@ theorem locate_leftCount_prefix_exact {stateCount : Nat} (L : Layout stateCount)
           MachineDescription.encodeNatAppend L.fuel (MachineDescription.encodeNatAppend L.state.val rest) := by
     simp [MoveLeftNonempty.leftCountPrefix, MachineDescription.encodeNatAppend, List.append_assoc]
   rw [hsource]
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hheader : (FieldLocator.machine .leftCount).runConfigExact? 1 (FieldLocator.config .header []
             (MachineCodeSymbol.header :: MachineDescription.encodeNatAppend L.fuel
                 (MachineDescription.encodeNatAppend L.state.val rest))) = some
@@ -280,7 +277,7 @@ theorem locate_leftCount_prefix_exact {stateCount : Nat} (L : Layout stateCount)
     rfl
   rw [hheader]
   simp only
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [FieldLocator.fuel_run_later .leftCount (by decide)]
   simp only
   rw [FieldLocator.state_run_leftCount]
@@ -309,7 +306,7 @@ theorem countDelete_run_exact (leftRev suffix : Word MachineCodeSymbol) :
         (DeleteRestagedMachine.editConfig (DeleteBlock.oneSourceConfig MachineCodeSymbol.tick
             leftRev suffix)) = some (DeleteRestagedMachine.rewindConfig (DeleteEndpointRewind.gateConfig
             (PhysicalBranch.deleteOutput leftRev suffix) none)) := by
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [DeleteRestagedMachine.edit_run_of_eq_some none _ _ _
     (DeleteBlock.run_one_exact MachineCodeSymbol.tick leftRev suffix)]
   simp only
@@ -371,7 +368,7 @@ theorem prefix_handoff_run_exact {stateCount : Nat} (selected : Selected stateCo
           { state := Dispatch.OptionalCell.Control.decode ⟨0, by decide⟩
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, decoderConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 theorem decoder_step_of_some {stateCount : Nat} (selected : Selected stateCount)
     (c d : TuringMachine.Configuration MachineCodeSymbol Decoder.Control)
     (hstep : Decoder.machine.stepConfig c = some d) : (machine selected).stepConfig (decoderConfig selected c) =
@@ -425,7 +422,7 @@ theorem decoder_handoff_run_exact {stateCount : Nat} (selected : Selected stateC
           { state := DeleteRestagedMachine.Control.edit (.erase (DeleteBlock.optionalGap cell))
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, deleteConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self]
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self]
 theorem delete_step_of_some {stateCount : Nat} (selected : Selected stateCount) (cell : Option MachineCodeSymbol)
     (c d : TuringMachine.Configuration MachineCodeSymbol DeleteRestagedMachine.Control)
     (hstep : (DeleteRestagedMachine.machine cell).stepConfig c = some d) :
@@ -476,7 +473,7 @@ theorem first_delete_handoff_run_exact {stateCount : Nat} (selected : Selected s
           { state := FieldLocator.Control.header
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine, transition, deleteConfig, countLocateConfig,
-    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, write_read_eq_self]
+    TuringMachine.PhaseEmbedding.liftConfig, roundTripTape, Tape.write_read_eq_self]
 theorem countLocate_step_of_some {stateCount : Nat} (selected : Selected stateCount) (cell : Option MachineCodeSymbol)
     (c d : TuringMachine.Configuration MachineCodeSymbol FieldLocator.Control)
     (hstep : (FieldLocator.machine .leftCount).stepConfig c = some d) :
@@ -527,7 +524,7 @@ theorem count_locator_handoff_run_exact {stateCount : Nat} (selected : Selected 
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, countLocateConfig, countDeleteConfig, TuringMachine.PhaseEmbedding.liftConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 theorem countDelete_run_of_some {stateCount : Nat} (selected : Selected stateCount) (cell : Option MachineCodeSymbol)
     {steps : Nat}
     {source target : TuringMachine.Configuration MachineCodeSymbol DeleteRestagedMachine.Control}
@@ -548,15 +545,6 @@ theorem countDelete_run_of_some {stateCount : Nat} (selected : Selected stateCou
             rcases action with ⟨write, direction, target⟩
             rfl
   · exact hrun
-theorem runConfigExact_trans {stateCount : Nat} (selected : Selected stateCount)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol (Control stateCount)}
-    (hab : (machine selected).runConfigExact? first a = some b)
-    (hbc : (machine selected).runConfigExact? second b = some c) :
-    (machine selected).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 def firstEditSteps {stateCount : Nat} (fuel : Nat) (L : Layout stateCount)
     (callerData : Word MachineCodeSymbol) (nextHead : Option MachineCodeSymbol)
     (remainingLeft : List (Option MachineCodeSymbol)) : Nat :=
@@ -628,10 +616,10 @@ theorem unified_run_to_first_left_delete {stateCount : Nat} (selected : Selected
         (DeleteRestagedMachine.run_exact nextHead leftRev suffix) hdeleteTape with
     ⟨deleteEndpoint, hdelete, hdeleteState, hdeleteTapeFinal⟩
   have hdeleteOuter := delete_run_of_some selected nextHead _ _ _ hdelete
-  have hrun1 := runConfigExact_trans selected hprefixOuter hprefixHandoff'
-  have hrun2 := runConfigExact_trans selected hrun1 hdecoderOuter
-  have hrun3 := runConfigExact_trans selected hrun2 hdecoderHandoff'
-  have hrun4 := runConfigExact_trans selected hrun3 hdeleteOuter
+  have hrun1 := TuringMachine.runConfigExact?_trans hprefixOuter hprefixHandoff'
+  have hrun2 := TuringMachine.runConfigExact?_trans hrun1 hdecoderOuter
+  have hrun3 := TuringMachine.runConfigExact?_trans hrun2 hdecoderHandoff'
+  have hrun4 := TuringMachine.runConfigExact?_trans hrun3 hdeleteOuter
   refine ⟨deleteConfig selected nextHead deleteEndpoint, ?_, ?_, ?_⟩
   · simpa [firstEditSteps, target, leftRev, suffix, Nat.add_assoc] using hrun4
   · simpa [deleteConfig, TuringMachine.PhaseEmbedding.liftConfig, DeleteRestagedMachine.rewindConfig,
@@ -711,9 +699,9 @@ theorem continue_to_left_count_decrement {stateCount : Nat} (selected : Selected
           (countDelete_run_exact countLeftRev countSuffix)) hcountDeleteTape with
     ⟨countEndpoint, hcount, hcountState, hcountTapeFinal⟩
   have hcountOuter := countDelete_run_of_some selected nextHead hcount
-  have hrun1 := runConfigExact_trans selected hhandoff hlocatorOuter
-  have hrun2 := runConfigExact_trans selected hrun1 hlocatorHandoff'
-  have hrun3 := runConfigExact_trans selected hrun2 hcountOuter
+  have hrun1 := TuringMachine.runConfigExact?_trans hhandoff hlocatorOuter
+  have hrun2 := TuringMachine.runConfigExact?_trans hrun1 hlocatorHandoff'
+  have hrun3 := TuringMachine.runConfigExact?_trans hrun2 hcountOuter
   refine ⟨countDeleteConfig selected nextHead countEndpoint, ?_, ?_, ?_⟩
   · simpa [countPhaseSteps, countSteps, countLeftRev, countSuffix, countDeleteRunSteps, Nat.add_assoc] using hrun3
   · simpa [countDeleteConfig, TuringMachine.PhaseEmbedding.liftConfig, DeleteRestagedMachine.rewindConfig,
@@ -760,7 +748,7 @@ theorem unified_run_to_removed_left_layout {stateCount : Nat} (selected : Select
           firstEndpoint = some countEndpoint := by
     rw [hfirstEndpointEq]
     exact hcount
-  have hrun := runConfigExact_trans selected hfirst hcount'
+  have hrun := TuringMachine.runConfigExact?_trans hfirst hcount'
   refine ⟨countEndpoint, ?_, hcountState, ?_⟩
   · simpa [throughCountSteps, target] using hrun
   · let countLeftRev : Word MachineCodeSymbol :=

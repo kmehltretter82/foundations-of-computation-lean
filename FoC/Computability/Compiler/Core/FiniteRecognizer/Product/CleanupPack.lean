@@ -132,27 +132,6 @@ theorem pull_finish_exact
       some (exitConfig outerLeft leftRev) := by
   rfl
 
-theorem runConfigExact?_add
-    (M : TuringMachine MachineCodeSymbol state)
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol state) :
-    M.runConfigExact? (first + second) c =
-      match M.runConfigExact? first c with
-      | none => none
-      | some middle => M.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : M.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem pull_run_exact
     (outerLeft : List (Option MachineCodeSymbol))
     (leftRev suffix : Word MachineCodeSymbol) :
@@ -168,7 +147,7 @@ theorem pull_run_exact
   | cons current suffix ih =>
       rw [show 5 * (current :: suffix).length + 1 =
           5 + (5 * suffix.length + 1) by simp; lia]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [pull_symbol_run_exact]
       simp only
       rw [ih (current :: leftRev)]
@@ -185,7 +164,7 @@ theorem rawGap_run_exact
       some (exitConfig outerLeft
         (List.append body.reverse leftRev)) := by
   unfold rawGapSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [erase_two_run_exact]
   simp only
   exact pull_run_exact outerLeft leftRev body
@@ -321,7 +300,7 @@ theorem rewind_run_exact (outerLeft : List (Option MachineCodeSymbol))
         (restagedExitConfig outerLeft (first :: rest)) =
       some (restagedGateConfig outerLeft (first :: rest).reverse) := by
   unfold rewindSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [skip_run_exact]
   simp only
   simpa using scan_run_exact outerLeft (first :: rest) []
@@ -350,7 +329,7 @@ theorem inner_run_exact
         rw [← hout]
         simp [outputRev, List.reverse_append, List.append_assoc]
       unfold innerRunSteps
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [editGap_run_exact]
       simp only
       have hout' :
@@ -462,13 +441,13 @@ theorem run_exact
   unfold runSteps
   rw [show fuelWord.length + 2 + innerRunSteps leftRev body =
       fuelWord.length + (2 + innerRunSteps leftRev body) by lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hseek]
   simp only
   change StageInput.TwoBlankCompactor.machine.runConfigExact?
       (2 + innerRunSteps leftRev body)
       (seekConfig outerLeft [] leftRev body) = _
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [hhandoff]
   simp only
   rw [hcompact]

@@ -145,28 +145,13 @@ theorem rewind_run_exact (buffer : InsertBlock.Buffer) (wordRev : Word MachineCo
   rw [TuringMachine.runConfigExact?, halt_retarget_step]
   simp only
   simpa using rewind_scan_run_exact buffer wordRev ([] : Word MachineCodeSymbol)
-theorem runConfigExact?_add (buffer : InsertBlock.Buffer) (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine buffer).runConfigExact? (first + second) c = match (machine buffer).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine buffer).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : (machine buffer).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 def runSteps (buffer : InsertBlock.Buffer) (leftRev suffix : Word MachineCodeSymbol) : Nat :=
   (suffix.length + buffer.word.length) + ((InsertBlock.finalLeftRev buffer leftRev suffix).length + 2)
 theorem run_exact (buffer : InsertBlock.Buffer) (leftRev suffix : Word MachineCodeSymbol) (hnonempty : buffer.word ≠ []) :
     (machine buffer).runConfigExact? (runSteps buffer leftRev suffix) (editConfig (InsertBlock.config buffer leftRev suffix)) =
       some (rewindConfig (RewindWord.gateConfig (PhysicalBranch.insertOutput buffer leftRev suffix) 0)) := by
   unfold runSteps
-  rw [runConfigExact?_add, edit_run_exact buffer leftRev suffix hnonempty]
+  rw [TuringMachine.runConfigExact?_add, edit_run_exact buffer leftRev suffix hnonempty]
   simp only
   rw [rewind_run_exact]
   rw [InsertBlock.finalLeftRev_reverse buffer leftRev suffix hnonempty]
@@ -313,25 +298,11 @@ theorem rewind_scan_run_exact (cell : Option MachineCodeSymbol) (remainingRev cr
       simp only
       rw [ih (current :: crossed)]
       simp [List.reverse_cons, List.append_assoc]
-theorem runConfigExact?_add (cell : Option MachineCodeSymbol) (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine cell).runConfigExact? (first + second) c = match (machine cell).runConfigExact? first c with
-      | none => none
-      | some middle => (machine cell).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : (machine cell).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 theorem rewind_run_exact (cell : Option MachineCodeSymbol) (wordRev : Word MachineCodeSymbol) :
     (machine cell).runConfigExact? (DeleteEndpointRewind.runSteps cell wordRev) (editConfig (DeleteBlock.exitConfig cell wordRev)) =
       some (rewindConfig (DeleteEndpointRewind.gateConfig wordRev.reverse cell)) := by
   unfold DeleteEndpointRewind.runSteps
-  rw [runConfigExact?_add, halt_retarget_skip_run_exact]
+  rw [TuringMachine.runConfigExact?_add, halt_retarget_skip_run_exact]
   simp only
   simpa using rewind_scan_run_exact cell wordRev ([] : Word MachineCodeSymbol)
 def runSteps (cell : Option MachineCodeSymbol) (leftRev suffix : Word MachineCodeSymbol) : Nat :=
@@ -340,7 +311,7 @@ theorem run_exact (cell : Option MachineCodeSymbol) (leftRev suffix : Word Machi
     (machine cell).runConfigExact? (runSteps cell leftRev suffix) (editConfig (DeleteBlock.sourceConfig cell leftRev suffix)) =
       some (rewindConfig (DeleteEndpointRewind.gateConfig (PhysicalBranch.deleteOutput leftRev suffix) cell)) := by
   unfold runSteps
-  rw [runConfigExact?_add, edit_run_exact]
+  rw [TuringMachine.runConfigExact?_add, edit_run_exact]
   simp only
   rw [rewind_run_exact]
   simp [PhysicalBranch.deleteOutput, List.reverse_append]
@@ -477,21 +448,6 @@ theorem leftCount_run (count : Nat) (leftRev suffix : Word MachineCodeSymbol) :
       simp only
       rw [ih]
       simp [MachineDescription.encodeNat, List.reverse_cons, List.append_assoc]
-theorem runConfigExact?_add (boundary : Boundary) (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine boundary).runConfigExact? (first + second) c = match (machine boundary).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine boundary).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : (machine boundary).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 def leftCountSteps {stateCount : Nat} (L : Layout stateCount) : Nat := 1 + ((L.fuel + 1) + (L.state.val + 1))
 def leftPayloadSteps {stateCount : Nat} (L : Layout stateCount) : Nat := 1 + ((L.fuel + 1) + ((L.state.val + 1) + (L.left.length + 1)))
 theorem locate_leftCount_exact {stateCount : Nat} (L : Layout stateCount) (callerData : Word MachineCodeSymbol) :
@@ -502,7 +458,7 @@ theorem locate_leftCount_exact {stateCount : Nat} (L : Layout stateCount) (calle
             (MachineDescription.encodeNatAppend L.state.val (afterStateWord L callerData)) := by
     rw [protectedWord_eq_statePrefix_stateSuffix]
     simp [statePrefix, stateSuffix, MachineDescription.encodeNatAppend]
-  rw [hsource, runConfigExact?_add]
+  rw [hsource, TuringMachine.runConfigExact?_add]
   have hheader : (machine .leftCount).runConfigExact? 1 (config .header [] (MachineCodeSymbol.header ::
               MachineDescription.encodeNatAppend L.fuel (MachineDescription.encodeNatAppend L.state.val (afterStateWord L callerData)))) =
         some (config .fuel [MachineCodeSymbol.header] (MachineDescription.encodeNatAppend L.fuel (MachineDescription.encodeNatAppend L.state.val
@@ -511,7 +467,7 @@ theorem locate_leftCount_exact {stateCount : Nat} (L : Layout stateCount) (calle
     rfl
   rw [hheader]
   simp only
-  rw [runConfigExact?_add, fuel_run_later .leftCount (by decide)]
+  rw [TuringMachine.runConfigExact?_add, fuel_run_later .leftCount (by decide)]
   simp only
   rw [state_run_leftCount]
   simp [LeftPrepend.leftCountPrefix, MachineDescription.encodeNatAppend, List.reverse_cons, List.reverse_append, List.append_assoc]
@@ -523,7 +479,7 @@ theorem locate_leftPayload_exact {stateCount : Nat} (L : Layout stateCount) (cal
             (MachineDescription.encodeNatAppend L.state.val (MachineDescription.encodeNatAppend L.left.length (LeftPrepend.leftPayloadSuffix L callerData))) := by
     rw [LeftPrepend.protectedWord_decomp]
     simp [LeftPrepend.leftPayloadPrefix, LeftPrepend.leftCountPrefix, MachineDescription.encodeNatAppend, List.append_assoc]
-  rw [hsource, runConfigExact?_add]
+  rw [hsource, TuringMachine.runConfigExact?_add]
   have hheader : (machine .leftPayload).runConfigExact? 1 (config .header [] (MachineCodeSymbol.header ::
               MachineDescription.encodeNatAppend L.fuel (MachineDescription.encodeNatAppend L.state.val
                   (MachineDescription.encodeNatAppend L.left.length (LeftPrepend.leftPayloadSuffix L callerData))))) =
@@ -533,9 +489,9 @@ theorem locate_leftPayload_exact {stateCount : Nat} (L : Layout stateCount) (cal
     rfl
   rw [hheader]
   simp only
-  rw [runConfigExact?_add, fuel_run_later .leftPayload (by decide)]
+  rw [TuringMachine.runConfigExact?_add, fuel_run_later .leftPayload (by decide)]
   simp only
-  rw [runConfigExact?_add, state_run_leftPayload]
+  rw [TuringMachine.runConfigExact?_add, state_run_leftPayload]
   simp only
   rw [leftCount_run]
   simp [LeftPrepend.leftPayloadPrefix, LeftPrepend.leftCountPrefix, MachineDescription.encodeNatAppend, List.reverse_cons, List.reverse_append, List.append_assoc]
@@ -595,20 +551,6 @@ theorem edit_pull_three_steps (leftRev : Word MachineCodeSymbol) (current : Mach
       some (editConfig (SerializedShift.Delete.pullConfig (current :: leftRev) suffix)) := by cases suffix <;> rfl
 theorem edit_pull_finish (leftRev : Word MachineCodeSymbol) : machine.runConfigExact? 1 (editConfig (SerializedShift.Delete.pullConfig leftRev [])) =
       some (editConfig (SerializedShift.Delete.exitConfig leftRev)) := by rfl
-theorem runConfigExact?_add (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c = match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 theorem edit_pull_run_exact (leftRev suffix : Word MachineCodeSymbol) :
     machine.runConfigExact? (3 * suffix.length + 1) (editConfig (SerializedShift.Delete.pullConfig leftRev suffix)) = some (editConfig
           (SerializedShift.Delete.exitConfig (List.append suffix.reverse leftRev))) := by
@@ -618,7 +560,7 @@ theorem edit_pull_run_exact (leftRev suffix : Word MachineCodeSymbol) :
   | cons current suffix ih =>
       rw [show 3 * (current :: suffix).length + 1 = 3 + (3 * suffix.length + 1) by
         simp [Nat.mul_add, Nat.add_comm, Nat.add_left_comm]]
-      rw [runConfigExact?_add, edit_pull_three_steps]
+      rw [TuringMachine.runConfigExact?_add, edit_pull_three_steps]
       simp only
       rw [ih]
       simp [List.reverse_cons, List.append_assoc]
@@ -660,7 +602,7 @@ theorem run_exact (leftRev : Word MachineCodeSymbol) (deleted : MachineCodeSymbo
     machine.runConfigExact? (runSteps leftRev suffix) (editConfig (SerializedShift.Delete.startConfig leftRev deleted suffix)) =
       some (rewindConfig (RewindWord.gateConfig (output leftRev suffix) 1)) := by
   unfold runSteps
-  rw [runConfigExact?_add, edit_run_exact]
+  rw [TuringMachine.runConfigExact?_add, edit_run_exact]
   simp only
   rw [rewind_run_exact]
   simp [output, List.reverse_append]

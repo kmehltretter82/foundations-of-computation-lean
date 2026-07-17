@@ -177,11 +177,6 @@ def roundTripTape (tape : Tape MachineCodeSymbol) :
     Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right tape)
 
-private theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem insert_step_of_some
     (phase : InsertPhase)
     (source target : TuringMachine.Configuration MachineCodeSymbol
@@ -252,7 +247,7 @@ theorem insert_return_run_exact
           tape := tape } =
       some { state := .scan, tape := roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, transition, roundTripTape, write_read_eq_self]
+    machine, transition, roundTripTape, Tape.write_read_eq_self]
 
 theorem roundTrip_gateTape
     (word : Word MachineCodeSymbol) (hword : word ≠ []) :
@@ -262,18 +257,6 @@ theorem roundTrip_gateTape
   | nil => contradiction
   | cons first rest =>
       cases rest <;> rfl
-
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
 
 def sourceWord
     (value : Nat) (suffix : Word MachineCodeSymbol) :
@@ -508,8 +491,8 @@ theorem initial_run_exact
       InsertRestagedMachine.machine, RewindWord.gateConfig,
       phaseBuffer, workConfig,
       initial_insert_output_eq_workWord] using hreturn
-  have hpref := runConfigExact_trans hseek' hinsert
-  have hrun := runConfigExact_trans hpref hreturn'
+  have hpref := TuringMachine.runConfigExact?_trans hseek' hinsert
+  have hrun := TuringMachine.runConfigExact?_trans hpref hreturn'
   simpa [initialRunSteps] using hrun
   done
 

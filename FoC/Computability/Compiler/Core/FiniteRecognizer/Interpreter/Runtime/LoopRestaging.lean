@@ -712,19 +712,6 @@ theorem encodeNat_length
       simp [MachineDescription.encodeNat, ih]
   done
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle targetConfig' :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some targetConfig') :
-    machine.runConfigExact? (first + second) source = some targetConfig' := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-  done
-
 def runSteps (target : Nat) : Nat :=
   (target + 1) + 1 + ((target + 1) + 1)
 
@@ -759,10 +746,10 @@ theorem run_exact
   have hrewind := run_rewind nextHead
     (MachineDescription.encodeNat target).reverse [] rest
     (encodeNat_reverse_symbols target)
-  have hfirst := runConfigExact_trans
+  have hfirst := TuringMachine.runConfigExact?_trans
     (by simpa [sourceConfig, delimiterConfig] using htarget)
     hdelimiter
-  have hall := runConfigExact_trans hfirst hrewind
+  have hall := TuringMachine.runConfigExact?_trans hfirst hrewind
   simpa [runSteps, sourceConfig, targetConfig, runtimeKeyBuilderKeyCode,
     runtimeKey_encodeCell_eq_singleton,
     MachineDescription.encodeNatAppend, encodeNat_length,

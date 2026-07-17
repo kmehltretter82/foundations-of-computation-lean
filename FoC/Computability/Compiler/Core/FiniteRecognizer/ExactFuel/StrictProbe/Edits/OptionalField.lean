@@ -299,11 +299,6 @@ def insertConfig
   state := .insert c.state
   tape := c.tape
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right T)
 
@@ -395,7 +390,7 @@ theorem delete_seek_handoff_exact
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, deleteConfig, seekConfig, roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem seek_step_of_some
     (old new : Option MachineCodeSymbol)
@@ -458,7 +453,7 @@ theorem seek_insert_handoff_exact
             tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, seekConfig, insertConfig, roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem insert_run_of_some
     (old new : Option MachineCodeSymbol)
@@ -488,18 +483,6 @@ theorem insert_run_of_some
             rcases action with ⟨write, direction, target⟩
             rfl
   · exact hrun
-
-theorem runConfigExact_trans
-    (old new : Option MachineCodeSymbol)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : (machine old new).runConfigExact? first a = some b)
-    (hbc : (machine old new).runConfigExact? second b = some c) :
-    (machine old new).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 
 theorem deleteOutput_eq_markerSource
     (middle suffix : Word MachineCodeSymbol) :
@@ -559,7 +542,7 @@ theorem run_exact
     DeleteRestagedMachine.run_exact old marked suffix
   have hdeleteOuter := delete_run_of_some old new _ _ _ hdeleteInner
   have hthroughDelete :=
-    runConfigExact_trans old new hmark hdeleteOuter
+    TuringMachine.runConfigExact?_trans hmark hdeleteOuter
   let deleteEndpoint :=
     DeleteRestagedMachine.rewindConfig
       (DeleteEndpointRewind.gateConfig
@@ -567,7 +550,7 @@ theorem run_exact
   have hdeleteHandoff :=
     delete_seek_handoff_exact old new deleteEndpoint.tape
   have hthroughHandoff :=
-    runConfigExact_trans old new hthroughDelete hdeleteHandoff
+    TuringMachine.runConfigExact?_trans hthroughDelete hdeleteHandoff
   have hdeleteWord :
       PhysicalBranch.deleteOutput marked suffix = markerWord := by
     simpa [marked, markerWord] using
@@ -588,7 +571,7 @@ theorem run_exact
     ⟨seekEndpoint, hseekInner, hseekState, hseekTape⟩
   have hseekOuter := seek_run_of_some old new _ _ _ hseekInner
   have hthroughSeek :=
-    runConfigExact_trans old new hthroughHandoff hseekOuter
+    TuringMachine.runConfigExact?_trans hthroughHandoff hseekOuter
   have hinsertHandoff :=
     seek_insert_handoff_exact old new seekEndpoint.tape
   have hinsertHandoff' :
@@ -600,7 +583,7 @@ theorem run_exact
               tape := roundTripTape seekEndpoint.tape }) := by
     simpa [seekConfig, hseekState] using hinsertHandoff
   have hthroughInsertHandoff :=
-    runConfigExact_trans old new hthroughSeek hinsertHandoff'
+    TuringMachine.runConfigExact?_trans hthroughSeek hinsertHandoff'
   have hinsertTape :
       Tape.Equiv
         (InsertRestagedMachine.editConfig
@@ -624,7 +607,7 @@ theorem run_exact
     ⟨insertEndpoint, hinsertInner, hinsertState, hinsertEndpointTape⟩
   have hinsertOuter := insert_run_of_some old new hinsertInner
   have hfull :=
-    runConfigExact_trans old new hthroughInsertHandoff hinsertOuter
+    TuringMachine.runConfigExact?_trans hthroughInsertHandoff hinsertOuter
   refine ⟨insertConfig insertEndpoint, ?_, ?_, ?_⟩
   · simpa [runSteps, marked, original, buffer] using hfull
   · simpa [insertConfig, InsertRestagedMachine.rewindConfig,

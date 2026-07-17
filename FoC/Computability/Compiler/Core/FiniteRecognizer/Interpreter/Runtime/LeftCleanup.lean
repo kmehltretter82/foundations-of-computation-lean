@@ -278,22 +278,6 @@ theorem finish_run_exact
   rfl
   done
 
-theorem runConfigExact_trans
-    {firstSteps secondSteps : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst :
-      machine.runConfigExact? firstSteps source = some middle)
-    (hsecond :
-      machine.runConfigExact? secondSteps middle = some target) :
-    machine.runConfigExact? (firstSteps + secondSteps) source =
-      some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-  done
-
 def runSteps (leftRev : Word MachineCodeSymbol) : Nat :=
   ((1 + (leftRev.length + 1)) + leftRev.length) + 2
 
@@ -320,9 +304,9 @@ theorem run_exact
     seek_run_exact action 1 leftRev.length (first :: rest)
   have hfinish :=
     finish_run_exact action (1 + leftRev.length) first rest
-  exact runConfigExact_trans
-    (runConfigExact_trans
-      (runConfigExact_trans hentry herase) hseek)
+  exact TuringMachine.runConfigExact?_trans
+    (TuringMachine.runConfigExact?_trans
+      (TuringMachine.runConfigExact?_trans hentry herase) hseek)
     hfinish
   done
 

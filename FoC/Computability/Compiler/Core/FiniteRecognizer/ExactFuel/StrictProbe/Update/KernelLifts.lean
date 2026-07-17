@@ -386,27 +386,6 @@ theorem rightNonempty_run_of_some {stateCount : Nat}
   · exact rightNonempty_step_of_some selected
   · exact hrun
 
-theorem runConfigExact_trans {stateCount : Nat}
-    (selected : Selected stateCount)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol
-      (KernelControl stateCount)}
-    (hab : (Update.Kernel.machine selected).runConfigExact?
-      first a = some b)
-    (hbc : (Update.Kernel.machine selected).runConfigExact?
-      second b = some c) :
-    (Update.Kernel.machine selected).runConfigExact?
-      (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem probe_left_nonempty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount)
     (hdirection : selected.direction = Direction.left)
@@ -423,7 +402,7 @@ theorem probe_left_nonempty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.transition, hdirection,
     leftNonemptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem probe_left_empty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount)
@@ -440,7 +419,7 @@ theorem probe_left_empty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, hdirection, fuelConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem probe_right_nonempty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount)
@@ -457,7 +436,7 @@ theorem probe_right_nonempty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, hdirection, fuelConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem probe_right_empty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount)
@@ -474,7 +453,7 @@ theorem probe_right_empty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, hdirection, fuelConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem fuel_left_empty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -490,7 +469,7 @@ theorem fuel_left_empty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, leftEmptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem fuel_right_empty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -506,7 +485,7 @@ theorem fuel_right_empty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, rightEmptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem fuel_right_nonempty_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -524,7 +503,7 @@ theorem fuel_right_nonempty_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, rightNonemptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem left_nonempty_finish_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -539,7 +518,7 @@ theorem left_nonempty_finish_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, leftNonemptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem left_empty_finish_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -554,7 +533,7 @@ theorem left_empty_finish_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, leftEmptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem right_empty_finish_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -569,7 +548,7 @@ theorem right_empty_finish_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, rightEmptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem right_nonempty_finish_handoff_run_exact {stateCount : Nat}
     (selected : Selected stateCount) (T : Tape MachineCodeSymbol) :
@@ -586,7 +565,7 @@ theorem right_nonempty_finish_handoff_run_exact {stateCount : Nat}
     Update.Kernel.machine,
     Update.Kernel.transition, rightNonemptyConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 end KernelLifts
 end Update

@@ -126,9 +126,6 @@ theorem tail_run_of_some {stateCount : Nat} (selected : Selected stateCount)
     simp [tailHalt, Update.LeftEmpty.General.transition,
       Edits.PositionedRight.transition, InsertRestagedMachine.transition, RewindWord.transition] at hinner'
   simp [machine, transition, embedTail, hactive, hinner', mapTailAction]
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) : Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
 theorem left_tail_handoff {stateCount : Nat} (selected : Selected stateCount)
     (newHead : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) : (machine selected).runConfigExact? 2
         { state := Control.left (.count selected newHead (.delete (.rewind .gate)))
@@ -137,18 +134,9 @@ theorem left_tail_handoff {stateCount : Nat} (selected : Selected stateCount)
           tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine,
     transition, tailConfig, TuringMachine.PhaseEmbedding.liftConfig, embedTail, tailHalt, roundTripTape,
-    Update.LeftEmpty.General.roundTripTape, write_read_eq_self,
+    Update.LeftEmpty.General.roundTripTape, Tape.write_read_eq_self,
     Update.LeftFirst.transition, DeleteRestagedMachine.transition,
     DeleteEndpointRewind.transition, Update.LeftEmpty.General.machine]
-theorem runConfigExact_trans {stateCount : Nat} (selected : Selected stateCount)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol (Control stateCount)}
-    (hab : (machine selected).runConfigExact? first a = some b)
-    (hbc : (machine selected).runConfigExact? second b = some c) :
-    (machine selected).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 def runSteps {stateCount : Nat} (fuel : Nat) (F : CarriedStateFrame.LoopFrame stateCount)
     (write : Option MachineCodeSymbol) (nextHead : Option MachineCodeSymbol)
     (remainingLeft : List (Option MachineCodeSymbol)) (callerData : Word MachineCodeSymbol) : Nat :=
@@ -195,8 +183,8 @@ theorem run_exact {stateCount : Nat} (callerData : Word MachineCodeSymbol)
       nextHead removed write callerData (roundTripTape leftEndpoint.tape) htailSource with
     ⟨tailEndpoint, htailInner, htailState, htailTape⟩
   have htailRun := tail_run_of_some selected nextHead htailInner
-  have hfirst := runConfigExact_trans selected hleftRun hhandoff
-  have hfull := runConfigExact_trans selected hfirst htailRun
+  have hfirst := TuringMachine.runConfigExact?_trans hleftRun hhandoff
+  have hfull := TuringMachine.runConfigExact?_trans hfirst htailRun
   have hshape : RightPrepend.prependedRightLayout replaced write =
       (CarriedStateFrame.afterSelected fuel write Direction.left nextState F).physicalFrame := by
     simpa [target, removed, replaced] using Update.LeftKernel.right_tail_target_eq_afterSelected

@@ -75,20 +75,6 @@ theorem update_run_of_eq_some (steps : Nat) (c d : TuringMachine.Configuration M
           rw [update_step, hstep]
           simp only [Option.map]
           exact ih next d hrun
-theorem runConfigExact?_add (first second : Nat) (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c = match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add, TuringMachine.runConfigExact?, TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 def withFuel {stateCount : Nat} (fuel : Nat) (L : Layout stateCount) : Layout stateCount :=
   { L with fuel := fuel }
 def suffixAfterFirstFuelTick {stateCount : Nat} (fuel : Nat) (L : Layout stateCount) (callerData : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
@@ -107,7 +93,7 @@ theorem run_exact {stateCount : Nat} (fuel : Nat) (L : Layout stateCount) (calle
     machine.runConfigExact? (runSteps fuel L callerData) (startConfig (Frame.protectedWord (withFuel (fuel + 1) L) callerData)) =
       some (updateConfig (DeleteOneRestagedMachine.rewindConfig (RewindWord.gateConfig (Frame.protectedWord (withFuel fuel L) callerData) 1))) := by
   unfold runSteps
-  rw [source_word_decomp, runConfigExact?_add, header_run_exact]
+  rw [source_word_decomp, TuringMachine.runConfigExact?_add, header_run_exact]
   simp only
   apply update_run_of_eq_some
   rw [DeleteOneRestagedMachine.run_exact, target_word_decomp]

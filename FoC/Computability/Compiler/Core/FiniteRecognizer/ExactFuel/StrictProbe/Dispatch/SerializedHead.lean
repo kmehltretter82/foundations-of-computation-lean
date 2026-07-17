@@ -239,11 +239,6 @@ theorem locator_run_exact {stateCount : Nat}
   exact locator_run_of_some M carriedState _ _ _
     (HeadLocator.run_exact L callerData)
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem missing_dispatch_run_exact {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
     (carriedState : Fin stateCount)
@@ -255,7 +250,7 @@ theorem missing_dispatch_run_exact {stateCount : Nat}
       some (failureConfig T) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, HeadLocator.transition, hmissing,
-    failureConfig, roundTripTape, write_read_eq_self]
+    failureConfig, roundTripTape, Tape.write_read_eq_self]
 
 theorem selected_dispatch_run_exact {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -277,19 +272,7 @@ theorem selected_dispatch_run_exact {stateCount : Nat}
           T) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, HeadLocator.transition, hselected,
-    selectedConfig, roundTripTape, write_read_eq_self]
-
-theorem runConfigExact_trans {stateCount : Nat}
-    (M : TuringMachine MachineCodeSymbol (Fin stateCount))
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol (Control stateCount)}
-    (hab : (machine M).runConfigExact? first a = some b)
-    (hbc : (machine M).runConfigExact? second b = some c) :
-    (machine M).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
+    selectedConfig, roundTripTape, Tape.write_read_eq_self]
 
 theorem succMissing_run_exact {stateCount : Nat}
     (M : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -301,7 +284,7 @@ theorem succMissing_run_exact {stateCount : Nat}
       some
         (failureConfig
           (HeadLocator.gateTape (Frame.protectedWord L callerData))) := by
-  exact runConfigExact_trans M
+  exact TuringMachine.runConfigExact?_trans
     (locator_run_exact M carriedState L callerData)
     (missing_dispatch_run_exact M carriedState L.head
       (HeadLocator.gateTape (Frame.protectedWord L callerData)) hmissing)
@@ -323,7 +306,7 @@ theorem succPresent_run_exact {stateCount : Nat}
             direction := direction
             nextState := nextState }
           (HeadLocator.gateTape (Frame.protectedWord L callerData))) := by
-  exact runConfigExact_trans M
+  exact TuringMachine.runConfigExact?_trans
     (locator_run_exact M carriedState L callerData)
     (selected_dispatch_run_exact M carriedState L.head write direction
       nextState (HeadLocator.gateTape (Frame.protectedWord L callerData))

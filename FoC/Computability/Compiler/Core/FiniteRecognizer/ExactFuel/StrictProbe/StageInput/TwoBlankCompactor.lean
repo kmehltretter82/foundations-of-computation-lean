@@ -227,7 +227,7 @@ theorem rawGap_run_exact
         (SerializedFieldComposer.DeleteBlock.exitConfig gapCell
           (List.append body.reverse leftRev)) := by
   unfold rawGapSteps
-  rw [SerializedFieldComposer.DeleteBlock.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [erase_two_run_exact]
   simp only
   exact SerializedFieldComposer.DeleteBlock.pull_run_exact
@@ -265,7 +265,7 @@ theorem inner_run_exact
           (SerializedFieldComposer.DeleteEndpointRewind.gateConfig
             (List.append leftRev.reverse body) gapCell)) := by
   unfold innerRunSteps
-  rw [SerializedFieldComposer.DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [editGap_run_exact]
   simp only
   rw [SerializedFieldComposer.DeleteRestagedMachine.rewind_run_exact]
@@ -295,26 +295,6 @@ theorem handoff_run_exact_of_ne_nil
   | nil => contradiction
   | cons first rest => exact handoff_run_exact first rest body
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 def runSteps
     (fuelWord body : Word MachineCodeSymbol) : Nat :=
   fuelWord.length + 2 +
@@ -340,10 +320,10 @@ theorem run_exact
         (2 + innerRunSteps
           (List.append fuelWord.reverse [MachineCodeSymbol.header]) body) by
     lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seek_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [handoff_run_exact_of_ne_nil]
   · simp only
     rw [compact_run_exact]

@@ -293,7 +293,7 @@ theorem canonicalSuccPresent {stateCount : Nat} {updateState : Type}
       (selectedPrefixTape callerData fuel F write direction nextState)
       targetTape hupdate
   have htotal :=
-    CyclicDriverIntegration.runConfigExact_trans M K hprefix htail
+    TuringMachine.runConfigExact?_trans hprefix htail
   have hcomputes := TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp htotal)
   simpa [CyclicRelationalContract.sourceConfig,

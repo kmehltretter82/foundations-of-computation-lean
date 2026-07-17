@@ -548,17 +548,6 @@ theorem decode_delete_handoff_layout {stateCount : Nat}
         (List.append (optionalCellWord nextHead)
           (MoveRightNonempty.afterFirstRightCell remainingRight callerData))
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
 def runSteps {stateCount : Nat}
     (L : Layout stateCount)
     (nextHead : Option MachineCodeSymbol)
@@ -592,10 +581,10 @@ theorem run_exact {stateCount : Nat}
     L nextHead remainingRight callerData
   have hdelete := delete_run_of_some L.head nextHead
     (delete_firstRightCell_exact L nextHead remainingRight callerData)
-  have hfirst := runConfigExact_trans hcount hcountDecode
-  have hsecond := runConfigExact_trans hfirst hdecode
-  have hthird := runConfigExact_trans hsecond hdecodeDelete
-  have hfourth := runConfigExact_trans hthird hdelete
+  have hfirst := TuringMachine.runConfigExact?_trans hcount hcountDecode
+  have hsecond := TuringMachine.runConfigExact?_trans hfirst hdecode
+  have hthird := TuringMachine.runConfigExact?_trans hsecond hdecodeDelete
+  have hfourth := TuringMachine.runConfigExact?_trans hthird hdelete
   simpa [runSteps, Nat.add_assoc] using hfourth
 
 end TailMachine
@@ -817,17 +806,6 @@ theorem handoff_layout {stateCount : Nat}
       exact handoff L.head leftHead leftTail
         (HeadLocator.afterHeadWord L callerData)
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
 def runSteps {stateCount : Nat}
     (L : Layout stateCount)
     (nextHead : Option MachineCodeSymbol)
@@ -859,8 +837,8 @@ theorem run_exact {stateCount : Nat}
   have hhandoff := handoff_layout L callerData
   have htail := tail_run_of_some
     (TailMachine.run_exact L nextHead remainingRight callerData hright)
-  have hpref := runConfigExact_trans hlocate hhandoff
-  have hrun := runConfigExact_trans hpref htail
+  have hpref := TuringMachine.runConfigExact?_trans hlocate hhandoff
+  have hrun := TuringMachine.runConfigExact?_trans hpref htail
   simpa [runSteps, Nat.add_assoc] using hrun
 
 end CombinedMachine

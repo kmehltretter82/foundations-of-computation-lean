@@ -579,7 +579,7 @@ theorem edit_run_exact
         pull_finish_exact baseLeftRev processedRev
   | cons current suffix ih =>
       rw [editSteps_cons]
-      rw [DeleteRestagedMachine.runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [pull_symbol_exact]
       simp only
       simpa [editSteps, List.reverse_cons, List.append_assoc] using
@@ -677,7 +677,7 @@ theorem rewind_run_exact
       some (gateConfig baseLeftRev wordRev.reverse) := by
   unfold rewindSteps
   rw [show wordRev.length + 2 = 1 + (wordRev.length + 1) by lia]
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hfirst :
       (DeleteRestagedMachine.machine none).runConfigExact? 1
           (exitConfig baseLeftRev wordRev) =
@@ -699,7 +699,7 @@ theorem run_exact
         (runSteps suffix) (pullConfig baseLeftRev [] suffix) =
       some (gateConfig baseLeftRev suffix) := by
   unfold runSteps
-  rw [DeleteRestagedMachine.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [edit_run_exact]
   simp only
   have happend :
@@ -839,18 +839,6 @@ theorem delete_bounce_exact
 def deletePhaseSteps (suffix : Word MachineCodeSymbol) : Nat :=
   1 + SentinelDelete.runSteps suffix + 2
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-  done
-
 theorem delete_symbol_exact
     (phase next : Phase)
     (baseLeftRev suffix : Word MachineCodeSymbol)
@@ -868,8 +856,8 @@ theorem delete_symbol_exact
     rw [TuringMachine.runConfigExact?,
       parse_delete_step phase next baseLeftRev suffix deleted hdelete]
     rfl
-  exact runConfigExact_trans
-    (runConfigExact_trans hfirst
+  exact TuringMachine.runConfigExact?_trans
+    (TuringMachine.runConfigExact?_trans hfirst
       (delete_run_of_eq_some next
         (SentinelDelete.run_exact baseLeftRev suffix)))
     (delete_bounce_exact next baseLeftRev suffix)

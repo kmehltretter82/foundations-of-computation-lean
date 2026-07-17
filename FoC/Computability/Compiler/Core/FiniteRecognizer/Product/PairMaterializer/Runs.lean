@@ -284,7 +284,7 @@ theorem emptyPrefixSchedule_nonempty
       finishConfig, ProductFinish.prefixConfig,
       ProductPrefix.materializerConfig, cleanupEmptyConfig,
       TuringMachine.PhaseEmbedding.liftConfig,
-      ProductFinish.write_read_eq_self,
+      Tape.write_read_eq_self,
       ProductCleanup.DynamicRightFuel.machine]
   have hfull :
       (machine left right).runConfigExact? (steps + 1)
@@ -864,7 +864,7 @@ theorem nonemptyPrefixSchedule_nonempty
       finishConfig, ProductFinish.prefixConfig,
       ProductPrefix.materializerConfig, cleanupNonemptyConfig,
       TuringMachine.PhaseEmbedding.liftConfig,
-      ProductFinish.write_read_eq_self,
+      Tape.write_read_eq_self,
       ProductCleanup.DynamicRightFuel.machine]
   have hfull :
       (machine left right).runConfigExact? (steps + 1)

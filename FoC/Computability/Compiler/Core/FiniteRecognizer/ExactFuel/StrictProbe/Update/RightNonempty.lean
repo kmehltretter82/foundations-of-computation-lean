@@ -23,11 +23,6 @@ open Languages SerializedFieldComposer
 
 local notation "liftRun" =>
   RightRemoval.lift_run_of_transition
-private theorem runConfigExact_trans {state : Type} (M : TuringMachine MachineCodeSymbol state) {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol state} (hab : M.runConfigExact? first a = some b) (hbc : M.runConfigExact? second b = some c) :
-    M.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab) (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 namespace HeadReplaceMachine
 inductive Control where
   | locate (inner : Dispatch.HeadCursor.Full.Control)
@@ -196,7 +191,7 @@ private theorem run_exact_of_equiv {stateCount : Nat} (L : Layout stateCount) (n
       L newHead callerData locatorEndpoint.tape hreplaceSource with
     ⟨replaceEndpoint, hreplaceInner, hreplaceState, hreplaceTape⟩
   have hreplace := replace_run_of_some L.head newHead hreplaceInner
-  have hrun := runConfigExact_trans (machine L.head newHead) hlocator hreplace
+  have hrun := TuringMachine.runConfigExact?_trans hlocator hreplace
   have hstart : locateConfig
       { state := Dispatch.HeadCursor.Full.machine.start, tape := T } =
       { state := (machine L.head newHead).start, tape := T } := rfl
@@ -311,7 +306,7 @@ private theorem run_exact_of_equiv {stateCount : Nat} (L : Layout stateCount) (w
       L write callerData payloadEndpoint.tape hpayloadTape with
     ⟨countEndpoint, hcountInner, hcountState, hcountTape⟩
   have hcount := count_run_of_some write hcountInner
-  have hrun := runConfigExact_trans (machine write) hpayload hcount
+  have hrun := TuringMachine.runConfigExact?_trans hpayload hcount
   refine ⟨countConfig countEndpoint, ?_, ?_, hcountTape⟩
   · simpa [runSteps, payloadInnerMachine, machine, payloadConfig,
       TuringMachine.PhaseEmbedding.liftConfig, payloadEmbed,
@@ -553,8 +548,8 @@ theorem run_exact {stateCount : Nat} (L : Layout stateCount) (write nextHead : O
           write callerData replaceEndpoint.tape hreplaceCanonical with
         ⟨prependEndpoint, hprependInner, hprependState, hprependTape⟩
       have hprepend := prepend_run_of_some write hprependInner
-      have hrun := runConfigExact_trans (machine write)
-        (runConfigExact_trans (machine write) hremove hreplace) hprepend
+      have hrun := TuringMachine.runConfigExact?_trans
+        (TuringMachine.runConfigExact?_trans hremove hreplace) hprepend
       refine ⟨prependConfig prependEndpoint, ?_, ?_, ?_⟩
       · simpa [runSteps, Nat.add_assoc] using hrun
       · simpa [prependConfig, prependEmbed,

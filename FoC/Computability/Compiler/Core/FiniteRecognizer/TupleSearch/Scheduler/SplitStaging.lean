@@ -227,7 +227,7 @@ theorem cross_separator_step (frame : Frame) :
     transition, ProductDuplicator.haltTape, ProductDuplicator.scanTape,
     ProductDuplicator.tapeAtCells, separatorTape,
     Scheduler.SplitLayout.encode]
-  rw [Scheduler.CandidateMaterializer.write_read_eq_self]
+  rw [Tape.write_read_eq_self]
   exact Tape.move_left_move_right_eq_self_of_right_cons _ rfl
 
 theorem cross_original_step (frame : Frame) :

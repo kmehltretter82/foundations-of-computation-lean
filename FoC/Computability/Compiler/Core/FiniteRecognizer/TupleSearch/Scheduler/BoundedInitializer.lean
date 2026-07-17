@@ -455,12 +455,6 @@ theorem sameHeadRoundTrip_equiv
           Tape.moveRight, Tape.Equiv, Tape.dropTrailingNone]
   done
 
-private theorem write_read_eq_self
-    (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem first_duplicate_handoff
     (tape : Tape MachineCodeSymbol) :
     TuringMachine.Computes machine
@@ -478,14 +472,14 @@ theorem first_duplicate_handoff
           FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine.halt
         tape := tape } = some middle := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine, write_read_eq_self]
+      FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine, Tape.write_read_eq_self]
   have hsecond : machine.stepConfig middle =
       some
         { state := .duplicate .second
             FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine.start
           tape := sameHeadRoundTrip tape } := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      sameHeadRoundTrip, write_read_eq_self]
+      sameHeadRoundTrip, Tape.write_read_eq_self]
   exact TuringMachine.Computes.step
     (TuringMachine.stepConfig_eq_some_iff_step.mp hfirst)
     (TuringMachine.Computes.step
@@ -509,13 +503,13 @@ theorem second_duplicate_handoff
           FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine.halt
         tape := tape } = some middle := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine, write_read_eq_self]
+      FiniteRecognizer.TupleSearch.Scheduler.UnaryFieldDuplicator.machine, Tape.write_read_eq_self]
   have hsecond : machine.stepConfig middle =
       some
         { state := .scan .candidateTail .three
           tape := sameHeadRoundTrip tape } := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      sameHeadRoundTrip, write_read_eq_self]
+      sameHeadRoundTrip, Tape.write_read_eq_self]
   exact TuringMachine.Computes.step
     (TuringMachine.stepConfig_eq_some_iff_step.mp hfirst)
     (TuringMachine.Computes.step
@@ -921,13 +915,13 @@ theorem candidateTail_handoff
         tape := tape } = some middle := by
     simp [middle, insertHaltConfig, machine,
       TuringMachine.stepConfig, transition,
-      InsertRestagedMachine.machine, write_read_eq_self]
+      InsertRestagedMachine.machine, Tape.write_read_eq_self]
   have hsecond : machine.stepConfig middle =
       some
         { state := .scan .innerSplit .two
           tape := sameHeadRoundTrip tape } := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      sameHeadRoundTrip, write_read_eq_self]
+      sameHeadRoundTrip, Tape.write_read_eq_self]
   exact TuringMachine.Computes.step
     (TuringMachine.stepConfig_eq_some_iff_step.mp hfirst)
     (TuringMachine.Computes.step
@@ -951,13 +945,13 @@ theorem innerSplit_handoff
         tape := tape } = some middle := by
     simp [middle, insertHaltConfig, machine,
       TuringMachine.stepConfig, transition,
-      InsertRestagedMachine.machine, write_read_eq_self]
+      InsertRestagedMachine.machine, Tape.write_read_eq_self]
   have hsecond : machine.stepConfig middle =
       some
         { state := .scan .outerPrefix .one
           tape := sameHeadRoundTrip tape } := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      sameHeadRoundTrip, write_read_eq_self]
+      sameHeadRoundTrip, Tape.write_read_eq_self]
   exact TuringMachine.Computes.step
     (TuringMachine.stepConfig_eq_some_iff_step.mp hfirst)
     (TuringMachine.Computes.step
@@ -983,7 +977,7 @@ theorem outerPrefix_handoff
         tape := tape } = some middle := by
     simp [middle, insertHaltConfig, machine,
       TuringMachine.stepConfig, transition,
-      InsertRestagedMachine.machine, write_read_eq_self]
+      InsertRestagedMachine.machine, Tape.write_read_eq_self]
   have hsecond : machine.stepConfig middle =
       some
         { state := .insert .leading
@@ -991,7 +985,7 @@ theorem outerPrefix_handoff
               (InsertPhase.buffer .leading)).start
           tape := sameHeadRoundTrip tape } := by
     simp [middle, machine, TuringMachine.stepConfig, transition,
-      sameHeadRoundTrip, write_read_eq_self]
+      sameHeadRoundTrip, Tape.write_read_eq_self]
   exact TuringMachine.Computes.step
     (TuringMachine.stepConfig_eq_some_iff_step.mp hfirst)
     (TuringMachine.Computes.step

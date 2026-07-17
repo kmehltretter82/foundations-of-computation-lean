@@ -287,18 +287,6 @@ theorem rewoundWord_eq_targetWord
           MachineDescription.encodeCell,
           MachineDescription.encodeNatAppend, List.append_assoc]
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {source middle target :
-      TuringMachine.Configuration MachineCodeSymbol Control}
-    (hfirst : machine.runConfigExact? first source = some middle)
-    (hsecond : machine.runConfigExact? second middle = some target) :
-    machine.runConfigExact? (first + second) source = some target := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hfirst)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hsecond)
-
 def runSteps (target : Nat) : Nat :=
   ((target + 1) + 1) +
     ((MachineDescription.encodeNat target).reverse.length + 1)
@@ -316,11 +304,11 @@ theorem run_exact
     simpa [sourceConfig, sourceWord, afterTargetConfig] using
       run_target head target [] (MachineCodeSymbol.header :: rest)
   have hguard := guard_rewrite_exact target head rest
-  have hpref := runConfigExact_trans htarget hguard
+  have hpref := TuringMachine.runConfigExact?_trans htarget hguard
   have hrewind := run_rewind
     (MachineDescription.encodeNat target).reverse
     (FiniteRecognizer.Interpreter.RuntimeEncodedList.Prepend.cellSymbol head :: rest)
-  have hrun := runConfigExact_trans hpref hrewind
+  have hrun := TuringMachine.runConfigExact?_trans hpref hrewind
   have hword := rewoundWord_eq_targetWord target head rest
   simp only [List.reverse_reverse] at hword
   simp only [List.reverse_reverse] at hrun

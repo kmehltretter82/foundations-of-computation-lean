@@ -205,11 +205,6 @@ theorem fuel_run_exact {stateCount : Nat}
 def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right T)
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape T) T := by
   exact Machine.moveLeft_moveRight_equiv_self T
@@ -235,7 +230,7 @@ theorem fuel_handoff_run_exact {stateCount : Nat}
     FuelDecrementMachine.transition,
     DeleteOneRestagedMachine.transition, RewindWord.transition,
     DeleteOneRestagedMachine.rewindConfig, RewindWord.gateConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 
 /-- The locator phase uses the generic phase embedding; no locator-specific
 run induction is repeated here. -/
@@ -265,19 +260,6 @@ theorem locate_run_of_some {stateCount : Nat}
             rcases action with ⟨write, direction, target⟩
             rfl
   · exact hrun
-
-theorem runConfigExact_trans {stateCount : Nat}
-    (selected : SerializedHeadDispatch.Selected stateCount)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol
-      (Control stateCount)}
-    (hab : (machine selected).runConfigExact? first a = some b)
-    (hbc : (machine selected).runConfigExact? second b = some c) :
-    (machine selected).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 
 def postFuelLocatorSource {stateCount : Nat}
     (fuel : Nat) (L : Layout stateCount)
@@ -363,8 +345,8 @@ theorem unified_run_to_leftPayload {stateCount : Nat}
   have hhandoff := fuel_handoff_run_exact selected
     (Frame.protectedWord target callerData)
   have hlocatorOuter := locate_run_of_some selected hlocator
-  have hpref := runConfigExact_trans selected hfuel hhandoff
-  have hrun := runConfigExact_trans selected hpref hlocatorOuter
+  have hpref := TuringMachine.runConfigExact?_trans hfuel hhandoff
+  have hrun := TuringMachine.runConfigExact?_trans hpref hlocatorOuter
   refine ⟨outerEndpoint, ?_, ?_, ?_⟩
   · simpa [runSteps, target, postFuelLocatorSource, outerEndpoint]
       using hrun

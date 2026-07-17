@@ -174,11 +174,6 @@ theorem cyclic_stepConfig {stateCount : Nat}
       simp [CyclicDriverIntegration.machine, htransition,
         cyclicConfig, TuringMachine.PhaseEmbedding.liftConfig]
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol :=
   Tape.move Direction.left (Tape.move Direction.right T)
 
@@ -203,7 +198,7 @@ theorem empty_handoff_run_exact {stateCount : Nat}
       some (cyclicStartConfig M (Tape.move Direction.left T)) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, emptyEndpoint, cyclicStartConfig,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem nonempty_handoff_run_exact {stateCount : Nat}
     {updateState : Type} [DecidableEq updateState]
@@ -220,7 +215,7 @@ theorem nonempty_handoff_run_exact {stateCount : Nat}
     machine, transition, emptyEndpoint, nonemptyEndpoint, compactorConfig,
     TuringMachine.PhaseEmbedding.liftConfig,
     StageInput.TwoBlankCompactor.config,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 
 theorem compactor_handoff_run_exact {stateCount : Nat}
     {updateState : Type} [DecidableEq updateState]
@@ -234,7 +229,7 @@ theorem compactor_handoff_run_exact {stateCount : Nat}
       some (cyclicStartConfig M (roundTripTape T)) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, cyclicStartConfig, roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 /-- Once the public prefix enters the cyclic phase, the outer and inner
 machines have exactly the same finite runs and halt at the same embedded

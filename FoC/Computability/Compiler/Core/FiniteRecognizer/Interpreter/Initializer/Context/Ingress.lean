@@ -956,7 +956,6 @@ theorem parsed_ingress_computes
       simpa [htable] using htarget
 
 
-
 end Machine
 
 end FiniteRecognizer.Interpreter.BooleanContextIngress

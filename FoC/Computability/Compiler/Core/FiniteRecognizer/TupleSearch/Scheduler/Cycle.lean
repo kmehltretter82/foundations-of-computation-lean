@@ -500,11 +500,6 @@ theorem computes_of_run_exact
   exact TuringMachine.computesIn_to_computes
     (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hrun)
 
-theorem write_read_eq_self (tape : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read tape) tape = tape := by
-  cases tape
-  rfl
-
 theorem duplicate_bounce_run_exact
     {stateCount : Nat}
     (selected : TuringMachine MachineCodeSymbol (Fin stateCount))
@@ -517,7 +512,7 @@ theorem duplicate_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, ProductDuplicator.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem erase_bounce_run_exact
     {stateCount : Nat}
@@ -532,7 +527,7 @@ theorem erase_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, Scheduler.SplitStaging.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem gap_bounce_run_exact
     {stateCount : Nat}
@@ -547,7 +542,7 @@ theorem gap_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, ProductGapExpander.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem materialize_bounce_run_exact
     {stateCount : Nat}
@@ -563,7 +558,7 @@ theorem materialize_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, Scheduler.CandidateMaterializer.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem probe_hit_bounce_run_exact
     {stateCount : Nat}
@@ -577,7 +572,7 @@ theorem probe_hit_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, CyclicDriverIntegration.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem probe_miss_bounce_run_exact
     {stateCount : Nat}
@@ -591,7 +586,7 @@ theorem probe_miss_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, ProductHandoff.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem recovery_bounce_run_exact
     {stateCount : Nat}
@@ -605,7 +600,7 @@ theorem recovery_bounce_run_exact
           tape := CyclicDriverIntegration.roundTripTape tape } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, ProductHandoff.machine,
-    CyclicDriverIntegration.roundTripTape, write_read_eq_self]
+    CyclicDriverIntegration.roundTripTape, Tape.write_read_eq_self]
 
 theorem dispatch_bounce_run_exact
     {stateCount : Nat}
@@ -620,7 +615,7 @@ theorem dispatch_bounce_run_exact
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
     machine, transition, Scheduler.Dispatch.machine,
     ProductDuplicator.machine, CyclicDriverIntegration.roundTripTape,
-    write_read_eq_self]
+    Tape.write_read_eq_self]
 
 theorem roundTripTape_equiv_self (tape : Tape MachineCodeSymbol) :
     Tape.Equiv (CyclicDriverIntegration.roundTripTape tape) tape := by

@@ -140,8 +140,6 @@ private def roundTripTape (T : Tape MachineCodeSymbol) : Tape MachineCodeSymbol 
   Tape.move .left (Tape.move .right T)
 private theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape T) T := Machine.moveLeft_moveRight_equiv_self T
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by cases T; rfl
 private theorem locate_run_of_some (write : Option MachineCodeSymbol)
     {steps : Nat} {source target : TuringMachine.Configuration MachineCodeSymbol
       Dispatch.HeadCursor.Full.Control} (hrun : Dispatch.HeadCursor.Full.machine.runConfigExact?
@@ -223,7 +221,7 @@ private theorem locate_handoff_run_exact (write oldHead : Option MachineCodeSymb
           tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine,
     transition, replaceConfig, TuringMachine.PhaseEmbedding.liftConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 private theorem replace_handoff_run_exact (write oldHead : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) : (machine write).runConfigExact? 2
       { state := Control.replace oldHead
           (Edits.OptionalField.Replace.machine oldHead none).halt, tape := T } =
@@ -233,7 +231,7 @@ private theorem replace_handoff_run_exact (write oldHead : Option MachineCodeSym
           tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine,
     transition, payloadConfig, TuringMachine.PhaseEmbedding.liftConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 private theorem payload_handoff_run_exact (write : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) : (machine write).runConfigExact? 2
       { state := Control.payload (Edits.PositionedLeft.machine .leftPayload
           (InsertBlock.optionalBuffer write)).halt, tape := T } =
@@ -243,18 +241,13 @@ private theorem payload_handoff_run_exact (write : Option MachineCodeSymbol) (T 
           tape := roundTripTape T }) := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig, machine,
     transition, countConfig, TuringMachine.PhaseEmbedding.liftConfig,
-    roundTripTape, write_read_eq_self]
+    roundTripTape, Tape.write_read_eq_self]
 private theorem finish_handoff_run_exact (write : Option MachineCodeSymbol) (T : Tape MachineCodeSymbol) : (machine write).runConfigExact? 2
       { state := Control.count (Edits.PositionedLeft.machine .leftCountDone
           (InsertBlock.singletonBuffer MachineCodeSymbol.tick)).halt, tape := T } =
       some { state := Control.done, tape := roundTripTape T } := by
   simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
-    machine, transition, roundTripTape, write_read_eq_self]
-private theorem runConfigExact_trans (write : Option MachineCodeSymbol)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control} (hab : (machine write).runConfigExact? first a = some b) (hbc : (machine write).runConfigExact? second b = some c) : (machine write).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab) (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
+    machine, transition, roundTripTape, Tape.write_read_eq_self]
 private theorem emptyRight_sourceWord_eq_protectedWord {stateCount : Nat} (L : Layout stateCount) (callerData : Word MachineCodeSymbol) (hright : L.right = []) :
     Dispatch.HeadCursor.GenericPrefix.sourceWord L
       (MachineCodeSymbol.done :: Frame.callerTag :: callerData) =
@@ -377,13 +370,13 @@ theorem run_from_equiv {stateCount : Nat} (L : Layout stateCount) (write : Optio
             (.rewind .gate) at hcountState
           subst countState
           have hfinish := finish_handoff_run_exact write countTape
-          have hrun := runConfigExact_trans write
-            (runConfigExact_trans write
-              (runConfigExact_trans write
-                (runConfigExact_trans write
-                  (runConfigExact_trans write
-                    (runConfigExact_trans write
-                      (runConfigExact_trans write hlocateOuter' hlocateHandoff)
+          have hrun := TuringMachine.runConfigExact?_trans
+            (TuringMachine.runConfigExact?_trans
+              (TuringMachine.runConfigExact?_trans
+                (TuringMachine.runConfigExact?_trans
+                  (TuringMachine.runConfigExact?_trans
+                    (TuringMachine.runConfigExact?_trans
+                      (TuringMachine.runConfigExact?_trans hlocateOuter' hlocateHandoff)
                       hreplaceOuter) hreplaceHandoff) hpayloadOuter)
                   hpayloadHandoff) hcountOuter) hfinish
           have htarget : Tape.Equiv (Tape.input (Frame.protectedWord

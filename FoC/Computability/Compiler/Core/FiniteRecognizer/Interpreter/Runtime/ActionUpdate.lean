@@ -359,18 +359,6 @@ theorem actionFields_run_exact
   rfl
   done
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-  done
-
 def actionTail
     (selected : TransitionDescription)
     (suffix : Word MachineCodeSymbol) : Word MachineCodeSymbol :=
@@ -464,7 +452,7 @@ theorem run_exact
         (MachineCodeSymbol.transition :: baseLeftRev))
       selected.read selected.write selected.move selected.target suffix
   rw [actionFieldsTarget_eq_target] at hfields
-  exact runConfigExact_trans (runConfigExact_trans hentry hsource) hfields
+  exact TuringMachine.runConfigExact?_trans (TuringMachine.runConfigExact?_trans hentry hsource) hfields
   done
 
 end FiniteRecognizer.Interpreter.RuntimeActionPrefix

@@ -198,7 +198,7 @@ theorem field_leftCount_prefix_exact
         (FieldLocator.config .gate
           (rawLeftCountPrefix fuel state).reverse suffix) := by
   unfold leftCountPrefixSteps
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hheader :
       (FieldLocator.machine .leftCount).runConfigExact? 1
           (FieldLocator.config .header []
@@ -214,7 +214,7 @@ theorem field_leftCount_prefix_exact
     rfl
   rw [hheader]
   simp only
-  rw [FieldLocator.runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [FieldLocator.fuel_run_later .leftCount (by decide)]
   simp only
   rw [FieldLocator.state_run_leftCount]
@@ -234,26 +234,6 @@ theorem fields_leftCount_prefix_exact
           (rawLeftCountPrefix fuel state).reverse suffix) := by
   exact fields_run_of_some .leftCountDone _ _ _
     (field_leftCount_prefix_exact fuel state suffix)
-
-theorem runConfigExact?_add
-    (boundary : Boundary) (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    (machine boundary).runConfigExact? (first + second) c =
-      match (machine boundary).runConfigExact? first c with
-      | none => none
-      | some middle =>
-          (machine boundary).runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero => simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : (machine boundary).stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
 
 def countScanSteps (count : Nat) : Nat := count + 2
 
@@ -382,7 +362,7 @@ theorem leftCountDone_raw_exact
         (countGateConfig count
           (rawLeftCountPrefix fuel state).reverse suffix) := by
   unfold leftCountDoneSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [fields_leftCount_prefix_exact]
   simp only
   exact count_scan_exact count
@@ -507,11 +487,6 @@ theorem roundTripTape_equiv (T : Tape MachineCodeSymbol) :
     Tape.Equiv (roundTripTape T) T :=
   Machine.moveLeft_moveRight_equiv_self T
 
-private theorem write_read_eq_self (T : Tape MachineCodeSymbol) :
-    Tape.write (Tape.read T) T = T := by
-  cases T
-  rfl
-
 theorem locate_step_of_some
     (boundary : Locator.Boundary)
     (buffer : InsertBlock.Buffer)
@@ -579,7 +554,7 @@ theorem handoff_run_exact
     simp [TuringMachine.runConfigExact?, TuringMachine.stepConfig,
       machine, transition, insertConfig,
       TuringMachine.PhaseEmbedding.liftConfig,
-      roundTripTape, write_read_eq_self, Locator.halt]
+      roundTripTape, Tape.write_read_eq_self, Locator.halt]
 
 theorem insert_run_of_some
     (boundary : Locator.Boundary)
@@ -607,19 +582,6 @@ theorem insert_run_of_some
             rcases action with ⟨write, direction, target⟩
             rfl
   · exact hrun
-
-theorem runConfigExact_trans
-    (boundary : Locator.Boundary)
-    (buffer : InsertBlock.Buffer)
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : (machine boundary buffer).runConfigExact? first a = some b)
-    (hbc : (machine boundary buffer).runConfigExact? second b = some c) :
-    (machine boundary buffer).runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
 
 def payloadSteps {stateCount : Nat}
     (L : Layout stateCount) (write : Option MachineCodeSymbol)
@@ -669,9 +631,9 @@ theorem payload_insert_exact {stateCount : Nat}
           (InsertBlock.optionalBuffer_nonempty write)) hinsertTape with
     ⟨insertEndpoint, hinsert, hinsertState, hinsertTapeFinal⟩
   have hinsertOuter := insert_run_of_some .leftPayload buffer hinsert
-  have hpref := runConfigExact_trans .leftPayload buffer
+  have hpref := TuringMachine.runConfigExact?_trans
     hlocateOuter hhandoff
-  have hrun := runConfigExact_trans .leftPayload buffer hpref hinsertOuter
+  have hrun := TuringMachine.runConfigExact?_trans hpref hinsertOuter
   refine ⟨insertConfig insertEndpoint, ?_, ?_, ?_⟩
   · simpa [payloadSteps, buffer, leftRev, suffix, Nat.add_assoc] using hrun
   · simpa [insertConfig,
@@ -773,9 +735,9 @@ theorem count_increment_exact {stateCount : Nat}
         hinsertTape with
     ⟨insertEndpoint, hinsert, hinsertState, hinsertTapeFinal⟩
   have hinsertOuter := insert_run_of_some .leftCountDone buffer hinsert
-  have hpref := runConfigExact_trans .leftCountDone buffer
+  have hpref := TuringMachine.runConfigExact?_trans
     hlocateOuter hhandoff
-  have hrun := runConfigExact_trans .leftCountDone buffer
+  have hrun := TuringMachine.runConfigExact?_trans
     hpref hinsertOuter
   refine ⟨insertConfig insertEndpoint, ?_, ?_, ?_⟩
   · simpa [countIncrementSteps, buffer, leftRev, suffix,

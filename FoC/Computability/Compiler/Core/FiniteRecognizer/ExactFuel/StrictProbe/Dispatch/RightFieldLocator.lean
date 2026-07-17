@@ -262,26 +262,6 @@ theorem returnCountStart_run_exact (count : Nat)
               rfl
       rw [hwords]
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem markCountBoundary_roundTrip_exact (count : Nat)
     (baseLeftRev suffix : Word MachineCodeSymbol) :
     machine.runConfigExact? (2 * count + 2)
@@ -294,7 +274,7 @@ theorem markCountBoundary_roundTrip_exact (count : Nat)
           (List.append (HeadLocator.ticks count)
             (MachineCodeSymbol.blank :: suffix))) := by
   rw [show 2 * count + 2 = (count + 1) + (count + 1) by lia]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [markCount_run_exact]
   simp only
   simpa using
@@ -451,7 +431,7 @@ theorem seekCellDone_markedCell_run_exact
           (MachineCodeSymbol.header :: suffix) :=
     List.append_assoc _ _ _
   rw [hassoc]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekCellDone_ticks_run_exact]
   simp only
   change
@@ -496,7 +476,7 @@ theorem seekCellDone_markedCells_run_exact
               (List.append (HeadLocator.markedCellsWord cells) suffix) :=
         List.append_assoc _ _ _
       rw [hassoc]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [seekCellDone_markedCell_run_exact]
       simp only
       rw [ih]
@@ -550,7 +530,7 @@ theorem seekCellDone_cell_run_exact
           (MachineCodeSymbol.done :: rightAfter) :=
     List.append_assoc _ _ _
   rw [hassoc]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekCellDone_ticks_run_exact]
   simp only
   change
@@ -672,7 +652,7 @@ theorem processCell_run_exact
             (MachineCodeSymbol.blank ::
               HeadLocator.cellOutputBody processed cell rightAfter))) := by
   unfold HeadLocator.processCellSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hfirst :
       machine.runConfigExact? 1
           (config .countCheck baseLeftRev
@@ -691,14 +671,14 @@ theorem processCell_run_exact
     simp only [TuringMachine.runConfigExact?]
   rw [hfirst]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [seekCountBoundary_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   unfold HeadLocator.cellInputBody
   rw [seekCellDone_markedCells_run_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   have hleft :
       List.append (HeadLocator.markedCellsWord processed).reverse
           (MachineCodeSymbol.blank ::
@@ -778,7 +758,7 @@ theorem processCells_run_exact
         TuringMachine.runConfigExact?]
   | cons cell rest ih =>
       unfold HeadLocator.processCellsSteps
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       have hsource :
           List.append (HeadLocator.ticks (cell :: rest).length)
               (MachineCodeSymbol.blank ::
@@ -893,10 +873,10 @@ theorem run_exact {stateCount : Nat}
   rw [HeadLocator.afterStateWord_eq_count_payload]
   rw [show HeadLocator.countBaseLeftRev L =
       MachineCodeSymbol.done :: HeadLocator.topFieldsRev L by rfl]
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [markCountBoundary_roundTrip_exact]
   simp only
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [processAllCells_run_exact]
   simp only
   change
@@ -981,26 +961,6 @@ theorem markedCell_run_exact
   | none => cases suffix <;> rfl
   | some symbol => cases symbol <;> cases suffix <;> rfl
 
-theorem runConfigExact?_add
-    (first second : Nat)
-    (c : TuringMachine.Configuration MachineCodeSymbol Control) :
-    machine.runConfigExact? (first + second) c =
-      match machine.runConfigExact? first c with
-      | none => none
-      | some middle => machine.runConfigExact? second middle := by
-  induction first generalizing c with
-  | zero =>
-      simp only [Nat.zero_add, TuringMachine.runConfigExact?]
-  | succ first ih =>
-      rw [Nat.succ_add]
-      rw [TuringMachine.runConfigExact?]
-      rw [TuringMachine.runConfigExact?]
-      cases hstep : machine.stepConfig c with
-      | none => rfl
-      | some next =>
-          simp only
-          exact ih next
-
 theorem markedCells_run_exact
     (cells : List (Option MachineCodeSymbol))
     (leftRev suffix : Word MachineCodeSymbol) :
@@ -1032,7 +992,7 @@ theorem markedCells_run_exact
               (List.append (HeadLocator.markedCellsWord cells) suffix) :=
         List.append_assoc _ _ _
       rw [hassoc]
-      rw [runConfigExact?_add]
+      rw [TuringMachine.runConfigExact?_add]
       rw [markedCell_run_exact]
       simp only
       rw [ih]
@@ -1072,7 +1032,7 @@ theorem run_exact
               leftRev))
           suffix) := by
   unfold runSteps
-  rw [runConfigExact?_add]
+  rw [TuringMachine.runConfigExact?_add]
   rw [markedCells_run_exact]
   simp only
   rw [head_run_exact]
@@ -1373,17 +1333,6 @@ theorem counter_decode_handoff_layout {stateCount : Nat}
     (List.append (HeadLocator.markedCellsWord L.left)
       (headSuffix L callerData))
 
-theorem runConfigExact_trans
-    {first second : Nat}
-    {a b c : TuringMachine.Configuration MachineCodeSymbol Control}
-    (hab : machine.runConfigExact? first a = some b)
-    (hbc : machine.runConfigExact? second b = some c) :
-    machine.runConfigExact? (first + second) a = some c := by
-  apply TuringMachine.runConfigExact?_eq_some_iff_computesIn.mpr
-  exact TuringMachine.computesIn_trans
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hab)
-    (TuringMachine.runConfigExact?_eq_some_iff_computesIn.mp hbc)
-
 def runSteps {stateCount : Nat} (L : Layout stateCount) : Nat :=
   (((FieldLocator.leftCountSteps L + 2) + Counter.runSteps L) + 2) +
     HeadDecoder.runSteps L.left L.head
@@ -1400,10 +1349,10 @@ theorem run_exact {stateCount : Nat}
   have hhandoffTwo := counter_decode_handoff_layout L callerData
   have hdecode := decode_run_of_some
     (HeadDecoder.locate_rightCount_exact L callerData)
-  have hfirst := runConfigExact_trans hlocate hhandoffOne
-  have hsecond := runConfigExact_trans hfirst hcounter
-  have hthird := runConfigExact_trans hsecond hhandoffTwo
-  have hfourth := runConfigExact_trans hthird hdecode
+  have hfirst := TuringMachine.runConfigExact?_trans hlocate hhandoffOne
+  have hsecond := TuringMachine.runConfigExact?_trans hfirst hcounter
+  have hthird := TuringMachine.runConfigExact?_trans hsecond hhandoffTwo
+  have hfourth := TuringMachine.runConfigExact?_trans hthird hdecode
   simpa [runSteps, Nat.add_assoc] using hfourth
 
 end OuterLocator
