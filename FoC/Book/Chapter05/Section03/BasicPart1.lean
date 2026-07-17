@@ -3,6 +3,7 @@ import FoC.Computability.Compiler
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
 import FoC.Computability.DescriptionCodeLanguages
+import FoC.Computability.DescriptionCodeUndecidable
 import FoC.Computability.DescriptionCodeValidity
 import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.StoppedUndecidable

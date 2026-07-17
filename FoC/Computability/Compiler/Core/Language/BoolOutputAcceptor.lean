@@ -353,15 +353,15 @@ private theorem haltsOnInput_exists_haltsWithTape
   let T := (D.runConfig n (D.initial w)).tape
   exact ⟨T, n, hn, rfl⟩
 
-theorem boolOutputAcceptorDescription_haltsOnInput_iff
+/-- Pointwise output-acceptor characterization: coherence is required only at the fixed input, so a source controlled on canonical encoded inputs still yields a recognizer there. Shared by the Boolean-language and code-language consumers. -/
+theorem boolOutputAcceptorDescription_haltsOnInput_iff_pointwise
     {source : MachineDescription} (hsource : source.SubroutineReady)
-    (b : Bool)
+    (b : Bool) (w : Word Bool)
     (hcoherent :
-      forall {w : Word Bool} {T : Tape Bool},
+      forall {T : Tape Bool},
         source.HaltsWithTape w T ->
           List.Mem b (Tape.normalizedOutput T) ->
-            Tape.normalizedOutput T = [b])
-    (w : Word Bool) :
+            Tape.normalizedOutput T = [b]) :
     (BoolOutputAcceptorDescription source b).HaltsOnInput w <->
       source.HaltsWithOutput w [b] := by
   have hscanner := fixedBoolPresenceScanner_subroutineReady b
@@ -417,8 +417,8 @@ theorem stoppedBoolOutputAcceptorConstruction
   refine ⟨BoolOutputAcceptorDescription D b,
     boolOutputAcceptorDescription_subroutineReady hsource b, ?_⟩
   intro w
-  apply boolOutputAcceptorDescription_haltsOnInput_iff hsource b
-  intro input T hhalt hmem
+  apply boolOutputAcceptorDescription_haltsOnInput_iff_pointwise hsource b w
+  intro T hhalt hmem
   classical
   have hsourceOutput :=
     MachineDescription.haltsWithOutput_of_haltsWithTape hhalt
@@ -426,13 +426,13 @@ theorem stoppedBoolOutputAcceptorConstruction
     StoppedMachineDescriptionDecidesLanguage.output_eq_of_haltsWithOutput
       hD hsourceOutput
   cases b
-  · by_cases hinput : input ∈ L
+  · by_cases hinput : w ∈ L
     · have hout := houtput.left hinput
       rw [hout] at hmem
       have hfalseTrue : false = true := List.mem_singleton.mp hmem
       cases hfalseTrue
     · exact houtput.right hinput
-  · by_cases hinput : input ∈ L
+  · by_cases hinput : w ∈ L
     · exact houtput.left hinput
     · have hout := houtput.right hinput
       rw [hout] at hmem

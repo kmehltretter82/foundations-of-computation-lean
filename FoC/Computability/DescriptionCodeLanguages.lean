@@ -206,5 +206,68 @@ theorem descriptionDecidableCodeLanguage_complement
   rcases h with ⟨D, reject, accept, hD⟩
   exact ⟨D, accept, reject, hD.complement⟩
 
+/-!
+## Diagonal nonrecognizability of the valid self-halting complement
+
+The valid self-halting language collects finite-description codes whose
+well-formed decoded machine halts on the canonical encoding of the code itself.
+Its complement admits no well-formed finite-description recognizer: feeding a
+supposed recognizer its own canonical code as the diagonal row forces the
+recognizer to halt exactly when it does not. This closes complement
+nonrecognizability directly in the finite description currency, with no decoder
+universality or compiler premise.
+-/
+
+/-- A finite-description code is self-halting when its valid decoded machine
+halts on the canonical encoding of the code itself. -/
+def CodeSelfHaltingLanguage : Language MachineCodeSymbol :=
+  fun machine => MachineDescription.CodeAccepts machine machine
+
+theorem mem_codeSelfHaltingLanguage_iff (w : Word MachineCodeSymbol) :
+    w ∈ CodeSelfHaltingLanguage <-> MachineDescription.CodeAccepts w w :=
+  Iff.rfl
+
+theorem mem_compl_codeSelfHaltingLanguage_iff (w : Word MachineCodeSymbol) :
+    w ∈ Language.Compl CodeSelfHaltingLanguage <->
+      ¬ MachineDescription.CodeAccepts w w :=
+  Iff.rfl
+
+/-- No fixed well-formed description recognizes the valid self-halting
+complement: its own canonical code is the diagonal witness. -/
+theorem not_descriptionRecognizesCodeLanguage_compl_codeSelfHalting
+    (D : MachineDescription) :
+    ¬ DescriptionRecognizesCodeLanguage D
+      (Language.Compl CodeSelfHaltingLanguage) := by
+  intro hD
+  have hwf : D.WellFormed := hD.wellFormed
+  -- The diagonal row is the canonical code of the recognizer itself.
+  have hcorrect := hD.correct (MachineDescription.encodeDescription D)
+  rw [mem_compl_codeSelfHaltingLanguage_iff] at hcorrect
+  -- On its own code, well-formed acceptance reduces to raw halting.
+  have hca :
+      MachineDescription.CodeAccepts (MachineDescription.encodeDescription D)
+          (MachineDescription.encodeDescription D) <->
+        D.HaltsOnInput
+          (MachineDescription.encodeCodeWordAsInput
+            (MachineDescription.encodeDescription D)) := by
+    rw [MachineDescription.codeAccepts_encodeDescription_iff]
+    exact ⟨fun h => h.right, fun h => ⟨hwf, h⟩⟩
+  -- hcorrect : Halts ↔ ¬ CodeAccepts; hca : CodeAccepts ↔ Halts ⇒ Halts ↔ ¬ Halts.
+  have key := hcorrect.trans (not_congr hca)
+  by_cases h :
+      D.HaltsOnInput
+        (MachineDescription.encodeCodeWordAsInput
+          (MachineDescription.encodeDescription D))
+  · exact absurd h (key.mp h)
+  · exact absurd (key.mpr h) h
+
+/-- The valid self-halting complement is not recognizable by any well-formed
+finite description. -/
+theorem not_descriptionRecognizableCodeLanguage_compl_codeSelfHalting :
+    ¬ DescriptionRecognizableCodeLanguage
+      (Language.Compl CodeSelfHaltingLanguage) := by
+  rintro ⟨D, hD⟩
+  exact not_descriptionRecognizesCodeLanguage_compl_codeSelfHalting D hD
+
 end Computability
 end FoC

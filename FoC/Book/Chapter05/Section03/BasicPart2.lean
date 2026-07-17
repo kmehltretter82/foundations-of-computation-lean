@@ -534,6 +534,35 @@ theorem concrete_machine_complement_self_halting_not_recursively_enumerable_if_d
   complement_self_halting_not_recursively_enumerable_if_decoder_universal
     huniv
 
+/-!
+## Finite-Description Negative Endpoints (Release State R1)
+
+Unlike the compatibility block above, the next two theorems are unconditional.
+They close both negative conjuncts of the Section 5.3 headline directly in the
+canonical finite well-formed-description currency, with no decoder universality,
+no decidable-to-acceptable principle, and no self-halting recognizability
+premise. The diagonal witness is a supposed recognizer's own canonical code.
+The positive conjunct — a finite recognizer for the valid self-halting language
+— remains open and isolated for the later machine construction.
+-/
+
+/--
+The complement of the valid self-halting language is not recognizable by any
+well-formed finite description. Unconditional.
+-/
+theorem concrete_machine_complement_self_halting_not_recognizable :
+    ¬ RecognizableCodeLanguage
+      (Language.Compl ConcreteMachineSelfHaltingLanguage) :=
+  Computability.not_descriptionRecognizableCodeLanguage_compl_codeSelfHalting
+
+/--
+The valid self-halting language has no halt-stable finite-description decider.
+Unconditional, and independent of whether it is recognizable.
+-/
+theorem concrete_machine_self_halting_undecidable_code_language :
+    UndecidableCodeLanguage ConcreteMachineSelfHaltingLanguage :=
+  Computability.not_descriptionDecidableCodeLanguage_codeSelfHalting
+
 theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_preimage
     (hpreimage :
       TuringDecidablePreimageConstruction
