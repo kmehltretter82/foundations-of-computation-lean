@@ -10,6 +10,7 @@ import FoC.Computability.Enumerable
 import FoC.Computability.Program
 import FoC.Computability.Grammar
 import FoC.Computability.Undecidable
+import FoC.Computability.StoppedUndecidable
 import FoC.Computability.Coding
 import FoC.Computability.Encoding
 import FoC.Computability.DescriptionLanguages
@@ -39,7 +40,7 @@ finite machine description has been constructed.
 | staged semantic programs | {module}`FoC.Computability.Program`, {module}`FoC.Computability.Grammar` | finite-stage search and semantic program/grammar bridges |
 | finite syntax and encodings | {module}`FoC.Computability.Coding`, {module}`FoC.Computability.Encoding`, {module}`FoC.Computability.DescriptionLanguages`, {module}`FoC.Computability.DescriptionCodeLanguages`, {module}`FoC.Computability.FiniteProgram` | concrete codes, parsers, decoded-code languages, and finite description witnesses |
 | machine construction | {module}`FoC.Computability.MachineBuilder`, {module}`FoC.Computability.Compiler` | executable descriptions, simulation, lowering, and compiler contracts |
-| semantic limitations | {module}`FoC.Computability.Undecidable` | reductions, diagonalization, and noncomputability |
+| semantic limitations | {module}`FoC.Computability.Undecidable`, {module}`FoC.Computability.StoppedUndecidable` | reductions, diagonalization, and noncomputability in legacy and stopped currencies |
 
 The staged-program layer is a proof tool rather than a replacement for Turing
 machines.  Construction modules must explicitly supply finite descriptions or

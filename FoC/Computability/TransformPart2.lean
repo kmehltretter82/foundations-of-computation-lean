@@ -518,7 +518,7 @@ theorem stoppedDecidesLanguage_to_turingAcceptable
   exact normalizedDeciderToAcceptor_acceptsLanguage_of_stopped_decider h
 
 theorem stoppedTuringDecidable_to_turingAcceptable
-    {input : Type} {L : Language input}
+    {input : Type u} {L : Language input}
     (h : StoppedTuringDecidable L) :
     TuringAcceptable L := by
   rcases h with ⟨symbol, state, M, encodeInput, zero, one, hdec⟩

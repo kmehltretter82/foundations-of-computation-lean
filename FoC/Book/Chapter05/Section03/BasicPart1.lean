@@ -4,6 +4,7 @@ import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
 import FoC.Computability.DescriptionCodeLanguages
 import FoC.Computability.DiagonalPairMachine
+import FoC.Computability.StoppedUndecidable
 
 set_option doc.verso true
 
@@ -780,6 +781,17 @@ theorem complement_self_halting_not_recursively_enumerable_if_decoder_universal
       (Language.Compl (TuringSelfHaltingLanguage decodeAccepts)) :=
   Computability.compl_selfHalting_not_recursivelyEnumerable_if_decoder_universal
     huniv
+
+/--
+Honest semantic decision endpoint. Decoder universality remains an explicit
+premise, but no decidable-to-acceptable Principle is needed and the conclusion
+uses the halt-stable distinct-output decider currency.
+-/
+theorem self_halting_not_stopped_decidable_if_decoder_universal
+    {decodeAccepts : Word code -> Word code -> Prop}
+    (huniv : TuringDecoderUniversalForAcceptableLanguages decodeAccepts) :
+    ¬ StoppedTuringDecidable (TuringSelfHaltingLanguage decodeAccepts) :=
+  Computability.selfHalting_not_stoppedDecidable_if_decoder_universal huniv
 
 /--
 Compatibility only: over the concrete machine-code alphabet the two premises
