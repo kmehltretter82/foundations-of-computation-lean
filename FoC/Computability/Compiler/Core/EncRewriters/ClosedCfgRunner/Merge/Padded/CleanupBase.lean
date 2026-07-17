@@ -228,28 +228,20 @@ theorem skipTransitionPrefixDescription_haltsFromTape
   constructor <;>
     rw [skipTransitionPrefixDescription_run]
 
+theorem sourceRewindDescription_subroutineReady :
+    sourceRewindDescription.SubroutineReady := by
+  exact machineDescription_subroutineReady_of_transition_checks
+    sourceRewindDescription
+    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide)
+
 theorem sourceRewindDescription_wellFormed :
-    sourceRewindDescription.WellFormed := by
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := sourceRewindDescription.transitions)
-      (stateCount := sourceRewindDescription.stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := sourceRewindDescription.transitions)
-      (by decide)
+    sourceRewindDescription.WellFormed :=
+  sourceRewindDescription_subroutineReady.left
 
 theorem sourceRewindDescription_haltTransitionFree :
     sourceRewindDescription.HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := sourceRewindDescription.transitions)
-    (state := sourceRewindDescription.halt)
-    (by decide)
-
-theorem sourceRewindDescription_subroutineReady :
-    sourceRewindDescription.SubroutineReady :=
-  ⟨sourceRewindDescription_wellFormed,
-    sourceRewindDescription_haltTransitionFree⟩
+  sourceRewindDescription_subroutineReady.right
 
 theorem sourceRewindDescription_run_scan
     (leftBits : Word Bool) (current : Bool)

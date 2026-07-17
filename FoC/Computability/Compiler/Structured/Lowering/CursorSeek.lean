@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Structured.Lowering.CursorBasic
+import FoC.Computability.Compiler.Structured.Lowering.FiniteMachineTactics
 
 set_option doc.verso true
 
@@ -39,40 +39,24 @@ def cursorMoveOnceDescription (move : Direction) :
         move := move
         target := 1 } ]
 
+theorem cursorMoveOnceDescription_subroutineReady
+    (move : Direction) :
+    (cursorMoveOnceDescription move).SubroutineReady := by
+  cases move <;>
+    exact machineDescription_subroutineReady_of_transition_checks
+      (cursorMoveOnceDescription _)
+      (by decide) (by decide) (by decide)
+      (by decide) (by decide) (by decide)
+
 theorem cursorMoveOnceDescription_wellFormed
     (move : Direction) :
-    (cursorMoveOnceDescription move).WellFormed := by
-  cases move
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := (cursorMoveOnceDescription Direction.left).transitions)
-      (stateCount := (cursorMoveOnceDescription Direction.left).stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := (cursorMoveOnceDescription Direction.left).transitions)
-      (by decide)
-  refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-  · exact transition_wellFormed_of_all
-      (l := (cursorMoveOnceDescription Direction.right).transitions)
-      (stateCount := (cursorMoveOnceDescription Direction.right).stateCount)
-      (by decide)
-  · exact transition_deterministic_of_all
-      (l := (cursorMoveOnceDescription Direction.right).transitions)
-      (by decide)
+    (cursorMoveOnceDescription move).WellFormed :=
+  (cursorMoveOnceDescription_subroutineReady move).left
 
 theorem cursorMoveOnceDescription_haltTransitionFree
     (move : Direction) :
     (cursorMoveOnceDescription move).HaltTransitionFree :=
-  transition_notFrom_of_all
-    (l := (cursorMoveOnceDescription move).transitions)
-    (state := (cursorMoveOnceDescription move).halt)
-    (by cases move <;> decide)
-
-theorem cursorMoveOnceDescription_subroutineReady
-    (move : Direction) :
-    (cursorMoveOnceDescription move).SubroutineReady :=
-  ⟨cursorMoveOnceDescription_wellFormed move,
-    cursorMoveOnceDescription_haltTransitionFree move⟩
+  (cursorMoveOnceDescription_subroutineReady move).right
 
 theorem cursorMoveOnceDescription_run
     (move : Direction) (T : Tape Bool) :
@@ -86,17 +70,10 @@ theorem cursorMoveOnceDescription_run
     | mk left head right =>
         cases head with
         | none =>
-            simp [cursorMoveOnceDescription, MachineDescription.runConfig,
-              MachineDescription.stepConfig,
-              MachineDescription.lookupTransition,
-              MachineDescription.Matches, Tape.read, Tape.write]
+            machine_step [cursorMoveOnceDescription]
         | some bit =>
             cases bit <;>
-              simp [cursorMoveOnceDescription,
-                MachineDescription.runConfig,
-                MachineDescription.stepConfig,
-                MachineDescription.lookupTransition,
-                MachineDescription.Matches, Tape.read, Tape.write]
+              machine_step [cursorMoveOnceDescription]
 
 theorem cursorMoveOnceDescription_haltsFromTape
     (move : Direction) (T : Tape Bool) :
@@ -178,10 +155,7 @@ private theorem returnToOpeningSeparatorDescription_step_bit
         tape := tapeAtCells left
           (some previous :: some current :: right) } := by
   cases previous <;> cases current <;> cases right <;>
-    simp [returnToOpeningSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+    machine_step [returnToOpeningSeparatorDescription]
 
 private theorem returnToOpeningSeparatorDescription_step_current
     (left right : List (Option Bool)) (current : Bool) :
@@ -191,10 +165,7 @@ private theorem returnToOpeningSeparatorDescription_step_current
       { state := returnToOpeningSeparatorDescription.start
         tape := tapeAtCells left (none :: some current :: right) } := by
   cases current <;> cases right <;>
-    simp [returnToOpeningSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft]
+    machine_step [returnToOpeningSeparatorDescription]
 
 private theorem returnToOpeningSeparatorDescription_run_finish
     (left right : List (Option Bool)) (current : Bool) :
@@ -204,11 +175,7 @@ private theorem returnToOpeningSeparatorDescription_run_finish
       { state := returnToOpeningSeparatorDescription.halt
         tape := tapeAtCells left (none :: some current :: right) } := by
   cases current <;> cases left <;> cases right <;>
-    simp [returnToOpeningSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      Tape.moveRight]
+    machine_step [returnToOpeningSeparatorDescription]
 
 theorem returnToOpeningSeparatorDescription_run
     (scanStack : Word Bool) (current : Bool)
@@ -450,10 +417,7 @@ private theorem cursorScanToNextSeparatorDescription_step_bit
       { state := cursorScanToNextSeparatorDescription.start
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
-    simp [cursorScanToNextSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [cursorScanToNextSeparatorDescription]
 
 private theorem cursorScanToNextSeparatorDescription_run_scan
     (bits : Word Bool) (left suffix : List (Option Bool)) :
@@ -513,11 +477,7 @@ private theorem cursorScanToNextSeparatorDescription_run_finish
       { state := cursorScanToNextSeparatorDescription.halt
         tape := tapeAtCells (some bit :: left) (none :: suffix) } := by
   cases bit <;> cases left <;> cases suffix <;>
-    simp [cursorScanToNextSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      Tape.moveRight]
+    machine_step [cursorScanToNextSeparatorDescription]
 
 theorem cursorScanToNextSeparatorDescription_run_to_next
     (bit : Bool) (rest : Word Bool)
@@ -663,10 +623,7 @@ private theorem cursorSeekNextSeparatorDescription_step_entry
       { state := 1
         tape := tapeAtCells (none :: left) right } := by
   cases right <;>
-    simp [cursorSeekNextSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [cursorSeekNextSeparatorDescription]
 
 private theorem cursorSeekNextSeparatorDescription_step_bit
     (left right : List (Option Bool)) (bit : Bool) :
@@ -676,10 +633,7 @@ private theorem cursorSeekNextSeparatorDescription_step_bit
       { state := 1
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
-    simp [cursorSeekNextSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [cursorSeekNextSeparatorDescription]
 
 private theorem cursorSeekNextSeparatorDescription_run_scan
     (bits : Word Bool) (left suffix : List (Option Bool)) :
@@ -726,11 +680,7 @@ private theorem cursorSeekNextSeparatorDescription_run_finish
       { state := cursorSeekNextSeparatorDescription.halt
         tape := tapeAtCells (some bit :: left) (none :: suffix) } := by
   cases bit <;> cases left <;> cases suffix <;>
-    simp [cursorSeekNextSeparatorDescription,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      Tape.moveRight]
+    machine_step [cursorSeekNextSeparatorDescription]
 
 theorem cursorSeekNextSeparatorDescription_run_to_next
     (bit : Bool) (rest : Word Bool)
@@ -915,10 +865,7 @@ private theorem seekTape2Description_step_entry
       { state := 1
         tape := tapeAtCells (none :: left) right } := by
   cases right <;>
-    simp [seekTape2Description,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [seekTape2Description]
 
 private theorem seekTape2Description_step_bit_first
     (left right : List (Option Bool)) (bit : Bool) :
@@ -928,10 +875,7 @@ private theorem seekTape2Description_step_bit_first
       { state := 1
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
-    simp [seekTape2Description,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [seekTape2Description]
 
 private theorem seekTape2Description_run_scan_first
     (bits : Word Bool) (left suffix : List (Option Bool)) :
@@ -978,10 +922,7 @@ private theorem seekTape2Description_step_between
       { state := 2
         tape := tapeAtCells (none :: left) right } := by
   cases right <;>
-    simp [seekTape2Description,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [seekTape2Description]
 
 private theorem seekTape2Description_step_bit_second
     (left right : List (Option Bool)) (bit : Bool) :
@@ -991,10 +932,7 @@ private theorem seekTape2Description_step_bit_second
       { state := 2
         tape := tapeAtCells (some bit :: left) right } := by
   cases bit <;> cases right <;>
-    simp [seekTape2Description,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveRight]
+    machine_step [seekTape2Description]
 
 private theorem seekTape2Description_run_scan_second
     (bits : Word Bool) (left suffix : List (Option Bool)) :
@@ -1041,11 +979,7 @@ private theorem seekTape2Description_run_finish
       { state := seekTape2Description.halt
         tape := tapeAtCells (some bit :: left) (none :: suffix) } := by
   cases bit <;> cases left <;> cases suffix <;>
-    simp [seekTape2Description,
-      MachineDescription.runConfig, MachineDescription.stepConfig,
-      MachineDescription.lookupTransition, MachineDescription.Matches,
-      tapeAtCells, Tape.read, Tape.write, Tape.move, Tape.moveLeft,
-      Tape.moveRight]
+    machine_step [seekTape2Description]
 
 theorem seekTape2Description_run_to_second
     (firstBit : Bool) (firstRest : Word Bool)
