@@ -40,6 +40,39 @@ def transitionNotFromBool
     (state : Nat) (t : TransitionDescription) : Bool :=
   decide (t.source ≠ state)
 
+/-- Executably check all clauses of finite-description well-formedness. -/
+def machineDescriptionWellFormedBool (D : MachineDescription) : Bool :=
+  decide (0 < D.stateCount) &&
+    decide (D.start < D.stateCount) &&
+    decide (D.halt < D.stateCount) &&
+    D.transitions.all (transitionWellFormedBool D.stateCount) &&
+    D.transitions.all (fun t =>
+      D.transitions.all (fun u => transitionDeterministicPairBool t u))
+
+/-- The pairwise Boolean check is exactly deterministic-key compatibility. -/
+theorem transitionDeterministicPairBool_eq_true_iff
+    (t u : TransitionDescription) :
+    transitionDeterministicPairBool t u = true <->
+      (TransitionDescription.SameKey t u ->
+        TransitionDescription.SameAction t u) := by
+  constructor
+  · intro h hkey
+    have hkeyBool : transitionSameKeyBool t u = true := by
+      simpa [transitionSameKeyBool, TransitionDescription.SameKey] using hkey
+    simpa [transitionDeterministicPairBool, hkeyBool,
+      transitionSameActionBool, TransitionDescription.SameAction, and_assoc]
+      using h
+  · intro h
+    by_cases hsource : t.source = u.source
+    · by_cases hread : t.read = u.read
+      · have haction := h (And.intro hsource hread)
+        simpa [transitionDeterministicPairBool, transitionSameKeyBool,
+          transitionSameActionBool, TransitionDescription.SameAction,
+          hsource, hread, and_assoc] using haction
+      · simp [transitionDeterministicPairBool, transitionSameKeyBool,
+          hsource, hread]
+    · simp [transitionDeterministicPairBool, transitionSameKeyBool, hsource]
+
 private theorem list_all_flatten_of_chunk_all
     {α : Type} {p : α -> Bool} {chunks : List (List α)}
     (h : chunks.all (fun l => l.all p) = true) :
@@ -156,6 +189,31 @@ theorem machineDescription_wellFormed_of_transition_checks
   · exact transition_deterministic_of_all
       (l := D.transitions)
       hdet
+
+/-- The executable description checker is sound and complete. -/
+theorem machineDescriptionWellFormedBool_eq_true_iff
+    (D : MachineDescription) :
+    machineDescriptionWellFormedBool D = true <-> D.WellFormed := by
+  simp only [machineDescriptionWellFormedBool, Bool.and_eq_true,
+    decide_eq_true_eq]
+  constructor
+  · intro h
+    rcases h with ⟨⟨⟨⟨hstate, hstart⟩, hhalt⟩, hwell⟩, hdet⟩
+    exact machineDescription_wellFormed_of_transition_checks
+      D hstate hstart hhalt hwell hdet
+  · intro h
+    rcases h with ⟨hstate, hstart, hhalt, hwell, hdet⟩
+    refine ⟨⟨⟨⟨hstate, hstart⟩, hhalt⟩, ?_⟩, ?_⟩
+    · apply List.all_eq_true.mpr
+      intro t ht
+      simpa [transitionWellFormedBool, TransitionDescription.WellFormed]
+        using hwell t ht
+    · apply List.all_eq_true.mpr
+      intro t ht
+      apply List.all_eq_true.mpr
+      intro u hu
+      exact (transitionDeterministicPairBool_eq_true_iff t u).mpr
+        (hdet t u ht hu)
 
 theorem machineDescription_haltTransitionFree_of_transition_checks
     (D : MachineDescription)

@@ -3,6 +3,7 @@ import FoC.Computability.Compiler
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
 import FoC.Computability.DescriptionCodeLanguages
+import FoC.Computability.DescriptionCodeValidity
 import FoC.Computability.DiagonalPairMachine
 import FoC.Computability.StoppedUndecidable
 
@@ -301,9 +302,30 @@ def ConcreteMachineEncodeCodeInput
     (input : Word ConcreteMachineCodeSymbol) : Word Bool :=
   MachineDescription.encodeCodeWordAsInput input
 
+/-- Complete decoding to a well-formed finite machine description. -/
+def ConcreteDescriptionCodeValid
+    (machine : Word ConcreteMachineCodeSymbol) : Prop :=
+  MachineDescription.DescriptionCodeValid machine
+
+/-- Executable checker for complete well-formed description codes. -/
+def ConcreteDescriptionCodeValidBool
+    (machine : Word ConcreteMachineCodeSymbol) : Bool :=
+  MachineDescription.descriptionCodeValidBool machine
+
+/-- Compatibility relation for raw complete decoding without well-formedness. -/
+def ConcreteRawMachineCodeAccepts
+    (machine input : Word ConcreteMachineCodeSymbol) : Prop :=
+  MachineDescription.RawCodeAccepts machine input
+
 def ConcreteMachineCodeAccepts
     (machine input : Word ConcreteMachineCodeSymbol) : Prop :=
   MachineDescription.CodeAccepts machine input
+
+/-- Inputs accepted by a fixed raw complete description code. -/
+def ConcreteRawMachineCodeAcceptedLanguage
+    (machine : Word ConcreteMachineCodeSymbol) :
+    Language ConcreteMachineCodeSymbol :=
+  MachineDescription.RawCodeAcceptedLanguage machine
 
 def ConcreteMachineCodePrefixAccepts
     (encoded : Word ConcreteMachineCodeSymbol) : Prop :=
@@ -992,12 +1014,41 @@ theorem concrete_machine_decode_prefix_eq_some_encode_append
       MachineDescription.decodeDescriptionPrefix_eq_some_encodeDescription_append
         h
 
+theorem concrete_description_code_valid_bool_iff
+    (machine : Word ConcreteMachineCodeSymbol) :
+    ConcreteDescriptionCodeValidBool machine = true <->
+      ConcreteDescriptionCodeValid machine :=
+  MachineDescription.descriptionCodeValidBool_eq_true_iff machine
+
+theorem concrete_description_code_valid_encode_iff
+    (D : ConcreteMachineDescription) :
+    ConcreteDescriptionCodeValid (ConcreteMachineEncode D) <->
+      ConcreteMachineWellFormed D :=
+  MachineDescription.descriptionCodeValid_encodeDescription_iff D
+
+theorem concrete_description_code_valid_iff_exists_encode_wellFormed
+    (machine : Word ConcreteMachineCodeSymbol) :
+    ConcreteDescriptionCodeValid machine <->
+      exists D : ConcreteMachineDescription,
+        machine = ConcreteMachineEncode D ∧ ConcreteMachineWellFormed D :=
+  MachineDescription.descriptionCodeValid_iff_exists_encodeDescription_wellFormed
+    machine
+
+theorem concrete_description_code_invalid_of_encode_append_nonempty
+    (D : ConcreteMachineDescription)
+    {junk : Word ConcreteMachineCodeSymbol} (hjunk : junk ≠ []) :
+    ¬ ConcreteDescriptionCodeValid
+      (Languages.Word.Concat (ConcreteMachineEncode D) junk) :=
+  MachineDescription.not_descriptionCodeValid_encodeDescription_append_of_ne_nil
+    D hjunk
+
 theorem concrete_machine_code_accepts_encode_description_iff
     (D : ConcreteMachineDescription)
     (input : Word ConcreteMachineCodeSymbol) :
     ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input <->
-      ConcreteMachineHaltsOnInput D
-        (ConcreteMachineEncodeCodeInput input) :=
+      ConcreteMachineWellFormed D ∧
+        ConcreteMachineHaltsOnInput D
+          (ConcreteMachineEncodeCodeInput input) :=
   MachineDescription.codeAccepts_encodeDescription_iff D input
 
 theorem concrete_machine_code_prefix_accepts_encode_description_iff
@@ -1012,10 +1063,18 @@ theorem concrete_machine_code_prefix_accepts_encode_description_iff
 theorem concrete_machine_encoded_description_accepts
     {D : ConcreteMachineDescription}
     {input : Word ConcreteMachineCodeSymbol}
+    (hD : ConcreteMachineWellFormed D)
     (h : ConcreteMachineHaltsOnInput D
       (ConcreteMachineEncodeCodeInput input)) :
     ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input :=
-  (concrete_machine_code_accepts_encode_description_iff D input).mpr h
+  (concrete_machine_code_accepts_encode_description_iff D input).mpr ⟨hD, h⟩
+
+theorem concrete_machine_encoded_description_accepts_wellFormed
+    {D : ConcreteMachineDescription}
+    {input : Word ConcreteMachineCodeSymbol}
+    (h : ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input) :
+    ConcreteMachineWellFormed D :=
+  (concrete_machine_code_accepts_encode_description_iff D input).mp h |>.left
 
 theorem concrete_machine_encoded_description_accepts_elim
     {D : ConcreteMachineDescription}
@@ -1023,15 +1082,18 @@ theorem concrete_machine_encoded_description_accepts_elim
     (h : ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input) :
     ConcreteMachineHaltsOnInput D
       (ConcreteMachineEncodeCodeInput input) :=
-  (concrete_machine_code_accepts_encode_description_iff D input).mp h
+  (concrete_machine_code_accepts_encode_description_iff D input).mp h |>.right
 
 theorem concrete_machine_encoded_description_recognizes_input_language
-    (D : ConcreteMachineDescription) :
+    (D : ConcreteMachineDescription) (hD : ConcreteMachineWellFormed D) :
     TuringDecoderRecognizes ConcreteMachineCodeAccepts
       (ConcreteMachineEncode D)
       (ConcreteMachineEncodedInputLanguage D) := by
   intro input
-  exact concrete_machine_code_accepts_encode_description_iff D input
+  change ConcreteMachineCodeAccepts (ConcreteMachineEncode D) input <->
+    ConcreteMachineHaltsOnInput D (ConcreteMachineEncodeCodeInput input)
+  simpa [hD] using
+    (concrete_machine_code_accepts_encode_description_iff D input)
 
 theorem concrete_encoded_input_description_compiler_of_program_compiler
     (hcompile : SemanticEncodedInputProgramAcceptorCompilationPrinciple) :
@@ -1049,7 +1111,7 @@ theorem concrete_encoded_input_description_compiler_decoder_universal
       intro input
       exact Iff.trans
         (concrete_machine_encoded_description_recognizes_input_language
-          D input)
+          D hD.left input)
         (hD.right input)
 
 theorem concrete_machine_compiled_transition_of_lookup

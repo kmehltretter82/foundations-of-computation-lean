@@ -573,6 +573,67 @@ def decodeDescriptionPrefix (tokens : Word MachineCodeSymbol) :
                                transitions := transitions }, suffix)
   | _ => none
 
+/-- Complete decoding is prefix decoding with an empty residual suffix. -/
+theorem decodeDescription_eq_some_iff_decodeDescriptionPrefix_eq_some_nil
+    {tokens : Word MachineCodeSymbol} {D : MachineDescription} :
+    decodeDescription tokens = some D <->
+      decodeDescriptionPrefix tokens = some (D, []) := by
+  cases tokens with
+  | nil => simp [decodeDescription, decodeDescriptionPrefix]
+  | cons symbol rest =>
+      cases symbol with
+      | header =>
+          simp only [decodeDescription, decodeDescriptionPrefix]
+          cases hstate : decodeNat rest with
+          | none => simp
+          | some parsedState =>
+              rcases parsedState with ⟨stateCount, restAfterState⟩
+              simp only
+              cases hstart : decodeNat restAfterState with
+              | none => simp
+              | some parsedStart =>
+                  rcases parsedStart with ⟨start, restAfterStart⟩
+                  simp only
+                  cases hhalt : decodeNat restAfterStart with
+                  | none => simp
+                  | some parsedHalt =>
+                      rcases parsedHalt with ⟨halt, restAfterHalt⟩
+                      simp only
+                      cases hcount : decodeNat restAfterHalt with
+                      | none => simp
+                      | some parsedCount =>
+                          rcases parsedCount with
+                            ⟨transitionCount, restAfterCount⟩
+                          simp only
+                          cases htrans :
+                              decodeTransitions transitionCount restAfterCount with
+                          | none => simp
+                          | some parsedTransitions =>
+                              rcases parsedTransitions with
+                                ⟨transitions, suffix⟩
+                              cases suffix with
+                              | nil =>
+                                  simp only
+                                  constructor
+                                  · intro h
+                                    cases h
+                                    rfl
+                                  · intro h
+                                    cases h
+                                    rfl
+                              | cons symbol tail =>
+                                  simp
+                                  intro h
+                                  cases h
+      | transition => simp [decodeDescription, decodeDescriptionPrefix]
+      | tick => simp [decodeDescription, decodeDescriptionPrefix]
+      | done => simp [decodeDescription, decodeDescriptionPrefix]
+      | blank => simp [decodeDescription, decodeDescriptionPrefix]
+      | zero => simp [decodeDescription, decodeDescriptionPrefix]
+      | one => simp [decodeDescription, decodeDescriptionPrefix]
+      | moveLeft => simp [decodeDescription, decodeDescriptionPrefix]
+      | moveRight => simp [decodeDescription, decodeDescriptionPrefix]
+
 theorem decodeDescription_encodeDescription
     (D : MachineDescription) :
     decodeDescription (encodeDescription D) = some D := by
@@ -704,6 +765,17 @@ theorem decodeDescriptionPrefix_eq_some_encodeDescription_append
     tokens = List.append (encodeDescription D) suffix := by
   rw [decodeDescriptionPrefix_eq_some_encodeDescriptionAppend h,
     encodeDescriptionAppend_eq_encodeDescription_append]
+
+/-- Every successfully complete-decoded word is the canonical code it denotes. -/
+theorem decodeDescription_eq_some_encodeDescription
+    {tokens : Word MachineCodeSymbol} {D : MachineDescription}
+    (h : decodeDescription tokens = some D) :
+    tokens = encodeDescription D := by
+  have hp :=
+    (decodeDescription_eq_some_iff_decodeDescriptionPrefix_eq_some_nil
+      (tokens := tokens) (D := D)).mp h
+  have htokens := decodeDescriptionPrefix_eq_some_encodeDescription_append hp
+  simpa using htokens
 
 theorem decodeDescriptionPrefix_encodeDescription_append
     (D : MachineDescription) (suffix : Word MachineCodeSymbol) :
