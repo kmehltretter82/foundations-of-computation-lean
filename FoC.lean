@@ -133,11 +133,10 @@ reader expects.
   decidable and recursively enumerable languages, compiler and encoding
   surfaces, reductions, diagonalization, and the halting problem.
 
-The current coverage classification is maintained in the repository's
-{lit}`data/coverage.yaml`. It distinguishes the checked formal core from
-application examples, drawings, language-specific programming details, and
-larger construction surfaces that are intentionally recorded as conditional
-theorem shapes.
+The formalization distinguishes the checked formal core from application
+examples, drawings, language-specific programming details, and larger
+construction surfaces that are intentionally recorded as conditional theorem
+shapes.
 
 ## Design notes
 

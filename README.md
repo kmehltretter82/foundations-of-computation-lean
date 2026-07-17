@@ -77,14 +77,9 @@ If you are curious about the more ambitious backend work, look under
 machine-description, normalized-output, staged-search, and finite-source
 construction boundaries.
 
-If you want the current formalization status, read
-[`data/coverage.yaml`](data/coverage.yaml). It records the chapter-level
-coverage, section-level formalized material, and any deferred application or
-construction work.
-
 ## Coverage Snapshot
 
-The coverage file is the source of truth, but the current high-level picture is:
+The current high-level picture is:
 
 | Chapter | Area | Status | Declarations |
 | --- | --- | --- | --- |
@@ -96,7 +91,7 @@ The coverage file is the source of truth, but the current high-level picture is:
 
 "Formal core covered" does not mean every example, drawing, programming
 language detail, or construction artifact from the book has been reproduced.
-The coverage file distinguishes checked mathematical content from deferred
+The formalization distinguishes checked mathematical content from deferred
 application material and from larger construction surfaces that are represented
 conditionally.
 
@@ -152,16 +147,6 @@ Most user-facing explanation for the HTML site lives in Lean module doc blocks
 with `set_option doc.verso true`. Update those source comments rather than the
 generated files under `.lake/build/literate-html/`.
 
-Broad API inventories should be generated from Lean declarations and docstrings
-rather than maintained by hand.
-
-For concrete finite-machine debugging, import
-`FoC.Computability.MachineDescriptionDebug`. It provides printable tape,
-configuration, and transition views; trace windows; breakpoints; watchpoints;
-compact summaries; final comparison reports; exact and `Tape.Equiv` comparers;
-and step-expectation checks for finding the first bad tape boundary. These
-helpers are opt-in diagnostics, not replacements for general run proofs.
-
 For compiler construction leaves that are easier to state as multi-tape
 algorithms, use
 `FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.Structured`.
@@ -177,7 +162,7 @@ For reusable move/write/scan/copy/append building blocks over that semantics,
 import
 `FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredPrimitives`.
 For lowerer-facing three-logical-tape proof scripts, import
-`FoC.Computability.Compiler.Core.CommonGround.FiniteTransducers.StructuredMultiTapeLowering.ThreeTapeTactic`.
+`FoC.Computability.Compiler.Structured.Lowering.ThreeTapeTactic`.
 It provides opt-in tactics such as `three_tape_step [...]` for local table-step
 simplification, `three_tape_phase_step [...]` for phase-composed descriptions,
 `three_tape_support` for all-read row support branches, and `three_tape_run`
