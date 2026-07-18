@@ -226,113 +226,10 @@ private theorem description_transitions_eq_chunks :
     Description.transitions = transitionChunks.flatten := by
   rfl
 
-private def transitionReadRank : Option Bool -> Nat
-  | none => 0
-  | some false => 1
-  | some true => 2
-
-private def transitionKeyRank (row : TransitionDescription) : Nat :=
-  3 * row.source + transitionReadRank row.read
-
-private def natAdjacentIncreasing : List Nat -> Prop
-  | [] => True
-  | [_] => True
-  | first :: second :: rest =>
-      first < second ∧ natAdjacentIncreasing (second :: rest)
-
-private def natAdjacentIncreasingBool : List Nat -> Bool
-  | [] => true
-  | [_] => true
-  | first :: second :: rest =>
-      decide (first < second) &&
-        natAdjacentIncreasingBool (second :: rest)
-
-private theorem natAdjacentIncreasing_of_bool
-    {values : List Nat}
-    (h : natAdjacentIncreasingBool values = true) :
-    natAdjacentIncreasing values := by
-  induction values with
-  | nil => trivial
-  | cons first rest ih =>
-      cases rest with
-      | nil => trivial
-      | cons second tail =>
-          simp only [natAdjacentIncreasingBool, Bool.and_eq_true,
-            decide_eq_true_eq] at h
-          exact ⟨h.1, ih h.2⟩
-
-private theorem natAdjacentIncreasing_tail
-    {first : Nat} {rest : List Nat}
-    (h : natAdjacentIncreasing (first :: rest)) :
-    natAdjacentIncreasing rest := by
-  cases rest with
-  | nil => trivial
-  | cons second tail => exact h.2
-
-private theorem natAdjacentIncreasing_head_lt_of_mem
-    {first value : Nat} {rest : List Nat}
-    (h : natAdjacentIncreasing (first :: rest))
-    (hvalue : value ∈ rest) :
-    first < value := by
-  induction rest generalizing first with
-  | nil => simp at hvalue
-  | cons second tail ih =>
-      rcases h with ⟨hfirst, htail⟩
-      simp only [List.mem_cons] at hvalue
-      rcases hvalue with rfl | hvalue
-      · exact hfirst
-      · exact Nat.lt_trans hfirst (ih htail hvalue)
-
-private theorem nat_nodup_of_adjacentIncreasing
-    {values : List Nat}
-    (h : natAdjacentIncreasing values) : values.Nodup := by
-  induction values with
-  | nil => exact List.nodup_nil
-  | cons first rest ih =>
-      apply List.nodup_cons.mpr
-      refine ⟨?_, ih (natAdjacentIncreasing_tail h)⟩
-      intro hmem
-      exact (Nat.lt_irrefl first)
-        (natAdjacentIncreasing_head_lt_of_mem h hmem)
-
-private theorem eq_of_mem_of_mem_of_transitionKeyRank_eq
-    {rows : List TransitionDescription} {left right : TransitionDescription}
-    (hnodup : (rows.map transitionKeyRank).Nodup)
-    (hleft : left ∈ rows) (hright : right ∈ rows)
-    (hkey : transitionKeyRank left = transitionKeyRank right) :
-    left = right := by
-  induction rows with
-  | nil =>
-      simp at hleft
-  | cons first rest ih =>
-      simp only [List.map_cons, List.nodup_cons] at hnodup
-      rcases hnodup with ⟨hfirst, hrest⟩
-      simp only [List.mem_cons] at hleft hright
-      rcases hleft with rfl | hleft
-      · rcases hright with rfl | hright
-        · rfl
-        · exfalso
-          apply hfirst
-          rw [hkey]
-          exact List.mem_map.mpr ⟨right, hright, rfl⟩
-      · rcases hright with rfl | hright
-        · exfalso
-          apply hfirst
-          rw [← hkey]
-          exact List.mem_map.mpr ⟨left, hleft, rfl⟩
-        · exact ih hrest hleft hright
-
 set_option maxRecDepth 100000 in
-private theorem description_transitionKeyRanks_adjacentIncreasing :
-    natAdjacentIncreasing
-      (Description.transitions.map transitionKeyRank) := by
-  apply natAdjacentIncreasing_of_bool
+private theorem description_transitionKeyRanksAdjacentIncreasingBool :
+    transitionKeyRanksAdjacentIncreasingBool Description.transitions = true := by
   decide
-
-private theorem description_transitionKeyRanks_nodup :
-    (Description.transitions.map transitionKeyRank).Nodup :=
-  nat_nodup_of_adjacentIncreasing
-    description_transitionKeyRanks_adjacentIncreasing
 
 set_option maxRecDepth 10000 in
 theorem description_subroutineReady : Description.SubroutineReady := by
@@ -341,14 +238,8 @@ theorem description_subroutineReady : Description.SubroutineReady := by
     · rw [description_transitions_eq_chunks]
       exact transition_wellFormed_of_chunk_all
         (chunks := transitionChunks) (by decide)
-    · unfold MachineDescription.Deterministic
-      intro left right hleft hright hsameKey
-      have hkey : transitionKeyRank left = transitionKeyRank right := by
-        simp [transitionKeyRank, hsameKey.1, hsameKey.2]
-      have heq := eq_of_mem_of_mem_of_transitionKeyRank_eq
-        description_transitionKeyRanks_nodup hleft hright hkey
-      subst right
-      exact ⟨rfl, rfl, rfl⟩
+    · exact transition_deterministic_of_keyRanksAdjacentIncreasingBool
+        description_transitionKeyRanksAdjacentIncreasingBool
   · unfold MachineDescription.HaltTransitionFree
     rw [description_transitions_eq_chunks]
     exact transition_notFrom_of_chunk_all
