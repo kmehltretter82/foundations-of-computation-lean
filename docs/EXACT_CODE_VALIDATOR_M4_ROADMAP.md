@@ -75,7 +75,14 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    M7 growth is +13560 / +20000 after file-size and naming cleanup.*
 4. **Suffix-emptiness check** — after the counted records, verify the tape head
    is at the end (empty suffix). This is condition 2 of the decomposition and
-   the exact-code (no-trailing-junk) guarantee. New leaf.
+   the exact-code (no-trailing-junk) guarantee.
+   *Status: closed 2026-07-18 in `ValidatorSuffixGate.lean`. The leaf-3 handoff
+   reads blank exactly when its decoded suffix is empty, formally separating
+   empty and nonempty sources. A three-state blank gate bounces left/right and
+   preserves the successful tape exactly; its all-suffix inversion proves that
+   every halt forces `suffix = []`. Axiom output contains only the standard
+   project axioms. The connected deletion pass removed a cloned halt-output
+   uniqueness proof from leaf 3. Cumulative M7 growth is +13773 / +20000.*
 5. **Determinism check** — verify no two parsed records share a lookup key with
    different actions (`transitionDeterministicPairBool`,
    `transitionWellFormedBool` from `TransitionTableChecks.lean` are the semantic
@@ -98,9 +105,10 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 
 ## Scope note
 
-This is the plan's "Medium–large" milestone (~person-weeks). Leaves 4–5 remain
-the substantive new finite machines; each must be built closed (no sorry, the
+This is the plan's "Medium–large" milestone (~person-weeks). Leaf 5 remains the
+substantive new finite machine; it must be built closed (no sorry, the
 Compiler tree is sorry-free), with a causally-connected deletion pass and a
-growth measurement after each, staying within the campaign's +20000 allowance.
+growth measurement, staying within the campaign's +20000 allowance.
 The token-alignment gate (leaf 1), header parser (leaf 2), transition scanner
-(leaf 3), and prefix parser are reusable closed starting points.
+(leaf 3), suffix gate (leaf 4), and prefix parser are reusable closed starting
+points.

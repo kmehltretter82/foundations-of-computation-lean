@@ -10,6 +10,7 @@
   "focused_checks": [
     "lake build FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorHeaderParser",
     "lake build FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner",
+    "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorSuffixGate.lean",
     "lake env lean FoC/Computability/SelfHaltingReferenceSpec.lean",
     "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorTransitionScanner/Spec.lean",
     "lake env lean FoC/Book/Chapter05/Section03/ConstructionStatus.lean"
@@ -20,6 +21,7 @@
     "recorded_against": "cb2aa8543edb60a6ce154792f5e4bec7f1a4123c"
   },
   "required_axiom_clean": [
+    "FoC.Computability.SelfHaltingRecognizer.exactCodeValidatorSuffixGateDescription_haltsFromTape_iff",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorTransitionScannerConstruction.accepts_of_haltsFromTape",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorTransitionScannerConstruction.exists_haltsFromTape_iff_accepts",
     "FoC.Computability.SelfHaltingRecognizer.concreteSelfHaltingRecognizerConstruction"

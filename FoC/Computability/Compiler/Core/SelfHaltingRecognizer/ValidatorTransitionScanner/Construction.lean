@@ -25,42 +25,6 @@ open MachineDescription
 
 namespace ValidatorTransitionScannerConstruction
 
-private theorem haltsFromTape_output_unique_of_haltFree
-    {D : MachineDescription}
-    (hhaltFree : D.HaltTransitionFree)
-    {input first second : Tape Bool}
-    (hfirst : D.HaltsFromTape input first)
-    (hsecond : D.HaltsFromTape input second) :
-    first = second := by
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hfirst with
-    ⟨firstSteps, hfirstRun⟩
-  rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hsecond with
-    ⟨secondSteps, hsecondRun⟩
-  by_cases hle : firstSteps ≤ secondSteps
-  · have hsteps :
-        secondSteps = firstSteps + (secondSteps - firstSteps) := by
-      lia
-    have hfirstLater :
-        D.runConfig secondSteps { state := D.start, tape := input } =
-          { state := D.halt, tape := first } := by
-      rw [hsteps, MachineDescription.runConfig_add, hfirstRun]
-      exact MachineDescription.runConfig_halt
-        hhaltFree first (secondSteps - firstSteps)
-    exact congrArg MachineDescription.Configuration.tape
-      (hfirstLater.symm.trans hsecondRun)
-  · have hle' : secondSteps ≤ firstSteps := Nat.le_of_not_ge hle
-    have hsteps :
-        firstSteps = secondSteps + (firstSteps - secondSteps) := by
-      lia
-    have hsecondLater :
-        D.runConfig firstSteps { state := D.start, tape := input } =
-          { state := D.halt, tape := second } := by
-      rw [hsteps, MachineDescription.runConfig_add, hsecondRun]
-      exact MachineDescription.runConfig_halt
-        hhaltFree second (firstSteps - secondSteps)
-    exact (congrArg MachineDescription.Configuration.tape
-      (hsecondLater.symm.trans hfirstRun)).symm
-
 private theorem leftRightSeqDescription_haltsFromTape_inv
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)
@@ -95,7 +59,7 @@ private theorem leftRightSeqDescription_haltsFromTape_inv
       (Tape.move Direction.left middle)
   have hidentityOutput :
       identityOutput = Tape.move Direction.left middle :=
-    haltsFromTape_output_unique_of_haltFree
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
       hidentity.2 hIdentityHalt hIdentityCanonical
   subst identityOutput
   exact ⟨middle, hAhalt, hBhalt⟩
@@ -223,7 +187,7 @@ theorem accepts_of_haltsFromTape
         stateCount start halt transitionCount tokens := by
     change middle = validatorHeaderBoundsHandoffTape
       stateCount start halt transitionCount tokens
-    exact haltsFromTape_output_unique_of_haltFree
+    exact MachineDescription.haltsFromTape_functional_of_haltTransitionFree
       ValidatorHeaderBounds.description_subroutineReady.2
       hheader hheaderCanonical
   subst middle
