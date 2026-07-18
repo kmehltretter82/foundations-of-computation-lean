@@ -1,10 +1,10 @@
-import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner.Spec
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner.Construction
 
 set_option doc.verso true
 
 /-!
 # Exact-code validator: counted transition scanner
 
-This active-frontier wrapper exports the repaired leaf-3 semantic contract and
-will export its finite Boolean implementation as the internal subphases close.
+This wrapper exports the repaired leaf-3 semantic contract together with its
+finite same-head composition of the header-bound and counted-row subphases.
 -/

@@ -63,14 +63,16 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    non-determinism bound currency: `0 < stateCount`, `start < stateCount`,
    `halt < stateCount`, and every `source,target < stateCount`. Track
    `decodeTransitions count tokens` (not the header scanner).
-   *Status: contract/feasibility audit closed 2026-07-18 in
-   `ValidatorTransitionScanner/Spec.lean`. The audit repaired the earlier
-   endpoint-only contract, which omitted three required
-   `MachineDescription.WellFormed` clauses. Counted decomposition is unique,
-   so one canonical source cannot demand inequivalent suffix handoffs. The
-   physical route remains one Boolean tape: reserved invalid four-bit markers
-   implement the existing parser's count/row shuttle and must all be restored
-   before the exact handoff. Internal subphases are header bounds, counted row
+   *Status: closed 2026-07-18 under `ValidatorTransitionScanner/`. The finite
+   same-head construction first checks all three header bounds, then parses
+   exactly `count` rows in `decodeTransitions count tokens` currency while
+   checking every source and target bound. It restores every reserved marker
+   and exposes the exact suffix handoff. `Construction.lean` proves forward
+   acceptance and all-word closed inversion (`accepts_of_haltsFromTape` and
+   `exists_haltsFromTape_iff_accepts`); both report only the standard project
+   axioms and the scanner tree has no direct sorry. The connected deletion pass
+   replaced downstream cloned scan helpers with the shared run API. Cumulative
+   M7 growth is +13560 / +20000 after file-size and naming cleanup.*
 4. **Suffix-emptiness check** — after the counted records, verify the tape head
    is at the end (empty suffix). This is condition 2 of the decomposition and
    the exact-code (no-trailing-junk) guarantee. New leaf.
@@ -96,9 +98,9 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 
 ## Scope note
 
-This is the plan's "Medium–large" milestone (~person-weeks). Leaves 3–5 remain
+This is the plan's "Medium–large" milestone (~person-weeks). Leaves 4–5 remain
 the substantive new finite machines; each must be built closed (no sorry, the
 Compiler tree is sorry-free), with a causally-connected deletion pass and a
 growth measurement after each, staying within the campaign's +20000 allowance.
-The token-alignment gate (leaf 1), header parser (leaf 2), and prefix parser are
-reusable closed starting points.
+The token-alignment gate (leaf 1), header parser (leaf 2), transition scanner
+(leaf 3), and prefix parser are reusable closed starting points.
