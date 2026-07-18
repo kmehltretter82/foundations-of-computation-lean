@@ -18,68 +18,6 @@ namespace ValidatorCountedRows
 open Languages
 open MachineDescription
 
-private theorem reaches_cross_scan_left_list
-    {entry scan : Nat}
-    {entryRead entryWrite boundary : ValidatorBlockSymbol}
-    (encountered : List ValidatorBlockSymbol)
-    (hentry :
-      blockDescription.lookup entry entryRead =
-        some
-          { source := entry
-            read := entryRead
-            write := entryWrite
-            move := Direction.left
-            target := scan })
-    (hscan : forall symbol : ValidatorBlockSymbol,
-      symbol ∈ encountered ->
-        blockDescription.lookup scan symbol =
-          some
-            { source := scan
-              read := symbol
-              write := symbol
-              move := Direction.left
-              target := scan })
-    (before after : Word ValidatorBlockSymbol) :
-    blockDescription.Reaches
-        (configuration entry
-          (List.append
-            (List.append before [boundary]) encountered.reverse)
-          (entryRead :: after))
-        (configuration scan before
-          (boundary ::
-            List.append encountered.reverse (entryWrite :: after))) := by
-  induction encountered generalizing entry entryRead entryWrite after with
-  | nil =>
-      have hrun := reaches_one_left hentry before after boundary
-      simpa [configuration] using hrun
-  | cons first rest ih =>
-      have hfirst := reaches_one_left hentry
-        (List.append (List.append before [boundary]) rest.reverse)
-        after first
-      have htail := ih
-        (entry := scan) (entryRead := first) (entryWrite := first)
-        (hentry := hscan first List.mem_cons_self)
-        (hscan := fun symbol hsymbol =>
-          hscan symbol (List.mem_cons_of_mem first hsymbol))
-        (after := entryWrite :: after)
-      simpa [configuration, List.reverse_cons, List.append_assoc] using
-        hfirst.trans htail
-
-private theorem lookup_state1_leftCorridor
-    (symbol : ValidatorBlockSymbol)
-    (hmem : symbol ∈ leftCorridorSymbols) :
-    blockDescription.lookup 1 symbol =
-      some
-        { source := 1
-          read := symbol
-          write := symbol
-          move := Direction.left
-          target := 1 } := by
-  cases symbol <;>
-    simp [leftCorridorSymbols, corridorSymbols,
-      canonicalCorridorSymbols] at hmem <;>
-    decide
-
 private theorem reaches_scan_tick_field
     {state target : Nat}
     (htick :

@@ -722,6 +722,145 @@ theorem runConfig_rewriteRight_replicate
         write :: List.replicate (count + 1) write by rfl]
       simpa [hwrite, htarget, List.append_assoc] using htail
 
+/-!
+## Generic logical reachability combinators
+
+These helpers keep construction-specific run files in the aligned-block
+currency without repeating the same one-step and heterogeneous-scan proofs.
+-/
+
+/-- Compact configuration notation for any aligned-block description. -/
+def blockConfiguration
+    (state : Nat)
+    (left right : Word ValidatorBlockSymbol) :
+    ValidatorBlockDescription.Configuration :=
+  { state := state
+    tape := validatorLogicalBlockTape left right }
+
+/-- Lift one right-moving lookup row to logical reachability. -/
+theorem reaches_one_right
+    {D : ValidatorBlockDescription}
+    {state target : Nat} {read write : ValidatorBlockSymbol}
+    (hlookup :
+      D.lookup state read =
+        some
+          { source := state
+            read := read
+            write := write
+            move := Direction.right
+            target := target })
+    (left rest : Word ValidatorBlockSymbol) :
+    D.Reaches
+        (blockConfiguration state left (read :: rest))
+        (blockConfiguration target (List.append left [write]) rest) := by
+  apply ValidatorBlockDescription.reaches_of_runConfig
+  exact ValidatorBlockDescription.runConfig_one_right_of_lookup
+    hlookup rfl left rest
+
+/-- Lift one left-moving lookup row to logical reachability. -/
+theorem reaches_one_left
+    {D : ValidatorBlockDescription}
+    {state target : Nat} {read write : ValidatorBlockSymbol}
+    (hlookup :
+      D.lookup state read =
+        some
+          { source := state
+            read := read
+            write := write
+            move := Direction.left
+            target := target })
+    (left rest : Word ValidatorBlockSymbol)
+    (previous : ValidatorBlockSymbol) :
+    D.Reaches
+        (blockConfiguration state
+          (List.append left [previous]) (read :: rest))
+        (blockConfiguration target left (previous :: write :: rest)) := by
+  apply ValidatorBlockDescription.reaches_of_runConfig
+  exact ValidatorBlockDescription.runConfig_one_left_of_lookup
+    hlookup rfl left rest previous
+
+/-- Scan a heterogeneous right word while preserving every logical symbol. -/
+theorem reaches_scan_right_list
+    {D : ValidatorBlockDescription} {state : Nat}
+    (symbols : List ValidatorBlockSymbol)
+    (hlookup : forall symbol : ValidatorBlockSymbol,
+      symbol ∈ symbols ->
+        D.lookup state symbol =
+          some
+            { source := state
+              read := symbol
+              write := symbol
+              move := Direction.right
+              target := state })
+    (left rest : Word ValidatorBlockSymbol) :
+    D.Reaches
+        (blockConfiguration state left (List.append symbols rest))
+        (blockConfiguration state (List.append left symbols) rest) := by
+  induction symbols generalizing left with
+  | nil =>
+      simpa [blockConfiguration] using
+        ValidatorBlockDescription.reaches_refl D
+          (blockConfiguration state left rest)
+  | cons first tail ih =>
+      have hfirst := reaches_one_right
+        (hlookup first List.mem_cons_self) left
+        (List.append tail rest)
+      have htail := ih
+        (fun symbol hsymbol =>
+          hlookup symbol (List.mem_cons_of_mem first hsymbol))
+        (List.append left [first])
+      simpa [blockConfiguration, List.append_assoc] using hfirst.trans htail
+
+/-- Cross one left-moving entry row and an encountered heterogeneous word.
+The encountered word is supplied in head-first order and therefore appears
+reversed in the physical left context. -/
+theorem reaches_cross_scan_left_list
+    {D : ValidatorBlockDescription} {entry scan : Nat}
+    {entryRead entryWrite boundary : ValidatorBlockSymbol}
+    (encountered : List ValidatorBlockSymbol)
+    (hentry :
+      D.lookup entry entryRead =
+        some
+          { source := entry
+            read := entryRead
+            write := entryWrite
+            move := Direction.left
+            target := scan })
+    (hscan : forall symbol : ValidatorBlockSymbol,
+      symbol ∈ encountered ->
+        D.lookup scan symbol =
+          some
+            { source := scan
+              read := symbol
+              write := symbol
+              move := Direction.left
+              target := scan })
+    (before after : Word ValidatorBlockSymbol) :
+    D.Reaches
+        (blockConfiguration entry
+          (List.append
+            (List.append before [boundary]) encountered.reverse)
+          (entryRead :: after))
+        (blockConfiguration scan before
+          (boundary ::
+            List.append encountered.reverse (entryWrite :: after))) := by
+  induction encountered generalizing entry entryRead entryWrite after with
+  | nil =>
+      have hrun := reaches_one_left hentry before after boundary
+      simpa [blockConfiguration] using hrun
+  | cons first rest ih =>
+      have hfirst := reaches_one_left hentry
+        (List.append (List.append before [boundary]) rest.reverse)
+        after first
+      have htail := ih
+        (entry := scan) (entryRead := first) (entryWrite := first)
+        (hentry := hscan first List.mem_cons_self)
+        (hscan := fun symbol hsymbol =>
+          hscan symbol (List.mem_cons_of_mem first hsymbol))
+        (after := entryWrite :: after)
+      simpa [blockConfiguration, List.reverse_cons, List.append_assoc] using
+        hfirst.trans htail
+
 end ValidatorBlockDescription
 
 /-!

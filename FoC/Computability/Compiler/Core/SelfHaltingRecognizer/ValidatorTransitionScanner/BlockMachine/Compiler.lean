@@ -8,7 +8,7 @@ open Languages
 open MachineDescription
 open FoC.Computability.DovetailInitialLayoutInitializer
 open FoC.Computability.DovetailInitialLayoutInitializer.StageInputMarkedScanner
-private def validatorBlockDecoderRows (logical : Nat) :
+def validatorBlockDecoderRows (logical : Nat) :
     List TransitionDescription :=
   [ validatorKeepPhysicalRow (validatorBlockRootState logical) false
       Direction.right (validatorBlockDecode1State logical false)
@@ -48,7 +48,7 @@ private def validatorBlockDecoderRows (logical : Nat) :
       (validatorBlockDecode3State logical true true true)
   ]
 
-private def validatorBlockRightFlipRows
+def validatorBlockRightFlipRows
     (logical : Nat) (read write : ValidatorBlockSymbol)
     (target : Nat) : List TransitionDescription :=
   let a := validatorBlockActionState logical read
@@ -62,7 +62,7 @@ private def validatorBlockRightFlipRows
       (validatorBlockRootState target)
   ]
 
-private def validatorBlockLeftRows
+def validatorBlockLeftRows
     (logical : Nat) (read write : ValidatorBlockSymbol)
     (target : Nat) : List TransitionDescription :=
   let a := validatorBlockActionState logical read
@@ -84,7 +84,7 @@ private def validatorBlockLeftRows
       (validatorBlockBoundaryState logical read) write.firstBit
       Direction.left (validatorBlockRootState target)]
 
-private def validatorBlockLeafRows
+def validatorBlockLeafRows
     (D : ValidatorBlockDescription) (logical : Nat)
     (read : ValidatorBlockSymbol) : List TransitionDescription :=
   match D.lookup logical read with
@@ -113,7 +113,7 @@ private def validatorBlockLeafRows
       else
         []
 
-private def validatorBlockActionRows
+def validatorBlockActionRows
     (D : ValidatorBlockDescription) (logical : Nat)
     (read : ValidatorBlockSymbol) : List TransitionDescription :=
   match D.lookup logical read with
@@ -130,7 +130,7 @@ private def validatorBlockActionRows
       else
         []
 
-private def validatorBlockLogicalRows
+def validatorBlockLogicalRows
     (D : ValidatorBlockDescription) (logical : Nat) :
     List TransitionDescription :=
   if logical = D.halt then
@@ -204,7 +204,8 @@ theorem ValidatorBlockPhysicalReaches.trans
   refine ⟨firstSteps + secondSteps, ?_⟩
   rw [MachineDescription.runConfig_add, hfirst, hsecond]
 
-private theorem lookupTransition_eq_some_of_mem_deterministic
+/-- A listed row is the selected row of a deterministic description. -/
+theorem lookupTransition_eq_some_of_mem_deterministic
     {M : MachineDescription} (hdet : M.Deterministic)
     {row : TransitionDescription} (hrow : row ∈ M.transitions) :
     M.lookupTransition row.source row.read = some row := by

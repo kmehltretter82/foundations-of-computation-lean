@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorDeterminismGate
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorSuffixGate
 import FoC.Computability.Compiler.Skeletons
 import FoC.Computability.Compiler.Core.FixedDescBoundedSim

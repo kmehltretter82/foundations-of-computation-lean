@@ -5,12 +5,14 @@ Campaign: `compiler-campaigns/self-halting-recognizer.json`. Spec anchor:
 `FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorSpec.lean`
 (committed `8b789bfa`).
 
-**Allowance review (2026-07-18).** The project owner approved a narrow +5,000
-contingency, raising this campaign from +20,000 to +25,000 while preserving its
-original pinned base. The extra allowance is reserved for leaves 6–7 (Boolean
-emission and exact-validator closeout) plus recognizer composition; it is not
-advance credit for leaf-5 proof growth. Leaf-level deletion and measurement
-requirements remain unchanged.
+**Allowance reviews (2026-07-18).** The project owner first approved a narrow
++5,000 contingency, raising this campaign from +20,000 to +25,000 while
+preserving its original pinned base. After the computed leaf-5 readiness
+certificate proved memory-heavy, the owner approved reallocating at most
++2,000 of that contingency to a verbose structural proof. Leaf 5 closed at
++21,997 cumulative growth after its deletion pass, leaving +3,003 for leaves
+6–7 (Boolean emission and exact-validator closeout) plus recognizer
+composition. The campaign ceiling and pinned base are unchanged.
 
 ## Target
 
@@ -94,6 +96,19 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    different actions (`transitionDeterministicPairBool`,
    `transitionWellFormedBool` from `TransitionTableChecks.lean` are the semantic
    oracles to match). New leaf; the hardest, needs a pairwise-key scan.
+   *Status: closed 2026-07-18 under `ValidatorDeterminismGate/`. The 102-state
+   logical block machine performs the triangular outer/inner row scan, compares
+   source, read, write, move, and target fields, reaches an explicit nonhalting
+   conflict state for equal keys with unequal actions, restores all markers on
+   success, and halts on the original boundary. `Runs/Physical.lean` proves the
+   exact successful target, conflict nonhalting, all-word closedness, and both
+   upper-pair and full-pair iff contracts. `Lookup.lean` proves
+   determinism, endpoint bounds, halt-freedom, and shared-entry readiness by
+   row-family structure; this reduced the leaf readiness check from 179 seconds
+   to 1.8 seconds. The connected deletion pass retired cloned four-left entry
+   machines, local scan proofs, an unused selected-pair route, and obsolete
+   certificate scaffolding. Focused axiom output contains only the standard
+   project axioms. Cumulative M7 growth is +21,997 / +25,000.*
 6. **Boolean emit + halt-stability** — on all-checks-pass emit `[true]`, else
    `[false]`; wire through `BoolOutputDescription`-style tails. Prove
    `HaltTransitionFree` and distinct outputs.
@@ -112,10 +127,8 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 
 ## Scope note
 
-This is the plan's "Medium–large" milestone (~person-weeks). Leaf 5 remains the
-substantive new finite machine; it must be built closed (no sorry, the
-Compiler tree is sorry-free), with a causally-connected deletion pass and a
-growth measurement, staying within the campaign's +25000 reviewed allowance.
-The token-alignment gate (leaf 1), header parser (leaf 2), transition scanner
-(leaf 3), suffix gate (leaf 4), and prefix parser are reusable closed starting
-points.
+This is the plan's "Medium–large" milestone (~person-weeks). Leaves 1–5 are now
+closed with no direct sorry and cumulative growth of +21,997. Leaves 6–7 must
+compose the Boolean closeout without exceeding the remaining +3,003 campaign
+headroom. The token-alignment gate, header parser, transition scanner, suffix
+gate, determinism gate, and prefix parser are reusable closed starting points.

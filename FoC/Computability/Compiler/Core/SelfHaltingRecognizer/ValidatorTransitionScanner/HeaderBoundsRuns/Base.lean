@@ -43,9 +43,8 @@ theorem reaches_one_right
     blockDescription.Reaches
         (configuration state left (read :: rest))
         (configuration target (List.append left [write]) rest) := by
-  apply ValidatorBlockDescription.reaches_of_runConfig
-  exact ValidatorBlockDescription.runConfig_one_right_of_lookup
-    hlookup rfl left rest
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_one_right hlookup left rest)
 
 /-- Shared one-step left move for header success and rejection runs. -/
 theorem reaches_one_left
@@ -64,9 +63,9 @@ theorem reaches_one_left
         (configuration state
           (List.append left [previous]) (read :: rest))
         (configuration target left (previous :: write :: rest)) := by
-  apply ValidatorBlockDescription.reaches_of_runConfig
-  exact ValidatorBlockDescription.runConfig_one_left_of_lookup
-    hlookup rfl left rest previous
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_one_left
+      hlookup left rest previous)
 
 private theorem reaches_scan_left_symbol
     {state : Nat} {symbol : ValidatorBlockSymbol}

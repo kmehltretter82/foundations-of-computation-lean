@@ -187,63 +187,15 @@ def blockDescription : ValidatorBlockDescription where
 private def coreDescription : MachineDescription :=
   compileValidatorBlockDescription blockDescription
 
-private def entryState (phase : Nat) : Nat :=
-  coreDescription.stateCount + phase
-
-private def entryRow
-    (phase : Nat) (read : Option Bool) (target : Nat) :
-    TransitionDescription where
-  source := entryState phase
-  read := read
-  write := read
-  move := Direction.left
-  target := target
-
-private def entryRowsAt (phase target : Nat) :
-    List TransitionDescription :=
-  [entryRow phase none target,
-    entryRow phase (some false) target,
-    entryRow phase (some true) target]
-
-private def entryRows : List TransitionDescription :=
-  entryRowsAt 0 (entryState 1) ++
-    entryRowsAt 1 (entryState 2) ++
-    entryRowsAt 2 (entryState 3) ++
-    entryRowsAt 3 coreDescription.start
-
 /-- Concrete Boolean description for the counted-row subphase. -/
-def Description : MachineDescription where
-  stateCount := coreDescription.stateCount + 4
-  start := entryState 0
-  halt := coreDescription.halt
-  transitions := coreDescription.transitions ++ entryRows
-
-private def transitionChunks : List (List TransitionDescription) :=
-  validatorBlockTransitionChunks blockDescription ++ [entryRows]
-
-set_option maxRecDepth 100000 in
-private theorem description_transitions_eq_chunks :
-    Description.transitions = transitionChunks.flatten := by
-  rfl
-
-set_option maxRecDepth 100000 in
-private theorem description_transitionKeyRanksAdjacentIncreasingBool :
-    transitionKeyRanksAdjacentIncreasingBool Description.transitions = true := by
-  decide
+def Description : MachineDescription :=
+  withValidatorFourLeftEntry coreDescription
 
 set_option maxRecDepth 10000 in
 theorem description_subroutineReady : Description.SubroutineReady := by
-  refine ⟨?_, ?_⟩
-  · refine ⟨by decide, by decide, by decide, ?_, ?_⟩
-    · rw [description_transitions_eq_chunks]
-      exact transition_wellFormed_of_chunk_all
-        (chunks := transitionChunks) (by decide)
-    · exact transition_deterministic_of_keyRanksAdjacentIncreasingBool
-        description_transitionKeyRanksAdjacentIncreasingBool
-  · unfold MachineDescription.HaltTransitionFree
-    rw [description_transitions_eq_chunks]
-    exact transition_notFrom_of_chunk_all
-      (chunks := transitionChunks) (by decide)
+  simpa [Description, coreDescription] using
+    withValidatorFourLeftEntry_compileValidatorBlockDescription_subroutineReady
+      blockDescription (by decide) (by decide) (by decide)
 
 /-- Every generated block-core row remains a row of the entry-extended machine. -/
 theorem compiledRow_mem_description
@@ -251,7 +203,8 @@ theorem compiledRow_mem_description
     (hrow : row ∈
       (compileValidatorBlockDescription blockDescription).transitions) :
     row ∈ Description.transitions := by
-  exact List.mem_append_left entryRows hrow
+  exact List.mem_append_left
+    (validatorFourLeftEntryRows coreDescription) hrow
 
 /-- Block occupied by one encoded tape-cell value. -/
 def cellBlock : Option Bool -> ValidatorBlockSymbol
@@ -332,6 +285,16 @@ def rowsBlocks : List TransitionDescription ->
   | [] => []
   | row :: rest => List.append (rowBlocks row) (rowsBlocks rest)
 
+/-- Encoding rows into logical blocks preserves list concatenation. -/
+theorem rowsBlocks_append
+    (left right : List TransitionDescription) :
+    rowsBlocks (left ++ right) =
+      List.append (rowsBlocks left) (rowsBlocks right) := by
+  induction left with
+  | nil => rfl
+  | cons row left ih =>
+      simp [rowsBlocks, ih, List.append_assoc]
+
 /-- Canonical blocks of a counted transition prefix and its suffix. -/
 theorem validatorCanonicalBlocks_encodeTransitionsAppend
     (rows : List TransitionDescription)
@@ -394,74 +357,6 @@ def validatorCountedRowsHandoffTape
       (rowsBlocks rows))
     (validatorCanonicalBlocks suffix)
 
-private theorem description_lookupTransition_eq_some_of_mem
-    {row : TransitionDescription} (hrow : row ∈ Description.transitions) :
-    Description.lookupTransition row.source row.read = some row := by
-  cases hlookup : Description.lookupTransition row.source row.read with
-  | none =>
-      unfold MachineDescription.lookupTransition at hlookup
-      have hmiss := List.find?_eq_none.mp hlookup row hrow
-      have hmatches :
-          MachineDescription.Matches row.source row.read row = true := by
-        simp [MachineDescription.Matches]
-      rw [hmatches] at hmiss
-      contradiction
-  | some found =>
-      have hfoundMem : found ∈ Description.transitions :=
-        MachineDescription.lookupTransition_mem hlookup
-      have hfoundMatches :=
-        MachineDescription.lookupTransition_matches hlookup
-      have haction := description_subroutineReady.1.2.2.2.2
-        row found hrow hfoundMem
-        ⟨hfoundMatches.1.symm, hfoundMatches.2.symm⟩
-      cases row
-      cases found
-      simp_all [TransitionDescription.SameAction]
-
-private theorem runConfig_one_entryRow
-    {phase target : Nat} {read : Option Bool} (tape : Tape Bool)
-    (hrow : entryRow phase read target ∈ entryRows)
-    (hread : Tape.read tape = read) :
-    Description.runConfig 1
-        { state := entryState phase, tape := tape } =
-      { state := target, tape := Tape.move Direction.left tape } := by
-  have hrowDescription : entryRow phase read target ∈
-      Description.transitions :=
-    List.mem_append_right coreDescription.transitions hrow
-  have hlookup :=
-    description_lookupTransition_eq_some_of_mem hrowDescription
-  change Description.lookupTransition (entryState phase) read =
-    some (entryRow phase read target) at hlookup
-  have hwrite : Tape.write read tape = tape := by
-    rw [← hread]
-    exact Tape.write_read_eq_self tape
-  simp [MachineDescription.runConfig, MachineDescription.stepConfig,
-    entryRow, hread, hlookup, hwrite]
-
-private theorem entryRow_zero_mem (read : Option Bool) :
-    entryRow 0 read (entryState 1) ∈ entryRows := by
-  cases read with
-  | none => simp [entryRows, entryRowsAt]
-  | some bit => cases bit <;> simp [entryRows, entryRowsAt]
-
-private theorem entryRow_one_mem (read : Option Bool) :
-    entryRow 1 read (entryState 2) ∈ entryRows := by
-  cases read with
-  | none => simp [entryRows, entryRowsAt]
-  | some bit => cases bit <;> simp [entryRows, entryRowsAt]
-
-private theorem entryRow_two_mem (read : Option Bool) :
-    entryRow 2 read (entryState 3) ∈ entryRows := by
-  cases read with
-  | none => simp [entryRows, entryRowsAt]
-  | some bit => cases bit <;> simp [entryRows, entryRowsAt]
-
-private theorem entryRow_three_mem (read : Option Bool) :
-    entryRow 3 read coreDescription.start ∈ entryRows := by
-  cases read with
-  | none => simp [entryRows, entryRowsAt]
-  | some bit => cases bit <;> simp [entryRows, entryRowsAt]
-
 /-- Four raw left moves enter the aligned counted-row core. -/
 theorem runConfig_entry_to_logicalStart
     (stateCount start halt transitionCount : Nat)
@@ -480,35 +375,15 @@ theorem runConfig_entry_to_logicalStart
   let tape2 := Tape.move Direction.left tape1
   let tape3 := Tape.move Direction.left tape2
   let tape4 := Tape.move Direction.left tape3
-  have hstep0 : Description.runConfig 1
-      { state := entryState 0, tape := tape0 } =
-      { state := entryState 1, tape := tape1 } := by
-    simpa [tape1] using runConfig_one_entryRow tape0
-      (entryRow_zero_mem (Tape.read tape0)) rfl
-  have hstep1 : Description.runConfig 1
-      { state := entryState 1, tape := tape1 } =
-      { state := entryState 2, tape := tape2 } := by
-    simpa [tape2] using runConfig_one_entryRow tape1
-      (entryRow_one_mem (Tape.read tape1)) rfl
-  have hstep2 : Description.runConfig 1
-      { state := entryState 2, tape := tape2 } =
-      { state := entryState 3, tape := tape3 } := by
-    simpa [tape3] using runConfig_one_entryRow tape2
-      (entryRow_two_mem (Tape.read tape2)) rfl
-  have hstep3 : Description.runConfig 1
-      { state := entryState 3, tape := tape3 } =
-      { state := coreDescription.start, tape := tape4 } := by
-    simpa [tape4] using runConfig_one_entryRow tape3
-      (entryRow_three_mem (Tape.read tape3)) rfl
   have hrun : Description.runConfig 4
-      { state := entryState 0, tape := tape0 } =
+      { state := Description.start, tape := tape0 } =
       { state := coreDescription.start, tape := tape4 } := by
-    rw [show 4 = 1 + 3 by decide,
-      MachineDescription.runConfig_add, hstep0]
-    rw [show 3 = 1 + 2 by decide,
-      MachineDescription.runConfig_add, hstep1]
-    rw [show 2 = 1 + 1 by decide,
-      MachineDescription.runConfig_add, hstep2, hstep3]
+    have hdet :
+        (withValidatorFourLeftEntry coreDescription).Deterministic := by
+      simpa [Description] using
+        description_subroutineReady.1.2.2.2.2
+    simpa [Description, tape4, tape3, tape2, tape1] using
+      runConfig_withValidatorFourLeftEntry coreDescription hdet tape0
   have htape4 : tape4 = validatorBlockTape
       (ValidatorHeaderBounds.startLeftBlocks
         stateCount start halt transitionCount)
@@ -523,7 +398,7 @@ theorem runConfig_entry_to_logicalStart
       (List.append (rowsBlocks rows) (validatorCanonicalBlocks suffix))
       .done
   change Description.runConfig 4
-      { state := entryState 0, tape := tape0 } = _
+      { state := Description.start, tape := tape0 } = _
   rw [hrun]
   simp only [validatorPhysicalBlockConfiguration, logicalStartConfig]
   rw [validatorPhysicalizeBlockTape_logical, htape4]

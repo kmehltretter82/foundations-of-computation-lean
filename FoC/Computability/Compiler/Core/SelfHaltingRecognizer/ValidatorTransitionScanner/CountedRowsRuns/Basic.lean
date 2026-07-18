@@ -41,9 +41,8 @@ theorem reaches_one_right
     blockDescription.Reaches
         (configuration state left (read :: rest))
         (configuration target (List.append left [write]) rest) := by
-  apply ValidatorBlockDescription.reaches_of_runConfig
-  exact ValidatorBlockDescription.runConfig_one_right_of_lookup
-    hlookup rfl left rest
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_one_right hlookup left rest)
 
 /-- Internal one-step left move shared with target restoration. -/
 theorem reaches_one_left
@@ -62,9 +61,9 @@ theorem reaches_one_left
         (configuration state
           (List.append left [previous]) (read :: rest))
         (configuration target left (previous :: write :: rest)) := by
-  apply ValidatorBlockDescription.reaches_of_runConfig
-  exact ValidatorBlockDescription.runConfig_one_left_of_lookup
-    hlookup rfl left rest previous
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_one_left
+      hlookup left rest previous)
 
 /-- Scan a heterogeneous right word while preserving every symbol. -/
 theorem reaches_scan_right_list
@@ -82,20 +81,9 @@ theorem reaches_scan_right_list
     blockDescription.Reaches
         (configuration state left (List.append symbols rest))
         (configuration state (List.append left symbols) rest) := by
-  induction symbols generalizing left with
-  | nil =>
-      simpa [configuration] using
-        ValidatorBlockDescription.reaches_refl blockDescription
-          (configuration state left rest)
-  | cons first tail ih =>
-      have hfirst := reaches_one_right
-        (hlookup first (List.mem_cons_self)) left
-        (List.append tail rest)
-      have htail := ih
-        (fun symbol hsymbol =>
-          hlookup symbol (List.mem_cons_of_mem first hsymbol))
-        (List.append left [first])
-      simpa [configuration, List.append_assoc] using hfirst.trans htail
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_scan_right_list
+      symbols hlookup left rest)
 
 /-!
 The next helper states a left scan in the order in which symbols are
@@ -133,22 +121,9 @@ private theorem reaches_cross_scan_left_list
         (configuration scan before
           (boundary ::
             List.append encountered.reverse (entryWrite :: after))) := by
-  induction encountered generalizing entry entryRead entryWrite after with
-  | nil =>
-      have hrun := reaches_one_left hentry before after boundary
-      simpa [configuration] using hrun
-  | cons first rest ih =>
-      have hfirst := reaches_one_left hentry
-        (List.append (List.append before [boundary]) rest.reverse)
-        after first
-      have htail := ih
-        (entry := scan) (entryRead := first) (entryWrite := first)
-        (hentry := hscan first List.mem_cons_self)
-        (hscan := fun symbol hsymbol =>
-          hscan symbol (List.mem_cons_of_mem first hsymbol))
-        (after := entryWrite :: after)
-      simpa [configuration, List.reverse_cons, List.append_assoc] using
-        hfirst.trans htail
+  simpa [configuration, ValidatorBlockDescription.blockConfiguration] using
+    (ValidatorBlockDescription.reaches_cross_scan_left_list
+      encountered hentry hscan before after)
 
 private theorem canonicalCorridor_natBlocks
     (value : Nat) (symbol : ValidatorBlockSymbol)
@@ -394,21 +369,6 @@ theorem sourcePairLeft_zero
         List.append (List.replicate stateCount .tick)
           (.done :: List.append middle [.marker001]) := by
   simp [sourcePairLeft, markedTicks]
-
-private theorem markedTicks_mem_corridor
-    (unmarked marked : Nat) (symbol : ValidatorBlockSymbol)
-    (hmem : symbol ∈
-      (show List ValidatorBlockSymbol from markedTicks unmarked marked)) :
-    symbol ∈ corridorSymbols := by
-  unfold markedTicks at hmem
-  rcases List.mem_append.mp hmem with hmarker | htick
-  · have heq : symbol = .marker010 :=
-      (List.mem_replicate.mp hmarker).2
-    subst symbol
-    exact marker010_mem_corridor
-  · have heq : symbol = .tick := (List.mem_replicate.mp htick).2
-    subst symbol
-    exact tick_mem_corridor
 
 /-- Scan a homogeneous marker run to its right boundary. -/
 theorem reaches_scan_right_markers
