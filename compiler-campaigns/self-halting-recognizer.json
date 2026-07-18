@@ -3,7 +3,7 @@
   "base_commit": "f9d5e6abfe94ca4763e5cb4f43c4bf40ca6c322a",
   "frontier": "FoC.Computability.SelfHaltingRecognizer.concreteSelfHaltingRecognizerConstruction",
   "status": "active-m7-route-a",
-  "opened_reason": "M7 positive-conjunct campaign for the Section 5.3 self-halting recognizer, gated open by the M6 audit (docs/SELF_HALTING_RECOGNIZER_M6_AUDIT.md). Route A: exact-code validator (M4 internal leaf) -> source-preserving duplicator w |-> w ++ w -> the closed unconditional universal-prefix runner. Correctness is proved at the specification level by FoC.Computability.mem_codeSelfHalting_iff_valid_and_codePrefixAccepts_selfAppend. The original +20000 allowance was approved by the project owner on 2026-07-17. Following the measured +13773 cost of leaves 1-4, the owner approved a narrow +5000 contingency on 2026-07-18, raising the cumulative allowance to +25000 while preserving the pinned base. On 2026-07-18 the owner reallocated at most +2000 of that contingency to leaf-5 structural readiness proofs; leaf 5 closed at cumulative +21997, leaving +3003 for leaves 6-7 and recognizer composition. M4 shares this campaign as an internal leaf and does not open a separate manifest.",
+  "opened_reason": "M7 positive-conjunct campaign for the Section 5.3 self-halting recognizer, gated open by the M6 audit (docs/SELF_HALTING_RECOGNIZER_M6_AUDIT.md). Route A: exact-code validator (M4 internal leaf) -> source-preserving duplicator w |-> w ++ w -> the closed unconditional universal-prefix runner. Correctness is proved at the specification level by FoC.Computability.mem_codeSelfHalting_iff_valid_and_codePrefixAccepts_selfAppend. The original +20000 allowance was approved by the project owner on 2026-07-17. Following the measured +13773 cost of leaves 1-4, the owner approved a narrow +5000 contingency on 2026-07-18, raising the cumulative allowance to +25000 while preserving the pinned base. On 2026-07-18 the owner reallocated at most +2000 of that contingency to leaf-5 structural readiness proofs; leaf 5 closed at cumulative +21997. Leaf 6 closed at cumulative +23022, leaving +1978 for leaf 7 and recognizer composition. M4 shares this campaign as an internal leaf and does not open a separate manifest.",
   "paths": [
     "FoC/Computability/Compiler/Core/SelfHaltingRecognizer"
   ],
@@ -11,6 +11,7 @@
     "lake build FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorHeaderParser",
     "lake build FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner",
     "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorSuffixGate.lean",
+    "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorBooleanCloseout.lean",
     "lake env lean FoC/Computability/SelfHaltingReferenceSpec.lean",
     "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorTransitionScanner/Spec.lean",
     "lake env lean FoC/Book/Chapter05/Section03/ConstructionStatus.lean"
@@ -24,6 +25,10 @@
     "reason": "On 2026-07-18 the project owner approved reallocating up to +2000 of the existing +5000 contingency to leaf 5. The allocation funds compositional row-family determinism, endpoint-bound, halt-freedom, and shared entry-wrapper proofs in place of a generated-table certificate that took 179-236 seconds and approached or exceeded available memory. After the causally connected deletion pass, leaf 5 closes at cumulative +21997; the campaign ceiling remains +25000 and the remaining +3003 stays reserved for leaves 6-7 and recognizer composition.",
     "recorded_against": "810fc381f55795cc9612e881423d45d82f805cd7"
   },
+  "leaf6_growth_review": {
+    "reason": "Leaf 6 adds a 1025-line generic structural completion wrapper. It preserves base transitions, maps the first base halt to an exact normalized true-output tail, maps every missing nonhalt lookup to an exact normalized false-output tail, and proves readiness and halt-freedom without a generated table certificate. Its connected deletion review found no obsolete leaf-local route to retire. The leaf closes at cumulative +23022; the original pinned base and +25000 ceiling remain unchanged, leaving +1978 for leaf 7 and recognizer composition.",
+    "recorded_against": "576cac59535b5f69f5e9d3972111b209b979c031"
+  },
   "required_axiom_clean": [
     "FoC.Computability.SelfHaltingRecognizer.exactCodeValidatorSuffixGateDescription_haltsFromTape_iff",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorTransitionScannerConstruction.accepts_of_haltsFromTape",
@@ -31,7 +36,10 @@
     "FoC.Computability.SelfHaltingRecognizer.ValidatorDeterminismGate.transitionUpperPairsBool_eq_true_of_haltsFromTape",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorDeterminismGate.haltsFromTape_iff_upperPairs_and_target",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorDeterminismGate.haltsFromTape_iff_fullPairs_and_target",
+    "FoC.Computability.SelfHaltingRecognizer.ValidatorBooleanCloseout.description_subroutineReady",
+    "FoC.Computability.SelfHaltingRecognizer.ValidatorBooleanCloseout.haltsFromTapeWithOutput_accept",
+    "FoC.Computability.SelfHaltingRecognizer.ValidatorBooleanCloseout.haltsFromTapeWithOutput_reject_of_missing",
     "FoC.Computability.SelfHaltingRecognizer.concreteSelfHaltingRecognizerConstruction"
   ],
-  "notes": "Frontier and consumer names are provisional targets to be created during M7; the manifest is pinned here so growth is measured from the post-M5 base. Per repository policy the shared M4 validator API must have two current compiling consumers in distinct families before promotion: (1) this self-halting recognizer, and (2) a standalone valid-code decidability theorem. Of the reviewed +5000 contingency, leaf 5 used at most +2000 and closed at cumulative +21997; the remaining +3003 is reserved for leaves 6-7 and recognizer composition. Do not reset base_commit after intermediate commits; do not raise the global baseline to pay for the campaign; run a causally-connected deletion pass after each closed leaf."
+  "notes": "Frontier and consumer names are provisional targets to be created during M7; the manifest is pinned here so growth is measured from the post-M5 base. Per repository policy the shared M4 validator API must have two current compiling consumers in distinct families before promotion: (1) this self-halting recognizer, and (2) a standalone valid-code decidability theorem. Leaf 5 used at most +2000 of the reviewed contingency and leaf 6 closes at cumulative +23022; the remaining +1978 is reserved for leaf 7 and recognizer composition. Do not reset base_commit after intermediate commits; do not raise the global baseline to pay for the campaign; run a causally-connected deletion pass after each closed leaf."
 }

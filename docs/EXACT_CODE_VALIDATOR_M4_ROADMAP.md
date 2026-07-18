@@ -10,9 +10,9 @@ Campaign: `compiler-campaigns/self-halting-recognizer.json`. Spec anchor:
 preserving its original pinned base. After the computed leaf-5 readiness
 certificate proved memory-heavy, the owner approved reallocating at most
 +2,000 of that contingency to a verbose structural proof. Leaf 5 closed at
-+21,997 cumulative growth after its deletion pass, leaving +3,003 for leaves
-6–7 (Boolean emission and exact-validator closeout) plus recognizer
-composition. The campaign ceiling and pinned base are unchanged.
++21,997 cumulative growth after its deletion pass. Leaf 6 then closed at
++23,022, leaving +1,978 for leaf 7 (exact-validator composition) plus
+recognizer composition. The campaign ceiling and pinned base are unchanged.
 
 ## Target
 
@@ -112,6 +112,17 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 6. **Boolean emit + halt-stability** — on all-checks-pass emit `[true]`, else
    `[false]`; wire through `BoolOutputDescription`-style tails. Prove
    `HaltTransitionFree` and distinct outputs.
+   *Status: closed 2026-07-18 in `ValidatorBooleanCloseout.lean`. The generic
+   structural wrapper preserves every base transition, redirects the first
+   base halt to an accept tail, completes every missing nonhalt lookup with a
+   reject tail, and has no outgoing transition at its fresh halt state. Both
+   tails rewind to the left boundary, erase the contiguous input, and halt on
+   the exact normalized output `[true]` or `[false]`. The module proves
+   `SubroutineReady`, base-step transfer, first-halt transfer, missing-key
+   rejection, exact output, and distinct answers without a computed table
+   certificate. Its focused check takes about 2.6 seconds. The connected
+   deletion review found no obsolete leaf-local route to retire. Cumulative M7
+   growth is +23,022 / +25,000.*
 7. **Closeout** — compose 1–6 into `ExactCodeValidatorConstruction`; prove
    forward correctness and closed inversion on ALL words (not only canonical
    encodings), discharging `descriptionCodeValidBool_eq_true_iff_prefix_nil_wellFormed`
@@ -127,8 +138,9 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 
 ## Scope note
 
-This is the plan's "Medium–large" milestone (~person-weeks). Leaves 1–5 are now
-closed with no direct sorry and cumulative growth of +21,997. Leaves 6–7 must
-compose the Boolean closeout without exceeding the remaining +3,003 campaign
-headroom. The token-alignment gate, header parser, transition scanner, suffix
-gate, determinism gate, and prefix parser are reusable closed starting points.
+This is the plan's "Medium–large" milestone (~person-weeks). Leaves 1–6 are now
+closed with no direct sorry and cumulative growth of +23,022. Leaf 7 must
+compose the exact validator, followed by the recognizer consumer, without
+exceeding the remaining +1,978 campaign headroom. The token-alignment gate,
+header parser, transition scanner, suffix gate, determinism gate, Boolean
+closeout, and prefix parser are reusable closed starting points.
