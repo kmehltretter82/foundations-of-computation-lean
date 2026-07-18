@@ -58,9 +58,19 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    the unique exact physical handoff. MCP verification reports only the
    standard project axioms. Cumulative M7 growth is +1235 / +20000; leaf 2 is
    +1026 after its 17-line causally-connected deletion pass.*
-3. **Transition-record scan + bounds** — for each of the counted records, parse
-   `(source, read, write, move, target)` and check `source,target < stateCount`.
-   New leaf; track `decodeTransitions count tokens` (not the header scanner).
+3. **Transition-record scan + all state bounds** — parse each counted
+   `(source, read, write, move, target)` record and check the complete
+   non-determinism bound currency: `0 < stateCount`, `start < stateCount`,
+   `halt < stateCount`, and every `source,target < stateCount`. Track
+   `decodeTransitions count tokens` (not the header scanner).
+   *Status: contract/feasibility audit closed 2026-07-18 in
+   `ValidatorTransitionScanner/Spec.lean`. The audit repaired the earlier
+   endpoint-only contract, which omitted three required
+   `MachineDescription.WellFormed` clauses. Counted decomposition is unique,
+   so one canonical source cannot demand inequivalent suffix handoffs. The
+   physical route remains one Boolean tape: reserved invalid four-bit markers
+   implement the existing parser's count/row shuttle and must all be restored
+   before the exact handoff. Internal subphases are header bounds, counted row
 4. **Suffix-emptiness check** — after the counted records, verify the tape head
    is at the end (empty suffix). This is condition 2 of the decomposition and
    the exact-code (no-trailing-junk) guarantee. New leaf.

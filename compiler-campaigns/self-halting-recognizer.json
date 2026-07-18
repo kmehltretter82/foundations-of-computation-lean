@@ -10,6 +10,7 @@
   "focused_checks": [
     "lake build FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorHeaderParser",
     "lake env lean FoC/Computability/SelfHaltingReferenceSpec.lean",
+    "lake env lean FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorTransitionScanner/Spec.lean",
     "lake env lean FoC/Book/Chapter05/Section03/ConstructionStatus.lean"
   ],
   "allow_net_growth": 20000,
