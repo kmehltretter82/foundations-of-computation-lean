@@ -5,6 +5,13 @@ Campaign: `compiler-campaigns/self-halting-recognizer.json`. Spec anchor:
 `FoC/Computability/Compiler/Core/SelfHaltingRecognizer/ValidatorSpec.lean`
 (committed `8b789bfa`).
 
+**Allowance review (2026-07-18).** The project owner approved a narrow +5,000
+contingency, raising this campaign from +20,000 to +25,000 while preserving its
+original pinned base. The extra allowance is reserved for leaves 6–7 (Boolean
+emission and exact-validator closeout) plus recognizer composition; it is not
+advance credit for leaf-5 proof growth. Leaf-level deletion and measurement
+requirements remain unchanged.
+
 ## Target
 
 `ExactCodeValidatorConstruction : Prop := DescriptionDecidableCodeLanguage ValidCodeLanguage`
@@ -45,7 +52,7 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    *Status: closed 2026-07-18 in `ValidatorTokenGate.lean`: valid complete
    codes pass with an exact source-preserving handoff; all-word inversion
    characterizes precisely the nonempty canonical encodings; empty input is
-   rejected. M7 cumulative growth is +209 / +20000 after the deletion pass.*
+   rejected. M7 cumulative growth is +209 / +25000 after the deletion pass.*
 2. **Header/field parser on tape** — parse the header token then the fixed
    `decodeNat` fields (stateCount, start, halt, transition count), leaving the
    transition-record region. The unbounded field values remain in their
@@ -56,7 +63,7 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    defines the 21-state Boolean machine, `Runs.lean` proves the exact forward
    execution, and `Inversion.lean` proves canonical-code closed inversion plus
    the unique exact physical handoff. MCP verification reports only the
-   standard project axioms. Cumulative M7 growth is +1235 / +20000; leaf 2 is
+   standard project axioms. Cumulative M7 growth is +1235 / +25000; leaf 2 is
    +1026 after its 17-line causally-connected deletion pass.*
 3. **Transition-record scan + all state bounds** — parse each counted
    `(source, read, write, move, target)` record and check the complete
@@ -72,7 +79,7 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    `exists_haltsFromTape_iff_accepts`); both report only the standard project
    axioms and the scanner tree has no direct sorry. The connected deletion pass
    replaced downstream cloned scan helpers with the shared run API. Cumulative
-   M7 growth is +13560 / +20000 after file-size and naming cleanup.*
+   M7 growth is +13560 / +25000 after file-size and naming cleanup.*
 4. **Suffix-emptiness check** — after the counted records, verify the tape head
    is at the end (empty suffix). This is condition 2 of the decomposition and
    the exact-code (no-trailing-junk) guarantee.
@@ -82,7 +89,7 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    preserves the successful tape exactly; its all-suffix inversion proves that
    every halt forces `suffix = []`. Axiom output contains only the standard
    project axioms. The connected deletion pass removed a cloned halt-output
-   uniqueness proof from leaf 3. Cumulative M7 growth is +13773 / +20000.*
+   uniqueness proof from leaf 3. Cumulative M7 growth is +13773 / +25000.*
 5. **Determinism check** — verify no two parsed records share a lookup key with
    different actions (`transitionDeterministicPairBool`,
    `transitionWellFormedBool` from `TransitionTableChecks.lean` are the semantic
@@ -108,7 +115,7 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 This is the plan's "Medium–large" milestone (~person-weeks). Leaf 5 remains the
 substantive new finite machine; it must be built closed (no sorry, the
 Compiler tree is sorry-free), with a causally-connected deletion pass and a
-growth measurement, staying within the campaign's +20000 allowance.
+growth measurement, staying within the campaign's +25000 reviewed allowance.
 The token-alignment gate (leaf 1), header parser (leaf 2), transition scanner
 (leaf 3), suffix gate (leaf 4), and prefix parser are reusable closed starting
 points.
