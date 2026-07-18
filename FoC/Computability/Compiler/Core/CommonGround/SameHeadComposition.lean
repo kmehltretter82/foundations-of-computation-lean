@@ -61,6 +61,73 @@ theorem leftRightSeqDescription_haltsFromTape_of_haltsFromTape
       (seqSubroutine_subroutineReady hA hid)
       hB hAid hbridge hBhalts
 
+/-- Exact closed inversion of a same-head sequence. -/
+theorem leftRightSeqDescription_haltsFromTape_inv
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input output : Tape Bool}
+    (hseq : (leftRightSeqDescription A B).HaltsFromTape input output) :
+    exists middle : Tape Bool,
+      A.HaltsFromTape input middle ∧
+        B.HaltsFromTape
+          (Tape.move Direction.right (Tape.move Direction.left middle))
+          output := by
+  let identity := ExactIdentityDescription
+  have hidentity : identity.SubroutineReady :=
+    CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hseq' : (seqSubroutine
+      (seqSubroutine A identity Direction.left) B Direction.right).HaltsFromTape
+      input output := by
+    simpa [leftRightSeqDescription, identity] using hseq
+  rcases seqSubroutine_haltsFromTape_closed_exists_mid
+      (seqSubroutine_subroutineReady hA hidentity) hB hseq' with
+    ⟨identityOutput, hAIdentity, hBhalt⟩
+  rcases seqSubroutine_haltsFromTape_closed_exists_mid
+      hA hidentity hAIdentity with ⟨middle, hAhalt, hIdentityHalt⟩
+  have hcanonical :=
+    CommonGround.Identity.exactIdentityDescription_haltsFromTape
+      (Tape.move Direction.left middle)
+  have hout : identityOutput = Tape.move Direction.left middle :=
+    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
+      hidentity.2 hIdentityHalt hcanonical
+  subst identityOutput
+  exact ⟨middle, hAhalt, hBhalt⟩
+
+/-- A left-phase stuck run is preserved by same-head sequencing. -/
+theorem leftRightSeqDescription_stuckFromTape_of_left
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input stuck : Tape Bool} (hstuck : A.StuckFromTape input stuck) :
+    (leftRightSeqDescription A B).StuckFromTape input stuck := by
+  have hid := CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hinner := seqSubroutine_stuckFromTape_of_left
+    (handoffMove := Direction.left) hA hid hstuck
+  exact seqSubroutine_stuckFromTape_of_left
+    (handoffMove := Direction.right)
+    (seqSubroutine_subroutineReady hA hid) hB hinner
+
+/-- A right-phase stuck run lifts after an exact same-head handoff. -/
+theorem leftRightSeqDescription_stuckFromTape_of_right
+    {A B : MachineDescription}
+    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
+    {input middle next stuck : Tape Bool}
+    (hAhalts : A.HaltsFromTape input middle)
+    (hbridge : Tape.move Direction.right (Tape.move Direction.left middle) = next)
+    (hBstuck : B.StuckFromTape next stuck) :
+    (leftRightSeqDescription A B).StuckFromTape input stuck := by
+  have hid := CommonGround.Identity.exactIdentityDescription_subroutineReady
+  have hinner : (seqSubroutine A ExactIdentityDescription Direction.left).HaltsFromTape
+      input (Tape.move Direction.left middle) :=
+    SeqComposition.seqSubroutine_haltsFromTape_of_haltsFromTape_eq
+      hA hid hAhalts rfl
+        (CommonGround.Identity.exactIdentityDescription_haltsFromTape
+          (Tape.move Direction.left middle))
+  have hBstuck' : B.StuckFromTape
+      (Tape.move Direction.right (Tape.move Direction.left middle)) stuck := by
+    simpa [hbridge] using hBstuck
+  exact seqSubroutine_stuckFromTape_of_right
+    (seqSubroutine_subroutineReady hA hid) hB hinner hBstuck'
+
 theorem leftRightSeqDescription_haltsFromTapeEquiv_of_haltsFromTapeEquiv
     {A B : MachineDescription}
     (hA : A.SubroutineReady) (hB : B.SubroutineReady)

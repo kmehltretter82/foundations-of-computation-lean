@@ -84,7 +84,7 @@ private theorem lookup_seq_left
         lia
       simpa [hfindA, hfindH, List.find?_eq_none] using hfindB
 
-private theorem stepConfig_seq_left
+theorem stepConfig_seq_left
     {A B : Fragment} {handoffMove : Direction}
     (hB : B.WellFormed)
     {c : MachineDescription.Configuration}
@@ -95,7 +95,7 @@ private theorem stepConfig_seq_left
   simp [MachineDescription.stepConfig,
     lookup_seq_left hB hstate hnotExit]
 
-private theorem runConfig_seq_left_of_no_exit
+theorem runConfig_seq_left_of_no_exit
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed) (hB : B.WellFormed)
     {n : Nat} {c : MachineDescription.Configuration}
@@ -297,7 +297,7 @@ private theorem lookup_seq_right
   simp [Fragment.seq, Fragment.toDescription, List.find?_append,
     hfindA, hfindH, List.find?_map, hpredicate]
 
-private theorem stepConfig_seq_right
+theorem stepConfig_seq_right
     {A B : Fragment} {handoffMove : Direction}
     (hA : A.WellFormed)
     (c : MachineDescription.Configuration) :

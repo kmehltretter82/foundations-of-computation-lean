@@ -598,6 +598,64 @@ theorem runConfig_one_reject
     hlookupCompleted', row, preserveLeftRow, transition,
     Tape.write_read_eq_self]
 
+private theorem lookup_none_of_stepConfig_none
+    {D : MachineDescription} {source : Configuration}
+    (hstep : D.stepConfig source = none) :
+    D.lookupTransition source.state (Tape.read source.tape) = none := by
+  unfold MachineDescription.stepConfig at hstep
+  cases hlookup :
+      D.lookupTransition source.state (Tape.read source.tape) with
+  | none => rfl
+  | some row => simp [hlookup] at hstep
+
+private theorem reaches_reject_of_runConfig_stuck
+    {D : MachineDescription} (hD : D.SubroutineReady)
+    {steps : Nat} {source : Configuration} {state : Nat}
+    {stuck : Tape Bool}
+    (hsource : source.state < D.stateCount)
+    (hrun : D.runConfig steps source =
+      { state := state, tape := stuck })
+    (hstep : D.stepConfig { state := state, tape := stuck } = none)
+    (hstate : state ≠ D.halt) :
+    exists completedSteps : Nat,
+      (Description D).runConfig completedSteps source =
+        { state := rejectRewindState D
+          tape := Tape.move Direction.left stuck } := by
+  induction steps generalizing source with
+  | zero =>
+      have hsourceEq : source = { state := state, tape := stuck } := by
+        simpa [MachineDescription.runConfig] using hrun
+      rw [hsourceEq] at hsource ⊢
+      exact ⟨1, runConfig_one_reject hD hsource hstate stuck
+        (lookup_none_of_stepConfig_none hstep)⟩
+  | succ steps ih =>
+      cases hsourceStep : D.stepConfig source with
+      | none =>
+          have hstay :=
+            MachineDescription.runConfig_of_stepConfig_none
+              hsourceStep (Nat.succ steps)
+          have hsourceEq :
+              source = { state := state, tape := stuck } :=
+            hstay.symm.trans hrun
+          have hlookup := lookup_none_of_stepConfig_none hsourceStep
+          have hsourceState : source.state ≠ D.halt := by
+            simpa [hsourceEq] using hstate
+          refine ⟨1, ?_⟩
+          simpa [hsourceEq] using
+            runConfig_one_reject hD hsource hsourceState source.tape hlookup
+      | some next =>
+          have hrunNext :
+              D.runConfig steps next =
+                { state := state, tape := stuck } := by
+            simpa [MachineDescription.runConfig, hsourceStep] using hrun
+          have hnextBound : next.state < D.stateCount :=
+            MachineDescription.stepConfig_state_bound hD.1 hsourceStep
+          rcases ih hnextBound hrunNext with
+            ⟨completedSteps, hcompleted⟩
+          refine ⟨completedSteps + 1, ?_⟩
+          have hcompletedStep := stepConfig_of_base_step hD hsourceStep
+          simpa [MachineDescription.runConfig, hcompletedStep] using hcompleted
+
 private theorem runConfig_to_first_halt
     {D : MachineDescription} (hD : D.SubroutineReady)
     {n : Nat} {source : Configuration} {T : Tape Bool}
@@ -984,6 +1042,23 @@ theorem haltsFromTape_reject_of_missing
     runConfig_one_reject hD hbound hstate
       (splitTape leftRev right padding) hlookup
 
+/-- Exact stuck-run evidence on a contiguous encoded split enters the rejecting
+answer tail. -/
+theorem haltsFromTape_reject_of_stuck
+    {D : MachineDescription} (hD : D.SubroutineReady)
+    {input : Tape Bool} (leftRev right : Word Bool) (padding : Nat)
+    (hstuck : D.StuckFromTape input
+      (splitTape leftRev right padding)) :
+    (Description D).HaltsFromTape input
+      (answerTape false
+        (List.append leftRev.reverse right).length padding) := by
+  apply haltsFromTape_of_reaches_rewind hD false leftRev right padding
+  rcases hstuck with ⟨steps, state, hrun, hstep, hstate⟩
+  rcases reaches_reject_of_runConfig_stuck hD hD.1.2.1
+      hrun hstep hstate with ⟨completedSteps, hcompleted⟩
+  exact ⟨completedSteps, by
+    simpa [Description, answerRewindState] using hcompleted⟩
+
 /-- Normalized accepting-output contract for a successful recognizer run. -/
 theorem haltsFromTapeWithOutput_accept
     {D : MachineDescription} (hD : D.SubroutineReady)
@@ -1014,6 +1089,18 @@ theorem haltsFromTapeWithOutput_reject_of_missing
     MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape
       (haltsFromTape_reject_of_missing hD leftRev right padding
         hbound hstate hlookup hreach)
+  simpa [answerTape_normalizedOutput] using houtput
+
+/-- Normalized rejecting-output contract for exact stuck-run evidence. -/
+theorem haltsFromTapeWithOutput_reject_of_stuck
+    {D : MachineDescription} (hD : D.SubroutineReady)
+    {input : Tape Bool} (leftRev right : Word Bool) (padding : Nat)
+    (hstuck : D.StuckFromTape input
+      (splitTape leftRev right padding)) :
+    (Description D).HaltsFromTapeWithOutput input [false] := by
+  have houtput :=
+    MachineDescription.haltsFromTapeWithOutput_of_haltsFromTape
+      (haltsFromTape_reject_of_stuck hD leftRev right padding hstuck)
   simpa [answerTape_normalizedOutput] using houtput
 
 /-- The conventional reject and accept answers are distinct. -/

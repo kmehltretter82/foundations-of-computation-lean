@@ -25,45 +25,6 @@ open MachineDescription
 
 namespace ValidatorTransitionScannerConstruction
 
-private theorem leftRightSeqDescription_haltsFromTape_inv
-    {A B : MachineDescription}
-    (hA : A.SubroutineReady) (hB : B.SubroutineReady)
-    {input output : Tape Bool}
-    (hseq :
-      MachineDescription.HaltsFromTape
-        (CommonGround.SameHeadComposition.leftRightSeqDescription A B)
-        input output) :
-    exists middle : Tape Bool,
-      A.HaltsFromTape input middle ∧
-        B.HaltsFromTape
-          (Tape.move Direction.right (Tape.move Direction.left middle))
-          output := by
-  let identity := ExactIdentityDescription
-  have hidentity : identity.SubroutineReady :=
-    CommonGround.Identity.exactIdentityDescription_subroutineReady
-  have hseq' :
-      MachineDescription.HaltsFromTape
-        (seqSubroutine
-          (seqSubroutine A identity Direction.left) B Direction.right)
-        input output := by
-    simpa [CommonGround.SameHeadComposition.leftRightSeqDescription,
-      identity] using hseq
-  rcases seqSubroutine_haltsFromTape_closed_exists_mid
-      (seqSubroutine_subroutineReady hA hidentity) hB hseq' with
-    ⟨identityOutput, hAIdentity, hBhalt⟩
-  rcases seqSubroutine_haltsFromTape_closed_exists_mid
-      hA hidentity hAIdentity with
-    ⟨middle, hAhalt, hIdentityHalt⟩
-  have hIdentityCanonical :=
-    CommonGround.Identity.exactIdentityDescription_haltsFromTape
-      (Tape.move Direction.left middle)
-  have hidentityOutput :
-      identityOutput = Tape.move Direction.left middle :=
-    MachineDescription.haltsFromTape_functional_of_haltTransitionFree
-      hidentity.2 hIdentityHalt hIdentityCanonical
-  subst identityOutput
-  exact ⟨middle, hAhalt, hBhalt⟩
-
 /-- Complete finite description for the transition scan and all state bounds. -/
 def Description : MachineDescription :=
   CommonGround.SameHeadComposition.leftRightSeqDescription
@@ -168,7 +129,7 @@ theorem accepts_of_haltsFromTape
       output) :
     ValidatorTransitionScanAccepts
       stateCount start halt transitionCount tokens := by
-  rcases leftRightSeqDescription_haltsFromTape_inv
+  rcases CommonGround.SameHeadComposition.leftRightSeqDescription_haltsFromTape_inv
       ValidatorHeaderBounds.description_subroutineReady
       ValidatorCountedRows.description_subroutineReady hhalts with
     ⟨middle, hheader, hcounted⟩

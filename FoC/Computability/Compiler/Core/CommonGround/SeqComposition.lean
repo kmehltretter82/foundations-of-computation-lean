@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.SeqSubroutineSemantics
+import FoC.Computability.Compiler.SeqSubroutineStuckSemantics
 
 set_option doc.verso true
 
@@ -213,20 +213,9 @@ theorem runConfig_state_ne_halt_of_later_ne_halt
     (hD : D.HaltTransitionFree)
     (hle : n ≤ k)
     (hlater : (D.runConfig k c).state ≠ D.halt) :
-    (D.runConfig n c).state ≠ D.halt := by
-  intro hhalt
-  have hk : k = n + (k - n) := by lia
-  have hcfg :
-      D.runConfig n c =
-        { state := D.halt, tape := (D.runConfig n c).tape } := by
-    cases hrunN : D.runConfig n c with
-    | mk state tape =>
-        simp [hrunN] at hhalt
-        simp [hhalt]
-  have hfinal : (D.runConfig k c).state = D.halt := by
-    rw [hk, runConfig_add, hcfg,
-      runConfig_halt hD]
-  exact hlater hfinal
+    (D.runConfig n c).state ≠ D.halt :=
+  MachineDescription.runConfig_state_ne_halt_of_later_ne_halt
+    hD hle hlater
 
 theorem runConfig_state_ne_halt_of_reaches_stuck
     {D : MachineDescription}

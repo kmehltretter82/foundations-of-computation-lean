@@ -18,14 +18,13 @@ namespace SelfHaltingRecognizer
 open MachineDescription
 open DovetailInitialLayoutInitializer
 
-/-- A missing generated leaf row prevents the physical machine from halting. -/
-theorem validatorBlockPhysical_ne_halt_of_leaf_stuck
+/-- A missing generated leaf row is exact physical stuck-run evidence. -/
+theorem validatorBlockPhysical_reachesStuck_of_leaf_stuck
     {D : ValidatorBlockDescription} {M : MachineDescription}
     (hsubset : forall row : TransitionDescription,
       row ∈ (compileValidatorBlockDescription D).transitions ->
         row ∈ M.transitions)
     (hdet : M.Deterministic)
-    (hhaltFree : M.HaltTransitionFree)
     {logical : Nat} (hlogical : logical < D.stateCount)
     (hnotHalt : logical ≠ D.halt)
     (left right : List (Option ValidatorBlockSymbol))
@@ -34,12 +33,15 @@ theorem validatorBlockPhysical_ne_halt_of_leaf_stuck
       M.lookupTransition (validatorBlockLeafState logical read)
           (some read.fourthBit) = none)
     (hleafNotHalt : validatorBlockLeafState logical read ≠ M.halt) :
-    forall n : Nat,
-      (M.runConfig n
-        { state := validatorBlockRootState logical
-          tape := validatorPhysicalizeBlockTape
-            { left := left, head := some read, right := right } }).state ≠
-        M.halt := by
+    M.ReachesStuck
+      { state := validatorBlockRootState logical
+        tape := validatorPhysicalizeBlockTape
+          { left := left, head := some read, right := right } }
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (validatorPhysicalizeBlockTape
+              { left := left, head := some read, right := right })))) := by
   let source : MachineDescription.Configuration :=
     { state := validatorBlockRootState logical
       tape := validatorPhysicalizeBlockTape
@@ -62,43 +64,82 @@ theorem validatorBlockPhysical_ne_halt_of_leaf_stuck
       Tape.read, Tape.move, Tape.moveRight, tapeAtCells]
   have hstep : M.stepConfig stuck = none := by
     simp [stuck, MachineDescription.stepConfig, hread, hleafNone]
-  change forall n : Nat, (M.runConfig n source).state ≠ M.halt
-  intro n
-  by_cases hle : 3 ≤ n
-  · intro hhalt
-    let remaining := n - 3
-    have hn : n = 3 + remaining := by lia
-    have hrun : M.runConfig n source = M.runConfig remaining stuck := by
-      rw [hn, MachineDescription.runConfig_add, hprefix]
-    have hstay := MachineDescription.runConfig_of_stepConfig_none
-      hstep remaining
-    have hstate : stuck.state = M.halt := by
-      have hstateEq : (M.runConfig n source).state = stuck.state := by
-        rw [hrun, hstay]
-      exact hstateEq ▸ hhalt
-    exact hleafNotHalt hstate
+  exact ⟨3, validatorBlockLeafState logical read,
+    by simpa [source, stuck] using hprefix,
+    by simpa [stuck] using hstep,
+    hleafNotHalt⟩
 
-  · intro hhalt
-    let remaining := 3 - n
-    have hthree : 3 = n + remaining := by lia
-    have hrunHalt : M.runConfig n source =
-        { state := M.halt, tape := (M.runConfig n source).tape } := by
-      cases hcfg : M.runConfig n source with
-      | mk state tape =>
-          simp [hcfg] at hhalt ⊢
-          exact hhalt
-    have hstay :
-        M.runConfig remaining (M.runConfig n source) =
-          M.runConfig n source := by
-      rw [hrunHalt]
-      exact MachineDescription.runConfig_halt hhaltFree
-        (M.runConfig n source).tape remaining
-    have hstate : stuck.state = M.halt := by
-      have hstuckEq : stuck = M.runConfig n source := by
-        rw [← hprefix, hthree, MachineDescription.runConfig_add, hstay]
-      rw [hstuckEq]
-      exact hhalt
-    exact hleafNotHalt hstate
+/-- A missing generated leaf row prevents the physical machine from halting. -/
+theorem validatorBlockPhysical_ne_halt_of_leaf_stuck
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hhaltFree : M.HaltTransitionFree)
+    {logical : Nat} (hlogical : logical < D.stateCount)
+    (hnotHalt : logical ≠ D.halt)
+    (left right : List (Option ValidatorBlockSymbol))
+    (read : ValidatorBlockSymbol)
+    (hleafNone :
+      M.lookupTransition (validatorBlockLeafState logical read)
+          (some read.fourthBit) = none)
+    (hleafNotHalt : validatorBlockLeafState logical read ≠ M.halt) :
+    forall n : Nat,
+      (M.runConfig n
+        { state := validatorBlockRootState logical
+          tape := validatorPhysicalizeBlockTape
+            { left := left, head := some read, right := right } }).state ≠
+        M.halt := by
+  rcases validatorBlockPhysical_reachesStuck_of_leaf_stuck
+      hsubset hdet hlogical hnotHalt left right read hleafNone hleafNotHalt with
+    ⟨steps, state, hrun, hstep, hstate⟩
+  intro n
+  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    (n := n) hhaltFree hrun hstep hstate
+
+/-- Lift an exact logical path to a missing generated leaf into physical
+stuck-run evidence. -/
+theorem validatorBlockPhysical_reachesStuck_of_logical_leaf_stuck
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    {logical : Nat}
+    (left right : List (Option ValidatorBlockSymbol))
+    (read : ValidatorBlockSymbol)
+    (hreaches : D.Reaches source
+      { state := logical
+        tape := { left := left, head := some read, right := right } })
+    (hlogical : logical < D.stateCount)
+    (hnotHalt : logical ≠ D.halt)
+    (hleafNone :
+      M.lookupTransition (validatorBlockLeafState logical read)
+          (some read.fourthBit) = none)
+    (hleafNotHalt : validatorBlockLeafState logical read ≠ M.halt) :
+    M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (validatorPhysicalizeBlockTape
+              { left := left, head := some read, right := right })))) := by
+  rcases validatorBlockPhysicalReaches_of_logicalReaches
+      hsubset hdet hsourceBound hDhaltFree htailCompatible hreaches with
+    ⟨prefixSteps, hprefix⟩
+  apply MachineDescription.ReachesStuck.prepend hprefix
+  simpa [validatorPhysicalBlockConfiguration] using
+    validatorBlockPhysical_reachesStuck_of_leaf_stuck
+      hsubset hdet hlogical hnotHalt left right read
+      hleafNone hleafNotHalt
 
 /-- A logical path to a missing leaf row prevents the generated machine from
 halting from the physicalized logical source. -/
@@ -132,16 +173,13 @@ theorem validatorBlockPhysical_ne_halt_of_logical_leaf_stuck
     forall n : Nat,
       (M.runConfig n (validatorPhysicalBlockConfiguration source)).state ≠
         M.halt := by
-  have hphysical := validatorBlockPhysicalReaches_of_logicalReaches
-    hsubset hdet hsourceBound hDhaltFree htailCompatible hreaches
-  rcases hphysical with ⟨steps, hrun⟩
+  rcases validatorBlockPhysical_reachesStuck_of_logical_leaf_stuck
+      hsubset hdet hsourceBound hDhaltFree htailCompatible
+      left right read hreaches hlogical hnotHalt hleafNone hleafNotHalt with
+    ⟨steps, state, hrun, hstep, hstate⟩
   intro n
-  apply CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
-    (n := n) hMhaltFree hrun
-  intro remaining
-  exact validatorBlockPhysical_ne_halt_of_leaf_stuck
-    hsubset hdet hMhaltFree hlogical hnotHalt left right read
-    hleafNone hleafNotHalt remaining
+  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    (n := n) hMhaltFree hrun hstep hstate
 
 /-- Word-oriented wrapper for a stuck aligned logical block. -/
 theorem validatorBlockPhysical_ne_halt_of_logicalTape_leaf_stuck
@@ -183,6 +221,60 @@ theorem validatorBlockPhysical_ne_halt_of_logicalTape_leaf_stuck
   · exact hnotHalt
   · exact hleafNone
   · exact hleafNotHalt
+
+/-- Word-oriented exact stuck-run evidence for a missing aligned leaf. -/
+theorem validatorBlockPhysical_reachesStuck_of_logicalTape_leaf_stuck
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    {logical : Nat}
+    (left right : Languages.Word ValidatorBlockSymbol)
+    (read : ValidatorBlockSymbol)
+    (hreaches : D.Reaches source
+      { state := logical
+        tape := validatorLogicalBlockTape left (read :: right) })
+    (hlogical : logical < D.stateCount)
+    (hnotHalt : logical ≠ D.halt)
+    (hleafNone :
+      M.lookupTransition (validatorBlockLeafState logical read)
+          (some read.fourthBit) = none)
+    (hleafNotHalt : validatorBlockLeafState logical read ≠ M.halt) :
+    M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (validatorBlockTape left (read :: right))))) := by
+  have hlogicalReaches : D.Reaches source
+      { state := logical
+        tape :=
+          { left := left.reverse.map some ++ [none]
+            head := some read
+            right := right.map some ++ [none] } } := by
+    simpa [validatorLogicalBlockTape] using hreaches
+  have hstuck := validatorBlockPhysical_reachesStuck_of_logical_leaf_stuck
+    hsubset hdet hsourceBound hDhaltFree htailCompatible
+    (left.reverse.map some ++ [none]) (right.map some ++ [none]) read
+    hlogicalReaches hlogical hnotHalt hleafNone hleafNotHalt
+  have htape :
+      validatorPhysicalizeBlockTape
+          { left := left.reverse.map some ++ [none]
+            head := some read
+            right := right.map some ++ [none] } =
+        validatorBlockTape left (read :: right) := by
+    simpa [validatorLogicalBlockTape] using
+      validatorPhysicalizeBlockTape_logical left (read :: right)
+  rw [htape] at hstuck
+  exact hstuck
 
 /-- A complete aligned-block witness that a logical source reaches a generated
 Boolean leaf with no outgoing row. -/
@@ -270,6 +362,35 @@ def ValidatorBlockStuckWitness.prepend
   | .leaf witness => .leaf (witness.prepend hprefix)
   | .rootBlank witness => .rootBlank (witness.prepend hprefix)
 
+/-- Consume a complete missing-leaf witness as exact physical stuck-run
+evidence. -/
+theorem validatorBlockPhysical_reachesStuck_of_leafStuckWitness
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    (witness : ValidatorBlockLeafStuckWitness D M source) :
+    M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (validatorBlockTape witness.left
+              (witness.read :: witness.right))))) := by
+  exact validatorBlockPhysical_reachesStuck_of_logicalTape_leaf_stuck
+    hsubset hdet hsourceBound hDhaltFree htailCompatible
+    witness.left witness.right witness.read witness.reaches
+    witness.logical_lt witness.logical_ne_halt witness.leaf_none
+    witness.leaf_ne_halt
+
 /-- Consume a complete missing-leaf witness at the physical compiler boundary. -/
 theorem validatorBlockPhysical_ne_halt_of_leafStuckWitness
     {D : ValidatorBlockDescription} {M : MachineDescription}
@@ -290,11 +411,57 @@ theorem validatorBlockPhysical_ne_halt_of_leafStuckWitness
     forall n : Nat,
       (M.runConfig n (validatorPhysicalBlockConfiguration source)).state ≠
         M.halt := by
-  exact validatorBlockPhysical_ne_halt_of_logicalTape_leaf_stuck
-    hsubset hdet hMhaltFree hsourceBound hDhaltFree htailCompatible
-    witness.left witness.right witness.read witness.reaches
-    witness.logical_lt witness.logical_ne_halt witness.leaf_none
-    witness.leaf_ne_halt
+  rcases validatorBlockPhysical_reachesStuck_of_leafStuckWitness
+      hsubset hdet hsourceBound hDhaltFree htailCompatible witness with
+    ⟨steps, state, hrun, hstep, hstate⟩
+  intro n
+  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    (n := n) hMhaltFree hrun hstep hstate
+
+/-- Consume a blank-root witness as exact physical stuck-run evidence. -/
+theorem validatorBlockPhysical_reachesStuck_of_rootBlankStuckWitness
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    (witness : ValidatorBlockRootBlankStuckWitness D M source) :
+    M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+      (validatorBlockTape witness.left []) := by
+  have hphysical := validatorBlockPhysicalReaches_of_logicalReaches
+    hsubset hdet hsourceBound hDhaltFree htailCompatible witness.reaches
+  rcases hphysical with ⟨steps, hrun⟩
+  let stuck := validatorPhysicalBlockConfiguration
+    { state := witness.logical
+      tape := validatorLogicalBlockTape witness.left [] }
+  have hread : Tape.read stuck.tape = none := by
+    simp [stuck, validatorPhysicalBlockConfiguration,
+      validatorPhysicalizeBlockTape_logical, validatorBlockTape,
+      validatorBlockBits, Tape.read, tapeAtCells]
+  have hlookup : M.lookupTransition stuck.state none = none := by
+    simpa [stuck, validatorPhysicalBlockConfiguration] using
+      witness.root_none
+  have hstep : M.stepConfig stuck = none := by
+    simp [MachineDescription.stepConfig, hread, hlookup]
+  have hstate : stuck.state ≠ M.halt := by
+    simpa [stuck, validatorPhysicalBlockConfiguration] using
+      witness.root_ne_halt
+  have hlocalRaw : M.ReachesStuck stuck stuck.tape :=
+    ⟨0, stuck.state, rfl, hstep, hstate⟩
+  have hlocal : M.ReachesStuck stuck (validatorBlockTape witness.left []) := by
+    simpa [stuck,
+      validatorPhysicalBlockConfiguration,
+      validatorPhysicalizeBlockTape_logical] using hlocalRaw
+  exact MachineDescription.ReachesStuck.prepend
+    (by simpa [stuck] using hrun) hlocal
 
 /-- Consume a blank-root witness at the physical compiler boundary. -/
 theorem validatorBlockPhysical_ne_halt_of_rootBlankStuckWitness
@@ -316,30 +483,48 @@ theorem validatorBlockPhysical_ne_halt_of_rootBlankStuckWitness
     forall n : Nat,
       (M.runConfig n (validatorPhysicalBlockConfiguration source)).state ≠
         M.halt := by
-  have hphysical := validatorBlockPhysicalReaches_of_logicalReaches
-    hsubset hdet hsourceBound hDhaltFree htailCompatible witness.reaches
-  rcases hphysical with ⟨steps, hrun⟩
-  let stuck := validatorPhysicalBlockConfiguration
-    { state := witness.logical
-      tape := validatorLogicalBlockTape witness.left [] }
-  have hread : Tape.read stuck.tape = none := by
-    simp [stuck, validatorPhysicalBlockConfiguration,
-      validatorPhysicalizeBlockTape_logical, validatorBlockTape,
-      validatorBlockBits, Tape.read, tapeAtCells]
-  have hlookup : M.lookupTransition stuck.state none = none := by
-    simpa [stuck, validatorPhysicalBlockConfiguration] using
-      witness.root_none
-  have hstep : M.stepConfig stuck = none := by
-    simp [MachineDescription.stepConfig, hread, hlookup]
-  have hstate : stuck.state ≠ M.halt := by
-    simpa [stuck, validatorPhysicalBlockConfiguration] using
-      witness.root_ne_halt
+  rcases validatorBlockPhysical_reachesStuck_of_rootBlankStuckWitness
+      hsubset hdet hsourceBound hDhaltFree htailCompatible witness with
+    ⟨steps, state, hrun, hstep, hstate⟩
   intro n
-  apply CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
-    (n := n) hMhaltFree
-  · simpa [stuck] using hrun
-  · exact hstep
-  · exact hstate
+  exact CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+    (n := n) hMhaltFree hrun hstep hstate
+
+/-- Either supported compiler witness exposes an exact physical stuck tape. -/
+theorem validatorBlockPhysical_reachesStuck_of_stuckWitness
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    (witness : ValidatorBlockStuckWitness D M source) :
+    (∃ left right : Languages.Word ValidatorBlockSymbol,
+      ∃ read : ValidatorBlockSymbol,
+        M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+          (Tape.move Direction.right
+            (Tape.move Direction.right
+              (Tape.move Direction.right
+                (validatorBlockTape left (read :: right)))))) ∨
+      (∃ left : Languages.Word ValidatorBlockSymbol,
+        M.ReachesStuck (validatorPhysicalBlockConfiguration source)
+          (validatorBlockTape left [])) := by
+  cases witness with
+  | leaf witness =>
+      exact Or.inl ⟨witness.left, witness.right, witness.read,
+        validatorBlockPhysical_reachesStuck_of_leafStuckWitness
+          hsubset hdet hsourceBound hDhaltFree htailCompatible witness⟩
+  | rootBlank witness =>
+      exact Or.inr ⟨witness.left,
+        validatorBlockPhysical_reachesStuck_of_rootBlankStuckWitness
+          hsubset hdet hsourceBound hDhaltFree htailCompatible witness⟩
 
 /-- Consume either supported compiler-level stuck witness. -/
 theorem validatorBlockPhysical_ne_halt_of_stuckWitness

@@ -11,8 +11,9 @@ preserving its original pinned base. After the computed leaf-5 readiness
 certificate proved memory-heavy, the owner approved reallocating at most
 +2,000 of that contingency to a verbose structural proof. Leaf 5 closed at
 +21,997 cumulative growth after its deletion pass. Leaf 6 then closed at
-+23,022, leaving +1,978 for leaf 7 (exact-validator composition) plus
-recognizer composition. The campaign ceiling and pinned base are unchanged.
++23,022. The first leaf-7 rejection-infrastructure checkpoint raises cumulative
+growth to +23,255, leaving +1,745 for exact-validator and recognizer
+composition. The campaign ceiling and pinned base are unchanged.
 
 ## Target
 
@@ -127,6 +128,14 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    forward correctness and closed inversion on ALL words (not only canonical
    encodings), discharging `descriptionCodeValidBool_eq_true_iff_prefix_nil_wellFormed`
    against the concrete machine.
+   *Status: in progress 2026-07-18. The first rejection-infrastructure
+   checkpoint adds exact `ReachesStuck`/`StuckFromTape` semantics, shared
+   sequential and same-head stuck lifting, exact scanner block-witness
+   physicalization, and a Boolean-closeout theorem that turns every contiguous
+   stuck run into normalized output `[false]`. The transition scanner now uses
+   the shared same-head inversion instead of its local copy. All eight touched
+   Lean modules pass focused checks. The remaining work is the gate-specific
+   total-outcome proofs, five-gate composition, and the two consumers below.*
 
 ## Consumers (both required before promoting the validator API)
 
@@ -139,8 +148,8 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
 ## Scope note
 
 This is the plan's "Medium–large" milestone (~person-weeks). Leaves 1–6 are now
-closed with no direct sorry and cumulative growth of +23,022. Leaf 7 must
-compose the exact validator, followed by the recognizer consumer, without
-exceeding the remaining +1,978 campaign headroom. The token-alignment gate,
+closed with no direct sorry; the first leaf-7 checkpoint brings cumulative
+growth to +23,255. Leaf 7 must compose the exact validator, followed by the
+recognizer consumer, without exceeding the remaining +1,745 campaign headroom. The token-alignment gate,
 header parser, transition scanner, suffix gate, determinism gate, Boolean
 closeout, and prefix parser are reusable closed starting points.
