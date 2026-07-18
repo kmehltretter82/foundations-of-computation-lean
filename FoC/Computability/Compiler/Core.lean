@@ -15,6 +15,7 @@ import FoC.Computability.Compiler.Core.ControllerStageInputProj
 import FoC.Computability.Compiler.Core.FiniteScaffolds
 import FoC.Computability.Compiler.Core.SearchDrivers
 import FoC.Computability.Compiler.Core.Closeout
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorSpec
 
 set_option doc.verso true
 
