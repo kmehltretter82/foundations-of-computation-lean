@@ -42,9 +42,11 @@ faithful diagonal-pair copy-machine witness are present. An exact-code validator
 and the unconditional universal-prefix runner compose into a concrete finite
 self-halting recognizer, closing the canonical direct-code theorem: the valid
 self-halting language is recognizable, is not decidable, and has a complement
-that is not recognizable. Covering every acceptable-language row is a stronger
-statement and still consumes the named encoded-input description compiler
-principle.
+that is not recognizable. A checked self-delimiting finite reduction also
+transports this result to pair halting, and a countable-image argument proves
+that some code language is not recognized by any well-formed finite
+description. Covering every acceptable-language row is a stronger statement
+and still consumes the named encoded-input description compiler principle.
 
 ## Architecture and Scope
 
@@ -115,9 +117,11 @@ lowering theorem. Semantic RE/co-RE, listability, range, and grammar results do
 not depend on such a blanket equivalence.
 
 Section 5.3 proves description syntax, parsing inversions, interpreter
-semantics, compiled-machine simulation interfaces, row-language facts, and
-conditional diagonal consequences. The finite prefix recognizer and its
-universal-prefix runner are constructed. Statements covering all acceptable
-languages retain only the encoded-input description compiler hypothesis needed
-to choose a description for an arbitrary acceptable language.
+semantics, compiled-machine simulation interfaces, row-language facts, the
+direct-code self-halting theorem, the checked finite pair-halting reduction,
+and the finite-description cardinality obstruction. The finite prefix
+recognizer and its universal-prefix runner are constructed. Statements covering
+all acceptable languages retain only the encoded-input description compiler
+hypothesis needed to choose a description for an arbitrary acceptable
+language.
 -/

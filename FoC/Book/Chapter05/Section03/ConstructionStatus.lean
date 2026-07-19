@@ -43,12 +43,12 @@ duplicate-free unary
 {lit}`T_n`/{lit}`G` presentation has not been formalized; neither open fidelity
 item is claimed by the direct-code headline.
 
-The M7 closeout measurement is +27,703 net Compiler lines against its pinned
-+30,000 allowance, leaving 2,297 campaign lines.  M9 closes at +856 against
-its ordinary +10,000 allowance, leaving 9,144 campaign lines.  With both
+The post-M11 measurement is +27,694 net Compiler lines for M7 against its
+pinned +30,000 allowance, leaving 2,306 campaign lines.  M9 measures +852
+against its ordinary +10,000 allowance, leaving 9,148 campaign lines.  With both
 campaigns retained as pinned outstanding loans, the aggregate circuit is
-40,000/120,000 (80,000 headroom).  Raw Compiler size is 510,097 lines against
-the pinned 347,066 baseline, or +163,031/+185,000 (21,969 headroom).  The
+40,000/120,000 (80,000 headroom).  Raw Compiler size is 510,096 lines against
+the pinned 347,066 baseline, or +163,030/+185,000 (21,970 headroom).  The
 campaigns remain pinned until their permanent-growth disposition is reviewed;
 these numbers do not reset either base.
 -/

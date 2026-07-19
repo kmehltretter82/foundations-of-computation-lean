@@ -380,12 +380,8 @@ private theorem step_reject_of_missing
     TuringMachine.Step (machine D reject)
       (baseConfig D (D.toTMConfig { state := state, tape := tape }))
       (rewindConfig D (Tape.move Direction.left tape)) := by
-  have hlookup : D.lookupTransition state (Tape.read tape) = none := by
-    cases hlookup : D.lookupTransition state (Tape.read tape) with
-    | none => rfl
-    | some row =>
-        rw [MachineDescription.stepConfig, hlookup] at hstep
-        cases hstep
+  have hlookup : D.lookupTransition state (Tape.read tape) = none :=
+    lookupTransition_eq_none_of_stepConfig_eq_none hstep
   have hsource : D.stateOfNat state ≠ D.toTuringMachine.halt := by
     change D.stateOfNat state ≠ D.stateOfNat D.halt
     intro heq

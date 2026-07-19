@@ -599,16 +599,6 @@ theorem runConfig_one_reject
     hlookupCompleted', row, preserveLeftRow, transition,
     Tape.write_read_eq_self]
 
-private theorem lookup_none_of_stepConfig_none
-    {D : MachineDescription} {source : Configuration}
-    (hstep : D.stepConfig source = none) :
-    D.lookupTransition source.state (Tape.read source.tape) = none := by
-  unfold MachineDescription.stepConfig at hstep
-  cases hlookup :
-      D.lookupTransition source.state (Tape.read source.tape) with
-  | none => rfl
-  | some row => simp [hlookup] at hstep
-
 private theorem reaches_reject_of_runConfig_stuck
     {D : MachineDescription} (hD : D.SubroutineReady)
     {steps : Nat} {source : Configuration} {state : Nat}
@@ -628,7 +618,7 @@ private theorem reaches_reject_of_runConfig_stuck
         simpa [MachineDescription.runConfig] using hrun
       rw [hsourceEq] at hsource ⊢
       exact ⟨1, runConfig_one_reject hD hsource hstate stuck
-        (lookup_none_of_stepConfig_none hstep)⟩
+        (lookupTransition_eq_none_of_stepConfig_eq_none hstep)⟩
   | succ steps ih =>
       cases hsourceStep : D.stepConfig source with
       | none =>
@@ -638,7 +628,8 @@ private theorem reaches_reject_of_runConfig_stuck
           have hsourceEq :
               source = { state := state, tape := stuck } :=
             hstay.symm.trans hrun
-          have hlookup := lookup_none_of_stepConfig_none hsourceStep
+          have hlookup :=
+            lookupTransition_eq_none_of_stepConfig_eq_none hsourceStep
           have hsourceState : source.state ≠ D.halt := by
             simpa [hsourceEq] using hstate
           refine ⟨1, ?_⟩

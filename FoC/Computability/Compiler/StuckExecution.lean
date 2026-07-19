@@ -41,6 +41,18 @@ theorem contiguousTape_splitTape
     ContiguousTape (splitTape leftRev right padding) :=
   ⟨leftRev, right, padding, rfl⟩
 
+/-- A missing configuration step is exactly a missing transition-table lookup
+at the configuration's current state and tape symbol. -/
+theorem lookupTransition_eq_none_of_stepConfig_eq_none
+    {D : MachineDescription} {source : Configuration}
+    (hstep : D.stepConfig source = none) :
+    D.lookupTransition source.state (Tape.read source.tape) = none := by
+  unfold MachineDescription.stepConfig at hstep
+  cases hlookup :
+      D.lookupTransition source.state (Tape.read source.tape) with
+  | none => rfl
+  | some row => simp [hlookup] at hstep
+
 /-- If a later halt-stable run state is not the halt, no earlier state was the
 halt either. -/
 theorem runConfig_state_ne_halt_of_later_ne_halt

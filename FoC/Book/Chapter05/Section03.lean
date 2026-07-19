@@ -32,7 +32,11 @@ the honest theorem-status table is
 ## Reusable Foundations
 
 The semantic diagonal theorems live in
-{module}`FoC.Computability.Undecidable`. The concrete decoded interpreter,
-finite prefix recognizer, exact-code validator, self-halting recognizer, and
-universal-prefix runner live under {module}`FoC.Computability.Compiler`.
+{module}`FoC.Computability.Undecidable`. Finite-description countability lives
+in {module}`FoC.Computability.DescriptionCardinality`, and the checked
+pair-halting endpoint lives in
+{module}`FoC.Computability.DescriptionPairHaltingUndecidable`. The concrete
+decoded interpreter, finite prefix recognizer, exact-code validator,
+self-halting recognizer, pair-reduction machine, and universal-prefix runner
+live under {module}`FoC.Computability.Compiler`.
 -/

@@ -35,6 +35,12 @@
     "reason": "On 2026-07-19 the project owner explicitly approved a second narrow +5000 closeout contingency after the checker measured +23272 / +25000, leaving only +1728 for gate-specific totality, five-gate exact-validator composition, both validator consumers, and the remaining route-A recognizer composition. The cumulative campaign ceiling is therefore +30000. The original base commit f9d5e6abfe94ca4763e5cb4f43c4bf40ca6c322a and the pinned 347066-line global baseline remain unchanged. This review does not authorize a separate frontier or unrelated growth; connected deletion passes and the independent global cap continue to apply.",
     "recorded_against": "fb0a27bd4ca2981783009cb97c5eda34d21a4cc5"
   },
+  "m11_closeout_measurement": {
+    "net_growth": 27694,
+    "allowance": 30000,
+    "post_closeout_reduction": 9,
+    "reason": "The final two-family cleanup replaced the validator's private missing-step lookup proof with the shared Compiler stuck-execution theorem. The pinned base and reviewed allowance are unchanged."
+  },
   "required_axiom_clean": [
     "FoC.Computability.SelfHaltingRecognizer.exactCodeValidatorSuffixGateDescription_haltsFromTape_iff",
     "FoC.Computability.SelfHaltingRecognizer.ValidatorTransitionScannerConstruction.accepts_of_haltsFromTape",

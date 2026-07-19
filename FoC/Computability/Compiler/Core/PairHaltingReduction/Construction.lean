@@ -61,8 +61,7 @@ theorem baseDescription_subroutineReady
     materializedDescription_subroutineReady hpair
 
 theorem description_subroutineReady
-    {pairDecider : MachineDescription}
-    (_hpair : pairDecider.SubroutineReady) (reject : Bool) :
+    (pairDecider : MachineDescription) (reject : Bool) :
     (Description pairDecider reject).SubroutineReady :=
   MissingRejectCompletion.description_subroutineReady
     (BaseDescription pairDecider) reject
@@ -267,7 +266,8 @@ theorem stoppedDecidesCodeSelfHalting_of_stoppedDecidesCodePairHalting
   have hpairReady : pairDecider.SubroutineReady :=
     ⟨hpair.wellFormed, hpair.haltTransitionFree⟩
   have hbaseReady := baseDescription_subroutineReady hpairReady
-  have hdescriptionReady := description_subroutineReady hpairReady reject
+  have hdescriptionReady :=
+    description_subroutineReady pairDecider reject
   refine ⟨hdescriptionReady.2, hdescriptionReady.1, hpair.answers_ne, ?_⟩
   intro code
   constructor
