@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section03.Basic
+import FoC.Book.Chapter05.Section03.Cardinality
 import FoC.Book.Chapter05.Section03.ContractGuardrails
 
 set_option doc.verso true
@@ -31,6 +32,7 @@ work that has not been performed.
 | Decoder coverage | {lit}`ConcreteMachineDecoderUniversalForAcceptableLanguages` | Conditional and jointly refutable with the decidable-to-acceptable construction ({lit}`concrete_decidable_to_acceptable_and_decoder_universal_incompatible`). It descends from the open {lit}`SemanticEncodedInputDescriptionCompilerPrinciple`, whose source class quantifies over all acceptable languages and is too broad to discharge as stated. |
 | Headline theorem | {lit}`concrete_machine_self_halting_main_theorem` | Proved unconditionally in the canonical finite currency: the valid direct-code self-halting language is {lit}`RecognizableCodeLanguage`, is {lit}`UndecidableCodeLanguage`, and its complement is not {lit}`RecognizableCodeLanguage`. The legacy {lit}`self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal` theorem remains only in its clearly documented compatibility block because it uses collapsed predicates and refutable premises. |
 | Pair halting | {lit}`ConcreteMachinePairHaltingCodeLanguage`, {lit}`concrete_machine_pair_halting_undecidable_code_language` | Proved unconditionally in the canonical self-delimiting finite-description currency. The checked machine validates one complete description, rewinds it, materializes {lit}`w ++ w`, invokes any supposed stopped pair decider, and sends malformed inputs through a finite missing-transition reject completion. The older tagged {lit}`ConcreteMachinePairHaltingProblem` theorems remain compatibility surfaces conditional on proposition-valued preimage constructions. |
+| Finite-description cardinality | {lit}`concrete_valid_description_codes_countable`, {lit}`concrete_finite_description_languages_countable`, {lit}`exists_concrete_language_not_recognizable_by_finite_description` | Proved unconditionally for the exact class of complete well-formed finite descriptions. Their recognized-language image is countable, whereas all languages over the finite nonempty code alphabet are uncountable. The enumeration-fidelity decision is the direct-code endpoint: no duplicate-free unary {lit}`T_n`, finite {lit}`G`, or equivalence bridge is claimed. |
 
 Consequently, the direct-code version of the Section 5.3 central theorem is
 closed in the canonical description-backed finite currency, with no decoder

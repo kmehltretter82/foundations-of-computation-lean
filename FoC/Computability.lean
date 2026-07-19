@@ -20,6 +20,7 @@ import FoC.Computability.MachineBuilder
 import FoC.Computability.Compiler
 import FoC.Computability.DescriptionCodeLanguages
 import FoC.Computability.DescriptionCodeUndecidable
+import FoC.Computability.DescriptionCardinality
 import FoC.Computability.DescriptionPairHalting
 import FoC.Computability.DescriptionPairHaltingUndecidable
 import FoC.Computability.SelfHaltingReferenceSpec

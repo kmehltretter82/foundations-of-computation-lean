@@ -4,6 +4,7 @@ import FoC.Foundation.Sets
 import FoC.Foundation.Functions
 import FoC.Foundation.Finite
 import FoC.Foundation.Countable
+import FoC.Foundation.CountableImage
 import FoC.Foundation.Relations
 import FoC.Foundation.Arithmetic
 import FoC.Foundation.Summation

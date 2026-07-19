@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section03.Basic
+import FoC.Book.Chapter05.Section03.Cardinality
 import FoC.Book.Chapter05.Section03.ContractGuardrails
 import FoC.Book.Chapter05.Section03.ConstructionStatus
 
@@ -21,7 +22,10 @@ vocabulary in {module}`FoC.Book.Chapter05.Section03.BasicPart1` and the
 pair-halting and universal-prefix results in
 {module}`FoC.Book.Chapter05.Section03.BasicPart2`. The currency collapse of
 the legacy decidability predicate and the resulting proof obligations are
-recorded in {module}`FoC.Book.Chapter05.Section03.ContractGuardrails`, and
+recorded in {module}`FoC.Book.Chapter05.Section03.ContractGuardrails`.  The
+countability obstruction for exact finite-description languages and the
+direct-code enumeration-fidelity decision are recorded in
+{module}`FoC.Book.Chapter05.Section03.Cardinality`, and
 the honest theorem-status table is
 {module}`FoC.Book.Chapter05.Section03.ConstructionStatus`.
 
