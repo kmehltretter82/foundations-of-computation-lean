@@ -1,6 +1,7 @@
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorDeterminismGate
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorSuffixGate
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTokenGate
+import FoC.Computability.Compiler.StuckExecution
 
 set_option doc.verso true
 
@@ -842,15 +843,6 @@ private theorem runConfig_one_erase_bit
   simp [MachineDescription.runConfig, MachineDescription.stepConfig,
     hlookup', row, transition]
 
-/-- A contiguous encoded window split at the current head.  {lit}`leftRev` is in
-tape-stack order and the right side contains at least one trailing blank. -/
-def splitTape
-    (leftRev right : Word Bool) (padding : Nat) : Tape Bool :=
-  tapeAtCells
-    (List.append (leftRev.map some) [none])
-    (List.append (right.map some)
-      (List.replicate (padding + 1) (none : Option Bool)))
-
 private def eraseTape
     (erased : Nat) (right : Word Bool) (padding : Nat) : Tape Bool :=
   tapeAtCells
@@ -893,7 +885,7 @@ private theorem runConfig_rewind
               (Tape.move Direction.left (splitTape [] right padding)) =
             none := by
         cases right <;>
-          simp [splitTape, tapeAtCells, Tape.read, Tape.move,
+          simp [splitTape, Tape.read, Tape.move,
             Tape.moveLeft, List.replicate_succ]
       have hstep := runConfig_one_rewind_blank hD answer
         (Tape.move Direction.left (splitTape [] right padding)) hread
@@ -910,7 +902,7 @@ private theorem runConfig_rewind
               (Tape.move Direction.left
                 (splitTape (bit :: rest) right padding)) = some bit := by
         cases right <;>
-          simp [splitTape, tapeAtCells, Tape.read, Tape.move,
+          simp [splitTape, Tape.read, Tape.move,
             Tape.moveLeft, List.replicate_succ]
       rw [runConfig_one_rewind_bit hD answer bit _ hread]
       have htail := ih (bit :: right)
@@ -971,7 +963,17 @@ private theorem runConfig_answer_tail
   rw [runConfig_rewind hD]
   have herase := runConfig_erase hD answer 0
     (List.append leftRev.reverse right) padding
-  simpa [splitTape, eraseTape] using herase
+  have htape :
+      splitTape [] (List.append leftRev.reverse right) padding =
+        eraseTape 0 (List.append leftRev.reverse right) padding := by
+    cases List.append leftRev.reverse right with
+    | nil =>
+        cases padding <;>
+          rfl
+    | cons bit rest =>
+        simp [splitTape, eraseTape, tapeAtCells]
+  rw [htape]
+  simpa using herase
 
 private theorem haltsFromTape_of_reaches_rewind
     {D : MachineDescription} (hD : D.SubroutineReady)

@@ -24,6 +24,44 @@ open MachineDescription
 
 open FoC.Computability.DovetailInitialLayoutInitializer
 
+/-- Every transition-scanner handoff is one contiguous encoded window. -/
+theorem validatorTransitionScannerHandoffTape_contiguous
+    (stateCount start halt transitionCount : Nat)
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    ContiguousTape
+      (validatorTransitionScannerHandoffTape
+        stateCount start halt transitionCount transitions suffix) := by
+  refine ⟨(encodeCodeWordAsInput
+      (validatorTransitionScannerPrefix
+        stateCount start halt transitionCount transitions)).reverse,
+    encodeCodeWordAsInput suffix, 0, ?_⟩
+  unfold validatorTransitionScannerHandoffTape
+  cases encodeCodeWordAsInput suffix <;>
+    simp [splitTape, tapeAtCells]
+
+/-- Every transition-scanner handoff has a nonempty left context, so the
+same-head sequencing bounce cancels exactly. -/
+theorem validatorTransitionScannerHandoffTape_move_right_left
+    (stateCount start halt transitionCount : Nat)
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    Tape.move Direction.right
+        (Tape.move Direction.left
+          (validatorTransitionScannerHandoffTape
+            stateCount start halt transitionCount transitions suffix)) =
+      validatorTransitionScannerHandoffTape
+        stateCount start halt transitionCount transitions suffix := by
+  unfold validatorTransitionScannerHandoffTape
+  exact
+    CommonGround.FiniteTransducers.tapeAtCells_move_right_move_left_append_singleton
+      (((encodeCodeWordAsInput
+        (validatorTransitionScannerPrefix
+          stateCount start halt transitionCount transitions)).reverse).map
+            some)
+      none
+      (List.append ((encodeCodeWordAsInput suffix).map some) [none])
+
 /-!
 ## Detectable boundary
 -/
@@ -243,6 +281,85 @@ theorem exactCodeValidatorSuffixGateDescription_haltsFromTape_iff
     subst output
     exact exactCodeValidatorSuffixGateDescription_haltsFromTape_nil
       stateCount start halt transitionCount transitions
+
+/-- A nonempty decoded suffix is rejected at the gate's missing start-state
+bit transition. -/
+theorem exactCodeValidatorSuffixGateDescription_stuckFromTape_cons
+    (stateCount start halt transitionCount : Nat)
+    (transitions : List TransitionDescription)
+    (symbol : MachineCodeSymbol) (rest : Word MachineCodeSymbol) :
+    VSG.StuckFromTape
+      (validatorTransitionScannerHandoffTape
+        stateCount start halt transitionCount transitions (symbol :: rest))
+      (validatorTransitionScannerHandoffTape
+        stateCount start halt transitionCount transitions (symbol :: rest)) := by
+  let input := validatorTransitionScannerHandoffTape
+    stateCount start halt transitionCount transitions (symbol :: rest)
+  have hreadNe : Tape.read input ≠ none := by
+    intro hread
+    have hempty :=
+      (validatorTransitionScannerHandoffTape_read_eq_none_iff
+        stateCount start halt transitionCount transitions
+          (symbol :: rest)).1 hread
+    simp at hempty
+  refine ⟨0, VSG.start, rfl, ?_, by decide⟩
+  cases hread : Tape.read input with
+  | none => exact False.elim (hreadNe hread)
+  | some bit =>
+      change VSG.stepConfig { state := VSG.start, tape := input } = none
+      simp only [MachineDescription.stepConfig, hread]
+      cases bit <;>
+        simp [VSG, ExactCodeValidatorSuffixGateDescription,
+          MachineDescription.lookupTransition,
+          MachineDescription.Matches, MachineDescription.transition]
+
+/-- Every canonical transition-scanner handoff either succeeds exactly or
+reaches a contiguous concrete missing suffix-gate row. -/
+theorem exactCodeValidatorSuffixGateDescription_haltsOrContiguousStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      VSG.HaltsFromTape
+        (validatorTransitionScannerHandoffTape
+          stateCount start halt transitionCount transitions suffix) output) ∨
+    (exists stuck : Tape Bool,
+      VSG.StuckFromTape
+          (validatorTransitionScannerHandoffTape
+            stateCount start halt transitionCount transitions suffix) stuck ∧
+        ContiguousTape stuck) := by
+  cases suffix with
+  | nil =>
+      exact Or.inl ⟨_,
+        exactCodeValidatorSuffixGateDescription_haltsFromTape_nil
+          stateCount start halt transitionCount transitions⟩
+  | cons symbol rest =>
+      exact Or.inr ⟨_,
+        exactCodeValidatorSuffixGateDescription_stuckFromTape_cons
+          stateCount start halt transitionCount transitions symbol rest,
+        validatorTransitionScannerHandoffTape_contiguous
+          stateCount start halt transitionCount transitions (symbol :: rest)⟩
+
+/-- Every canonical transition-scanner handoff either succeeds exactly or
+reaches a concrete missing suffix-gate row. -/
+theorem exactCodeValidatorSuffixGateDescription_haltsOrStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (transitions : List TransitionDescription)
+    (suffix : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      VSG.HaltsFromTape
+        (validatorTransitionScannerHandoffTape
+          stateCount start halt transitionCount transitions suffix) output) ∨
+    (exists stuck : Tape Bool,
+      VSG.StuckFromTape
+        (validatorTransitionScannerHandoffTape
+          stateCount start halt transitionCount transitions suffix) stuck) := by
+  rcases exactCodeValidatorSuffixGateDescription_haltsOrContiguousStuckFromTape
+      stateCount start halt transitionCount transitions suffix with
+    hhalts | hstuck
+  · exact Or.inl hhalts
+  · rcases hstuck with ⟨stuck, hstuck, _hcontiguous⟩
+    exact Or.inr ⟨stuck, hstuck⟩
 
 end SelfHaltingRecognizer
 end Computability

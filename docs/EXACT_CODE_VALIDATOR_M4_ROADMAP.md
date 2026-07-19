@@ -11,9 +11,11 @@ preserving its original pinned base. After the computed leaf-5 readiness
 certificate proved memory-heavy, the owner approved reallocating at most
 +2,000 of that contingency to a verbose structural proof. Leaf 5 closed at
 +21,997 cumulative growth after its deletion pass. Leaf 6 then closed at
-+23,022. The first leaf-7 rejection-infrastructure checkpoint raises cumulative
-growth to +23,255, leaving +1,745 for exact-validator and recognizer
-composition. The campaign ceiling and pinned base are unchanged.
++23,022. The first leaf-7 rejection-infrastructure checkpoint reached +23,272.
+On 2026-07-19 the project owner approved a second narrow +5,000 closeout
+contingency, raising the cumulative ceiling to +30,000 while preserving the
+original pinned base and global baseline. The completed validator checkpoint
+measures +24,990, leaving +5,010 for recognizer composition.
 
 ## Target
 
@@ -128,28 +130,34 @@ Proved decomposition (`descriptionCodeValid_iff_prefix_nil_wellFormed`):
    forward correctness and closed inversion on ALL words (not only canonical
    encodings), discharging `descriptionCodeValidBool_eq_true_iff_prefix_nil_wellFormed`
    against the concrete machine.
-   *Status: in progress 2026-07-18. The first rejection-infrastructure
-   checkpoint adds exact `ReachesStuck`/`StuckFromTape` semantics, shared
-   sequential and same-head stuck lifting, exact scanner block-witness
-   physicalization, and a Boolean-closeout theorem that turns every contiguous
-   stuck run into normalized output `[false]`. The transition scanner now uses
-   the shared same-head inversion instead of its local copy. All eight touched
-   Lean modules pass focused checks. The remaining work is the gate-specific
-   total-outcome proofs, five-gate composition, and the two consumers below.*
+   *Status: closed 2026-07-19 in `ValidatorConstruction.lean`. Exact
+   `ReachesStuck`/`StuckFromTape` semantics and shared sequential/same-head
+   lifting carry every gate failure to a contiguous physical endpoint. The
+   five gates compose with exact handoffs; successful runs are equivalent to
+   `DescriptionCodeValid`, while every other canonical encoded code word has a
+   concrete stuck endpoint. `ValidatorBooleanCloseout` maps those two outcomes
+   to normalized `[true]` and `[false]`, respectively. The resulting
+   `ExactCodeValidatorConstruction` is halt-stable and has all-word forward and
+   closed correctness. The standalone book consumer
+   `concrete_valid_code_language_recursive` compiles. The self-halting
+   recognizer remains the required first consumer and next M7 frontier.*
 
 ## Consumers (both required before promoting the validator API)
 
 - **C1:** the self-halting recognizer — validator as phase-1 leaf, then the
-  duplicator + closed prefix runner (route-A bridge already proved:
+  duplicator + closed prefix runner. *Pending M7 composition.* The route-A
+  bridge is already proved:
   `mem_codeSelfHalting_iff_valid_and_codePrefixAccepts_selfAppend`).
 - **C2:** a standalone book theorem that `ValidCodeLanguage` is a
-  `RecursiveCodeLanguage` (decidable code language).
+  `RecursiveCodeLanguage` (decidable code language). *Closed by
+  `concrete_valid_code_language_recursive`.*
 
 ## Scope note
 
 This is the plan's "Medium–large" milestone (~person-weeks). Leaves 1–6 are now
-closed with no direct sorry; the first leaf-7 checkpoint brings cumulative
-growth to +23,255. Leaf 7 must compose the exact validator, followed by the
-recognizer consumer, without exceeding the remaining +1,745 campaign headroom. The token-alignment gate,
-header parser, transition scanner, suffix gate, determinism gate, Boolean
-closeout, and prefix parser are reusable closed starting points.
+closed with no direct sorry, and leaf 7 now closes the exact validator and its
+standalone book consumer. The checkpoint measures +24,990 / +30,000. The
+remaining +5,010 is reserved for the recognizer consumer and connected cleanup.
+The token-alignment gate, header parser, transition scanner, suffix gate,
+determinism gate, Boolean closeout, and prefix parser are reusable closed
+starting points.

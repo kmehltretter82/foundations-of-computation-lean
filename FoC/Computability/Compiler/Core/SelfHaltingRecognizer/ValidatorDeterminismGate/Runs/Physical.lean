@@ -6,6 +6,7 @@ import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransition
 
 set_option doc.verso true
 set_option maxRecDepth 10000
+set_option maxHeartbeats 1000000
 
 /-!
 # Exact-code validator: physical determinism-gate execution
@@ -79,28 +80,21 @@ theorem physicallyReaches_of_logicalReaches
   · exact blockDescription_tailCompatible
   · exact hrun
 
-/-- A logical conflict path prevents every generated physical run from
-reaching the successful halt. -/
-theorem physicalState_ne_halt_of_conflict
+/-- A logical conflict path reaches a contiguous concrete missing physical
+transition. -/
+theorem physicalExistsContiguousReachesStuck_of_conflict
     {source : ValidatorBlockDescription.Configuration}
     (hconflict : ReachesConflict source) :
-    forall steps : Nat,
-      (Description.runConfig steps
-        (validatorPhysicalBlockConfiguration source)).state ≠
-          Description.halt := by
+    exists stuck : Tape Bool,
+      Description.ReachesStuck
+          (validatorPhysicalBlockConfiguration source) stuck ∧
+        ContiguousTape stuck := by
   rcases hconflict with ⟨left, right, hreaches⟩
   change List ValidatorBlockSymbol at right
   cases right with
   | nil =>
-      apply validatorBlockPhysical_ne_halt_of_rootBlankStuckWitness
-        (D := blockDescription) (M := Description)
-        (fun row hrow => compiledRow_mem_description hrow)
-        description_subroutineReady.1.2.2.2.2
-        description_subroutineReady.2
-        blockDescription_sourceBound
-        blockDescription_haltFree
-        blockDescription_tailCompatible
-      exact
+      let witness : ValidatorBlockRootBlankStuckWitness
+          blockDescription Description source :=
         { logical := 100
           left := left
           reaches := by
@@ -116,16 +110,18 @@ theorem physicalState_ne_halt_of_conflict
                 compileValidatorBlockDescription_lookup_root_none
                   blockDescription 100
           root_ne_halt := by decide }
+      exact ⟨validatorBlockTape witness.left [],
+        validatorBlockPhysical_reachesStuck_of_rootBlankStuckWitness
+          (D := blockDescription) (M := Description)
+          (fun row hrow => compiledRow_mem_description hrow)
+          description_subroutineReady.1.2.2.2.2
+          blockDescription_sourceBound
+          blockDescription_haltFree
+          blockDescription_tailCompatible witness,
+        validatorBlockRootStuckTape_contiguous witness.left⟩
   | cons read right =>
-      apply validatorBlockPhysical_ne_halt_of_leafStuckWitness
-        (D := blockDescription) (M := Description)
-        (fun row hrow => compiledRow_mem_description hrow)
-        description_subroutineReady.1.2.2.2.2
-        description_subroutineReady.2
-        blockDescription_sourceBound
-        blockDescription_haltFree
-        blockDescription_tailCompatible
-      exact
+      let witness : ValidatorBlockLeafStuckWitness
+          blockDescription Description source :=
         { logical := 100
           left := left
           right := right
@@ -142,6 +138,47 @@ theorem physicalState_ne_halt_of_conflict
             · apply compileValidatorBlockDescription_lookup_leaf_none
               cases read <;> decide
           leaf_ne_halt := by cases read <;> decide }
+      exact ⟨Tape.move Direction.right
+          (Tape.move Direction.right
+            (Tape.move Direction.right
+              (validatorBlockTape witness.left
+                (witness.read :: witness.right)))),
+        validatorBlockPhysical_reachesStuck_of_leafStuckWitness
+          (D := blockDescription) (M := Description)
+          (fun row hrow => compiledRow_mem_description hrow)
+          description_subroutineReady.1.2.2.2.2
+          blockDescription_sourceBound
+          blockDescription_haltFree
+          blockDescription_tailCompatible witness,
+        validatorBlockLeafStuckTape_contiguous
+          witness.left witness.right witness.read⟩
+
+/-- A logical conflict path reaches a concrete missing physical transition. -/
+theorem physicalReachesStuck_of_conflict
+    {source : ValidatorBlockDescription.Configuration}
+    (hconflict : ReachesConflict source) :
+    exists stuck : Tape Bool,
+      Description.ReachesStuck
+        (validatorPhysicalBlockConfiguration source) stuck := by
+  rcases physicalExistsContiguousReachesStuck_of_conflict hconflict with
+    ⟨stuck, hstuck, _hcontiguous⟩
+  exact ⟨stuck, hstuck⟩
+
+/-- A logical conflict path prevents every generated physical run from
+reaching the successful halt. -/
+theorem physicalState_ne_halt_of_conflict
+    {source : ValidatorBlockDescription.Configuration}
+    (hconflict : ReachesConflict source) :
+    forall steps : Nat,
+      (Description.runConfig steps
+        (validatorPhysicalBlockConfiguration source)).state ≠
+          Description.halt := by
+  rcases physicalReachesStuck_of_conflict hconflict with
+    ⟨_stuck, steps, state, hrun, hstep, hstate⟩
+  intro n
+  exact
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+      description_subroutineReady.2 hrun hstep hstate
 
 private theorem sourceTape_eq_blockTape
     (stateCount start halt transitionCount : Nat)
@@ -226,6 +263,65 @@ private theorem sourceTape_empty_split
   rw [sourceTape_eq_blockTape]
   simp [ValidatorCountedRows.rowsBlocks,
     ValidatorHeaderBounds.prefixBlocks_eq_startLeftBlocks_append_done]
+
+/-- A conflicting transition table reaches a contiguous concrete missing
+physical row from the public determinism-gate source. -/
+theorem exists_contiguous_stuckFromTape_of_upperPairs_false
+    (stateCount start halt transitionCount : Nat)
+    (rows : List TransitionDescription)
+    (hupper : transitionUpperPairsBool rows = false) :
+    exists stuck : Tape Bool,
+      Description.StuckFromTape
+          (sourceTape stateCount start halt transitionCount rows) stuck ∧
+        ContiguousTape stuck := by
+  have hnil : rows ≠ [] := by
+    intro hrows
+    subst rows
+    simp [transitionUpperPairsBool] at hupper
+  have hsplit := List.dropLast_concat_getLast hnil
+  have hupperSplit := hupper
+  rw [← hsplit] at hupperSplit
+  have hconflict : ReachesConflict
+      (configuration 0
+        (nonemptyStartLeftBlocks stateCount start halt transitionCount
+          rows.dropLast (rows.getLast hnil)) [.done]) := by
+    simpa [nonemptyStartLeftBlocks] using
+      reaches_encoded_nonempty_table_conflict
+        stateCount start halt transitionCount
+        rows.dropLast (rows.getLast hnil) [] hupperSplit
+  have hentrySplit := runConfig_entry_to_logicalStart
+    stateCount start halt transitionCount
+    (rows.dropLast ++ [rows.getLast hnil])
+    (nonemptyStartLeftBlocks stateCount start halt transitionCount
+      rows.dropLast (rows.getLast hnil))
+    (sourceTape_nonempty_split stateCount start halt transitionCount
+      rows.dropLast (rows.getLast hnil))
+  have hentry : Description.runConfig 4
+      { state := Description.start
+        tape := sourceTape stateCount start halt transitionCount rows } =
+      validatorPhysicalBlockConfiguration
+        (configuration 0
+          (nonemptyStartLeftBlocks stateCount start halt transitionCount
+            rows.dropLast (rows.getLast hnil)) [.done]) := by
+    simpa [hsplit] using hentrySplit
+  rcases physicalExistsContiguousReachesStuck_of_conflict hconflict with
+    ⟨stuck, hstuck, hcontiguous⟩
+  exact ⟨stuck,
+    MachineDescription.ReachesStuck.prepend hentry hstuck, hcontiguous⟩
+
+/-- A conflicting transition table reaches a concrete missing physical row
+from the public determinism-gate source. -/
+theorem exists_stuckFromTape_of_upperPairs_false
+    (stateCount start halt transitionCount : Nat)
+    (rows : List TransitionDescription)
+    (hupper : transitionUpperPairsBool rows = false) :
+    exists stuck : Tape Bool,
+      Description.StuckFromTape
+        (sourceTape stateCount start halt transitionCount rows) stuck := by
+  rcases exists_contiguous_stuckFromTape_of_upperPairs_false
+      stateCount start halt transitionCount rows hupper with
+    ⟨stuck, hstuck, _hcontiguous⟩
+  exact ⟨stuck, hstuck⟩
 
 /-- A compatible nonempty encoded table reaches the restored physical source. -/
 theorem physicallyReaches_nonemptyTable
@@ -338,6 +434,43 @@ theorem haltsFromTape_of_upperPairs
   rw [hrun]
   simp
 
+/-- Every canonical determinism-gate source either restores and halts or
+reaches a contiguous concrete missing row on a conflicting table. -/
+theorem haltsOrContiguousStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (rows : List TransitionDescription) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (sourceTape stateCount start halt transitionCount rows) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+          (sourceTape stateCount start halt transitionCount rows) stuck ∧
+        ContiguousTape stuck) := by
+  cases hupper : transitionUpperPairsBool rows with
+  | true =>
+      exact Or.inl ⟨_, haltsFromTape_of_upperPairs
+        stateCount start halt transitionCount rows hupper⟩
+  | false =>
+      exact Or.inr (exists_contiguous_stuckFromTape_of_upperPairs_false
+        stateCount start halt transitionCount rows hupper)
+
+/-- Every canonical determinism-gate source either restores and halts or
+reaches a concrete missing row on a conflicting table. -/
+theorem haltsOrStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (rows : List TransitionDescription) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (sourceTape stateCount start halt transitionCount rows) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+        (sourceTape stateCount start halt transitionCount rows) stuck) := by
+  rcases haltsOrContiguousStuckFromTape
+      stateCount start halt transitionCount rows with hhalts | hstuck
+  · exact Or.inl hhalts
+  · rcases hstuck with ⟨stuck, hstuck, _hcontiguous⟩
+    exact Or.inr ⟨stuck, hstuck⟩
+
 /-- Any physical halt certifies that every pair of equal transition keys has
 the same action. -/
 theorem transitionUpperPairsBool_eq_true_of_haltsFromTape
@@ -350,53 +483,16 @@ theorem transitionUpperPairsBool_eq_true_of_haltsFromTape
   cases hupper : transitionUpperPairsBool rows with
   | true => rfl
   | false =>
-      have hnil : rows ≠ [] := by
-        intro hrows
-        subst rows
-        simp [transitionUpperPairsBool] at hupper
-      have hsplit := List.dropLast_concat_getLast hnil
-      have hupperSplit := hupper
-      rw [← hsplit] at hupperSplit
-      have hconflict : ReachesConflict
-          (configuration 0
-            (nonemptyStartLeftBlocks stateCount start halt transitionCount
-              rows.dropLast (rows.getLast hnil)) [.done]) := by
-        simpa [nonemptyStartLeftBlocks] using
-          reaches_encoded_nonempty_table_conflict
-            stateCount start halt transitionCount
-            rows.dropLast (rows.getLast hnil) [] hupperSplit
-      have hentry : Description.runConfig 4
-          { state := Description.start
-            tape := sourceTape stateCount start halt transitionCount
-              (rows.dropLast ++ [rows.getLast hnil]) } =
-        validatorPhysicalBlockConfiguration
-          (configuration 0
-            (nonemptyStartLeftBlocks stateCount start halt transitionCount
-              rows.dropLast (rows.getLast hnil)) [.done]) :=
-        runConfig_entry_to_logicalStart
-          stateCount start halt transitionCount
-          (rows.dropLast ++ [rows.getLast hnil])
-          (nonemptyStartLeftBlocks stateCount start halt transitionCount
-            rows.dropLast (rows.getLast hnil))
-          (sourceTape_nonempty_split
-            stateCount start halt transitionCount
-            rows.dropLast (rows.getLast hnil))
-      have hnever : forall steps : Nat,
-          (Description.runConfig steps
-            { state := Description.start
-              tape := sourceTape stateCount start halt transitionCount
-                (rows.dropLast ++ [rows.getLast hnil]) }).state ≠
-            Description.halt := by
-        intro steps
-        exact
-          CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
-              (n := steps) description_subroutineReady.2 hentry
-              (physicalState_ne_halt_of_conflict hconflict)
-      have hhaltsSplit := hhalts
-      rw [← hsplit] at hhaltsSplit
-      rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape
-          hhaltsSplit with ⟨steps, hrun⟩
-      have hne := hnever steps
+      rcases exists_stuckFromTape_of_upperPairs_false
+          stateCount start halt transitionCount rows hupper with
+        ⟨_stuck, stuckSteps, stuckState, hstuckRun, hstuckStep,
+          hstuckState⟩
+      rcases MachineDescription.runConfig_eq_halt_of_haltsFromTape hhalts with
+        ⟨steps, hrun⟩
+      have hne :=
+        CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+          (n := steps) description_subroutineReady.2
+          hstuckRun hstuckStep hstuckState
       rw [hrun] at hne
       exact False.elim (hne rfl)
 

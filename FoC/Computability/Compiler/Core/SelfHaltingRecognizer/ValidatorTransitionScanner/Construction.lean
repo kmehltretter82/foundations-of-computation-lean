@@ -37,7 +37,9 @@ theorem description_subroutineReady : Description.SubroutineReady := by
       ValidatorHeaderBounds.description_subroutineReady
       ValidatorCountedRows.description_subroutineReady
 
-private theorem scannerStartTape_move_right_left
+/-- The transition-scanner source has a nonempty left context, so the
+same-head composition handoff cancels exactly. -/
+theorem scannerStartTape_move_right_left
     (stateCount start halt transitionCount : Nat)
     (tokens : Word MachineCodeSymbol) :
     Tape.move Direction.right
@@ -185,6 +187,86 @@ theorem exists_haltsFromTape_iff_accepts
       ⟨rows, suffix, _hdecode, hhalts⟩
     exact ⟨validatorTransitionScannerHandoffTape
       stateCount start halt transitionCount rows suffix, hhalts⟩
+
+/-- Every canonical transition-scanner source either reaches its exact decoded
+handoff or a contiguous concrete missing row in one of its two physical
+subphases. -/
+theorem haltsOrContiguousStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+          (validatorTransitionScannerStartTape
+            stateCount start halt transitionCount tokens) stuck ∧
+        ContiguousTape stuck) := by
+  rcases ValidatorHeaderBounds.haltsOrContiguousStuckFromTape
+      stateCount start halt transitionCount tokens with hheader | hheader
+  · rcases hheader with ⟨_headerOutput, hheaderHalts⟩
+    have hboundsBool :=
+      ValidatorHeaderBounds.validatorHeaderBoundsBool_eq_true_of_haltsFromTape
+        stateCount start halt transitionCount tokens hheaderHalts
+    have hbounds := (validatorHeaderBoundsBool_eq_true_iff
+      stateCount start halt).1 hboundsBool
+    have hheaderExact : ValidatorHeaderBounds.Description.HaltsFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens)
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) := by
+      simpa [validatorHeaderBoundsHandoffTape] using
+        ValidatorHeaderBounds.haltsFromTape_headerBoundsHandoff
+          stateCount start halt transitionCount tokens
+          hbounds.1 hbounds.2.1 hbounds.2.2
+    rcases ValidatorCountedRows.haltsOrContiguousStuckFromTape
+        stateCount start halt transitionCount tokens with hrows | hrows
+    · rcases hrows with ⟨output, hrowsHalts⟩
+      exact Or.inl ⟨output,
+        CommonGround.SameHeadComposition.leftRightSeqDescription_haltsFromTape_of_haltsFromTape
+          ValidatorHeaderBounds.description_subroutineReady
+          ValidatorCountedRows.description_subroutineReady
+          hheaderExact
+          (scannerStartTape_move_right_left
+            stateCount start halt transitionCount tokens)
+          hrowsHalts⟩
+    · rcases hrows with ⟨stuck, hrowsStuck, hcontiguous⟩
+      exact Or.inr ⟨stuck,
+        CommonGround.SameHeadComposition.leftRightSeqDescription_stuckFromTape_of_right
+          ValidatorHeaderBounds.description_subroutineReady
+          ValidatorCountedRows.description_subroutineReady
+          hheaderExact
+          (scannerStartTape_move_right_left
+            stateCount start halt transitionCount tokens)
+          hrowsStuck,
+        hcontiguous⟩
+  · rcases hheader with ⟨stuck, hheaderStuck, hcontiguous⟩
+    exact Or.inr ⟨stuck,
+      CommonGround.SameHeadComposition.leftRightSeqDescription_stuckFromTape_of_left
+        ValidatorHeaderBounds.description_subroutineReady
+        ValidatorCountedRows.description_subroutineReady
+        (by simpa [validatorHeaderBoundsHandoffTape] using hheaderStuck),
+      hcontiguous⟩
+
+/-- Every canonical transition-scanner source either reaches its exact decoded
+handoff or a concrete missing row in one of its two physical subphases. -/
+theorem haltsOrStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) stuck) := by
+  rcases haltsOrContiguousStuckFromTape
+      stateCount start halt transitionCount tokens with hhalts | hstuck
+  · exact Or.inl hhalts
+  · rcases hstuck with ⟨stuck, hstuck, _hcontiguous⟩
+    exact Or.inr ⟨stuck, hstuck⟩
 
 end ValidatorTransitionScannerConstruction
 

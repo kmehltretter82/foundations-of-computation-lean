@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorSpec
 import FoC.Computability.Compiler.Dovetail.Scanner.TokenAligned
+import FoC.Computability.Compiler.StuckExecution
 
 set_option doc.verso true
 
@@ -25,6 +26,7 @@ open Languages
 open MachineDescription
 
 open EncRewriters.CanonicalLayouts.DovetailLayoutScanner
+open DovetailInitialLayoutInitializer.StageInputMarkedScanner
 
 /-- The reusable finite description used as the validator's token gate. -/
 abbrev ExactCodeValidatorTokenGateDescription : MachineDescription :=
@@ -90,6 +92,34 @@ theorem exactCodeValidatorTokenGateDescription_not_haltsFromTape_nil
   rintro ⟨symbol, rest, hbits, _⟩
   cases symbol <;>
     simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput] at hbits
+
+/-- The empty public input reaches the token gate's missing state-9 blank
+transition after the left-fringe bounce. -/
+theorem exactCodeValidatorTokenGateDescription_stuckFromTape_nil :
+    ExactCodeValidatorTokenGateDescription.StuckFromTape
+      (Tape.input [])
+      (Tape.move Direction.right
+        (Tape.move Direction.left (Tape.input []))) := by
+  refine ⟨2, 9, ?_, ?_, by decide⟩
+  · simp [ExactCodeValidatorTokenGateDescription,
+      CodeWordAlignedPreScannerDescription,
+      MachineDescription.runConfig, MachineDescription.stepConfig,
+      MachineDescription.lookupTransition, MachineDescription.Matches,
+      keepMove, MachineDescription.transition, Tape.input, Tape.blank,
+      Tape.read, Tape.write, Tape.move, Tape.moveLeft, Tape.moveRight]
+  · simp [ExactCodeValidatorTokenGateDescription,
+      CodeWordAlignedPreScannerDescription,
+      MachineDescription.stepConfig, MachineDescription.lookupTransition,
+      MachineDescription.Matches, keepMove, MachineDescription.transition,
+      Tape.input, Tape.blank, Tape.read, Tape.move, Tape.moveLeft,
+      Tape.moveRight]
+
+/-- The empty-input token rejection remains a contiguous blank window. -/
+theorem exactCodeValidatorTokenGateDescription_stuckTape_nil_contiguous :
+    ContiguousTape
+      (Tape.move Direction.right
+        (Tape.move Direction.left (Tape.input []))) := by
+  exact ⟨[], [], 0, rfl⟩
 
 end SelfHaltingRecognizer
 end Computability

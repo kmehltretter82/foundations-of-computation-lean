@@ -70,16 +70,6 @@ theorem paddedStartTape_equiv_input (w : Word Bool) :
       simpa [tapeAtCells, Tape.input] using
         dropTrailingNone_append_none (rest.map some)
 
-private theorem move_left_codeWordAlignedHandoffTape_cons
-    (b : Bool) (tailBits : Word Bool) :
-    Tape.move Direction.left
-        (codeWordAlignedHandoffTape (b :: tailBits)) =
-      tapeAtCells [none]
-        (List.append ((b :: tailBits).map some) [none]) := by
-  cases tailBits <;>
-    simp [codeWordAlignedHandoffTape, tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
-
 /--
 Forward behavior of the word-start recognizer on canonical family inputs:
 it halts exactly at the checked handoff tape.

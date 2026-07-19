@@ -183,6 +183,18 @@ def codeWordAlignedHandoffTape (bits : Word Bool) : Tape Bool :=
   Tape.move Direction.right
     (tapeAtCells [none] (List.append (bits.map some) [none]))
 
+/-- Moving left from a nonempty token-aligned handoff exposes the padded word
+start expected by downstream parsers. -/
+theorem move_left_codeWordAlignedHandoffTape_cons
+    (b : Bool) (tailBits : Word Bool) :
+    Tape.move Direction.left
+        (codeWordAlignedHandoffTape (b :: tailBits)) =
+      tapeAtCells [none]
+        (List.append ((b :: tailBits).map some) [none]) := by
+  cases tailBits <;>
+    simp [codeWordAlignedHandoffTape, tapeAtCells,
+      Tape.move, Tape.moveLeft, Tape.moveRight]
+
 private theorem run_codeWordAligned_scanToken
     (symbol : MachineCodeSymbol) (leftRev restCells : List (Option Bool)) :
     CWA.runConfig 4

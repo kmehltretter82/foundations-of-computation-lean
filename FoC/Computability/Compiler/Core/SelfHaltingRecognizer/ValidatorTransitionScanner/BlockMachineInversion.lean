@@ -1,5 +1,6 @@
 import FoC.Computability.Compiler.Core.CommonGround.SeqComposition
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner.BlockSimulation
+import FoC.Computability.Compiler.StuckExecution
 
 set_option doc.verso true
 
@@ -17,6 +18,40 @@ namespace SelfHaltingRecognizer
 
 open MachineDescription
 open DovetailInitialLayoutInitializer
+
+/-- The physical block-tape layout is exactly one contiguous Boolean split. -/
+theorem validatorBlockTape_eq_splitTape
+    (left right : Languages.Word ValidatorBlockSymbol) :
+    validatorBlockTape left right =
+      splitTape (validatorBlockBits left).reverse
+        (validatorBlockBits right) 0 := by
+  unfold validatorBlockTape
+  cases hright : validatorBlockBits right <;>
+    simp [splitTape, tapeAtCells]
+
+/-- A generated missing leaf is three physical moves into a complete block,
+and therefore still lies within the contiguous encoded window. -/
+theorem validatorBlockLeafStuckTape_contiguous
+    (left right : Languages.Word ValidatorBlockSymbol)
+    (read : ValidatorBlockSymbol) :
+    ContiguousTape
+      (Tape.move Direction.right
+        (Tape.move Direction.right
+          (Tape.move Direction.right
+            (validatorBlockTape left (read :: right))))) := by
+  refine ⟨[read.thirdBit, read.secondBit, read.firstBit] ++
+      (validatorBlockBits left).reverse,
+    read.fourthBit :: validatorBlockBits right, 0, ?_⟩
+  simp [validatorBlockTape, validatorBlockBits,
+    ValidatorBlockSymbol.bits_eq_components, splitTape, tapeAtCells,
+    Tape.move, Tape.moveRight]
+
+/-- A missing block-root row at the right boundary is a contiguous endpoint. -/
+theorem validatorBlockRootStuckTape_contiguous
+    (left : Languages.Word ValidatorBlockSymbol) :
+    ContiguousTape (validatorBlockTape left []) := by
+  rw [validatorBlockTape_eq_splitTape]
+  exact contiguousTape_splitTape _ _ _
 
 /-- A missing generated leaf row is exact physical stuck-run evidence. -/
 theorem validatorBlockPhysical_reachesStuck_of_leaf_stuck
@@ -525,6 +560,35 @@ theorem validatorBlockPhysical_reachesStuck_of_stuckWitness
       exact Or.inr ⟨witness.left,
         validatorBlockPhysical_reachesStuck_of_rootBlankStuckWitness
           hsubset hdet hsourceBound hDhaltFree htailCompatible witness⟩
+
+/-- Either compiler-level rejection witness reaches an exact contiguous
+Boolean tape suitable for structural reject closeout. -/
+theorem validatorBlockPhysical_exists_contiguous_reachesStuck_of_stuckWitness
+    {D : ValidatorBlockDescription} {M : MachineDescription}
+    (hsubset : forall row : TransitionDescription,
+      row ∈ (compileValidatorBlockDescription D).transitions ->
+        row ∈ M.transitions)
+    (hdet : M.Deterministic)
+    (hsourceBound : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source < D.stateCount)
+    (hDhaltFree : forall row : ValidatorBlockTransition,
+      row ∈ D.transitions -> row.source ≠ D.halt)
+    (htailCompatible : forall state read row,
+      D.lookup state read = some row ->
+        row.read.tailBits = row.write.tailBits)
+    {source : ValidatorBlockDescription.Configuration}
+    (witness : ValidatorBlockStuckWitness D M source) :
+    exists stuck : Tape Bool,
+      M.ReachesStuck (validatorPhysicalBlockConfiguration source) stuck ∧
+        ContiguousTape stuck := by
+  rcases validatorBlockPhysical_reachesStuck_of_stuckWitness
+      hsubset hdet hsourceBound hDhaltFree htailCompatible witness with
+    hleaf | hroot
+  · rcases hleaf with ⟨left, right, read, hstuck⟩
+    exact ⟨_, hstuck,
+      validatorBlockLeafStuckTape_contiguous left right read⟩
+  · rcases hroot with ⟨left, hstuck⟩
+    exact ⟨_, hstuck, validatorBlockRootStuckTape_contiguous left⟩
 
 /-- Consume either supported compiler-level stuck witness. -/
 theorem validatorBlockPhysical_ne_halt_of_stuckWitness

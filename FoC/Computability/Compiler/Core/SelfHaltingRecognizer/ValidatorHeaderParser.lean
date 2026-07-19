@@ -1,4 +1,4 @@
-import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorHeaderParser.Inversion
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorHeaderParser.Totality
 
 set_option doc.verso true
 
@@ -6,5 +6,6 @@ set_option doc.verso true
 # Exact-code validator: header-parser leaf
 
 This wrapper exports the finite Boolean header/fixed-field parser, its exact
-forward transition-region handoff, and its closed canonical-code inversion.
+forward transition-region handoff, closed canonical-code inversion, and total
+halt-or-stuck outcome.
 -/

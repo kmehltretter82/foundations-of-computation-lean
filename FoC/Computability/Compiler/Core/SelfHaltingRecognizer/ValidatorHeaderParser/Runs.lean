@@ -26,9 +26,11 @@ def validatorHeaderSymbolCells
     (symbol : MachineCodeSymbol) : List (Option Bool) :=
   (encodeCodeSymbolAsInput symbol).map some
 
-private def validatorHeaderNatCells (n : Nat) : List (Option Bool) :=
+/-- Boolean tape cells of one canonical unary natural-number token. -/
+def validatorHeaderNatCells (n : Nat) : List (Option Bool) :=
   (encodeCodeWordAsInput (encodeNat n)).map some
-private theorem validatorHeaderMapSomeAppend
+/-- Mapping Boolean cells commutes with explicit list append. -/
+theorem validatorHeaderMapSomeAppend
     (left right : Word Bool) :
     (List.append left right).map some =
       List.append (left.map some) (right.map some) := by
@@ -73,7 +75,8 @@ private theorem validatorHeaderReverseAppend
         tail := by
   induction a <;> simp
 
-private def validatorHeaderFieldFuel (n : Nat) : Nat :=
+/-- Exact number of parser steps used by one unary natural-number field. -/
+def validatorHeaderFieldFuel (n : Nat) : Nat :=
   4 * (n + 1)
 
 /-- Exact number of steps used to scan the header and four unary fields. -/
@@ -264,7 +267,8 @@ private theorem validatorHeaderNatCells_succ_append
   rw [validatorHeaderNatCells_succ]
   exact List.append_assoc _ _ _
 
-private theorem run_validatorHeader_stateCount_nat
+/-- Exact state-count-field run. -/
+theorem run_validatorHeader_stateCount_nat
     (n : Nat) (leftRev restCells : List (Option Bool)) :
     VHP.runConfig (validatorHeaderFieldFuel n)
         (config 4 leftRev
@@ -287,7 +291,8 @@ private theorem run_validatorHeader_stateCount_nat
       simp [validatorHeaderNatCells_succ, List.reverse_append,
         List.append_assoc]
 
-private theorem run_validatorHeader_start_nat
+/-- Exact start-state-field run. -/
+theorem run_validatorHeader_start_nat
     (n : Nat) (leftRev restCells : List (Option Bool)) :
     VHP.runConfig (validatorHeaderFieldFuel n)
         (config 8 leftRev
@@ -310,7 +315,8 @@ private theorem run_validatorHeader_start_nat
       simp [validatorHeaderNatCells_succ, List.reverse_append,
         List.append_assoc]
 
-private theorem run_validatorHeader_halt_nat
+/-- Exact halt-state-field run. -/
+theorem run_validatorHeader_halt_nat
     (n : Nat) (leftRev restCells : List (Option Bool)) :
     VHP.runConfig (validatorHeaderFieldFuel n)
         (config 12 leftRev
@@ -333,7 +339,8 @@ private theorem run_validatorHeader_halt_nat
       simp [validatorHeaderNatCells_succ, List.reverse_append,
         List.append_assoc]
 
-private theorem run_validatorHeader_transitionCount_nat
+/-- Exact transition-count-field run. -/
+theorem run_validatorHeader_transitionCount_nat
     (n : Nat) (leftRev restCells : List (Option Bool)) :
     VHP.runConfig (validatorHeaderFieldFuel n)
         (config 16 leftRev

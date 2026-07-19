@@ -47,6 +47,53 @@ private theorem runConfig_entry_to_inversionSource
   rw [htape, hlogical] at hentry
   exact hentry
 
+/-- A logical counted-row rejection witness reaches a concrete contiguous
+missing-row endpoint from the public source. -/
+theorem exists_contiguous_stuckFromTape_of_stuck
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol)
+    (witness : ValidatorBlockStuckWitness blockDescription Description
+      (configuration 0
+        (loopLeftBlocks stateCount start halt 0 transitionCount [])
+        (.done :: validatorCanonicalBlocks tokens))) :
+    exists stuck : Tape Bool,
+      Description.StuckFromTape
+          (validatorTransitionScannerStartTape
+            stateCount start halt transitionCount tokens) stuck ∧
+        ContiguousTape stuck := by
+  have hphysical :=
+    validatorBlockPhysical_exists_contiguous_reachesStuck_of_stuckWitness
+    (D := blockDescription) (M := Description)
+    (fun _ hrow => compiledRow_mem_description hrow)
+    description_subroutineReady.1.2.2.2.2
+    blockDescription_sourceBound
+    blockDescription_haltFree
+    blockDescription_tailCompatible
+    witness
+  have hentry := runConfig_entry_to_inversionSource
+    stateCount start halt transitionCount tokens
+  rcases hphysical with ⟨stuck, hstuck, hcontiguous⟩
+  exact ⟨stuck,
+    MachineDescription.ReachesStuck.prepend hentry hstuck, hcontiguous⟩
+
+/-- A logical counted-row rejection witness reaches a concrete missing
+generated Boolean row from the public source. -/
+theorem exists_stuckFromTape_of_stuck
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol)
+    (witness : ValidatorBlockStuckWitness blockDescription Description
+      (configuration 0
+        (loopLeftBlocks stateCount start halt 0 transitionCount [])
+        (.done :: validatorCanonicalBlocks tokens))) :
+    exists stuck : Tape Bool,
+      Description.StuckFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) stuck := by
+  rcases exists_contiguous_stuckFromTape_of_stuck
+      stateCount start halt transitionCount tokens witness with
+    ⟨stuck, hstuck, _hcontiguous⟩
+  exact ⟨stuck, hstuck⟩
+
 /-- A concrete logical rejection witness prevents the complete counted-row
 subphase from ever reaching its physical halt state. -/
 theorem runConfig_state_ne_halt_of_stuck
@@ -62,21 +109,13 @@ theorem runConfig_state_ne_halt_of_stuck
           tape := validatorTransitionScannerStartTape
             stateCount start halt transitionCount tokens }).state ≠
         Description.halt := by
-  have hcore := validatorBlockPhysical_ne_halt_of_stuckWitness
-    (D := blockDescription) (M := Description)
-    (fun _ hrow => compiledRow_mem_description hrow)
-    description_subroutineReady.1.2.2.2.2
-    description_subroutineReady.2
-    blockDescription_sourceBound
-    blockDescription_haltFree
-    blockDescription_tailCompatible
-    witness
-  have hentry := runConfig_entry_to_inversionSource
-    stateCount start halt transitionCount tokens
+  rcases exists_stuckFromTape_of_stuck
+      stateCount start halt transitionCount tokens witness with
+    ⟨_stuck, stuckSteps, stuckState, hrun, hstep, hstate⟩
   intro steps
   exact
-    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_ne_halt_region
-      (n := steps) description_subroutineReady.2 hentry hcore
+    CommonGround.SeqComposition.runConfig_state_ne_halt_of_reaches_stuck
+      (n := steps) description_subroutineReady.2 hrun hstep hstate
 
 /-- Any physical halt of the counted-row pass decodes exactly the declared
 number of transition rows, all with bounded endpoints. -/
@@ -105,6 +144,50 @@ theorem exists_bounded_rows_of_haltsFromTape
       exact False.elim
         ((runConfig_state_ne_halt_of_stuck
           stateCount start halt transitionCount tokens witness steps) hstate)
+
+/-- Every canonical counted-row source either reaches its exact restored
+handoff or a contiguous concrete missing generated row. -/
+theorem haltsOrContiguousStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+          (validatorTransitionScannerStartTape
+            stateCount start halt transitionCount tokens) stuck ∧
+        ContiguousTape stuck) := by
+  cases checkedRowsInversion
+      stateCount start halt transitionCount tokens with
+  | accepted rows suffix hcount htokens hbounds =>
+      subst tokens
+      exact Or.inl ⟨_, haltsFromTape_transitionScannerRows
+        stateCount start halt transitionCount rows suffix
+        hcount.symm hbounds⟩
+  | stuck witness =>
+      exact Or.inr (exists_contiguous_stuckFromTape_of_stuck
+        stateCount start halt transitionCount tokens witness)
+
+/-- Every canonical counted-row source either reaches its exact restored
+handoff or a concrete missing generated row. -/
+theorem haltsOrStuckFromTape
+    (stateCount start halt transitionCount : Nat)
+    (tokens : Word MachineCodeSymbol) :
+    (exists output : Tape Bool,
+      Description.HaltsFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) output) ∨
+    (exists stuck : Tape Bool,
+      Description.StuckFromTape
+        (validatorTransitionScannerStartTape
+          stateCount start halt transitionCount tokens) stuck) := by
+  rcases haltsOrContiguousStuckFromTape
+      stateCount start halt transitionCount tokens with hhalts | hstuck
+  · exact Or.inl hhalts
+  · rcases hstuck with ⟨stuck, hstuck, _hcontiguous⟩
+    exact Or.inr ⟨stuck, hstuck⟩
 
 end ValidatorCountedRows
 end SelfHaltingRecognizer

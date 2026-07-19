@@ -1,5 +1,6 @@
 import FoC.Computability.Coding
 import FoC.Computability.Compiler
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorConstruction
 import FoC.Computability.Compiler.UniversalAndRanges.Basic
 import FoC.Computability.Compiler.UniversalAndRanges.FiniteSource
 import FoC.Computability.DescriptionCodeLanguages
@@ -371,6 +372,17 @@ def ConcreteStoppedDescriptionDecidesCodeLanguage
 def RecursiveCodeLanguage
     (L : Language ConcreteMachineCodeSymbol) : Prop :=
   DescriptionDecidableCodeLanguage L
+
+/-- Complete well-formed finite-description codes, viewed as a book-facing
+code language. -/
+def ConcreteValidCodeLanguage : Language ConcreteMachineCodeSymbol :=
+  SelfHaltingRecognizer.ValidCodeLanguage
+
+/-- Standard finite-description codes form a recursive code language in the
+honest halt-stable, distinct-output currency. -/
+theorem concrete_valid_code_language_recursive :
+    RecursiveCodeLanguage ConcreteValidCodeLanguage := by
+  exact SelfHaltingRecognizer.ExactCodeValidator.construction
 
 /-- A code language has no halt-stable finite-description decider. -/
 def UndecidableCodeLanguage

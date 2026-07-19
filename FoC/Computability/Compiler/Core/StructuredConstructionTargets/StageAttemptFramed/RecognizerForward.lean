@@ -903,16 +903,6 @@ theorem appendSentinelRewindDescription_forward
         Tape.move, Tape.moveLeft, List.reverse_append])
     hrewind
 
-theorem move_left_codeWordAlignedHandoffTape_cons
-    (b : Bool) (tailBits : Word Bool) :
-    Tape.move Direction.left
-        (codeWordAlignedHandoffTape (b :: tailBits)) =
-      tapeAtCells [none]
-        (List.append ((b :: tailBits).map some) [none]) := by
-  cases tailBits <;>
-    simp [codeWordAlignedHandoffTape, tapeAtCells,
-      Tape.move, Tape.moveLeft, Tape.moveRight]
-
 private theorem alignedAppendRewindDescription_forward
     (C : DovetailControllerLayout) :
     PRE.HaltsFromTape

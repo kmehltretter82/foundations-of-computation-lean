@@ -234,7 +234,8 @@ private theorem validatorHeaderFieldEventuallyInv
               leftRev,
             rfl, htail⟩
 
-private theorem validatorHeader_blank_stuck
+/-- At any unary-field entry, a blank head is a concrete missing parser row. -/
+theorem validatorHeader_blank_stuck
     (state : Nat)
     (hstate :
       state = 0 ∨ state = 4 ∨ state = 8 ∨ state = 12 ∨ state = 16)

@@ -15,6 +15,32 @@ namespace FoC
 namespace Computability
 namespace MachineDescription
 
+/-- A contiguous Boolean window split at the current head.  The left word is
+stored in tape-stack order and both far edges carry an explicit blank. -/
+def splitTape
+    (leftRev right : Languages.Word Bool) (padding : Nat) : Tape Bool :=
+  match right with
+  | [] =>
+      { left := List.append (leftRev.map some) [none]
+        head := none
+        right := List.replicate padding none }
+  | bit :: rest =>
+      { left := List.append (leftRev.map some) [none]
+        head := some bit
+        right := List.append (rest.map some)
+          (List.replicate (padding + 1) none) }
+
+/-- A tape whose represented window is one contiguous Boolean word between
+explicit far-edge blanks. -/
+def ContiguousTape (tape : Tape Bool) : Prop :=
+  exists leftRev right : Languages.Word Bool, exists padding : Nat,
+    tape = splitTape leftRev right padding
+
+theorem contiguousTape_splitTape
+    (leftRev right : Languages.Word Bool) (padding : Nat) :
+    ContiguousTape (splitTape leftRev right padding) :=
+  ⟨leftRev, right, padding, rfl⟩
+
 /-- If a later halt-stable run state is not the halt, no earlier state was the
 halt either. -/
 theorem runConfig_state_ne_halt_of_later_ne_halt
