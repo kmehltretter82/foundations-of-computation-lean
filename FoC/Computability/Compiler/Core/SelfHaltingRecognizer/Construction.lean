@@ -114,7 +114,7 @@ private theorem gate_output_eq_validatedBoundary
         stateCount start halt transitionCount rows
     _ = validatedBoundaryTape (encodeCodeWordAsInput code) := by rw [hcode]
 
-private theorem gate_haltsTo_validatedBoundary_iff
+theorem gate_haltsTo_validatedBoundary_iff
     (code : Word MachineCodeSymbol) :
     ExactCodeValidator.GateDescription.HaltsFromTape
         (Tape.input (encodeCodeWordAsInput code))
@@ -136,7 +136,7 @@ private theorem gate_haltsTo_validatedBoundary_iff
     subst output
     exact hgate
 
-private theorem valid_code_ne_nil
+theorem valid_code_ne_nil
     {code : Word MachineCodeSymbol}
     (hvalid : MachineDescription.DescriptionCodeValid code) :
     code ≠ [] := by
@@ -144,7 +144,7 @@ private theorem valid_code_ne_nil
   subst code
   exact MachineDescription.not_descriptionCodeValid_nil hvalid
 
-private theorem encoded_code_ne_nil_of_code_ne_nil
+theorem encoded_code_ne_nil_of_code_ne_nil
     {code : Word MachineCodeSymbol} (hcode : code ≠ []) :
     encodeCodeWordAsInput code ≠ [] := by
   cases code with
@@ -152,7 +152,7 @@ private theorem encoded_code_ne_nil_of_code_ne_nil
   | cons symbol rest =>
       cases symbol <;> simp [encodeCodeWordAsInput, encodeCodeSymbolAsInput]
 
-private theorem validatedBoundaryTape_bounce
+theorem validatedBoundaryTape_bounce
     (bits : Word Bool) (hbits : bits ≠ []) :
     Tape.move Direction.right
         (Tape.move Direction.left (validatedBoundaryTape bits)) =
@@ -164,7 +164,7 @@ private theorem validatedBoundaryTape_bounce
       CommonGround.FiniteTransducers.tapeAtCells,
       List.reverse_append, Tape.move, Tape.moveLeft, Tape.moveRight]
 
-private theorem rewind_haltsFrom_validatedBoundary
+theorem rewind_haltsFrom_validatedBoundary
     (bits : Word Bool) (hbits : bits ≠ []) :
     CommonGround.FiniteTransducers.rightEdgeRewindDescription.HaltsFromTape
       (validatedBoundaryTape bits)
@@ -178,7 +178,7 @@ private theorem rewind_haltsFrom_validatedBoundary
         ([] : List (Option Bool)) init.reverse last
         ([] : List (Option Bool)))
 
-private theorem rewindTargetTape_bounce (bits : Word Bool) :
+theorem rewindTargetTape_bounce (bits : Word Bool) :
     Tape.move Direction.right
         (Tape.move Direction.left
           (CommonGround.FiniteTransducers.rightEdgeRewindTargetTape bits [])) =
@@ -188,7 +188,7 @@ private theorem rewindTargetTape_bounce (bits : Word Bool) :
       CommonGround.FiniteTransducers.tapeAtCells, Tape.move,
       Tape.moveLeft, Tape.moveRight]
 
-private theorem rewindTargetTape_equiv_input (bits : Word Bool) :
+theorem rewindTargetTape_equiv_input (bits : Word Bool) :
     Tape.Equiv
       (CommonGround.FiniteTransducers.rightEdgeRewindTargetTape bits [])
       (Tape.input bits) := by

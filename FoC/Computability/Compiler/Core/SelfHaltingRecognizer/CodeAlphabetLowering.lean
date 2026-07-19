@@ -1,6 +1,8 @@
 import FoC.Computability.Compiler.DescriptionExecution
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Common.PrefixHalting
 import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Common.TapeEquivTransport
+import FoC.Computability.Compiler.Core.FiniteRecognizer.ExactFuel.StrictProbe.Frame.Rewind
+import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.CodeAlphabetLowering.TapeEquiv
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.HaltStoppedMachine
 import FoC.Computability.Compiler.Core.SelfHaltingRecognizer.ValidatorTransitionScanner.BlockMachine.Compiler
 set_option doc.verso true
@@ -28,6 +30,7 @@ namespace SelfHaltingRecognizer
 namespace CodeAlphabetLowering
 open Languages
 open MachineDescription
+open FiniteRecognizer.ExactFuel.StrictProbe.SerializedFieldComposer
 /-!
 ## Finite Boolean machines as description tables
 -/
@@ -60,7 +63,7 @@ private def finiteBoolMachineRows [DecidableEq state]
       M.statesFinite.elems boolTapeCellFinite.elems).filterMap
     (finiteBoolMachineRow? M)
 
-private def finiteBoolMachineDescription [DecidableEq state]
+def finiteBoolMachineDescription [DecidableEq state]
     (M : TuringMachine Bool state) : MachineDescription where
   stateCount := M.statesFinite.elems.length
   start :=
@@ -224,7 +227,7 @@ private theorem finiteBoolMachineDescription_haltTransitionFree
   apply hsource
   exact finite_index_injective M.statesFinite heq
 
-private theorem finiteBoolMachineDescription_subroutineReady
+theorem finiteBoolMachineDescription_subroutineReady
     [DecidableEq state]
     (M : TuringMachine Bool state) :
     (finiteBoolMachineDescription M).SubroutineReady :=
@@ -460,6 +463,39 @@ private theorem finiteBoolMachineDescription_haltsOnInput_iff
           using hhalt) with
       ⟨_target, steps, hstate, _htape⟩
     exact ⟨steps, hstate⟩
+
+theorem finiteBoolMachineDescription_haltsFromTape_of_stopped_computes
+    [DecidableEq state]
+    (M : TuringMachine Bool state) (source : Tape Bool)
+    (final : TuringMachine.Configuration Bool state)
+    (hcomputes : TuringMachine.Computes (haltStoppedMachine M)
+      { state := M.start, tape := source } final)
+    (hhalt : final.state = M.halt) :
+    (finiteBoolMachineDescription M).HaltsFromTape source final.tape := by
+  rcases TuringMachine.computes_to_computesIn hcomputes with
+    ⟨steps, hcomputesIn⟩
+  let initial : TuringMachine.Configuration Bool state :=
+    { state := M.start, tape := source }
+  have hbounded : (haltStoppedMachine M).runConfigBounded steps initial = final :=
+    runConfigBounded_eq_of_computesIn hcomputesIn
+  refine ⟨steps, ?_⟩
+  change
+    ((finiteBoolMachineDescription M).runConfig steps
+      { state := (finiteBoolMachineDescription M).start, tape := source }).state =
+      (finiteBoolMachineDescription M).halt ∧
+    ((finiteBoolMachineDescription M).runConfig steps
+      { state := (finiteBoolMachineDescription M).start, tape := source }).tape =
+      final.tape
+  rw [show MachineDescription.Configuration.mk
+      (finiteBoolMachineDescription M).start source =
+    finiteBoolMachineConfig M initial by rfl,
+    finiteBoolMachineDescription_runConfig_stopped, hbounded]
+  constructor
+  · change (Foundation.FiniteType.indexOfDecidable M.statesFinite
+      final.state).val =
+      (Foundation.FiniteType.indexOfDecidable M.statesFinite M.halt).val
+    rw [hhalt]
+  · rfl
 
 /-!
 ## Four-bit simulation of the code alphabet
@@ -1044,6 +1080,46 @@ private theorem codeBlockMachine_computes_step_from_equiv
   · exact Tape.Equiv.trans (Tape.Equiv.symm htapeEndpoint)
       hcanonicalTape
 
+private theorem codeBlockMachine_computes_of_logical_computes
+    [DecidableEq state]
+    (M : TuringMachine MachineCodeSymbol state)
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    {source target : TuringMachine.Configuration MachineCodeSymbol state}
+    (hcomputes : TuringMachine.Computes M source target)
+    (sourceTape : Tape Bool)
+    (htape : Tape.Equiv sourceTape (physicalizeCodeTape source.tape)) :
+    exists endpoint : TuringMachine.Configuration Bool (BlockControl state),
+      TuringMachine.Computes (codeBlockMachine M)
+        { state := .root source.state, tape := sourceTape } endpoint ∧
+      endpoint.state = .root target.state ∧
+      Tape.Equiv endpoint.tape (physicalizeCodeTape target.tape) := by
+  induction hcomputes generalizing sourceTape with
+  | refl source =>
+      exact ⟨{ state := .root source.state, tape := sourceTape },
+        TuringMachine.Computes.refl _, rfl, htape⟩
+  | @step source next target hstep htail ih =>
+      cases hstep with
+      | mk htransition =>
+          rename_i write move nextState
+          have hsource : source.state ≠ M.halt := by
+            intro hsource
+            have hdisabled := hstop (Tape.read source.tape)
+            rw [hsource, hdisabled] at htransition
+            cases htransition
+          rcases codeBlockMachine_computes_step_from_equiv M source sourceTape
+              write move nextState hsource htransition htape with
+            ⟨middle, hprefix, hmiddleState, hmiddleTape⟩
+          rcases ih middle.tape hmiddleTape with
+            ⟨endpoint, htailPhysical, hendpointState, hendpointTape⟩
+          have hmiddle : middle =
+              { state := .root nextState, tape := middle.tape } := by
+            cases middle; cases hmiddleState; rfl
+          have htailPhysical' : TuringMachine.Computes
+              (codeBlockMachine M) middle endpoint := by
+            rw [hmiddle]; exact htailPhysical
+          exact ⟨endpoint, TuringMachine.computes_trans hprefix htailPhysical',
+            hendpointState, hendpointTape⟩
+
 private theorem codeBlockMachine_haltsFrom_of_logical_haltsFrom
     [DecidableEq state]
     (M : TuringMachine MachineCodeSymbol state)
@@ -1308,6 +1384,49 @@ private theorem inputTape_equiv_physicalized (code : Word MachineCodeSymbol) :
       rw [physicalizeCodeTape_input_cons]
       exact Tape.Equiv.refl _
 
+/-- A public boundary predicate for the four-bit representative of a logical
+code-symbol tape.  The physical representative is intentionally quotiented by
+trailing blank padding. -/
+def RepresentsCodeTape
+    (physical : Tape Bool) (logical : Tape MachineCodeSymbol) : Prop :=
+  Tape.Equiv physical (physicalizeCodeTape logical)
+
+theorem input_representsCodeTape (code : Word MachineCodeSymbol) :
+    RepresentsCodeTape
+      (Tape.input (encodeCodeWordAsInput code)) (Tape.input code) :=
+  inputTape_equiv_physicalized code
+
+private theorem physicalizeCodeTape_equiv
+    {source target : Tape MachineCodeSymbol}
+    (h : Tape.Equiv source target) :
+    Tape.Equiv (physicalizeCodeTape source) (physicalizeCodeTape target) := by
+  rcases h with ⟨hleft, hhead, hright⟩
+  constructor
+  · change Tape.dropTrailingNone
+        (source.left.flatMap fun cell => (codeCellBits cell).reverse) =
+      Tape.dropTrailingNone
+        (target.left.flatMap fun cell => (codeCellBits cell).reverse)
+    exact dropTrailingNone_flatMap_congr _ 4 (by rfl) hleft
+  constructor
+  · change codeCellBit0 source.head = codeCellBit0 target.head
+    rw [hhead]
+  · change Tape.dropTrailingNone
+        (codeCellBit1 source.head :: codeCellBit2 source.head ::
+          codeCellBit3 source.head :: source.right.flatMap codeCellBits) =
+      Tape.dropTrailingNone
+        (codeCellBit1 target.head :: codeCellBit2 target.head ::
+          codeCellBit3 target.head :: target.right.flatMap codeCellBits)
+    apply Tape.dropTrailingNone_cons_eq (congrArg codeCellBit1 hhead)
+    apply Tape.dropTrailingNone_cons_eq (congrArg codeCellBit2 hhead)
+    apply Tape.dropTrailingNone_cons_eq (congrArg codeCellBit3 hhead)
+    exact dropTrailingNone_flatMap_congr codeCellBits 4 (by rfl) hright
+
+theorem representsCodeTape_of_equiv
+    (hphysical : RepresentsCodeTape physical logical)
+    (hlogical : Tape.Equiv logical target) :
+    RepresentsCodeTape physical target :=
+  Tape.Equiv.trans hphysical (physicalizeCodeTape_equiv hlogical)
+
 def lowerCodeAlphabetMachineDescription [DecidableEq state]
     (M : TuringMachine MachineCodeSymbol state) : MachineDescription :=
   finiteBoolMachineDescription (codeBlockMachine M)
@@ -1335,6 +1454,42 @@ theorem lowerCodeAlphabetMachineDescription_haltsOnInput_iff
   · exact codeBlockMachine_haltsFrom_of_logical_haltsFrom M hstop _ _
       (inputTape_equiv_physicalized code)
 
+/-- Lower a known logical computation while retaining its represented endpoint
+for a following finite-description phase. -/
+theorem lowerCodeAlphabetMachineDescription_haltsFromTapeEquiv_of_computes
+    [DecidableEq state]
+    (M : TuringMachine MachineCodeSymbol state)
+    (hstop : TuringMachine.HaltingTransitionsDisabled M)
+    {input : Word MachineCodeSymbol} {targetTape : Tape Bool}
+    {target : TuringMachine.Configuration MachineCodeSymbol state}
+    (hcomputes : TuringMachine.Computes M (TuringMachine.initial M input) target)
+    (hhalt : TuringMachine.Halted M target)
+    (htarget : RepresentsCodeTape targetTape target.tape) :
+    (lowerCodeAlphabetMachineDescription M).HaltsFromTapeEquiv
+      (Tape.input (encodeCodeWordAsInput input)) targetTape := by
+  rcases codeBlockMachine_computes_of_logical_computes M hstop hcomputes
+      (Tape.input (encodeCodeWordAsInput input))
+      (inputTape_equiv_physicalized input) with
+    ⟨physicalFinal, hphysicalComputes, hphysicalState, hphysicalTape⟩
+  have hphysicalHalt : TuringMachine.Halted
+      (codeBlockMachine M) physicalFinal := by
+    change physicalFinal.state = .root M.halt
+    exact hphysicalState.trans (congrArg BlockControl.root hhalt)
+  rcases original_haltsFrom_to_haltStoppedMachine (M := codeBlockMachine M)
+      ⟨physicalFinal, hphysicalComputes, hphysicalHalt⟩ with
+    ⟨stoppedFinal, hstoppedComputes, hstoppedHalt⟩
+  have hstoppedOriginal :=
+    haltStoppedMachine_computes_to_original hstoppedComputes
+  have hfinalEq : stoppedFinal = physicalFinal :=
+    TuringMachine.computes_to_halted_unique
+      (codeBlockMachine_haltingTransitionsDisabled M)
+      hstoppedOriginal hstoppedHalt hphysicalComputes hphysicalHalt
+  subst stoppedFinal
+  have hdescription := finiteBoolMachineDescription_haltsFromTape_of_stopped_computes
+      (codeBlockMachine M) (Tape.input (encodeCodeWordAsInput input))
+      physicalFinal hstoppedComputes hphysicalHalt
+  refine ⟨physicalFinal.tape, hdescription, ?_⟩
+  exact Tape.Equiv.trans hphysicalTape (Tape.Equiv.symm htarget)
 end CodeAlphabetLowering
 end SelfHaltingRecognizer
 end Computability

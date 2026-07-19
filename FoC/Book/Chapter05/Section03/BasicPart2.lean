@@ -1,4 +1,5 @@
 import FoC.Book.Chapter05.Section03.BasicPart1
+import FoC.Computability.DescriptionPairHaltingUndecidable
 
 set_option doc.verso true
 
@@ -572,6 +573,28 @@ theorem concrete_machine_self_halting_main_theorem :
   ⟨concrete_machine_self_halting_recognizable,
     concrete_machine_self_halting_undecidable_code_language,
     concrete_machine_complement_self_halting_not_recognizable⟩
+
+/-!
+## Finite-Description Pair Halting
+
+The canonical pair currency is self-delimiting: one complete description code
+is followed by that description's input word in the same code-symbol alphabet.
+Unlike the tagged compatibility language below, finite self-append and finite
+description sequencing now provide the preimage construction itself.
+-/
+
+/-- The self-delimiting valid finite-description pair-halting language. -/
+def ConcreteMachinePairHaltingCodeLanguage :
+    Language ConcreteMachineCodeSymbol :=
+  CodePairHaltingLanguage
+
+/-- Self-delimiting finite-description pair halting has no halt-stable finite
+decider.  This is the unconditional checked-composition endpoint. -/
+theorem concrete_machine_pair_halting_undecidable_code_language :
+    UndecidableCodeLanguage ConcreteMachinePairHaltingCodeLanguage := by
+  change ¬ DescriptionDecidableCodeLanguage CodePairHaltingLanguage
+  exact
+    Computability.PairHaltingReduction.not_descriptionDecidableCodeLanguage_codePairHalting
 
 theorem concrete_machine_pair_halting_undecidable_if_self_halting_undecidable_of_preimage
     (hpreimage :

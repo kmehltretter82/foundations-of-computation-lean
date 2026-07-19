@@ -1,0 +1,30 @@
+{
+  "name": "pair-halting-reduction",
+  "base_commit": "aafc752029a6ad52734829d1834dcd4528818baa",
+  "frontier": "FoC.Computability.PairHaltingReduction.not_descriptionDecidableCodeLanguage_codePairHalting",
+  "status": "active-m9-closed-awaiting-growth-review",
+  "opened_reason": "M9 checked finite reduction from the stopped self-delimiting pair-halting decider currency to the stopped valid self-halting decider currency. The pre-construction boundary, collision, malformed-input, sequencing, and growth audit is recorded in docs/PAIR_HALTING_M9_AUDIT.md. The route reuses the exact-code gate, same-head description sequencing, the M7 self-append machinery, and a campaign-local missing-only reject completion.",
+  "paths": [
+    "FoC/Computability/Compiler/Core/PairHaltingReduction"
+  ],
+  "focused_checks": [
+    "lake env lean FoC/Computability/DescriptionPairHalting.lean",
+    "lake env lean FoC/Computability/Compiler/Core/PairHaltingReduction/Construction.lean",
+    "lake env lean FoC/Computability/DescriptionPairHaltingUndecidable.lean",
+    "lake env lean FoC/Book/Chapter05/Section03/BasicPart2.lean",
+    "lake env lean FoC/Book/Chapter05/Section03/ConstructionStatus.lean"
+  ],
+  "allow_net_growth": 10000,
+  "required_axiom_clean": [
+    "FoC.Computability.PairHaltingReduction.stoppedDecidesCodeSelfHalting_of_stoppedDecidesCodePairHalting",
+    "FoC.Computability.PairHaltingReduction.not_descriptionDecidableCodeLanguage_codePairHalting",
+    "FoC.Book.Chapter05.Section03.concrete_machine_pair_halting_undecidable_code_language"
+  ],
+  "closeout_measurement": {
+    "net_growth": 856,
+    "allowance": 10000,
+    "deletion_pass_net_reduction": 8,
+    "reason": "The checked self-delimiting reduction, malformed-input completion, semantic undecidability corollary, and book endpoint compile with no sorryAx. The immediate deletion pass replaced one campaign-local output-equivalence proof with the existing MachineDescription API. The campaign stays pinned until permanent-growth disposition is reviewed."
+  },
+  "notes": "Keep the self-delimiting complete-description boundary as the canonical M9 pair currency. Do not claim that blind self-append is correct on malformed words; the exact-code gate is part of the reduction. Do not reset base_commit after intermediate commits, raise the checked-in baseline, or reuse M7's frontier allowance. The checked route is closed; retain this manifest as an outstanding pinned loan until permanent-growth disposition is reviewed."
+}

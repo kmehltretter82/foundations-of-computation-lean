@@ -30,23 +30,24 @@ work that has not been performed.
 | Self-halting recognizer | {lit}`concreteSelfHaltingRecognizerConstruction`, {lit}`concrete_machine_self_halting_recognizable` | Proved unconditionally by a well-formed finite Boolean description. The route-A machine rejects malformed, incomplete, and prefix-plus-junk codes with the exact validator, rewinds the preserved source, materializes {lit}`w ++ w`, lowers the finite code-alphabet runner, and invokes the unconditional universal-prefix machine. Its closed halting characterization is {lit}`ConcreteRecognizer.description_haltsOnInput_iff`; no {lit}`hself`, generic compiler Principle, or decoder-universality premise remains. The exact validator also retains its distinct valid-code-decider consumer {lit}`concrete_valid_code_language_recursive`. |
 | Decoder coverage | {lit}`ConcreteMachineDecoderUniversalForAcceptableLanguages` | Conditional and jointly refutable with the decidable-to-acceptable construction ({lit}`concrete_decidable_to_acceptable_and_decoder_universal_incompatible`). It descends from the open {lit}`SemanticEncodedInputDescriptionCompilerPrinciple`, whose source class quantifies over all acceptable languages and is too broad to discharge as stated. |
 | Headline theorem | {lit}`concrete_machine_self_halting_main_theorem` | Proved unconditionally in the canonical finite currency: the valid direct-code self-halting language is {lit}`RecognizableCodeLanguage`, is {lit}`UndecidableCodeLanguage`, and its complement is not {lit}`RecognizableCodeLanguage`. The legacy {lit}`self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal` theorem remains only in its clearly documented compatibility block because it uses collapsed predicates and refutable premises. |
-| Pair halting | {lit}`ConcreteMachinePairHaltingProblem` | Conditional. Undecidability transport uses proposition-valued preimage constructions; the faithful diagonal-pair machine is proved, but no checked finite composition backs the preimage principle. |
+| Pair halting | {lit}`ConcreteMachinePairHaltingCodeLanguage`, {lit}`concrete_machine_pair_halting_undecidable_code_language` | Proved unconditionally in the canonical self-delimiting finite-description currency. The checked machine validates one complete description, rewinds it, materializes {lit}`w ++ w`, invokes any supposed stopped pair decider, and sends malformed inputs through a finite missing-transition reject completion. The older tagged {lit}`ConcreteMachinePairHaltingProblem` theorems remain compatibility surfaces conditional on proposition-valued preimage constructions. |
 
 Consequently, the direct-code version of the Section 5.3 central theorem is
 closed in the canonical description-backed finite currency, with no decoder
 universality, compiler Principle, assumed self-recognizer, or {lit}`sorryAx`.
-The finite valid-code checker and the self-halting recognizer are separate
-current consumers of the exact validation surface.  Pair-halting still awaits
-checked finite preimage composition, and the printed duplicate-free unary
+The finite valid-code checker, self-halting recognizer, and pair-halting
+reduction are current consumers of the exact validation surface.  The printed
+duplicate-free unary
 {lit}`T_n`/{lit}`G` presentation has not been formalized; neither open fidelity
 item is claimed by the direct-code headline.
 
-The M7 closeout measurement is +27,428 net Compiler lines against its pinned
-+30,000 allowance, leaving 2,572 campaign lines.  With M7 still recorded as
-the sole ordinary outstanding loan, the aggregate circuit is
-30,000/120,000 (90,000 headroom).  Raw Compiler size is 508,966 lines against
-the pinned 347,066 baseline, or +161,900/+185,000 (23,100 headroom).  The
-campaign remains pinned until its permanent-growth disposition is reviewed;
+The M7 closeout measurement is +27,703 net Compiler lines against its pinned
++30,000 allowance, leaving 2,297 campaign lines.  M9 closes at +856 against
+its ordinary +10,000 allowance, leaving 9,144 campaign lines.  With both
+campaigns retained as pinned outstanding loans, the aggregate circuit is
+40,000/120,000 (80,000 headroom).  Raw Compiler size is 510,097 lines against
+the pinned 347,066 baseline, or +163,031/+185,000 (21,969 headroom).  The
+campaigns remain pinned until their permanent-growth disposition is reviewed;
 these numbers do not reset either base.
 -/
 
