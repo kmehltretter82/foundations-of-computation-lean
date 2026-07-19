@@ -466,6 +466,14 @@ def ConcreteMachineSelfHaltingLanguage :
     Language ConcreteMachineCodeSymbol :=
   TuringSelfHaltingLanguage ConcreteMachineCodeAccepts
 
+/-- The valid self-halting code language has an unconditional finite
+well-formed-description recognizer. -/
+theorem concrete_machine_self_halting_recognizable :
+    RecognizableCodeLanguage ConcreteMachineSelfHaltingLanguage := by
+  change DescriptionRecognizableCodeLanguage CodeSelfHaltingLanguage
+  exact
+    Computability.SelfHaltingRecognizer.concreteSelfHaltingRecognizerConstruction
+
 def ConcreteMachinePairHaltingProblem :
     Language (ConcretePairCodeSymbol ConcreteMachineCodeSymbol) :=
   TuringPairHaltingProblem
@@ -857,8 +865,9 @@ theorem self_halting_undecidable_if_decoder_universal
 Compatibility only. This K-shaped statement is not the closed central theorem:
 its premises are jointly refutable over the concrete machine-code alphabet,
 its middle conjunct uses the collapsed legacy predicate, and self-halting
-recognizability enters as the unproved {lit}`hself` premise rather than as a
-finite construction.
+recognizability enters as an abstract {lit}`hself` premise.  The canonical
+finite-description replacement is the later
+{lit}`concrete_machine_self_halting_main_theorem`.
 -/
 theorem self_halting_re_not_recursive_and_complement_not_re_if_decoder_universal
     {decodeAccepts : Word code -> Word code -> Prop}

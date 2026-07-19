@@ -38,10 +38,13 @@ status page distinguishes those premises from completed constructions.
 Section 5.3 states the diagonal, reduction, self-halting, pair-halting,
 machine-encoding, and universal-machine vocabulary. Finite-table execution,
 description encoding and parsing, the decoded-description interpreter, and a
-faithful diagonal-pair copy-machine witness are present. A finite prefix
-recognizer supplies one unconditional universal-prefix runner. Covering every
-acceptable-language row is a stronger statement and still consumes the named
-encoded-input description compiler principle.
+faithful diagonal-pair copy-machine witness are present. An exact-code validator
+and the unconditional universal-prefix runner compose into a concrete finite
+self-halting recognizer, closing the canonical direct-code theorem: the valid
+self-halting language is recognizable, is not decidable, and has a complement
+that is not recognizable. Covering every acceptable-language row is a stronger
+statement and still consumes the named encoded-input description compiler
+principle.
 
 ## Architecture and Scope
 
@@ -53,12 +56,13 @@ Completed concrete finite constructions live in the reusable computability
 layer; open finite routes remain explicit hypotheses of their book-facing
 results.
 
-Some textbook presentations are deliberately recast. The book's two-tape
-listing-machine and enumerated {lit}`T_n`/{lit}`G`/{lit}`U` storyline is
-represented here by semantic listing/range witnesses, encoded machine
-descriptions, diagonal pair maps, and universal-prefix row coverage. That
-presentation keeps the theorem shapes while separating the completed finite
-runner from the general compiler principle used to obtain row coverage.
+Some textbook presentations are deliberately recast. The canonical
+self-halting result is stated directly over complete finite-description codes.
+The printed duplicate-free unary {lit}`T_n`/{lit}`G` enumeration has not been
+formalized and is not claimed equivalent to this endpoint. Semantic
+listing/range witnesses and universal-prefix row coverage are separate
+interfaces; the completed finite runner remains distinct from the general
+compiler principle used to obtain row coverage.
 
 Two source discrepancies are not reproduced in Lean.  The range-machine
 discussion types its computed value as a symbol where the surrounding argument
@@ -92,9 +96,9 @@ listing/range equivalences, grammar traces, reductions, and the abstract
 diagonal arguments are unconditional. The effective finite listing/range and
 grammar converses are conditional on named finite compiler interfaces.
 Concrete finite descriptions implement the scanners, encoders, transducers,
-decoded interpreter, and universal-prefix runner used by the chapter. General
-compiler principles stay visible in theorem hypotheses when the theorem
-genuinely needs them.
+decoded interpreter, exact-code validator, self-halting recognizer, and
+universal-prefix runner used by the chapter. General compiler principles stay
+visible in theorem hypotheses when the theorem genuinely needs them.
 
 Section 5.1 uses a partial transition function, so a missing row stops an
 execution without being the same event as entering the designated halt state.

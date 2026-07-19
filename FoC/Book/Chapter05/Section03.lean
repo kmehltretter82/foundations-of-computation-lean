@@ -9,7 +9,10 @@ set_option doc.verso true
 
 This module provides the supporting declarations and helper lemmas for
 Section 5.3. It covers diagonal arguments, reductions, self-halting,
-pair-halting, encodings, and the universal machine vocabulary.
+pair-halting, encodings, and the universal machine vocabulary.  Its canonical
+direct-code theorem gives a finite recognizer for valid self-halting codes,
+proves that language undecidable in the halt-stable finite currency, and proves
+its complement is not finitely recognizable.
 
 ## Section Pages
 
@@ -26,6 +29,6 @@ the honest theorem-status table is
 
 The semantic diagonal theorems live in
 {module}`FoC.Computability.Undecidable`. The concrete decoded interpreter,
-finite prefix recognizer, and universal-prefix runner live under
-{module}`FoC.Computability.Compiler`.
+finite prefix recognizer, exact-code validator, self-halting recognizer, and
+universal-prefix runner live under {module}`FoC.Computability.Compiler`.
 -/
