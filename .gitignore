@@ -11,3 +11,7 @@
 *.trace
 *.log
 /html/
+
+# Owner-local planning, audit, and proof-hygiene artifacts.
+/docs/
+/scripts/
